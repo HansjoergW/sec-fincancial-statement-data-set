@@ -1,0 +1,11 @@
+name: Python workflow
+
+on: [push]
+
+steps:
+  - uses: actions/setup-python@v2
+    with:
+      python-version: 3.10
+  - run: pip install -r requirements.txt
+  - run: pytest
+  - run: pylint secfdstools

@@ -1,0 +1,22 @@
+pyproject.toml
+-> im Namen keine "." nur underlines verwenden
+
+
+Attention:
+testpypi und pypi benötigen eigene accounts!
+https://test.pypi.org/
+
+
+
+pypi: packaging projects: https://packaging.python.org/en/latest/tutorials/packaging-projects/
+
+
+steps:
+- pip install --upgrade build
+- python -m build
+- pip install --upgrade twine
+- twine upload --repository testpypi dist/*
+  -> Token gibt es unter: https://pypi.org/manage/account/
+  -> username -> <token>
+  -> passwort pypi-<token>
+

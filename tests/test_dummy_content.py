@@ -1,4 +1,4 @@
-from secfdstools import dummy_content
+from secfsdstools import dummy_content
 
 
 def test_addition():

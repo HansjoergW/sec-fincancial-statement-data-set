@@ -1,0 +1,25 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "secfsdstools_hansjoerg_wingeier"
+version = "0.0.2"
+authors = [
+    { name="Hansjoerg Wingeier", email="hansjoerg.wingeier@gmail.com" },
+]
+description = "A few python tools to analyze the SEC.gov financial statements data sets (https://www.sec.gov/dera/data/financial-statement-data-sets)"
+readme = "README.md"
+requires-python = ">=3.8"
+classifiers = [
+    "Development Status :: 1 - Planning",
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: Apache Software License",
+    "Operating System :: OS Independent",
+    "Topic :: Office/Business :: Financial",
+    "Topic :: Office/Business :: Financial :: Investment"
+]
+
+[project.urls]
+"Homepage" = "https://github.com/HansjoergW/sec-fincancial-statement-data-set"
+"Bug Tracker" = "https://github.com/HansjoergW/sec-fincancial-statement-data-set/issues"

@@ -1,13 +1,21 @@
+Allgemein
+---------
 pyproject.toml
 -> im Namen keine "." nur underlines verwenden
 
 
+Releasing
+---------
+neuen Release definieren: https://docs.github.com/en/repositories/releasing-projects-on-github/managing-releases-in-a-repository
+
+Releasing auf test.pypi.org testen
+------------------------------------
 Attention:
 testpypi und pypi benötigen eigene accounts!
 https://test.pypi.org/
 
-
-
+Allgemeiner manueller ablauf Releasing
+--------------------------------------
 pypi: packaging projects: https://packaging.python.org/en/latest/tutorials/packaging-projects/
 
 
@@ -19,4 +27,9 @@ steps:
   -> Token gibt es unter: https://pypi.org/manage/account/
   -> username -> <token>
   -> passwort pypi-<token>
+
+
+Automatisierter Ablauf mit GitHubAction
+--------------------------------------
+-> Template benützen (neuer Workflow), bzw. https://github.com/pypa/gh-action-pypi-publish
 

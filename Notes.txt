@@ -7,7 +7,12 @@ pyproject.toml
 Neuer Release
 -------------
 1. updated pyproject.toml mit neuer version
-2. commit neue version mit tag
+2. commit neue version
+3. Tag Version im log Tab of Commit Tools (intellij), use vx.x.x
+4. push !Achtung! Tags auch pushen!!!!!
+5. wait till test run on github is finished
+6. on github select code, right screen choose "create new release", select Tag
+7. enter infos and press publish
 
 
 

@@ -20,5 +20,5 @@ jobs:
       - name: unit tests
         run: pytest
       - name: linting
-        run: pylint secfdstools
+        run: pylint secfsdstools
 

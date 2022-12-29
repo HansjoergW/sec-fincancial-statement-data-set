@@ -49,6 +49,7 @@ class SecZipDownloader:
                 shutil.copyfileobj(urldata, out_file)
                 return "success"
         except Exception as ex: # pylint: disable=W0703
+            # we want to catch everything here.
             return f'failed: {ex}'
 
     def _download_missing(self, to_download_entries: Dict[str, str]):

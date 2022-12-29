@@ -32,9 +32,9 @@ def write_content_to_zip(content: str, filename: str) -> str:
     :return: written zipfilename
     """
     zip_filename = filename + ".zip"
-    with zipfile.ZipFile(zip_filename, mode="w", compression=zipfile.ZIP_DEFLATED) as zf:
+    with zipfile.ZipFile(zip_filename, mode="w", compression=zipfile.ZIP_DEFLATED) as zf_fp:
         file = Path(filename).name
-        zf.writestr(file, content)
+        zf_fp.writestr(file, content)
     return zip_filename
 
 
@@ -44,6 +44,6 @@ def read_content_from_zip(filename: str) -> str:
     :param filename: zipfilename without the ending ".zip"
     :return:
     """
-    with zipfile.ZipFile(filename + ".zip", mode="r") as zf:
+    with zipfile.ZipFile(filename + ".zip", mode="r") as zf_fp:
         file = Path(filename).name
-        return zf.read(file).decode("utf-8")
+        return zf_fp.read(file).decode("utf-8")

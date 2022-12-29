@@ -20,5 +20,5 @@ jobs:
       - name: unit tests
         run: pytest
       - name: linting
-        run: pylint secfsdstools
+        run: pylint --disable=R0913 secfsdstools
 

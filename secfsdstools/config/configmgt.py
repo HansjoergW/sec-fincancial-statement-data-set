@@ -32,7 +32,8 @@ class ConfigurationManager:
             LOGGER.info('Get configuration from %s', self.filename)
             self.config = self.read_configuration()
         else:
-            self.config = Configuration(download_dir='./dld', create_index=True, user_agent_email='your.email@goeshere.com')
+            self.config = Configuration(download_dir='./dld', create_index=True,
+                                        user_agent_email='your.email@goeshere.com')
             LOGGER.info('Configuration file does not exist - create it as %s', self.filename)
             self.write_configuration(self.config)
 

@@ -3,6 +3,9 @@ Config
 - Target directory download
 - user agent / fakeuseragent
 - build index -> sqlite db
+- build reports
+- export excel
+- cli
 
 
 Release

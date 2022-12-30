@@ -1,6 +1,6 @@
 import os
 
-from secfsdstools.config.configmgt import ConfigurationManager, Configuration
+from secfsdstools._0_config.configmgt import ConfigurationManager, Configuration
 
 CURRENT_DIR = os.path.dirname(os.path.realpath(__file__))
 NOT_EXISTING_CFG = CURRENT_DIR + '/config.cfg'

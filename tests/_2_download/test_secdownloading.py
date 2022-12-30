@@ -4,8 +4,8 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from secfsdstools.download.secdownloading import SecZipDownloader
-from secfsdstools.utils.downloadutils import UrlDownloader
+from secfsdstools._0_utils.downloadutils import UrlDownloader
+from secfsdstools._2_download.secdownloading import SecZipDownloader
 
 RE_MATCH_QRTR_FILENAME = '^20\d{2}q[1-4]\.zip$'
 RE_MATCH_QRTR_FILENAME_compiled = re.compile(RE_MATCH_QRTR_FILENAME)

@@ -7,7 +7,7 @@ from time import sleep
 
 import requests
 
-from secfsdstools.utils.fileutils import write_content_to_zip
+from secfsdstools._0_utils.fileutils import write_content_to_zip
 
 LOGGER = logging.getLogger(__name__)
 

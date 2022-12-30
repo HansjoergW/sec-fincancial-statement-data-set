@@ -10,7 +10,7 @@ import shutil
 import urllib.request
 from typing import List, Dict
 
-from secfsdstools.utils.downloadutils import UrlDownloader
+from secfsdstools._0_utils.downloadutils import UrlDownloader
 
 LOGGER = logging.getLogger(__name__)
 

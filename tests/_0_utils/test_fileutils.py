@@ -1,6 +1,6 @@
 import os
 
-from secfsdstools.utils.fileutils import write_content_to_zip, read_content_from_zip
+from secfsdstools._0_utils.fileutils import write_content_to_zip, read_content_from_zip
 
 
 def test_write_content_to_zip():

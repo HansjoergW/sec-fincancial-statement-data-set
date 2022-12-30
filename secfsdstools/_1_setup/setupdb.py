@@ -23,7 +23,7 @@ class DbCreator(DB):
     def __init__(self, db_dir: str):
         super().__init__(db_dir=db_dir)
 
-    def _create_db(self):
+    def create_db(self):
         """
         reads the ddl files from the ddl directory and creates the tables
         """
@@ -45,7 +45,8 @@ class DbCreator(DB):
         curr = conn.cursor()
         for index in indexes:
             sqlfile = indexes_dict[index]
-            with open(sqlfile, 'r', encoding='utf8').read() as script:
+            with open(sqlfile, 'r', encoding='utf8') as scriptfile:
+                script = scriptfile.read()
                 LOGGER.debug("execute creation script %s", sqlfile)
                 curr.executescript(script)
             conn.commit()

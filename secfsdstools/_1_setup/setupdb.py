@@ -39,6 +39,7 @@ class DbCreator(DB):
         indexes.sort()
 
         if not os.path.isdir(self.db_dir):
+            LOGGER.info("creating folder for db: %s", self.db_dir)
             os.makedirs(self.db_dir)
 
         conn = self.get_connection()

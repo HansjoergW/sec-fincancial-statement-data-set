@@ -29,6 +29,9 @@ class SecZipDownloader:
             zip_dir = zip_dir + '/'
         self.zip_dir = zip_dir
         self.urldownloader = urldownloader
+        if not os.path.isdir(self.zip_dir):
+            LOGGER.info("creating download folder: %s", self.zip_dir)
+            os.makedirs(self.zip_dir)
 
     def _get_downloaded_list(self) -> List[str]:
         zip_list: List[str] = glob.glob(self.zip_dir + '*.zip')

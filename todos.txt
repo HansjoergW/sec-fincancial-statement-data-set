@@ -7,7 +7,7 @@ Config
 - build reports
 - export excel
 - cli
--
+- download in parallel
 
 
 Release

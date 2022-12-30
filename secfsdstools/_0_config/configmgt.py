@@ -15,6 +15,7 @@ LOGGER = logging.getLogger(__name__)
 class Configuration:
     """ Basic configuration settings """
     download_dir: str
+    db_dir: str
     create_index: bool
     user_agent_email: str
 
@@ -32,8 +33,11 @@ class ConfigurationManager:
             LOGGER.info('Get configuration from %s', self.filename)
             self.config = self.read_configuration()
         else:
-            self.config = Configuration(download_dir='./dld', create_index=True,
+            self.config = Configuration(download_dir='./dld',
+                                        db_dir='./db',
+                                        create_index=True,
                                         user_agent_email='your.email@goeshere.com')
+
             LOGGER.info('Configuration file does not exist - create it as %s', self.filename)
             self.write_configuration(self.config)
 
@@ -54,6 +58,7 @@ class ConfigurationManager:
 
         return Configuration(
             download_dir=config['DEFAULT'].get('DownloadDirectory', './dld'),
+            db_dir=config['DEFAULT'].get('DbDirectory', './db'),
             create_index=config['DEFAULT'].getboolean('CreateIndex', True),
             user_agent_email=config['DEFAULT'].get('UserAgentEmail', 'your.email@goeshere.com')
         )
@@ -65,6 +70,7 @@ class ConfigurationManager:
         """
         config = configparser.ConfigParser()
         config['DEFAULT'] = {'DownloadDirectory': configuration.download_dir,
+                             'DbDirectory': configuration.db_dir,
                              'CreateIndex': configuration.create_index,
                              'UserAgentEmail': configuration.user_agent_email}
         with open(self.filename, 'w', encoding="utf8") as configfile:

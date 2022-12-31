@@ -32,8 +32,9 @@ class DbCreator(DB):
 
         indexes_dict: Dict[int, str] = {}
         for sqlfile in sqlfiles:
-            LOGGER.debug("extract version from sql file %s", sqlfile)
-            index = int(sqlfile[sqlfile.rfind('\\V') + 2:sqlfile.find('__')])
+            LOGGER.debug("extract version from sql file %s ... ", sqlfile)
+            index = int(sqlfile[sqlfile.rfind(os.path.sep + 'V') + 2:sqlfile.find('__')])
+            LOGGER.debug(" ... extracted version: %d", index)
             indexes_dict[index] = sqlfile
 
         indexes = list(indexes_dict.keys())

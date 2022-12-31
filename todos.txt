@@ -13,3 +13,11 @@ Config
 Release
 -------
 deploy first release on pypi.org not on test.pypi.org
+
+
+Ideen
+-----
+- Wie regex nur die richtigen Zeilen lesen und nur diese parsen lassen
+  -> evtl. hat pandas bereits etwas eingebaut?
+- Files neu sortieren, bei adsh und index von adsh merken und direkt darauf springen
+

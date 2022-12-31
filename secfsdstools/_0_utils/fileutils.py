@@ -5,24 +5,22 @@ helper utils condhandling compressed files.
 import zipfile
 from pathlib import Path
 
+import pandas as pd
 
-# def _check_if_zipped(path: str) -> bool:
-#     return os.path.isfile(path + ".zip")
-#
-#
-# def write_df_to_zip(df: pd.DataFrame, filename: str):
-#     csv_content = df.to_csv(sep='\t', header=True)
-#     write_content_to_zip(csv_content, filename)
-#
-#
-# def read_df_from_zip(filename: str) -> pd.DataFrame:
-#     if _check_if_zipped(filename):
-#         with zipfile.ZipFile(filename + ".zip", "r") as zf:
-#             file = Path(filename).name
-#             return pd.read_csv(zf.open(file), header=0, delimiter="\t")
-#     else:
-#         return pd.read_csv(filename, header=0, delimiter="\t")
-#
+
+def read_df_from_file_in_zip(zip_file: str, file_to_extract: str, dtype=None, usecols=None) -> pd.DataFrame:
+    """
+    reads the content of a file inside a zip file directly into dataframe
+    :param zip_file: the zip file containing the data file
+    :param file_to_extract: the file with the data
+    :param dtype: column type array or None
+    :param usecols: list with all the columns that should be read or None
+    :return: the pandas dataframe
+    """
+    with zipfile.ZipFile(zip_file, "r") as zf:
+        file = Path(file_to_extract).name
+        return pd.read_csv(zf.open(file), header=0, delimiter="\t", dtype=dtype, usecols=usecols)
+
 
 def write_content_to_zip(content: str, filename: str) -> str:
     """

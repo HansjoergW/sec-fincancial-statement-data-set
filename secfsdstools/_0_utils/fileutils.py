@@ -8,7 +8,8 @@ from pathlib import Path
 import pandas as pd
 
 
-def read_df_from_file_in_zip(zip_file: str, file_to_extract: str, dtype=None, usecols=None) -> pd.DataFrame:
+def read_df_from_file_in_zip(zip_file: str, file_to_extract: str,
+                             dtype=None, usecols=None) -> pd.DataFrame:
     """
     reads the content of a file inside a zip file directly into dataframe
     :param zip_file: the zip file containing the data file
@@ -17,9 +18,10 @@ def read_df_from_file_in_zip(zip_file: str, file_to_extract: str, dtype=None, us
     :param usecols: list with all the columns that should be read or None
     :return: the pandas dataframe
     """
-    with zipfile.ZipFile(zip_file, "r") as zf:
+    with zipfile.ZipFile(zip_file, "r") as zip_fp:
         file = Path(file_to_extract).name
-        return pd.read_csv(zf.open(file), header=0, delimiter="\t", dtype=dtype, usecols=usecols)
+        return pd.read_csv(zip_fp.open(file), header=0, delimiter="\t",
+                           dtype=dtype, usecols=usecols)
 
 
 def write_content_to_zip(content: str, filename: str) -> str:

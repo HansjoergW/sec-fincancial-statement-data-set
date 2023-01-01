@@ -1,17 +1,20 @@
-CREATE TABLE IF NOT EXISTS report_index
+CREATE TABLE IF NOT EXISTS index_reports
 (
     accessionNumber,
     cik,
     form,
     filed,
     period,
-    originFile
+    originFile,
+    originFileType,
+    PRIMARY KEY (accessionNumber, originFile)
 );
 
-CREATE TABLE IF NOT EXISTS zip_file_processing
+CREATE TABLE IF NOT EXISTS index_file_processing_state
 (
     fileName,
     status,
-    processTime
-)
+    processTime,
+    PRIMARY KEY (fileName)
+);
 

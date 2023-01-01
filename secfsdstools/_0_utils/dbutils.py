@@ -6,6 +6,7 @@ import logging
 import os
 import sqlite3
 from abc import ABC
+from dataclasses import Field
 from typing import List, TypeVar, Tuple
 
 import pandas as pd
@@ -105,3 +106,33 @@ class DB(ABC):
             return [T(**dict(x)) for x in results]
         finally:
             conn.close()
+
+    def create_insert_statement_for_dataclass(self, table_name: str, data):
+        """
+        creates the insert sql statement based on the fields of a dataclass
+
+        :param table_name: name of the table to insert into
+        :param data: object of the dataclass
+        :return: 'insert into' statement
+        """
+        # todo: None handling
+        fields: List[Field]
+        if isinstance(data.__dataclass_fields__, dict):
+            # __dataclass_fields__ is a dict, so you can use the
+            # .values() method to get the Field objects
+            fields = data.__dataclass_fields__.values()
+        else:  # from python 3.10
+            # __dataclass_fields__ is a tuple, so you can just use it directly
+            fields = data.__dataclass_fields__
+
+        column_list = [f"'{field.name}'" for field in fields]
+        value_list = []
+        for field in fields:
+            quotes = ""
+            if field.type == str:
+                quotes = "'"
+            value_list.append(quotes + str(getattr(data, field.name)) + quotes)
+
+        column_str = ', '.join(column_list)
+        value_str = ', '.join(value_list)
+        return f"INSERT INTO {table_name} ({column_str}) VALUES ({value_str})"

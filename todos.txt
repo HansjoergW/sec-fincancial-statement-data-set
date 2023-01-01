@@ -4,6 +4,7 @@ Config
 - user agent / fakeuseragent
 - orchestrator
 - build index -> sqlite db
+- index for name zu sic, einfach namenssuche -> oder dann Info wie mit sqldb file umzugehen ist?
 - build reports
 - export excel
 - cli

@@ -17,15 +17,17 @@ class TesttableRow:
     col2: str
 
 
-def test_db(db):
-    # create simple table
-    sql_create = """
+sql_create = """
     CREATE TABLE IF NOT EXISTS testtable1
         (
             col1,
             col2
         )
     """
+
+
+def test_db(db):
+    # create simple table
     db.execute_single(sql_create)
 
     # read the content
@@ -51,5 +53,17 @@ def test_db(db):
     assert result_type[0].col1 == 'row1-1'
     assert result_type[0].col2 == 'row1-2'
 
-
     print('success')
+
+def test_insert_dataclass(db):
+    @dataclass
+    class Row:
+        col1: str
+        col2: int
+
+    # create simple table
+    db.execute_single(sql_create)
+    
+    data = Row(col1='col1', col2=123)
+    insert_sql = db.create_insert_statement_for_dataclass(table_name='testtable1', data=data)
+    assert insert_sql == "INSERT INTO testtable1 ('col1', 'col2') VALUES ('col1', 123)"

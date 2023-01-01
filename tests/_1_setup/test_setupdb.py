@@ -8,6 +8,5 @@ def test_db_cration(tmp_path):
     creator.create_db()
 
     # check if expected tables are present
-    assert len(creator.execute_fetchall("SELECT * FROM zip_file_processing")) == 0
-    assert len(creator.execute_fetchall("SELECT * FROM report_index")) == 0
-
+    assert len(creator.execute_fetchall("SELECT * FROM index_file_processing_state")) == 0
+    assert len(creator.execute_fetchall("SELECT * FROM index_reports")) == 0

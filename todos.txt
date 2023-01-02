@@ -4,11 +4,12 @@ Config
 - user agent / fakeuseragent
 - orchestrator
 - build index -> sqlite db
-- index for name zu sic, einfach namenssuche -> oder dann Info wie mit sqldb file umzugehen ist?
+- download in parallel / integrate parallelExecution ParallelExecution.py (von sec_processing)
+- index for name zu cik, einfach namenssuche -> oder dann Info wie mit sqldb file umzugehen ist?
 - build reports
 - export excel
 - cli
-- download in parallel
+
 
 
 Release

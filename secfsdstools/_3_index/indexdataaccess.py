@@ -57,7 +57,7 @@ class DBIndexingAccessor(DB):
         :return: List with IndexFileProcessingState objects
         """
         sql = f'SELECT * FROM {self.INDEX_PROCESSING_TABLE}'
-        return self.execute_fetchall_typed(sql, IndexReport)
+        return self.execute_fetchall_typed(sql, IndexFileProcessingState)
 
     def read_all_indexfileprocessing_df(self) -> pd.DataFrame:
         """

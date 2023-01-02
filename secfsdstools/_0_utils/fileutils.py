@@ -24,6 +24,18 @@ def read_df_from_file_in_zip(zip_file: str, file_to_extract: str,
                            dtype=dtype, usecols=usecols)
 
 
+def read_content_from_file_in_zip(zip_file: str, file_to_extract: str) -> str:
+    """
+    reads the text content of a file inside a zip file
+    :param zip_file: the zip file containing the data file
+    :param file_to_extract: the file with the data
+    :return: the content as string
+    """
+    with zipfile.ZipFile(zip_file, "r") as zip_fp:
+        file = Path(file_to_extract).name
+        return zip_fp.read(file).decode("utf-8")
+
+
 def write_content_to_zip(content: str, filename: str) -> str:
     """
     write the content str into the zip file. compression is set to zipfile.ZIP_DEFLATED

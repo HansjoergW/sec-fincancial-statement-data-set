@@ -7,7 +7,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ["3.8", "3.9", "3.10"]
+        python-version: ["3.7", "3.8", "3.9", "3.10"]
 
     steps:
       - uses: actions/checkout@v3
@@ -20,5 +20,5 @@ jobs:
       - name: unit tests
         run: pytest
       - name: linting
-        run: pylint --disable=R0913,R0903,W0511 secfsdstools
+        run: pylint --disable=R0913,R0903,W0511,R0902 secfsdstools
 

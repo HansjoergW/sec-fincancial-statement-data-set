@@ -1,5 +1,6 @@
 import os
 import re
+from typing import List, Tuple
 from unittest.mock import MagicMock
 
 import pytest
@@ -17,7 +18,7 @@ def seczipdownloader(tmp_path):
     zip_dir = tmp_path / 'zipfiles'
     os.makedirs(zip_dir)
 
-    yield SecZipDownloader(zip_dir=str(zip_dir), urldownloader=url_downloader)
+    yield SecZipDownloader(zip_dir=str(zip_dir), urldownloader=url_downloader, execute_serial=True)
 
 
 def test_get_downloaded(seczipdownloader):
@@ -31,11 +32,11 @@ def test_get_downloaded(seczipdownloader):
     assert len(list_of_zips) == 1
 
 
-def test_get_zips_to_download_from_sec_site(seczipdownloader):
-    list_available = seczipdownloader._get_zips_to_download()
+def test_get_available_zips(seczipdownloader):
+    list_available = seczipdownloader._get_available_zips()
 
     assert len(list_available) > 40  # there have to be more than  quarters for 10 years
-    for filename, url in list_available.items():
+    for filename, url in list_available:
         assert RE_MATCH_QRTR_FILENAME_compiled.match(filename)
 
     print(list_available)
@@ -43,10 +44,10 @@ def test_get_zips_to_download_from_sec_site(seczipdownloader):
 
 def test_download_single_zip_file(seczipdownloader):
     url = 'https://www.sec.gov/files/dera/data/financial-statement-data-sets/2009q1.zip'
-    filename = seczipdownloader.zip_dir + '/2009q1.zip'
+    filename = '2009q1.zip'
 
     # download the real zip
-    seczipdownloader._download_zip(url=url, file_path=filename)
+    seczipdownloader._download_zip(url=url, file=filename)
 
     # us the logic of the class to check if there is a zip file with the expected name
     list_of_zips = seczipdownloader._get_downloaded_list()
@@ -54,11 +55,20 @@ def test_download_single_zip_file(seczipdownloader):
     assert list_of_zips[0].endswith('2009q1.zip')
 
 
-def test_download_missing(seczipdownloader):
+def test_calculate_missing_zips(seczipdownloader):
+    seczipdownloader._get_downloaded_list = MagicMock(return_value=['file1'])
+    seczipdownloader._get_available_zips = MagicMock(return_value=[('file1', 'file1'), ('file2', 'file2')])
+
+    missing: List[Tuple[str, str]] = seczipdownloader._calculate_missing_zips()
+    assert len(missing) == 1
+    assert missing == [('file2', 'file2')]
+
+
+def test_download_zip(seczipdownloader):
     url = 'https://www.sec.gov/files/dera/data/financial-statement-data-sets/2009q1.zip'
 
     # download the real zip
-    seczipdownloader._download_missing(to_download_entries={'2009q1.zip': url})
+    seczipdownloader._download_zip(file='2009q1.zip', url=url)
 
     # us the logic of the class to check if there is a zip file with the expected name
     list_of_zips = seczipdownloader._get_downloaded_list()
@@ -67,12 +77,11 @@ def test_download_missing(seczipdownloader):
 
 
 def test_downloading(seczipdownloader):
-    seczipdownloader._download_missing = MagicMock()
+    seczipdownloader._download_file = MagicMock()
 
-    seczipdownloader._get_downloaded_list = MagicMock(return_value=['file1'])
-    seczipdownloader._get_zips_to_download = MagicMock(return_value={'file1': 'file1', 'file2': 'file2'})
+    seczipdownloader._calculate_missing_zips = MagicMock(return_value=[('file2', 'file2')])
 
     seczipdownloader.download()
 
-    assert seczipdownloader._download_missing.call_count == 1
-    assert seczipdownloader._download_missing.call_args_list[0].args[0] == {'file2': 'file2'}
+    assert seczipdownloader._download_file.call_count == 1
+    assert seczipdownloader._download_file.call_args_list[0].args[0] == ('file2', 'file2')

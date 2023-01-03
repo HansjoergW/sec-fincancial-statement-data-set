@@ -10,6 +10,7 @@ from time import time, sleep
 from typing import Generic, TypeVar, List, Callable, Optional, Tuple
 
 from pathos.multiprocessing import ProcessingPool as Pool
+from pathos.multiprocessing import cpu_count
 
 IT = TypeVar("IT")  # input type of the list to split
 PT = TypeVar("PT")  # processed type of the list to split
@@ -46,15 +47,16 @@ class ParallelExecutor(Generic[IT, PT, OT]):
     """
 
     def __init__(self,
-                 processes: int = 8,
+                 processes: int = cpu_count(),
                  chunksize: int = 100,
                  max_calls_per_sec: int = 0,
                  intend: str = "    ",
                  execute_serial: bool = False):
         """
-        :param processes: number of parallel processes
-        :param chunksize: size of chunk - think of it as a commit
-        :param max_calls_per_sec: how many calls may be made per second (for all processes)
+        :param processes: number of parallel processes, default is cpu_count
+        :param chunksize: size of chunk - think of it as a commit, default is 100
+        :param max_calls_per_sec: how many calls may be made per second (for all processes),
+            default is 0, meaning no limit
         :param execute_serial: for easier debugging, this flag ensures that all data are
                processed in the main thread
         """
@@ -98,7 +100,7 @@ class ParallelExecutor(Generic[IT, PT, OT]):
         """
         self.post_process_chunk_function = post_process
 
-    def process_throttled(self, data: IT) -> PT:
+    def _process_throttled(self, data: IT) -> PT:
         """
         process the current data set and makes sure that only a limited number
         of calls per seconds are made
@@ -115,12 +117,12 @@ class ParallelExecutor(Generic[IT, PT, OT]):
         return result
 
     def _execute_parallel(self, chunk: List[IT]) -> List[PT]:
-        return self.pool.map(self.process_throttled, chunk)
+        return self.pool.map(self._process_throttled, chunk)
 
     def _execute_serial(self, chunk: List[IT]) -> List[PT]:
         results: List[PT] = []
         for entry in chunk:
-            results.append(self.process_throttled(entry))
+            results.append(self._process_throttled(entry))
         return results
 
     def execute(self) -> Tuple[List[OT], List[IT]]:

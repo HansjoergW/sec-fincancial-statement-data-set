@@ -2,6 +2,7 @@
 from secfsdstools._0_config.configmgt import ConfigurationManager, Configuration
 from secfsdstools._1_setup.setupdb import DbCreator
 from secfsdstools._2_download.secdownloading import SecZipDownloader, UrlDownloader
+from secfsdstools._3_index.indexing import ReportZipIndexer
 
 
 def update(config_file: str = None):
@@ -17,9 +18,12 @@ def update(config_file: str = None):
 
     # download actual data
     url_downloader = UrlDownloader(user_agent=config.user_agent_email)
-    SecZipDownloader(zip_dir=config.download_dir, urldownloader=url_downloader).download()
+    secdownloader = SecZipDownloader(zip_dir=config.download_dir, urldownloader=url_downloader)
+    secdownloader.download()
 
     # create index of reports
+    indexer = ReportZipIndexer(db_dir=config.db_dir, secdownloader=secdownloader)
+    indexer.process()
 
 
 if __name__ == '__main__':

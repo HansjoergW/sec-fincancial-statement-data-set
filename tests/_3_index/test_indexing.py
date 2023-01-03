@@ -24,7 +24,7 @@ def test_nothing_indexed(reportindexer):
 
 def test_one_indexed(reportindexer):
     reportindexer.dbaccessor.insert_indexfileprocessing(
-        IndexFileProcessingState(fileName="file1", fullPath="", status="processed", processTime=""))
+        IndexFileProcessingState(fileName="file1", fullPath="", status="processed", processTime="", entries=1))
 
     not_indexed = reportindexer._calculate_not_indexed()
     assert len(set(not_indexed) - {'file2'}) == 0
@@ -32,10 +32,10 @@ def test_one_indexed(reportindexer):
 
 def test_all_indexed(reportindexer):
     reportindexer.dbaccessor.insert_indexfileprocessing(
-        IndexFileProcessingState(fileName="file1", fullPath="", status="processed", processTime=""))
+        IndexFileProcessingState(fileName="file1", fullPath="", status="processed", processTime="", entries=1))
 
     reportindexer.dbaccessor.insert_indexfileprocessing(
-        IndexFileProcessingState(fileName="file2", fullPath="", status="processed", processTime=""))
+        IndexFileProcessingState(fileName="file2", fullPath="", status="processed", processTime="", entries=1))
 
     not_indexed = reportindexer._calculate_not_indexed()
 

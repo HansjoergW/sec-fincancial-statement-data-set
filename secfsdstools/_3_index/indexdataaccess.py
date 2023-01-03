@@ -26,6 +26,7 @@ class IndexFileProcessingState:
     fileName: str  # pylint: disable=C0103
     fullPath: str  # pylint: disable=C0103
     status: str
+    entries: int
     processTime: str  # pylint: disable=C0103
 
 

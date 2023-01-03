@@ -32,7 +32,7 @@ def test_indexreports(indexaccessor):
 
 def test_indexprocessing(indexaccessor):
     processing_state = IndexFileProcessingState(fileName='2022q1.zip', status='processed',
-                                                processTime='', fullPath='full')
+                                                processTime='', fullPath='full', entries=1)
 
     indexaccessor.insert_indexfileprocessing(data=processing_state)
 

@@ -4,9 +4,10 @@ Config
 - user agent / fakeuseragent
 - orchestrator
 - build index -> sqlite db
-- download in parallel / integrate parallelExecution ParallelExecution.py (von sec_processing)
+
 - index for name zu cik, einfach namenssuche -> oder dann Info wie mit sqldb file umzugehen ist?
-- build reports
+- build reports / read access
+
 - export excel
 - cli
 
@@ -21,5 +22,9 @@ Ideen
 -----
 - Wie regex nur die richtigen Zeilen lesen und nur diese parsen lassen
   -> evtl. hat pandas bereits etwas eingebaut?
+
 - Files neu sortieren, bei adsh und index von adsh merken und direkt darauf springen
+
+- is sehr langsam, warum?
+  download in parallel / integrate parallelExecution ParallelExecution.py (von sec_processing)
 

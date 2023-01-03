@@ -1,6 +1,6 @@
 CREATE TABLE IF NOT EXISTS index_reports
 (
-    accessionNumber,
+    adsh,
     cik,
     name,
     form,
@@ -8,7 +8,7 @@ CREATE TABLE IF NOT EXISTS index_reports
     period,
     originFile,
     originFileType,
-    PRIMARY KEY (accessionNumber, originFile)
+    PRIMARY KEY (adsh, originFile)
 );
 
 CREATE TABLE IF NOT EXISTS index_file_processing_state

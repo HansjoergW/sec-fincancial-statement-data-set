@@ -30,7 +30,7 @@ class ReportZipIndexer:
     def _index_file(self, file_name: str):
         full_path = self.zip_dir + file_name
         sub_df = read_df_from_file_in_zip(zip_file=full_path, file_to_extract="sub.txt")
-        sub_selected_df = sub_df[['accessionNumber',
+        sub_selected_df = sub_df[['adsh',
                                   'cik',
                                   'name',
                                   'form',

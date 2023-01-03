@@ -15,7 +15,7 @@ def indexaccessor(tmp_path):
 
 
 def test_indexreports(indexaccessor):
-    report = IndexReport(accessionNumber='abc123', cik=1, form='10-K', name='bla', filed=20220130, period=20211231,
+    report = IndexReport(adsh='abc123', cik=1, form='10-K', name='bla', filed=20220130, period=20211231,
                          originFile='2022q1.zip', originFileType='quarter')
 
     indexaccessor.insert_indexreport(data=report)
@@ -23,11 +23,11 @@ def test_indexreports(indexaccessor):
     all_reports: List[IndexReport] = indexaccessor.read_all_indexreports()
 
     assert len(all_reports) == 1
-    assert all_reports[0].accessionNumber == 'abc123'
+    assert all_reports[0].adsh == 'abc123'
 
     all_reports_df: pd.DataFrame = indexaccessor.read_all_indexreports_df()
     assert len(all_reports_df) == 1
-    assert all_reports_df.iloc[0].accessionNumber == 'abc123'
+    assert all_reports_df.iloc[0].adsh == 'abc123'
 
 
 def test_indexprocessing(indexaccessor):

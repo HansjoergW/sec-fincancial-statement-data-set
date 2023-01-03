@@ -15,7 +15,7 @@ def indexaccessor(tmp_path):
 
 
 def test_indexreports(indexaccessor):
-    report = IndexReport(accessionNumber='abc123', cik=1, form='10-K', filed=20220130, period=20211231,
+    report = IndexReport(accessionNumber='abc123', cik=1, form='10-K', name='bla', filed=20220130, period=20211231,
                          originFile='2022q1.zip', originFileType='quarter')
 
     indexaccessor.insert_indexreport(data=report)
@@ -32,7 +32,7 @@ def test_indexreports(indexaccessor):
 
 def test_indexprocessing(indexaccessor):
     processing_state = IndexFileProcessingState(fileName='2022q1.zip', status='processed',
-                                                processTime='')
+                                                processTime='', fullPath='full')
 
     indexaccessor.insert_indexfileprocessing(data=processing_state)
 

@@ -12,6 +12,7 @@ class IndexReport:
     """ dataclass for index_reports table"""
     accessionNumber: str  # pylint: disable=C0103
     cik: int
+    name: str
     form: str
     filed: int
     period: int

@@ -23,6 +23,7 @@ class IndexReport:
 class IndexFileProcessingState:
     """ dataclass for index_file_processing_state table"""
     fileName: str  # pylint: disable=C0103
+    fullPath: str  # pylint: disable=C0103
     status: str
     processTime: str  # pylint: disable=C0103
 
@@ -74,6 +75,13 @@ class DBIndexingAccessor(DB):
         """
         sql = self.create_insert_statement_for_dataclass(self.INDEX_REPORTS_TABLE, data)
         self.execute_single(sql)
+
+    def append_indexreport_df(self, dataframe: pd.DataFrame):
+        """
+        append the content of the df to the index report table
+        :param dataframe: the dataframe to be appended
+        """
+        self.append_df_to_table(table_name=self.INDEX_REPORTS_TABLE, dataframe=dataframe)
 
     def insert_indexfileprocessing(self, data: IndexFileProcessingState):
         """

@@ -2,6 +2,7 @@ CREATE TABLE IF NOT EXISTS index_reports
 (
     accessionNumber,
     cik,
+    name,
     form,
     filed,
     period,
@@ -13,6 +14,7 @@ CREATE TABLE IF NOT EXISTS index_reports
 CREATE TABLE IF NOT EXISTS index_file_processing_state
 (
     fileName,
+    fullPath,
     status,
     processTime,
     PRIMARY KEY (fileName)

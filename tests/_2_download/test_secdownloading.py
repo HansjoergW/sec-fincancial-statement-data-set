@@ -22,13 +22,13 @@ def seczipdownloader(tmp_path):
 
 
 def test_get_downloaded(seczipdownloader):
-    list_of_zips = seczipdownloader._get_downloaded_list()
+    list_of_zips = seczipdownloader.get_downloaded_list()
     assert len(list_of_zips) == 0
 
     f = open(seczipdownloader.zip_dir + '/demo.zip', 'w')
     f.close()
 
-    list_of_zips = seczipdownloader._get_downloaded_list()
+    list_of_zips = seczipdownloader.get_downloaded_list()
     assert len(list_of_zips) == 1
 
 
@@ -50,13 +50,13 @@ def test_download_single_zip_file(seczipdownloader):
     seczipdownloader._download_zip(url=url, file=filename)
 
     # us the logic of the class to check if there is a zip file with the expected name
-    list_of_zips = seczipdownloader._get_downloaded_list()
+    list_of_zips = seczipdownloader.get_downloaded_list()
     assert len(list_of_zips) == 1
     assert list_of_zips[0].endswith('2009q1.zip')
 
 
 def test_calculate_missing_zips(seczipdownloader):
-    seczipdownloader._get_downloaded_list = MagicMock(return_value=['file1'])
+    seczipdownloader.get_downloaded_list = MagicMock(return_value=['file1'])
     seczipdownloader._get_available_zips = MagicMock(return_value=[('file1', 'file1'), ('file2', 'file2')])
 
     missing: List[Tuple[str, str]] = seczipdownloader._calculate_missing_zips()
@@ -71,7 +71,7 @@ def test_download_zip(seczipdownloader):
     seczipdownloader._download_zip(file='2009q1.zip', url=url)
 
     # us the logic of the class to check if there is a zip file with the expected name
-    list_of_zips = seczipdownloader._get_downloaded_list()
+    list_of_zips = seczipdownloader.get_downloaded_list()
     assert len(list_of_zips) == 1
     assert list_of_zips[0].endswith('2009q1.zip')
 

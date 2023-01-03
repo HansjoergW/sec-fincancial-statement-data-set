@@ -107,6 +107,19 @@ class DB(ABC):
         finally:
             conn.close()
 
+    def append_df_to_table(self, table_name: str, dataframe: pd.DataFrame):
+        """
+        add the content of a df to the table. The name of the columns in df
+        and table have to match
+        :param table_name: name of the table to append the data
+        :param dataframe:  the df with the data
+        """
+        conn = self.get_connection()
+        try:
+            dataframe.to_sql(table_name, conn, if_exists="append", index=False)
+        finally:
+            conn.close()
+
     def create_insert_statement_for_dataclass(self, table_name: str, data):
         """
         creates the insert sql statement based on the fields of a dataclass

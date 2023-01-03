@@ -36,7 +36,11 @@ class SecZipDownloader:
             LOGGER.info("creating download folder: %s", self.zip_dir)
             os.makedirs(self.zip_dir)
 
-    def _get_downloaded_list(self) -> List[str]:
+    def get_downloaded_list(self) -> List[str]:
+        """
+        returns the list with the downloaded zipfiles
+        :return: list with downloaded zipfiles
+        """
         zip_list: List[str] = glob.glob(self.zip_dir + '*.zip')
         return [os.path.basename(x) for x in zip_list]
 
@@ -49,7 +53,7 @@ class SecZipDownloader:
         return [(os.path.basename(href), href) for href in hrefs]
 
     def _calculate_missing_zips(self) -> List[Tuple[str, str]]:
-        dld_zip_files = self._get_downloaded_list()
+        dld_zip_files = self.get_downloaded_list()
         zips_to_dld_dict = self._get_available_zips()
 
         return [(name, href) for name, href in zips_to_dld_dict if name not in dld_zip_files]

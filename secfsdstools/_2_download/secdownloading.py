@@ -1,13 +1,10 @@
 """
 Downloading zip files of the financial statement data sets from the sec.
 """
-
 import glob
 import logging
 import os
 import re
-import shutil
-import urllib.request
 from typing import List, Tuple
 
 from secfsdstools._0_utils.downloadutils import UrlDownloader
@@ -45,7 +42,7 @@ class SecZipDownloader:
 
     def _get_available_zips(self) -> List[Tuple[str, str]]:
         content = self.urldownloader.get_url_content(self.FIN_STAT_DATASET_URL)
-        first_table = self.table_re.findall(content)[0]
+        first_table = self.table_re.findall(content.text)[0]
         hrefs = self.href_re.findall(first_table)
 
         hrefs = ['https://www.sec.gov' + href[6:-1] for href in hrefs]
@@ -60,10 +57,8 @@ class SecZipDownloader:
     def _download_zip(self, url: str, file: str) -> str:
         file_path = self.zip_dir + file
         try:
-            with urllib.request.urlopen(url, timeout=30) as urldata, \
-                    open(file_path, 'wb') as out_file:
-                shutil.copyfileobj(urldata, out_file)
-                return 'success'
+            self.urldownloader.binary_download_url_to_file(url, file_path)
+            return 'success'
         except Exception as ex:  # pylint: disable=W0703
             # we want to catch everything here.
             return f'failed: {ex}'
@@ -72,18 +67,23 @@ class SecZipDownloader:
         file: str = data[0]
         url: str = data[1]
 
+        # todo: logging does not work like that when using multiprocessing
+        #  see https://superfastpython.com/multiprocessing-logging-in-python/
+        # LOGGER.info('    start to download %s ', file)
         result = self._download_zip(url, file)
-        LOGGER.info('    %s - %s', file, result)
+        # LOGGER.info('    %s - %s', file, result)
         return result
 
     def download(self):
         """
         downloads the missing quarterly zip files from the sec.
         """
+
         executor = ParallelExecutor[Tuple[str, str], str, type(None)](
             max_calls_per_sec=8,
-            chunksize=1,
-            execute_serial=self.execute_serial
+            chunksize=20,
+            execute_serial=True
+            # execute_serial=self.execute_serial
         )
         executor.set_get_entries_function(self._calculate_missing_zips)
         executor.set_process_element_function(self._download_file)

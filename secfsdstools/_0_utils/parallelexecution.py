@@ -160,7 +160,7 @@ class ParallelExecutor(Generic[IT, PT, OT]):
 
                 # post process the chunk and add the result to the result_list.
                 # it is olso ok to return nothing
-                result_list.append(self.post_process_chunk_function(processed))
+                result_list.extend(self.post_process_chunk_function(processed))
                 logging.info("%scommited chunk: %d", self.intend, i)
 
             # call get_entries_function again to check whether there have been

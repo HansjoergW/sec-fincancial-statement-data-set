@@ -41,7 +41,8 @@ class UrlDownloader:
         :param sleep_time: (optional) wait time between retries, default is one second
         :return the written file
         """
-        content = self.get_url_content(file_url, max_tries, sleep_time)
+        response = self.get_url_content(file_url, max_tries, sleep_time)
+        content = response.text
 
         if expected_size is not None:
             if len(content) != expected_size:
@@ -49,7 +50,26 @@ class UrlDownloader:
 
         return write_content_to_zip(content, target_file)
 
-    def get_url_content(self, file_url: str, max_tries: int = 6, sleep_time: int = 1) -> str:
+    def binary_download_url_to_file(self, file_url: str, target_file: str,
+                                    max_tries: int = 6,
+                                    sleep_time: int = 1):
+        """
+            downloads the binary of an url and stores it into the target-file.
+            retries a download several times, if it fails
+
+        :param file_url: url that referencese the file to be downloaded
+        :param target_file: the file to store the content into (it will be written into a zipfile)
+        :param max_tries: (optional) maximum retries, default is 6
+        :param sleep_time: (optional) wait time between retries, default is one second
+        :return the written file
+        """
+        response = self.get_url_content(file_url, max_tries, sleep_time)
+
+        with open(target_file, "wb") as target_fp:
+            target_fp.write(response.content)
+
+    def get_url_content(self, file_url: str, max_tries: int = 6, sleep_time: int = 1) \
+            -> requests.models.Response:
         """
             downloads the content auf an url and returns it as a string.
             retries a download several times, if it fails.
@@ -76,4 +96,4 @@ class UrlDownloader:
                     raise err
                 sleep(sleep_time)
 
-        return response.text
+        return response

@@ -7,7 +7,7 @@ test_download_url = 'https://www.sec.gov/dera/data/financial-statement-data-sets
 def test_download_to_string():
     downloader = UrlDownloader('my@test.com')
 
-    download_content = downloader.get_url_content(test_download_url)
+    download_content = downloader.get_url_content(test_download_url).text
 
     # we expect a html file
     assert "<html" in download_content

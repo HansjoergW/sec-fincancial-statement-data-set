@@ -1,11 +1,23 @@
 """
 helper utils condhandling compressed files.
 """
-
+import glob
+import os
 import zipfile
 from pathlib import Path
+from typing import List
 
 import pandas as pd
+
+
+def get_filenames_in_directory(filter_string: str) -> List[str]:
+    """
+    returns a list with files matching the filter.
+    the filter can also contain a folder structure.
+    :return: list files in the directory
+    """
+    zip_list: List[str] = glob.glob(filter_string)
+    return [os.path.basename(x) for x in zip_list]
 
 
 def read_df_from_file_in_zip(zip_file: str, file_to_extract: str,

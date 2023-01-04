@@ -1,7 +1,9 @@
 import os
 
-from secfsdstools._0_utils.fileutils import write_content_to_zip, read_content_from_zip, read_df_from_file_in_zip
 import numpy as np
+
+from secfsdstools._0_utils.fileutils import write_content_to_zip, read_content_from_zip, read_df_from_file_in_zip, get_filenames_in_directory
+
 CURRENT_DIR, CURRENT_FILE = os.path.split(__file__)
 
 
@@ -40,3 +42,15 @@ def test_read_df_from_file_in_zip():
     cik_as_str_df = read_df_from_file_in_zip(zip_file=zip_file, file_to_extract=file, usecols=['adsh', 'cik'])
     assert len(cik_as_str_df) == 439
     assert len(cik_as_str_df.columns) == 2
+
+
+def test_get_filenames_in_directory(tmp_path):
+    list_of_zips = get_filenames_in_directory(os.path.join(tmp_path, '*.zip'))
+    assert len(list_of_zips) == 0
+
+    f = open(tmp_path / 'demo.zip', 'w')
+    f.close()
+
+    list_of_zips = get_filenames_in_directory(os.path.join(tmp_path, '*.zip'))
+    assert len(list_of_zips) == 1
+    assert list_of_zips[0] == 'demo.zip'

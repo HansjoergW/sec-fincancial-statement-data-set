@@ -28,7 +28,7 @@ def update(config: Configuration = None):
     secdownloader.download()
 
     # create index of reports
-    indexer = ReportZipIndexer(db_dir=config.db_dir, secdownloader=secdownloader)
+    indexer = ReportZipIndexer(db_dir=config.db_dir, zip_dir=config.download_dir)
     indexer.process()
 
 

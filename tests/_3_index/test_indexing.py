@@ -1,25 +1,24 @@
 import os
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 import pytest
 
 from secfsdstools._1_setup.setupdb import DbCreator
-from secfsdstools._2_download.secdownloading import SecZipDownloader
+from secfsdstools._0_utils.fileutils import get_filenames_in_directory
 from secfsdstools._3_index.indexdataaccess import IndexFileProcessingState
 from secfsdstools._3_index.indexing import ReportZipIndexer
 
 
 @pytest.fixture
 def reportindexer(tmp_path):
-    seczipdownloader = SecZipDownloader(zip_dir=str(tmp_path), urldownloader=None)
-    seczipdownloader.get_downloaded_list = MagicMock(return_value=['file1', 'file2'])
     DbCreator(db_dir=str(tmp_path)).create_db()
-    return ReportZipIndexer(db_dir=str(tmp_path), secdownloader=seczipdownloader)
+    return ReportZipIndexer(db_dir=str(tmp_path), zip_dir=str(tmp_path))
 
 
 def test_nothing_indexed(reportindexer):
-    not_indexed = reportindexer._calculate_not_indexed()
-    assert len(set(not_indexed) - {'file1', 'file2'}) == 0
+    with patch('secfsdstools._3_index.indexing.get_filenames_in_directory', return_value = ['file1', 'file2']):
+        not_indexed = reportindexer._calculate_not_indexed()
+        assert len(set(not_indexed) - {'file1', 'file2'}) == 0
 
 
 def test_one_indexed(reportindexer):

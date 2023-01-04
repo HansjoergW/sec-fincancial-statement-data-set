@@ -1,9 +1,9 @@
 """Indexing the downloaded to data"""
+import os
 from datetime import datetime, timezone
 from typing import List
 
-from secfsdstools._0_utils.fileutils import read_df_from_file_in_zip
-from secfsdstools._2_download.secdownloading import SecZipDownloader
+from secfsdstools._0_utils.fileutils import read_df_from_file_in_zip, get_filenames_in_directory
 from secfsdstools._3_index.indexdataaccess import DBIndexingAccessor, IndexFileProcessingState
 
 
@@ -13,12 +13,9 @@ class ReportZipIndexer:
     """
     PROCESSED_STR: str = 'processed'
 
-    # todo: Dependency to secdownloader is not really a good thing
-
-    def __init__(self, db_dir: str, secdownloader: SecZipDownloader):
+    def __init__(self, db_dir: str, zip_dir: str):
         self.dbaccessor = DBIndexingAccessor(db_dir=db_dir)
-        self.secdownloader = secdownloader
-        self.zip_dir = self.secdownloader.zip_dir
+        self.zip_dir = zip_dir
 
         # get current datetime in UTC
         utc_dt = datetime.now(timezone.utc)
@@ -28,7 +25,7 @@ class ReportZipIndexer:
         self.process_time = iso_date
 
     def _calculate_not_indexed(self) -> List[str]:
-        downloaded_zipfiles = self.secdownloader.get_downloaded_list()
+        downloaded_zipfiles = get_filenames_in_directory(os.path.join(self.zip_dir, "*.zip"))
         processed_indexfiles_df = self.dbaccessor.read_all_indexfileprocessing_df()
 
         indexed_df = processed_indexfiles_df[processed_indexfiles_df.status == self.PROCESSED_STR]

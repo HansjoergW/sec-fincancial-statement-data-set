@@ -63,10 +63,24 @@ class ReportReader:
         self.num_df = self._read_df_from_raw(NUM_TXT, NUM_COLS)
         self.pre_df = self._read_df_from_raw(PRE_TXT, PRE_COLS)
 
+    def get_raw_num_data(self) -> pd.DataFrame:
+        """
+        returns a copy of the raw dataframe for the num.txt file of this report
+        :return: pd.DataFrame
+        """
+        return self.num_df.copy()
+
+    def get_raw_pre_data(self) -> pd.DataFrame:
+        """
+        returns a copy of the raw dataframe for the pre.txt file of this report
+        :return: pd.DataFrame
+        """
+        return self.pre_df.copy()
+
     def financial_statements_for_dates_and_tags(self,
-                                        dates: Optional[List[int]] = None,
-                                        tags: Optional[List[str]] = None,
-                                        ) -> pd.DataFrame:
+                                                dates: Optional[List[int]] = None,
+                                                tags: Optional[List[str]] = None,
+                                                ) -> pd.DataFrame:
         """
         creates the financial statements dataset by merging the pre and num
          sets together. It also filters out only the ddates that are
@@ -74,7 +88,7 @@ class ReportReader:
         Note: the dates are int in the form YYYYMMDD
         :param dates: list with ddates to filter for
         :param tags: list with tags to consider
-        :return:
+        :return: pd.DataFrame
         """
 
         num_df_filtered_for_dates = self.num_df
@@ -96,3 +110,24 @@ class ReportReader:
         num_pre_merged_pivot_df.sort_values(['stmt', 'report', 'line', 'inpth'], inplace=True)
         num_pre_merged_pivot_df.reset_index(drop=False, inplace=True)
         return num_pre_merged_pivot_df
+
+    def financial_statements_for_period(self, tags: Optional[List[str]] = None, ) -> pd.DataFrame:
+        """
+        returns the merged and pivoted table for the of the num-
+         and predata for the current date only
+        :param tags: List with tags to include or None
+        :return:
+        """
+        return self.financial_statements_for_dates_and_tags(dates=[self.report.period], tags=tags)
+
+    def financial_statements_for_period_and_previous_period(
+            self, tags: Optional[List[str]] = None, ) -> pd.DataFrame:
+        """
+        returns the merged and pivoted table for the of the num-
+         and predata for the current and the date
+         of the same period a year ago.
+        :param tags: List with tags to include or None
+        :return: pd.DataFrame
+        """
+        return self.financial_statements_for_dates_and_tags(
+            dates=[self.report.period, self.report.period - 10_000], tags=tags)

@@ -25,18 +25,25 @@ def test_read_raw_data(reportreader):
     assert reportreader.pre_df.shape == (100, 10)
 
 
-def test_financial_statements_for_dates(reportreader):
+def test_financial_statements_for_dates_and_tags(reportreader):
     reportreader._read_raw_data()
 
     # read only for the actual period
-    fin_stmts_df = reportreader._financial_statements_for_dates([reportreader.report.period])
+    fin_stmts_df = reportreader.financial_statements_for_dates_and_tags(dates=[reportreader.report.period])
 
     assert fin_stmts_df.shape == (74, 10)
 
     # read for the actual period and the previous period
     # 20091231 and 20081231 (sine the dates are ints, we just can remove 10_000 to get the last year
-    fin_stmts_df = reportreader._financial_statements_for_dates([reportreader.report.period,
+    fin_stmts_df = reportreader.financial_statements_for_dates_and_tags([reportreader.report.period,
                                                                  reportreader.report.period - 10_000])
 
     assert fin_stmts_df.shape == (74, 11)
+
+
+    # read only for the actual period
+    fin_stmts_df = reportreader.financial_statements_for_dates_and_tags(
+        tags=['Assets'])
+    assert fin_stmts_df.shape == (1, 11)
+
 

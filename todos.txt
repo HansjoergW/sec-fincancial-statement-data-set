@@ -7,9 +7,14 @@ Config
 
 - index for name zu cik, einfach namenssuche -> oder dann Info wie mit sqldb file umzugehen ist?
 - build reports / read access
+  -> single report
+    -> read fin statement for period, for period and previous year
+    -> statistics? data for which dates? positions in current period
+    -> which statements are present
+  -> searching company
+  -> all reports by company, by date, type
 
-- export excel
-- cli
+
 
 
 
@@ -27,4 +32,7 @@ Ideen
 
 - is sehr langsam, warum?
   download in parallel / integrate parallelExecution ParallelExecution.py (von sec_processing)
+
+- export excel
+- cli
 

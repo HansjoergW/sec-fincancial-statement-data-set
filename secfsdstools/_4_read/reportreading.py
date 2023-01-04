@@ -42,7 +42,7 @@ class ReportReader:
         self.num_df: Optional[pd.DataFrame]
         self.pre_df: Optional[pd.DataFrame]
 
-        self.adsh_pattern = re.compile(f"^{report.adsh}.*$", re.MULTILINE)
+        self.adsh_pattern = re.compile(f'^{report.adsh}.*$', re.MULTILINE)
 
     def _read_df_from_raw(self, file_in_zip: str, column_names: List[str]) \
             -> pd.DataFrame:
@@ -63,15 +63,35 @@ class ReportReader:
         self.num_df = self._read_df_from_raw(NUM_TXT, NUM_COLS)
         self.pre_df = self._read_df_from_raw(PRE_TXT, PRE_COLS)
 
-    def _financial_statements_for_dates(self, dates: List[int]) -> pd.DataFrame:
-        num_df_filtered_for_dates = self.num_df[self.num_df.ddate.isin(dates)]
+    def financial_statements_for_dates_and_tags(self,
+                                        dates: Optional[List[int]] = None,
+                                        tags: Optional[List[str]] = None,
+                                        ) -> pd.DataFrame:
+        """
+        creates the financial statements dataset by merging the pre and num
+         sets together. It also filters out only the ddates that are
+         inside the list.
+        Note: the dates are int in the form YYYYMMDD
+        :param dates: list with ddates to filter for
+        :param tags: list with tags to consider
+        :return:
+        """
+
+        num_df_filtered_for_dates = self.num_df
+        if dates:
+            num_df_filtered_for_dates = self.num_df[self.num_df.ddate.isin(dates)]
+
+        pre_filtered_for_tags = self.pre_df
+        if tags:
+            pre_filtered_for_tags = self.pre_df[self.pre_df.tag.isin(tags)]
+
         num_pre_merged_df = pd.merge(num_df_filtered_for_dates,
-                                     self.pre_df,
+                                     pre_filtered_for_tags,
                                      on=['adsh', 'tag', 'version'])
         num_pre_merged_pivot_df = num_pre_merged_df.pivot_table(
-            index=["adsh", "tag", "version", "stmt", "report", "line", "uom", "negating", "inpth"],
-            columns="ddate",
-            values="value")
+            index=['adsh', 'tag', 'version', 'stmt', 'report', 'line', 'uom', 'negating', 'inpth'],
+            columns='ddate',
+            values='value')
         num_pre_merged_pivot_df.rename_axis(None, axis=1, inplace=True)
         num_pre_merged_pivot_df.sort_values(['stmt', 'report', 'line', 'inpth'], inplace=True)
         num_pre_merged_pivot_df.reset_index(drop=False, inplace=True)

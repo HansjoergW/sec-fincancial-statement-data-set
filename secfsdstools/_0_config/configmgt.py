@@ -1,12 +1,13 @@
 """
-Read configuration
+Manage the configuration
 """
 import configparser
 import logging
 import os
 from dataclasses import dataclass
 
-DEFAULT_CONFIG_FILE: str = 'secsdfstools.cfg'
+DEFAULT_CONFIG_FILE: str = '.secfsdstools.cfg'
+SECFSDSTOOLS_ENV_VAR_NAME: str = 'SECFSDSTOOLS_CFG'
 
 LOGGER = logging.getLogger(__name__)
 
@@ -16,8 +17,14 @@ class Configuration:
     """ Basic configuration settings """
     download_dir: str
     db_dir: str
-    create_index: bool
     user_agent_email: str
+
+
+DEFAULT_CONFIGURATION = Configuration(
+    download_dir=os.path.join(os.path.expanduser('~'), '/data/dld'),
+    db_dir=os.path.join(os.path.expanduser('~'), './data/db'),
+    user_agent_email='your.email@goeshere.com'
+)
 
 
 class ConfigurationManager:
@@ -26,44 +33,67 @@ class ConfigurationManager:
     If the file does not exist, it will create one in the current directory
     """
 
-    def __init__(self, filename: str = DEFAULT_CONFIG_FILE):
-        self.filename = filename
-        self.config = None
-        if os.path.exists(filename):
-            LOGGER.info('Get configuration from %s', self.filename)
-            self.config = self.read_configuration()
-        else:
-            self.config = Configuration(download_dir='./dld',
-                                        db_dir='./db',
-                                        create_index=True,
-                                        user_agent_email='your.email@goeshere.com')
-
-            LOGGER.info('Configuration file does not exist - create it as %s', self.filename)
-            self.write_configuration(self.config)
-
-    def get_configuration(self) -> Configuration:
+    @staticmethod
+    def read_config_file() -> Configuration:
         """
-        Returns the configuration
-        :return: Configuration class isntance
+        reads the configuration object:
+        1. checks there is a set environment variable
+        2. checks if it is at the current working  directory
+        3. checks if it is in the user home
+        :return: Configuration instance
         """
-        return self.config
+        env_config_file = os.getenv(SECFSDSTOOLS_ENV_VAR_NAME)
+        if env_config_file:
+            LOGGER.info('read configuration from %s', env_config_file)
+            if not os.path.isfile(env_config_file):
+                LOGGER.error('environment variable %s was set.', SECFSDSTOOLS_ENV_VAR_NAME)
+                LOGGER.error('But config file is not present, creating it ...')
+                conf_dir, _ = os.path.split(env_config_file)
+                os.makedirs(conf_dir, exist_ok=True)
+                ConfigurationManager._write_configuration(env_config_file, DEFAULT_CONFIGURATION)
+                LOGGER.error('config file created at %s.', env_config_file)
+                LOGGER.error('please check the content ant then restart')
+                raise ValueError(
+                    f'environment variable {SECFSDSTOOLS_ENV_VAR_NAME}' +
+                    ' was set but config file was not present. ' +
+                    f'It was created at location {env_config_file}. Please check it and rerun')
 
-    def read_configuration(self) -> Configuration:
+            return ConfigurationManager._read_configuration(env_config_file)
+
+        current_cfg_file_path = os.path.join(os.getcwd(), DEFAULT_CONFIG_FILE)
+        if os.path.isfile(current_cfg_file_path):
+            LOGGER.info('found config file at %s', current_cfg_file_path)
+            return ConfigurationManager._read_configuration(current_cfg_file_path)
+
+            # check if file exists at home directory
+        home_cfg_file_path = os.path.join(os.path.expanduser('~'), DEFAULT_CONFIG_FILE)
+        if not os.path.isfile(home_cfg_file_path):
+            LOGGER.error('found no config file at home directory %s', home_cfg_file_path)
+            ConfigurationManager._write_configuration(home_cfg_file_path, DEFAULT_CONFIGURATION)
+            LOGGER.error('config file created at %s. please check the content ant then restart',
+                         home_cfg_file_path)
+            raise ValueError(
+                'Config file not found at user home directory. ' +
+                f'It was created at location {home_cfg_file_path}. Please check it and rerun')
+        return ConfigurationManager._read_configuration(home_cfg_file_path)
+
+    @staticmethod
+    def _read_configuration(file_path: str) -> Configuration:
         """
         Read the configuration file.
         :return: Configuration data class
         """
         config = configparser.ConfigParser()
-        config.read(self.filename)
+        config.read(file_path)
 
         return Configuration(
-            download_dir=config['DEFAULT'].get('DownloadDirectory', './dld'),
-            db_dir=config['DEFAULT'].get('DbDirectory', './db'),
-            create_index=config['DEFAULT'].getboolean('CreateIndex', True),
-            user_agent_email=config['DEFAULT'].get('UserAgentEmail', 'your.email@goeshere.com')
+            download_dir=config['DEFAULT'].get('DownloadDirectory', ),
+            db_dir=config['DEFAULT'].get('DbDirectory'),
+            user_agent_email=config['DEFAULT'].get('UserAgentEmail')
         )
 
-    def write_configuration(self, configuration: Configuration):
+    @staticmethod
+    def _write_configuration(file_path: str, configuration: Configuration):
         """
         Write the configuration to the configured file.
         :param configuration: Configuration instance
@@ -71,7 +101,6 @@ class ConfigurationManager:
         config = configparser.ConfigParser()
         config['DEFAULT'] = {'DownloadDirectory': configuration.download_dir,
                              'DbDirectory': configuration.db_dir,
-                             'CreateIndex': configuration.create_index,
                              'UserAgentEmail': configuration.user_agent_email}
-        with open(self.filename, 'w', encoding="utf8") as configfile:
+        with open(file_path, 'w', encoding="utf8") as configfile:
             config.write(configfile)

@@ -3,3 +3,4 @@ pylint~=2.15
 pandas~=1.5
 requests~=2.28
 pathos~=0.3
+coverage~=7.0

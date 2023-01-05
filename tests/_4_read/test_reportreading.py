@@ -14,8 +14,8 @@ PATH_TO_ZIP = CURRENT_DIR + '/testdata/'
 def reportreader():
     report = IndexReport(adsh=APPLE_ADSH_10Q_2010_Q1, cik=320193, name='APPLE INC',
                          form='10-Q', filed=20100125, period=20091231, originFile='2010q1.zip',
-                         originFileType='quarter', fullPath='', url='')
-    yield ReportReader(report=report, zip_dir=PATH_TO_ZIP)
+                         originFileType='quarter', fullPath=PATH_TO_ZIP + '2010q1.zip', url='')
+    yield ReportReader(report=report)
 
 
 def test_read_raw_data(reportreader):
@@ -36,10 +36,9 @@ def test_financial_statements_for_dates_and_tags(reportreader):
     # read for the actual period and the previous period
     # 20091231 and 20081231 (sine the dates are ints, we just can remove 10_000 to get the last year
     fin_stmts_df = reportreader.financial_statements_for_dates_and_tags([reportreader.report.period,
-                                                                 reportreader.report.period - 10_000])
+                                                                         reportreader.report.period - 10_000])
 
     assert fin_stmts_df.shape == (74, 11)
-
 
     # read only for the actual period
     fin_stmts_df = reportreader.financial_statements_for_dates_and_tags(
@@ -47,3 +46,10 @@ def test_financial_statements_for_dates_and_tags(reportreader):
     assert fin_stmts_df.shape == (1, 11)
 
 
+def test_statistics(reportreader):
+    reportreader._read_raw_data()
+    stats = reportreader.statistics()
+
+    assert stats.num_entries == 145
+    assert stats.pre_entries == 100
+    assert len(set(stats.list_of_statements) - {'BS', 'CF', 'CP', 'IS'}) == 0

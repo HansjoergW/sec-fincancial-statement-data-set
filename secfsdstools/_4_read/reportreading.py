@@ -2,11 +2,12 @@
 reading and merging the data for a single report.
 """
 
-import os.path
 import re
+from dataclasses import dataclass
 from io import StringIO
-from typing import Optional, List
+from typing import Optional, List, Dict
 
+import numpy as np
 import pandas as pd
 
 from secfsdstools._0_utils.fileutils import read_content_from_file_in_zip
@@ -18,6 +19,18 @@ PRE_TXT = "pre.txt"
 NUM_COLS = ['adsh', 'tag', 'version', 'coreg', 'ddate', 'qtrs', 'uom', 'value', 'footnote']
 PRE_COLS = ['adsh', 'report', 'line', 'stmt', 'inpth', 'rfile',
             'tag', 'version', 'plabel', 'negating']
+
+
+@dataclass
+class BasicReportStats:
+    """
+    Contains simple statistics of a report.
+    """
+    num_entries: int
+    pre_entries: int
+    facts_per_date: Dict[int, int]
+    list_of_statements: List[str]
+    tags_per_statement: Dict[str, List[str]]
 
 
 def match_group_iter(match_iter):
@@ -36,9 +49,8 @@ class ReportReader:
     to prepare and aggregate the raw data
     """
 
-    def __init__(self, report: IndexReport, zip_dir: str):
+    def __init__(self, report: IndexReport):
         self.report = report
-        self.zip_file_path = os.path.join(zip_dir, report.originFile)
         self.num_df: Optional[pd.DataFrame]
         self.pre_df: Optional[pd.DataFrame]
 
@@ -51,7 +63,7 @@ class ReportReader:
         uses re to first filter only the rows that belong to the report
         and only then actually create the df
         """
-        content = read_content_from_file_in_zip(self.zip_file_path, file_in_zip)
+        content = read_content_from_file_in_zip(self.report.fullPath, file_in_zip)
         lines = "\n".join(match_group_iter(self.adsh_pattern.finditer(content)))
         return pd.read_csv(StringIO(lines), sep="\t", header=None, names=column_names)
 
@@ -133,3 +145,29 @@ class ReportReader:
         # note: -10_000 selects the last year, since int values are used for ddate
         return self.financial_statements_for_dates_and_tags(
             dates=[self.report.period, self.report.period - 10_000], tags=tags)
+
+    def statistics(self) -> BasicReportStats:
+        """
+        calculate a few simple statistics of a report.
+        - number of entries in the num-file
+        - number of entries in the pre-file
+        - number of facts per ddate (in num file)
+        - list of different statements in the pre file
+        - list of tags per statement
+
+        :return: BasicReportsStats instance
+        """
+        num_entries = len(self.num_df)
+        pre_entries = len(self.pre_df)
+        facts_per_date: Dict[int, int] = self.num_df.ddate.value_counts().to_dict()
+        list_of_statements: List[str] = self.pre_df.stmt.unique().tolist()
+        tags_per_statement_raw: Dict[str, np.array] = \
+            self.pre_df[['stmt', 'tag']].groupby('stmt')['tag'].unique().to_dict()
+        tags_per_statement: Dict[str, List[str]] = \
+            {k: v.tolist() for k, v in tags_per_statement_raw.items()}
+
+        return BasicReportStats(num_entries=num_entries,
+                                pre_entries=pre_entries,
+                                facts_per_date=facts_per_date,
+                                list_of_statements=list_of_statements,
+                                tags_per_statement=tags_per_statement)

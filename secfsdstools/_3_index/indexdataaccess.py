@@ -1,6 +1,6 @@
 """Database logic to hanlde the indexing"""
 from dataclasses import dataclass
-from typing import List
+from typing import List, Optional
 
 import pandas as pd
 
@@ -16,7 +16,7 @@ class IndexReport:
     form: str
     filed: int
     period: int
-    fullPath: str # pylint: disable=C0103
+    fullPath: str  # pylint: disable=C0103
     originFile: str  # pylint: disable=C0103
     originFileType: str  # pylint: disable=C0103
     url: str
@@ -94,3 +94,56 @@ class DBIndexingAccessor(DB):
         """
         sql = self.create_insert_statement_for_dataclass(self.INDEX_PROCESSING_TABLE, data)
         self.execute_single(sql)
+
+    def find_latest_company_report(self, cik: int) -> IndexReport:
+        """
+        returns the latest report of a company
+        :param cik: the cik of the company
+        :return:IndexReport of the latest report of the company
+        """
+
+        sql = f'SELECT * FROM {self.INDEX_REPORTS_TABLE} WHERE cik = {cik} ORDER BY period DESC'
+        return self.execute_fetchall_typed(sql, IndexReport)[0]
+
+    def read_index_report_for_adsh(self, adsh: str) -> IndexReport:
+        """
+        returns the IndexReport instance for the provided adsh
+        :param adsh: adsh
+        :return: the report for the provided adsh
+        """
+        sql = f'SELECT * FROM {self.INDEX_REPORTS_TABLE} WHERE adsh = {adsh}'
+        return self.execute_fetchall_typed(sql, IndexReport)[0]
+
+    def read_index_reports_for_cik(self, cik: int, forms: Optional[List[str]]) -> List[IndexReport]:
+        """
+        gets all reports as IndexReport instances for a company identified by its cik.
+        if forms is not set, all forms are returned, otherwise forms is a list of the
+         forms that should be returned
+        :param cik: cik of the company
+        :param forms: list of the forms to be returend, like ['10-Q', '10-K']
+        :return:
+        """
+        sql = f'SELECT * FROM {self.INDEX_REPORTS_TABLE} WHERE cik = {cik}'
+        if forms is not None:
+            forms_str = ", ".join(["'" + x.upper() + "'" for x in forms])
+            sql = sql + f' and form in ({forms_str}) '
+        sql = sql + ' ORDER BY period DESC'
+
+        return self.execute_fetchall_typed(sql, IndexReport)
+
+    def read_index_reports_for_cik_df(self, cik: int, forms: Optional[List[str]]) -> pd.DataFrame:
+        """
+        gets all reports as IndexReport instances for a company identified by its cik.
+        if forms is not set, all forms are returned, otherwise forms is a list of the
+         forms that should be returned
+        :param cik: cik of the company
+        :param forms: list of the forms to be returend, like ['10-Q', '10-K']
+        :return:
+        """
+        sql = f'SELECT * FROM {self.INDEX_REPORTS_TABLE} WHERE cik = {cik}'
+        if forms is not None:
+            forms_str = ", ".join(["'" + x.upper() + "'" for x in forms])
+            sql = sql + f' and form in ({forms_str}) '
+        sql = sql + ' ORDER BY period DESC'
+
+        return self.execute_read_as_df(sql)

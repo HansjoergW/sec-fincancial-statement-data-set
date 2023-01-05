@@ -10,8 +10,9 @@ from typing import Optional, List, Dict
 import numpy as np
 import pandas as pd
 
+from secfsdstools._0_config.configmgt import Configuration, ConfigurationManager
 from secfsdstools._0_utils.fileutils import read_content_from_file_in_zip
-from secfsdstools._3_index.indexdataaccess import IndexReport
+from secfsdstools._3_index.indexdataaccess import IndexReport, DBIndexingAccessor
 
 NUM_TXT = "num.txt"
 PRE_TXT = "pre.txt"
@@ -48,6 +49,21 @@ class ReportReader:
     reading the data for a single report. also provides several convenient methods
     to prepare and aggregate the raw data
     """
+
+    @classmethod
+    def get_report_by_adsh(cls, adsh: str, configuration: Optional[Configuration] = None):
+        """
+        creates the ReportReader instance for a certain adsh.
+        if no configuration is passed, it reads the config from the config file
+        :param ads: ads
+        :param configuration: Optional configuration object
+        :return: instance of Company Reader
+        """
+        if configuration is None:
+            configuration = ConfigurationManager.read_config_file()
+
+        dbaccessor = DBIndexingAccessor(db_dir=configuration.db_dir)
+        return ReportReader(dbaccessor.read_index_report_for_adsh(adsh=adsh))
 
     def __init__(self, report: IndexReport):
         self.report = report

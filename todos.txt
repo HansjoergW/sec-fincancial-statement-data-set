@@ -10,9 +10,9 @@ Config
   -> single report
     -> read fin statement for period, for period and previous year
     -> statistics? data for which dates? positions in current period
-    -> which statements are present
+    -> which statements are present, which tags are present
   -> searching company
-  -> all reports by company, by date, type
+  -> all reports by company, by date, form
 
 
 

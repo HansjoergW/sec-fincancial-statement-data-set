@@ -6,8 +6,10 @@ CREATE TABLE IF NOT EXISTS index_reports
     form,
     filed,
     period,
+    fullPath,
     originFile,
     originFileType,
+    url,
     PRIMARY KEY (adsh, originFile)
 );
 

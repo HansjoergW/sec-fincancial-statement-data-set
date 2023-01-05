@@ -16,7 +16,7 @@ def indexaccessor(tmp_path):
 
 def test_indexreports(indexaccessor):
     report = IndexReport(adsh='abc123', cik=1, form='10-K', name='bla', filed=20220130, period=20211231,
-                         originFile='2022q1.zip', originFileType='quarter')
+                         originFile='2022q1.zip', originFileType='quarter', fullPath='', url='')
 
     indexaccessor.insert_indexreport(data=report)
 

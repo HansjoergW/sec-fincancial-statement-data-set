@@ -6,6 +6,8 @@ from typing import List
 from secfsdstools._0_utils.fileutils import read_df_from_file_in_zip, get_filenames_in_directory
 from secfsdstools._3_index.indexdataaccess import DBIndexingAccessor, IndexFileProcessingState
 
+URL_PREFIX: str = 'https://www.sec.gov/Archives/edgar/data/'
+
 
 class ReportZipIndexer:
     """
@@ -35,27 +37,33 @@ class ReportZipIndexer:
         return list(not_indexed)
 
     def _index_file(self, file_name: str):
-        full_path = self.zip_dir + file_name
+        path = self.zip_dir + file_name
+        full_path = os.path.realpath(path)
 
         # todo: check if table already contains entries
         #  will fail at the moment, since the the primary key is defined
-        sub_df = read_df_from_file_in_zip(zip_file=full_path, file_to_extract="sub.txt")
-        sub_selected_df = sub_df[['adsh',
-                                  'cik',
-                                  'name',
-                                  'form',
-                                  'filed',
-                                  'period']].copy()
+        sub_df = read_df_from_file_in_zip(zip_file=full_path, file_to_extract="sub.txt",
+                                          usecols=['adsh',
+                                                   'cik',
+                                                   'name',
+                                                   'form',
+                                                   'filed',
+                                                   'period'])
 
-        sub_selected_df['originFile'] = file_name
-        sub_selected_df['originFileType'] = 'quarter'
-        self.dbaccessor.append_indexreport_df(sub_selected_df)
+        sub_df['fullPath'] = full_path
+        sub_df['originFile'] = file_name
+        sub_df['originFileType'] = 'quarter'
+        sub_df['url'] = URL_PREFIX
+        sub_df['url'] = sub_df['url'] + sub_df['cik'].astype(str) + '/' + \
+                        sub_df['adsh'].str.replace('-', '') + '/' + sub_df['adsh'] + '-index.htm'
+
+        self.dbaccessor.append_indexreport_df(sub_df)
         self.dbaccessor.insert_indexfileprocessing(
             IndexFileProcessingState(
                 fileName=file_name,
                 fullPath=full_path,
                 status=self.PROCESSED_STR,
-                entries=len(sub_selected_df),
+                entries=len(sub_df),
                 processTime=self.process_time
             ))
 

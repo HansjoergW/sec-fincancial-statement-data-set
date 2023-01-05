@@ -129,5 +129,7 @@ class ReportReader:
         :param tags: List with tags to include or None
         :return: pd.DataFrame
         """
+
+        # note: -10_000 selects the last year, since int values are used for ddate
         return self.financial_statements_for_dates_and_tags(
             dates=[self.report.period, self.report.period - 10_000], tags=tags)

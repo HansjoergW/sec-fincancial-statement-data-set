@@ -10,14 +10,16 @@ from secfsdstools._0_utils.dbutils import DB
 @dataclass
 class IndexReport:
     """ dataclass for index_reports table"""
-    adsh: str  # pylint: disable=C0103
+    adsh: str
     cik: int
     name: str
     form: str
     filed: int
     period: int
+    fullPath: str # pylint: disable=C0103
     originFile: str  # pylint: disable=C0103
     originFileType: str  # pylint: disable=C0103
+    url: str
 
 
 @dataclass

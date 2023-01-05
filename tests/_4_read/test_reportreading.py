@@ -14,7 +14,7 @@ PATH_TO_ZIP = CURRENT_DIR + '/testdata/'
 def reportreader():
     report = IndexReport(adsh=APPLE_ADSH_10Q_2010_Q1, cik=320193, name='APPLE INC',
                          form='10-Q', filed=20100125, period=20091231, originFile='2010q1.zip',
-                         originFileType='quarter')
+                         originFileType='quarter', fullPath='', url='')
     yield ReportReader(report=report, zip_dir=PATH_TO_ZIP)
 
 

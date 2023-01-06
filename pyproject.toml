@@ -4,10 +4,11 @@ build-backend = "hatchling.build"
 
 [project]
 name = "secfsdstools"
-version = "0.1.0"
+version = "0.1.1"
 authors = [
     { name="Hansjoerg Wingeier", email="hansjoerg.wingeier@gmail.com" },
 ]
+
 description = "A few python tools to analyze the SEC.gov financial statements data sets (https://www.sec.gov/dera/data/financial-statement-data-sets)"
 readme = "README.md"
 requires-python = ">=3.8"
@@ -18,6 +19,20 @@ classifiers = [
     "Operating System :: OS Independent",
     "Topic :: Office/Business :: Financial",
     "Topic :: Office/Business :: Financial :: Investment"
+]
+
+keywords=[
+    "SEC.GOV",
+    "SEC EDGAR",
+    "SEC Filing",
+    "EDGAR",
+    "Finance",
+    "CIK",
+    "10-Q",
+    "10-K",
+    "8-K",
+    "Financial Statements",
+    "Financial Statements Dataset"
 ]
 
 [project.urls]

@@ -5,6 +5,28 @@ from the U.S. securities and exchange commission (sec.gov).
 
 For a detail description of the content and the structure of the dataset, see https://www.sec.gov/files/aqfs.pdf.
 
+> The SEC financial statement datasets contain financial information that companies are required to disclose to the US
+> Securities and Exchange Commission (SEC). These financial statements include the balance sheet, income statement,
+> statement of cash flows, and statement of stockholders' equity. The datasets also include footnotes and other
+> disclosures that provide additional information about a company's financial position and performance. The financial
+> statements are typically presented in a standardized format, making it easier to compare the financial performance of
+> different companies. The datasets are useful for a wide range of purposes, including financial analysis, credit
+> analysis, and investment research.
+>
+> *chat.openai.com*
+
+# TL;DR
+
+The SEC releases quarterly zip files, each containing four CSV files with numerical data from all financial reports
+filed within that quarter.
+
+However, accessing data from the past 12 years can be time-consuming due to the large amount
+of data - over 120 million data points.
+
+This library simplifies the process of working with this data and provides a
+convenient way to extract information from the primary financial statements - the balance sheet, income statement, and
+statement of cash flows.
+
 # Installation
 
 The project is published on pypi.org. Simply use pip install to install it:
@@ -13,15 +35,25 @@ The project is published on pypi.org. Simply use pip install to install it:
 pip install secfsdstools
 ```
 
+The library has been tested for python version 3.8, 3.9, and 3.10
+
 If you want to contribute, just clone the project and use a python 3.8 environment.
 The dependencies are defined in the requirements.txt file.
 
 # Principles
 
-In order to be able to work with the data, they first have to be downloaded and
-indexed. The index is created in a simple sqlite db.
+To improve efficiency, the zip files are downloaded and indexed using a SQLite database table. 
+The index table contains information on all filed reports, totaling over 500,000. 
+
+Using the index allows for direct extraction of data for a specific report from the appropriate zip file, 
+reducing the need to open and search through each zip file. 
+
+The library is designed to have a low memory footprint, only parsing and reading the data for a specific
+report into pandas dataframe tables
 
 # Configuration
+
+
 
 In order to do that, a configuration file has to be crated.
 The easiest thing to do is to create the file ".secfsdstools.cfg" within your home directory.
@@ -162,7 +194,7 @@ reproduce the content of the primary financial statements of a report (BalanceSh
 (Note: the code in this chapter is available in the module `secfsdstools._9_examples.examplecreportreading`)
 
 The ReportReader class enables as to access the real data of a report. It provides two class methods which
-help to create a ReportReader either by the unique report id "adsh" or by an instance of IndexReport 
+help to create a ReportReader either by the unique report id "adsh" or by an instance of IndexReport
 (which is returned by one of the methods shown in the last section).
 
 in order to create an instance based on the adsh itself, you can use the following code:

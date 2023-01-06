@@ -42,25 +42,19 @@ The dependencies are defined in the requirements.txt file.
 
 # Principles
 
-To improve efficiency, the zip files are downloaded and indexed using a SQLite database table. 
-The index table contains information on all filed reports, totaling over 500,000. 
+To improve efficiency, the zip files are downloaded and indexed using a SQLite database table.
+The index table contains information on all filed reports, totaling over 500,000.
 
-Using the index allows for direct extraction of data for a specific report from the appropriate zip file, 
-reducing the need to open and search through each zip file. 
+Using the index allows for direct extraction of data for a specific report from the appropriate zip file,
+reducing the need to open and search through each zip file.
 
 The library is designed to have a low memory footprint, only parsing and reading the data for a specific
 report into pandas dataframe tables
 
 # Configuration
 
-
-
-In order to do that, a configuration file has to be crated.
-The easiest thing to do is to create the file ".secfsdstools.cfg" within your home directory.
-
-As an alternative, you can also create it in your working dir where you plan to launch the code.
-
-The file only has 3 entries:
+To configure the library, create a file called ".secfsdstools.cfg" in your home directory. The file only requires three
+entries:
 
 ```
 [DEFAULT]
@@ -69,18 +63,18 @@ dbdirectory = c:/users/me/secfsdstools/data/db
 useragentemail = your.email@goeshere.com
 ```
 
-The download directory is the place where financial data sets files are downloaded to.
+The download directory is the place where quarterly zip files from the sec.gov are downloaded to.
 The db directory is the directory in which the sqllite db is created.
-When connecting to sec site, you should provide the user-agent email.
+The useragentemail is used in the requests made to the sec.gov website.
 
-Note, if you call `update()` (see the next chapter), without having an existing configuration
-file, it will fail, but it will create one in the user home directory with default settings.
-
-If the default settings are ok, just run `update()` again.
+If you call `update()` without a configuration file, an error message will appear. However, a default config file will
+be
+created in the user home directory. If you are satisfied with the default settings (download directory is set to "<home>
+/secfsdstools/data/dld" and the database directory is set to "secfsdstools/data/db"), you can simply rerun `update()`.
 
 # Downloading the data files from sec and index the content
 
-In order to download the data files and create the indexes, you just need to call
+In order to download the data files and create the index, just call the `update()` method:
 
 ```
 from secfsdstools.update import update
@@ -92,20 +86,16 @@ update()
 
 ## Using the index db with a db browser
 
-Since an index of the reports was created in the previous step, you can also have a look at that.
-All you need to do is to have Database Viewer that supports the sqlite format.
+The index of reports created in the previous step can be viewed using a database viewer that supports the SQLite format,
+such as [DB Browser for SQLite](https://sqlitebrowser.org/).
 
-For instance, I use the [DB Browser for SQLite](https://sqlitebrowser.org/).
+(The location of the SQLite database file is specified in the "dbdirectory" field of the config file, which is set to
+"secfsdstools/data/db" in the default configuration. The database file is named "secfsdstools.db".)
 
-The location of the sqlite database file is configured as "dbdirectory" in the config file.
-If you use the default settings, it will be in your user home directory under "secfsdstools/data/db".
-The name of the file is "secfsdstools.db".
+There are only two tables in the database: "index_reports" and "index_file_processing_state".
 
-There are only two tables within the db: "index_reports" and "index_file_processing_state".
-
-The interesting one of these is "index_reports".
-It gives an overview of all the available reports in the downloaded data and contains the
-following relevant columns:
+The "index_reports" table provides an overview of all available reports in the downloaded
+data and includes the following relevant columns:
 
 * **adsh** <br>The unique id of the report (a string).
 * **cik** <br>The unique id of the company (an int).
@@ -127,21 +117,25 @@ and run `update()` again (see previous chapter).
 ## Getting the data in your python code
 
 ___
-**Note:** The following cod is working only after `update()` method was called and therefore the quarterly zip files
-from the sec.gov have been downloaded and indexed
+**Note:** The following code works only after the `update()` method was successfully executed and the quarterly zip
+files from the sec.gov were downloaded and indexed
 ___
 
-Inside the package `secfsdstools._4_read` are several modules that help to read the detail information from zip files.
+Inside the package `secfsdstools._4_read` are several modules that help to read the detail information from the zip
+files.
 
 ### Module `companyreading`
 
-(Note: the code in this chapter is available in the module `secfsdstools._9_examples.examplecompanyreading`)
+___
+**Note:** the code in this chapter is available in the module `secfsdstools._9_examples.examplecompanyreading`
+___
 
 Inside the module `secfsdstools._4_read.companyreading` the `CompanyReader` class is defined.
-You will need the cik-number to get an instance for a certain company. The cik can be find either by searching in the
+
+You will need the cik-number to get an instance for a certain company. The cik can be found either by searching in the
 index_reports table or on the [sec.gov website](https://www.sec.gov/edgar/searchedgar/companysearch).
 
-The following example shows how to create a `CompanyReader` instance for apple (which has the cik 320193):
+The following example shows how to create a `CompanyReader` instance for apple (which cik is 320193):
 
 ```
 from typing import Dict, List
@@ -157,15 +151,17 @@ if __name__ == '__main__':
 
 Next, you can get the data of the latest filing of the company. This is the content of the entry in the sub.txt file
 inside the zipped data. Besides basic information about the report, it contains also basic information of the company,
-like the address. For details about the fields, see https://www.sec.gov/files/aqfs.pdf.
+like the address.
+
+For details about the fields, see https://www.sec.gov/files/aqfs.pdf.
 
 ```
     latest_filing: Dict[str, str] = apple_reader.get_latest_company_filing()
     print(latest_filing) 
 ```
 
-Now, lets have a look at all the reports apple has filed. There are two methods with either
-return a pandas dataframe, or a list of `secfsdstools._3_index.indexdataaccess.IndexReport` instance
+Now, lets have a look at all the reports apple has filed. There are two methods, one of them returning a pandas
+dataframe and the other a list of `secfsdstools._3_index.indexdataaccess.IndexReport` instances.
 
 ```
     # get basic infos of all the reports the company has filed.
@@ -186,14 +182,16 @@ return a pandas dataframe, or a list of `secfsdstools._3_index.indexdataaccess.I
 This is the same information that you see when you browse the "index_reports" table as described above
 under **Using the index db with a db browser**.
 
-Next, we will see how we can get read the detailed information for a report. For instance, how we can
+Next, we will see how we can read the detailed information for a report. For instance, how you can
 reproduce the content of the primary financial statements of a report (BalanceSheet, IncomeStatement, CashFlow).
 
 ### Module `reportreading`
 
-(Note: the code in this chapter is available in the module `secfsdstools._9_examples.examplecreportreading`)
+___
+**Note:** the code in this chapter is available in the module `secfsdstools._9_examples.examplecreportreading`.
+___
 
-The ReportReader class enables as to access the real data of a report. It provides two class methods which
+The ReportReader class enables us to access the real data of a report. It provides two class methods which
 help to create a ReportReader either by the unique report id "adsh" or by an instance of IndexReport
 (which is returned by one of the methods shown in the last section).
 
@@ -210,7 +208,7 @@ if __name__ == '__main__':
 ```
 
 The data of the report is split up in "pre.txt" and the "num.txt" files inside the zip file.
-In order to get the raw content of them, there are the following methods available which return a pandas dataframe.
+In order to get the raw content of them, there are the following methods available which return a pandas dataframes.
 
 ```
     # reading the raw content of the num and pre files
@@ -218,11 +216,11 @@ In order to get the raw content of them, there are the following methods availab
     raw_num_df = apple_10k_2022_reader.get_raw_num_data()
 ```
 
-However, the data is more useful if the data of these two datasets are merged together, so that
+However, the data is more useful if the data of these two datasets is merged together, so that
 the primary financial statements (BalanceSheet, IncomeStatement, CashFlow) can be reproduced.
 
-There are two methods, which exactly do that. The first one returns only the data of the current period and the second
-also returns the content for the previous year.
+There are two methods, which do exactly do that. The first one returns only the data of the current period and the second
+also returns the content for the previous year. (provided that this information is present in the report)
 
 ```
     # merging the data from num and pre together and produce the primary financial statements

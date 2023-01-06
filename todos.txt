@@ -1,11 +1,17 @@
 Config
 ------
 
+integrate rapid api
+
+
 - build reports / read access
   - index for name zu cik, einfach namenssuche -> oder dann Info wie mit sqldb file umzugehen ist?-
+
 - report reader und company reader erweiterbar -> baseclasse ABC
 
-
+build
+- coverage report
+- api documentation creation
 
 
 
@@ -17,11 +23,6 @@ deploy first release on pypi.org not on test.pypi.org
 
 Ideen
 -----
-- Wie regex nur die richtigen Zeilen lesen und nur diese parsen lassen
-  -> evtl. hat pandas bereits etwas eingebaut?
-
-- Files neu sortieren, bei adsh und index von adsh merken und direkt darauf springen
-
 - is sehr langsam, warum?
   download in parallel / integrate parallelExecution ParallelExecution.py (von sec_processing)
 

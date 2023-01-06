@@ -35,7 +35,7 @@ class CompanyReader:
         self.cik = cik
         self.dbaccessor = dbaccessor
 
-    def get_latest_company_information(self) -> Dict[str, str]:
+    def get_latest_company_filling(self) -> Dict[str, str]:
         """
         returns the latest company information (the content in the sub.txt file)
         :return: Dict with str/str

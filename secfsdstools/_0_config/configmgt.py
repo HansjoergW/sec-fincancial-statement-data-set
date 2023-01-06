@@ -21,8 +21,8 @@ class Configuration:
 
 
 DEFAULT_CONFIGURATION = Configuration(
-    download_dir=os.path.join(os.path.expanduser('~'), '/data/dld'),
-    db_dir=os.path.join(os.path.expanduser('~'), './data/db'),
+    download_dir=os.path.join(os.path.expanduser('~'), 'secfsdstools/data/dld'),
+    db_dir=os.path.join(os.path.expanduser('~'), 'secfsdstools/data/db'),
     user_agent_email='your.email@goeshere.com'
 )
 

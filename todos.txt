@@ -1,11 +1,10 @@
 Config
 ------
 
-- index for name zu cik, einfach namenssuche -> oder dann Info wie mit sqldb file umzugehen ist?
 - build reports / read access
-  -> single report
-  -> searching company
-  -> all reports by company, by date, form
+  - index for name zu cik, einfach namenssuche -> oder dann Info wie mit sqldb file umzugehen ist?-
+- report reader und company reader erweiterbar -> baseclasse ABC
+
 
 
 

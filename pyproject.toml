@@ -3,7 +3,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "secfsdstools_hansjoerg_wingeier"
+name = "secfsdstools"
 version = "0.0.4"
 authors = [
     { name="Hansjoerg Wingeier", email="hansjoerg.wingeier@gmail.com" },

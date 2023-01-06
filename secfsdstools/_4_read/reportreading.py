@@ -67,8 +67,8 @@ class ReportReader:
 
     def __init__(self, report: IndexReport):
         self.report = report
-        self.num_df: Optional[pd.DataFrame]
-        self.pre_df: Optional[pd.DataFrame]
+        self.num_df: Optional[pd.DataFrame] = None
+        self.pre_df: Optional[pd.DataFrame] = None
 
         self.adsh_pattern = re.compile(f'^{report.adsh}.*$', re.MULTILINE)
 
@@ -85,17 +85,19 @@ class ReportReader:
 
     def _read_raw_data(self):
         """
-        read the raw data from the num and pre file into dataframes and store them inside the object
-        :return:
+        read the raw data from the num and pre file into dataframes and store them
+        inside the object. used in a lazy loading manner.
         """
-        self.num_df = self._read_df_from_raw(NUM_TXT, NUM_COLS)
-        self.pre_df = self._read_df_from_raw(PRE_TXT, PRE_COLS)
+        if self.num_df is None:
+            self.num_df = self._read_df_from_raw(NUM_TXT, NUM_COLS)
+            self.pre_df = self._read_df_from_raw(PRE_TXT, PRE_COLS)
 
     def get_raw_num_data(self) -> pd.DataFrame:
         """
         returns a copy of the raw dataframe for the num.txt file of this report
         :return: pd.DataFrame
         """
+        self._read_raw_data() # lazy load the data if necessary
         return self.num_df.copy()
 
     def get_raw_pre_data(self) -> pd.DataFrame:
@@ -103,6 +105,7 @@ class ReportReader:
         returns a copy of the raw dataframe for the pre.txt file of this report
         :return: pd.DataFrame
         """
+        self._read_raw_data() # lazy load the data if necessary
         return self.pre_df.copy()
 
     def financial_statements_for_dates_and_tags(self,
@@ -119,6 +122,7 @@ class ReportReader:
         :return: pd.DataFrame
         """
 
+        self._read_raw_data() # lazy load the data if necessary
         num_df_filtered_for_dates = self.num_df
         if dates:
             num_df_filtered_for_dates = self.num_df[self.num_df.ddate.isin(dates)]
@@ -173,6 +177,8 @@ class ReportReader:
 
         :return: BasicReportsStats instance
         """
+
+        self._read_raw_data() # lazy load the data if necessary
         num_entries = len(self.num_df)
         pre_entries = len(self.pre_df)
         facts_per_date: Dict[int, int] = self.num_df.ddate.value_counts().to_dict()

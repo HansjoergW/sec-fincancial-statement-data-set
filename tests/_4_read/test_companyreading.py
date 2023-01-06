@@ -17,5 +17,5 @@ def test_get_latest_company_information():
         originFile='', originFileType='', url=''
     )
 
-    result = reader.get_latest_company_information()
+    result = reader.get_latest_company_filing()
     print(result)

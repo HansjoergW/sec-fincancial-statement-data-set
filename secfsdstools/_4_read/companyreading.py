@@ -35,7 +35,7 @@ class CompanyReader:
         self.cik = cik
         self.dbaccessor = dbaccessor
 
-    def get_latest_company_filling(self) -> Dict[str, str]:
+    def get_latest_company_filing(self) -> Dict[str, str]:
         """
         returns the latest company information (the content in the sub.txt file)
         :return: Dict with str/str
@@ -53,7 +53,7 @@ class CompanyReader:
             {x[0]: x[1] for x in zip(colnames.split('\t'), values.split('\t'))}
         return value_dict
 
-    def get_all_company_reports(self, forms: Optional[List[str]]) -> List[IndexReport]:
+    def get_all_company_reports(self, forms: Optional[List[str]] = None) -> List[IndexReport]:
         """
         gets all reports as IndexReport instances for a company identified by its cik.
         if forms is not set, all forms are returned, otherwise forms is a list of the
@@ -63,7 +63,7 @@ class CompanyReader:
         """
         return self.dbaccessor.read_index_reports_for_cik(self.cik, forms)
 
-    def get_all_company_reports_df(self, forms: Optional[List[str]]) -> pd.DataFrame:
+    def get_all_company_reports_df(self, forms: Optional[List[str]] = None) -> pd.DataFrame:
         """
         gets all reports as IndexReport instances for a company identified by its cik.
         if forms is not set, all forms are returned, otherwise forms is a list of the

@@ -111,10 +111,11 @@ class DBIndexingAccessor(DB):
         :param adsh: adsh
         :return: the report for the provided adsh
         """
-        sql = f'SELECT * FROM {self.INDEX_REPORTS_TABLE} WHERE adsh = {adsh}'
+        sql = f"SELECT * FROM {self.INDEX_REPORTS_TABLE} WHERE adsh = '{adsh}'"
         return self.execute_fetchall_typed(sql, IndexReport)[0]
 
-    def read_index_reports_for_cik(self, cik: int, forms: Optional[List[str]]) -> List[IndexReport]:
+    def read_index_reports_for_cik(self, cik: int, forms: Optional[List[str]] = None) \
+            -> List[IndexReport]:
         """
         gets all reports as IndexReport instances for a company identified by its cik.
         if forms is not set, all forms are returned, otherwise forms is a list of the
@@ -131,7 +132,8 @@ class DBIndexingAccessor(DB):
 
         return self.execute_fetchall_typed(sql, IndexReport)
 
-    def read_index_reports_for_cik_df(self, cik: int, forms: Optional[List[str]]) -> pd.DataFrame:
+    def read_index_reports_for_cik_df(self, cik: int, forms: Optional[List[str]] = None) \
+            -> pd.DataFrame:
         """
         gets all reports as IndexReport instances for a company identified by its cik.
         if forms is not set, all forms are returned, otherwise forms is a list of the

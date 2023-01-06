@@ -55,15 +55,24 @@ class ReportReader:
         """
         creates the ReportReader instance for a certain adsh.
         if no configuration is passed, it reads the config from the config file
-        :param ads: ads
+        :param adsh: adsh
         :param configuration: Optional configuration object
-        :return: instance of Company Reader
+        :return: instance of ReportReader
         """
         if configuration is None:
             configuration = ConfigurationManager.read_config_file()
 
         dbaccessor = DBIndexingAccessor(db_dir=configuration.db_dir)
         return ReportReader(dbaccessor.read_index_report_for_adsh(adsh=adsh))
+
+    @classmethod
+    def get_report_by_indexreport(cls, index_report: IndexReport):
+        """
+        crates the ReportReader instance based on the IndexReport instance
+        :param index_report:
+        :return:
+        """
+        return ReportReader(index_report)
 
     def __init__(self, report: IndexReport):
         self.report = report
@@ -97,7 +106,7 @@ class ReportReader:
         returns a copy of the raw dataframe for the num.txt file of this report
         :return: pd.DataFrame
         """
-        self._read_raw_data() # lazy load the data if necessary
+        self._read_raw_data()  # lazy load the data if necessary
         return self.num_df.copy()
 
     def get_raw_pre_data(self) -> pd.DataFrame:
@@ -105,7 +114,7 @@ class ReportReader:
         returns a copy of the raw dataframe for the pre.txt file of this report
         :return: pd.DataFrame
         """
-        self._read_raw_data() # lazy load the data if necessary
+        self._read_raw_data()  # lazy load the data if necessary
         return self.pre_df.copy()
 
     def financial_statements_for_dates_and_tags(self,
@@ -122,7 +131,7 @@ class ReportReader:
         :return: pd.DataFrame
         """
 
-        self._read_raw_data() # lazy load the data if necessary
+        self._read_raw_data()  # lazy load the data if necessary
         num_df_filtered_for_dates = self.num_df
         if dates:
             num_df_filtered_for_dates = self.num_df[self.num_df.ddate.isin(dates)]
@@ -178,7 +187,7 @@ class ReportReader:
         :return: BasicReportsStats instance
         """
 
-        self._read_raw_data() # lazy load the data if necessary
+        self._read_raw_data()  # lazy load the data if necessary
         num_entries = len(self.num_df)
         pre_entries = len(self.pre_df)
         facts_per_date: Dict[int, int] = self.num_df.ddate.value_counts().to_dict()

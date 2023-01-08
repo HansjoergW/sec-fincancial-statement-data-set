@@ -12,6 +12,23 @@ integrate rapid api
 build
 - build für 3.7
 - release notes
+
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+name = "my-project"
+version = "1.0.0"
+long_description = "docs/releases.md"
+authors = ["Your Name <your@email.com>"]
+
+[tool.setuptools.dependencies]
+python = "^3.6"
+
+[tool.setuptools.dev-dependencies]
+pytest = "^5.4"
+
 - coverage report
 - api documentation creation
 

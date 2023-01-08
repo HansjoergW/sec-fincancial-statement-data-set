@@ -10,7 +10,7 @@ integrate rapid api
 - report reader und company reader erweiterbar -> baseclasse ABC
 
 build
-- add tags
+- build für 3.7
 - release notes
 - coverage report
 - api documentation creation

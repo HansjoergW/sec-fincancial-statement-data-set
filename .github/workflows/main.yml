@@ -16,7 +16,9 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
       - name: install dependencies
-        run: pip install -r requirements.txt
+        run: pip install .
+      - name: install test dependencies
+        run: pip install .[test]
       - name: unit tests
         run: pytest
       - name: linting

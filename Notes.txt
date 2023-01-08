@@ -45,3 +45,7 @@ Automatisierter Ablauf mit GitHubAction
 --------------------------------------
 -> Template benützen (neuer Workflow), bzw. https://github.com/pypa/gh-action-pypi-publish
 
+Download Stats
+-----------------
+
+https://pypistats.org/packages/secfsdstools

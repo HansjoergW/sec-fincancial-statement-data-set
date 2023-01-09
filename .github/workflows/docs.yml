@@ -14,7 +14,7 @@ name: Build and Deploy Documentation
 on:
   push:
     branches:
-      - master
+      - main
 
 jobs:
   build:

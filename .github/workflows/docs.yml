@@ -1,0 +1,50 @@
+#  This workflow will run on every push to the master branch of your repository, and it will do the following:
+#
+#  Install the sphinx and sphinx-rtd-theme packages.
+#  Generate the HTML documentation in the docs/_build/html directory.
+#  Deploy the documentation to GitHub Pages using the peaceiris/actions-gh-pages action.
+#  Deploy the documentation to ReadTheDocs using the peaceiris/actions-readthedocs action.
+#
+#  To use this workflow, you will need to create a personal access token on ReadTheDocs and add it
+#  to your repository's secrets as READTHEDOCS_TOKEN. You can then use this token to authenticate
+#  the peaceiris/actions-readthedocs action and allow it to publish your documentation to ReadTheDocs.
+
+name: Build and Deploy Documentation
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+          python-version: 3.8
+      - run: pip install sphinx sphinx-rtd-theme
+      - run: mkdir -p docs/_build/html
+      - run: sphinx-build -b html docs/ docs/_build/html
+#      - name: Deploy to GitHub Pages
+#        uses: peaceiris/actions-gh-pages@v3
+#        with:
+#          github_token: ${{ secrets.GITHUB_TOKEN }}
+#          publish_dir: docs/_build/html
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+          python-version: 3.8
+      - run: pip install sphinx sphinx-rtd-theme
+      - run: mkdir -p docs/_build/html
+      - run: sphinx-build -b html docs/ docs/_build/html
+#      - name: Deploy to ReadTheDocs
+#        uses: peaceiris/actions-readthedocs@v2
+#        with:
+#          readthedocs_version: latest
+#          readthedocs_token: ${{ secrets.READTHEDOCS_TOKEN }}
+

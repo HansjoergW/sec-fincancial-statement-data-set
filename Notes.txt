@@ -49,3 +49,7 @@ Download Stats
 -----------------
 
 https://pypistats.org/packages/secfsdstools
+
+Create API-Documentation
+------------------------
+pdoc --html --force -o docs/api secfsdstools

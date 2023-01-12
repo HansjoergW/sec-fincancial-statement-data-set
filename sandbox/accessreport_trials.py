@@ -3,7 +3,7 @@ from io import StringIO
 
 import pandas as pd
 
-from secfsdstools._0_utils.fileutils import read_df_from_file_in_zip, read_content_from_file_in_zip
+from secfsdstools.a_utils.fileutils import read_df_from_file_in_zip, read_content_from_file_in_zip
 
 TEST_FILE = '../data/dld/2022q3.zip'
 TEST_REPORT = '0000320193-22-000070'  # APPLE INC 10-Q  2022-06-30

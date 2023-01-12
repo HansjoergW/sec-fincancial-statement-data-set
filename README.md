@@ -121,16 +121,16 @@ ___
 files from the sec.gov were downloaded and indexed
 ___
 
-Inside the package `secfsdstools._4_read` are several modules that help to read the detail information from the zip
+Inside the package `secfsdstools.e_read` are several modules that help to read the detail information from the zip
 files.
 
 ### Module `companyreading`
 
 ___
-**Note:** the code in this chapter is available in the module `secfsdstools._9_examples.examplecompanyreading`
+**Note:** the code in this chapter is available in the module `secfsdstools.x_examples.examplecompanyreading`
 ___
 
-Inside the module `secfsdstools._4_read.companyreading` the `CompanyReader` class is defined.
+Inside the module `secfsdstools.e_read.companyreading` the `CompanyReader` class is defined.
 
 You will need the cik-number to get an instance for a certain company. The cik can be found either by searching in the
 index_reports table or on the [sec.gov website](https://www.sec.gov/edgar/searchedgar/companysearch).
@@ -140,8 +140,8 @@ The following example shows how to create a `CompanyReader` instance for apple (
 ```
 from typing import Dict, List
 
-from secfsdstools._3_index.indexdataaccess import IndexReport
-from secfsdstools._4_read.companyreading import CompanyReader
+from secfsdstools.d_index.indexdataaccess import IndexReport
+from secfsdstools.e_read.companyreading import CompanyReader
 
 
 if __name__ == '__main__':
@@ -161,7 +161,7 @@ For details about the fields, see https://www.sec.gov/files/aqfs.pdf.
 ```
 
 Now, lets have a look at all the reports apple has filed. There are two methods, one of them returning a pandas
-dataframe and the other a list of `secfsdstools._3_index.indexdataaccess.IndexReport` instances.
+dataframe and the other a list of `secfsdstools.d_index.indexdataaccess.IndexReport` instances.
 
 ```
     # get basic infos of all the reports the company has filed.
@@ -188,7 +188,7 @@ reproduce the content of the primary financial statements of a report (BalanceSh
 ### Module `reportreading`
 
 ___
-**Note:** the code in this chapter is available in the module `secfsdstools._9_examples.examplecreportreading`.
+**Note:** the code in this chapter is available in the module `secfsdstools.x_examples.examplecreportreading`.
 ___
 
 The ReportReader class enables us to access the real data of a report. It provides two class methods which
@@ -198,7 +198,7 @@ help to create a ReportReader either by the unique report id "adsh" or by an ins
 in order to create an instance based on the adsh itself, you can use the following code:
 
 ```
-from secfsdstools._4_read.reportreading import ReportReader
+from secfsdstools.e_read.reportreading import ReportReader
 
 if __name__ == '__main__':
     # id apples 10k report from september 2022

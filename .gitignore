@@ -2,6 +2,7 @@
 .idea
 secrets.txt
 /data/
+/docs/api
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

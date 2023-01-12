@@ -1,10 +1,10 @@
 """ Getting everything ready to work with the data. """
 import logging
 
-from secfsdstools._0_config.configmgt import ConfigurationManager, Configuration
-from secfsdstools._1_setup.setupdb import DbCreator
-from secfsdstools._2_download.secdownloading import SecZipDownloader, UrlDownloader
-from secfsdstools._3_index.indexing import ReportZipIndexer
+from secfsdstools.a_config.configmgt import ConfigurationManager, Configuration
+from secfsdstools.b_setup.setupdb import DbCreator
+from secfsdstools.c_download.secdownloading import SecZipDownloader, UrlDownloader
+from secfsdstools.d_index.indexing import ReportZipIndexer
 
 LOGGER = logging.getLogger(__name__)
 

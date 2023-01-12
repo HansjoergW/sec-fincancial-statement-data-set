@@ -1,4 +1,4 @@
-name: Python workflow
+name: Python test and linting
 
 on: [push]
 

@@ -51,5 +51,6 @@ test = [
     "pytest~=7.2",
     "pylint~=2.15",
     "coverage~=7.0",
-    "typing_extensions~=4.0"
+    "typing_extensions~=4.0",
+    "pdoc3~=0.10"
 ]

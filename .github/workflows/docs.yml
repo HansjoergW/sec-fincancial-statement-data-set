@@ -28,12 +28,12 @@ jobs:
         run: pip install .
       - run: pip install pdoc3==0.10
       - run: mkdir -p docs/_build/html
-      - run: pdoc3 --output-dir docs/_build --html-dir docs/_build/html --force secfsdstools
+      - run: pdoc3 pdoc3 --html --force -o docs/api secfsdstools
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: docs/_build/html
+          publish_dir: docs/api
 #  deploy:
 #    runs-on: ubuntu-latest
 #    steps:

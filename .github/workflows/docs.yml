@@ -24,9 +24,9 @@ jobs:
       - uses: actions/setup-python@v2
         with:
           python-version: 3.8
-      - run: pip install sphinx sphinx-rtd-theme
+      - run: pip install pdoc3==0.10
       - run: mkdir -p docs/_build/html
-      - run: sphinx-build -b html docs/ docs/_build/html
+      - run: pdoc3 --output-dir docs/_build --html-dir docs/_build/html --force secfsdstools
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:

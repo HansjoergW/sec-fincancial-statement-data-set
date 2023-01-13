@@ -27,6 +27,9 @@ This library simplifies the process of working with this data and provides a
 convenient way to extract information from the primary financial statements - the balance sheet, income statement, and
 statement of cash flows.
 
+# Links
+* [API Documentation](https://hansjoergw.github.io/sec-fincancial-statement-data-set/secfsdstools/)
+
 # Installation
 
 The project is published on pypi.org. Simply use pip install to install it:

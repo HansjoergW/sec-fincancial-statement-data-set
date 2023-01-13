@@ -12,9 +12,13 @@
 name: Build and Deploy Documentation
 
 on:
-  push:
-    branches:
-      - main
+  release:
+    types: [published]
+
+#on:
+#  push:
+#    branches:
+#      - main
 
 jobs:
   build:

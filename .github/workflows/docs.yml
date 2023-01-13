@@ -24,6 +24,8 @@ jobs:
       - uses: actions/setup-python@v2
         with:
           python-version: 3.8
+      - name: install dependencies
+        run: pip install .
       - run: pip install pdoc3==0.10
       - run: mkdir -p docs/_build/html
       - run: pdoc3 --output-dir docs/_build --html-dir docs/_build/html --force secfsdstools

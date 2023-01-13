@@ -16,7 +16,7 @@ def reportindexer(tmp_path):
 
 
 def test_nothing_indexed(reportindexer):
-    with patch('secfsdstools._3_index.indexing.get_filenames_in_directory', return_value = ['file1', 'file2']):
+    with patch('secfsdstools.d_index.indexing.get_filenames_in_directory', return_value = ['file1', 'file2']):
         not_indexed = reportindexer._calculate_not_indexed()
         assert len(set(not_indexed) - {'file1', 'file2'}) == 0
 

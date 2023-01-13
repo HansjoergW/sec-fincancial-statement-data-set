@@ -47,7 +47,7 @@ def test_download_single_zip_file(seczipdownloader):
 
 
 def test_calculate_missing_zips(seczipdownloader):
-    with patch("secfsdstools._2_download.secdownloading.get_filenames_in_directory", return_value=['file1']):
+    with patch("secfsdstools.c_download.secdownloading.get_filenames_in_directory", return_value=['file1']):
         seczipdownloader._get_available_zips = MagicMock(return_value=[('file1', 'file1'), ('file2', 'file2')])
 
         missing: List[Tuple[str, str]] = seczipdownloader._calculate_missing_zips()

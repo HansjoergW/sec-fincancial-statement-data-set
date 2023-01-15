@@ -29,21 +29,25 @@ def test_financial_statements_for_dates_and_tags(reportreader):
     reportreader._read_raw_data()
 
     # read only for the actual period
-    fin_stmts_df = reportreader.financial_statements_for_dates_and_tags(dates=[reportreader.report.period])
-
-    assert fin_stmts_df.shape == (74, 10)
-
-    # read for the actual period and the previous period
-    # 20091231 and 20081231 (sine the dates are ints, we just can remove 10_000 to get the last year
-    fin_stmts_df = reportreader.financial_statements_for_dates_and_tags([reportreader.report.period,
-                                                                         reportreader.report.period - 10_000])
+    fin_stmts_df = reportreader.financial_statements_for_period()
 
     assert fin_stmts_df.shape == (74, 11)
 
+    # read for the actual period and the previous period
+    fin_stmts_df = reportreader.financial_statements_for_period_and_previous_period()
+
+    assert fin_stmts_df.shape == (74, 12)
+
     # read only for the actual period
-    fin_stmts_df = reportreader.financial_statements_for_dates_and_tags(
-        tags=['Assets'])
+    fin_stmts_df = reportreader.financial_statements_for_period(tags=['Assets'])
     assert fin_stmts_df.shape == (1, 11)
+
+
+def test_submission_data(reportreader):
+    data = reportreader.submission_data()
+
+    assert data['adsh'] == APPLE_ADSH_10Q_2010_Q1
+    assert data['cik'] == 320193
 
 
 def test_statistics(reportreader):

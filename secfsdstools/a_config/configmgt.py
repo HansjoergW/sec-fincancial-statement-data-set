@@ -40,7 +40,9 @@ class ConfigurationManager:
         1. checks there is a set environment variable
         2. checks if it is at the current working  directory
         3. checks if it is in the user home
-        :return: Configuration instance
+
+        Returns:
+            Configuration: configuration instance
         """
         env_config_file = os.getenv(SECFSDSTOOLS_ENV_VAR_NAME)
         if env_config_file:
@@ -81,7 +83,9 @@ class ConfigurationManager:
     def _read_configuration(file_path: str) -> Configuration:
         """
         Read the configuration file.
-        :return: Configuration data class
+
+        Returns:
+             Configuration: instance
         """
         config = configparser.ConfigParser()
         config.read(file_path)

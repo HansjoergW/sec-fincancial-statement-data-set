@@ -5,7 +5,7 @@ reading and merging the data for a single report.
 import re
 from dataclasses import dataclass
 from io import StringIO
-from typing import Optional, List, Dict
+from typing import Optional, List, Dict, Union
 
 import numpy as np
 import pandas as pd
@@ -13,13 +13,7 @@ import pandas as pd
 from secfsdstools.a_config.configmgt import Configuration, ConfigurationManager
 from secfsdstools.a_utils.fileutils import read_content_from_file_in_zip
 from secfsdstools.d_index.indexdataaccess import IndexReport, DBIndexingAccessor
-
-NUM_TXT = "num.txt"
-PRE_TXT = "pre.txt"
-
-NUM_COLS = ['adsh', 'tag', 'version', 'coreg', 'ddate', 'qtrs', 'uom', 'value', 'footnote']
-PRE_COLS = ['adsh', 'report', 'line', 'stmt', 'inpth', 'rfile',
-            'tag', 'version', 'plabel', 'negating']
+from secfsdstools.e_read.basereportreading import match_group_iter, BaseReportReader
 
 
 @dataclass
@@ -34,30 +28,26 @@ class BasicReportStats:
     tags_per_statement: Dict[str, List[str]]
 
 
-def match_group_iter(match_iter):
-    """
-    returns an iterator that returns the group() of the matching iterator
-    :param match_iter:
-    :return: group content iterator
-    """
-    for match in match_iter:
-        yield match.group()
-
-
-class ReportReader:
+class ReportReader(BaseReportReader):
     """
     reading the data for a single report. also provides several convenient methods
     to prepare and aggregate the raw data
     """
+    FIRST_LINE_PATTERN = re.compile(f"^.*$", re.MULTILINE)
 
     @classmethod
     def get_report_by_adsh(cls, adsh: str, configuration: Optional[Configuration] = None):
         """
         creates the ReportReader instance for a certain adsh.
         if no configuration is passed, it reads the config from the config file
-        :param adsh: adsh
-        :param configuration: Optional configuration object
-        :return: instance of ReportReader
+
+        Args: 
+            adsh (str): unique report id
+            configuration (Configuration optional, default=None): Optional configuration object
+
+        Returns:
+            ReportReader: instance of ReportReader
+
         """
         if configuration is None:
             configuration = ConfigurationManager.read_config_file()
@@ -69,111 +59,48 @@ class ReportReader:
     def get_report_by_indexreport(cls, index_report: IndexReport):
         """
         crates the ReportReader instance based on the IndexReport instance
-        :param index_report:
-        :return:
+
+        Args: 
+            index_report (IndexReport): instance of IndexReport
+
+        Returns:
+            ReportReader: isntance of ReportReader
         """
         return ReportReader(index_report)
 
     def __init__(self, report: IndexReport):
+        super().__init__()
         self.report = report
-        self.num_df: Optional[pd.DataFrame] = None
-        self.pre_df: Optional[pd.DataFrame] = None
-
         self.adsh_pattern = re.compile(f'^{report.adsh}.*$', re.MULTILINE)
 
-    def _read_df_from_raw(self, file_in_zip: str, column_names: List[str]) \
+    def _read_df_from_raw(self,
+                          file_in_zip: str,
+                          usecols: List[str] = None,
+                          column_names: List[str] = None) \
             -> pd.DataFrame:
         """
         reads the num.txt or pre.txt directly from the zip file into a df.
         uses re to first filter only the rows that belong to the report
         and only then actually create the df
+
         """
+
         content = read_content_from_file_in_zip(self.report.fullPath, file_in_zip)
-        lines = "\n".join(match_group_iter(self.adsh_pattern.finditer(content)))
-        return pd.read_csv(StringIO(lines), sep="\t", header=None, names=column_names)
 
-    def _read_raw_data(self):
-        """
-        read the raw data from the num and pre file into dataframes and store them
-        inside the object. used in a lazy loading manner.
-        """
-        if self.num_df is None:
-            self.num_df = self._read_df_from_raw(NUM_TXT, NUM_COLS)
-            self.pre_df = self._read_df_from_raw(PRE_TXT, PRE_COLS)
+        lines: List[str] = [re.search(ReportReader.FIRST_LINE_PATTERN, content).group()]
+        lines.extend(match_group_iter(self.adsh_pattern.finditer(content)))
+        data_str = "\n".join(lines)
+        return pd.read_csv(StringIO(data_str), sep="\t", header=0, names=column_names, usecols=usecols)
 
-    def get_raw_num_data(self) -> pd.DataFrame:
+    def submission_data(self) -> Dict[str, Union[str, int]]:
         """
-        returns a copy of the raw dataframe for the num.txt file of this report
-        :return: pd.DataFrame
+        returns the data from the submission txt file as dictionary
+
+        Returns:
+            Dict[str, Union[str, int]]: data from submission txt file as dictionary
         """
         self._read_raw_data()  # lazy load the data if necessary
-        return self.num_df.copy()
-
-    def get_raw_pre_data(self) -> pd.DataFrame:
-        """
-        returns a copy of the raw dataframe for the pre.txt file of this report
-        :return: pd.DataFrame
-        """
-        self._read_raw_data()  # lazy load the data if necessary
-        return self.pre_df.copy()
-
-    def financial_statements_for_dates_and_tags(self,
-                                                dates: Optional[List[int]] = None,
-                                                tags: Optional[List[str]] = None,
-                                                ) -> pd.DataFrame:
-        """
-        creates the financial statements dataset by merging the pre and num
-         sets together. It also filters out only the ddates that are
-         inside the list.
-        Note: the dates are int in the form YYYYMMDD
-        :param dates: list with ddates to filter for
-        :param tags: list with tags to consider
-        :return: pd.DataFrame
-        """
-
-        self._read_raw_data()  # lazy load the data if necessary
-        num_df_filtered_for_dates = self.num_df
-        if dates:
-            num_df_filtered_for_dates = self.num_df[self.num_df.ddate.isin(dates)]
-
-        pre_filtered_for_tags = self.pre_df
-        if tags:
-            pre_filtered_for_tags = self.pre_df[self.pre_df.tag.isin(tags)]
-
-        num_pre_merged_df = pd.merge(num_df_filtered_for_dates,
-                                     pre_filtered_for_tags,
-                                     on=['adsh', 'tag', 'version'])
-        num_pre_merged_pivot_df = num_pre_merged_df.pivot_table(
-            index=['adsh', 'tag', 'version', 'stmt', 'report', 'line', 'uom', 'negating', 'inpth'],
-            columns='ddate',
-            values='value')
-        num_pre_merged_pivot_df.rename_axis(None, axis=1, inplace=True)
-        num_pre_merged_pivot_df.sort_values(['stmt', 'report', 'line', 'inpth'], inplace=True)
-        num_pre_merged_pivot_df.reset_index(drop=False, inplace=True)
-        return num_pre_merged_pivot_df
-
-    def financial_statements_for_period(self, tags: Optional[List[str]] = None, ) -> pd.DataFrame:
-        """
-        returns the merged and pivoted table for the of the num-
-         and predata for the current date only
-        :param tags: List with tags to include or None
-        :return:
-        """
-        return self.financial_statements_for_dates_and_tags(dates=[self.report.period], tags=tags)
-
-    def financial_statements_for_period_and_previous_period(
-            self, tags: Optional[List[str]] = None, ) -> pd.DataFrame:
-        """
-        returns the merged and pivoted table for the of the num-
-         and predata for the current and the date
-         of the same period a year ago.
-        :param tags: List with tags to include or None
-        :return: pd.DataFrame
-        """
-
-        # note: -10_000 selects the last year, since int values are used for ddate
-        return self.financial_statements_for_dates_and_tags(
-            dates=[self.report.period, self.report.period - 10_000], tags=tags)
+        return self.sub_df.loc[0].to_dict()
 
     def statistics(self) -> BasicReportStats:
         """
@@ -184,7 +111,8 @@ class ReportReader:
         - list of different statements in the pre file
         - list of tags per statement
 
-        :return: BasicReportsStats instance
+        Rreturns:
+            BasicReportsStats: instance with basic report infos
         """
 
         self._read_raw_data()  # lazy load the data if necessary

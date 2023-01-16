@@ -1,4 +1,5 @@
 import os
+from unittest.mock import patch
 
 import pytest
 
@@ -7,14 +8,14 @@ from secfsdstools.e_read.reportreading import ReportReader
 
 APPLE_ADSH_10Q_2010_Q1 = '0001193125-10-012085'
 CURRENT_DIR, _ = os.path.split(__file__)
-PATH_TO_ZIP = CURRENT_DIR + '/testdata/'
+PATH_TO_ZIP = CURRENT_DIR + '/testdata/2010q1.zip'
 
 
 @pytest.fixture
 def reportreader():
     report = IndexReport(adsh=APPLE_ADSH_10Q_2010_Q1, cik=320193, name='APPLE INC',
                          form='10-Q', filed=20100125, period=20091231, originFile='2010q1.zip',
-                         originFileType='quarter', fullPath=PATH_TO_ZIP + '2010q1.zip', url='')
+                         originFileType='quarter', fullPath=PATH_TO_ZIP, url='')
 
     reportreader = ReportReader(report=report)
     reportreader._read_raw_data()
@@ -55,3 +56,15 @@ def test_statistics(reportreader):
     assert stats.num_entries == 145
     assert stats.pre_entries == 100
     assert len(set(stats.list_of_statements) - {'BS', 'CF', 'CP', 'IS'}) == 0
+
+
+def test_cm_get_report_by_adsh():
+    instance = IndexReport(cik=320193, name="", form="", filed=0, period=0, originFile="", originFileType="", url="",
+                           adsh=APPLE_ADSH_10Q_2010_Q1,
+                           fullPath=PATH_TO_ZIP)
+
+    with patch("secfsdstools.d_index.indexdataaccess.DBIndexingAccessor.read_index_report_for_adsh",
+               return_value=instance):
+        reportreader = ReportReader.get_report_by_adsh(adsh=APPLE_ADSH_10Q_2010_Q1)
+        reportreader._read_raw_data()
+        assert reportreader.num_df.shape == (145, 9)

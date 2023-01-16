@@ -1,5 +1,5 @@
 """
-reading and merging the data for a single report.
+reading the data for a single report.
 """
 
 import re
@@ -33,7 +33,7 @@ class ReportReader(BaseReportReader):
     reading the data for a single report. also provides several convenient methods
     to prepare and aggregate the raw data
     """
-    FIRST_LINE_PATTERN = re.compile(f"^.*$", re.MULTILINE)
+    FIRST_LINE_PATTERN = re.compile("^.*$", re.MULTILINE)
 
     @classmethod
     def get_report_by_adsh(cls, adsh: str, configuration: Optional[Configuration] = None):
@@ -41,7 +41,7 @@ class ReportReader(BaseReportReader):
         creates the ReportReader instance for a certain adsh.
         if no configuration is passed, it reads the config from the config file
 
-        Args: 
+        Args:
             adsh (str): unique report id
             configuration (Configuration optional, default=None): Optional configuration object
 
@@ -53,14 +53,15 @@ class ReportReader(BaseReportReader):
             configuration = ConfigurationManager.read_config_file()
 
         dbaccessor = DBIndexingAccessor(db_dir=configuration.db_dir)
-        return ReportReader(dbaccessor.read_index_report_for_adsh(adsh=adsh))
+        return ReportReader.get_report_by_indexreport(
+            dbaccessor.read_index_report_for_adsh(adsh=adsh))
 
     @classmethod
     def get_report_by_indexreport(cls, index_report: IndexReport):
         """
         crates the ReportReader instance based on the IndexReport instance
 
-        Args: 
+        Args:
             index_report (IndexReport): instance of IndexReport
 
         Returns:
@@ -90,7 +91,8 @@ class ReportReader(BaseReportReader):
         lines: List[str] = [re.search(ReportReader.FIRST_LINE_PATTERN, content).group()]
         lines.extend(match_group_iter(self.adsh_pattern.finditer(content)))
         data_str = "\n".join(lines)
-        return pd.read_csv(StringIO(data_str), sep="\t", header=0, names=column_names, usecols=usecols)
+        return pd.read_csv(StringIO(data_str), sep="\t", header=0,
+                           names=column_names, usecols=usecols)
 
     def submission_data(self) -> Dict[str, Union[str, int]]:
         """

@@ -1,10 +1,6 @@
 Todos
 ------
 features
-- Finish Zipreader
-  - class method
-  - example
-- Test all Classmethods
 - Example Notebooks
   - update method
   - quicksstart
@@ -12,6 +8,7 @@ features
   - example zip reading
   - example extension -> z.B. db access / erweiteren reader
 - integrate rapid api
+
 build & docu
 - Update all API Doc to correct format
 - build für 3.7

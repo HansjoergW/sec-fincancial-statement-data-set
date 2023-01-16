@@ -6,8 +6,11 @@ from typing import Dict, List
 from secfsdstools.d_index.indexdataaccess import IndexReport
 from secfsdstools.e_read.companyreading import CompanyReader
 
-
 def run():
+    # pylint: disable=W0612
+    """
+    run the example
+    """
     apple_cik: int = 320193
 
     # getting the company reader instance for apple

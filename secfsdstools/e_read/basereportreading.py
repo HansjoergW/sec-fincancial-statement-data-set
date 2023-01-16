@@ -1,3 +1,7 @@
+"""
+base logic for reporting classes
+"""
+
 from abc import ABC, abstractmethod
 from typing import List, Optional, Dict
 
@@ -28,6 +32,9 @@ def match_group_iter(match_iter):
 
 
 class BaseReportReader(ABC):
+    """
+    BaseReportReader
+    """
 
     def __init__(self):
         self.num_df: Optional[pd.DataFrame] = None
@@ -61,8 +68,10 @@ class BaseReportReader(ABC):
             self.num_df = self._read_df_from_raw(file_in_zip=NUM_TXT)
             self.pre_df = self._read_df_from_raw(file_in_zip=PRE_TXT)
             self.sub_df = self._read_df_from_raw(file_in_zip=SUB_TXT)
-            self.adsh_form_map = self.sub_df[['adsh', 'form']].set_index('adsh').to_dict()['form']
-            self.adsh_period_map = self.sub_df[['adsh', 'period']].set_index('adsh').to_dict()['period']
+            self.adsh_form_map = \
+                self.sub_df[['adsh', 'form']].set_index('adsh').to_dict()['form']
+            self.adsh_period_map = \
+                self.sub_df[['adsh', 'period']].set_index('adsh').to_dict()['period']
 
             # caculate the date for the previous year
             self.adsh_previous_map = {adsh: BaseReportReader._calculate_previous_period(period)
@@ -117,10 +126,11 @@ class BaseReportReader(ABC):
             which ddates matches the period of the report and the previous year. If this is set
             to True, then the value of use_period is ignored
 
-            tags (List[str], optional, None): if set, only the tags listet in this parameter are returned
+            tags (List[str], optional, None): if set, only the tags listet in this
+            parameter are returned
 
         Returns:
-            (pd.DataFrame): the filtered and transformed data
+            pd.DataFrame: the filtered and transformed data
         """
 
         self._read_raw_data()  # lazy load the data if necessary
@@ -159,7 +169,8 @@ class BaseReportReader(ABC):
 
         # some cleanup and ordering
         num_pre_merged_pivot_df.rename_axis(None, axis=1, inplace=True)
-        num_pre_merged_pivot_df.sort_values(['adsh', 'stmt', 'report', 'line', 'inpth'], inplace=True)
+        num_pre_merged_pivot_df.sort_values(['adsh', 'stmt', 'report', 'line', 'inpth'],
+                                            inplace=True)
         num_pre_merged_pivot_df.reset_index(drop=False, inplace=True)
 
         # adding the report type as an additional column
@@ -168,7 +179,8 @@ class BaseReportReader(ABC):
         # the values for ddate are ints, not string
         # if we pivot, then the column names stay ints, which is unuexpected, so we change the
         # the type of the column to strings
-        num_pre_merged_pivot_df.rename(columns={x: str(x) for x in num_pre_merged_pivot_df.columns}, inplace=True)
+        num_pre_merged_pivot_df.rename(columns={x: str(x) for x in num_pre_merged_pivot_df.columns},
+                                       inplace=True)
 
         return num_pre_merged_pivot_df
 

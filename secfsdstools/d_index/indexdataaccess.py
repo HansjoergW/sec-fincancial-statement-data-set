@@ -43,7 +43,9 @@ class DBIndexingAccessor(DB):
     def read_all_indexreports(self) -> List[IndexReport]:
         """
         reads all entries of the index_reports table
-        :return: List with IndexReport objects
+
+        Returns:
+            List[IndexReport]: List with IndexReport objects
         """
         sql = f'SELECT * FROM {self.INDEX_REPORTS_TABLE}'
         return self.execute_fetchall_typed(sql, IndexReport)
@@ -51,7 +53,9 @@ class DBIndexingAccessor(DB):
     def read_all_indexreports_df(self) -> pd.DataFrame:
         """
         reads all entries of the index_reports table as a pandas DataFrame
-        :return: pandas DataFrame
+
+        Returns:
+            pd.DataFrame: pandas DataFrame
         """
         sql = f'SELECT * FROM {self.INDEX_REPORTS_TABLE}'
         return self.execute_read_as_df(sql)
@@ -59,7 +63,9 @@ class DBIndexingAccessor(DB):
     def read_all_indexfileprocessing(self) -> List[IndexFileProcessingState]:
         """
         reads all entries of the index_file_processing_state table
-        :return: List with IndexFileProcessingState objects
+
+        Returns:
+            List[IndexFileProcessingState]: List with IndexFileProcessingState objects
         """
         sql = f'SELECT * FROM {self.INDEX_PROCESSING_TABLE}'
         return self.execute_fetchall_typed(sql, IndexFileProcessingState)
@@ -67,15 +73,30 @@ class DBIndexingAccessor(DB):
     def read_all_indexfileprocessing_df(self) -> pd.DataFrame:
         """
         reads all entries of the index_file_processing_state table as a pandas DataFrame
-        :return: pandas DataFrame
+
+        Returns:
+            pd.DataFrame: pandas DataFrame
         """
         sql = f'SELECT * FROM {self.INDEX_PROCESSING_TABLE}'
         return self.execute_read_as_df(sql)
 
+    def read_index_file_for_filename(self, filename: str) -> IndexFileProcessingState:
+        """
+        returns the IndexFileProcessingState instance for the provided filename
+        Args:
+            filename (str): the filename of the file
+
+        Returns:
+            IndexFileProcessingState: the processing state instance
+        """
+        sql = f"SELECT * FROM {self.INDEX_PROCESSING_TABLE} WHERE fileName = '{filename}'"
+        return self.execute_fetchall_typed(sql, IndexFileProcessingState)[0]
+
     def insert_indexreport(self, data: IndexReport):
         """
         inserts an entry into the index_report table
-        :param data: IndexReport data object
+        Args:
+            data (IndexReport): IndexReport data object
         """
         sql = self.create_insert_statement_for_dataclass(self.INDEX_REPORTS_TABLE, data)
         self.execute_single(sql)
@@ -83,14 +104,18 @@ class DBIndexingAccessor(DB):
     def append_indexreport_df(self, dataframe: pd.DataFrame):
         """
         append the content of the df to the index report table
-        :param dataframe: the dataframe to be appended
+
+        Args:
+            dataframe (pd.DataFrame): the dataframe to be appended
         """
         self.append_df_to_table(table_name=self.INDEX_REPORTS_TABLE, dataframe=dataframe)
 
     def insert_indexfileprocessing(self, data: IndexFileProcessingState):
         """
         inserts an entry into the index_file_processing_state table
-        :param data: IndexFileProcessingState data object
+
+        Args:
+            data (IndexFileProcessingState): IndexFileProcessingState data object to insert
         """
         sql = self.create_insert_statement_for_dataclass(self.INDEX_PROCESSING_TABLE, data)
         self.execute_single(sql)
@@ -98,8 +123,12 @@ class DBIndexingAccessor(DB):
     def find_latest_company_report(self, cik: int) -> IndexReport:
         """
         returns the latest report of a company
-        :param cik: the cik of the company
-        :return:IndexReport of the latest report of the company
+
+        Args:
+            cik (int): the cik of the company
+
+        Returns:
+            IndexReport: of the latest report of the company
         """
 
         sql = f'SELECT * FROM {self.INDEX_REPORTS_TABLE} WHERE cik = {cik} ORDER BY period DESC'
@@ -108,8 +137,11 @@ class DBIndexingAccessor(DB):
     def read_index_report_for_adsh(self, adsh: str) -> IndexReport:
         """
         returns the IndexReport instance for the provided adsh
-        :param adsh: adsh
-        :return: the report for the provided adsh
+
+        Args:
+            adsh (str):  adsh
+        Returns:
+            IndexReport: the report for the provided adsh
         """
         sql = f"SELECT * FROM {self.INDEX_REPORTS_TABLE} WHERE adsh = '{adsh}'"
         return self.execute_fetchall_typed(sql, IndexReport)[0]
@@ -120,9 +152,13 @@ class DBIndexingAccessor(DB):
         gets all reports as IndexReport instances for a company identified by its cik.
         if forms is not set, all forms are returned, otherwise forms is a list of the
          forms that should be returned
-        :param cik: cik of the company
-        :param forms: list of the forms to be returend, like ['10-Q', '10-K']
-        :return:
+
+        Args:
+            cik (int): cik of the company
+            forms (List[str], optional, None): list of the forms to be returend,
+             like ['10-Q', '10-K']
+        Returns:
+            List[IndexReport]
         """
         sql = f'SELECT * FROM {self.INDEX_REPORTS_TABLE} WHERE cik = {cik}'
         if forms is not None:
@@ -138,9 +174,13 @@ class DBIndexingAccessor(DB):
         gets all reports as IndexReport instances for a company identified by its cik.
         if forms is not set, all forms are returned, otherwise forms is a list of the
          forms that should be returned
-        :param cik: cik of the company
-        :param forms: list of the forms to be returend, like ['10-Q', '10-K']
-        :return:
+
+        Args:
+            cik (int): cik of the company
+            forms (List[str], optional, None):  list of the forms to be returend,
+             like ['10-Q', '10-K']
+        Returns:
+            pd.DataFrame
         """
         sql = f'SELECT * FROM {self.INDEX_REPORTS_TABLE} WHERE cik = {cik}'
         if forms is not None:

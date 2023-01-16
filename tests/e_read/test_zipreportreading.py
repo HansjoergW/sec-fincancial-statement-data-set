@@ -1,7 +1,9 @@
 import os
+from unittest.mock import patch
 
 import pytest
 
+from secfsdstools.d_index.indexdataaccess import IndexFileProcessingState
 from secfsdstools.e_read.zipreportreading import ZipReportReader
 
 CURRENT_DIR, _ = os.path.split(__file__)
@@ -45,3 +47,15 @@ def test_statistics(zipreader):
     assert stats.number_of_reports == 495
     assert stats.reports_per_form['10-Q'] == 80
     assert stats.reports_per_period_date[20091231] == 434
+
+
+def test_cm_get_zip_by_name():
+    instance = IndexFileProcessingState(fileName="", status="", entries=0, processTime="",
+                                        fullPath=PATH_TO_ZIP)
+
+    with patch("secfsdstools.d_index.indexdataaccess.DBIndexingAccessor.read_index_file_for_filename",
+               return_value=instance):
+        zipreader = ZipReportReader.get_zip_by_name("2010q1.zip")
+        zipreader._read_raw_data()
+        assert zipreader.get_raw_num_data().shape == (151692, 9)
+

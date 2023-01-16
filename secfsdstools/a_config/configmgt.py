@@ -100,7 +100,6 @@ class ConfigurationManager:
     def _write_configuration(file_path: str, configuration: Configuration):
         """
         Write the configuration to the configured file.
-        :param configuration: Configuration instance
         """
         config = configparser.ConfigParser()
         config['DEFAULT'] = {'DownloadDirectory': configuration.download_dir,

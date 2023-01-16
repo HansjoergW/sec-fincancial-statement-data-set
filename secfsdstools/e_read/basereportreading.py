@@ -88,6 +88,16 @@ class BaseReportReader(ABC):
         self._read_raw_data()  # lazy load the data if necessary
         return self.pre_df.copy()
 
+    def get_raw_sub_data(self) -> pd.DataFrame:
+        """
+        returns a copy of the raw dataframe for the sub.txt file of this report
+
+        Returns:
+            pd.DataFrame: pandas dataframe
+        """
+        self._read_raw_data()  # lazy load the data if necessary
+        return self.sub_df.copy()
+
     def financial_statements_for_tags(self,
                                       use_period: bool = True,
                                       use_previous_period: bool = False,
@@ -154,6 +164,12 @@ class BaseReportReader(ABC):
 
         # adding the report type as an additional column
         num_pre_merged_pivot_df['form'] = num_pre_merged_pivot_df['adsh'].map(self.adsh_form_map)
+
+        # the values for ddate are ints, not string
+        # if we pivot, then the column names stay ints, which is unuexpected, so we change the
+        # the type of the column to strings
+        num_pre_merged_pivot_df.rename(columns={x: str(x) for x in num_pre_merged_pivot_df.columns}, inplace=True)
+
         return num_pre_merged_pivot_df
 
     def financial_statements_for_period(self, tags: Optional[List[str]] = None, ) -> pd.DataFrame:

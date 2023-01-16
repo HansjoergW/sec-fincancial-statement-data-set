@@ -1,8 +1,12 @@
 # Release Notes
 
 ## Upcoming
-* Api documentation
 * support of https://rapidapi.com/hansjoerg.wingeier/api/daily-sec-financial-statement-dataset 
+* example notebooks
+
+## 0.2.1
+* new zipreader class which helps to read data from a whole zip file; same interface as report reader
+* added example notebooks
 
 ## 0.2.0
 * first simple APi docu on githubpages https://hansjoergw.github.io/sec-fincancial-statement-data-set/secfsdstools/

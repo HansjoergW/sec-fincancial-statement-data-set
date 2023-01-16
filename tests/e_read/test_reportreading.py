@@ -15,19 +15,18 @@ def reportreader():
     report = IndexReport(adsh=APPLE_ADSH_10Q_2010_Q1, cik=320193, name='APPLE INC',
                          form='10-Q', filed=20100125, period=20091231, originFile='2010q1.zip',
                          originFileType='quarter', fullPath=PATH_TO_ZIP + '2010q1.zip', url='')
-    yield ReportReader(report=report)
+
+    reportreader = ReportReader(report=report)
+    reportreader._read_raw_data()
+    return reportreader
 
 
 def test_read_raw_data(reportreader):
-    reportreader._read_raw_data()
-
     assert reportreader.num_df.shape == (145, 9)
     assert reportreader.pre_df.shape == (100, 10)
 
 
-def test_financial_statements_for_dates_and_tags(reportreader):
-    reportreader._read_raw_data()
-
+def test_financial_statements(reportreader):
     # read only for the actual period
     fin_stmts_df = reportreader.financial_statements_for_period()
 
@@ -51,7 +50,6 @@ def test_submission_data(reportreader):
 
 
 def test_statistics(reportreader):
-    reportreader._read_raw_data()
     stats = reportreader.statistics()
 
     assert stats.num_entries == 145

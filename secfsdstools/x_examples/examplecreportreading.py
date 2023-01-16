@@ -4,7 +4,7 @@ Examples for ReportReader
 
 from secfsdstools.e_read.reportreading import ReportReader
 
-if __name__ == '__main__':
+def run():
     # id apples 10k report from september 2022
     ADSH_APPLE_10K_2022: str = '0000320193-22-000108'
 
@@ -30,3 +30,6 @@ if __name__ == '__main__':
     # Filter for CashFlow
     apple_10k_2022_cf_df = apple_10k_2022_current_and_previous_year_df[
         apple_10k_2022_current_and_previous_year_df.stmt == 'CF']
+
+if __name__ == '__main__':
+    run()

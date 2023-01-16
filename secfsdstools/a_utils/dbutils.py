@@ -29,15 +29,19 @@ class DB(ABC):
     def get_connection(self) -> sqlite3.Connection:
         """
         creates a connection to the db.
-        :return: sqlite3 connection instance
+
+        Returns:
+            sqlite3.Connection: sqlite3 connection instance
         """
         return sqlite3.connect(self.database)
 
     def execute_read_as_df(self, sql: str) -> pd.DataFrame:
         """
         directly read the content into a pandas dataframe
-        :param sql: Select String
-        :return: pd.DataFrame
+        Args:
+             sql (str): Select String
+        Returns:
+            pd.DataFrame: pd.DataFrame
         """
         conn = self.get_connection()
         try:
@@ -49,7 +53,8 @@ class DB(ABC):
     def execute_single(self, sql: str):
         """
         executes a single sql statement without any parameters.
-        :param sql: sql string, not paramterized
+        Args:
+             sql (str): sql string, not paramterized
         """
         conn = self.get_connection()
         try:
@@ -62,8 +67,9 @@ class DB(ABC):
     def execute_many(self, sql: str, params: List[Tuple]):
         """
         executes a parameterized statement for every tuple in the params list
-        :param sql: parameterized statement
-        :param params: list with tuples containing the parameters
+        Args:
+             sql (str): parameterized statement
+             params (List[Tuple]): list with tuples containing the parameters
         """
         conn = self.get_connection()
         try:
@@ -76,8 +82,10 @@ class DB(ABC):
     def execute_fetchall(self, sql: str) -> List[Tuple]:
         """
         returns all results of the sql
-        :param sql: sql statement
-        :return: list with tuples
+        Args:
+             sql (str): sql statement
+        Returns:
+            List[Tuple]: list with tuples
         """
         conn = self.get_connection()
         try:
@@ -92,9 +100,11 @@ class DB(ABC):
         Note all selected columns in the sql have to exist with the same
          name in the dataclass of type T.
 
-        :param sql: sql string
-        :param T: type class
-        :return: list of instances of the type
+        Args:
+             sql (str): sql string
+             T: type class
+        Returns:
+             List[T]: list of instances of the type
         """
         conn = self.get_connection()
         try:
@@ -111,8 +121,10 @@ class DB(ABC):
         """
         add the content of a df to the table. The name of the columns in df
         and table have to match
-        :param table_name: name of the table to append the data
-        :param dataframe:  the df with the data
+
+        Args:
+             table_name (str): name of the table to append the data
+             dataframe (pd.DataFrame):  the df with the data
         """
         conn = self.get_connection()
         try:
@@ -124,9 +136,11 @@ class DB(ABC):
         """
         creates the insert sql statement based on the fields of a dataclass
 
-        :param table_name: name of the table to insert into
-        :param data: object of the dataclass
-        :return: 'insert into' statement
+        Args:
+             table_name (str): name of the table to insert into
+             data: object of the dataclass
+        Returns:
+            str: 'insert into' statement
         """
         # todo: None handling
         fields: List[Field]

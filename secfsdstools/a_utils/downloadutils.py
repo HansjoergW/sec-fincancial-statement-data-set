@@ -19,7 +19,8 @@ class UrlDownloader:
 
     def __init__(self, user_agent: str = "<not set>"):
         """
-        :param user_agent: according to https://www.sec.gov/os/accessing-edgar-data in the form
+        Args:
+            user_agent (str): according to https://www.sec.gov/os/accessing-edgar-data in the form
         User-Agent: Sample Company Name AdminContact@<sample company domain>.com
         """
 
@@ -33,13 +34,19 @@ class UrlDownloader:
             downloads the content auf an url and stores it into the target-file.
             retries a download several times, if it fails
 
-        :param file_url: url that referencese the file to be downloaded
-        :param target_file: the file to store the content into (it will be written into a zipfile)
-        :param expected_size: (optional) the expected size of the data that is downloaded.
-                logs a warning if the size doesn't match
-        :param max_tries: (optional) maximum retries, default is 6
-        :param sleep_time: (optional) wait time between retries, default is one second
-        :return the written file
+        Args:
+            file_url (str): url that referencese the file to be downloaded
+            target_file (str): the file to store the content into
+               (it will be written into a zipfile)
+            expected_size (str, optional, None): the expected size of
+              the data that is downloaded.
+            logs a warning if the size doesn't match
+            max_tries (int, optional, 6): maximum retries, default is 6
+            sleep_time (int, optional, 1): wait time between retries,
+              default is one second
+
+        Returns:
+            str: the written file name
         """
         response = self.get_url_content(file_url, max_tries, sleep_time)
         content = response.text
@@ -50,18 +57,20 @@ class UrlDownloader:
 
         return write_content_to_zip(content, target_file)
 
-    def binary_download_url_to_file(self, file_url: str, target_file: str,
+    def binary_download_url_to_file(self, file_url: str,
+                                    target_file: str,
                                     max_tries: int = 6,
                                     sleep_time: int = 1):
         """
             downloads the binary of an url and stores it into the target-file.
             retries a download several times, if it fails
 
-        :param file_url: url that referencese the file to be downloaded
-        :param target_file: the file to store the content into (it will be written into a zipfile)
-        :param max_tries: (optional) maximum retries, default is 6
-        :param sleep_time: (optional) wait time between retries, default is one second
-        :return the written file
+        Args:
+            file_url (str): url that referencese the file to be downloaded
+            target_file (str): the file to store the content into
+              (it will be written into a zipfile)
+            max_tries (int, optional, 6): maximum retries, default is 6
+            sleep_time (int, optional, 1): wait time between retries, default is one second
         """
         response = self.get_url_content(file_url, max_tries, sleep_time)
 
@@ -75,11 +84,13 @@ class UrlDownloader:
             retries a download several times, if it fails.
             Uses the defined user-agent as header information
 
-        :param file_url: url that referencese the file to be downloaded
-        :param expected_size: (optional) the expected size of the data that is downloaded.
-            logs a warning if the size doesn't match
-        :param sleep_time: (optional) wait time between retries, default is one second
-        :return
+        Args:
+            file_url (str): url that referencese the file to be downloaded
+            max_tries (int, optional, 6): maximum number of tries to get the data
+            sleep_time (int, optional, 1): wait time between retries, default is one second
+
+        Returns:
+             requests.models.Response
         """
         response = None
         current_try = 0

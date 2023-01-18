@@ -37,7 +37,7 @@ class ReportZipIndexer:
         return list(not_indexed)
 
     def _index_file(self, file_name: str):
-        path = self.zip_dir + file_name
+        path = os.path.join(self.zip_dir, file_name)
         full_path = os.path.realpath(path)
 
         # todo: check if table already contains entries

@@ -70,13 +70,13 @@ class ConfigurationManager:
             # check if file exists at home directory
         home_cfg_file_path = os.path.join(os.path.expanduser('~'), DEFAULT_CONFIG_FILE)
         if not os.path.isfile(home_cfg_file_path):
-            LOGGER.error('found no config file at home directory %s', home_cfg_file_path)
+            LOGGER.error('No config file found at home directory %s.', home_cfg_file_path)
             ConfigurationManager._write_configuration(home_cfg_file_path, DEFAULT_CONFIGURATION)
-            LOGGER.error('config file created at %s. please check the content ant then restart',
+            LOGGER.error('Config file created at %s. Please check the content and then rerun.',
                          home_cfg_file_path)
             raise ValueError(
                 'Config file not found at user home directory. ' +
-                f'It was created at location {home_cfg_file_path}. Please check it and rerun')
+                f'It was created at location {home_cfg_file_path}. Please check content and rerun')
         return ConfigurationManager._read_configuration(home_cfg_file_path)
 
     @staticmethod
@@ -90,6 +90,7 @@ class ConfigurationManager:
         config = configparser.ConfigParser()
         config.read(file_path)
 
+        dld_dir = config['DEFAULT'].get('DownloadDirectory', )
         return Configuration(
             download_dir=config['DEFAULT'].get('DownloadDirectory', ),
             db_dir=config['DEFAULT'].get('DbDirectory'),

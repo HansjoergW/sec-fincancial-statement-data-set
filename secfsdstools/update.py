@@ -41,9 +41,9 @@ if __name__ == '__main__':
         ]
     )
 
-    update(
-        Configuration(
-            db_dir='c:/ieu/projects/sec-fincancial-statement-data-set/data/db/',
-            download_dir='c:/ieu/projects/sec-fincancial-statement-data-set/data/dld/',
-            user_agent_email='your.email@goes.here'
-        ))
+    update()
+        # Configuration(
+        #     db_dir='c:/ieu/projects/sec-fincancial-statement-data-set/data/db/',
+        #     download_dir='c:/ieu/projects/sec-fincancial-statement-data-set/data/dld/',
+        #     user_agent_email='your.email@goes.here'
+        # ))

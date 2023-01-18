@@ -7,17 +7,13 @@ features
   - example report reading
   - example zip reading
   - example extension -> z.B. db access / erweiteren reader
+
 - integrate rapid api
 
-build & docu
+build, release & docu
 - Update all API Doc to correct format
 - build für 3.7
 - coverage report
-
-
-Release
--------
-deploy first release on pypi.org not on test.pypi.org
 
 
 Ideen

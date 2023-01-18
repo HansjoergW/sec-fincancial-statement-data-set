@@ -52,8 +52,11 @@ https://pypistats.org/packages/secfsdstools
 
 Create API-Documentation
 ------------------------
-pdoc --html --force -o docs/api secfsdstools
-
+pdoc3 --html --force -o docs/api secfsdstools
 guidline
 https://pdoc3.github.io/pdoc/doc/pdoc/test/example_pkg/#gsc.tab=0
 
+jupyter lab
+-----------
+pip install jupyterlab
+jupyter lab --notebook-dir=.

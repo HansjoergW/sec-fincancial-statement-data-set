@@ -9,8 +9,7 @@ import pandas as pd
 from secfsdstools.a_config.configmgt import Configuration, ConfigurationManager
 from secfsdstools.a_utils.fileutils import read_content_from_file_in_zip
 from secfsdstools.d_index.indexdataaccess import DBIndexingAccessor, IndexReport
-
-SUB_TXT = "sub.txt"
+from secfsdstools.e_read.basereportreading import SUB_TXT
 
 
 class CompanyReader:

@@ -22,6 +22,6 @@ jobs:
       - name: unit tests
         run: pytest tests --ignore=tests/x_examples
       - name: linting
-        run: pylint --disable=R0913,R0903,W0511,R0902,R0801 secfsdstools
+        run: pylint --disable=R0913,R0903,W0511,R0902,R0801,R0201 secfsdstools
 
 

@@ -18,7 +18,7 @@ dependencies = [
 
 description = "A few python tools to analyze the SEC.gov financial statements data sets (https://www.sec.gov/dera/data/financial-statement-data-sets)"
 readme = "README.md"
-requires-python = ">=3.8"
+requires-python = ">=3.7"
 classifiers = [
     "Development Status :: 1 - Planning",
     "Programming Language :: Python :: 3",

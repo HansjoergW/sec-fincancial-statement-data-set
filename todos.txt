@@ -1,7 +1,16 @@
 Todos
 ------
-- build für 3.7
+
+v.0.2.1
+- adapt readme
+
+v.0.3.0
+- adapt readme
+- adapt relaeses
 - integrate rapid api
+- notebook rapid api
+
+later
 
 features
 - Example Notebooks
@@ -11,7 +20,6 @@ features
 
 
 build, release & docu
-- build für 3.7
 - coverage report
 
 

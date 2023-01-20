@@ -1,7 +1,7 @@
 Todos
 ------
 - build für 3.7
-
+- integrate rapid api
 
 features
 - Example Notebooks
@@ -9,10 +9,8 @@ features
   - example zip reading
   - example extension -> z.B. db access / erweiteren reader
 
-- integrate rapid api
 
 build, release & docu
-- Update all API Doc to correct format
 - build für 3.7
 - coverage report
 

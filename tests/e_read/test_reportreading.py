@@ -3,6 +3,7 @@ from unittest.mock import patch
 
 import pytest
 
+from secfsdstools.a_config.configmgt import Configuration
 from secfsdstools.d_index.indexdataaccess import IndexReport
 from secfsdstools.e_read.reportreading import ReportReader
 
@@ -65,6 +66,10 @@ def test_cm_get_report_by_adsh():
 
     with patch("secfsdstools.d_index.indexdataaccess.DBIndexingAccessor.read_index_report_for_adsh",
                return_value=instance):
-        reportreader = ReportReader.get_report_by_adsh(adsh=APPLE_ADSH_10Q_2010_Q1)
+        reportreader = ReportReader.get_report_by_adsh(
+            adsh=APPLE_ADSH_10Q_2010_Q1,
+            configuration=Configuration(db_dir="",
+                                        download_dir="",
+                                        user_agent_email=""))
         reportreader._read_raw_data()
         assert reportreader.num_df.shape == (145, 9)

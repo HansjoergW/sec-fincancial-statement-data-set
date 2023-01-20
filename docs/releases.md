@@ -6,7 +6,7 @@
 
 ## 0.2.1
 * new zipreader class which helps to read data from a whole zip file; same interface as report reader
-* added example notebooks
+* added getting started notebook: https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/01_quickstart.ipynb
 
 ## 0.2.0
 * first simple APi docu on githubpages https://hansjoergw.github.io/sec-fincancial-statement-data-set/secfsdstools/

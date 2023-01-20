@@ -12,7 +12,7 @@ def db(tmp_path):
 
 
 @dataclass
-class TesttableRow:
+class DataRow:
     col1: str
     col2: str
 
@@ -48,7 +48,7 @@ def test_db(db):
     assert result_df.shape == (2, 2)
 
     # read directly as type
-    result_type = db.execute_fetchall_typed(sql="SELECT * FROM testtable1", T=TesttableRow)
+    result_type = db.execute_fetchall_typed(sql="SELECT * FROM testtable1", T=DataRow)
     assert len(result_type) == 2
     assert result_type[0].col1 == 'row1-1'
     assert result_type[0].col2 == 'row1-2'

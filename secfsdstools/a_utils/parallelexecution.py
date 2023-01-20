@@ -53,11 +53,13 @@ class ParallelExecutor(Generic[IT, PT, OT]):
                  intend: str = "    ",
                  execute_serial: bool = False):
         """
-        :param processes: number of parallel processes, default is cpu_count
-        :param chunksize: size of chunk - think of it as a commit, default is 100
-        :param max_calls_per_sec: how many calls may be made per second (for all processes),
+        Args:
+            processes (int, optional, cpu_count()): number of parallel processes, default is cpu_count
+            chunksiz (int, optional, 100): size of chunk - think of it as a commit, default is 100
+            max_calls_per_sec (int, optional, 0): how many calls may be made per second (for all processes),
             default is 0, meaning no limit
-        :param execute_serial: for easier debugging, this flag ensures that all data are
+            intend (str, optional, '    '): how much log messages should be intended
+            execute_serial (bool, optional, False): for easier debugging, this flag ensures that all data are
                processed in the main thread
         """
 
@@ -82,21 +84,29 @@ class ParallelExecutor(Generic[IT, PT, OT]):
     def set_get_entries_function(self, get_entries: Callable[[], List[IT]]):
         """
         set the function which returns the list of the items that have not been processed.
-        :param get_entries: function that returns the items to be processed
+
+        Args:
+            get_entries (Callable[[], List[IT]]): function that returns the items to be processed
+
         """
         self.get_entries_function = get_entries
 
     def set_process_element_function(self, process_element: Callable[[IT], PT]):
         """
         set the function that processes a single element and returns the processed element
+
+        Args:
+            process_element (Callable[[IT], PT]): function that processes a single element
         """
         self.process_element_function = process_element
 
     def set_post_process_chunk_function(self, post_process: Callable[[List[PT]], List[OT]]):
         """
-        set the function that receives a list of processed elements unad updates
+        set the function that receives a list of processed elements and updates
         the state of these elements accordingly
-        :param post_process:
+
+        Args:
+            post_process (Callable[[List[PT]], List[OT]]): the post process method
         """
         self.post_process_chunk_function = post_process
 
@@ -104,8 +114,6 @@ class ParallelExecutor(Generic[IT, PT, OT]):
         """
         process the current data set and makes sure that only a limited number
         of calls per seconds are made
-        :param data: data to process
-        :return: processed result
         """
         start = time()
         result: PT = self.process_element_function(data)
@@ -129,8 +137,9 @@ class ParallelExecutor(Generic[IT, PT, OT]):
         """
         starts the parallel processing and returns the results.
 
-        :return: tuple with two lists: the first are the processed entries,
-                 the sedond list are the entries that couldn't be processed
+        Returns:
+             Tuple[List[OT], List[IT]]: tuple with two lists: the first are the processed entries,
+                 the second list are the entries that couldn't be processed
         """
 
         last_missing = None

@@ -1,8 +1,10 @@
 Todos
 ------
+- build für 3.7
+
+
 features
 - Example Notebooks
-  - quicksstart
   - example report reading
   - example zip reading
   - example extension -> z.B. db access / erweiteren reader

@@ -189,3 +189,17 @@ class DBIndexingAccessor(DB):
         sql = sql + ' ORDER BY period DESC'
 
         return self.execute_read_as_df(sql)
+
+    def find_company_by_name(self, name_part: str) -> pd.DataFrame:
+        """
+        Finds companies in the index based on the provided part of the name.
+        Lower and uppercase are ignored.
+
+        Args:
+            name_part: the part of the name
+
+        Returns:
+            pd.DataFrame: with columns name and cik
+        """
+        sql = f"SELECT DISTINCT name, cik from {self.INDEX_REPORTS_TABLE} WHERE name like '%{name_part}%' ORDER BY name"
+        return self.execute_read_as_df(sql)

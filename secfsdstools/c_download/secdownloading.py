@@ -50,7 +50,7 @@ class SecZipDownloader:
 
         return [(name, href) for name, href in zips_to_dld_dict if name not in dld_zip_files]
 
-    def _download_zip(self, url: str, file: str) -> str:
+    def _download_zip(self, file: str, url: str) -> str:
         file_path = self.zip_dir + file
         try:
             self.urldownloader.binary_download_url_to_file(url, file_path)
@@ -63,11 +63,8 @@ class SecZipDownloader:
         file: str = data[0]
         url: str = data[1]
 
-        # todo: logging does not work like that when using multiprocessing
-        #  see https://superfastpython.com/multiprocessing-logging-in-python/
-        # LOGGER.info('    start to download %s ', file)
-        result = self._download_zip(url, file)
-        # LOGGER.info('    %s - %s', file, result)
+        LOGGER.info('    start to download %s ', file)
+        result = self._download_zip(url=url, file=file)
         return result
 
     def download(self):

@@ -16,18 +16,20 @@ def update(config: Configuration = None):
 
     # read config
     if config is None:
-        LOGGER.info("No configuration provided ... reading configuration file ..")
+        LOGGER.info("reading configuration file ..")
         config = ConfigurationManager.read_config_file()
 
     # create the db
     DbCreator(db_dir=config.db_dir).create_db()
 
     # download actual data
+    LOGGER.info("start to download files from sec.gov ...")
     url_downloader = UrlDownloader(user_agent=config.user_agent_email)
     secdownloader = SecZipDownloader(zip_dir=config.download_dir, urldownloader=url_downloader)
     secdownloader.download()
 
     # create index of reports
+    LOGGER.info("start to index downloaded files ...")
     indexer = ReportZipIndexer(db_dir=config.db_dir, zip_dir=config.download_dir)
     indexer.process()
 

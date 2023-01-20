@@ -2,7 +2,6 @@ Todos
 ------
 features
 - Example Notebooks
-  - update method
   - quicksstart
   - example report reading
   - example zip reading

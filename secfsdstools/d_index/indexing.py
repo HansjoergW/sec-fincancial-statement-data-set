@@ -1,4 +1,5 @@
 """Indexing the downloaded to data"""
+import logging
 import os
 from datetime import datetime, timezone
 from typing import List
@@ -6,7 +7,8 @@ from typing import List
 from secfsdstools.a_utils.fileutils import read_df_from_file_in_zip, get_filenames_in_directory
 from secfsdstools.d_index.indexdataaccess import DBIndexingAccessor, IndexFileProcessingState
 
-URL_PREFIX: str = 'https://www.sec.gov/Archives/edgar/data/'
+
+LOGGER = logging.getLogger(__name__)
 
 
 class ReportZipIndexer:
@@ -14,6 +16,7 @@ class ReportZipIndexer:
     Index the reports.
     """
     PROCESSED_STR: str = 'processed'
+    URL_PREFIX: str = 'https://www.sec.gov/Archives/edgar/data/'
 
     def __init__(self, db_dir: str, zip_dir: str):
         self.dbaccessor = DBIndexingAccessor(db_dir=db_dir)
@@ -37,6 +40,7 @@ class ReportZipIndexer:
         return list(not_indexed)
 
     def _index_file(self, file_name: str):
+        LOGGER.info("indexing file %s", file_name)
         path = os.path.join(self.zip_dir, file_name)
         full_path = os.path.realpath(path)
 
@@ -53,7 +57,7 @@ class ReportZipIndexer:
         sub_df['fullPath'] = full_path
         sub_df['originFile'] = file_name
         sub_df['originFileType'] = 'quarter'
-        sub_df['url'] = URL_PREFIX
+        sub_df['url'] = ReportZipIndexer.URL_PREFIX
         sub_df['url'] = sub_df['url'] + sub_df['cik'].astype(str) + '/' + \
                         sub_df['adsh'].str.replace('-', '') + '/' + sub_df['adsh'] + '-index.htm'
 

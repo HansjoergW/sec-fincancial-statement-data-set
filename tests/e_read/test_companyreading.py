@@ -1,6 +1,7 @@
 import os
 from unittest.mock import MagicMock
 
+from secfsdstools.a_config.configmgt import Configuration
 from secfsdstools.d_index.indexdataaccess import IndexReport
 from secfsdstools.e_read.companyreading import CompanyReader
 
@@ -19,3 +20,12 @@ def test_get_latest_company_information():
 
     result = reader.get_latest_company_filing()
     print(result)
+
+
+def test_get_company_reader():
+    reader = CompanyReader.get_company_reader(cik=123,
+                                              configuration=Configuration(db_dir="",
+                                                                          download_dir="",
+                                                                          user_agent_email=""))
+
+    assert reader is not None

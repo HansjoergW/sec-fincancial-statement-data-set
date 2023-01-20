@@ -3,6 +3,7 @@ from unittest.mock import patch
 
 import pytest
 
+from secfsdstools.a_config.configmgt import Configuration
 from secfsdstools.d_index.indexdataaccess import IndexFileProcessingState
 from secfsdstools.e_read.zipreportreading import ZipReportReader
 
@@ -55,7 +56,10 @@ def test_cm_get_zip_by_name():
 
     with patch("secfsdstools.d_index.indexdataaccess.DBIndexingAccessor.read_index_file_for_filename",
                return_value=instance):
-        zipreader = ZipReportReader.get_zip_by_name("2010q1.zip")
+        zipreader = ZipReportReader.get_zip_by_name(name="2010q1.zip",
+                                                    configuration=Configuration(db_dir="",
+                                                                                download_dir="",
+                                                                                user_agent_email=""))
         zipreader._read_raw_data()
         assert zipreader.get_raw_num_data().shape == (151692, 9)
 

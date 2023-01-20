@@ -132,7 +132,8 @@ class DB(ABC):
         finally:
             conn.close()
 
-    def create_insert_statement_for_dataclass(self, table_name: str, data):
+    def create_insert_statement_for_dataclass(self, table_name: str, data) -> str:
+        # pylint: disable=R0201
         """
         creates the insert sql statement based on the fields of a dataclass
 

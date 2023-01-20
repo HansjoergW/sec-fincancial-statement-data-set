@@ -63,4 +63,9 @@ def test_downloading(seczipdownloader):
     seczipdownloader.download()
 
     assert seczipdownloader._download_file.call_count == 1
-    assert seczipdownloader._download_file.call_args_list[0].args[0] == ('file2', 'file2')
+
+    import platform
+    if platform.python_version().startswith("3.7"):
+        assert seczipdownloader._download_file.call_args_list[0][0][0]== ('file2', 'file2')
+    else:
+        assert seczipdownloader._download_file.call_args_list[0].args[0] == ('file2', 'file2')

@@ -22,7 +22,7 @@ class CompanyReader:
         """
         creates a company instance for the provided cik. If no  configuration object is passed,
         it reads the configuration from the config file.
-        
+
         Args:
             cik (int): the central identification key which is assigned by the sec for every company
             configuration (Configuration, optional, None): Optional configuration object
@@ -42,7 +42,8 @@ class CompanyReader:
         """
         returns the latest company information (the content in the sub.txt file)
         Returns:
-            Dict[str, str]: dict with the information of the latest report as present in the sub.txt file.
+            Dict[str, str]: dict with the information of the latest
+             report as present in the sub.txt file.
         """
         latest_report = self.dbaccessor.find_latest_company_report(self.cik)
         content = read_content_from_file_in_zip(latest_report.fullPath, SUB_TXT)
@@ -64,7 +65,8 @@ class CompanyReader:
          forms that should be returned
 
         Args:
-            forms (List[str], optional, None): list of the forms to be returend, like ['10-Q', '10-K']
+            forms (List[str], optional, None): list of the forms to be returned,
+             like ['10-Q', '10-K']
 
         Returns:
             List[IndexReport]: the list of matching reports as a list of IndexReport instances
@@ -78,7 +80,8 @@ class CompanyReader:
          forms that should be returned
 
         Args:
-            forms (List[str], optional, None): list of the forms to be returend, like ['10-Q', '10-K']
+            forms (List[str], optional, None): list of the forms to
+             be returned, like ['10-Q', '10-K']
 
         Returns:
             pd.DataFrame: the list of matching reports as a panas Dataframe

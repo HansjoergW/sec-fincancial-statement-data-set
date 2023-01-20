@@ -201,5 +201,8 @@ class DBIndexingAccessor(DB):
         Returns:
             pd.DataFrame: with columns name and cik
         """
-        sql = f"SELECT DISTINCT name, cik from {self.INDEX_REPORTS_TABLE} WHERE name like '%{name_part}%' ORDER BY name"
+        sql = f"""
+                SELECT DISTINCT name, cik from {self.INDEX_REPORTS_TABLE} 
+                WHERE name like '%{name_part}%' 
+                ORDER BY name"""
         return self.execute_read_as_df(sql)

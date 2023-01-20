@@ -54,13 +54,15 @@ class ParallelExecutor(Generic[IT, PT, OT]):
                  execute_serial: bool = False):
         """
         Args:
-            processes (int, optional, cpu_count()): number of parallel processes, default is cpu_count
-            chunksiz (int, optional, 100): size of chunk - think of it as a commit, default is 100
-            max_calls_per_sec (int, optional, 0): how many calls may be made per second (for all processes),
-            default is 0, meaning no limit
+            processes (int, optional, cpu_count()): number of parallel processes,
+             default is cpu_count
+            chunksize (int, optional, 100): size of chunk - think of it as a commit,
+             default is 100
+            max_calls_per_sec (int, optional, 0): how many calls may be made per
+             second (for all processes), default is 0, meaning no limit
             intend (str, optional, '    '): how much log messages should be intended
-            execute_serial (bool, optional, False): for easier debugging, this flag ensures that all data are
-               processed in the main thread
+            execute_serial (bool, optional, False): for easier debugging, this
+             flag ensures that all data areprocessed in the main thread
         """
 
         self.processes = processes

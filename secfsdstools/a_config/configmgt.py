@@ -90,7 +90,6 @@ class ConfigurationManager:
         config = configparser.ConfigParser()
         config.read(file_path)
 
-        dld_dir = config['DEFAULT'].get('DownloadDirectory', )
         return Configuration(
             download_dir=config['DEFAULT'].get('DownloadDirectory', ),
             db_dir=config['DEFAULT'].get('DbDirectory'),

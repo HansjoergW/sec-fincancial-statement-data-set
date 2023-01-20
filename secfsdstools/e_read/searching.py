@@ -10,6 +10,7 @@ from secfsdstools.d_index.indexdataaccess import DBIndexingAccessor
 
 
 class IndexSearch:
+    """Provides search methods on the index_report table."""
 
     def __init__(self, dbaccessor: DBIndexingAccessor):
         self.dbaccessor = dbaccessor
@@ -43,4 +44,3 @@ class IndexSearch:
         """
 
         return self.dbaccessor.find_company_by_name(name_part=name_part)
-

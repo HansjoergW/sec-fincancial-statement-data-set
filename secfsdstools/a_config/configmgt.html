@@ -69,7 +69,9 @@ class ConfigurationManager:
         1. checks there is a set environment variable
         2. checks if it is at the current working  directory
         3. checks if it is in the user home
-        :return: Configuration instance
+
+        Returns:
+            Configuration: configuration instance
         &#34;&#34;&#34;
         env_config_file = os.getenv(SECFSDSTOOLS_ENV_VAR_NAME)
         if env_config_file:
@@ -97,20 +99,22 @@ class ConfigurationManager:
             # check if file exists at home directory
         home_cfg_file_path = os.path.join(os.path.expanduser(&#39;~&#39;), DEFAULT_CONFIG_FILE)
         if not os.path.isfile(home_cfg_file_path):
-            LOGGER.error(&#39;found no config file at home directory %s&#39;, home_cfg_file_path)
+            LOGGER.error(&#39;No config file found at home directory %s.&#39;, home_cfg_file_path)
             ConfigurationManager._write_configuration(home_cfg_file_path, DEFAULT_CONFIGURATION)
-            LOGGER.error(&#39;config file created at %s. please check the content ant then restart&#39;,
+            LOGGER.error(&#39;Config file created at %s. Please check the content and then rerun.&#39;,
                          home_cfg_file_path)
             raise ValueError(
                 &#39;Config file not found at user home directory. &#39; +
-                f&#39;It was created at location {home_cfg_file_path}. Please check it and rerun&#39;)
+                f&#39;It was created at location {home_cfg_file_path}. Please check content and rerun&#39;)
         return ConfigurationManager._read_configuration(home_cfg_file_path)
 
     @staticmethod
     def _read_configuration(file_path: str) -&gt; Configuration:
         &#34;&#34;&#34;
         Read the configuration file.
-        :return: Configuration data class
+
+        Returns:
+             Configuration: instance
         &#34;&#34;&#34;
         config = configparser.ConfigParser()
         config.read(file_path)
@@ -125,7 +129,6 @@ class ConfigurationManager:
     def _write_configuration(file_path: str, configuration: Configuration):
         &#34;&#34;&#34;
         Write the configuration to the configured file.
-        :param configuration: Configuration instance
         &#34;&#34;&#34;
         config = configparser.ConfigParser()
         config[&#39;DEFAULT&#39;] = {&#39;DownloadDirectory&#39;: configuration.download_dir,
@@ -199,7 +202,9 @@ If the file does not exist, it will create one in the current directory</p></div
         1. checks there is a set environment variable
         2. checks if it is at the current working  directory
         3. checks if it is in the user home
-        :return: Configuration instance
+
+        Returns:
+            Configuration: configuration instance
         &#34;&#34;&#34;
         env_config_file = os.getenv(SECFSDSTOOLS_ENV_VAR_NAME)
         if env_config_file:
@@ -227,20 +232,22 @@ If the file does not exist, it will create one in the current directory</p></div
             # check if file exists at home directory
         home_cfg_file_path = os.path.join(os.path.expanduser(&#39;~&#39;), DEFAULT_CONFIG_FILE)
         if not os.path.isfile(home_cfg_file_path):
-            LOGGER.error(&#39;found no config file at home directory %s&#39;, home_cfg_file_path)
+            LOGGER.error(&#39;No config file found at home directory %s.&#39;, home_cfg_file_path)
             ConfigurationManager._write_configuration(home_cfg_file_path, DEFAULT_CONFIGURATION)
-            LOGGER.error(&#39;config file created at %s. please check the content ant then restart&#39;,
+            LOGGER.error(&#39;Config file created at %s. Please check the content and then rerun.&#39;,
                          home_cfg_file_path)
             raise ValueError(
                 &#39;Config file not found at user home directory. &#39; +
-                f&#39;It was created at location {home_cfg_file_path}. Please check it and rerun&#39;)
+                f&#39;It was created at location {home_cfg_file_path}. Please check content and rerun&#39;)
         return ConfigurationManager._read_configuration(home_cfg_file_path)
 
     @staticmethod
     def _read_configuration(file_path: str) -&gt; Configuration:
         &#34;&#34;&#34;
         Read the configuration file.
-        :return: Configuration data class
+
+        Returns:
+             Configuration: instance
         &#34;&#34;&#34;
         config = configparser.ConfigParser()
         config.read(file_path)
@@ -255,7 +262,6 @@ If the file does not exist, it will create one in the current directory</p></div
     def _write_configuration(file_path: str, configuration: Configuration):
         &#34;&#34;&#34;
         Write the configuration to the configured file.
-        :param configuration: Configuration instance
         &#34;&#34;&#34;
         config = configparser.ConfigParser()
         config[&#39;DEFAULT&#39;] = {&#39;DownloadDirectory&#39;: configuration.download_dir,
@@ -274,8 +280,12 @@ If the file does not exist, it will create one in the current directory</p></div
 1. checks there is a set environment variable
 2. checks if it is at the current working
 directory
-3. checks if it is in the user home
-:return: Configuration instance</p></div>
+3. checks if it is in the user home</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code><a title="secfsdstools.a_config.configmgt.Configuration" href="#secfsdstools.a_config.configmgt.Configuration">Configuration</a></code></dt>
+<dd>configuration instance</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -287,7 +297,9 @@ def read_config_file() -&gt; Configuration:
     1. checks there is a set environment variable
     2. checks if it is at the current working  directory
     3. checks if it is in the user home
-    :return: Configuration instance
+
+    Returns:
+        Configuration: configuration instance
     &#34;&#34;&#34;
     env_config_file = os.getenv(SECFSDSTOOLS_ENV_VAR_NAME)
     if env_config_file:
@@ -315,13 +327,13 @@ def read_config_file() -&gt; Configuration:
         # check if file exists at home directory
     home_cfg_file_path = os.path.join(os.path.expanduser(&#39;~&#39;), DEFAULT_CONFIG_FILE)
     if not os.path.isfile(home_cfg_file_path):
-        LOGGER.error(&#39;found no config file at home directory %s&#39;, home_cfg_file_path)
+        LOGGER.error(&#39;No config file found at home directory %s.&#39;, home_cfg_file_path)
         ConfigurationManager._write_configuration(home_cfg_file_path, DEFAULT_CONFIGURATION)
-        LOGGER.error(&#39;config file created at %s. please check the content ant then restart&#39;,
+        LOGGER.error(&#39;Config file created at %s. Please check the content and then rerun.&#39;,
                      home_cfg_file_path)
         raise ValueError(
             &#39;Config file not found at user home directory. &#39; +
-            f&#39;It was created at location {home_cfg_file_path}. Please check it and rerun&#39;)
+            f&#39;It was created at location {home_cfg_file_path}. Please check content and rerun&#39;)
     return ConfigurationManager._read_configuration(home_cfg_file_path)</code></pre>
 </details>
 </dd>

@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.10.0" />
 <title>secfsdstools.e_read.reportreading API documentation</title>
-<meta name="description" content="reading and merging the data for a single report." />
+<meta name="description" content="reading the data for a single report." />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
 <link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
@@ -22,19 +22,19 @@
 <h1 class="title">Module <code>secfsdstools.e_read.reportreading</code></h1>
 </header>
 <section id="section-intro">
-<p>reading and merging the data for a single report.</p>
+<p>reading the data for a single report.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">&#34;&#34;&#34;
-reading and merging the data for a single report.
+reading the data for a single report.
 &#34;&#34;&#34;
 
 import re
 from dataclasses import dataclass
 from io import StringIO
-from typing import Optional, List, Dict
+from typing import Optional, List, Dict, Union
 
 import numpy as np
 import pandas as pd
@@ -42,13 +42,7 @@ import pandas as pd
 from secfsdstools.a_config.configmgt import Configuration, ConfigurationManager
 from secfsdstools.a_utils.fileutils import read_content_from_file_in_zip
 from secfsdstools.d_index.indexdataaccess import IndexReport, DBIndexingAccessor
-
-NUM_TXT = &#34;num.txt&#34;
-PRE_TXT = &#34;pre.txt&#34;
-
-NUM_COLS = [&#39;adsh&#39;, &#39;tag&#39;, &#39;version&#39;, &#39;coreg&#39;, &#39;ddate&#39;, &#39;qtrs&#39;, &#39;uom&#39;, &#39;value&#39;, &#39;footnote&#39;]
-PRE_COLS = [&#39;adsh&#39;, &#39;report&#39;, &#39;line&#39;, &#39;stmt&#39;, &#39;inpth&#39;, &#39;rfile&#39;,
-            &#39;tag&#39;, &#39;version&#39;, &#39;plabel&#39;, &#39;negating&#39;]
+from secfsdstools.e_read.basereportreading import match_group_iter, BaseReportReader
 
 
 @dataclass
@@ -63,146 +57,81 @@ class BasicReportStats:
     tags_per_statement: Dict[str, List[str]]
 
 
-def match_group_iter(match_iter):
-    &#34;&#34;&#34;
-    returns an iterator that returns the group() of the matching iterator
-    :param match_iter:
-    :return: group content iterator
-    &#34;&#34;&#34;
-    for match in match_iter:
-        yield match.group()
-
-
-class ReportReader:
+class ReportReader(BaseReportReader):
     &#34;&#34;&#34;
     reading the data for a single report. also provides several convenient methods
     to prepare and aggregate the raw data
     &#34;&#34;&#34;
+    FIRST_LINE_PATTERN = re.compile(&#34;^.*$&#34;, re.MULTILINE)
 
     @classmethod
     def get_report_by_adsh(cls, adsh: str, configuration: Optional[Configuration] = None):
         &#34;&#34;&#34;
         creates the ReportReader instance for a certain adsh.
         if no configuration is passed, it reads the config from the config file
-        :param adsh: adsh
-        :param configuration: Optional configuration object
-        :return: instance of ReportReader
+
+        Args:
+            adsh (str): unique report id
+            configuration (Configuration optional, default=None): Optional configuration object
+
+        Returns:
+            ReportReader: instance of ReportReader
+
         &#34;&#34;&#34;
         if configuration is None:
             configuration = ConfigurationManager.read_config_file()
 
         dbaccessor = DBIndexingAccessor(db_dir=configuration.db_dir)
-        return ReportReader(dbaccessor.read_index_report_for_adsh(adsh=adsh))
+        return ReportReader.get_report_by_indexreport(
+            dbaccessor.read_index_report_for_adsh(adsh=adsh))
 
     @classmethod
     def get_report_by_indexreport(cls, index_report: IndexReport):
         &#34;&#34;&#34;
         crates the ReportReader instance based on the IndexReport instance
-        :param index_report:
-        :return:
+
+        Args:
+            index_report (IndexReport): instance of IndexReport
+
+        Returns:
+            ReportReader: isntance of ReportReader
         &#34;&#34;&#34;
         return ReportReader(index_report)
 
     def __init__(self, report: IndexReport):
+        super().__init__()
         self.report = report
-        self.num_df: Optional[pd.DataFrame] = None
-        self.pre_df: Optional[pd.DataFrame] = None
-
         self.adsh_pattern = re.compile(f&#39;^{report.adsh}.*$&#39;, re.MULTILINE)
 
-    def _read_df_from_raw(self, file_in_zip: str, column_names: List[str]) \
+    def _read_df_from_raw(self,
+                          file_in_zip: str,
+                          usecols: List[str] = None,
+                          column_names: List[str] = None) \
             -&gt; pd.DataFrame:
         &#34;&#34;&#34;
         reads the num.txt or pre.txt directly from the zip file into a df.
         uses re to first filter only the rows that belong to the report
         and only then actually create the df
+
         &#34;&#34;&#34;
+
         content = read_content_from_file_in_zip(self.report.fullPath, file_in_zip)
-        lines = &#34;\n&#34;.join(match_group_iter(self.adsh_pattern.finditer(content)))
-        return pd.read_csv(StringIO(lines), sep=&#34;\t&#34;, header=None, names=column_names)
 
-    def _read_raw_data(self):
-        &#34;&#34;&#34;
-        read the raw data from the num and pre file into dataframes and store them
-        inside the object. used in a lazy loading manner.
-        &#34;&#34;&#34;
-        if self.num_df is None:
-            self.num_df = self._read_df_from_raw(NUM_TXT, NUM_COLS)
-            self.pre_df = self._read_df_from_raw(PRE_TXT, PRE_COLS)
+        lines: List[str] = [re.search(ReportReader.FIRST_LINE_PATTERN, content).group()]
+        lines.extend(match_group_iter(self.adsh_pattern.finditer(content)))
+        data_str = &#34;\n&#34;.join(lines)
+        return pd.read_csv(StringIO(data_str), sep=&#34;\t&#34;, header=0,
+                           names=column_names, usecols=usecols)
 
-    def get_raw_num_data(self) -&gt; pd.DataFrame:
+    def submission_data(self) -&gt; Dict[str, Union[str, int]]:
         &#34;&#34;&#34;
-        returns a copy of the raw dataframe for the num.txt file of this report
-        :return: pd.DataFrame
+        returns the data from the submission txt file as dictionary
+
+        Returns:
+            Dict[str, Union[str, int]]: data from submission txt file as dictionary
         &#34;&#34;&#34;
         self._read_raw_data()  # lazy load the data if necessary
-        return self.num_df.copy()
-
-    def get_raw_pre_data(self) -&gt; pd.DataFrame:
-        &#34;&#34;&#34;
-        returns a copy of the raw dataframe for the pre.txt file of this report
-        :return: pd.DataFrame
-        &#34;&#34;&#34;
-        self._read_raw_data()  # lazy load the data if necessary
-        return self.pre_df.copy()
-
-    def financial_statements_for_dates_and_tags(self,
-                                                dates: Optional[List[int]] = None,
-                                                tags: Optional[List[str]] = None,
-                                                ) -&gt; pd.DataFrame:
-        &#34;&#34;&#34;
-        creates the financial statements dataset by merging the pre and num
-         sets together. It also filters out only the ddates that are
-         inside the list.
-        Note: the dates are int in the form YYYYMMDD
-        :param dates: list with ddates to filter for
-        :param tags: list with tags to consider
-        :return: pd.DataFrame
-        &#34;&#34;&#34;
-
-        self._read_raw_data()  # lazy load the data if necessary
-        num_df_filtered_for_dates = self.num_df
-        if dates:
-            num_df_filtered_for_dates = self.num_df[self.num_df.ddate.isin(dates)]
-
-        pre_filtered_for_tags = self.pre_df
-        if tags:
-            pre_filtered_for_tags = self.pre_df[self.pre_df.tag.isin(tags)]
-
-        num_pre_merged_df = pd.merge(num_df_filtered_for_dates,
-                                     pre_filtered_for_tags,
-                                     on=[&#39;adsh&#39;, &#39;tag&#39;, &#39;version&#39;])
-        num_pre_merged_pivot_df = num_pre_merged_df.pivot_table(
-            index=[&#39;adsh&#39;, &#39;tag&#39;, &#39;version&#39;, &#39;stmt&#39;, &#39;report&#39;, &#39;line&#39;, &#39;uom&#39;, &#39;negating&#39;, &#39;inpth&#39;],
-            columns=&#39;ddate&#39;,
-            values=&#39;value&#39;)
-        num_pre_merged_pivot_df.rename_axis(None, axis=1, inplace=True)
-        num_pre_merged_pivot_df.sort_values([&#39;stmt&#39;, &#39;report&#39;, &#39;line&#39;, &#39;inpth&#39;], inplace=True)
-        num_pre_merged_pivot_df.reset_index(drop=False, inplace=True)
-        return num_pre_merged_pivot_df
-
-    def financial_statements_for_period(self, tags: Optional[List[str]] = None, ) -&gt; pd.DataFrame:
-        &#34;&#34;&#34;
-        returns the merged and pivoted table for the of the num-
-         and predata for the current date only
-        :param tags: List with tags to include or None
-        :return:
-        &#34;&#34;&#34;
-        return self.financial_statements_for_dates_and_tags(dates=[self.report.period], tags=tags)
-
-    def financial_statements_for_period_and_previous_period(
-            self, tags: Optional[List[str]] = None, ) -&gt; pd.DataFrame:
-        &#34;&#34;&#34;
-        returns the merged and pivoted table for the of the num-
-         and predata for the current and the date
-         of the same period a year ago.
-        :param tags: List with tags to include or None
-        :return: pd.DataFrame
-        &#34;&#34;&#34;
-
-        # note: -10_000 selects the last year, since int values are used for ddate
-        return self.financial_statements_for_dates_and_tags(
-            dates=[self.report.period, self.report.period - 10_000], tags=tags)
+        return self.sub_df.loc[0].to_dict()
 
     def statistics(self) -&gt; BasicReportStats:
         &#34;&#34;&#34;
@@ -213,7 +142,8 @@ class ReportReader:
         - list of different statements in the pre file
         - list of tags per statement
 
-        :return: BasicReportsStats instance
+        Rreturns:
+            BasicReportsStats: instance with basic report infos
         &#34;&#34;&#34;
 
         self._read_raw_data()  # lazy load the data if necessary
@@ -238,30 +168,6 @@ class ReportReader:
 <section>
 </section>
 <section>
-<h2 class="section-title" id="header-functions">Functions</h2>
-<dl>
-<dt id="secfsdstools.e_read.reportreading.match_group_iter"><code class="name flex">
-<span>def <span class="ident">match_group_iter</span></span>(<span>match_iter)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>returns an iterator that returns the group() of the matching iterator
-:param match_iter:
-:return: group content iterator</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def match_group_iter(match_iter):
-    &#34;&#34;&#34;
-    returns an iterator that returns the group() of the matching iterator
-    :param match_iter:
-    :return: group content iterator
-    &#34;&#34;&#34;
-    for match in match_iter:
-        yield match.group()</code></pre>
-</details>
-</dd>
-</dl>
 </section>
 <section>
 <h2 class="section-title" id="header-classes">Classes</h2>
@@ -321,136 +227,81 @@ to prepare and aggregate the raw data</p></div>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class ReportReader:
+<pre><code class="python">class ReportReader(BaseReportReader):
     &#34;&#34;&#34;
     reading the data for a single report. also provides several convenient methods
     to prepare and aggregate the raw data
     &#34;&#34;&#34;
+    FIRST_LINE_PATTERN = re.compile(&#34;^.*$&#34;, re.MULTILINE)
 
     @classmethod
     def get_report_by_adsh(cls, adsh: str, configuration: Optional[Configuration] = None):
         &#34;&#34;&#34;
         creates the ReportReader instance for a certain adsh.
         if no configuration is passed, it reads the config from the config file
-        :param adsh: adsh
-        :param configuration: Optional configuration object
-        :return: instance of ReportReader
+
+        Args:
+            adsh (str): unique report id
+            configuration (Configuration optional, default=None): Optional configuration object
+
+        Returns:
+            ReportReader: instance of ReportReader
+
         &#34;&#34;&#34;
         if configuration is None:
             configuration = ConfigurationManager.read_config_file()
 
         dbaccessor = DBIndexingAccessor(db_dir=configuration.db_dir)
-        return ReportReader(dbaccessor.read_index_report_for_adsh(adsh=adsh))
+        return ReportReader.get_report_by_indexreport(
+            dbaccessor.read_index_report_for_adsh(adsh=adsh))
 
     @classmethod
     def get_report_by_indexreport(cls, index_report: IndexReport):
         &#34;&#34;&#34;
         crates the ReportReader instance based on the IndexReport instance
-        :param index_report:
-        :return:
+
+        Args:
+            index_report (IndexReport): instance of IndexReport
+
+        Returns:
+            ReportReader: isntance of ReportReader
         &#34;&#34;&#34;
         return ReportReader(index_report)
 
     def __init__(self, report: IndexReport):
+        super().__init__()
         self.report = report
-        self.num_df: Optional[pd.DataFrame] = None
-        self.pre_df: Optional[pd.DataFrame] = None
-
         self.adsh_pattern = re.compile(f&#39;^{report.adsh}.*$&#39;, re.MULTILINE)
 
-    def _read_df_from_raw(self, file_in_zip: str, column_names: List[str]) \
+    def _read_df_from_raw(self,
+                          file_in_zip: str,
+                          usecols: List[str] = None,
+                          column_names: List[str] = None) \
             -&gt; pd.DataFrame:
         &#34;&#34;&#34;
         reads the num.txt or pre.txt directly from the zip file into a df.
         uses re to first filter only the rows that belong to the report
         and only then actually create the df
+
         &#34;&#34;&#34;
+
         content = read_content_from_file_in_zip(self.report.fullPath, file_in_zip)
-        lines = &#34;\n&#34;.join(match_group_iter(self.adsh_pattern.finditer(content)))
-        return pd.read_csv(StringIO(lines), sep=&#34;\t&#34;, header=None, names=column_names)
 
-    def _read_raw_data(self):
-        &#34;&#34;&#34;
-        read the raw data from the num and pre file into dataframes and store them
-        inside the object. used in a lazy loading manner.
-        &#34;&#34;&#34;
-        if self.num_df is None:
-            self.num_df = self._read_df_from_raw(NUM_TXT, NUM_COLS)
-            self.pre_df = self._read_df_from_raw(PRE_TXT, PRE_COLS)
+        lines: List[str] = [re.search(ReportReader.FIRST_LINE_PATTERN, content).group()]
+        lines.extend(match_group_iter(self.adsh_pattern.finditer(content)))
+        data_str = &#34;\n&#34;.join(lines)
+        return pd.read_csv(StringIO(data_str), sep=&#34;\t&#34;, header=0,
+                           names=column_names, usecols=usecols)
 
-    def get_raw_num_data(self) -&gt; pd.DataFrame:
+    def submission_data(self) -&gt; Dict[str, Union[str, int]]:
         &#34;&#34;&#34;
-        returns a copy of the raw dataframe for the num.txt file of this report
-        :return: pd.DataFrame
+        returns the data from the submission txt file as dictionary
+
+        Returns:
+            Dict[str, Union[str, int]]: data from submission txt file as dictionary
         &#34;&#34;&#34;
         self._read_raw_data()  # lazy load the data if necessary
-        return self.num_df.copy()
-
-    def get_raw_pre_data(self) -&gt; pd.DataFrame:
-        &#34;&#34;&#34;
-        returns a copy of the raw dataframe for the pre.txt file of this report
-        :return: pd.DataFrame
-        &#34;&#34;&#34;
-        self._read_raw_data()  # lazy load the data if necessary
-        return self.pre_df.copy()
-
-    def financial_statements_for_dates_and_tags(self,
-                                                dates: Optional[List[int]] = None,
-                                                tags: Optional[List[str]] = None,
-                                                ) -&gt; pd.DataFrame:
-        &#34;&#34;&#34;
-        creates the financial statements dataset by merging the pre and num
-         sets together. It also filters out only the ddates that are
-         inside the list.
-        Note: the dates are int in the form YYYYMMDD
-        :param dates: list with ddates to filter for
-        :param tags: list with tags to consider
-        :return: pd.DataFrame
-        &#34;&#34;&#34;
-
-        self._read_raw_data()  # lazy load the data if necessary
-        num_df_filtered_for_dates = self.num_df
-        if dates:
-            num_df_filtered_for_dates = self.num_df[self.num_df.ddate.isin(dates)]
-
-        pre_filtered_for_tags = self.pre_df
-        if tags:
-            pre_filtered_for_tags = self.pre_df[self.pre_df.tag.isin(tags)]
-
-        num_pre_merged_df = pd.merge(num_df_filtered_for_dates,
-                                     pre_filtered_for_tags,
-                                     on=[&#39;adsh&#39;, &#39;tag&#39;, &#39;version&#39;])
-        num_pre_merged_pivot_df = num_pre_merged_df.pivot_table(
-            index=[&#39;adsh&#39;, &#39;tag&#39;, &#39;version&#39;, &#39;stmt&#39;, &#39;report&#39;, &#39;line&#39;, &#39;uom&#39;, &#39;negating&#39;, &#39;inpth&#39;],
-            columns=&#39;ddate&#39;,
-            values=&#39;value&#39;)
-        num_pre_merged_pivot_df.rename_axis(None, axis=1, inplace=True)
-        num_pre_merged_pivot_df.sort_values([&#39;stmt&#39;, &#39;report&#39;, &#39;line&#39;, &#39;inpth&#39;], inplace=True)
-        num_pre_merged_pivot_df.reset_index(drop=False, inplace=True)
-        return num_pre_merged_pivot_df
-
-    def financial_statements_for_period(self, tags: Optional[List[str]] = None, ) -&gt; pd.DataFrame:
-        &#34;&#34;&#34;
-        returns the merged and pivoted table for the of the num-
-         and predata for the current date only
-        :param tags: List with tags to include or None
-        :return:
-        &#34;&#34;&#34;
-        return self.financial_statements_for_dates_and_tags(dates=[self.report.period], tags=tags)
-
-    def financial_statements_for_period_and_previous_period(
-            self, tags: Optional[List[str]] = None, ) -&gt; pd.DataFrame:
-        &#34;&#34;&#34;
-        returns the merged and pivoted table for the of the num-
-         and predata for the current and the date
-         of the same period a year ago.
-        :param tags: List with tags to include or None
-        :return: pd.DataFrame
-        &#34;&#34;&#34;
-
-        # note: -10_000 selects the last year, since int values are used for ddate
-        return self.financial_statements_for_dates_and_tags(
-            dates=[self.report.period, self.report.period - 10_000], tags=tags)
+        return self.sub_df.loc[0].to_dict()
 
     def statistics(self) -&gt; BasicReportStats:
         &#34;&#34;&#34;
@@ -461,7 +312,8 @@ to prepare and aggregate the raw data</p></div>
         - list of different statements in the pre file
         - list of tags per statement
 
-        :return: BasicReportsStats instance
+        Rreturns:
+            BasicReportsStats: instance with basic report infos
         &#34;&#34;&#34;
 
         self._read_raw_data()  # lazy load the data if necessary
@@ -480,6 +332,18 @@ to prepare and aggregate the raw data</p></div>
                                 list_of_statements=list_of_statements,
                                 tags_per_statement=tags_per_statement)</code></pre>
 </details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="secfsdstools.e_read.basereportreading.BaseReportReader" href="basereportreading.html#secfsdstools.e_read.basereportreading.BaseReportReader">BaseReportReader</a></li>
+<li>abc.ABC</li>
+</ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="secfsdstools.e_read.reportreading.ReportReader.FIRST_LINE_PATTERN"><code class="name">var <span class="ident">FIRST_LINE_PATTERN</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
 <h3>Static methods</h3>
 <dl>
 <dt id="secfsdstools.e_read.reportreading.ReportReader.get_report_by_adsh"><code class="name flex">
@@ -487,10 +351,19 @@ to prepare and aggregate the raw data</p></div>
 </code></dt>
 <dd>
 <div class="desc"><p>creates the ReportReader instance for a certain adsh.
-if no configuration is passed, it reads the config from the config file
-:param adsh: adsh
-:param configuration: Optional configuration object
-:return: instance of ReportReader</p></div>
+if no configuration is passed, it reads the config from the config file</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>adsh</code></strong> :&ensp;<code>str</code></dt>
+<dd>unique report id</dd>
+<dt><strong><code>configuration</code></strong> :&ensp;<code>Configuration optional</code>, default=<code>None</code></dt>
+<dd>Optional configuration object</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code><a title="secfsdstools.e_read.reportreading.ReportReader" href="#secfsdstools.e_read.reportreading.ReportReader">ReportReader</a></code></dt>
+<dd>instance of ReportReader</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -500,24 +373,38 @@ def get_report_by_adsh(cls, adsh: str, configuration: Optional[Configuration] = 
     &#34;&#34;&#34;
     creates the ReportReader instance for a certain adsh.
     if no configuration is passed, it reads the config from the config file
-    :param adsh: adsh
-    :param configuration: Optional configuration object
-    :return: instance of ReportReader
+
+    Args:
+        adsh (str): unique report id
+        configuration (Configuration optional, default=None): Optional configuration object
+
+    Returns:
+        ReportReader: instance of ReportReader
+
     &#34;&#34;&#34;
     if configuration is None:
         configuration = ConfigurationManager.read_config_file()
 
     dbaccessor = DBIndexingAccessor(db_dir=configuration.db_dir)
-    return ReportReader(dbaccessor.read_index_report_for_adsh(adsh=adsh))</code></pre>
+    return ReportReader.get_report_by_indexreport(
+        dbaccessor.read_index_report_for_adsh(adsh=adsh))</code></pre>
 </details>
 </dd>
 <dt id="secfsdstools.e_read.reportreading.ReportReader.get_report_by_indexreport"><code class="name flex">
 <span>def <span class="ident">get_report_by_indexreport</span></span>(<span>index_report: <a title="secfsdstools.d_index.indexdataaccess.IndexReport" href="../d_index/indexdataaccess.html#secfsdstools.d_index.indexdataaccess.IndexReport">IndexReport</a>)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>crates the ReportReader instance based on the IndexReport instance
-:param index_report:
-:return:</p></div>
+<div class="desc"><p>crates the ReportReader instance based on the IndexReport instance</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>index_report</code></strong> :&ensp;<code>IndexReport</code></dt>
+<dd>instance of IndexReport</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code><a title="secfsdstools.e_read.reportreading.ReportReader" href="#secfsdstools.e_read.reportreading.ReportReader">ReportReader</a></code></dt>
+<dd>isntance of ReportReader</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -526,8 +413,12 @@ def get_report_by_adsh(cls, adsh: str, configuration: Optional[Configuration] = 
 def get_report_by_indexreport(cls, index_report: IndexReport):
     &#34;&#34;&#34;
     crates the ReportReader instance based on the IndexReport instance
-    :param index_report:
-    :return:
+
+    Args:
+        index_report (IndexReport): instance of IndexReport
+
+    Returns:
+        ReportReader: isntance of ReportReader
     &#34;&#34;&#34;
     return ReportReader(index_report)</code></pre>
 </details>
@@ -535,145 +426,6 @@ def get_report_by_indexreport(cls, index_report: IndexReport):
 </dl>
 <h3>Methods</h3>
 <dl>
-<dt id="secfsdstools.e_read.reportreading.ReportReader.financial_statements_for_dates_and_tags"><code class="name flex">
-<span>def <span class="ident">financial_statements_for_dates_and_tags</span></span>(<span>self, dates: Optional[List[int]] = None, tags: Optional[List[str]] = None) ‑> pandas.core.frame.DataFrame</span>
-</code></dt>
-<dd>
-<div class="desc"><p>creates the financial statements dataset by merging the pre and num
-sets together. It also filters out only the ddates that are
-inside the list.
-Note: the dates are int in the form YYYYMMDD
-:param dates: list with ddates to filter for
-:param tags: list with tags to consider
-:return: pd.DataFrame</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def financial_statements_for_dates_and_tags(self,
-                                            dates: Optional[List[int]] = None,
-                                            tags: Optional[List[str]] = None,
-                                            ) -&gt; pd.DataFrame:
-    &#34;&#34;&#34;
-    creates the financial statements dataset by merging the pre and num
-     sets together. It also filters out only the ddates that are
-     inside the list.
-    Note: the dates are int in the form YYYYMMDD
-    :param dates: list with ddates to filter for
-    :param tags: list with tags to consider
-    :return: pd.DataFrame
-    &#34;&#34;&#34;
-
-    self._read_raw_data()  # lazy load the data if necessary
-    num_df_filtered_for_dates = self.num_df
-    if dates:
-        num_df_filtered_for_dates = self.num_df[self.num_df.ddate.isin(dates)]
-
-    pre_filtered_for_tags = self.pre_df
-    if tags:
-        pre_filtered_for_tags = self.pre_df[self.pre_df.tag.isin(tags)]
-
-    num_pre_merged_df = pd.merge(num_df_filtered_for_dates,
-                                 pre_filtered_for_tags,
-                                 on=[&#39;adsh&#39;, &#39;tag&#39;, &#39;version&#39;])
-    num_pre_merged_pivot_df = num_pre_merged_df.pivot_table(
-        index=[&#39;adsh&#39;, &#39;tag&#39;, &#39;version&#39;, &#39;stmt&#39;, &#39;report&#39;, &#39;line&#39;, &#39;uom&#39;, &#39;negating&#39;, &#39;inpth&#39;],
-        columns=&#39;ddate&#39;,
-        values=&#39;value&#39;)
-    num_pre_merged_pivot_df.rename_axis(None, axis=1, inplace=True)
-    num_pre_merged_pivot_df.sort_values([&#39;stmt&#39;, &#39;report&#39;, &#39;line&#39;, &#39;inpth&#39;], inplace=True)
-    num_pre_merged_pivot_df.reset_index(drop=False, inplace=True)
-    return num_pre_merged_pivot_df</code></pre>
-</details>
-</dd>
-<dt id="secfsdstools.e_read.reportreading.ReportReader.financial_statements_for_period"><code class="name flex">
-<span>def <span class="ident">financial_statements_for_period</span></span>(<span>self, tags: Optional[List[str]] = None) ‑> pandas.core.frame.DataFrame</span>
-</code></dt>
-<dd>
-<div class="desc"><p>returns the merged and pivoted table for the of the num-
-and predata for the current date only
-:param tags: List with tags to include or None
-:return:</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def financial_statements_for_period(self, tags: Optional[List[str]] = None, ) -&gt; pd.DataFrame:
-    &#34;&#34;&#34;
-    returns the merged and pivoted table for the of the num-
-     and predata for the current date only
-    :param tags: List with tags to include or None
-    :return:
-    &#34;&#34;&#34;
-    return self.financial_statements_for_dates_and_tags(dates=[self.report.period], tags=tags)</code></pre>
-</details>
-</dd>
-<dt id="secfsdstools.e_read.reportreading.ReportReader.financial_statements_for_period_and_previous_period"><code class="name flex">
-<span>def <span class="ident">financial_statements_for_period_and_previous_period</span></span>(<span>self, tags: Optional[List[str]] = None) ‑> pandas.core.frame.DataFrame</span>
-</code></dt>
-<dd>
-<div class="desc"><p>returns the merged and pivoted table for the of the num-
-and predata for the current and the date
-of the same period a year ago.
-:param tags: List with tags to include or None
-:return: pd.DataFrame</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def financial_statements_for_period_and_previous_period(
-        self, tags: Optional[List[str]] = None, ) -&gt; pd.DataFrame:
-    &#34;&#34;&#34;
-    returns the merged and pivoted table for the of the num-
-     and predata for the current and the date
-     of the same period a year ago.
-    :param tags: List with tags to include or None
-    :return: pd.DataFrame
-    &#34;&#34;&#34;
-
-    # note: -10_000 selects the last year, since int values are used for ddate
-    return self.financial_statements_for_dates_and_tags(
-        dates=[self.report.period, self.report.period - 10_000], tags=tags)</code></pre>
-</details>
-</dd>
-<dt id="secfsdstools.e_read.reportreading.ReportReader.get_raw_num_data"><code class="name flex">
-<span>def <span class="ident">get_raw_num_data</span></span>(<span>self) ‑> pandas.core.frame.DataFrame</span>
-</code></dt>
-<dd>
-<div class="desc"><p>returns a copy of the raw dataframe for the num.txt file of this report
-:return: pd.DataFrame</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def get_raw_num_data(self) -&gt; pd.DataFrame:
-    &#34;&#34;&#34;
-    returns a copy of the raw dataframe for the num.txt file of this report
-    :return: pd.DataFrame
-    &#34;&#34;&#34;
-    self._read_raw_data()  # lazy load the data if necessary
-    return self.num_df.copy()</code></pre>
-</details>
-</dd>
-<dt id="secfsdstools.e_read.reportreading.ReportReader.get_raw_pre_data"><code class="name flex">
-<span>def <span class="ident">get_raw_pre_data</span></span>(<span>self) ‑> pandas.core.frame.DataFrame</span>
-</code></dt>
-<dd>
-<div class="desc"><p>returns a copy of the raw dataframe for the pre.txt file of this report
-:return: pd.DataFrame</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def get_raw_pre_data(self) -&gt; pd.DataFrame:
-    &#34;&#34;&#34;
-    returns a copy of the raw dataframe for the pre.txt file of this report
-    :return: pd.DataFrame
-    &#34;&#34;&#34;
-    self._read_raw_data()  # lazy load the data if necessary
-    return self.pre_df.copy()</code></pre>
-</details>
-</dd>
 <dt id="secfsdstools.e_read.reportreading.ReportReader.statistics"><code class="name flex">
 <span>def <span class="ident">statistics</span></span>(<span>self) ‑> <a title="secfsdstools.e_read.reportreading.BasicReportStats" href="#secfsdstools.e_read.reportreading.BasicReportStats">BasicReportStats</a></span>
 </code></dt>
@@ -684,7 +436,8 @@ of the same period a year ago.
 - number of facts per ddate (in num file)
 - list of different statements in the pre file
 - list of tags per statement</p>
-<p>:return: BasicReportsStats instance</p></div>
+<h2 id="rreturns">Rreturns</h2>
+<p>BasicReportsStats: instance with basic report infos</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -698,7 +451,8 @@ of the same period a year ago.
     - list of different statements in the pre file
     - list of tags per statement
 
-    :return: BasicReportsStats instance
+    Rreturns:
+        BasicReportsStats: instance with basic report infos
     &#34;&#34;&#34;
 
     self._read_raw_data()  # lazy load the data if necessary
@@ -718,7 +472,45 @@ of the same period a year ago.
                             tags_per_statement=tags_per_statement)</code></pre>
 </details>
 </dd>
+<dt id="secfsdstools.e_read.reportreading.ReportReader.submission_data"><code class="name flex">
+<span>def <span class="ident">submission_data</span></span>(<span>self) ‑> Dict[str, Union[str, int]]</span>
+</code></dt>
+<dd>
+<div class="desc"><p>returns the data from the submission txt file as dictionary</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>Dict[str, Union[str, int]]</code></dt>
+<dd>data from submission txt file as dictionary</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def submission_data(self) -&gt; Dict[str, Union[str, int]]:
+    &#34;&#34;&#34;
+    returns the data from the submission txt file as dictionary
+
+    Returns:
+        Dict[str, Union[str, int]]: data from submission txt file as dictionary
+    &#34;&#34;&#34;
+    self._read_raw_data()  # lazy load the data if necessary
+    return self.sub_df.loc[0].to_dict()</code></pre>
+</details>
+</dd>
 </dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="secfsdstools.e_read.basereportreading.BaseReportReader" href="basereportreading.html#secfsdstools.e_read.basereportreading.BaseReportReader">BaseReportReader</a></b></code>:
+<ul class="hlist">
+<li><code><a title="secfsdstools.e_read.basereportreading.BaseReportReader.financial_statements_for_period" href="basereportreading.html#secfsdstools.e_read.basereportreading.BaseReportReader.financial_statements_for_period">financial_statements_for_period</a></code></li>
+<li><code><a title="secfsdstools.e_read.basereportreading.BaseReportReader.financial_statements_for_period_and_previous_period" href="basereportreading.html#secfsdstools.e_read.basereportreading.BaseReportReader.financial_statements_for_period_and_previous_period">financial_statements_for_period_and_previous_period</a></code></li>
+<li><code><a title="secfsdstools.e_read.basereportreading.BaseReportReader.financial_statements_for_tags" href="basereportreading.html#secfsdstools.e_read.basereportreading.BaseReportReader.financial_statements_for_tags">financial_statements_for_tags</a></code></li>
+<li><code><a title="secfsdstools.e_read.basereportreading.BaseReportReader.get_raw_num_data" href="basereportreading.html#secfsdstools.e_read.basereportreading.BaseReportReader.get_raw_num_data">get_raw_num_data</a></code></li>
+<li><code><a title="secfsdstools.e_read.basereportreading.BaseReportReader.get_raw_pre_data" href="basereportreading.html#secfsdstools.e_read.basereportreading.BaseReportReader.get_raw_pre_data">get_raw_pre_data</a></code></li>
+<li><code><a title="secfsdstools.e_read.basereportreading.BaseReportReader.get_raw_sub_data" href="basereportreading.html#secfsdstools.e_read.basereportreading.BaseReportReader.get_raw_sub_data">get_raw_sub_data</a></code></li>
+</ul>
+</li>
+</ul>
 </dd>
 </dl>
 </section>
@@ -732,11 +524,6 @@ of the same period a year ago.
 <li><h3>Super-module</h3>
 <ul>
 <li><code><a title="secfsdstools.e_read" href="index.html">secfsdstools.e_read</a></code></li>
-</ul>
-</li>
-<li><h3><a href="#header-functions">Functions</a></h3>
-<ul class="">
-<li><code><a title="secfsdstools.e_read.reportreading.match_group_iter" href="#secfsdstools.e_read.reportreading.match_group_iter">match_group_iter</a></code></li>
 </ul>
 </li>
 <li><h3><a href="#header-classes">Classes</a></h3>
@@ -754,14 +541,11 @@ of the same period a year ago.
 <li>
 <h4><code><a title="secfsdstools.e_read.reportreading.ReportReader" href="#secfsdstools.e_read.reportreading.ReportReader">ReportReader</a></code></h4>
 <ul class="">
-<li><code><a title="secfsdstools.e_read.reportreading.ReportReader.financial_statements_for_dates_and_tags" href="#secfsdstools.e_read.reportreading.ReportReader.financial_statements_for_dates_and_tags">financial_statements_for_dates_and_tags</a></code></li>
-<li><code><a title="secfsdstools.e_read.reportreading.ReportReader.financial_statements_for_period" href="#secfsdstools.e_read.reportreading.ReportReader.financial_statements_for_period">financial_statements_for_period</a></code></li>
-<li><code><a title="secfsdstools.e_read.reportreading.ReportReader.financial_statements_for_period_and_previous_period" href="#secfsdstools.e_read.reportreading.ReportReader.financial_statements_for_period_and_previous_period">financial_statements_for_period_and_previous_period</a></code></li>
-<li><code><a title="secfsdstools.e_read.reportreading.ReportReader.get_raw_num_data" href="#secfsdstools.e_read.reportreading.ReportReader.get_raw_num_data">get_raw_num_data</a></code></li>
-<li><code><a title="secfsdstools.e_read.reportreading.ReportReader.get_raw_pre_data" href="#secfsdstools.e_read.reportreading.ReportReader.get_raw_pre_data">get_raw_pre_data</a></code></li>
+<li><code><a title="secfsdstools.e_read.reportreading.ReportReader.FIRST_LINE_PATTERN" href="#secfsdstools.e_read.reportreading.ReportReader.FIRST_LINE_PATTERN">FIRST_LINE_PATTERN</a></code></li>
 <li><code><a title="secfsdstools.e_read.reportreading.ReportReader.get_report_by_adsh" href="#secfsdstools.e_read.reportreading.ReportReader.get_report_by_adsh">get_report_by_adsh</a></code></li>
 <li><code><a title="secfsdstools.e_read.reportreading.ReportReader.get_report_by_indexreport" href="#secfsdstools.e_read.reportreading.ReportReader.get_report_by_indexreport">get_report_by_indexreport</a></code></li>
 <li><code><a title="secfsdstools.e_read.reportreading.ReportReader.statistics" href="#secfsdstools.e_read.reportreading.ReportReader.statistics">statistics</a></code></li>
+<li><code><a title="secfsdstools.e_read.reportreading.ReportReader.submission_data" href="#secfsdstools.e_read.reportreading.ReportReader.submission_data">submission_data</a></code></li>
 </ul>
 </li>
 </ul>

@@ -35,7 +35,59 @@ from typing import Dict, List
 from secfsdstools.d_index.indexdataaccess import IndexReport
 from secfsdstools.e_read.companyreading import CompanyReader
 
+def run():
+    # pylint: disable=W0612
+    &#34;&#34;&#34;
+    run the example
+    &#34;&#34;&#34;
+    apple_cik: int = 320193
+
+    # getting the company reader instance for apple
+    apple_reader = CompanyReader.get_company_reader(apple_cik)
+
+    # get the information of the latest filing
+    latest_filing: Dict[str, str] = apple_reader.get_latest_company_filing()
+    print(latest_filing)
+
+    # get basic infos of all the reports the company has filed.
+    # ... first as a pandas DataFrame
+    apple_all_reports_df = apple_reader.get_all_company_reports_df()
+
+    # ... second as list of IndexReport instances
+    apple_all_reports: List[IndexReport] = apple_reader.get_all_company_reports()
+    print(&#34;first entry: &#34;, apple_all_reports[0])
+
+    # both method can also be used with filters for the form, the report type.
+    # for instance, if you are only interested in annual and quarter reports, you can use
+    apple_10k_and_10q_reports_df = apple_reader.get_all_company_reports_df(forms=[&#39;10-K&#39;, &#39;10-Q&#39;])
+    print(apple_10k_and_10q_reports_df)
+
+
 if __name__ == &#39;__main__&#39;:
+    run()</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-functions">Functions</h2>
+<dl>
+<dt id="secfsdstools.x_examples.examplecompanyreading.run"><code class="name flex">
+<span>def <span class="ident">run</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>run the example</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def run():
+    # pylint: disable=W0612
+    &#34;&#34;&#34;
+    run the example
+    &#34;&#34;&#34;
     apple_cik: int = 320193
 
     # getting the company reader instance for apple
@@ -58,12 +110,8 @@ if __name__ == &#39;__main__&#39;:
     apple_10k_and_10q_reports_df = apple_reader.get_all_company_reports_df(forms=[&#39;10-K&#39;, &#39;10-Q&#39;])
     print(apple_10k_and_10q_reports_df)</code></pre>
 </details>
-</section>
-<section>
-</section>
-<section>
-</section>
-<section>
+</dd>
+</dl>
 </section>
 <section>
 </section>
@@ -77,6 +125,11 @@ if __name__ == &#39;__main__&#39;:
 <li><h3>Super-module</h3>
 <ul>
 <li><code><a title="secfsdstools.x_examples" href="index.html">secfsdstools.x_examples</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-functions">Functions</a></h3>
+<ul class="">
+<li><code><a title="secfsdstools.x_examples.examplecompanyreading.run" href="#secfsdstools.x_examples.examplecompanyreading.run">run</a></code></li>
 </ul>
 </li>
 </ul>

@@ -58,15 +58,19 @@ class DB(ABC):
     def get_connection(self) -&gt; sqlite3.Connection:
         &#34;&#34;&#34;
         creates a connection to the db.
-        :return: sqlite3 connection instance
+
+        Returns:
+            sqlite3.Connection: sqlite3 connection instance
         &#34;&#34;&#34;
         return sqlite3.connect(self.database)
 
     def execute_read_as_df(self, sql: str) -&gt; pd.DataFrame:
         &#34;&#34;&#34;
         directly read the content into a pandas dataframe
-        :param sql: Select String
-        :return: pd.DataFrame
+        Args:
+             sql (str): Select String
+        Returns:
+            pd.DataFrame: pd.DataFrame
         &#34;&#34;&#34;
         conn = self.get_connection()
         try:
@@ -78,7 +82,8 @@ class DB(ABC):
     def execute_single(self, sql: str):
         &#34;&#34;&#34;
         executes a single sql statement without any parameters.
-        :param sql: sql string, not paramterized
+        Args:
+             sql (str): sql string, not paramterized
         &#34;&#34;&#34;
         conn = self.get_connection()
         try:
@@ -91,8 +96,9 @@ class DB(ABC):
     def execute_many(self, sql: str, params: List[Tuple]):
         &#34;&#34;&#34;
         executes a parameterized statement for every tuple in the params list
-        :param sql: parameterized statement
-        :param params: list with tuples containing the parameters
+        Args:
+             sql (str): parameterized statement
+             params (List[Tuple]): list with tuples containing the parameters
         &#34;&#34;&#34;
         conn = self.get_connection()
         try:
@@ -105,8 +111,10 @@ class DB(ABC):
     def execute_fetchall(self, sql: str) -&gt; List[Tuple]:
         &#34;&#34;&#34;
         returns all results of the sql
-        :param sql: sql statement
-        :return: list with tuples
+        Args:
+             sql (str): sql statement
+        Returns:
+            List[Tuple]: list with tuples
         &#34;&#34;&#34;
         conn = self.get_connection()
         try:
@@ -121,9 +129,11 @@ class DB(ABC):
         Note all selected columns in the sql have to exist with the same
          name in the dataclass of type T.
 
-        :param sql: sql string
-        :param T: type class
-        :return: list of instances of the type
+        Args:
+             sql (str): sql string
+             T: type class
+        Returns:
+             List[T]: list of instances of the type
         &#34;&#34;&#34;
         conn = self.get_connection()
         try:
@@ -140,8 +150,10 @@ class DB(ABC):
         &#34;&#34;&#34;
         add the content of a df to the table. The name of the columns in df
         and table have to match
-        :param table_name: name of the table to append the data
-        :param dataframe:  the df with the data
+
+        Args:
+             table_name (str): name of the table to append the data
+             dataframe (pd.DataFrame):  the df with the data
         &#34;&#34;&#34;
         conn = self.get_connection()
         try:
@@ -149,13 +161,15 @@ class DB(ABC):
         finally:
             conn.close()
 
-    def create_insert_statement_for_dataclass(self, table_name: str, data):
+    def create_insert_statement_for_dataclass(self, table_name: str, data) -&gt; str:
         &#34;&#34;&#34;
         creates the insert sql statement based on the fields of a dataclass
 
-        :param table_name: name of the table to insert into
-        :param data: object of the dataclass
-        :return: &#39;insert into&#39; statement
+        Args:
+             table_name (str): name of the table to insert into
+             data: object of the dataclass
+        Returns:
+            str: &#39;insert into&#39; statement
         &#34;&#34;&#34;
         # todo: None handling
         fields: List[Field]
@@ -211,15 +225,19 @@ class DB(ABC):
     def get_connection(self) -&gt; sqlite3.Connection:
         &#34;&#34;&#34;
         creates a connection to the db.
-        :return: sqlite3 connection instance
+
+        Returns:
+            sqlite3.Connection: sqlite3 connection instance
         &#34;&#34;&#34;
         return sqlite3.connect(self.database)
 
     def execute_read_as_df(self, sql: str) -&gt; pd.DataFrame:
         &#34;&#34;&#34;
         directly read the content into a pandas dataframe
-        :param sql: Select String
-        :return: pd.DataFrame
+        Args:
+             sql (str): Select String
+        Returns:
+            pd.DataFrame: pd.DataFrame
         &#34;&#34;&#34;
         conn = self.get_connection()
         try:
@@ -231,7 +249,8 @@ class DB(ABC):
     def execute_single(self, sql: str):
         &#34;&#34;&#34;
         executes a single sql statement without any parameters.
-        :param sql: sql string, not paramterized
+        Args:
+             sql (str): sql string, not paramterized
         &#34;&#34;&#34;
         conn = self.get_connection()
         try:
@@ -244,8 +263,9 @@ class DB(ABC):
     def execute_many(self, sql: str, params: List[Tuple]):
         &#34;&#34;&#34;
         executes a parameterized statement for every tuple in the params list
-        :param sql: parameterized statement
-        :param params: list with tuples containing the parameters
+        Args:
+             sql (str): parameterized statement
+             params (List[Tuple]): list with tuples containing the parameters
         &#34;&#34;&#34;
         conn = self.get_connection()
         try:
@@ -258,8 +278,10 @@ class DB(ABC):
     def execute_fetchall(self, sql: str) -&gt; List[Tuple]:
         &#34;&#34;&#34;
         returns all results of the sql
-        :param sql: sql statement
-        :return: list with tuples
+        Args:
+             sql (str): sql statement
+        Returns:
+            List[Tuple]: list with tuples
         &#34;&#34;&#34;
         conn = self.get_connection()
         try:
@@ -274,9 +296,11 @@ class DB(ABC):
         Note all selected columns in the sql have to exist with the same
          name in the dataclass of type T.
 
-        :param sql: sql string
-        :param T: type class
-        :return: list of instances of the type
+        Args:
+             sql (str): sql string
+             T: type class
+        Returns:
+             List[T]: list of instances of the type
         &#34;&#34;&#34;
         conn = self.get_connection()
         try:
@@ -293,8 +317,10 @@ class DB(ABC):
         &#34;&#34;&#34;
         add the content of a df to the table. The name of the columns in df
         and table have to match
-        :param table_name: name of the table to append the data
-        :param dataframe:  the df with the data
+
+        Args:
+             table_name (str): name of the table to append the data
+             dataframe (pd.DataFrame):  the df with the data
         &#34;&#34;&#34;
         conn = self.get_connection()
         try:
@@ -302,13 +328,15 @@ class DB(ABC):
         finally:
             conn.close()
 
-    def create_insert_statement_for_dataclass(self, table_name: str, data):
+    def create_insert_statement_for_dataclass(self, table_name: str, data) -&gt; str:
         &#34;&#34;&#34;
         creates the insert sql statement based on the fields of a dataclass
 
-        :param table_name: name of the table to insert into
-        :param data: object of the dataclass
-        :return: &#39;insert into&#39; statement
+        Args:
+             table_name (str): name of the table to insert into
+             data: object of the dataclass
+        Returns:
+            str: &#39;insert into&#39; statement
         &#34;&#34;&#34;
         # todo: None handling
         fields: List[Field]
@@ -348,10 +376,14 @@ class DB(ABC):
 </code></dt>
 <dd>
 <div class="desc"><p>add the content of a df to the table. The name of the columns in df
-and table have to match
-:param table_name: name of the table to append the data
-:param dataframe:
-the df with the data</p></div>
+and table have to match</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>table_name</code></strong> :&ensp;<code>str</code></dt>
+<dd>name of the table to append the data</dd>
+<dt><strong><code>dataframe</code></strong> :&ensp;<code>pd.DataFrame</code></dt>
+<dd>the df with the data</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -360,8 +392,10 @@ the df with the data</p></div>
     &#34;&#34;&#34;
     add the content of a df to the table. The name of the columns in df
     and table have to match
-    :param table_name: name of the table to append the data
-    :param dataframe:  the df with the data
+
+    Args:
+         table_name (str): name of the table to append the data
+         dataframe (pd.DataFrame):  the df with the data
     &#34;&#34;&#34;
     conn = self.get_connection()
     try:
@@ -371,24 +405,35 @@ the df with the data</p></div>
 </details>
 </dd>
 <dt id="secfsdstools.a_utils.dbutils.DB.create_insert_statement_for_dataclass"><code class="name flex">
-<span>def <span class="ident">create_insert_statement_for_dataclass</span></span>(<span>self, table_name: str, data)</span>
+<span>def <span class="ident">create_insert_statement_for_dataclass</span></span>(<span>self, table_name: str, data) ‑> str</span>
 </code></dt>
 <dd>
 <div class="desc"><p>creates the insert sql statement based on the fields of a dataclass</p>
-<p>:param table_name: name of the table to insert into
-:param data: object of the dataclass
-:return: 'insert into' statement</p></div>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>table_name</code></strong> :&ensp;<code>str</code></dt>
+<dd>name of the table to insert into</dd>
+<dt><strong><code>data</code></strong></dt>
+<dd>object of the dataclass</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>str</code></dt>
+<dd>'insert into' statement</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def create_insert_statement_for_dataclass(self, table_name: str, data):
+<pre><code class="python">def create_insert_statement_for_dataclass(self, table_name: str, data) -&gt; str:
     &#34;&#34;&#34;
     creates the insert sql statement based on the fields of a dataclass
 
-    :param table_name: name of the table to insert into
-    :param data: object of the dataclass
-    :return: &#39;insert into&#39; statement
+    Args:
+         table_name (str): name of the table to insert into
+         data: object of the dataclass
+    Returns:
+        str: &#39;insert into&#39; statement
     &#34;&#34;&#34;
     # todo: None handling
     fields: List[Field]
@@ -417,9 +462,17 @@ the df with the data</p></div>
 <span>def <span class="ident">execute_fetchall</span></span>(<span>self, sql: str) ‑> List[Tuple[]]</span>
 </code></dt>
 <dd>
-<div class="desc"><p>returns all results of the sql
-:param sql: sql statement
-:return: list with tuples</p></div>
+<div class="desc"><p>returns all results of the sql</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>sql</code></strong> :&ensp;<code>str</code></dt>
+<dd>sql statement</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>List[Tuple]</code></dt>
+<dd>list with tuples</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -427,8 +480,10 @@ the df with the data</p></div>
 <pre><code class="python">def execute_fetchall(self, sql: str) -&gt; List[Tuple]:
     &#34;&#34;&#34;
     returns all results of the sql
-    :param sql: sql statement
-    :return: list with tuples
+    Args:
+         sql (str): sql statement
+    Returns:
+        List[Tuple]: list with tuples
     &#34;&#34;&#34;
     conn = self.get_connection()
     try:
@@ -446,9 +501,18 @@ the df with the data</p></div>
 into the provided type.
 Note all selected columns in the sql have to exist with the same
 name in the dataclass of type T.</p>
-<p>:param sql: sql string
-:param T: type class
-:return: list of instances of the type</p></div>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>sql</code></strong> :&ensp;<code>str</code></dt>
+<dd>sql string</dd>
+<dt><strong><code>T</code></strong></dt>
+<dd>type class</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>List[T]</code></dt>
+<dd>list of instances of the type</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -459,9 +523,11 @@ name in the dataclass of type T.</p>
     Note all selected columns in the sql have to exist with the same
      name in the dataclass of type T.
 
-    :param sql: sql string
-    :param T: type class
-    :return: list of instances of the type
+    Args:
+         sql (str): sql string
+         T: type class
+    Returns:
+         List[T]: list of instances of the type
     &#34;&#34;&#34;
     conn = self.get_connection()
     try:
@@ -479,9 +545,14 @@ name in the dataclass of type T.</p>
 <span>def <span class="ident">execute_many</span></span>(<span>self, sql: str, params: List[Tuple[]])</span>
 </code></dt>
 <dd>
-<div class="desc"><p>executes a parameterized statement for every tuple in the params list
-:param sql: parameterized statement
-:param params: list with tuples containing the parameters</p></div>
+<div class="desc"><p>executes a parameterized statement for every tuple in the params list</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>sql</code></strong> :&ensp;<code>str</code></dt>
+<dd>parameterized statement</dd>
+<dt><strong><code>params</code></strong> :&ensp;<code>List[Tuple]</code></dt>
+<dd>list with tuples containing the parameters</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -489,8 +560,9 @@ name in the dataclass of type T.</p>
 <pre><code class="python">def execute_many(self, sql: str, params: List[Tuple]):
     &#34;&#34;&#34;
     executes a parameterized statement for every tuple in the params list
-    :param sql: parameterized statement
-    :param params: list with tuples containing the parameters
+    Args:
+         sql (str): parameterized statement
+         params (List[Tuple]): list with tuples containing the parameters
     &#34;&#34;&#34;
     conn = self.get_connection()
     try:
@@ -505,9 +577,17 @@ name in the dataclass of type T.</p>
 <span>def <span class="ident">execute_read_as_df</span></span>(<span>self, sql: str) ‑> pandas.core.frame.DataFrame</span>
 </code></dt>
 <dd>
-<div class="desc"><p>directly read the content into a pandas dataframe
-:param sql: Select String
-:return: pd.DataFrame</p></div>
+<div class="desc"><p>directly read the content into a pandas dataframe</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>sql</code></strong> :&ensp;<code>str</code></dt>
+<dd>Select String</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>pd.DataFrame</code></dt>
+<dd>pd.DataFrame</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -515,8 +595,10 @@ name in the dataclass of type T.</p>
 <pre><code class="python">def execute_read_as_df(self, sql: str) -&gt; pd.DataFrame:
     &#34;&#34;&#34;
     directly read the content into a pandas dataframe
-    :param sql: Select String
-    :return: pd.DataFrame
+    Args:
+         sql (str): Select String
+    Returns:
+        pd.DataFrame: pd.DataFrame
     &#34;&#34;&#34;
     conn = self.get_connection()
     try:
@@ -530,8 +612,12 @@ name in the dataclass of type T.</p>
 <span>def <span class="ident">execute_single</span></span>(<span>self, sql: str)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>executes a single sql statement without any parameters.
-:param sql: sql string, not paramterized</p></div>
+<div class="desc"><p>executes a single sql statement without any parameters.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>sql</code></strong> :&ensp;<code>str</code></dt>
+<dd>sql string, not paramterized</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -539,7 +625,8 @@ name in the dataclass of type T.</p>
 <pre><code class="python">def execute_single(self, sql: str):
     &#34;&#34;&#34;
     executes a single sql statement without any parameters.
-    :param sql: sql string, not paramterized
+    Args:
+         sql (str): sql string, not paramterized
     &#34;&#34;&#34;
     conn = self.get_connection()
     try:
@@ -554,8 +641,12 @@ name in the dataclass of type T.</p>
 <span>def <span class="ident">get_connection</span></span>(<span>self) ‑> sqlite3.Connection</span>
 </code></dt>
 <dd>
-<div class="desc"><p>creates a connection to the db.
-:return: sqlite3 connection instance</p></div>
+<div class="desc"><p>creates a connection to the db.</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>sqlite3.Connection</code></dt>
+<dd>sqlite3 connection instance</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -563,7 +654,9 @@ name in the dataclass of type T.</p>
 <pre><code class="python">def get_connection(self) -&gt; sqlite3.Connection:
     &#34;&#34;&#34;
     creates a connection to the db.
-    :return: sqlite3 connection instance
+
+    Returns:
+        sqlite3.Connection: sqlite3 connection instance
     &#34;&#34;&#34;
     return sqlite3.connect(self.database)</code></pre>
 </details>

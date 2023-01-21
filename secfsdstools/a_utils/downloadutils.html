@@ -48,7 +48,8 @@ class UrlDownloader:
 
     def __init__(self, user_agent: str = &#34;&lt;not set&gt;&#34;):
         &#34;&#34;&#34;
-        :param user_agent: according to https://www.sec.gov/os/accessing-edgar-data in the form
+        Args:
+            user_agent (str): according to https://www.sec.gov/os/accessing-edgar-data in the form
         User-Agent: Sample Company Name AdminContact@&lt;sample company domain&gt;.com
         &#34;&#34;&#34;
 
@@ -62,13 +63,19 @@ class UrlDownloader:
             downloads the content auf an url and stores it into the target-file.
             retries a download several times, if it fails
 
-        :param file_url: url that referencese the file to be downloaded
-        :param target_file: the file to store the content into (it will be written into a zipfile)
-        :param expected_size: (optional) the expected size of the data that is downloaded.
-                logs a warning if the size doesn&#39;t match
-        :param max_tries: (optional) maximum retries, default is 6
-        :param sleep_time: (optional) wait time between retries, default is one second
-        :return the written file
+        Args:
+            file_url (str): url that referencese the file to be downloaded
+            target_file (str): the file to store the content into
+               (it will be written into a zipfile)
+            expected_size (str, optional, None): the expected size of
+              the data that is downloaded.
+            logs a warning if the size doesn&#39;t match
+            max_tries (int, optional, 6): maximum retries, default is 6
+            sleep_time (int, optional, 1): wait time between retries,
+              default is one second
+
+        Returns:
+            str: the written file name
         &#34;&#34;&#34;
         response = self.get_url_content(file_url, max_tries, sleep_time)
         content = response.text
@@ -79,18 +86,20 @@ class UrlDownloader:
 
         return write_content_to_zip(content, target_file)
 
-    def binary_download_url_to_file(self, file_url: str, target_file: str,
+    def binary_download_url_to_file(self, file_url: str,
+                                    target_file: str,
                                     max_tries: int = 6,
                                     sleep_time: int = 1):
         &#34;&#34;&#34;
             downloads the binary of an url and stores it into the target-file.
             retries a download several times, if it fails
 
-        :param file_url: url that referencese the file to be downloaded
-        :param target_file: the file to store the content into (it will be written into a zipfile)
-        :param max_tries: (optional) maximum retries, default is 6
-        :param sleep_time: (optional) wait time between retries, default is one second
-        :return the written file
+        Args:
+            file_url (str): url that referencese the file to be downloaded
+            target_file (str): the file to store the content into
+              (it will be written into a zipfile)
+            max_tries (int, optional, 6): maximum retries, default is 6
+            sleep_time (int, optional, 1): wait time between retries, default is one second
         &#34;&#34;&#34;
         response = self.get_url_content(file_url, max_tries, sleep_time)
 
@@ -104,11 +113,13 @@ class UrlDownloader:
             retries a download several times, if it fails.
             Uses the defined user-agent as header information
 
-        :param file_url: url that referencese the file to be downloaded
-        :param expected_size: (optional) the expected size of the data that is downloaded.
-            logs a warning if the size doesn&#39;t match
-        :param sleep_time: (optional) wait time between retries, default is one second
-        :return
+        Args:
+            file_url (str): url that referencese the file to be downloaded
+            max_tries (int, optional, 6): maximum number of tries to get the data
+            sleep_time (int, optional, 1): wait time between retries, default is one second
+
+        Returns:
+             requests.models.Response
         &#34;&#34;&#34;
         response = None
         current_try = 0
@@ -143,8 +154,12 @@ class UrlDownloader:
 </code></dt>
 <dd>
 <div class="desc"><p>Main downloader class</p>
-<p>:param user_agent: according to <a href="https://www.sec.gov/os/accessing-edgar-data">https://www.sec.gov/os/accessing-edgar-data</a> in the form
-User-Agent: Sample Company Name AdminContact@<sample company domain>.com</p></div>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>user_agent</code></strong> :&ensp;<code>str</code></dt>
+<dd>according to <a href="https://www.sec.gov/os/accessing-edgar-data">https://www.sec.gov/os/accessing-edgar-data</a> in the form</dd>
+</dl>
+<p>User-Agent: Sample Company Name AdminContact@<sample company domain>.com</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -156,7 +171,8 @@ User-Agent: Sample Company Name AdminContact@<sample company domain>.com</p></di
 
     def __init__(self, user_agent: str = &#34;&lt;not set&gt;&#34;):
         &#34;&#34;&#34;
-        :param user_agent: according to https://www.sec.gov/os/accessing-edgar-data in the form
+        Args:
+            user_agent (str): according to https://www.sec.gov/os/accessing-edgar-data in the form
         User-Agent: Sample Company Name AdminContact@&lt;sample company domain&gt;.com
         &#34;&#34;&#34;
 
@@ -170,13 +186,19 @@ User-Agent: Sample Company Name AdminContact@<sample company domain>.com</p></di
             downloads the content auf an url and stores it into the target-file.
             retries a download several times, if it fails
 
-        :param file_url: url that referencese the file to be downloaded
-        :param target_file: the file to store the content into (it will be written into a zipfile)
-        :param expected_size: (optional) the expected size of the data that is downloaded.
-                logs a warning if the size doesn&#39;t match
-        :param max_tries: (optional) maximum retries, default is 6
-        :param sleep_time: (optional) wait time between retries, default is one second
-        :return the written file
+        Args:
+            file_url (str): url that referencese the file to be downloaded
+            target_file (str): the file to store the content into
+               (it will be written into a zipfile)
+            expected_size (str, optional, None): the expected size of
+              the data that is downloaded.
+            logs a warning if the size doesn&#39;t match
+            max_tries (int, optional, 6): maximum retries, default is 6
+            sleep_time (int, optional, 1): wait time between retries,
+              default is one second
+
+        Returns:
+            str: the written file name
         &#34;&#34;&#34;
         response = self.get_url_content(file_url, max_tries, sleep_time)
         content = response.text
@@ -187,18 +209,20 @@ User-Agent: Sample Company Name AdminContact@<sample company domain>.com</p></di
 
         return write_content_to_zip(content, target_file)
 
-    def binary_download_url_to_file(self, file_url: str, target_file: str,
+    def binary_download_url_to_file(self, file_url: str,
+                                    target_file: str,
                                     max_tries: int = 6,
                                     sleep_time: int = 1):
         &#34;&#34;&#34;
             downloads the binary of an url and stores it into the target-file.
             retries a download several times, if it fails
 
-        :param file_url: url that referencese the file to be downloaded
-        :param target_file: the file to store the content into (it will be written into a zipfile)
-        :param max_tries: (optional) maximum retries, default is 6
-        :param sleep_time: (optional) wait time between retries, default is one second
-        :return the written file
+        Args:
+            file_url (str): url that referencese the file to be downloaded
+            target_file (str): the file to store the content into
+              (it will be written into a zipfile)
+            max_tries (int, optional, 6): maximum retries, default is 6
+            sleep_time (int, optional, 1): wait time between retries, default is one second
         &#34;&#34;&#34;
         response = self.get_url_content(file_url, max_tries, sleep_time)
 
@@ -212,11 +236,13 @@ User-Agent: Sample Company Name AdminContact@<sample company domain>.com</p></di
             retries a download several times, if it fails.
             Uses the defined user-agent as header information
 
-        :param file_url: url that referencese the file to be downloaded
-        :param expected_size: (optional) the expected size of the data that is downloaded.
-            logs a warning if the size doesn&#39;t match
-        :param sleep_time: (optional) wait time between retries, default is one second
-        :return
+        Args:
+            file_url (str): url that referencese the file to be downloaded
+            max_tries (int, optional, 6): maximum number of tries to get the data
+            sleep_time (int, optional, 1): wait time between retries, default is one second
+
+        Returns:
+             requests.models.Response
         &#34;&#34;&#34;
         response = None
         current_try = 0
@@ -243,27 +269,36 @@ User-Agent: Sample Company Name AdminContact@<sample company domain>.com</p></di
 <dd>
 <div class="desc"><p>downloads the binary of an url and stores it into the target-file.
 retries a download several times, if it fails</p>
-<p>:param file_url: url that referencese the file to be downloaded
-:param target_file: the file to store the content into (it will be written into a zipfile)
-:param max_tries: (optional) maximum retries, default is 6
-:param sleep_time: (optional) wait time between retries, default is one second
-:return the written file</p></div>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>file_url</code></strong> :&ensp;<code>str</code></dt>
+<dd>url that referencese the file to be downloaded</dd>
+<dt><strong><code>target_file</code></strong> :&ensp;<code>str</code></dt>
+<dd>the file to store the content into
+(it will be written into a zipfile)</dd>
+<dt><strong><code>max_tries</code></strong> :&ensp;<code>int</code>, optional<code>, 6</code></dt>
+<dd>maximum retries, default is 6</dd>
+<dt><strong><code>sleep_time</code></strong> :&ensp;<code>int</code>, optional<code>, 1</code></dt>
+<dd>wait time between retries, default is one second</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def binary_download_url_to_file(self, file_url: str, target_file: str,
+<pre><code class="python">def binary_download_url_to_file(self, file_url: str,
+                                target_file: str,
                                 max_tries: int = 6,
                                 sleep_time: int = 1):
     &#34;&#34;&#34;
         downloads the binary of an url and stores it into the target-file.
         retries a download several times, if it fails
 
-    :param file_url: url that referencese the file to be downloaded
-    :param target_file: the file to store the content into (it will be written into a zipfile)
-    :param max_tries: (optional) maximum retries, default is 6
-    :param sleep_time: (optional) wait time between retries, default is one second
-    :return the written file
+    Args:
+        file_url (str): url that referencese the file to be downloaded
+        target_file (str): the file to store the content into
+          (it will be written into a zipfile)
+        max_tries (int, optional, 6): maximum retries, default is 6
+        sleep_time (int, optional, 1): wait time between retries, default is one second
     &#34;&#34;&#34;
     response = self.get_url_content(file_url, max_tries, sleep_time)
 
@@ -277,13 +312,28 @@ retries a download several times, if it fails</p>
 <dd>
 <div class="desc"><p>downloads the content auf an url and stores it into the target-file.
 retries a download several times, if it fails</p>
-<p>:param file_url: url that referencese the file to be downloaded
-:param target_file: the file to store the content into (it will be written into a zipfile)
-:param expected_size: (optional) the expected size of the data that is downloaded.
-logs a warning if the size doesn't match
-:param max_tries: (optional) maximum retries, default is 6
-:param sleep_time: (optional) wait time between retries, default is one second
-:return the written file</p></div>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>file_url</code></strong> :&ensp;<code>str</code></dt>
+<dd>url that referencese the file to be downloaded</dd>
+<dt><strong><code>target_file</code></strong> :&ensp;<code>str</code></dt>
+<dd>the file to store the content into
+(it will be written into a zipfile)</dd>
+<dt><strong><code>expected_size</code></strong> :&ensp;<code>str</code>, optional<code>, None</code></dt>
+<dd>the expected size of
+the data that is downloaded.</dd>
+<dt>logs a warning if the size doesn't match</dt>
+<dt><strong><code>max_tries</code></strong> :&ensp;<code>int</code>, optional<code>, 6</code></dt>
+<dd>maximum retries, default is 6</dd>
+<dt><strong><code>sleep_time</code></strong> :&ensp;<code>int</code>, optional<code>, 1</code></dt>
+<dd>wait time between retries,
+default is one second</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>str</code></dt>
+<dd>the written file name</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -296,13 +346,19 @@ logs a warning if the size doesn't match
         downloads the content auf an url and stores it into the target-file.
         retries a download several times, if it fails
 
-    :param file_url: url that referencese the file to be downloaded
-    :param target_file: the file to store the content into (it will be written into a zipfile)
-    :param expected_size: (optional) the expected size of the data that is downloaded.
-            logs a warning if the size doesn&#39;t match
-    :param max_tries: (optional) maximum retries, default is 6
-    :param sleep_time: (optional) wait time between retries, default is one second
-    :return the written file
+    Args:
+        file_url (str): url that referencese the file to be downloaded
+        target_file (str): the file to store the content into
+           (it will be written into a zipfile)
+        expected_size (str, optional, None): the expected size of
+          the data that is downloaded.
+        logs a warning if the size doesn&#39;t match
+        max_tries (int, optional, 6): maximum retries, default is 6
+        sleep_time (int, optional, 1): wait time between retries,
+          default is one second
+
+    Returns:
+        str: the written file name
     &#34;&#34;&#34;
     response = self.get_url_content(file_url, max_tries, sleep_time)
     content = response.text
@@ -321,11 +377,17 @@ logs a warning if the size doesn't match
 <div class="desc"><p>downloads the content auf an url and returns it as a string.
 retries a download several times, if it fails.
 Uses the defined user-agent as header information</p>
-<p>:param file_url: url that referencese the file to be downloaded
-:param expected_size: (optional) the expected size of the data that is downloaded.
-logs a warning if the size doesn't match
-:param sleep_time: (optional) wait time between retries, default is one second
-:return</p></div>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>file_url</code></strong> :&ensp;<code>str</code></dt>
+<dd>url that referencese the file to be downloaded</dd>
+<dt><strong><code>max_tries</code></strong> :&ensp;<code>int</code>, optional<code>, 6</code></dt>
+<dd>maximum number of tries to get the data</dd>
+<dt><strong><code>sleep_time</code></strong> :&ensp;<code>int</code>, optional<code>, 1</code></dt>
+<dd>wait time between retries, default is one second</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<p>requests.models.Response</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -337,11 +399,13 @@ logs a warning if the size doesn't match
         retries a download several times, if it fails.
         Uses the defined user-agent as header information
 
-    :param file_url: url that referencese the file to be downloaded
-    :param expected_size: (optional) the expected size of the data that is downloaded.
-        logs a warning if the size doesn&#39;t match
-    :param sleep_time: (optional) wait time between retries, default is one second
-    :return
+    Args:
+        file_url (str): url that referencese the file to be downloaded
+        max_tries (int, optional, 6): maximum number of tries to get the data
+        sleep_time (int, optional, 1): wait time between retries, default is one second
+
+    Returns:
+         requests.models.Response
     &#34;&#34;&#34;
     response = None
     current_try = 0

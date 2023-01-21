@@ -84,12 +84,16 @@ class ParallelExecutor(Generic[IT, PT, OT]):
                  intend: str = &#34;    &#34;,
                  execute_serial: bool = False):
         &#34;&#34;&#34;
-        :param processes: number of parallel processes, default is cpu_count
-        :param chunksize: size of chunk - think of it as a commit, default is 100
-        :param max_calls_per_sec: how many calls may be made per second (for all processes),
-            default is 0, meaning no limit
-        :param execute_serial: for easier debugging, this flag ensures that all data are
-               processed in the main thread
+        Args:
+            processes (int, optional, cpu_count()): number of parallel processes,
+             default is cpu_count
+            chunksize (int, optional, 100): size of chunk - think of it as a commit,
+             default is 100
+            max_calls_per_sec (int, optional, 0): how many calls may be made per
+             second (for all processes), default is 0, meaning no limit
+            intend (str, optional, &#39;    &#39;): how much log messages should be intended
+            execute_serial (bool, optional, False): for easier debugging, this
+             flag ensures that all data areprocessed in the main thread
         &#34;&#34;&#34;
 
         self.processes = processes
@@ -113,21 +117,29 @@ class ParallelExecutor(Generic[IT, PT, OT]):
     def set_get_entries_function(self, get_entries: Callable[[], List[IT]]):
         &#34;&#34;&#34;
         set the function which returns the list of the items that have not been processed.
-        :param get_entries: function that returns the items to be processed
+
+        Args:
+            get_entries (Callable[[], List[IT]]): function that returns the items to be processed
+
         &#34;&#34;&#34;
         self.get_entries_function = get_entries
 
     def set_process_element_function(self, process_element: Callable[[IT], PT]):
         &#34;&#34;&#34;
         set the function that processes a single element and returns the processed element
+
+        Args:
+            process_element (Callable[[IT], PT]): function that processes a single element
         &#34;&#34;&#34;
         self.process_element_function = process_element
 
     def set_post_process_chunk_function(self, post_process: Callable[[List[PT]], List[OT]]):
         &#34;&#34;&#34;
-        set the function that receives a list of processed elements unad updates
+        set the function that receives a list of processed elements and updates
         the state of these elements accordingly
-        :param post_process:
+
+        Args:
+            post_process (Callable[[List[PT]], List[OT]]): the post process method
         &#34;&#34;&#34;
         self.post_process_chunk_function = post_process
 
@@ -135,8 +147,6 @@ class ParallelExecutor(Generic[IT, PT, OT]):
         &#34;&#34;&#34;
         process the current data set and makes sure that only a limited number
         of calls per seconds are made
-        :param data: data to process
-        :return: processed result
         &#34;&#34;&#34;
         start = time()
         result: PT = self.process_element_function(data)
@@ -160,8 +170,9 @@ class ParallelExecutor(Generic[IT, PT, OT]):
         &#34;&#34;&#34;
         starts the parallel processing and returns the results.
 
-        :return: tuple with two lists: the first are the processed entries,
-                 the sedond list are the entries that couldn&#39;t be processed
+        Returns:
+             Tuple[List[OT], List[IT]]: tuple with two lists: the first are the processed entries,
+                 the second list are the entries that couldn&#39;t be processed
         &#34;&#34;&#34;
 
         last_missing = None
@@ -240,12 +251,22 @@ entries and returns the processed content.
 The post_process_chunk_function receives a list of processed entries. you use this
 function to update the processed entries, so that in the next call to
 get_entries_function, these entries will not be part of</p>
-<p>:param processes: number of parallel processes, default is cpu_count
-:param chunksize: size of chunk - think of it as a commit, default is 100
-:param max_calls_per_sec: how many calls may be made per second (for all processes),
-default is 0, meaning no limit
-:param execute_serial: for easier debugging, this flag ensures that all data are
-processed in the main thread</p></div>
+<h2 id="args">Args</h2>
+<dl>
+<dt>processes (int, optional, cpu_count()): number of parallel processes,</dt>
+<dt>default is cpu_count</dt>
+<dt><strong><code>chunksize</code></strong> :&ensp;<code>int</code>, optional<code>, 100</code></dt>
+<dd>size of chunk - think of it as a commit,</dd>
+<dt>default is 100</dt>
+<dt><strong><code>max_calls_per_sec</code></strong> :&ensp;<code>int</code>, optional<code>, 0</code></dt>
+<dd>how many calls may be made per</dd>
+<dt>second (for all processes), default is 0, meaning no limit</dt>
+<dt>intend (str, optional, '
+'): how much log messages should be intended</dt>
+<dt><strong><code>execute_serial</code></strong> :&ensp;<code>bool</code>, optional<code>, False</code></dt>
+<dd>for easier debugging, this</dd>
+</dl>
+<p>flag ensures that all data areprocessed in the main thread</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -286,12 +307,16 @@ processed in the main thread</p></div>
                  intend: str = &#34;    &#34;,
                  execute_serial: bool = False):
         &#34;&#34;&#34;
-        :param processes: number of parallel processes, default is cpu_count
-        :param chunksize: size of chunk - think of it as a commit, default is 100
-        :param max_calls_per_sec: how many calls may be made per second (for all processes),
-            default is 0, meaning no limit
-        :param execute_serial: for easier debugging, this flag ensures that all data are
-               processed in the main thread
+        Args:
+            processes (int, optional, cpu_count()): number of parallel processes,
+             default is cpu_count
+            chunksize (int, optional, 100): size of chunk - think of it as a commit,
+             default is 100
+            max_calls_per_sec (int, optional, 0): how many calls may be made per
+             second (for all processes), default is 0, meaning no limit
+            intend (str, optional, &#39;    &#39;): how much log messages should be intended
+            execute_serial (bool, optional, False): for easier debugging, this
+             flag ensures that all data areprocessed in the main thread
         &#34;&#34;&#34;
 
         self.processes = processes
@@ -315,21 +340,29 @@ processed in the main thread</p></div>
     def set_get_entries_function(self, get_entries: Callable[[], List[IT]]):
         &#34;&#34;&#34;
         set the function which returns the list of the items that have not been processed.
-        :param get_entries: function that returns the items to be processed
+
+        Args:
+            get_entries (Callable[[], List[IT]]): function that returns the items to be processed
+
         &#34;&#34;&#34;
         self.get_entries_function = get_entries
 
     def set_process_element_function(self, process_element: Callable[[IT], PT]):
         &#34;&#34;&#34;
         set the function that processes a single element and returns the processed element
+
+        Args:
+            process_element (Callable[[IT], PT]): function that processes a single element
         &#34;&#34;&#34;
         self.process_element_function = process_element
 
     def set_post_process_chunk_function(self, post_process: Callable[[List[PT]], List[OT]]):
         &#34;&#34;&#34;
-        set the function that receives a list of processed elements unad updates
+        set the function that receives a list of processed elements and updates
         the state of these elements accordingly
-        :param post_process:
+
+        Args:
+            post_process (Callable[[List[PT]], List[OT]]): the post process method
         &#34;&#34;&#34;
         self.post_process_chunk_function = post_process
 
@@ -337,8 +370,6 @@ processed in the main thread</p></div>
         &#34;&#34;&#34;
         process the current data set and makes sure that only a limited number
         of calls per seconds are made
-        :param data: data to process
-        :return: processed result
         &#34;&#34;&#34;
         start = time()
         result: PT = self.process_element_function(data)
@@ -362,8 +393,9 @@ processed in the main thread</p></div>
         &#34;&#34;&#34;
         starts the parallel processing and returns the results.
 
-        :return: tuple with two lists: the first are the processed entries,
-                 the sedond list are the entries that couldn&#39;t be processed
+        Returns:
+             Tuple[List[OT], List[IT]]: tuple with two lists: the first are the processed entries,
+                 the second list are the entries that couldn&#39;t be processed
         &#34;&#34;&#34;
 
         last_missing = None
@@ -413,8 +445,12 @@ processed in the main thread</p></div>
 </code></dt>
 <dd>
 <div class="desc"><p>starts the parallel processing and returns the results.</p>
-<p>:return: tuple with two lists: the first are the processed entries,
-the sedond list are the entries that couldn't be processed</p></div>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>Tuple[List[OT], List[IT]]</code></dt>
+<dd>tuple with two lists: the first are the processed entries,
+the second list are the entries that couldn't be processed</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -423,8 +459,9 @@ the sedond list are the entries that couldn't be processed</p></div>
     &#34;&#34;&#34;
     starts the parallel processing and returns the results.
 
-    :return: tuple with two lists: the first are the processed entries,
-             the sedond list are the entries that couldn&#39;t be processed
+    Returns:
+         Tuple[List[OT], List[IT]]: tuple with two lists: the first are the processed entries,
+             the second list are the entries that couldn&#39;t be processed
     &#34;&#34;&#34;
 
     last_missing = None
@@ -468,8 +505,12 @@ the sedond list are the entries that couldn't be processed</p></div>
 <span>def <span class="ident">set_get_entries_function</span></span>(<span>self, get_entries: Callable[[], List[~IT]])</span>
 </code></dt>
 <dd>
-<div class="desc"><p>set the function which returns the list of the items that have not been processed.
-:param get_entries: function that returns the items to be processed</p></div>
+<div class="desc"><p>set the function which returns the list of the items that have not been processed.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>get_entries</code></strong> :&ensp;<code>Callable[[], List[IT]]</code></dt>
+<dd>function that returns the items to be processed</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -477,7 +518,10 @@ the sedond list are the entries that couldn't be processed</p></div>
 <pre><code class="python">def set_get_entries_function(self, get_entries: Callable[[], List[IT]]):
     &#34;&#34;&#34;
     set the function which returns the list of the items that have not been processed.
-    :param get_entries: function that returns the items to be processed
+
+    Args:
+        get_entries (Callable[[], List[IT]]): function that returns the items to be processed
+
     &#34;&#34;&#34;
     self.get_entries_function = get_entries</code></pre>
 </details>
@@ -486,18 +530,24 @@ the sedond list are the entries that couldn't be processed</p></div>
 <span>def <span class="ident">set_post_process_chunk_function</span></span>(<span>self, post_process: Callable[[List[~PT]], List[~OT]])</span>
 </code></dt>
 <dd>
-<div class="desc"><p>set the function that receives a list of processed elements unad updates
-the state of these elements accordingly
-:param post_process:</p></div>
+<div class="desc"><p>set the function that receives a list of processed elements and updates
+the state of these elements accordingly</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>post_process</code></strong> :&ensp;<code>Callable[[List[PT]], List[OT]]</code></dt>
+<dd>the post process method</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def set_post_process_chunk_function(self, post_process: Callable[[List[PT]], List[OT]]):
     &#34;&#34;&#34;
-    set the function that receives a list of processed elements unad updates
+    set the function that receives a list of processed elements and updates
     the state of these elements accordingly
-    :param post_process:
+
+    Args:
+        post_process (Callable[[List[PT]], List[OT]]): the post process method
     &#34;&#34;&#34;
     self.post_process_chunk_function = post_process</code></pre>
 </details>
@@ -506,7 +556,12 @@ the state of these elements accordingly
 <span>def <span class="ident">set_process_element_function</span></span>(<span>self, process_element: Callable[[~IT], ~PT])</span>
 </code></dt>
 <dd>
-<div class="desc"><p>set the function that processes a single element and returns the processed element</p></div>
+<div class="desc"><p>set the function that processes a single element and returns the processed element</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>process_element</code></strong> :&ensp;<code>Callable[[IT], PT]</code></dt>
+<dd>function that processes a single element</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -514,6 +569,9 @@ the state of these elements accordingly
 <pre><code class="python">def set_process_element_function(self, process_element: Callable[[IT], PT]):
     &#34;&#34;&#34;
     set the function that processes a single element and returns the processed element
+
+    Args:
+        process_element (Callable[[IT], PT]): function that processes a single element
     &#34;&#34;&#34;
     self.process_element_function = process_element</code></pre>
 </details>

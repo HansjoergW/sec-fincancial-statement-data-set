@@ -28,6 +28,7 @@
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">&#34;&#34;&#34;Indexing the downloaded to data&#34;&#34;&#34;
+import logging
 import os
 from datetime import datetime, timezone
 from typing import List
@@ -35,7 +36,8 @@ from typing import List
 from secfsdstools.a_utils.fileutils import read_df_from_file_in_zip, get_filenames_in_directory
 from secfsdstools.d_index.indexdataaccess import DBIndexingAccessor, IndexFileProcessingState
 
-URL_PREFIX: str = &#39;https://www.sec.gov/Archives/edgar/data/&#39;
+
+LOGGER = logging.getLogger(__name__)
 
 
 class ReportZipIndexer:
@@ -43,6 +45,7 @@ class ReportZipIndexer:
     Index the reports.
     &#34;&#34;&#34;
     PROCESSED_STR: str = &#39;processed&#39;
+    URL_PREFIX: str = &#39;https://www.sec.gov/Archives/edgar/data/&#39;
 
     def __init__(self, db_dir: str, zip_dir: str):
         self.dbaccessor = DBIndexingAccessor(db_dir=db_dir)
@@ -66,7 +69,8 @@ class ReportZipIndexer:
         return list(not_indexed)
 
     def _index_file(self, file_name: str):
-        path = self.zip_dir + file_name
+        LOGGER.info(&#34;indexing file %s&#34;, file_name)
+        path = os.path.join(self.zip_dir, file_name)
         full_path = os.path.realpath(path)
 
         # todo: check if table already contains entries
@@ -82,7 +86,7 @@ class ReportZipIndexer:
         sub_df[&#39;fullPath&#39;] = full_path
         sub_df[&#39;originFile&#39;] = file_name
         sub_df[&#39;originFileType&#39;] = &#39;quarter&#39;
-        sub_df[&#39;url&#39;] = URL_PREFIX
+        sub_df[&#39;url&#39;] = ReportZipIndexer.URL_PREFIX
         sub_df[&#39;url&#39;] = sub_df[&#39;url&#39;] + sub_df[&#39;cik&#39;].astype(str) + &#39;/&#39; + \
                         sub_df[&#39;adsh&#39;].str.replace(&#39;-&#39;, &#39;&#39;) + &#39;/&#39; + sub_df[&#39;adsh&#39;] + &#39;-index.htm&#39;
 
@@ -129,6 +133,7 @@ class ReportZipIndexer:
     Index the reports.
     &#34;&#34;&#34;
     PROCESSED_STR: str = &#39;processed&#39;
+    URL_PREFIX: str = &#39;https://www.sec.gov/Archives/edgar/data/&#39;
 
     def __init__(self, db_dir: str, zip_dir: str):
         self.dbaccessor = DBIndexingAccessor(db_dir=db_dir)
@@ -152,7 +157,8 @@ class ReportZipIndexer:
         return list(not_indexed)
 
     def _index_file(self, file_name: str):
-        path = self.zip_dir + file_name
+        LOGGER.info(&#34;indexing file %s&#34;, file_name)
+        path = os.path.join(self.zip_dir, file_name)
         full_path = os.path.realpath(path)
 
         # todo: check if table already contains entries
@@ -168,7 +174,7 @@ class ReportZipIndexer:
         sub_df[&#39;fullPath&#39;] = full_path
         sub_df[&#39;originFile&#39;] = file_name
         sub_df[&#39;originFileType&#39;] = &#39;quarter&#39;
-        sub_df[&#39;url&#39;] = URL_PREFIX
+        sub_df[&#39;url&#39;] = ReportZipIndexer.URL_PREFIX
         sub_df[&#39;url&#39;] = sub_df[&#39;url&#39;] + sub_df[&#39;cik&#39;].astype(str) + &#39;/&#39; + \
                         sub_df[&#39;adsh&#39;].str.replace(&#39;-&#39;, &#39;&#39;) + &#39;/&#39; + sub_df[&#39;adsh&#39;] + &#39;-index.htm&#39;
 
@@ -193,6 +199,10 @@ class ReportZipIndexer:
 <h3>Class variables</h3>
 <dl>
 <dt id="secfsdstools.d_index.indexing.ReportZipIndexer.PROCESSED_STR"><code class="name">var <span class="ident">PROCESSED_STR</span> : str</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="secfsdstools.d_index.indexing.ReportZipIndexer.URL_PREFIX"><code class="name">var <span class="ident">URL_PREFIX</span> : str</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -239,6 +249,7 @@ class ReportZipIndexer:
 <h4><code><a title="secfsdstools.d_index.indexing.ReportZipIndexer" href="#secfsdstools.d_index.indexing.ReportZipIndexer">ReportZipIndexer</a></code></h4>
 <ul class="">
 <li><code><a title="secfsdstools.d_index.indexing.ReportZipIndexer.PROCESSED_STR" href="#secfsdstools.d_index.indexing.ReportZipIndexer.PROCESSED_STR">PROCESSED_STR</a></code></li>
+<li><code><a title="secfsdstools.d_index.indexing.ReportZipIndexer.URL_PREFIX" href="#secfsdstools.d_index.indexing.ReportZipIndexer.URL_PREFIX">URL_PREFIX</a></code></li>
 <li><code><a title="secfsdstools.d_index.indexing.ReportZipIndexer.process" href="#secfsdstools.d_index.indexing.ReportZipIndexer.process">process</a></code></li>
 </ul>
 </li>

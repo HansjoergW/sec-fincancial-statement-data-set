@@ -72,7 +72,9 @@ class DBIndexingAccessor(DB):
     def read_all_indexreports(self) -&gt; List[IndexReport]:
         &#34;&#34;&#34;
         reads all entries of the index_reports table
-        :return: List with IndexReport objects
+
+        Returns:
+            List[IndexReport]: List with IndexReport objects
         &#34;&#34;&#34;
         sql = f&#39;SELECT * FROM {self.INDEX_REPORTS_TABLE}&#39;
         return self.execute_fetchall_typed(sql, IndexReport)
@@ -80,7 +82,9 @@ class DBIndexingAccessor(DB):
     def read_all_indexreports_df(self) -&gt; pd.DataFrame:
         &#34;&#34;&#34;
         reads all entries of the index_reports table as a pandas DataFrame
-        :return: pandas DataFrame
+
+        Returns:
+            pd.DataFrame: pandas DataFrame
         &#34;&#34;&#34;
         sql = f&#39;SELECT * FROM {self.INDEX_REPORTS_TABLE}&#39;
         return self.execute_read_as_df(sql)
@@ -88,7 +92,9 @@ class DBIndexingAccessor(DB):
     def read_all_indexfileprocessing(self) -&gt; List[IndexFileProcessingState]:
         &#34;&#34;&#34;
         reads all entries of the index_file_processing_state table
-        :return: List with IndexFileProcessingState objects
+
+        Returns:
+            List[IndexFileProcessingState]: List with IndexFileProcessingState objects
         &#34;&#34;&#34;
         sql = f&#39;SELECT * FROM {self.INDEX_PROCESSING_TABLE}&#39;
         return self.execute_fetchall_typed(sql, IndexFileProcessingState)
@@ -96,15 +102,30 @@ class DBIndexingAccessor(DB):
     def read_all_indexfileprocessing_df(self) -&gt; pd.DataFrame:
         &#34;&#34;&#34;
         reads all entries of the index_file_processing_state table as a pandas DataFrame
-        :return: pandas DataFrame
+
+        Returns:
+            pd.DataFrame: pandas DataFrame
         &#34;&#34;&#34;
         sql = f&#39;SELECT * FROM {self.INDEX_PROCESSING_TABLE}&#39;
         return self.execute_read_as_df(sql)
 
+    def read_index_file_for_filename(self, filename: str) -&gt; IndexFileProcessingState:
+        &#34;&#34;&#34;
+        returns the IndexFileProcessingState instance for the provided filename
+        Args:
+            filename (str): the filename of the file
+
+        Returns:
+            IndexFileProcessingState: the processing state instance
+        &#34;&#34;&#34;
+        sql = f&#34;SELECT * FROM {self.INDEX_PROCESSING_TABLE} WHERE fileName = &#39;{filename}&#39;&#34;
+        return self.execute_fetchall_typed(sql, IndexFileProcessingState)[0]
+
     def insert_indexreport(self, data: IndexReport):
         &#34;&#34;&#34;
         inserts an entry into the index_report table
-        :param data: IndexReport data object
+        Args:
+            data (IndexReport): IndexReport data object
         &#34;&#34;&#34;
         sql = self.create_insert_statement_for_dataclass(self.INDEX_REPORTS_TABLE, data)
         self.execute_single(sql)
@@ -112,14 +133,18 @@ class DBIndexingAccessor(DB):
     def append_indexreport_df(self, dataframe: pd.DataFrame):
         &#34;&#34;&#34;
         append the content of the df to the index report table
-        :param dataframe: the dataframe to be appended
+
+        Args:
+            dataframe (pd.DataFrame): the dataframe to be appended
         &#34;&#34;&#34;
         self.append_df_to_table(table_name=self.INDEX_REPORTS_TABLE, dataframe=dataframe)
 
     def insert_indexfileprocessing(self, data: IndexFileProcessingState):
         &#34;&#34;&#34;
         inserts an entry into the index_file_processing_state table
-        :param data: IndexFileProcessingState data object
+
+        Args:
+            data (IndexFileProcessingState): IndexFileProcessingState data object to insert
         &#34;&#34;&#34;
         sql = self.create_insert_statement_for_dataclass(self.INDEX_PROCESSING_TABLE, data)
         self.execute_single(sql)
@@ -127,8 +152,12 @@ class DBIndexingAccessor(DB):
     def find_latest_company_report(self, cik: int) -&gt; IndexReport:
         &#34;&#34;&#34;
         returns the latest report of a company
-        :param cik: the cik of the company
-        :return:IndexReport of the latest report of the company
+
+        Args:
+            cik (int): the cik of the company
+
+        Returns:
+            IndexReport: of the latest report of the company
         &#34;&#34;&#34;
 
         sql = f&#39;SELECT * FROM {self.INDEX_REPORTS_TABLE} WHERE cik = {cik} ORDER BY period DESC&#39;
@@ -137,8 +166,11 @@ class DBIndexingAccessor(DB):
     def read_index_report_for_adsh(self, adsh: str) -&gt; IndexReport:
         &#34;&#34;&#34;
         returns the IndexReport instance for the provided adsh
-        :param adsh: adsh
-        :return: the report for the provided adsh
+
+        Args:
+            adsh (str):  adsh
+        Returns:
+            IndexReport: the report for the provided adsh
         &#34;&#34;&#34;
         sql = f&#34;SELECT * FROM {self.INDEX_REPORTS_TABLE} WHERE adsh = &#39;{adsh}&#39;&#34;
         return self.execute_fetchall_typed(sql, IndexReport)[0]
@@ -149,9 +181,13 @@ class DBIndexingAccessor(DB):
         gets all reports as IndexReport instances for a company identified by its cik.
         if forms is not set, all forms are returned, otherwise forms is a list of the
          forms that should be returned
-        :param cik: cik of the company
-        :param forms: list of the forms to be returend, like [&#39;10-Q&#39;, &#39;10-K&#39;]
-        :return:
+
+        Args:
+            cik (int): cik of the company
+            forms (List[str], optional, None): list of the forms to be returend,
+             like [&#39;10-Q&#39;, &#39;10-K&#39;]
+        Returns:
+            List[IndexReport]
         &#34;&#34;&#34;
         sql = f&#39;SELECT * FROM {self.INDEX_REPORTS_TABLE} WHERE cik = {cik}&#39;
         if forms is not None:
@@ -167,9 +203,13 @@ class DBIndexingAccessor(DB):
         gets all reports as IndexReport instances for a company identified by its cik.
         if forms is not set, all forms are returned, otherwise forms is a list of the
          forms that should be returned
-        :param cik: cik of the company
-        :param forms: list of the forms to be returend, like [&#39;10-Q&#39;, &#39;10-K&#39;]
-        :return:
+
+        Args:
+            cik (int): cik of the company
+            forms (List[str], optional, None):  list of the forms to be returend,
+             like [&#39;10-Q&#39;, &#39;10-K&#39;]
+        Returns:
+            pd.DataFrame
         &#34;&#34;&#34;
         sql = f&#39;SELECT * FROM {self.INDEX_REPORTS_TABLE} WHERE cik = {cik}&#39;
         if forms is not None:
@@ -177,6 +217,23 @@ class DBIndexingAccessor(DB):
             sql = sql + f&#39; and form in ({forms_str}) &#39;
         sql = sql + &#39; ORDER BY period DESC&#39;
 
+        return self.execute_read_as_df(sql)
+
+    def find_company_by_name(self, name_part: str) -&gt; pd.DataFrame:
+        &#34;&#34;&#34;
+        Finds companies in the index based on the provided part of the name.
+        Lower and uppercase are ignored.
+
+        Args:
+            name_part: the part of the name
+
+        Returns:
+            pd.DataFrame: with columns name and cik
+        &#34;&#34;&#34;
+        sql = f&#34;&#34;&#34;
+                SELECT DISTINCT name, cik from {self.INDEX_REPORTS_TABLE} 
+                WHERE name like &#39;%{name_part}%&#39; 
+                ORDER BY name&#34;&#34;&#34;
         return self.execute_read_as_df(sql)</code></pre>
 </details>
 </section>
@@ -210,7 +267,9 @@ class DBIndexingAccessor(DB):
     def read_all_indexreports(self) -&gt; List[IndexReport]:
         &#34;&#34;&#34;
         reads all entries of the index_reports table
-        :return: List with IndexReport objects
+
+        Returns:
+            List[IndexReport]: List with IndexReport objects
         &#34;&#34;&#34;
         sql = f&#39;SELECT * FROM {self.INDEX_REPORTS_TABLE}&#39;
         return self.execute_fetchall_typed(sql, IndexReport)
@@ -218,7 +277,9 @@ class DBIndexingAccessor(DB):
     def read_all_indexreports_df(self) -&gt; pd.DataFrame:
         &#34;&#34;&#34;
         reads all entries of the index_reports table as a pandas DataFrame
-        :return: pandas DataFrame
+
+        Returns:
+            pd.DataFrame: pandas DataFrame
         &#34;&#34;&#34;
         sql = f&#39;SELECT * FROM {self.INDEX_REPORTS_TABLE}&#39;
         return self.execute_read_as_df(sql)
@@ -226,7 +287,9 @@ class DBIndexingAccessor(DB):
     def read_all_indexfileprocessing(self) -&gt; List[IndexFileProcessingState]:
         &#34;&#34;&#34;
         reads all entries of the index_file_processing_state table
-        :return: List with IndexFileProcessingState objects
+
+        Returns:
+            List[IndexFileProcessingState]: List with IndexFileProcessingState objects
         &#34;&#34;&#34;
         sql = f&#39;SELECT * FROM {self.INDEX_PROCESSING_TABLE}&#39;
         return self.execute_fetchall_typed(sql, IndexFileProcessingState)
@@ -234,15 +297,30 @@ class DBIndexingAccessor(DB):
     def read_all_indexfileprocessing_df(self) -&gt; pd.DataFrame:
         &#34;&#34;&#34;
         reads all entries of the index_file_processing_state table as a pandas DataFrame
-        :return: pandas DataFrame
+
+        Returns:
+            pd.DataFrame: pandas DataFrame
         &#34;&#34;&#34;
         sql = f&#39;SELECT * FROM {self.INDEX_PROCESSING_TABLE}&#39;
         return self.execute_read_as_df(sql)
 
+    def read_index_file_for_filename(self, filename: str) -&gt; IndexFileProcessingState:
+        &#34;&#34;&#34;
+        returns the IndexFileProcessingState instance for the provided filename
+        Args:
+            filename (str): the filename of the file
+
+        Returns:
+            IndexFileProcessingState: the processing state instance
+        &#34;&#34;&#34;
+        sql = f&#34;SELECT * FROM {self.INDEX_PROCESSING_TABLE} WHERE fileName = &#39;{filename}&#39;&#34;
+        return self.execute_fetchall_typed(sql, IndexFileProcessingState)[0]
+
     def insert_indexreport(self, data: IndexReport):
         &#34;&#34;&#34;
         inserts an entry into the index_report table
-        :param data: IndexReport data object
+        Args:
+            data (IndexReport): IndexReport data object
         &#34;&#34;&#34;
         sql = self.create_insert_statement_for_dataclass(self.INDEX_REPORTS_TABLE, data)
         self.execute_single(sql)
@@ -250,14 +328,18 @@ class DBIndexingAccessor(DB):
     def append_indexreport_df(self, dataframe: pd.DataFrame):
         &#34;&#34;&#34;
         append the content of the df to the index report table
-        :param dataframe: the dataframe to be appended
+
+        Args:
+            dataframe (pd.DataFrame): the dataframe to be appended
         &#34;&#34;&#34;
         self.append_df_to_table(table_name=self.INDEX_REPORTS_TABLE, dataframe=dataframe)
 
     def insert_indexfileprocessing(self, data: IndexFileProcessingState):
         &#34;&#34;&#34;
         inserts an entry into the index_file_processing_state table
-        :param data: IndexFileProcessingState data object
+
+        Args:
+            data (IndexFileProcessingState): IndexFileProcessingState data object to insert
         &#34;&#34;&#34;
         sql = self.create_insert_statement_for_dataclass(self.INDEX_PROCESSING_TABLE, data)
         self.execute_single(sql)
@@ -265,8 +347,12 @@ class DBIndexingAccessor(DB):
     def find_latest_company_report(self, cik: int) -&gt; IndexReport:
         &#34;&#34;&#34;
         returns the latest report of a company
-        :param cik: the cik of the company
-        :return:IndexReport of the latest report of the company
+
+        Args:
+            cik (int): the cik of the company
+
+        Returns:
+            IndexReport: of the latest report of the company
         &#34;&#34;&#34;
 
         sql = f&#39;SELECT * FROM {self.INDEX_REPORTS_TABLE} WHERE cik = {cik} ORDER BY period DESC&#39;
@@ -275,8 +361,11 @@ class DBIndexingAccessor(DB):
     def read_index_report_for_adsh(self, adsh: str) -&gt; IndexReport:
         &#34;&#34;&#34;
         returns the IndexReport instance for the provided adsh
-        :param adsh: adsh
-        :return: the report for the provided adsh
+
+        Args:
+            adsh (str):  adsh
+        Returns:
+            IndexReport: the report for the provided adsh
         &#34;&#34;&#34;
         sql = f&#34;SELECT * FROM {self.INDEX_REPORTS_TABLE} WHERE adsh = &#39;{adsh}&#39;&#34;
         return self.execute_fetchall_typed(sql, IndexReport)[0]
@@ -287,9 +376,13 @@ class DBIndexingAccessor(DB):
         gets all reports as IndexReport instances for a company identified by its cik.
         if forms is not set, all forms are returned, otherwise forms is a list of the
          forms that should be returned
-        :param cik: cik of the company
-        :param forms: list of the forms to be returend, like [&#39;10-Q&#39;, &#39;10-K&#39;]
-        :return:
+
+        Args:
+            cik (int): cik of the company
+            forms (List[str], optional, None): list of the forms to be returend,
+             like [&#39;10-Q&#39;, &#39;10-K&#39;]
+        Returns:
+            List[IndexReport]
         &#34;&#34;&#34;
         sql = f&#39;SELECT * FROM {self.INDEX_REPORTS_TABLE} WHERE cik = {cik}&#39;
         if forms is not None:
@@ -305,9 +398,13 @@ class DBIndexingAccessor(DB):
         gets all reports as IndexReport instances for a company identified by its cik.
         if forms is not set, all forms are returned, otherwise forms is a list of the
          forms that should be returned
-        :param cik: cik of the company
-        :param forms: list of the forms to be returend, like [&#39;10-Q&#39;, &#39;10-K&#39;]
-        :return:
+
+        Args:
+            cik (int): cik of the company
+            forms (List[str], optional, None):  list of the forms to be returend,
+             like [&#39;10-Q&#39;, &#39;10-K&#39;]
+        Returns:
+            pd.DataFrame
         &#34;&#34;&#34;
         sql = f&#39;SELECT * FROM {self.INDEX_REPORTS_TABLE} WHERE cik = {cik}&#39;
         if forms is not None:
@@ -315,6 +412,23 @@ class DBIndexingAccessor(DB):
             sql = sql + f&#39; and form in ({forms_str}) &#39;
         sql = sql + &#39; ORDER BY period DESC&#39;
 
+        return self.execute_read_as_df(sql)
+
+    def find_company_by_name(self, name_part: str) -&gt; pd.DataFrame:
+        &#34;&#34;&#34;
+        Finds companies in the index based on the provided part of the name.
+        Lower and uppercase are ignored.
+
+        Args:
+            name_part: the part of the name
+
+        Returns:
+            pd.DataFrame: with columns name and cik
+        &#34;&#34;&#34;
+        sql = f&#34;&#34;&#34;
+                SELECT DISTINCT name, cik from {self.INDEX_REPORTS_TABLE} 
+                WHERE name like &#39;%{name_part}%&#39; 
+                ORDER BY name&#34;&#34;&#34;
         return self.execute_read_as_df(sql)</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -339,8 +453,12 @@ class DBIndexingAccessor(DB):
 <span>def <span class="ident">append_indexreport_df</span></span>(<span>self, dataframe: pandas.core.frame.DataFrame)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>append the content of the df to the index report table
-:param dataframe: the dataframe to be appended</p></div>
+<div class="desc"><p>append the content of the df to the index report table</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>dataframe</code></strong> :&ensp;<code>pd.DataFrame</code></dt>
+<dd>the dataframe to be appended</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -348,18 +466,66 @@ class DBIndexingAccessor(DB):
 <pre><code class="python">def append_indexreport_df(self, dataframe: pd.DataFrame):
     &#34;&#34;&#34;
     append the content of the df to the index report table
-    :param dataframe: the dataframe to be appended
+
+    Args:
+        dataframe (pd.DataFrame): the dataframe to be appended
     &#34;&#34;&#34;
     self.append_df_to_table(table_name=self.INDEX_REPORTS_TABLE, dataframe=dataframe)</code></pre>
+</details>
+</dd>
+<dt id="secfsdstools.d_index.indexdataaccess.DBIndexingAccessor.find_company_by_name"><code class="name flex">
+<span>def <span class="ident">find_company_by_name</span></span>(<span>self, name_part: str) ‑> pandas.core.frame.DataFrame</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Finds companies in the index based on the provided part of the name.
+Lower and uppercase are ignored.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>name_part</code></strong></dt>
+<dd>the part of the name</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>pd.DataFrame</code></dt>
+<dd>with columns name and cik</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def find_company_by_name(self, name_part: str) -&gt; pd.DataFrame:
+    &#34;&#34;&#34;
+    Finds companies in the index based on the provided part of the name.
+    Lower and uppercase are ignored.
+
+    Args:
+        name_part: the part of the name
+
+    Returns:
+        pd.DataFrame: with columns name and cik
+    &#34;&#34;&#34;
+    sql = f&#34;&#34;&#34;
+            SELECT DISTINCT name, cik from {self.INDEX_REPORTS_TABLE} 
+            WHERE name like &#39;%{name_part}%&#39; 
+            ORDER BY name&#34;&#34;&#34;
+    return self.execute_read_as_df(sql)</code></pre>
 </details>
 </dd>
 <dt id="secfsdstools.d_index.indexdataaccess.DBIndexingAccessor.find_latest_company_report"><code class="name flex">
 <span>def <span class="ident">find_latest_company_report</span></span>(<span>self, cik: int) ‑> <a title="secfsdstools.d_index.indexdataaccess.IndexReport" href="#secfsdstools.d_index.indexdataaccess.IndexReport">IndexReport</a></span>
 </code></dt>
 <dd>
-<div class="desc"><p>returns the latest report of a company
-:param cik: the cik of the company
-:return:IndexReport of the latest report of the company</p></div>
+<div class="desc"><p>returns the latest report of a company</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>cik</code></strong> :&ensp;<code>int</code></dt>
+<dd>the cik of the company</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code><a title="secfsdstools.d_index.indexdataaccess.IndexReport" href="#secfsdstools.d_index.indexdataaccess.IndexReport">IndexReport</a></code></dt>
+<dd>of the latest report of the company</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -367,8 +533,12 @@ class DBIndexingAccessor(DB):
 <pre><code class="python">def find_latest_company_report(self, cik: int) -&gt; IndexReport:
     &#34;&#34;&#34;
     returns the latest report of a company
-    :param cik: the cik of the company
-    :return:IndexReport of the latest report of the company
+
+    Args:
+        cik (int): the cik of the company
+
+    Returns:
+        IndexReport: of the latest report of the company
     &#34;&#34;&#34;
 
     sql = f&#39;SELECT * FROM {self.INDEX_REPORTS_TABLE} WHERE cik = {cik} ORDER BY period DESC&#39;
@@ -379,8 +549,12 @@ class DBIndexingAccessor(DB):
 <span>def <span class="ident">insert_indexfileprocessing</span></span>(<span>self, data: <a title="secfsdstools.d_index.indexdataaccess.IndexFileProcessingState" href="#secfsdstools.d_index.indexdataaccess.IndexFileProcessingState">IndexFileProcessingState</a>)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>inserts an entry into the index_file_processing_state table
-:param data: IndexFileProcessingState data object</p></div>
+<div class="desc"><p>inserts an entry into the index_file_processing_state table</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>data</code></strong> :&ensp;<code><a title="secfsdstools.d_index.indexdataaccess.IndexFileProcessingState" href="#secfsdstools.d_index.indexdataaccess.IndexFileProcessingState">IndexFileProcessingState</a></code></dt>
+<dd>IndexFileProcessingState data object to insert</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -388,7 +562,9 @@ class DBIndexingAccessor(DB):
 <pre><code class="python">def insert_indexfileprocessing(self, data: IndexFileProcessingState):
     &#34;&#34;&#34;
     inserts an entry into the index_file_processing_state table
-    :param data: IndexFileProcessingState data object
+
+    Args:
+        data (IndexFileProcessingState): IndexFileProcessingState data object to insert
     &#34;&#34;&#34;
     sql = self.create_insert_statement_for_dataclass(self.INDEX_PROCESSING_TABLE, data)
     self.execute_single(sql)</code></pre>
@@ -398,8 +574,12 @@ class DBIndexingAccessor(DB):
 <span>def <span class="ident">insert_indexreport</span></span>(<span>self, data: <a title="secfsdstools.d_index.indexdataaccess.IndexReport" href="#secfsdstools.d_index.indexdataaccess.IndexReport">IndexReport</a>)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>inserts an entry into the index_report table
-:param data: IndexReport data object</p></div>
+<div class="desc"><p>inserts an entry into the index_report table</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>data</code></strong> :&ensp;<code><a title="secfsdstools.d_index.indexdataaccess.IndexReport" href="#secfsdstools.d_index.indexdataaccess.IndexReport">IndexReport</a></code></dt>
+<dd>IndexReport data object</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -407,7 +587,8 @@ class DBIndexingAccessor(DB):
 <pre><code class="python">def insert_indexreport(self, data: IndexReport):
     &#34;&#34;&#34;
     inserts an entry into the index_report table
-    :param data: IndexReport data object
+    Args:
+        data (IndexReport): IndexReport data object
     &#34;&#34;&#34;
     sql = self.create_insert_statement_for_dataclass(self.INDEX_REPORTS_TABLE, data)
     self.execute_single(sql)</code></pre>
@@ -417,8 +598,12 @@ class DBIndexingAccessor(DB):
 <span>def <span class="ident">read_all_indexfileprocessing</span></span>(<span>self) ‑> List[<a title="secfsdstools.d_index.indexdataaccess.IndexFileProcessingState" href="#secfsdstools.d_index.indexdataaccess.IndexFileProcessingState">IndexFileProcessingState</a>]</span>
 </code></dt>
 <dd>
-<div class="desc"><p>reads all entries of the index_file_processing_state table
-:return: List with IndexFileProcessingState objects</p></div>
+<div class="desc"><p>reads all entries of the index_file_processing_state table</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>List[<a title="secfsdstools.d_index.indexdataaccess.IndexFileProcessingState" href="#secfsdstools.d_index.indexdataaccess.IndexFileProcessingState">IndexFileProcessingState</a>]</code></dt>
+<dd>List with IndexFileProcessingState objects</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -426,7 +611,9 @@ class DBIndexingAccessor(DB):
 <pre><code class="python">def read_all_indexfileprocessing(self) -&gt; List[IndexFileProcessingState]:
     &#34;&#34;&#34;
     reads all entries of the index_file_processing_state table
-    :return: List with IndexFileProcessingState objects
+
+    Returns:
+        List[IndexFileProcessingState]: List with IndexFileProcessingState objects
     &#34;&#34;&#34;
     sql = f&#39;SELECT * FROM {self.INDEX_PROCESSING_TABLE}&#39;
     return self.execute_fetchall_typed(sql, IndexFileProcessingState)</code></pre>
@@ -436,8 +623,12 @@ class DBIndexingAccessor(DB):
 <span>def <span class="ident">read_all_indexfileprocessing_df</span></span>(<span>self) ‑> pandas.core.frame.DataFrame</span>
 </code></dt>
 <dd>
-<div class="desc"><p>reads all entries of the index_file_processing_state table as a pandas DataFrame
-:return: pandas DataFrame</p></div>
+<div class="desc"><p>reads all entries of the index_file_processing_state table as a pandas DataFrame</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>pd.DataFrame</code></dt>
+<dd>pandas DataFrame</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -445,7 +636,9 @@ class DBIndexingAccessor(DB):
 <pre><code class="python">def read_all_indexfileprocessing_df(self) -&gt; pd.DataFrame:
     &#34;&#34;&#34;
     reads all entries of the index_file_processing_state table as a pandas DataFrame
-    :return: pandas DataFrame
+
+    Returns:
+        pd.DataFrame: pandas DataFrame
     &#34;&#34;&#34;
     sql = f&#39;SELECT * FROM {self.INDEX_PROCESSING_TABLE}&#39;
     return self.execute_read_as_df(sql)</code></pre>
@@ -455,8 +648,12 @@ class DBIndexingAccessor(DB):
 <span>def <span class="ident">read_all_indexreports</span></span>(<span>self) ‑> List[<a title="secfsdstools.d_index.indexdataaccess.IndexReport" href="#secfsdstools.d_index.indexdataaccess.IndexReport">IndexReport</a>]</span>
 </code></dt>
 <dd>
-<div class="desc"><p>reads all entries of the index_reports table
-:return: List with IndexReport objects</p></div>
+<div class="desc"><p>reads all entries of the index_reports table</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>List[<a title="secfsdstools.d_index.indexdataaccess.IndexReport" href="#secfsdstools.d_index.indexdataaccess.IndexReport">IndexReport</a>]</code></dt>
+<dd>List with IndexReport objects</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -464,7 +661,9 @@ class DBIndexingAccessor(DB):
 <pre><code class="python">def read_all_indexreports(self) -&gt; List[IndexReport]:
     &#34;&#34;&#34;
     reads all entries of the index_reports table
-    :return: List with IndexReport objects
+
+    Returns:
+        List[IndexReport]: List with IndexReport objects
     &#34;&#34;&#34;
     sql = f&#39;SELECT * FROM {self.INDEX_REPORTS_TABLE}&#39;
     return self.execute_fetchall_typed(sql, IndexReport)</code></pre>
@@ -474,8 +673,12 @@ class DBIndexingAccessor(DB):
 <span>def <span class="ident">read_all_indexreports_df</span></span>(<span>self) ‑> pandas.core.frame.DataFrame</span>
 </code></dt>
 <dd>
-<div class="desc"><p>reads all entries of the index_reports table as a pandas DataFrame
-:return: pandas DataFrame</p></div>
+<div class="desc"><p>reads all entries of the index_reports table as a pandas DataFrame</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>pd.DataFrame</code></dt>
+<dd>pandas DataFrame</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -483,19 +686,61 @@ class DBIndexingAccessor(DB):
 <pre><code class="python">def read_all_indexreports_df(self) -&gt; pd.DataFrame:
     &#34;&#34;&#34;
     reads all entries of the index_reports table as a pandas DataFrame
-    :return: pandas DataFrame
+
+    Returns:
+        pd.DataFrame: pandas DataFrame
     &#34;&#34;&#34;
     sql = f&#39;SELECT * FROM {self.INDEX_REPORTS_TABLE}&#39;
     return self.execute_read_as_df(sql)</code></pre>
+</details>
+</dd>
+<dt id="secfsdstools.d_index.indexdataaccess.DBIndexingAccessor.read_index_file_for_filename"><code class="name flex">
+<span>def <span class="ident">read_index_file_for_filename</span></span>(<span>self, filename: str) ‑> <a title="secfsdstools.d_index.indexdataaccess.IndexFileProcessingState" href="#secfsdstools.d_index.indexdataaccess.IndexFileProcessingState">IndexFileProcessingState</a></span>
+</code></dt>
+<dd>
+<div class="desc"><p>returns the IndexFileProcessingState instance for the provided filename</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>filename</code></strong> :&ensp;<code>str</code></dt>
+<dd>the filename of the file</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code><a title="secfsdstools.d_index.indexdataaccess.IndexFileProcessingState" href="#secfsdstools.d_index.indexdataaccess.IndexFileProcessingState">IndexFileProcessingState</a></code></dt>
+<dd>the processing state instance</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def read_index_file_for_filename(self, filename: str) -&gt; IndexFileProcessingState:
+    &#34;&#34;&#34;
+    returns the IndexFileProcessingState instance for the provided filename
+    Args:
+        filename (str): the filename of the file
+
+    Returns:
+        IndexFileProcessingState: the processing state instance
+    &#34;&#34;&#34;
+    sql = f&#34;SELECT * FROM {self.INDEX_PROCESSING_TABLE} WHERE fileName = &#39;{filename}&#39;&#34;
+    return self.execute_fetchall_typed(sql, IndexFileProcessingState)[0]</code></pre>
 </details>
 </dd>
 <dt id="secfsdstools.d_index.indexdataaccess.DBIndexingAccessor.read_index_report_for_adsh"><code class="name flex">
 <span>def <span class="ident">read_index_report_for_adsh</span></span>(<span>self, adsh: str) ‑> <a title="secfsdstools.d_index.indexdataaccess.IndexReport" href="#secfsdstools.d_index.indexdataaccess.IndexReport">IndexReport</a></span>
 </code></dt>
 <dd>
-<div class="desc"><p>returns the IndexReport instance for the provided adsh
-:param adsh: adsh
-:return: the report for the provided adsh</p></div>
+<div class="desc"><p>returns the IndexReport instance for the provided adsh</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>adsh</code></strong> :&ensp;<code>str</code></dt>
+<dd>adsh</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code><a title="secfsdstools.d_index.indexdataaccess.IndexReport" href="#secfsdstools.d_index.indexdataaccess.IndexReport">IndexReport</a></code></dt>
+<dd>the report for the provided adsh</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -503,8 +748,11 @@ class DBIndexingAccessor(DB):
 <pre><code class="python">def read_index_report_for_adsh(self, adsh: str) -&gt; IndexReport:
     &#34;&#34;&#34;
     returns the IndexReport instance for the provided adsh
-    :param adsh: adsh
-    :return: the report for the provided adsh
+
+    Args:
+        adsh (str):  adsh
+    Returns:
+        IndexReport: the report for the provided adsh
     &#34;&#34;&#34;
     sql = f&#34;SELECT * FROM {self.INDEX_REPORTS_TABLE} WHERE adsh = &#39;{adsh}&#39;&#34;
     return self.execute_fetchall_typed(sql, IndexReport)[0]</code></pre>
@@ -516,10 +764,17 @@ class DBIndexingAccessor(DB):
 <dd>
 <div class="desc"><p>gets all reports as IndexReport instances for a company identified by its cik.
 if forms is not set, all forms are returned, otherwise forms is a list of the
-forms that should be returned
-:param cik: cik of the company
-:param forms: list of the forms to be returend, like ['10-Q', '10-K']
-:return:</p></div>
+forms that should be returned</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>cik</code></strong> :&ensp;<code>int</code></dt>
+<dd>cik of the company</dd>
+<dt><strong><code>forms</code></strong> :&ensp;<code>List[str]</code>, optional<code>, None</code></dt>
+<dd>list of the forms to be returend,</dd>
+</dl>
+<p>like ['10-Q', '10-K']</p>
+<h2 id="returns">Returns</h2>
+<p>List[IndexReport]</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -530,9 +785,13 @@ forms that should be returned
     gets all reports as IndexReport instances for a company identified by its cik.
     if forms is not set, all forms are returned, otherwise forms is a list of the
      forms that should be returned
-    :param cik: cik of the company
-    :param forms: list of the forms to be returend, like [&#39;10-Q&#39;, &#39;10-K&#39;]
-    :return:
+
+    Args:
+        cik (int): cik of the company
+        forms (List[str], optional, None): list of the forms to be returend,
+         like [&#39;10-Q&#39;, &#39;10-K&#39;]
+    Returns:
+        List[IndexReport]
     &#34;&#34;&#34;
     sql = f&#39;SELECT * FROM {self.INDEX_REPORTS_TABLE} WHERE cik = {cik}&#39;
     if forms is not None:
@@ -549,10 +808,17 @@ forms that should be returned
 <dd>
 <div class="desc"><p>gets all reports as IndexReport instances for a company identified by its cik.
 if forms is not set, all forms are returned, otherwise forms is a list of the
-forms that should be returned
-:param cik: cik of the company
-:param forms: list of the forms to be returend, like ['10-Q', '10-K']
-:return:</p></div>
+forms that should be returned</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>cik</code></strong> :&ensp;<code>int</code></dt>
+<dd>cik of the company</dd>
+<dt><strong><code>forms</code></strong> :&ensp;<code>List[str]</code>, optional<code>, None</code></dt>
+<dd>list of the forms to be returend,</dd>
+</dl>
+<p>like ['10-Q', '10-K']</p>
+<h2 id="returns">Returns</h2>
+<p>pd.DataFrame</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -563,9 +829,13 @@ forms that should be returned
     gets all reports as IndexReport instances for a company identified by its cik.
     if forms is not set, all forms are returned, otherwise forms is a list of the
      forms that should be returned
-    :param cik: cik of the company
-    :param forms: list of the forms to be returend, like [&#39;10-Q&#39;, &#39;10-K&#39;]
-    :return:
+
+    Args:
+        cik (int): cik of the company
+        forms (List[str], optional, None):  list of the forms to be returend,
+         like [&#39;10-Q&#39;, &#39;10-K&#39;]
+    Returns:
+        pd.DataFrame
     &#34;&#34;&#34;
     sql = f&#39;SELECT * FROM {self.INDEX_REPORTS_TABLE} WHERE cik = {cik}&#39;
     if forms is not None:
@@ -724,6 +994,7 @@ forms that should be returned
 <li><code><a title="secfsdstools.d_index.indexdataaccess.DBIndexingAccessor.INDEX_PROCESSING_TABLE" href="#secfsdstools.d_index.indexdataaccess.DBIndexingAccessor.INDEX_PROCESSING_TABLE">INDEX_PROCESSING_TABLE</a></code></li>
 <li><code><a title="secfsdstools.d_index.indexdataaccess.DBIndexingAccessor.INDEX_REPORTS_TABLE" href="#secfsdstools.d_index.indexdataaccess.DBIndexingAccessor.INDEX_REPORTS_TABLE">INDEX_REPORTS_TABLE</a></code></li>
 <li><code><a title="secfsdstools.d_index.indexdataaccess.DBIndexingAccessor.append_indexreport_df" href="#secfsdstools.d_index.indexdataaccess.DBIndexingAccessor.append_indexreport_df">append_indexreport_df</a></code></li>
+<li><code><a title="secfsdstools.d_index.indexdataaccess.DBIndexingAccessor.find_company_by_name" href="#secfsdstools.d_index.indexdataaccess.DBIndexingAccessor.find_company_by_name">find_company_by_name</a></code></li>
 <li><code><a title="secfsdstools.d_index.indexdataaccess.DBIndexingAccessor.find_latest_company_report" href="#secfsdstools.d_index.indexdataaccess.DBIndexingAccessor.find_latest_company_report">find_latest_company_report</a></code></li>
 <li><code><a title="secfsdstools.d_index.indexdataaccess.DBIndexingAccessor.insert_indexfileprocessing" href="#secfsdstools.d_index.indexdataaccess.DBIndexingAccessor.insert_indexfileprocessing">insert_indexfileprocessing</a></code></li>
 <li><code><a title="secfsdstools.d_index.indexdataaccess.DBIndexingAccessor.insert_indexreport" href="#secfsdstools.d_index.indexdataaccess.DBIndexingAccessor.insert_indexreport">insert_indexreport</a></code></li>
@@ -731,6 +1002,7 @@ forms that should be returned
 <li><code><a title="secfsdstools.d_index.indexdataaccess.DBIndexingAccessor.read_all_indexfileprocessing_df" href="#secfsdstools.d_index.indexdataaccess.DBIndexingAccessor.read_all_indexfileprocessing_df">read_all_indexfileprocessing_df</a></code></li>
 <li><code><a title="secfsdstools.d_index.indexdataaccess.DBIndexingAccessor.read_all_indexreports" href="#secfsdstools.d_index.indexdataaccess.DBIndexingAccessor.read_all_indexreports">read_all_indexreports</a></code></li>
 <li><code><a title="secfsdstools.d_index.indexdataaccess.DBIndexingAccessor.read_all_indexreports_df" href="#secfsdstools.d_index.indexdataaccess.DBIndexingAccessor.read_all_indexreports_df">read_all_indexreports_df</a></code></li>
+<li><code><a title="secfsdstools.d_index.indexdataaccess.DBIndexingAccessor.read_index_file_for_filename" href="#secfsdstools.d_index.indexdataaccess.DBIndexingAccessor.read_index_file_for_filename">read_index_file_for_filename</a></code></li>
 <li><code><a title="secfsdstools.d_index.indexdataaccess.DBIndexingAccessor.read_index_report_for_adsh" href="#secfsdstools.d_index.indexdataaccess.DBIndexingAccessor.read_index_report_for_adsh">read_index_report_for_adsh</a></code></li>
 <li><code><a title="secfsdstools.d_index.indexdataaccess.DBIndexingAccessor.read_index_reports_for_cik" href="#secfsdstools.d_index.indexdataaccess.DBIndexingAccessor.read_index_reports_for_cik">read_index_reports_for_cik</a></code></li>
 <li><code><a title="secfsdstools.d_index.indexdataaccess.DBIndexingAccessor.read_index_reports_for_cik_df" href="#secfsdstools.d_index.indexdataaccess.DBIndexingAccessor.read_index_reports_for_cik_df">read_index_reports_for_cik_df</a></code></li>

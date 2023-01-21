@@ -29,7 +29,50 @@
 </summary>
 <pre><code class="python">&#34;&#34;&#34;
 company search logic.
-&#34;&#34;&#34;</code></pre>
+&#34;&#34;&#34;
+from typing import Optional
+
+import pandas as pd
+
+from secfsdstools.a_config.configmgt import Configuration, ConfigurationManager
+from secfsdstools.d_index.indexdataaccess import DBIndexingAccessor
+
+
+class IndexSearch:
+    &#34;&#34;&#34;Provides search methods on the index_report table.&#34;&#34;&#34;
+
+    def __init__(self, dbaccessor: DBIndexingAccessor):
+        self.dbaccessor = dbaccessor
+
+    @classmethod
+    def get_index_search(cls, configuration: Optional[Configuration] = None):
+        &#34;&#34;&#34;
+        Creates a IndexSearch instance.
+        If no  configuration object is passed, it reads the configuration from
+        the config file.
+        Args:
+            configuration (Configuration, optional, None): configuration object
+
+        Returns;:
+            IndexSearch: instance of IndexSearch
+        &#34;&#34;&#34;
+        if configuration is None:
+            configuration = ConfigurationManager.read_config_file()
+        return IndexSearch(DBIndexingAccessor(db_dir=configuration.db_dir))
+
+
+    def find_company_by_name(self, name_part: str) -&gt; pd.DataFrame:
+        &#34;&#34;&#34;
+        Searches entries by the given name part. Upper/lower case is ignored.
+
+        Args:
+            name_part:
+
+        Returns:
+            pd.DataFrame: with columns &#39;cik&#39;, &#39;name&#39;
+        &#34;&#34;&#34;
+
+        return self.dbaccessor.find_company_by_name(name_part=name_part)</code></pre>
 </details>
 </section>
 <section>
@@ -39,6 +82,128 @@ company search logic.
 <section>
 </section>
 <section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="secfsdstools.e_read.searching.IndexSearch"><code class="flex name class">
+<span>class <span class="ident">IndexSearch</span></span>
+<span>(</span><span>dbaccessor: <a title="secfsdstools.d_index.indexdataaccess.DBIndexingAccessor" href="../d_index/indexdataaccess.html#secfsdstools.d_index.indexdataaccess.DBIndexingAccessor">DBIndexingAccessor</a>)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Provides search methods on the index_report table.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class IndexSearch:
+    &#34;&#34;&#34;Provides search methods on the index_report table.&#34;&#34;&#34;
+
+    def __init__(self, dbaccessor: DBIndexingAccessor):
+        self.dbaccessor = dbaccessor
+
+    @classmethod
+    def get_index_search(cls, configuration: Optional[Configuration] = None):
+        &#34;&#34;&#34;
+        Creates a IndexSearch instance.
+        If no  configuration object is passed, it reads the configuration from
+        the config file.
+        Args:
+            configuration (Configuration, optional, None): configuration object
+
+        Returns;:
+            IndexSearch: instance of IndexSearch
+        &#34;&#34;&#34;
+        if configuration is None:
+            configuration = ConfigurationManager.read_config_file()
+        return IndexSearch(DBIndexingAccessor(db_dir=configuration.db_dir))
+
+
+    def find_company_by_name(self, name_part: str) -&gt; pd.DataFrame:
+        &#34;&#34;&#34;
+        Searches entries by the given name part. Upper/lower case is ignored.
+
+        Args:
+            name_part:
+
+        Returns:
+            pd.DataFrame: with columns &#39;cik&#39;, &#39;name&#39;
+        &#34;&#34;&#34;
+
+        return self.dbaccessor.find_company_by_name(name_part=name_part)</code></pre>
+</details>
+<h3>Static methods</h3>
+<dl>
+<dt id="secfsdstools.e_read.searching.IndexSearch.get_index_search"><code class="name flex">
+<span>def <span class="ident">get_index_search</span></span>(<span>configuration: Optional[<a title="secfsdstools.a_config.configmgt.Configuration" href="../a_config/configmgt.html#secfsdstools.a_config.configmgt.Configuration">Configuration</a>] = None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Creates a IndexSearch instance.
+If no
+configuration object is passed, it reads the configuration from
+the config file.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>configuration</code></strong> :&ensp;<code>Configuration</code>, optional<code>, None</code></dt>
+<dd>configuration object</dd>
+</dl>
+<p>Returns;:
+IndexSearch: instance of IndexSearch</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@classmethod
+def get_index_search(cls, configuration: Optional[Configuration] = None):
+    &#34;&#34;&#34;
+    Creates a IndexSearch instance.
+    If no  configuration object is passed, it reads the configuration from
+    the config file.
+    Args:
+        configuration (Configuration, optional, None): configuration object
+
+    Returns;:
+        IndexSearch: instance of IndexSearch
+    &#34;&#34;&#34;
+    if configuration is None:
+        configuration = ConfigurationManager.read_config_file()
+    return IndexSearch(DBIndexingAccessor(db_dir=configuration.db_dir))</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="secfsdstools.e_read.searching.IndexSearch.find_company_by_name"><code class="name flex">
+<span>def <span class="ident">find_company_by_name</span></span>(<span>self, name_part: str) ‑> pandas.core.frame.DataFrame</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Searches entries by the given name part. Upper/lower case is ignored.</p>
+<h2 id="args">Args</h2>
+<p>name_part:</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>pd.DataFrame</code></dt>
+<dd>with columns 'cik', 'name'</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def find_company_by_name(self, name_part: str) -&gt; pd.DataFrame:
+    &#34;&#34;&#34;
+    Searches entries by the given name part. Upper/lower case is ignored.
+
+    Args:
+        name_part:
+
+    Returns:
+        pd.DataFrame: with columns &#39;cik&#39;, &#39;name&#39;
+    &#34;&#34;&#34;
+
+    return self.dbaccessor.find_company_by_name(name_part=name_part)</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+</dl>
 </section>
 </article>
 <nav id="sidebar">
@@ -50,6 +215,17 @@ company search logic.
 <li><h3>Super-module</h3>
 <ul>
 <li><code><a title="secfsdstools.e_read" href="index.html">secfsdstools.e_read</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="secfsdstools.e_read.searching.IndexSearch" href="#secfsdstools.e_read.searching.IndexSearch">IndexSearch</a></code></h4>
+<ul class="">
+<li><code><a title="secfsdstools.e_read.searching.IndexSearch.find_company_by_name" href="#secfsdstools.e_read.searching.IndexSearch.find_company_by_name">find_company_by_name</a></code></li>
+<li><code><a title="secfsdstools.e_read.searching.IndexSearch.get_index_search" href="#secfsdstools.e_read.searching.IndexSearch.get_index_search">get_index_search</a></code></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>

@@ -33,11 +33,70 @@ Examples for ReportReader
 
 from secfsdstools.e_read.reportreading import ReportReader
 
-if __name__ == &#39;__main__&#39;:
-    # id apples 10k report from september 2022
-    ADSH_APPLE_10K_2022: str = &#39;0000320193-22-000108&#39;
 
-    apple_10k_2022_reader = ReportReader.get_report_by_adsh(adsh=ADSH_APPLE_10K_2022)
+def run():
+    # pylint: disable=W0612
+    &#34;&#34;&#34;
+    run the example
+    &#34;&#34;&#34;
+
+    # id apples 10k report from september 2022
+    adsh_apple_10k_2022: str = &#39;0000320193-22-000108&#39;
+
+    apple_10k_2022_reader = ReportReader.get_report_by_adsh(adsh=adsh_apple_10k_2022)
+
+    # reading the raw content of the num and pre files
+    raw_pre_df = apple_10k_2022_reader.get_raw_pre_data()
+    raw_num_df = apple_10k_2022_reader.get_raw_num_data()
+
+    # merging the data from num and pre together and produce the primary financial statements
+    apple_10k_2022_current_year_df = apple_10k_2022_reader.financial_statements_for_period()
+    apple_10k_2022_current_and_previous_year_df = \
+        apple_10k_2022_reader.financial_statements_for_period_and_previous_period()
+
+    # Filter for BalanceSheet
+    apple_10k_2022_bs_df = apple_10k_2022_current_and_previous_year_df[
+        apple_10k_2022_current_and_previous_year_df.stmt == &#39;BS&#39;]
+
+    # Filter for IncomeStatement
+    apple_10k_2022_is_df = apple_10k_2022_current_and_previous_year_df[
+        apple_10k_2022_current_and_previous_year_df.stmt == &#39;IS&#39;]
+
+    # Filter for CashFlow
+    apple_10k_2022_cf_df = apple_10k_2022_current_and_previous_year_df[
+        apple_10k_2022_current_and_previous_year_df.stmt == &#39;CF&#39;]
+
+
+if __name__ == &#39;__main__&#39;:
+    run()</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-functions">Functions</h2>
+<dl>
+<dt id="secfsdstools.x_examples.examplecreportreading.run"><code class="name flex">
+<span>def <span class="ident">run</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>run the example</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def run():
+    # pylint: disable=W0612
+    &#34;&#34;&#34;
+    run the example
+    &#34;&#34;&#34;
+
+    # id apples 10k report from september 2022
+    adsh_apple_10k_2022: str = &#39;0000320193-22-000108&#39;
+
+    apple_10k_2022_reader = ReportReader.get_report_by_adsh(adsh=adsh_apple_10k_2022)
 
     # reading the raw content of the num and pre files
     raw_pre_df = apple_10k_2022_reader.get_raw_pre_data()
@@ -60,12 +119,8 @@ if __name__ == &#39;__main__&#39;:
     apple_10k_2022_cf_df = apple_10k_2022_current_and_previous_year_df[
         apple_10k_2022_current_and_previous_year_df.stmt == &#39;CF&#39;]</code></pre>
 </details>
-</section>
-<section>
-</section>
-<section>
-</section>
-<section>
+</dd>
+</dl>
 </section>
 <section>
 </section>
@@ -79,6 +134,11 @@ if __name__ == &#39;__main__&#39;:
 <li><h3>Super-module</h3>
 <ul>
 <li><code><a title="secfsdstools.x_examples" href="index.html">secfsdstools.x_examples</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-functions">Functions</a></h3>
+<ul class="">
+<li><code><a title="secfsdstools.x_examples.examplecreportreading.run" href="#secfsdstools.x_examples.examplecreportreading.run">run</a></code></li>
 </ul>
 </li>
 </ul>

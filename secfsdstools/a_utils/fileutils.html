@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.10.0" />
 <title>secfsdstools.a_utils.fileutils API documentation</title>
-<meta name="description" content="helper utils condhandling compressed files." />
+<meta name="description" content="helper utils handling compressed files." />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
 <link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
@@ -22,19 +22,19 @@
 <h1 class="title">Module <code>secfsdstools.a_utils.fileutils</code></h1>
 </header>
 <section id="section-intro">
-<p>helper utils condhandling compressed files.</p>
+<p>helper utils handling compressed files.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">&#34;&#34;&#34;
-helper utils condhandling compressed files.
+helper utils handling compressed files.
 &#34;&#34;&#34;
 import glob
 import os
 import zipfile
 from pathlib import Path
-from typing import List
+from typing import List, Optional, Dict
 
 import pandas as pd
 
@@ -43,21 +43,28 @@ def get_filenames_in_directory(filter_string: str) -&gt; List[str]:
     &#34;&#34;&#34;
     returns a list with files matching the filter.
     the filter can also contain a folder structure.
-    :return: list files in the directory
+
+    Returns:
+        List[str]: list files in the directory
     &#34;&#34;&#34;
     zip_list: List[str] = glob.glob(filter_string)
     return [os.path.basename(x) for x in zip_list]
 
 
 def read_df_from_file_in_zip(zip_file: str, file_to_extract: str,
-                             dtype=None, usecols=None) -&gt; pd.DataFrame:
+                             dtype: Optional[Dict[str, object]] = None,
+                             usecols: Optional[List[str]] = None) -&gt; pd.DataFrame:
     &#34;&#34;&#34;
     reads the content of a file inside a zip file directly into dataframe
-    :param zip_file: the zip file containing the data file
-    :param file_to_extract: the file with the data
-    :param dtype: column type array or None
-    :param usecols: list with all the columns that should be read or None
-    :return: the pandas dataframe
+
+    Args:
+        zip_file (str): the zip file containing the data file
+        file_to_extract (str): the file with the data
+        dtype (Dict[str, object], optional, None): column type array or None
+        usecols (List[str], optional, None): list with all the columns
+        that should be read or None
+    Returns:
+        pd.DataFrame: the pandas dataframe
     &#34;&#34;&#34;
     with zipfile.ZipFile(zip_file, &#34;r&#34;) as zip_fp:
         file = Path(file_to_extract).name
@@ -68,9 +75,13 @@ def read_df_from_file_in_zip(zip_file: str, file_to_extract: str,
 def read_content_from_file_in_zip(zip_file: str, file_to_extract: str) -&gt; str:
     &#34;&#34;&#34;
     reads the text content of a file inside a zip file
-    :param zip_file: the zip file containing the data file
-    :param file_to_extract: the file with the data
-    :return: the content as string
+
+    Args:
+        zip_file (str): the zip file containing the data file
+        file_to_extract (str): the file with the data
+
+    Returns:
+        str: the content as string
     &#34;&#34;&#34;
     with zipfile.ZipFile(zip_file, &#34;r&#34;) as zip_fp:
         file = Path(file_to_extract).name
@@ -80,9 +91,13 @@ def read_content_from_file_in_zip(zip_file: str, file_to_extract: str) -&gt; str
 def write_content_to_zip(content: str, filename: str) -&gt; str:
     &#34;&#34;&#34;
     write the content str into the zip file. compression is set to zipfile.ZIP_DEFLATED
-    :param content: string
-    :param filename: string name of the target zipfile, withouit the ending &#34;.zip&#34;
-    :return: written zipfilename
+
+    Args:
+        content (str): the content that should be written into the file
+        filename (str): string name of the target zipfile, without the ending &#34;.zip&#34;
+
+    Returns:
+        str: path to the zipfile that was ritten
     &#34;&#34;&#34;
     zip_filename = filename + &#34;.zip&#34;
     with zipfile.ZipFile(zip_filename, mode=&#34;w&#34;, compression=zipfile.ZIP_DEFLATED) as zf_fp:
@@ -94,8 +109,11 @@ def write_content_to_zip(content: str, filename: str) -&gt; str:
 def read_content_from_zip(filename: str) -&gt; str:
     &#34;&#34;&#34;
     returns the content of the provided zipfile (ending &#34;.zip)
-    :param filename: zipfilename without the ending &#34;.zip&#34;
-    :return:
+    Args:
+        filename (str): string name of the target zipfile, without the ending &#34;.zip&#34;
+
+    Returns:
+        str: the content of a zipfile
     &#34;&#34;&#34;
     with zipfile.ZipFile(filename + &#34;.zip&#34;, mode=&#34;r&#34;) as zf_fp:
         file = Path(filename).name
@@ -114,8 +132,12 @@ def read_content_from_zip(filename: str) -&gt; str:
 </code></dt>
 <dd>
 <div class="desc"><p>returns a list with files matching the filter.
-the filter can also contain a folder structure.
-:return: list files in the directory</p></div>
+the filter can also contain a folder structure.</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>List[str]</code></dt>
+<dd>list files in the directory</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -124,7 +146,9 @@ the filter can also contain a folder structure.
     &#34;&#34;&#34;
     returns a list with files matching the filter.
     the filter can also contain a folder structure.
-    :return: list files in the directory
+
+    Returns:
+        List[str]: list files in the directory
     &#34;&#34;&#34;
     zip_list: List[str] = glob.glob(filter_string)
     return [os.path.basename(x) for x in zip_list]</code></pre>
@@ -134,10 +158,19 @@ the filter can also contain a folder structure.
 <span>def <span class="ident">read_content_from_file_in_zip</span></span>(<span>zip_file: str, file_to_extract: str) ‑> str</span>
 </code></dt>
 <dd>
-<div class="desc"><p>reads the text content of a file inside a zip file
-:param zip_file: the zip file containing the data file
-:param file_to_extract: the file with the data
-:return: the content as string</p></div>
+<div class="desc"><p>reads the text content of a file inside a zip file</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>zip_file</code></strong> :&ensp;<code>str</code></dt>
+<dd>the zip file containing the data file</dd>
+<dt><strong><code>file_to_extract</code></strong> :&ensp;<code>str</code></dt>
+<dd>the file with the data</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>str</code></dt>
+<dd>the content as string</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -145,9 +178,13 @@ the filter can also contain a folder structure.
 <pre><code class="python">def read_content_from_file_in_zip(zip_file: str, file_to_extract: str) -&gt; str:
     &#34;&#34;&#34;
     reads the text content of a file inside a zip file
-    :param zip_file: the zip file containing the data file
-    :param file_to_extract: the file with the data
-    :return: the content as string
+
+    Args:
+        zip_file (str): the zip file containing the data file
+        file_to_extract (str): the file with the data
+
+    Returns:
+        str: the content as string
     &#34;&#34;&#34;
     with zipfile.ZipFile(zip_file, &#34;r&#34;) as zip_fp:
         file = Path(file_to_extract).name
@@ -158,9 +195,17 @@ the filter can also contain a folder structure.
 <span>def <span class="ident">read_content_from_zip</span></span>(<span>filename: str) ‑> str</span>
 </code></dt>
 <dd>
-<div class="desc"><p>returns the content of the provided zipfile (ending ".zip)
-:param filename: zipfilename without the ending ".zip"
-:return:</p></div>
+<div class="desc"><p>returns the content of the provided zipfile (ending ".zip)</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>filename</code></strong> :&ensp;<code>str</code></dt>
+<dd>string name of the target zipfile, without the ending ".zip"</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>str</code></dt>
+<dd>the content of a zipfile</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -168,8 +213,11 @@ the filter can also contain a folder structure.
 <pre><code class="python">def read_content_from_zip(filename: str) -&gt; str:
     &#34;&#34;&#34;
     returns the content of the provided zipfile (ending &#34;.zip)
-    :param filename: zipfilename without the ending &#34;.zip&#34;
-    :return:
+    Args:
+        filename (str): string name of the target zipfile, without the ending &#34;.zip&#34;
+
+    Returns:
+        str: the content of a zipfile
     &#34;&#34;&#34;
     with zipfile.ZipFile(filename + &#34;.zip&#34;, mode=&#34;r&#34;) as zf_fp:
         file = Path(filename).name
@@ -177,28 +225,45 @@ the filter can also contain a folder structure.
 </details>
 </dd>
 <dt id="secfsdstools.a_utils.fileutils.read_df_from_file_in_zip"><code class="name flex">
-<span>def <span class="ident">read_df_from_file_in_zip</span></span>(<span>zip_file: str, file_to_extract: str, dtype=None, usecols=None) ‑> pandas.core.frame.DataFrame</span>
+<span>def <span class="ident">read_df_from_file_in_zip</span></span>(<span>zip_file: str, file_to_extract: str, dtype: Optional[Dict[str, object]] = None, usecols: Optional[List[str]] = None) ‑> pandas.core.frame.DataFrame</span>
 </code></dt>
 <dd>
-<div class="desc"><p>reads the content of a file inside a zip file directly into dataframe
-:param zip_file: the zip file containing the data file
-:param file_to_extract: the file with the data
-:param dtype: column type array or None
-:param usecols: list with all the columns that should be read or None
-:return: the pandas dataframe</p></div>
+<div class="desc"><p>reads the content of a file inside a zip file directly into dataframe</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>zip_file</code></strong> :&ensp;<code>str</code></dt>
+<dd>the zip file containing the data file</dd>
+<dt><strong><code>file_to_extract</code></strong> :&ensp;<code>str</code></dt>
+<dd>the file with the data</dd>
+<dt><strong><code>dtype</code></strong> :&ensp;<code>Dict[str, object]</code>, optional<code>, None</code></dt>
+<dd>column type array or None</dd>
+<dt><strong><code>usecols</code></strong> :&ensp;<code>List[str]</code>, optional<code>, None</code></dt>
+<dd>list with all the columns</dd>
+</dl>
+<p>that should be read or None</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>pd.DataFrame</code></dt>
+<dd>the pandas dataframe</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def read_df_from_file_in_zip(zip_file: str, file_to_extract: str,
-                             dtype=None, usecols=None) -&gt; pd.DataFrame:
+                             dtype: Optional[Dict[str, object]] = None,
+                             usecols: Optional[List[str]] = None) -&gt; pd.DataFrame:
     &#34;&#34;&#34;
     reads the content of a file inside a zip file directly into dataframe
-    :param zip_file: the zip file containing the data file
-    :param file_to_extract: the file with the data
-    :param dtype: column type array or None
-    :param usecols: list with all the columns that should be read or None
-    :return: the pandas dataframe
+
+    Args:
+        zip_file (str): the zip file containing the data file
+        file_to_extract (str): the file with the data
+        dtype (Dict[str, object], optional, None): column type array or None
+        usecols (List[str], optional, None): list with all the columns
+        that should be read or None
+    Returns:
+        pd.DataFrame: the pandas dataframe
     &#34;&#34;&#34;
     with zipfile.ZipFile(zip_file, &#34;r&#34;) as zip_fp:
         file = Path(file_to_extract).name
@@ -210,10 +275,19 @@ the filter can also contain a folder structure.
 <span>def <span class="ident">write_content_to_zip</span></span>(<span>content: str, filename: str) ‑> str</span>
 </code></dt>
 <dd>
-<div class="desc"><p>write the content str into the zip file. compression is set to zipfile.ZIP_DEFLATED
-:param content: string
-:param filename: string name of the target zipfile, withouit the ending ".zip"
-:return: written zipfilename</p></div>
+<div class="desc"><p>write the content str into the zip file. compression is set to zipfile.ZIP_DEFLATED</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>content</code></strong> :&ensp;<code>str</code></dt>
+<dd>the content that should be written into the file</dd>
+<dt><strong><code>filename</code></strong> :&ensp;<code>str</code></dt>
+<dd>string name of the target zipfile, without the ending ".zip"</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>str</code></dt>
+<dd>path to the zipfile that was ritten</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -221,9 +295,13 @@ the filter can also contain a folder structure.
 <pre><code class="python">def write_content_to_zip(content: str, filename: str) -&gt; str:
     &#34;&#34;&#34;
     write the content str into the zip file. compression is set to zipfile.ZIP_DEFLATED
-    :param content: string
-    :param filename: string name of the target zipfile, withouit the ending &#34;.zip&#34;
-    :return: written zipfilename
+
+    Args:
+        content (str): the content that should be written into the file
+        filename (str): string name of the target zipfile, without the ending &#34;.zip&#34;
+
+    Returns:
+        str: path to the zipfile that was ritten
     &#34;&#34;&#34;
     zip_filename = filename + &#34;.zip&#34;
     with zipfile.ZipFile(zip_filename, mode=&#34;w&#34;, compression=zipfile.ZIP_DEFLATED) as zf_fp:

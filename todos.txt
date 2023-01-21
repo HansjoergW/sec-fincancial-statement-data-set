@@ -23,7 +23,8 @@ features
 
 
 build, release & docu
-- coverage report
+- coverage report padge
+- release to readthedocs
 
 
 Ideen

@@ -12,6 +12,9 @@ v.0.3.0
 
 later
 
+-build timeline for company
+-correct quarter naming
+
 features
 - Example Notebooks
   - example report reading

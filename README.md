@@ -29,7 +29,7 @@ statement of cash flows.
 
 # Links
 * [API Documentation](https://hansjoergw.github.io/sec-fincancial-statement-data-set/secfsdstools/)
-
+* [QuickStart Jupyter Notebook](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/01_quickstart.ipynb)
 # Installation
 
 The project is published on pypi.org. Simply use pip install to install it:
@@ -38,10 +38,10 @@ The project is published on pypi.org. Simply use pip install to install it:
 pip install secfsdstools
 ```
 
-The library has been tested for python version 3.8, 3.9, and 3.10
+The library has been tested for python version 3.7, 3.8, 3.9, and 3.10
 
-If you want to contribute, just clone the project and use a python 3.8 environment.
-The dependencies are defined in the requirements.txt file.
+If you want to contribute, just clone the project and use a python 3.7 environment.
+The dependencies are defined in the requirements.txt file or use the pyproject.toml to install them.
 
 # Principles
 
@@ -71,8 +71,7 @@ The db directory is the directory in which the sqllite db is created.
 The useragentemail is used in the requests made to the sec.gov website.
 
 If you call `update()` without a configuration file, an error message will appear. However, a default config file will
-be
-created in the user home directory. If you are satisfied with the default settings (download directory is set to "<home>
+be created in the user home directory. If you are satisfied with the default settings (download directory is set to "<home>
 /secfsdstools/data/dld" and the database directory is set to "secfsdstools/data/db"), you can simply rerun `update()`.
 
 # Downloading the data files from sec and index the content
@@ -252,6 +251,9 @@ Now lets filter for the BalanceSheet, IncomeStatement, and CashFlow for the curr
 If you compare the content of the balance sheet dataframe with
 [apple's 10-K report from 2022](https://www.sec.gov/ix?doc=/Archives/edgar/data/320193/000032019322000108/aapl-20220924.htm#ief5efb7a728d4285b6b4af1e880101bc_85)
 you see that the structure and the content is indeed the same.
+
+Also checkout the example Jupyter Notebooks:
+* [QuickStart Jupyter Notebook](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/01_quickstart.ipynb)
 
 
 

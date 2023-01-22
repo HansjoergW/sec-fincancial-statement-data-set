@@ -1,26 +1,25 @@
 Todos
 ------
 
-v.0.2.1
-- adapt readme
-
 v.0.3.0
 - adapt readme
-- adapt relaeses
+- adapt releases
 - integrate rapid api
 - notebook rapid api
+- wie kann rapid-secret in the tests verwendet werden?
+
 
 later
-
 -build timeline for company
 -correct quarter naming
+-parquet
+-db-version for updates
 
 features
 - Example Notebooks
   - example report reading
   - example zip reading
   - example extension -> z.B. db access / erweiteren reader
-
 
 build, release & docu
 - coverage report padge
@@ -29,9 +28,7 @@ build, release & docu
 
 Ideen
 -----
-- is sehr langsam, warum?
-  download in parallel / integrate parallelExecution ParallelExecution.py (von sec_processing)
-
 - export excel
 - cli
+- https://streamlit.io/ ui
 

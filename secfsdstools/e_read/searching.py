@@ -24,7 +24,7 @@ class IndexSearch:
         Args:
             configuration (Configuration, optional, None): configuration object
 
-        Returns;:
+        Returns:
             IndexSearch: instance of IndexSearch
         """
         if configuration is None:

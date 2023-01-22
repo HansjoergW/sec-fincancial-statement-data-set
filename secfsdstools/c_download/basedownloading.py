@@ -4,6 +4,7 @@ from abc import ABC, abstractmethod
 from typing import Tuple, List, Dict
 
 from secfsdstools.a_utils.downloadutils import UrlDownloader
+from secfsdstools.a_utils.fileutils import get_filenames_in_directory
 from secfsdstools.a_utils.parallelexecution import ParallelExecutor
 
 LOGGER = logging.getLogger(__name__)
@@ -42,6 +43,9 @@ class BaseDownloader(ABC):
         LOGGER.info('    start to download %s ', file)
         result = self._download_zip(url=url, file=file)
         return result
+
+    def _get_downloaded_zips(self) -> List[str]:
+        return get_filenames_in_directory(os.path.join(self.zip_dir, '*.zip'))
 
     @abstractmethod
     def _calculate_missing_zips(self) -> List[Tuple[str, str]]:

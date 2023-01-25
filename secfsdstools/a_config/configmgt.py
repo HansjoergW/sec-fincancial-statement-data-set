@@ -5,6 +5,7 @@ import configparser
 import logging
 import os
 from dataclasses import dataclass
+from typing import Optional
 
 DEFAULT_CONFIG_FILE: str = '.secfsdstools.cfg'
 SECFSDSTOOLS_ENV_VAR_NAME: str = 'SECFSDSTOOLS_CFG'
@@ -18,6 +19,8 @@ class Configuration:
     download_dir: str
     db_dir: str
     user_agent_email: str
+    rapid_api_key: Optional[str] = None
+    rapid_api_plan: str = 'basic'
 
 
 DEFAULT_CONFIGURATION = Configuration(
@@ -90,10 +93,15 @@ class ConfigurationManager:
         config = configparser.ConfigParser()
         config.read(file_path)
 
+        # todo: check if rapid api plan is correct
+        #  maybe do a check and call heartbeat? to see if it is working
+        #  api auslagern, wäre vlt eine gute Idee...
         return Configuration(
             download_dir=config['DEFAULT'].get('DownloadDirectory', ),
             db_dir=config['DEFAULT'].get('DbDirectory'),
-            user_agent_email=config['DEFAULT'].get('UserAgentEmail')
+            user_agent_email=config['DEFAULT'].get('UserAgentEmail'),
+            rapid_api_key=config['DEFAULT'].get('RapidApiKey', None),
+            rapid_api_plan=config['DEFAULT'].get('RapidApiPlan', 'basic')
         )
 
     @staticmethod

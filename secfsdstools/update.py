@@ -3,7 +3,8 @@ import logging
 
 from secfsdstools.a_config.configmgt import ConfigurationManager, Configuration
 from secfsdstools.b_setup.setupdb import DbCreator
-from secfsdstools.c_download.secdownloading import SecZipDownloader, UrlDownloader
+from secfsdstools.c_download.secdownloading import SecZipDownloader
+from secfsdstools.c_download.rapiddownloading import RapidZipDownloader
 from secfsdstools.d_index.indexing import ReportZipIndexer
 
 LOGGER = logging.getLogger(__name__)
@@ -22,11 +23,20 @@ def update(config: Configuration = None):
     # create the db
     DbCreator(db_dir=config.db_dir).create_db()
 
-    # download actual data
+    # download data from sec.gov
     LOGGER.info("start to download files from sec.gov ...")
-    url_downloader = UrlDownloader(user_agent=config.user_agent_email)
-    secdownloader = SecZipDownloader(zip_dir=config.download_dir, urldownloader=url_downloader)
+    secdownloader = SecZipDownloader.get_downloader(configuration=config)
     secdownloader.download()
+
+    # download data from rapid
+    # todo: check if rapid is set
+    LOGGER.info("start to download files from rapid...")
+    rapiddownloader = RapidZipDownloader.get_downloader(configuration=config)
+    try:
+        rapiddownloader.download()
+    except Exception as ex:
+        LOGGER.warning("Failed to get data from rapid api, please check rapid-api-key. " +
+                       "Only using data from Sec.gov: %s", ex)
 
     # create index of reports
     LOGGER.info("start to index downloaded files ...")

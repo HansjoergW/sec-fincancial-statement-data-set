@@ -82,3 +82,53 @@ def test_config_file_in_home(tmp_path):
         configuration = ConfigurationManager.read_config_file()
         assert configuration is not None
         assert configuration.db_dir == 'bloblo'
+
+
+def test_check_configuration(tmp_path):
+    invalid_email_config = Configuration(db_dir=str(tmp_path),
+                                         download_dir=str(tmp_path),
+                                         user_agent_email='email')
+
+    results = ConfigurationManager.check_configuration(invalid_email_config)
+    assert len(results) == 1
+    assert 'UserAgentEmail' in results[0]
+
+    invalid_rapid_plan = Configuration(db_dir=str(tmp_path),
+                                       download_dir=str(tmp_path),
+                                       user_agent_email='abc@xy.org',
+                                       rapid_api_plan='bl')
+
+    results = ConfigurationManager.check_configuration(invalid_rapid_plan)
+    assert len(results) == 1
+    assert 'RapidApiPlan' in results[0]
+
+    valid_rapid_plan = Configuration(db_dir=str(tmp_path),
+                                       download_dir=str(tmp_path),
+                                       user_agent_email='abc@xy.org',
+                                       rapid_api_plan='basic')
+
+    results = ConfigurationManager.check_configuration(valid_rapid_plan)
+    assert len(results) == 0
+
+    valid_rapid_plan = Configuration(db_dir=str(tmp_path),
+                                     download_dir=str(tmp_path),
+                                     user_agent_email='abc@xy.org',
+                                     rapid_api_plan='premium')
+    results = ConfigurationManager.check_configuration(valid_rapid_plan)
+    assert len(results) == 0
+
+    valid_rapid_plan = Configuration(db_dir=str(tmp_path),
+                                     download_dir=str(tmp_path),
+                                     user_agent_email='abc@xy.org',
+                                     rapid_api_plan=None)
+    results = ConfigurationManager.check_configuration(valid_rapid_plan)
+    assert len(results) == 0
+
+
+
+    continue here
+    rapid_api_key = os.environ.get('RAPID_API_KEY')
+    valid_api_key = Configuration(db_dir=str(tmp_path),
+                                  download_dir=str(tmp_path),
+                                  user_agent_email='abc@xy.com',
+                                  rapid_api_key=rapid_api_key)

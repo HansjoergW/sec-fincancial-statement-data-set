@@ -82,7 +82,7 @@ class UrlDownloader:
         with open(target_file, "wb") as target_fp:
             target_fp.write(response.content)
 
-    def get_url_content(self, file_url: str, max_tries: int = 6, sleep_time: int = 1, headers: Dict[str, str] = None) \
+    def get_url_content(self, url: str, max_tries: int = 6, sleep_time: int = 1, headers: Dict[str, str] = None) \
             -> requests.models.Response:
         """
             downloads the content auf an url and returns it as a string.
@@ -90,7 +90,7 @@ class UrlDownloader:
             Uses the defined user-agent as header information
 
         Args:
-            file_url (str): url that referencese the file to be downloaded
+            url (str): url that referencese the file to be downloaded
             max_tries (int, optional, 6): maximum number of tries to get the data
             sleep_time (int, optional, 1): wait time between retries, default is one second
             headers (Dict[str, str], optional, None}): additional headers
@@ -107,13 +107,13 @@ class UrlDownloader:
                     headers = {'User-Agent': self.user_agent}
                 else:
                     headers.update({'User-Agent': self.user_agent})
-                response = requests.get(file_url, timeout=10,
+                response = requests.get(url, timeout=10,
                                         headers=headers, stream=True)
                 response.raise_for_status()
                 break
             except requests.exceptions.RequestException as err:
                 if current_try >= max_tries:
-                    LOGGER.info('RequestException: failed to download %s2', file_url)
+                    LOGGER.info('RequestException: failed to download %s2', url)
                     raise err
                 sleep(sleep_time)
 

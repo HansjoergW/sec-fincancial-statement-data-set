@@ -4,8 +4,12 @@ Manage the configuration
 import configparser
 import logging
 import os
+import re
 from dataclasses import dataclass
-from typing import Optional
+from typing import Optional, List
+
+from secfsdstools.a_utils.downloadutils import UrlDownloader
+from secfsdstools.a_utils.rapiddownloadutils import RapidUrlBuilder
 
 DEFAULT_CONFIG_FILE: str = '.secfsdstools.cfg'
 SECFSDSTOOLS_ENV_VAR_NAME: str = 'SECFSDSTOOLS_CFG'
@@ -20,7 +24,7 @@ class Configuration:
     db_dir: str
     user_agent_email: str
     rapid_api_key: Optional[str] = None
-    rapid_api_plan: str = 'basic'
+    rapid_api_plan: Optional[str] = 'basic'
 
 
 DEFAULT_CONFIGURATION = Configuration(
@@ -96,6 +100,7 @@ class ConfigurationManager:
         # todo: check if rapid api plan is correct
         #  maybe do a check and call heartbeat? to see if it is working
         #  api auslagern, wäre vlt eine gute Idee...
+        #  man könnte noch einen generellen config check machen, und z.B. auch gleich die Directories anlegen..
         return Configuration(
             download_dir=config['DEFAULT'].get('DownloadDirectory', ),
             db_dir=config['DEFAULT'].get('DbDirectory'),
@@ -103,6 +108,51 @@ class ConfigurationManager:
             rapid_api_key=config['DEFAULT'].get('RapidApiKey', None),
             rapid_api_plan=config['DEFAULT'].get('RapidApiPlan', 'basic')
         )
+
+    @staticmethod
+    def _is_valid_email(email):
+        pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+        return bool(re.match(pattern, email))
+
+    @staticmethod
+    def check_configuration(config: Configuration) -> List[str]:
+        """
+        Validates the configuration:
+
+        Args:
+            config (Configuration): the configuration to be validated
+
+        Returns:
+            List[str]: List with the validations
+        """
+
+        messages: List[str] = []
+
+        if not os.path.isdir(config.db_dir):
+            LOGGER.info("SQLite db directory does not exist, creating it at %s", config.db_dir)
+            os.makedirs(config.db_dir, exist_ok=True)
+
+        if not os.path.isdir(config.download_dir):
+            LOGGER.info("Download directory does not exist, creating it at %s", config.download_dir)
+            os.makedirs(config.download_dir, exist_ok=True)
+
+        if not ConfigurationManager._is_valid_email(config.user_agent_email):
+            messages.append(f'The defined UserAgentEmail is not a valid format: {config.user_agent_email}')
+
+        if config.rapid_api_plan not in ['basic', 'premium', None]:
+            messages.append(
+                f'The defined RapidApiPlan ({config.rapid_api_plan}) is not valid. Allowed values are basic, premium')
+
+        if config.rapid_api_key is not None:
+            try:
+                rapidurlbuilder = RapidUrlBuilder(rapid_api_key=config.rapid_api_key, rapid_plan='basic')
+                response = UrlDownloader(config.user_agent_email).get_url_content(
+                    url=rapidurlbuilder.get_heartbeat_url(),
+                    headers=rapidurlbuilder.get_headers())
+            except Exception as err:
+                messages.append(f'RapidApiKey {config.rapid_api_key} was set but calling the API did fail: {str(err)}')
+
+        return messages
 
     @staticmethod
     def _write_configuration(file_path: str, configuration: Configuration):

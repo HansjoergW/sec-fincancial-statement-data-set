@@ -3,8 +3,8 @@ import logging
 
 from secfsdstools.a_config.configmgt import ConfigurationManager, Configuration
 from secfsdstools.b_setup.setupdb import DbCreator
-from secfsdstools.c_download.secdownloading import SecZipDownloader
 from secfsdstools.c_download.rapiddownloading import RapidZipDownloader
+from secfsdstools.c_download.secdownloading import SecZipDownloader
 from secfsdstools.d_index.indexing import ReportZipIndexer
 
 LOGGER = logging.getLogger(__name__)
@@ -29,14 +29,14 @@ def update(config: Configuration = None):
     secdownloader.download()
 
     # download data from rapid
-    # todo: check if rapid is set
-    LOGGER.info("start to download files from rapid...")
-    rapiddownloader = RapidZipDownloader.get_downloader(configuration=config)
-    try:
-        rapiddownloader.download()
-    except Exception as ex:
-        LOGGER.warning("Failed to get data from rapid api, please check rapid-api-key. " +
-                       "Only using data from Sec.gov: %s", ex)
+    if (config.rapid_api_key is not None) & config.rapid_api_key != '':
+        try:
+            LOGGER.info("start to download files from rapid...")
+            rapiddownloader = RapidZipDownloader.get_downloader(configuration=config)
+            rapiddownloader.download()
+        except Exception as ex:
+            LOGGER.warning("Failed to get data from rapid api, please check rapid-api-key. " +
+                           "Only using data from Sec.gov: %s", ex)
 
     # create index of reports
     LOGGER.info("start to index downloaded files ...")
@@ -54,8 +54,8 @@ if __name__ == '__main__':
     )
 
     update()
-        # Configuration(
-        #     db_dir='c:/ieu/projects/sec-fincancial-statement-data-set/data/db/',
-        #     download_dir='c:/ieu/projects/sec-fincancial-statement-data-set/data/dld/',
-        #     user_agent_email='your.email@goes.here'
-        # ))
+    # Configuration(
+    #     db_dir='c:/ieu/projects/sec-fincancial-statement-data-set/data/db/',
+    #     download_dir='c:/ieu/projects/sec-fincancial-statement-data-set/data/dld/',
+    #     user_agent_email='your.email@goes.here'
+    # ))

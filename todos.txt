@@ -7,6 +7,7 @@ v.0.3.0
 - integrate rapid api
 - notebook rapid api
 - wie kann rapid-secret in the tests verwendet werden?
+- warning, falls daten nicht indexiert sind -> Hinweis Message beim Laden der Config
 
 
 later

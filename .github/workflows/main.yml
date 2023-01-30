@@ -2,6 +2,9 @@ name: Python test and linting
 
 on: [push]
 
+env:
+  RAPID_API_KEY: ${{ secrets.RAPID_API_KEY }}
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -21,8 +24,6 @@ jobs:
         run: pip install .[test]
       - name: unit tests
         run: pytest tests --ignore=tests/x_examples
-        with:
-          RAPID_API_KEY: ${{ secrets.RAPID_API_KEY }}
       - name: linting
         run: pylint --disable=R0913,R0903,W0511,R0902,R0801,R0201 secfsdstools
 

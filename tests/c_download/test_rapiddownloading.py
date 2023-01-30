@@ -22,11 +22,6 @@ def rapidzipdownloader(tmp_path):
                              urldownloader=url_downloader,
                              execute_serial=True)
 
-
-# todo: für die tests muss: es muss geprüft werden, ob basic oder premium account verwendet wird
-#  ist part der config
-
-
 def test_get_content(rapidzipdownloader):
     # check if the call to the api is working
     content = rapidzipdownloader._get_content()

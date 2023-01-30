@@ -28,14 +28,14 @@ def test_environment_variable_with_file(tmp_path):
     # create the configuration at the expected location
     config_file = str(tmp_path) + '/test.cfg'
     ConfigurationManager._write_configuration(config_file,
-                                              Configuration(db_dir='blublu',
-                                                            download_dir='blublu',
+                                              Configuration(db_dir=os.path.join(tmp_path, 'blublu'),
+                                                            download_dir=os.path.join(tmp_path, 'blublu'),
                                                             user_agent_email='user@email.com'))
 
     with patch.dict(os.environ, {SECFSDSTOOLS_ENV_VAR_NAME: config_file}, clear=True):
         configuration = ConfigurationManager.read_config_file()
         assert configuration is not None
-        assert configuration.db_dir == 'blublu'
+        assert configuration.db_dir.endswith('blublu')
 
 
 # Tests
@@ -47,13 +47,13 @@ def test_config_file_in_cwd(tmp_path, monkeypatch: pytest.MonkeyPatch):
     config_file = str(tmp_path / DEFAULT_CONFIG_FILE)
 
     ConfigurationManager._write_configuration(config_file,
-                                              Configuration(db_dir='blabla',
-                                                            download_dir='blabla',
+                                              Configuration(db_dir=os.path.join(tmp_path, 'blabla'),
+                                                            download_dir=os.path.join(tmp_path, 'blabla'),
                                                             user_agent_email='user@email.com'))
 
     configuration = ConfigurationManager.read_config_file()
     assert configuration is not None
-    assert configuration.db_dir == 'blabla'
+    assert configuration.db_dir.endswith('blabla')
 
 
 def test_no_config_file_in_home(tmp_path):
@@ -73,15 +73,15 @@ def test_config_file_in_home(tmp_path):
     config_file = str(tmp_path / DEFAULT_CONFIG_FILE)
 
     ConfigurationManager._write_configuration(config_file,
-                                              Configuration(db_dir='bloblo',
-                                                            download_dir='bloblo',
+                                              Configuration(db_dir=os.path.join(tmp_path, 'bloblo'),
+                                                            download_dir=os.path.join(tmp_path, 'bloblo'),
                                                             user_agent_email='user@email.com'))
     with patch('os.path.expanduser') as mock_expanduser:
         mock_expanduser.return_value = str(tmp_path)
 
         configuration = ConfigurationManager.read_config_file()
         assert configuration is not None
-        assert configuration.db_dir == 'bloblo'
+        assert configuration.db_dir.endswith('bloblo')
 
 
 def test_check_basic_configuration(tmp_path):

@@ -1,3 +1,7 @@
+"""
+Logic to download the zipfiles from the rapid api.
+"""
+
 import json
 import logging
 import os
@@ -13,10 +17,15 @@ LOGGER = logging.getLogger(__name__)
 
 
 class RapidZipDownloader(BaseDownloader):
+    """
+    Class which coordinates downloading form the rapidapi api
+    https://rapidapi.com/hansjoerg.wingeier/api/daily-sec-financial-statement-dataset
+    """
 
     def __init__(self, rapidurlbuilder: RapidUrlBuilder, zip_dir: str, urldownloader: UrlDownloader,
                  execute_serial: bool = False):
-        super().__init__(zip_dir=zip_dir, urldownloader=urldownloader, execute_serial=execute_serial)
+        super().__init__(zip_dir=zip_dir, urldownloader=urldownloader,
+                         execute_serial=execute_serial)
         self.rapidurlbuilder = rapidurlbuilder
 
         self.qrtr_zip_dir = zip_dir
@@ -68,7 +77,9 @@ class RapidZipDownloader(BaseDownloader):
 
         cutoff: str = ''
         if last_quarter_file_quarter < 4:
-            cutoff = str(last_quarter_file_year) + str(((last_quarter_file_quarter * 3) + 1)).zfill(2) + '00'
+            cutoff = str(last_quarter_file_year) \
+                     + str(((last_quarter_file_quarter * 3) + 1)).zfill(2) \
+                     + '00'
         else:
             cutoff = str(last_quarter_file_year + 1) + '0100'
         return cutoff
@@ -87,7 +98,8 @@ class RapidZipDownloader(BaseDownloader):
 
         missing = list(set(available_zips) - set(dld_zip_files))
 
-        # only consider the filenames with names (without extension) are bigger than the cutoff string
+        # only consider the filenames with names (without extension)
+        # are bigger than the cutoff string
         missing_after_cut_off = [entry for entry in missing if entry[:8] > cutoff_str]
 
         missing_tuple = [(filename, self.rapidurlbuilder.get_donwload_url(filename)) for filename in

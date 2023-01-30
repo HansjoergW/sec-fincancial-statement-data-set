@@ -1,3 +1,7 @@
+"""
+Contains BaseDownloader class.
+"""
+
 import logging
 import os
 from abc import ABC, abstractmethod
@@ -11,6 +15,10 @@ LOGGER = logging.getLogger(__name__)
 
 
 class BaseDownloader(ABC):
+    """
+    Base class for Downloaders. Implements basic methods to download files
+    from an url and store it.
+    """
 
     def __init__(self, zip_dir: str, urldownloader: UrlDownloader, execute_serial: bool = False):
         self.urldownloader = urldownloader
@@ -30,7 +38,8 @@ class BaseDownloader(ABC):
     def _download_zip(self, file: str, url: str) -> str:
         file_path = os.path.join(self.zip_dir, file)
         try:
-            self.urldownloader.binary_download_url_to_file(url, file_path, headers=self._get_headers())
+            self.urldownloader.binary_download_url_to_file(url, file_path,
+                                                           headers=self._get_headers())
             return 'success'
         except Exception as ex:  # pylint: disable=W0703
             # we want to catch everything here.

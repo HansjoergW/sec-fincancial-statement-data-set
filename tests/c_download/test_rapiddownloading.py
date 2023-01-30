@@ -5,6 +5,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from secfsdstools.a_utils.downloadutils import UrlDownloader
+from secfsdstools.a_utils.rapiddownloadutils import RapidUrlBuilder
 from secfsdstools.c_download.rapiddownloading import RapidZipDownloader
 
 
@@ -15,7 +16,9 @@ def rapidzipdownloader(tmp_path):
     os.makedirs(zip_dir)
     rapid_api_key = os.environ.get('RAPID_API_KEY')
 
-    yield RapidZipDownloader(rapid_plan='basic', rapid_api_key=rapid_api_key, zip_dir=str(zip_dir),
+    rapidurlbuilder = RapidUrlBuilder(rapid_plan='basic', rapid_api_key=rapid_api_key)
+    yield RapidZipDownloader(rapidurlbuilder=rapidurlbuilder,
+                             zip_dir=str(zip_dir),
                              urldownloader=url_downloader,
                              execute_serial=True)
 
@@ -73,7 +76,7 @@ def test_get_available_zips(rapidzipdownloader):
     base_entries = rapidzipdownloader._get_available_zips()
     assert len(base_entries) == 3
 
-    rapidzipdownloader.rapid_plan = 'premium'
+    rapidzipdownloader.rapidurlbuilder.rapid_plan = 'premium'
 
     base_entries = rapidzipdownloader._get_available_zips()
     assert len(base_entries) == 5
@@ -109,6 +112,7 @@ def test_calculate_missing_zips(rapidzipdownloader):
     result = rapidzipdownloader._calculate_missing_zips()
 
     assert len(result) == 2
-
-    assert result[0][0] == '20230101.zip'
-    assert result[0][1] == 'https://daily-sec-financial-statement-dataset.p.rapidapi.com/basic/2023-01-01/'
+    for entry in result:
+        assert entry[0] in ['20230101.zip', '20230102.zip']
+        assert entry[1] in ['https://daily-sec-financial-statement-dataset.p.rapidapi.com/basic/2023-01-01/',
+                            'https://daily-sec-financial-statement-dataset.p.rapidapi.com/basic/2023-01-02/']

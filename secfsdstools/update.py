@@ -31,12 +31,12 @@ def update(config: Configuration = None):
     # download data from rapid
     if (config.rapid_api_key is not None) & config.rapid_api_key != '':
         try:
-            LOGGER.info("start to download files from rapid...")
+            LOGGER.info("start to download files from rapid... %s")
             rapiddownloader = RapidZipDownloader.get_downloader(configuration=config)
             rapiddownloader.download()
-        except Exception as ex:
-            LOGGER.warning("Failed to get data from rapid api, please check rapid-api-key. " +
-                           "Only using data from Sec.gov: %s", ex)
+        except Exception as ex: # pylint: disable=W0703
+            LOGGER.warning("Failed to get data from rapid api, please check rapid-api-key. ")
+            LOGGER.warning("Only using data from Sec.gov because of: %s", ex)
 
     # create index of reports
     LOGGER.info("start to index downloaded files ...")

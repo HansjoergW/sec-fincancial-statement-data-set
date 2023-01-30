@@ -97,10 +97,6 @@ class ConfigurationManager:
         config = configparser.ConfigParser()
         config.read(file_path)
 
-        # todo: check if rapid api plan is correct
-        #  maybe do a check and call heartbeat? to see if it is working
-        #  api auslagern, wäre vlt eine gute Idee...
-        #  man könnte noch einen generellen config check machen, und z.B. auch gleich die Directories anlegen..
         config = Configuration(
             download_dir=config['DEFAULT'].get('DownloadDirectory', ),
             db_dir=config['DEFAULT'].get('DbDirectory'),
@@ -110,18 +106,19 @@ class ConfigurationManager:
         )
 
         check_messages = ConfigurationManager.check_basic_configuration(config)
-        if len(check_messages):
+        if len(check_messages) > 0:
             print(
                 f"""There are problems with your configuration.
                     Please fix the following issues in {file_path}: {check_messages}""")
             raise ValueError(f'Problems with configuration in {file_path}: {check_messages}')
 
         check_rapid_messages = ConfigurationManager.check_rapid_configuration(config)
-        if len(check_rapid_messages):
+        if len(check_rapid_messages) > 0:
             print(f'rapid configuration is invalid in {file_path}: {check_rapid_messages}')
-            print(f'rapid configuration will be ignored.')
+            print('rapid configuration will be ignored.')
 
-            LOGGER.warning('rapid configuration is invalid in %s: %s', file_path, str(check_rapid_messages))
+            LOGGER.warning('rapid configuration is invalid in %s: %s',
+                           file_path, str(check_rapid_messages))
             config.rapid_api_key = None
             config.rapid_api_plan = None
         return config
@@ -154,7 +151,8 @@ class ConfigurationManager:
             os.makedirs(config.download_dir, exist_ok=True)
 
         if not ConfigurationManager._is_valid_email(config.user_agent_email):
-            messages.append(f'The defined UserAgentEmail is not a valid format: {config.user_agent_email}')
+            messages.append(
+                f'The defined UserAgentEmail is not a valid format: {config.user_agent_email}')
 
         return messages
 
@@ -173,19 +171,22 @@ class ConfigurationManager:
 
         if config.rapid_api_plan not in ['basic', 'premium', None]:
             messages.append(
-                f'The defined RapidApiPlan ({config.rapid_api_plan}) is not valid. Allowed values are basic, premium')
+                f'The defined RapidApiPlan ({config.rapid_api_plan}) is not valid.' +
+                ' Allowed values are basic, premium')
 
         if config.rapid_api_key is not None:
             try:
-                rapidurlbuilder = RapidUrlBuilder(rapid_api_key=config.rapid_api_key, rapid_plan='basic')
+                rapidurlbuilder = RapidUrlBuilder(rapid_api_key=config.rapid_api_key,
+                                                  rapid_plan='basic')
                 response = UrlDownloader(config.user_agent_email).get_url_content(
                     url=rapidurlbuilder.get_heartbeat_url(),
                     headers=rapidurlbuilder.get_headers(),
                     max_tries=2
                 )
                 print(response)
-            except Exception as err:
-                messages.append(f'RapidApiKey {config.rapid_api_key} was set but seems to be not valid: {str(err)}\n' +
+            except Exception as err:  # pylint: disable=W0703
+                messages.append(f'RapidApiKey {config.rapid_api_key} was set' +
+                                f' but seems to be not valid: {str(err)}\n' +
                                 'Please go to rapidapi.com and create a valid api key if you' +
                                 ' want to have daily data updates')
 

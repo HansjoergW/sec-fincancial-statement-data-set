@@ -23,7 +23,8 @@ class SecZipDownloader(BaseDownloader):
     href_re = re.compile("href=\".*?\"", re.IGNORECASE + re.MULTILINE + re.DOTALL)
 
     def __init__(self, zip_dir: str, urldownloader: UrlDownloader, execute_serial: bool = False):
-        super().__init__(zip_dir=zip_dir, urldownloader=urldownloader, execute_serial=execute_serial)
+        super().__init__(zip_dir=zip_dir, urldownloader=urldownloader,
+                         execute_serial=execute_serial)
 
     @classmethod
     def get_downloader(cls, configuration: Optional[Configuration] = None):

@@ -87,7 +87,7 @@ def test_config_file_in_home(tmp_path):
 def test_check_basic_configuration(tmp_path):
     invalid_email_config = Configuration(db_dir=str(tmp_path),
                                          download_dir=str(tmp_path),
-                                         user_agent_email='user@email.com')
+                                         user_agent_email='email.com')
 
     results = ConfigurationManager.check_basic_configuration(invalid_email_config)
     assert len(results) == 1

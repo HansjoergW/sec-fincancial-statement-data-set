@@ -37,7 +37,8 @@ class RapidUrlBuilder:
             str, the url
 
         """
-        return RapidUrlBuilder.RAPID_URL + f'/{self.rapid_plan}/{filename[:4]}-{filename[4:6]}-{filename[6:8]}/'
+        return RapidUrlBuilder.RAPID_URL + \
+               f'/{self.rapid_plan}/{filename[:4]}-{filename[4:6]}-{filename[6:8]}/'
 
     def get_content_url(self) -> str:
         """

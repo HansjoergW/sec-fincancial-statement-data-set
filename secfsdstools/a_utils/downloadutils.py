@@ -82,7 +82,8 @@ class UrlDownloader:
         with open(target_file, "wb") as target_fp:
             target_fp.write(response.content)
 
-    def get_url_content(self, url: str, max_tries: int = 6, sleep_time: int = 1, headers: Dict[str, str] = None) \
+    def get_url_content(self, url: str, max_tries: int = 6,
+                        sleep_time: int = 1, headers: Dict[str, str] = None) \
             -> requests.models.Response:
         """
             downloads the content auf an url and returns it as a string.

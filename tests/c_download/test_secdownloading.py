@@ -1,7 +1,7 @@
 import os
 import re
 from typing import List, Tuple
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 import pytest
 
@@ -32,9 +32,9 @@ def test_get_available_zips(seczipdownloader):
 
 
 def test_calculate_missing_zips(seczipdownloader):
-    with patch("secfsdstools.c_download.secdownloading.get_filenames_in_directory", return_value=['file1']):
-        seczipdownloader._get_available_zips = MagicMock(return_value=[('file1', 'file1'), ('file2', 'file2')])
+    seczipdownloader._get_downloaded_zips = MagicMock(return_value=['file1'])
+    seczipdownloader._get_available_zips = MagicMock(return_value=[('file1', 'file1'), ('file2', 'file2')])
 
-        missing: List[Tuple[str, str]] = seczipdownloader._calculate_missing_zips()
-        assert len(missing) == 1
-        assert missing == [('file2', 'file2')]
+    missing: List[Tuple[str, str]] = seczipdownloader._calculate_missing_zips()
+    assert len(missing) == 1
+    assert missing == [('file2', 'file2')]

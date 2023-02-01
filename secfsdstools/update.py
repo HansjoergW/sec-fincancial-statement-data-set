@@ -17,21 +17,20 @@ def update(config: Configuration = None):
 
     # read config
     if config is None:
-        LOGGER.info("reading configuration file ..")
         config = ConfigurationManager.read_config_file()
 
     # create the db
     DbCreator(db_dir=config.db_dir).create_db()
 
     # download data from sec.gov
-    LOGGER.info("start to download files from sec.gov ...")
+    LOGGER.info("check if there are new files to download from sec.gov ...")
     secdownloader = SecZipDownloader.get_downloader(configuration=config)
     secdownloader.download()
 
     # download data from rapid
-    if (config.rapid_api_key is not None) & config.rapid_api_key != '':
+    if (config.rapid_api_key is not None) & (config.rapid_api_key != ''):
         try:
-            LOGGER.info("start to download files from rapid... %s")
+            LOGGER.info("check if there are new files to download from rapid...")
             rapiddownloader = RapidZipDownloader.get_downloader(configuration=config)
             rapiddownloader.download()
         except Exception as ex: # pylint: disable=W0703
@@ -40,13 +39,16 @@ def update(config: Configuration = None):
 
     # create index of reports
     LOGGER.info("start to index downloaded files ...")
-    indexer = ReportZipIndexer(db_dir=config.db_dir, zip_dir=config.download_dir)
-    indexer.process()
+    qrtr_indexer = ReportZipIndexer(db_dir=config.db_dir, zip_dir=config.download_dir, file_type='quarter')
+    qrtr_indexer.process()
+
+    daily_indexer = ReportZipIndexer(db_dir=config.db_dir, zip_dir=config.daily_download_dir, file_type='daily')
+    daily_indexer.process()
 
 
 if __name__ == '__main__':
     logging.basicConfig(
-        level=logging.DEBUG,
+        level=logging.INFO,
         format="%(asctime)s [%(levelname)s] %(module)s  %(message)s",
         handlers=[
             logging.StreamHandler()

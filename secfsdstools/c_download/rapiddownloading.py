@@ -22,16 +22,13 @@ class RapidZipDownloader(BaseDownloader):
     https://rapidapi.com/hansjoerg.wingeier/api/daily-sec-financial-statement-dataset
     """
 
-    def __init__(self, rapidurlbuilder: RapidUrlBuilder, zip_dir: str, urldownloader: UrlDownloader,
+    def __init__(self, rapidurlbuilder: RapidUrlBuilder, daily_zip_dir: str, qrtr_zip_dir: str, urldownloader: UrlDownloader,
                  execute_serial: bool = False):
-        super().__init__(zip_dir=zip_dir, urldownloader=urldownloader,
+        super().__init__(zip_dir=daily_zip_dir, urldownloader=urldownloader,
                          execute_serial=execute_serial)
         self.rapidurlbuilder = rapidurlbuilder
 
-        self.qrtr_zip_dir = zip_dir
-
-        # overwrite zipdir
-        self.zip_dir = os.path.join(self.zip_dir, "daily")
+        self.qrtr_zip_dir = qrtr_zip_dir
 
         if not os.path.isdir(self.zip_dir):
             LOGGER.info("creating download folder: %s", self.zip_dir)
@@ -53,9 +50,13 @@ class RapidZipDownloader(BaseDownloader):
             configuration = ConfigurationManager.read_config_file()
 
         urldownloader = UrlDownloader(user_agent=configuration.user_agent_email)
-        rapidurlbuilder = RapidUrlBuilder(rapid_plan="", rapid_api_key="")
+        rapidurlbuilder = RapidUrlBuilder(rapid_plan=configuration.rapid_api_plan,
+                                          rapid_api_key=configuration.rapid_api_key)
+        # overwrite zipdir
+
         return RapidZipDownloader(rapidurlbuilder=rapidurlbuilder,
-                                  zip_dir=configuration.download_dir,
+                                  daily_zip_dir=configuration.daily_download_dir,
+                                  qrtr_zip_dir=configuration.download_dir,
                                   urldownloader=urldownloader)
 
     def _get_headers(self) -> Dict[str, str]:

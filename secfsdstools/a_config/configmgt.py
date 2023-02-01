@@ -25,6 +25,10 @@ class Configuration:
     user_agent_email: str
     rapid_api_key: Optional[str] = None
     rapid_api_plan: Optional[str] = 'basic'
+    daily_download_dir: Optional[str] = None
+
+    def __post_init__(self):
+        self.daily_download_dir = os.path.join(self.download_dir, "daily")
 
 
 DEFAULT_CONFIGURATION = Configuration(
@@ -94,6 +98,7 @@ class ConfigurationManager:
         Returns:
              Configuration: instance
         """
+        LOGGER.info('reading configuration from %s', file_path)
         config = configparser.ConfigParser()
         config.read(file_path)
 
@@ -178,12 +183,11 @@ class ConfigurationManager:
             try:
                 rapidurlbuilder = RapidUrlBuilder(rapid_api_key=config.rapid_api_key,
                                                   rapid_plan='basic')
-                response = UrlDownloader(config.user_agent_email).get_url_content(
+                UrlDownloader(config.user_agent_email).get_url_content(
                     url=rapidurlbuilder.get_heartbeat_url(),
                     headers=rapidurlbuilder.get_headers(),
                     max_tries=2
                 )
-                print(response)
             except Exception as err:  # pylint: disable=W0703
                 messages.append(f'RapidApiKey {config.rapid_api_key} was set' +
                                 f' but seems to be not valid: {str(err)}\n' +

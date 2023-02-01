@@ -7,7 +7,6 @@ from typing import List
 from secfsdstools.a_utils.fileutils import read_df_from_file_in_zip, get_filenames_in_directory
 from secfsdstools.d_index.indexdataaccess import DBIndexingAccessor, IndexFileProcessingState
 
-
 LOGGER = logging.getLogger(__name__)
 
 
@@ -18,9 +17,10 @@ class ReportZipIndexer:
     PROCESSED_STR: str = 'processed'
     URL_PREFIX: str = 'https://www.sec.gov/Archives/edgar/data/'
 
-    def __init__(self, db_dir: str, zip_dir: str):
+    def __init__(self, db_dir: str, zip_dir: str, file_type: str):
         self.dbaccessor = DBIndexingAccessor(db_dir=db_dir)
         self.zip_dir = zip_dir
+        self.file_type = file_type
 
         # get current datetime in UTC
         utc_dt = datetime.now(timezone.utc)
@@ -52,11 +52,13 @@ class ReportZipIndexer:
                                                    'name',
                                                    'form',
                                                    'filed',
-                                                   'period'])
+                                                   'period'],
+                                          dtype={'period': 'Int64',
+                                                 'filed': 'Int64'})
 
         sub_df['fullPath'] = full_path
         sub_df['originFile'] = file_name
-        sub_df['originFileType'] = 'quarter'
+        sub_df['originFileType'] = self.file_type
         sub_df['url'] = ReportZipIndexer.URL_PREFIX
         sub_df['url'] = sub_df['url'] + sub_df['cik'].astype(str) + '/' + \
                         sub_df['adsh'].str.replace('-', '') + '/' + sub_df['adsh'] + '-index.htm'

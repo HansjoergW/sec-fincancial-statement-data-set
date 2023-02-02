@@ -12,7 +12,7 @@ from secfsdstools.d_index.indexing import ReportZipIndexer
 @pytest.fixture
 def reportindexer(tmp_path):
     DbCreator(db_dir=str(tmp_path)).create_db()
-    return ReportZipIndexer(db_dir=str(tmp_path), zip_dir=str(tmp_path))
+    return ReportZipIndexer(db_dir=str(tmp_path), zip_dir=str(tmp_path), file_type='quarter')
 
 
 def test_nothing_indexed(reportindexer):

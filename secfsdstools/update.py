@@ -36,13 +36,21 @@ def update(config: Configuration = None):
         except Exception as ex: # pylint: disable=W0703
             LOGGER.warning("Failed to get data from rapid api, please check rapid-api-key. ")
             LOGGER.warning("Only using data from Sec.gov because of: %s", ex)
+    else:
+        print("No rapid-api-key is set: \n"
+              + "If you are interested in daily updates, please have a look at "
+              + "https://rapidapi.com/hansjoerg.wingeier/api/daily-sec-financial-statement-dataset")
 
     # create index of reports
     LOGGER.info("start to index downloaded files ...")
-    qrtr_indexer = ReportZipIndexer(db_dir=config.db_dir, zip_dir=config.download_dir, file_type='quarter')
+    qrtr_indexer = ReportZipIndexer(db_dir=config.db_dir,
+                                    zip_dir=config.download_dir,
+                                    file_type='quarter')
     qrtr_indexer.process()
 
-    daily_indexer = ReportZipIndexer(db_dir=config.db_dir, zip_dir=config.daily_download_dir, file_type='daily')
+    daily_indexer = ReportZipIndexer(db_dir=config.db_dir,
+                                     zip_dir=config.daily_download_dir,
+                                     file_type='daily')
     daily_indexer.process()
 
 

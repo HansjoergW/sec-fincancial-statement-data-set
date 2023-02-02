@@ -41,6 +41,7 @@ class CompanyReader:
     def get_latest_company_filing(self) -> Dict[str, str]:
         """
         returns the latest company information (the content in the sub.txt file)
+        from the quarter-zip files.
         Returns:
             Dict[str, str]: dict with the information of the latest
              report as present in the sub.txt file.

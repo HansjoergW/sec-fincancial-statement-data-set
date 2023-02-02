@@ -22,7 +22,8 @@ class RapidZipDownloader(BaseDownloader):
     https://rapidapi.com/hansjoerg.wingeier/api/daily-sec-financial-statement-dataset
     """
 
-    def __init__(self, rapidurlbuilder: RapidUrlBuilder, daily_zip_dir: str, qrtr_zip_dir: str, urldownloader: UrlDownloader,
+    def __init__(self, rapidurlbuilder: RapidUrlBuilder, daily_zip_dir: str, qrtr_zip_dir: str,
+                 urldownloader: UrlDownloader,
                  execute_serial: bool = False):
         super().__init__(zip_dir=daily_zip_dir, urldownloader=urldownloader,
                          execute_serial=execute_serial)
@@ -114,6 +115,6 @@ class RapidZipDownloader(BaseDownloader):
 
         available_files = [entry['file'] for entry in daily_entries if
                            ((entry['subscription'] == 'basic') | (
-                                       entry['subscription'] == self.rapidurlbuilder.rapid_plan))]
+                                   entry['subscription'] == self.rapidurlbuilder.rapid_plan))]
 
         return available_files

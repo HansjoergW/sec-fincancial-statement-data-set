@@ -5,10 +5,8 @@ v.0.3.0
 - adapt readme
 - adapt releases
 - integrate rapid api
-  -> download
-  -> von wo lesen, falls in daily und in quarter -> quarter
-  -> statistics -> z.B. nur vom letzten quarter
 - notebook rapid api
+- tests for update method
 
 
 v.0.4.0

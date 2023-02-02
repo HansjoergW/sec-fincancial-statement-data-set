@@ -131,7 +131,10 @@ class DBIndexingAccessor(DB):
             IndexReport: of the latest report of the company
         """
 
-        sql = f'SELECT * FROM {self.INDEX_REPORTS_TABLE} WHERE cik = {cik} ORDER BY period DESC'
+        sql = f"""SELECT *
+                    FROM {self.INDEX_REPORTS_TABLE}
+                    WHERE cik = {cik} and originFileType = 'quarter'
+                    ORDER BY period DESC"""
         return self.execute_fetchall_typed(sql, IndexReport)[0]
 
     def read_index_report_for_adsh(self, adsh: str) -> IndexReport:

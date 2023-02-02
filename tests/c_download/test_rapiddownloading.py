@@ -12,15 +12,19 @@ from secfsdstools.c_download.rapiddownloading import RapidZipDownloader
 @pytest.fixture
 def rapidzipdownloader(tmp_path):
     url_downloader = UrlDownloader()
-    zip_dir = tmp_path / 'zipfiles'
-    os.makedirs(zip_dir)
+    daily_zip_dir = tmp_path / 'dailyzipfiles'
+    qrtr_zip_dir = tmp_path / 'qrtzipfiles'
+    os.makedirs(daily_zip_dir)
+    os.makedirs(qrtr_zip_dir)
     rapid_api_key = os.environ.get('RAPID_API_KEY')
 
     rapidurlbuilder = RapidUrlBuilder(rapid_plan='basic', rapid_api_key=rapid_api_key)
     yield RapidZipDownloader(rapidurlbuilder=rapidurlbuilder,
-                             zip_dir=str(zip_dir),
+                             qrtr_zip_dir=str(qrtr_zip_dir),
+                             daily_zip_dir=str(daily_zip_dir),
                              urldownloader=url_downloader,
                              execute_serial=True)
+
 
 def test_get_content(rapidzipdownloader):
     # check if the call to the api is working
@@ -31,7 +35,7 @@ def test_get_content(rapidzipdownloader):
 
 
 def test_get_zip_dir(rapidzipdownloader):
-    assert rapidzipdownloader.zip_dir.endswith("daily")
+    assert rapidzipdownloader.zip_dir.endswith("dailyzipfiles")
 
 
 def test_get_available_zips(rapidzipdownloader):
@@ -109,5 +113,5 @@ def test_calculate_missing_zips(rapidzipdownloader):
     assert len(result) == 2
     for entry in result:
         assert entry[0] in ['20230101.zip', '20230102.zip']
-        assert entry[1] in ['https://daily-sec-financial-statement-dataset.p.rapidapi.com/basic/2023-01-01/',
-                            'https://daily-sec-financial-statement-dataset.p.rapidapi.com/basic/2023-01-02/']
+        assert entry[1] in ['https://daily-sec-financial-statement-dataset.p.rapidapi.com/basic/day/2023-01-01/',
+                            'https://daily-sec-financial-statement-dataset.p.rapidapi.com/basic/day/2023-01-02/']

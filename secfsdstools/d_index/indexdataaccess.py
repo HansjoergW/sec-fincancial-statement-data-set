@@ -146,7 +146,12 @@ class DBIndexingAccessor(DB):
         Returns:
             IndexReport: the report for the provided adsh
         """
-        sql = f"SELECT * FROM {self.INDEX_REPORTS_TABLE} WHERE adsh = '{adsh}'"
+        # sorting by originfiletype, so we prefer official data from SEC,
+        # over the daily files, in case both should be present.
+        sql = f"""SELECT * 
+                    FROM {self.INDEX_REPORTS_TABLE} 
+                    WHERE adsh = '{adsh}' 
+                    ORDER BY originFileType DESC"""
         return self.execute_fetchall_typed(sql, IndexReport)[0]
 
     def read_index_reports_for_cik(self, cik: int, forms: Optional[List[str]] = None) \

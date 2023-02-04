@@ -14,6 +14,15 @@ def update(config: Configuration = None):
     """
     ensures that all available zip files are downloaded and that the index is created.
     """
+    # check if a logger is active if not, make sure it logs to the console
+    if logging.root.level == logging.NOTSET:
+        logging.basicConfig(
+            level=logging.INFO,
+            format="%(asctime)s [%(levelname)s] %(module)s  %(message)s",
+            handlers=[
+                logging.StreamHandler()
+            ]
+        )
 
     # read config
     if config is None:
@@ -55,14 +64,6 @@ def update(config: Configuration = None):
 
 
 if __name__ == '__main__':
-    logging.basicConfig(
-        level=logging.INFO,
-        format="%(asctime)s [%(levelname)s] %(module)s  %(message)s",
-        handlers=[
-            logging.StreamHandler()
-        ]
-    )
-
     update()
     # Configuration(
     #     db_dir='c:/ieu/projects/sec-fincancial-statement-data-set/data/db/',

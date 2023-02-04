@@ -3,10 +3,8 @@ Todos
 
 v.0.3.0
 - adapt readme
-- adapt releases
-- integrate rapid api
-- notebook rapid api
-- tests for update method
+- adapt releases in project.toml
+
 
 
 v.0.4.0

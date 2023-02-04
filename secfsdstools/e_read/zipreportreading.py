@@ -70,7 +70,7 @@ class ZipReportReader(BaseReportReader):
         - number of reports per period date (counts per value in the period column of sub-file)
 
         Rreturns:
-            BasicReportsStats: instance with basic report infos
+            ZipFileStats: instance with basic report infos
         """
 
         self._read_raw_data()  # lazy load the data if necessary

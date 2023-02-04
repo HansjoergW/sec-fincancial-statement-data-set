@@ -4,16 +4,16 @@ Downloading zip files of the financial statement data sets from the sec.
 import logging
 import os
 import re
-from typing import List, Tuple
+from typing import List, Tuple, Optional
 
+from secfsdstools.a_config.configmgt import Configuration, ConfigurationManager
 from secfsdstools.a_utils.downloadutils import UrlDownloader
-from secfsdstools.a_utils.fileutils import get_filenames_in_directory
-from secfsdstools.a_utils.parallelexecution import ParallelExecutor
+from secfsdstools.c_download.basedownloading import BaseDownloader
 
 LOGGER = logging.getLogger(__name__)
 
 
-class SecZipDownloader:
+class SecZipDownloader(BaseDownloader):
     """
         Downloading the quarterly zip files of the financial statement data sets
     """
@@ -23,18 +23,27 @@ class SecZipDownloader:
     href_re = re.compile("href=\".*?\"", re.IGNORECASE + re.MULTILINE + re.DOTALL)
 
     def __init__(self, zip_dir: str, urldownloader: UrlDownloader, execute_serial: bool = False):
-        self.urldownloader = urldownloader
-        self.execute_serial = execute_serial
+        super().__init__(zip_dir=zip_dir, urldownloader=urldownloader,
+                         execute_serial=execute_serial)
 
-        self.result = None
+    @classmethod
+    def get_downloader(cls, configuration: Optional[Configuration] = None):
+        """
+        Creates a IndexSearch instance.
+        If no  configuration object is passed, it reads the configuration from
+        the config file.
+        Args:
+            configuration (Configuration, optional, None): configuration object
 
-        if zip_dir[-1] != '/':
-            zip_dir = zip_dir + '/'
-        self.zip_dir = zip_dir
+        Returns:
+            SecZipDownloader: instance of RapidZipDownloader
+        """
+        if configuration is None:
+            configuration = ConfigurationManager.read_config_file()
 
-        if not os.path.isdir(self.zip_dir):
-            LOGGER.info("creating download folder: %s", self.zip_dir)
-            os.makedirs(self.zip_dir)
+        urldownloader = UrlDownloader(user_agent=configuration.user_agent_email)
+        return SecZipDownloader(zip_dir=configuration.download_dir,
+                                urldownloader=urldownloader)
 
     def _get_available_zips(self) -> List[Tuple[str, str]]:
         content = self.urldownloader.get_url_content(self.FIN_STAT_DATASET_URL)
@@ -45,42 +54,7 @@ class SecZipDownloader:
         return [(os.path.basename(href), href) for href in hrefs]
 
     def _calculate_missing_zips(self) -> List[Tuple[str, str]]:
-        dld_zip_files = get_filenames_in_directory(os.path.join(self.zip_dir, '*.zip'))
+        dld_zip_files = self._get_downloaded_zips()
         zips_to_dld_dict = self._get_available_zips()
 
         return [(name, href) for name, href in zips_to_dld_dict if name not in dld_zip_files]
-
-    def _download_zip(self, file: str, url: str) -> str:
-        file_path = self.zip_dir + file
-        try:
-            self.urldownloader.binary_download_url_to_file(url, file_path)
-            return 'success'
-        except Exception as ex:  # pylint: disable=W0703
-            # we want to catch everything here.
-            return f'failed: {ex}'
-
-    def _download_file(self, data: Tuple[str, str]) -> str:
-        file: str = data[0]
-        url: str = data[1]
-
-        LOGGER.info('    start to download %s ', file)
-        result = self._download_zip(url=url, file=file)
-        return result
-
-    def download(self):
-        """
-        downloads the missing quarterly zip files from the sec.
-        """
-
-        executor = ParallelExecutor[Tuple[str, str], str, type(None)](
-            max_calls_per_sec=8,
-            chunksize=20,
-            execute_serial=True
-            # execute_serial=self.execute_serial
-        )
-        executor.set_get_entries_function(self._calculate_missing_zips)
-        executor.set_process_element_function(self._download_file)
-        executor.set_post_process_chunk_function(lambda x: x)
-
-        self.result = executor.execute()
-        executor.pool.close()

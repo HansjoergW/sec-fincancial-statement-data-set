@@ -27,9 +27,14 @@ This library simplifies the process of working with this data and provides a
 convenient way to extract information from the primary financial statements - the balance sheet, income statement, and
 statement of cash flows.
 
+It also provides an integration with the https://rapidapi.com/hansjoerg.wingeier/api/daily-sec-financial-statement-dataset API 
+and therefore providing a possibility to receive the latest filings on a daily basis and not just every three months.
+
 # Links
 * [API Documentation](https://hansjoergw.github.io/sec-fincancial-statement-data-set/secfsdstools/)
 * [QuickStart Jupyter Notebook](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/01_quickstart.ipynb)
+* [Connect to the daily-sec-financial-statement-dataset Notebook](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/02_connect_rapidapi.ipynb) 
+
 # Installation
 
 The project is published on pypi.org. Simply use pip install to install it:
@@ -254,6 +259,7 @@ you see that the structure and the content is indeed the same.
 
 Also checkout the example Jupyter Notebooks:
 * [QuickStart Jupyter Notebook](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/01_quickstart.ipynb)
+* [Connect to the daily-sec-financial-statement-dataset Notebook](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/02_connect_rapidapi.ipynb) 
 
 
 

@@ -1,8 +1,11 @@
 # Release Notes
 
 ## Upcoming
-* support of https://rapidapi.com/hansjoerg.wingeier/api/daily-sec-financial-statement-dataset 
 * more example notebooks
+* use parquet as storing format instead of zipfiles with csv files
+
+## 0.3.0 2023-Feb-04
+* integration of https://rapidapi.com/hansjoerg.wingeier/api/daily-sec-financial-statement-dataset. Daily updates instead of quarterly updates.
 
 ## 0.2.1 2023-Jan-21
 * class ZipReportReader: helps to read data from a whole zip file; has the same interface as report reader

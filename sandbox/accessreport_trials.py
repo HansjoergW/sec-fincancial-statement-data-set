@@ -4,6 +4,8 @@ from io import StringIO
 import pandas as pd
 
 from secfsdstools.a_utils.fileutils import read_df_from_file_in_zip, read_content_from_file_in_zip
+from secfsdstools.e_read.companyreading import CompanyReader
+from secfsdstools.e_read.reportreading import ReportReader
 
 TEST_FILE = '../data/dld/2022q3.zip'
 TEST_REPORT = '0000320193-22-000070'  # APPLE INC 10-Q  2022-06-30
@@ -37,6 +39,15 @@ def test_read_content_with_re():
 
     print(lines)
 
+def test_8k():
+    apple_reader = CompanyReader.get_company_reader(cik=320193)
+    _8ks = apple_reader.get_all_company_reports_df(forms=['8-K'])
+
+    first = ReportReader.get_report_by_adsh(adsh=_8ks.iloc[0].adsh)
+    pre_raw_df = first.get_raw_pre_data()
+    num_raw_df = first.get_raw_num_data()
+
+    print("hello")
 
 
 # df = pd.read_csv(StringIO(csvString), sep=","

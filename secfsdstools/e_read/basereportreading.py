@@ -48,7 +48,7 @@ class BaseReportReader(ABC):
     def _calculate_previous_period(period: int) -> int:
         previous_value = period - 10_000
         period_monthday = period % 10_000
-        period_year = (period // 10_000)
+        period_year = period // 10_000
 
         if period % 10_000 == 229:
             previous_value = previous_value - 1

@@ -160,7 +160,10 @@ class DBIndexingAccessor(DB):
             IndexReport: of the latest report of the company
         &#34;&#34;&#34;
 
-        sql = f&#39;SELECT * FROM {self.INDEX_REPORTS_TABLE} WHERE cik = {cik} ORDER BY period DESC&#39;
+        sql = f&#34;&#34;&#34;SELECT *
+                    FROM {self.INDEX_REPORTS_TABLE}
+                    WHERE cik = {cik} and originFileType = &#39;quarter&#39;
+                    ORDER BY period DESC&#34;&#34;&#34;
         return self.execute_fetchall_typed(sql, IndexReport)[0]
 
     def read_index_report_for_adsh(self, adsh: str) -&gt; IndexReport:
@@ -172,7 +175,12 @@ class DBIndexingAccessor(DB):
         Returns:
             IndexReport: the report for the provided adsh
         &#34;&#34;&#34;
-        sql = f&#34;SELECT * FROM {self.INDEX_REPORTS_TABLE} WHERE adsh = &#39;{adsh}&#39;&#34;
+        # sorting by originfiletype, so we prefer official data from SEC,
+        # over the daily files, in case both should be present.
+        sql = f&#34;&#34;&#34;SELECT *
+                    FROM {self.INDEX_REPORTS_TABLE}
+                    WHERE adsh = &#39;{adsh}&#39;
+                    ORDER BY originFileType DESC&#34;&#34;&#34;
         return self.execute_fetchall_typed(sql, IndexReport)[0]
 
     def read_index_reports_for_cik(self, cik: int, forms: Optional[List[str]] = None) \
@@ -355,7 +363,10 @@ class DBIndexingAccessor(DB):
             IndexReport: of the latest report of the company
         &#34;&#34;&#34;
 
-        sql = f&#39;SELECT * FROM {self.INDEX_REPORTS_TABLE} WHERE cik = {cik} ORDER BY period DESC&#39;
+        sql = f&#34;&#34;&#34;SELECT *
+                    FROM {self.INDEX_REPORTS_TABLE}
+                    WHERE cik = {cik} and originFileType = &#39;quarter&#39;
+                    ORDER BY period DESC&#34;&#34;&#34;
         return self.execute_fetchall_typed(sql, IndexReport)[0]
 
     def read_index_report_for_adsh(self, adsh: str) -&gt; IndexReport:
@@ -367,7 +378,12 @@ class DBIndexingAccessor(DB):
         Returns:
             IndexReport: the report for the provided adsh
         &#34;&#34;&#34;
-        sql = f&#34;SELECT * FROM {self.INDEX_REPORTS_TABLE} WHERE adsh = &#39;{adsh}&#39;&#34;
+        # sorting by originfiletype, so we prefer official data from SEC,
+        # over the daily files, in case both should be present.
+        sql = f&#34;&#34;&#34;SELECT *
+                    FROM {self.INDEX_REPORTS_TABLE}
+                    WHERE adsh = &#39;{adsh}&#39;
+                    ORDER BY originFileType DESC&#34;&#34;&#34;
         return self.execute_fetchall_typed(sql, IndexReport)[0]
 
     def read_index_reports_for_cik(self, cik: int, forms: Optional[List[str]] = None) \
@@ -541,7 +557,10 @@ Lower and uppercase are ignored.</p>
         IndexReport: of the latest report of the company
     &#34;&#34;&#34;
 
-    sql = f&#39;SELECT * FROM {self.INDEX_REPORTS_TABLE} WHERE cik = {cik} ORDER BY period DESC&#39;
+    sql = f&#34;&#34;&#34;SELECT *
+                FROM {self.INDEX_REPORTS_TABLE}
+                WHERE cik = {cik} and originFileType = &#39;quarter&#39;
+                ORDER BY period DESC&#34;&#34;&#34;
     return self.execute_fetchall_typed(sql, IndexReport)[0]</code></pre>
 </details>
 </dd>
@@ -754,7 +773,12 @@ Lower and uppercase are ignored.</p>
     Returns:
         IndexReport: the report for the provided adsh
     &#34;&#34;&#34;
-    sql = f&#34;SELECT * FROM {self.INDEX_REPORTS_TABLE} WHERE adsh = &#39;{adsh}&#39;&#34;
+    # sorting by originfiletype, so we prefer official data from SEC,
+    # over the daily files, in case both should be present.
+    sql = f&#34;&#34;&#34;SELECT *
+                FROM {self.INDEX_REPORTS_TABLE}
+                WHERE adsh = &#39;{adsh}&#39;
+                ORDER BY originFileType DESC&#34;&#34;&#34;
     return self.execute_fetchall_typed(sql, IndexReport)[0]</code></pre>
 </details>
 </dd>

@@ -99,7 +99,7 @@ class ZipReportReader(BaseReportReader):
         - number of reports per period date (counts per value in the period column of sub-file)
 
         Rreturns:
-            BasicReportsStats: instance with basic report infos
+            ZipFileStats: instance with basic report infos
         &#34;&#34;&#34;
 
         self._read_raw_data()  # lazy load the data if necessary
@@ -226,7 +226,7 @@ class ZipReportReader(BaseReportReader):
         - number of reports per period date (counts per value in the period column of sub-file)
 
         Rreturns:
-            BasicReportsStats: instance with basic report infos
+            ZipFileStats: instance with basic report infos
         &#34;&#34;&#34;
 
         self._read_raw_data()  # lazy load the data if necessary
@@ -296,7 +296,7 @@ def get_zip_by_name(cls, name: str, configuration: Optional[Configuration] = Non
 - number of reports per form (10-K, 10-Q, &hellip;)
 - number of reports per period date (counts per value in the period column of sub-file)</p>
 <h2 id="rreturns">Rreturns</h2>
-<p>BasicReportsStats: instance with basic report infos</p></div>
+<p>ZipFileStats: instance with basic report infos</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -311,7 +311,7 @@ def get_zip_by_name(cls, name: str, configuration: Optional[Configuration] = Non
     - number of reports per period date (counts per value in the period column of sub-file)
 
     Rreturns:
-        BasicReportsStats: instance with basic report infos
+        ZipFileStats: instance with basic report infos
     &#34;&#34;&#34;
 
     self._read_raw_data()  # lazy load the data if necessary

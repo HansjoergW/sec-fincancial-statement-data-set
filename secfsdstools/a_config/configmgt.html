@@ -33,7 +33,12 @@ Manage the configuration
 import configparser
 import logging
 import os
+import re
 from dataclasses import dataclass
+from typing import Optional, List
+
+from secfsdstools.a_utils.downloadutils import UrlDownloader
+from secfsdstools.a_utils.rapiddownloadutils import RapidUrlBuilder
 
 DEFAULT_CONFIG_FILE: str = &#39;.secfsdstools.cfg&#39;
 SECFSDSTOOLS_ENV_VAR_NAME: str = &#39;SECFSDSTOOLS_CFG&#39;
@@ -47,6 +52,12 @@ class Configuration:
     download_dir: str
     db_dir: str
     user_agent_email: str
+    rapid_api_key: Optional[str] = None
+    rapid_api_plan: Optional[str] = &#39;basic&#39;
+    daily_download_dir: Optional[str] = None
+
+    def __post_init__(self):
+        self.daily_download_dir = os.path.join(self.download_dir, &#34;daily&#34;)
 
 
 DEFAULT_CONFIGURATION = Configuration(
@@ -116,14 +127,103 @@ class ConfigurationManager:
         Returns:
              Configuration: instance
         &#34;&#34;&#34;
+        LOGGER.info(&#39;reading configuration from %s&#39;, file_path)
         config = configparser.ConfigParser()
         config.read(file_path)
 
-        return Configuration(
+        config = Configuration(
             download_dir=config[&#39;DEFAULT&#39;].get(&#39;DownloadDirectory&#39;, ),
             db_dir=config[&#39;DEFAULT&#39;].get(&#39;DbDirectory&#39;),
-            user_agent_email=config[&#39;DEFAULT&#39;].get(&#39;UserAgentEmail&#39;)
+            user_agent_email=config[&#39;DEFAULT&#39;].get(&#39;UserAgentEmail&#39;),
+            rapid_api_key=config[&#39;DEFAULT&#39;].get(&#39;RapidApiKey&#39;, None),
+            rapid_api_plan=config[&#39;DEFAULT&#39;].get(&#39;RapidApiPlan&#39;, &#39;basic&#39;)
         )
+
+        check_messages = ConfigurationManager.check_basic_configuration(config)
+        if len(check_messages) &gt; 0:
+            print(
+                f&#34;&#34;&#34;There are problems with your configuration.
+                    Please fix the following issues in {file_path}: {check_messages}&#34;&#34;&#34;)
+            raise ValueError(f&#39;Problems with configuration in {file_path}: {check_messages}&#39;)
+
+        check_rapid_messages = ConfigurationManager.check_rapid_configuration(config)
+        if len(check_rapid_messages) &gt; 0:
+            print(f&#39;rapid configuration is invalid in {file_path}: {check_rapid_messages}&#39;)
+            print(&#39;rapid configuration will be ignored.&#39;)
+
+            LOGGER.warning(&#39;rapid configuration is invalid in %s: %s&#39;,
+                           file_path, str(check_rapid_messages))
+            config.rapid_api_key = None
+            config.rapid_api_plan = None
+        return config
+
+    @staticmethod
+    def _is_valid_email(email):
+        pattern = r&#39;^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$&#39;
+        return bool(re.match(pattern, email))
+
+    @staticmethod
+    def check_basic_configuration(config: Configuration) -&gt; List[str]:
+        &#34;&#34;&#34;
+        Validates the basic configuration:
+
+        Args:
+            config (Configuration): the configuration to be validated
+
+        Returns:
+            List[str]: List with the invalid configurations
+        &#34;&#34;&#34;
+
+        messages: List[str] = []
+
+        if not os.path.isdir(config.db_dir):
+            LOGGER.info(&#34;SQLite db directory does not exist, creating it at %s&#34;, config.db_dir)
+            os.makedirs(config.db_dir, exist_ok=True)
+
+        if not os.path.isdir(config.download_dir):
+            LOGGER.info(&#34;Download directory does not exist, creating it at %s&#34;, config.download_dir)
+            os.makedirs(config.download_dir, exist_ok=True)
+
+        if not ConfigurationManager._is_valid_email(config.user_agent_email):
+            messages.append(
+                f&#39;The defined UserAgentEmail is not a valid format: {config.user_agent_email}&#39;)
+
+        return messages
+
+    @staticmethod
+    def check_rapid_configuration(config: Configuration) -&gt; List[str]:
+        &#34;&#34;&#34;
+        Validates the rapid configuration:
+
+        Args:
+            config (Configuration): the configuration to be validated
+
+        Returns:
+            List[str]: List with the invalid configurations
+        &#34;&#34;&#34;
+        messages: List[str] = []
+
+        if config.rapid_api_plan not in [&#39;basic&#39;, &#39;premium&#39;, None]:
+            messages.append(
+                f&#39;The defined RapidApiPlan ({config.rapid_api_plan}) is not valid.&#39; +
+                &#39; Allowed values are basic, premium&#39;)
+
+        if config.rapid_api_key is not None:
+            try:
+                rapidurlbuilder = RapidUrlBuilder(rapid_api_key=config.rapid_api_key,
+                                                  rapid_plan=&#39;basic&#39;)
+                UrlDownloader(config.user_agent_email).get_url_content(
+                    url=rapidurlbuilder.get_heartbeat_url(),
+                    headers=rapidurlbuilder.get_headers(),
+                    max_tries=2
+                )
+            except Exception as err:  # pylint: disable=W0703
+                messages.append(f&#39;RapidApiKey {config.rapid_api_key} was set&#39; +
+                                f&#39; but seems to be not valid: {str(err)}\n&#39; +
+                                &#39;Please go to rapidapi.com and create a valid api key if you&#39; +
+                                &#39; want to have daily data updates&#39;)
+
+        return messages
 
     @staticmethod
     def _write_configuration(file_path: str, configuration: Configuration):
@@ -149,7 +249,7 @@ class ConfigurationManager:
 <dl>
 <dt id="secfsdstools.a_config.configmgt.Configuration"><code class="flex name class">
 <span>class <span class="ident">Configuration</span></span>
-<span>(</span><span>download_dir: str, db_dir: str, user_agent_email: str)</span>
+<span>(</span><span>download_dir: str, db_dir: str, user_agent_email: str, rapid_api_key: Optional[str] = None, rapid_api_plan: Optional[str] = 'basic', daily_download_dir: Optional[str] = None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Basic configuration settings</p></div>
@@ -161,15 +261,33 @@ class ConfigurationManager:
     &#34;&#34;&#34; Basic configuration settings &#34;&#34;&#34;
     download_dir: str
     db_dir: str
-    user_agent_email: str</code></pre>
+    user_agent_email: str
+    rapid_api_key: Optional[str] = None
+    rapid_api_plan: Optional[str] = &#39;basic&#39;
+    daily_download_dir: Optional[str] = None
+
+    def __post_init__(self):
+        self.daily_download_dir = os.path.join(self.download_dir, &#34;daily&#34;)</code></pre>
 </details>
 <h3>Class variables</h3>
 <dl>
+<dt id="secfsdstools.a_config.configmgt.Configuration.daily_download_dir"><code class="name">var <span class="ident">daily_download_dir</span> : Optional[str]</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
 <dt id="secfsdstools.a_config.configmgt.Configuration.db_dir"><code class="name">var <span class="ident">db_dir</span> : str</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
 <dt id="secfsdstools.a_config.configmgt.Configuration.download_dir"><code class="name">var <span class="ident">download_dir</span> : str</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="secfsdstools.a_config.configmgt.Configuration.rapid_api_key"><code class="name">var <span class="ident">rapid_api_key</span> : Optional[str]</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="secfsdstools.a_config.configmgt.Configuration.rapid_api_plan"><code class="name">var <span class="ident">rapid_api_plan</span> : Optional[str]</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -249,14 +367,103 @@ If the file does not exist, it will create one in the current directory</p></div
         Returns:
              Configuration: instance
         &#34;&#34;&#34;
+        LOGGER.info(&#39;reading configuration from %s&#39;, file_path)
         config = configparser.ConfigParser()
         config.read(file_path)
 
-        return Configuration(
+        config = Configuration(
             download_dir=config[&#39;DEFAULT&#39;].get(&#39;DownloadDirectory&#39;, ),
             db_dir=config[&#39;DEFAULT&#39;].get(&#39;DbDirectory&#39;),
-            user_agent_email=config[&#39;DEFAULT&#39;].get(&#39;UserAgentEmail&#39;)
+            user_agent_email=config[&#39;DEFAULT&#39;].get(&#39;UserAgentEmail&#39;),
+            rapid_api_key=config[&#39;DEFAULT&#39;].get(&#39;RapidApiKey&#39;, None),
+            rapid_api_plan=config[&#39;DEFAULT&#39;].get(&#39;RapidApiPlan&#39;, &#39;basic&#39;)
         )
+
+        check_messages = ConfigurationManager.check_basic_configuration(config)
+        if len(check_messages) &gt; 0:
+            print(
+                f&#34;&#34;&#34;There are problems with your configuration.
+                    Please fix the following issues in {file_path}: {check_messages}&#34;&#34;&#34;)
+            raise ValueError(f&#39;Problems with configuration in {file_path}: {check_messages}&#39;)
+
+        check_rapid_messages = ConfigurationManager.check_rapid_configuration(config)
+        if len(check_rapid_messages) &gt; 0:
+            print(f&#39;rapid configuration is invalid in {file_path}: {check_rapid_messages}&#39;)
+            print(&#39;rapid configuration will be ignored.&#39;)
+
+            LOGGER.warning(&#39;rapid configuration is invalid in %s: %s&#39;,
+                           file_path, str(check_rapid_messages))
+            config.rapid_api_key = None
+            config.rapid_api_plan = None
+        return config
+
+    @staticmethod
+    def _is_valid_email(email):
+        pattern = r&#39;^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$&#39;
+        return bool(re.match(pattern, email))
+
+    @staticmethod
+    def check_basic_configuration(config: Configuration) -&gt; List[str]:
+        &#34;&#34;&#34;
+        Validates the basic configuration:
+
+        Args:
+            config (Configuration): the configuration to be validated
+
+        Returns:
+            List[str]: List with the invalid configurations
+        &#34;&#34;&#34;
+
+        messages: List[str] = []
+
+        if not os.path.isdir(config.db_dir):
+            LOGGER.info(&#34;SQLite db directory does not exist, creating it at %s&#34;, config.db_dir)
+            os.makedirs(config.db_dir, exist_ok=True)
+
+        if not os.path.isdir(config.download_dir):
+            LOGGER.info(&#34;Download directory does not exist, creating it at %s&#34;, config.download_dir)
+            os.makedirs(config.download_dir, exist_ok=True)
+
+        if not ConfigurationManager._is_valid_email(config.user_agent_email):
+            messages.append(
+                f&#39;The defined UserAgentEmail is not a valid format: {config.user_agent_email}&#39;)
+
+        return messages
+
+    @staticmethod
+    def check_rapid_configuration(config: Configuration) -&gt; List[str]:
+        &#34;&#34;&#34;
+        Validates the rapid configuration:
+
+        Args:
+            config (Configuration): the configuration to be validated
+
+        Returns:
+            List[str]: List with the invalid configurations
+        &#34;&#34;&#34;
+        messages: List[str] = []
+
+        if config.rapid_api_plan not in [&#39;basic&#39;, &#39;premium&#39;, None]:
+            messages.append(
+                f&#39;The defined RapidApiPlan ({config.rapid_api_plan}) is not valid.&#39; +
+                &#39; Allowed values are basic, premium&#39;)
+
+        if config.rapid_api_key is not None:
+            try:
+                rapidurlbuilder = RapidUrlBuilder(rapid_api_key=config.rapid_api_key,
+                                                  rapid_plan=&#39;basic&#39;)
+                UrlDownloader(config.user_agent_email).get_url_content(
+                    url=rapidurlbuilder.get_heartbeat_url(),
+                    headers=rapidurlbuilder.get_headers(),
+                    max_tries=2
+                )
+            except Exception as err:  # pylint: disable=W0703
+                messages.append(f&#39;RapidApiKey {config.rapid_api_key} was set&#39; +
+                                f&#39; but seems to be not valid: {str(err)}\n&#39; +
+                                &#39;Please go to rapidapi.com and create a valid api key if you&#39; +
+                                &#39; want to have daily data updates&#39;)
+
+        return messages
 
     @staticmethod
     def _write_configuration(file_path: str, configuration: Configuration):
@@ -272,6 +479,109 @@ If the file does not exist, it will create one in the current directory</p></div
 </details>
 <h3>Static methods</h3>
 <dl>
+<dt id="secfsdstools.a_config.configmgt.ConfigurationManager.check_basic_configuration"><code class="name flex">
+<span>def <span class="ident">check_basic_configuration</span></span>(<span>config: <a title="secfsdstools.a_config.configmgt.Configuration" href="#secfsdstools.a_config.configmgt.Configuration">Configuration</a>) ‑> List[str]</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Validates the basic configuration:</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>config</code></strong> :&ensp;<code><a title="secfsdstools.a_config.configmgt.Configuration" href="#secfsdstools.a_config.configmgt.Configuration">Configuration</a></code></dt>
+<dd>the configuration to be validated</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>List[str]</code></dt>
+<dd>List with the invalid configurations</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@staticmethod
+def check_basic_configuration(config: Configuration) -&gt; List[str]:
+    &#34;&#34;&#34;
+    Validates the basic configuration:
+
+    Args:
+        config (Configuration): the configuration to be validated
+
+    Returns:
+        List[str]: List with the invalid configurations
+    &#34;&#34;&#34;
+
+    messages: List[str] = []
+
+    if not os.path.isdir(config.db_dir):
+        LOGGER.info(&#34;SQLite db directory does not exist, creating it at %s&#34;, config.db_dir)
+        os.makedirs(config.db_dir, exist_ok=True)
+
+    if not os.path.isdir(config.download_dir):
+        LOGGER.info(&#34;Download directory does not exist, creating it at %s&#34;, config.download_dir)
+        os.makedirs(config.download_dir, exist_ok=True)
+
+    if not ConfigurationManager._is_valid_email(config.user_agent_email):
+        messages.append(
+            f&#39;The defined UserAgentEmail is not a valid format: {config.user_agent_email}&#39;)
+
+    return messages</code></pre>
+</details>
+</dd>
+<dt id="secfsdstools.a_config.configmgt.ConfigurationManager.check_rapid_configuration"><code class="name flex">
+<span>def <span class="ident">check_rapid_configuration</span></span>(<span>config: <a title="secfsdstools.a_config.configmgt.Configuration" href="#secfsdstools.a_config.configmgt.Configuration">Configuration</a>) ‑> List[str]</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Validates the rapid configuration:</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>config</code></strong> :&ensp;<code><a title="secfsdstools.a_config.configmgt.Configuration" href="#secfsdstools.a_config.configmgt.Configuration">Configuration</a></code></dt>
+<dd>the configuration to be validated</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>List[str]</code></dt>
+<dd>List with the invalid configurations</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@staticmethod
+def check_rapid_configuration(config: Configuration) -&gt; List[str]:
+    &#34;&#34;&#34;
+    Validates the rapid configuration:
+
+    Args:
+        config (Configuration): the configuration to be validated
+
+    Returns:
+        List[str]: List with the invalid configurations
+    &#34;&#34;&#34;
+    messages: List[str] = []
+
+    if config.rapid_api_plan not in [&#39;basic&#39;, &#39;premium&#39;, None]:
+        messages.append(
+            f&#39;The defined RapidApiPlan ({config.rapid_api_plan}) is not valid.&#39; +
+            &#39; Allowed values are basic, premium&#39;)
+
+    if config.rapid_api_key is not None:
+        try:
+            rapidurlbuilder = RapidUrlBuilder(rapid_api_key=config.rapid_api_key,
+                                              rapid_plan=&#39;basic&#39;)
+            UrlDownloader(config.user_agent_email).get_url_content(
+                url=rapidurlbuilder.get_heartbeat_url(),
+                headers=rapidurlbuilder.get_headers(),
+                max_tries=2
+            )
+        except Exception as err:  # pylint: disable=W0703
+            messages.append(f&#39;RapidApiKey {config.rapid_api_key} was set&#39; +
+                            f&#39; but seems to be not valid: {str(err)}\n&#39; +
+                            &#39;Please go to rapidapi.com and create a valid api key if you&#39; +
+                            &#39; want to have daily data updates&#39;)
+
+    return messages</code></pre>
+</details>
+</dd>
 <dt id="secfsdstools.a_config.configmgt.ConfigurationManager.read_config_file"><code class="name flex">
 <span>def <span class="ident">read_config_file</span></span>(<span>) ‑> <a title="secfsdstools.a_config.configmgt.Configuration" href="#secfsdstools.a_config.configmgt.Configuration">Configuration</a></span>
 </code></dt>
@@ -357,15 +667,20 @@ def read_config_file() -&gt; Configuration:
 <ul>
 <li>
 <h4><code><a title="secfsdstools.a_config.configmgt.Configuration" href="#secfsdstools.a_config.configmgt.Configuration">Configuration</a></code></h4>
-<ul class="">
+<ul class="two-column">
+<li><code><a title="secfsdstools.a_config.configmgt.Configuration.daily_download_dir" href="#secfsdstools.a_config.configmgt.Configuration.daily_download_dir">daily_download_dir</a></code></li>
 <li><code><a title="secfsdstools.a_config.configmgt.Configuration.db_dir" href="#secfsdstools.a_config.configmgt.Configuration.db_dir">db_dir</a></code></li>
 <li><code><a title="secfsdstools.a_config.configmgt.Configuration.download_dir" href="#secfsdstools.a_config.configmgt.Configuration.download_dir">download_dir</a></code></li>
+<li><code><a title="secfsdstools.a_config.configmgt.Configuration.rapid_api_key" href="#secfsdstools.a_config.configmgt.Configuration.rapid_api_key">rapid_api_key</a></code></li>
+<li><code><a title="secfsdstools.a_config.configmgt.Configuration.rapid_api_plan" href="#secfsdstools.a_config.configmgt.Configuration.rapid_api_plan">rapid_api_plan</a></code></li>
 <li><code><a title="secfsdstools.a_config.configmgt.Configuration.user_agent_email" href="#secfsdstools.a_config.configmgt.Configuration.user_agent_email">user_agent_email</a></code></li>
 </ul>
 </li>
 <li>
 <h4><code><a title="secfsdstools.a_config.configmgt.ConfigurationManager" href="#secfsdstools.a_config.configmgt.ConfigurationManager">ConfigurationManager</a></code></h4>
 <ul class="">
+<li><code><a title="secfsdstools.a_config.configmgt.ConfigurationManager.check_basic_configuration" href="#secfsdstools.a_config.configmgt.ConfigurationManager.check_basic_configuration">check_basic_configuration</a></code></li>
+<li><code><a title="secfsdstools.a_config.configmgt.ConfigurationManager.check_rapid_configuration" href="#secfsdstools.a_config.configmgt.ConfigurationManager.check_rapid_configuration">check_rapid_configuration</a></code></li>
 <li><code><a title="secfsdstools.a_config.configmgt.ConfigurationManager.read_config_file" href="#secfsdstools.a_config.configmgt.ConfigurationManager.read_config_file">read_config_file</a></code></li>
 </ul>
 </li>

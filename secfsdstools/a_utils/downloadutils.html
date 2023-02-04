@@ -33,6 +33,7 @@ Download utils to download data from the SEC website.
 
 import logging
 from time import sleep
+from typing import Dict
 
 import requests
 
@@ -58,7 +59,8 @@ class UrlDownloader:
     def download_url_to_file(self, file_url: str, target_file: str,
                              expected_size: int = None,
                              max_tries: int = 6,
-                             sleep_time: int = 1):
+                             sleep_time: int = 1,
+                             headers: Dict[str, str] = None):
         &#34;&#34;&#34;
             downloads the content auf an url and stores it into the target-file.
             retries a download several times, if it fails
@@ -73,11 +75,12 @@ class UrlDownloader:
             max_tries (int, optional, 6): maximum retries, default is 6
             sleep_time (int, optional, 1): wait time between retries,
               default is one second
+            headers (Dict[str, str], optional, None}): additional headers
 
         Returns:
             str: the written file name
         &#34;&#34;&#34;
-        response = self.get_url_content(file_url, max_tries, sleep_time)
+        response = self.get_url_content(file_url, max_tries, sleep_time, headers=headers)
         content = response.text
 
         if expected_size is not None:
@@ -89,7 +92,8 @@ class UrlDownloader:
     def binary_download_url_to_file(self, file_url: str,
                                     target_file: str,
                                     max_tries: int = 6,
-                                    sleep_time: int = 1):
+                                    sleep_time: int = 1,
+                                    headers: Dict[str, str] = None):
         &#34;&#34;&#34;
             downloads the binary of an url and stores it into the target-file.
             retries a download several times, if it fails
@@ -100,13 +104,15 @@ class UrlDownloader:
               (it will be written into a zipfile)
             max_tries (int, optional, 6): maximum retries, default is 6
             sleep_time (int, optional, 1): wait time between retries, default is one second
+            headers (Dict[str, str], optional, None}): additional headers
         &#34;&#34;&#34;
-        response = self.get_url_content(file_url, max_tries, sleep_time)
+        response = self.get_url_content(file_url, max_tries, sleep_time, headers=headers)
 
         with open(target_file, &#34;wb&#34;) as target_fp:
             target_fp.write(response.content)
 
-    def get_url_content(self, file_url: str, max_tries: int = 6, sleep_time: int = 1) \
+    def get_url_content(self, url: str, max_tries: int = 6,
+                        sleep_time: int = 1, headers: Dict[str, str] = None) \
             -&gt; requests.models.Response:
         &#34;&#34;&#34;
             downloads the content auf an url and returns it as a string.
@@ -114,9 +120,10 @@ class UrlDownloader:
             Uses the defined user-agent as header information
 
         Args:
-            file_url (str): url that referencese the file to be downloaded
+            url (str): url that referencese the file to be downloaded
             max_tries (int, optional, 6): maximum number of tries to get the data
             sleep_time (int, optional, 1): wait time between retries, default is one second
+            headers (Dict[str, str], optional, None}): additional headers
 
         Returns:
              requests.models.Response
@@ -126,13 +133,17 @@ class UrlDownloader:
         while current_try &lt; max_tries:
             current_try += 1
             try:
-                response = requests.get(file_url, timeout=10,
-                                        headers={&#39;User-Agent&#39;: self.user_agent}, stream=True)
+                if headers is None:
+                    headers = {&#39;User-Agent&#39;: self.user_agent}
+                else:
+                    headers.update({&#39;User-Agent&#39;: self.user_agent})
+                response = requests.get(url, timeout=10,
+                                        headers=headers, stream=True)
                 response.raise_for_status()
                 break
             except requests.exceptions.RequestException as err:
                 if current_try &gt;= max_tries:
-                    LOGGER.info(&#39;RequestException: failed to download %s2&#39;, file_url)
+                    LOGGER.info(&#39;RequestException: failed to download %s2&#39;, url)
                     raise err
                 sleep(sleep_time)
 
@@ -181,7 +192,8 @@ class UrlDownloader:
     def download_url_to_file(self, file_url: str, target_file: str,
                              expected_size: int = None,
                              max_tries: int = 6,
-                             sleep_time: int = 1):
+                             sleep_time: int = 1,
+                             headers: Dict[str, str] = None):
         &#34;&#34;&#34;
             downloads the content auf an url and stores it into the target-file.
             retries a download several times, if it fails
@@ -196,11 +208,12 @@ class UrlDownloader:
             max_tries (int, optional, 6): maximum retries, default is 6
             sleep_time (int, optional, 1): wait time between retries,
               default is one second
+            headers (Dict[str, str], optional, None}): additional headers
 
         Returns:
             str: the written file name
         &#34;&#34;&#34;
-        response = self.get_url_content(file_url, max_tries, sleep_time)
+        response = self.get_url_content(file_url, max_tries, sleep_time, headers=headers)
         content = response.text
 
         if expected_size is not None:
@@ -212,7 +225,8 @@ class UrlDownloader:
     def binary_download_url_to_file(self, file_url: str,
                                     target_file: str,
                                     max_tries: int = 6,
-                                    sleep_time: int = 1):
+                                    sleep_time: int = 1,
+                                    headers: Dict[str, str] = None):
         &#34;&#34;&#34;
             downloads the binary of an url and stores it into the target-file.
             retries a download several times, if it fails
@@ -223,13 +237,15 @@ class UrlDownloader:
               (it will be written into a zipfile)
             max_tries (int, optional, 6): maximum retries, default is 6
             sleep_time (int, optional, 1): wait time between retries, default is one second
+            headers (Dict[str, str], optional, None}): additional headers
         &#34;&#34;&#34;
-        response = self.get_url_content(file_url, max_tries, sleep_time)
+        response = self.get_url_content(file_url, max_tries, sleep_time, headers=headers)
 
         with open(target_file, &#34;wb&#34;) as target_fp:
             target_fp.write(response.content)
 
-    def get_url_content(self, file_url: str, max_tries: int = 6, sleep_time: int = 1) \
+    def get_url_content(self, url: str, max_tries: int = 6,
+                        sleep_time: int = 1, headers: Dict[str, str] = None) \
             -&gt; requests.models.Response:
         &#34;&#34;&#34;
             downloads the content auf an url and returns it as a string.
@@ -237,9 +253,10 @@ class UrlDownloader:
             Uses the defined user-agent as header information
 
         Args:
-            file_url (str): url that referencese the file to be downloaded
+            url (str): url that referencese the file to be downloaded
             max_tries (int, optional, 6): maximum number of tries to get the data
             sleep_time (int, optional, 1): wait time between retries, default is one second
+            headers (Dict[str, str], optional, None}): additional headers
 
         Returns:
              requests.models.Response
@@ -249,13 +266,17 @@ class UrlDownloader:
         while current_try &lt; max_tries:
             current_try += 1
             try:
-                response = requests.get(file_url, timeout=10,
-                                        headers={&#39;User-Agent&#39;: self.user_agent}, stream=True)
+                if headers is None:
+                    headers = {&#39;User-Agent&#39;: self.user_agent}
+                else:
+                    headers.update({&#39;User-Agent&#39;: self.user_agent})
+                response = requests.get(url, timeout=10,
+                                        headers=headers, stream=True)
                 response.raise_for_status()
                 break
             except requests.exceptions.RequestException as err:
                 if current_try &gt;= max_tries:
-                    LOGGER.info(&#39;RequestException: failed to download %s2&#39;, file_url)
+                    LOGGER.info(&#39;RequestException: failed to download %s2&#39;, url)
                     raise err
                 sleep(sleep_time)
 
@@ -264,7 +285,7 @@ class UrlDownloader:
 <h3>Methods</h3>
 <dl>
 <dt id="secfsdstools.a_utils.downloadutils.UrlDownloader.binary_download_url_to_file"><code class="name flex">
-<span>def <span class="ident">binary_download_url_to_file</span></span>(<span>self, file_url: str, target_file: str, max_tries: int = 6, sleep_time: int = 1)</span>
+<span>def <span class="ident">binary_download_url_to_file</span></span>(<span>self, file_url: str, target_file: str, max_tries: int = 6, sleep_time: int = 1, headers: Dict[str, str] = None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>downloads the binary of an url and stores it into the target-file.
@@ -280,7 +301,8 @@ retries a download several times, if it fails</p>
 <dd>maximum retries, default is 6</dd>
 <dt><strong><code>sleep_time</code></strong> :&ensp;<code>int</code>, optional<code>, 1</code></dt>
 <dd>wait time between retries, default is one second</dd>
-</dl></div>
+</dl>
+<p>headers (Dict[str, str], optional, None}): additional headers</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -288,7 +310,8 @@ retries a download several times, if it fails</p>
 <pre><code class="python">def binary_download_url_to_file(self, file_url: str,
                                 target_file: str,
                                 max_tries: int = 6,
-                                sleep_time: int = 1):
+                                sleep_time: int = 1,
+                                headers: Dict[str, str] = None):
     &#34;&#34;&#34;
         downloads the binary of an url and stores it into the target-file.
         retries a download several times, if it fails
@@ -299,15 +322,16 @@ retries a download several times, if it fails</p>
           (it will be written into a zipfile)
         max_tries (int, optional, 6): maximum retries, default is 6
         sleep_time (int, optional, 1): wait time between retries, default is one second
+        headers (Dict[str, str], optional, None}): additional headers
     &#34;&#34;&#34;
-    response = self.get_url_content(file_url, max_tries, sleep_time)
+    response = self.get_url_content(file_url, max_tries, sleep_time, headers=headers)
 
     with open(target_file, &#34;wb&#34;) as target_fp:
         target_fp.write(response.content)</code></pre>
 </details>
 </dd>
 <dt id="secfsdstools.a_utils.downloadutils.UrlDownloader.download_url_to_file"><code class="name flex">
-<span>def <span class="ident">download_url_to_file</span></span>(<span>self, file_url: str, target_file: str, expected_size: int = None, max_tries: int = 6, sleep_time: int = 1)</span>
+<span>def <span class="ident">download_url_to_file</span></span>(<span>self, file_url: str, target_file: str, expected_size: int = None, max_tries: int = 6, sleep_time: int = 1, headers: Dict[str, str] = None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>downloads the content auf an url and stores it into the target-file.
@@ -329,6 +353,7 @@ the data that is downloaded.</dd>
 <dd>wait time between retries,
 default is one second</dd>
 </dl>
+<p>headers (Dict[str, str], optional, None}): additional headers</p>
 <h2 id="returns">Returns</h2>
 <dl>
 <dt><code>str</code></dt>
@@ -341,7 +366,8 @@ default is one second</dd>
 <pre><code class="python">def download_url_to_file(self, file_url: str, target_file: str,
                          expected_size: int = None,
                          max_tries: int = 6,
-                         sleep_time: int = 1):
+                         sleep_time: int = 1,
+                         headers: Dict[str, str] = None):
     &#34;&#34;&#34;
         downloads the content auf an url and stores it into the target-file.
         retries a download several times, if it fails
@@ -356,11 +382,12 @@ default is one second</dd>
         max_tries (int, optional, 6): maximum retries, default is 6
         sleep_time (int, optional, 1): wait time between retries,
           default is one second
+        headers (Dict[str, str], optional, None}): additional headers
 
     Returns:
         str: the written file name
     &#34;&#34;&#34;
-    response = self.get_url_content(file_url, max_tries, sleep_time)
+    response = self.get_url_content(file_url, max_tries, sleep_time, headers=headers)
     content = response.text
 
     if expected_size is not None:
@@ -371,7 +398,7 @@ default is one second</dd>
 </details>
 </dd>
 <dt id="secfsdstools.a_utils.downloadutils.UrlDownloader.get_url_content"><code class="name flex">
-<span>def <span class="ident">get_url_content</span></span>(<span>self, file_url: str, max_tries: int = 6, sleep_time: int = 1) ‑> requests.models.Response</span>
+<span>def <span class="ident">get_url_content</span></span>(<span>self, url: str, max_tries: int = 6, sleep_time: int = 1, headers: Dict[str, str] = None) ‑> requests.models.Response</span>
 </code></dt>
 <dd>
 <div class="desc"><p>downloads the content auf an url and returns it as a string.
@@ -379,20 +406,22 @@ retries a download several times, if it fails.
 Uses the defined user-agent as header information</p>
 <h2 id="args">Args</h2>
 <dl>
-<dt><strong><code>file_url</code></strong> :&ensp;<code>str</code></dt>
+<dt><strong><code>url</code></strong> :&ensp;<code>str</code></dt>
 <dd>url that referencese the file to be downloaded</dd>
 <dt><strong><code>max_tries</code></strong> :&ensp;<code>int</code>, optional<code>, 6</code></dt>
 <dd>maximum number of tries to get the data</dd>
 <dt><strong><code>sleep_time</code></strong> :&ensp;<code>int</code>, optional<code>, 1</code></dt>
 <dd>wait time between retries, default is one second</dd>
 </dl>
+<p>headers (Dict[str, str], optional, None}): additional headers</p>
 <h2 id="returns">Returns</h2>
 <p>requests.models.Response</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def get_url_content(self, file_url: str, max_tries: int = 6, sleep_time: int = 1) \
+<pre><code class="python">def get_url_content(self, url: str, max_tries: int = 6,
+                    sleep_time: int = 1, headers: Dict[str, str] = None) \
         -&gt; requests.models.Response:
     &#34;&#34;&#34;
         downloads the content auf an url and returns it as a string.
@@ -400,9 +429,10 @@ Uses the defined user-agent as header information</p>
         Uses the defined user-agent as header information
 
     Args:
-        file_url (str): url that referencese the file to be downloaded
+        url (str): url that referencese the file to be downloaded
         max_tries (int, optional, 6): maximum number of tries to get the data
         sleep_time (int, optional, 1): wait time between retries, default is one second
+        headers (Dict[str, str], optional, None}): additional headers
 
     Returns:
          requests.models.Response
@@ -412,13 +442,17 @@ Uses the defined user-agent as header information</p>
     while current_try &lt; max_tries:
         current_try += 1
         try:
-            response = requests.get(file_url, timeout=10,
-                                    headers={&#39;User-Agent&#39;: self.user_agent}, stream=True)
+            if headers is None:
+                headers = {&#39;User-Agent&#39;: self.user_agent}
+            else:
+                headers.update({&#39;User-Agent&#39;: self.user_agent})
+            response = requests.get(url, timeout=10,
+                                    headers=headers, stream=True)
             response.raise_for_status()
             break
         except requests.exceptions.RequestException as err:
             if current_try &gt;= max_tries:
-                LOGGER.info(&#39;RequestException: failed to download %s2&#39;, file_url)
+                LOGGER.info(&#39;RequestException: failed to download %s2&#39;, url)
                 raise err
             sleep(sleep_time)
 

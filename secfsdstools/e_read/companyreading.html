@@ -70,6 +70,7 @@ class CompanyReader:
     def get_latest_company_filing(self) -&gt; Dict[str, str]:
         &#34;&#34;&#34;
         returns the latest company information (the content in the sub.txt file)
+        from the quarter-zip files.
         Returns:
             Dict[str, str]: dict with the information of the latest
              report as present in the sub.txt file.
@@ -166,6 +167,7 @@ class CompanyReader:
     def get_latest_company_filing(self) -&gt; Dict[str, str]:
         &#34;&#34;&#34;
         returns the latest company information (the content in the sub.txt file)
+        from the quarter-zip files.
         Returns:
             Dict[str, str]: dict with the information of the latest
              report as present in the sub.txt file.
@@ -339,7 +341,8 @@ forms that should be returned</p>
 <span>def <span class="ident">get_latest_company_filing</span></span>(<span>self) ‑> Dict[str, str]</span>
 </code></dt>
 <dd>
-<div class="desc"><p>returns the latest company information (the content in the sub.txt file)</p>
+<div class="desc"><p>returns the latest company information (the content in the sub.txt file)
+from the quarter-zip files.</p>
 <h2 id="returns">Returns</h2>
 <dl>
 <dt><code>Dict[str, str]</code></dt>
@@ -353,6 +356,7 @@ forms that should be returned</p>
 <pre><code class="python">def get_latest_company_filing(self) -&gt; Dict[str, str]:
     &#34;&#34;&#34;
     returns the latest company information (the content in the sub.txt file)
+    from the quarter-zip files.
     Returns:
         Dict[str, str]: dict with the information of the latest
          report as present in the sub.txt file.

@@ -148,9 +148,9 @@ class DBIndexingAccessor(DB):
         """
         # sorting by originfiletype, so we prefer official data from SEC,
         # over the daily files, in case both should be present.
-        sql = f"""SELECT * 
-                    FROM {self.INDEX_REPORTS_TABLE} 
-                    WHERE adsh = '{adsh}' 
+        sql = f"""SELECT *
+                    FROM {self.INDEX_REPORTS_TABLE}
+                    WHERE adsh = '{adsh}'
                     ORDER BY originFileType DESC"""
         return self.execute_fetchall_typed(sql, IndexReport)[0]
 

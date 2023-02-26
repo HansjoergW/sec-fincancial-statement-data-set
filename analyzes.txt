@@ -1,0 +1,7 @@
+BS Assets
+---------
+example 2017q4
+-> Assets not present in 113
+-> some have AssetsNet: 3 (0000355019-17-000032, 0000814676-17-000042, 0001551163-17-000187)
+-> some don't have BS entries (maybe tagged the wrong way)
+-> some don't show that position, for instance if they only have CurrentAssets: eg 0001213900-17-011833

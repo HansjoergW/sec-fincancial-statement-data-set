@@ -13,6 +13,9 @@ v.0.4.0
     -> config for autocheck to download / autodownload
 
 
+check notebook link
+-> issue
+
 later
 -build timeline for company
 -correct quarter naming -> was meine ich damit?
@@ -40,4 +43,6 @@ Ideen
 look at
 -------
 - https://pypi.org/project/edgartools/1.6.0/
+
+
 

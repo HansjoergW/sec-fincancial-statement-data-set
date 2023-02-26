@@ -60,3 +60,16 @@ jupyter lab
 -----------
 pip install jupyterlab
 jupyter lab --notebook-dir=.
+
+Umgebung für analyzing
+-----------------------
+https://towardsdatascience.com/interactive-controls-for-jupyter-notebooks-f5c94829aee6
+https://ipywidgets.readthedocs.io/en/stable/examples/Using%20Interact.html
+https://ipython.readthedocs.io/en/stable/api/generated/IPython.display.html#
+
+benötigt neuerey python version (probleme mit conda install und python 3.7)
+- conda create -n secanalyzing python==3.10
+- pip install jupyterlab
+- jupyter labextension install @jupyter-widgets/jupyterlab-manager
+- pip install secfsdstools
+- pip install ipywidgets

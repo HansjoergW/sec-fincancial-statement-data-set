@@ -1,40 +1,73 @@
+from typing import Dict, List
+
 import pandas as pd
 
 
 class BalanceSheetStandardizer:
+    rename_map: Dict[str, str] = {
+        'AssetsNet': 'Assets',
+        'PartnersCapital': 'Equity',
+        'StockholdersEquity': 'Equity',
+        'StockholdersEquityIncludingPortionAttributableToNoncontrollingInterest': 'Equity'
+    }
+    relevant_tags: List[str] = ['Assets', 'AssetsCurrent', 'AssetsNoncurrent',
+                                'InventoryNet', 'CashAndCashEquivalentsAtCarrying',
+                                'Liabilities', 'LiabilitiesCurrent', 'LiabilitiesNoncurrent',
+                                'RetainedEarningsAccumulatedDeficit'
+                                'Equity'
+                                ]
 
     def standardize(self, df: pd.DataFrame) -> pd.DataFrame:
-        cpy_df = df.copy()
-        self.handle_assetsnet(cpy_df)
+        # todo: wann muss negating berücksichtigt werden?
+
+        cpy_df = df[(df.stmt == 'BS') & df.tag.isin(BalanceSheetStandardizer.relevant_tags)] \
+            [['adsh', 'coreg', 'tag', 'version', 'ddate', 'uom', 'value', 'report', 'line', 'negating']].copy()
+
+        self.rename_tags(cpy_df)
+        pivot_df = self.pivot(cpy_df)
         return cpy_df
 
-    def handle_assetsnet(self, df: pd.DataFrame):
+    def rename_tags(self, df: pd.DataFrame):
         """ renames AssetsNet to Assets"""
-        mask = (df.tag == 'AssetsNet') & (df.stmt == 'BS')
-        df.loc[mask, 'tag'] = 'Assets'
+        for old_tag, new_tag in BalanceSheetStandardizer.rename_map.items():
+            mask = (df.tag == old_tag)
+            df.loc[mask, 'tag'] = new_tag
+
+    def pivot(self, df: pd.DataFrame) -> pd.DataFrame:
+        # it is possible, that the same number appears multiple times in different lines,
+        # therefore, duplicates have to be removed, otherwise pivot is not possible
+        relevant_df = df[['adsh', 'coreg', 'report', 'tag', 'value']].drop_duplicates()
+
+        relevant_df.loc[relevant_df['coreg'].isna(), 'coreg'] = '-'
+
+        duplicates_df = relevant_df[['adsh', 'coreg', 'report', 'tag']].value_counts().reset_index()
+        duplicates_df.rename(columns={0: 'count'}, inplace=True)
+        duplicated_adsh = duplicates_df[duplicates_df['count'] > 1].adsh.unique().tolist()
+
+        # todo: logging duplicated entries ...>
+        relevant_df = relevant_df[~relevant_df.adsh.isin(duplicated_adsh)]
+
+        # for adsh in relevant_df.adsh.tolist():
+        #     print(adsh)
+        #     relevant_df[relevant_df.adsh==adsh].pivot(index=['adsh', 'coreg', 'report'],
+        #                                                             columns='tag',
+        #                                                             values='value')
+
+        Equity Tag ist nicht vorhanden
+
+        return relevant_df.pivot(index=['adsh', 'coreg', 'report'],
+                                 columns='tag',
+                                 values='value')
 
     def handle_assetscur_assetsnoncur_present(self, df: pd.DataFrame):
         """calculateed Assets if only assets current and noncurrent are present"""
 
-        mask = (df.tag == 'AssetsNet') & (df.stmt == 'BS')
 
+"""
 
-Frage: wann piovtieren wir? sonst müssen wir viele groupbys und rows add machen
-und auf welches Datum?
-
-das müsste man von anfang her anders selektieren, period dürfte nicht pivotiert
-werden
-
-man müsste ein raw df haben, dass nur period dates enthält, aber nicht pivotiert ist
-
-das wäre der nächste Schritt.
-hier müsste ich auch überlegen, welche spalten ich benötige
-z.B.sollte negating in die Rechnung einbezogen werden.
-
-der balance sheet standardizer erzeugt dann eine BS only übersicht
 
 
 steps gemäss dipl arbeit.
 - erst renaming
 
-
+"""

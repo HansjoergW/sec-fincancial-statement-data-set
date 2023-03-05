@@ -73,3 +73,4 @@ benötigt neuerey python version (probleme mit conda install und python 3.7)
 - jupyter labextension install @jupyter-widgets/jupyterlab-manager
 - pip install secfsdstools
 - pip install ipywidgets
+

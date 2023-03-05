@@ -107,6 +107,29 @@ class BaseReportReader(ABC):
         self._read_raw_data()  # lazy load the data if necessary
         return self.sub_df.copy()
 
+    def merge_for_period(self) -> pd.DataFrame:
+        """
+        merges the raw data of pre and num together, but just uses the period date,
+        meaning only entries in the num file are considered that have a ddate equals
+        to the period of the report.
+
+        Returns:
+            pd.DataFrame: pandas dataframe
+
+        """
+        self._read_raw_data()  # lazy load the data if necessary
+
+        mask = self.num_df['adsh'].map(self.adsh_period_map) == self.num_df['ddate']
+        num_df_filtered_for_period = self.num_df[mask]
+
+        num_pre_merged_df = pd.merge(num_df_filtered_for_period,
+                                     self.pre_df,
+                                     on=['adsh', 'tag', 'version'])
+
+        num_pre_merged_df['form'] = num_pre_merged_df['adsh'].map(self.adsh_form_map)
+
+        return num_pre_merged_df
+
     def financial_statements_for_tags(self,
                                       use_period: bool = True,
                                       use_previous_period: bool = False,

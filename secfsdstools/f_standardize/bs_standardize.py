@@ -1,4 +1,4 @@
-from typing import Dict, List
+from typing import Dict, List, Tuple
 
 import pandas as pd
 
@@ -11,21 +11,29 @@ class BalanceSheetStandardizer:
         'StockholdersEquityIncludingPortionAttributableToNoncontrollingInterest': 'Equity'
     }
     relevant_tags: List[str] = ['Assets', 'AssetsCurrent', 'AssetsNoncurrent',
-                                'InventoryNet', 'CashAndCashEquivalentsAtCarrying',
+                                'InventoryNet', 'CashAndCashEquivalentsAtCarryingValue',
                                 'Liabilities', 'LiabilitiesCurrent', 'LiabilitiesNoncurrent',
-                                'RetainedEarningsAccumulatedDeficit'
-                                'Equity'
+                                'RetainedEarningsAccumulatedDeficit',
+                                'Equity',
+                                'LiabilitiesAndStockholdersEquity'
                                 ]
+
+    sum_definition: Dict[str, Tuple[str, str]] = {
+        'Assets': ('AssetsCurrent', 'AssetsNoncurrent'),
+        'Liabilities': ('LiabilitiesCurrent', 'LiabilitiesNoncurrent')
+    }
 
     def standardize(self, df: pd.DataFrame) -> pd.DataFrame:
         # todo: wann muss negating berücksichtigt werden?
 
-        cpy_df = df[(df.stmt == 'BS') & df.tag.isin(BalanceSheetStandardizer.relevant_tags)] \
+        cpy_df = df[(df.stmt == 'BS')] \
             [['adsh', 'coreg', 'tag', 'version', 'ddate', 'uom', 'value', 'report', 'line', 'negating']].copy()
 
         self.rename_tags(cpy_df)
+        cpy_df = cpy_df[cpy_df.tag.isin(BalanceSheetStandardizer.relevant_tags)]
         pivot_df = self.pivot(cpy_df)
-        return cpy_df
+        self.complete_sums(pivot_df)
+        return pivot_df
 
     def rename_tags(self, df: pd.DataFrame):
         """ renames AssetsNet to Assets"""
@@ -53,21 +61,71 @@ class BalanceSheetStandardizer:
         #                                                             columns='tag',
         #                                                             values='value')
 
-        Equity Tag ist nicht vorhanden
+        pivot_df = relevant_df.pivot(index=['adsh', 'coreg', 'report'],
+                                     columns='tag',
+                                     values='value')
+        pivot_df.reset_index(inplace=True)
+        return pivot_df
 
-        return relevant_df.pivot(index=['adsh', 'coreg', 'report'],
-                                 columns='tag',
-                                 values='value')
+    def complete_sums(self, df: pd.DataFrame):
+        """ completes sum definitions:
+            eg. Assets = 'AssetsCurrent' + 'AssetsNoncurrent'
+            if Assets and AssetsCurrent is present -> calculate AssetsNoncurrent
+            if Assets and AssetsNoncurrent is present -> calculate AssetsCurrent
+            if AssetsNoncurrent and AssetsCurrent are present, calculate Assets
+        """
+        for total, summands in BalanceSheetStandardizer.sum_definition.items():
+            summand_1 = summands[0]
+            summand_2 = summands[1]
 
-    def handle_assetscur_assetsnoncur_present(self, df: pd.DataFrame):
-        """calculateed Assets if only assets current and noncurrent are present"""
+            mask_total_sum1_nosum2 = (~df[total].isna() &
+                                      ~df[summand_1].isna() &
+                                      df[summand_2].isna())
+            df.loc[mask_total_sum1_nosum2, summand_2] = df[total] - df[summand_1]
+
+            mask_total_nosum1_sum2 = (~df[total].isna() &
+                                      df[summand_1].isna() &
+                                      ~df[summand_2].isna())
+            df.loc[mask_total_nosum1_sum2, summand_1] = df[total] - df[summand_2]
+
+            mask_nototal_sum1_sum2 = (df[total].isna() &
+                                      ~df[summand_1].isna() &
+                                      ~df[summand_2].isna())
+            df.loc[mask_nototal_sum1_sum2, total] = df[summand_1] + df[summand_2]
+
+            # if only the total is present, we assume that only the first summand (eg. currentassets are present)
+            # that is not really proper.
+            mask_total_nosum1_nosum2 = (~df[total].isna() &
+                                        df[summand_1].isna() &
+                                        df[summand_2].isna())
+            df.loc[mask_total_nosum1_nosum2, summand_1] = df[total]
+            df.loc[mask_total_nosum1_nosum2, summand_2] = 0.0
+
+            mask_nototal_sum1_nosum2 = (df[total].isna() &
+                                        ~df[summand_1].isna() &
+                                        df[summand_2].isna())
+            df.loc[mask_nototal_sum1_nosum2, total] = df[summand_1]
+            df.loc[mask_nototal_sum1_nosum2, summand_2] = 0.0
+
+            mask_nototal_nosum1_sum2 = (df[total].isna() &
+                                        df[summand_1].isna() &
+                                        ~df[summand_2].isna())
+            df.loc[mask_nototal_nosum1_sum2, total] = df[summand_2]
+            df.loc[mask_nototal_nosum1_sum2, summand_1] = 0.0
 
 
-"""
+            oft ist auch nur cash vorhanden -> vorallem bei subsidiaries -> hier müsste man prüfen, ob
+            in dem fall cash == assets ist
+            manchmal ist diese info auch in einem zusätzlichen report/tabelle
+            -> dort könnte man das eigentlich ignorieren
+            -> man müsste also prüfen, ob für die gleiche kombination ovn
+            -> adsh und coreg bereits ein eintrag besteht.
 
+            es bräuchte so etwas wie zusätzliche clean regeln,
+            z.B. nur einträge mit weniger nan beachten, falls nur report unterschiedlich
+            oder generell nur tiefere report nr beachten.
 
+            man könnte auch noch coregs entfernen und nur main zulassen..
 
-steps gemäss dipl arbeit.
-- erst renaming
+            das ziel müsste sein, die main einträge möglichst vollständig zu haben.
 
-"""

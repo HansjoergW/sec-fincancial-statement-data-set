@@ -16,7 +16,6 @@ if __name__ == '__main__':
 
     df = standardizer.standardize(fs_df)
 
-
     adshs_set =  set(df.adsh.unique().tolist())
     adshs_with_assets = set(df[df.tag.isin(['Assets'])].adsh.unique().tolist())
 

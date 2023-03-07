@@ -14,7 +14,7 @@ if __name__ == '__main__':
 
     standardizer = BalanceSheetStandardizer()
 
-    df = standardizer.standardize(fs_df)
+    df = standardizer.standardize(fs_df, only_return_main_coreg=True, filter_for_main_report=True)
 
     adshs_set =  set(df.adsh.unique().tolist())
     adshs_with_assets = set(df[df.tag.isin(['Assets'])].adsh.unique().tolist())

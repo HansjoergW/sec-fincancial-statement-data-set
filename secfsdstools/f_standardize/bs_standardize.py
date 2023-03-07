@@ -8,22 +8,37 @@ class BalanceSheetStandardizer:
         'AssetsNet': 'Assets',
         'PartnersCapital': 'Equity',
         'StockholdersEquity': 'Equity',
-        'StockholdersEquityIncludingPortionAttributableToNoncontrollingInterest': 'Equity'
+        'StockholdersEquityIncludingPortionAttributableToNoncontrollingInterest': 'Equity',
+        'CashAndCashEquivalentsAtCarryingValue': 'Cash',
+        'CashCashEquivalentsAndFederalFundsSold': 'Cash'
     }
+
+    CashAndDueFromBanks auch vorhanden -> könnte sein, dass es auch zusammen mit
+    CashCashEquivalentsAndFederalFundsSold auftaucht
+
     relevant_tags: List[str] = ['Assets', 'AssetsCurrent', 'AssetsNoncurrent',
-                                'InventoryNet', 'CashAndCashEquivalentsAtCarryingValue',
                                 'Liabilities', 'LiabilitiesCurrent', 'LiabilitiesNoncurrent',
-                                'RetainedEarningsAccumulatedDeficit',
                                 'Equity',
+                                'InventoryNet', 'Cash',
+                                'RetainedEarningsAccumulatedDeficit',
                                 'LiabilitiesAndStockholdersEquity'
                                 ]
+
+    main_columns = ['Assets', 'AssetsCurrent', 'AssetsNoncurrent',
+                    'Liabilities', 'LiabilitiesCurrent', 'LiabilitiesNoncurrent']
 
     sum_definition: Dict[str, Tuple[str, str]] = {
         'Assets': ('AssetsCurrent', 'AssetsNoncurrent'),
         'Liabilities': ('LiabilitiesCurrent', 'LiabilitiesNoncurrent')
     }
 
-    def standardize(self, df: pd.DataFrame) -> pd.DataFrame:
+    könnte Assets = Liabilities + Equity auch Als Summe abgebildet werden?
+    und falls ja, an welcher Position? zuerst, oder erst nach Assets/Liabilities definition
+    oder besser, zuerst analysieren, was das für Fälle sind
+    Problem ist, das Assets auch durch Assets = AssetCurrent + -Noncurrent berechnet werden kann
+
+    def standardize(self, df: pd.DataFrame, only_return_main_coreg: bool = False,
+                    filter_for_main_report: bool = False) -> pd.DataFrame:
         # todo: wann muss negating berücksichtigt werden?
 
         cpy_df = df[(df.stmt == 'BS')] \
@@ -33,7 +48,19 @@ class BalanceSheetStandardizer:
         cpy_df = cpy_df[cpy_df.tag.isin(BalanceSheetStandardizer.relevant_tags)]
         pivot_df = self.pivot(cpy_df)
         self.complete_sums(pivot_df)
-        return pivot_df
+        self.complete_special_rules(pivot_df)
+
+        if only_return_main_coreg:
+            pivot_df = pivot_df[pivot_df.coreg == '-']
+
+        if filter_for_main_report:
+            pivot_df['nan_count'] = pivot_df[BalanceSheetStandardizer.main_columns].isna().sum(axis=1)
+            pivot_df.sort_values(['adsh','coreg', 'nan_count'], inplace=True)
+            pivot_df = pivot_df.groupby(['adsh', 'coreg']).last()
+            pivot_df.reset_index(inplace=True)
+
+        col_order = ['adsh', 'coreg', 'report', 'ddate'] + BalanceSheetStandardizer.relevant_tags
+        return pivot_df[col_order].copy()
 
     def rename_tags(self, df: pd.DataFrame):
         """ renames AssetsNet to Assets"""
@@ -44,11 +71,11 @@ class BalanceSheetStandardizer:
     def pivot(self, df: pd.DataFrame) -> pd.DataFrame:
         # it is possible, that the same number appears multiple times in different lines,
         # therefore, duplicates have to be removed, otherwise pivot is not possible
-        relevant_df = df[['adsh', 'coreg', 'report', 'tag', 'value']].drop_duplicates()
+        relevant_df = df[['adsh', 'coreg', 'report', 'tag', 'value', 'ddate']].drop_duplicates()
 
         relevant_df.loc[relevant_df['coreg'].isna(), 'coreg'] = '-'
 
-        duplicates_df = relevant_df[['adsh', 'coreg', 'report', 'tag']].value_counts().reset_index()
+        duplicates_df = relevant_df[['adsh', 'coreg', 'report', 'tag', 'ddate']].value_counts().reset_index()
         duplicates_df.rename(columns={0: 'count'}, inplace=True)
         duplicated_adsh = duplicates_df[duplicates_df['count'] > 1].adsh.unique().tolist()
 
@@ -61,7 +88,7 @@ class BalanceSheetStandardizer:
         #                                                             columns='tag',
         #                                                             values='value')
 
-        pivot_df = relevant_df.pivot(index=['adsh', 'coreg', 'report'],
+        pivot_df = relevant_df.pivot(index=['adsh', 'coreg', 'report', 'ddate'],
                                      columns='tag',
                                      values='value')
         pivot_df.reset_index(inplace=True)
@@ -114,6 +141,19 @@ class BalanceSheetStandardizer:
             df.loc[mask_nototal_nosum1_sum2, summand_1] = 0.0
 
 
+    def complete_special_rules(self, df: pd.DataFrame):
+        """
+        Special rules which help to complete the information
+        """
+
+        # if Equity == -Liabilities and Assets is nan, then
+        # Assets, AssetsCurrent, and AssetsNoncurrent is 0.0
+        mask = (df.Equity == -df.Liabilities) & df.Assets.isna()
+        df.loc[mask, 'Assets'] = 0.0
+        df.loc[mask, 'AssetsCurrent'] = 0.0
+        df.loc[mask, 'AssetsNoncurrent'] = 0.0
+
+"""
             oft ist auch nur cash vorhanden -> vorallem bei subsidiaries -> hier müsste man prüfen, ob
             in dem fall cash == assets ist
             manchmal ist diese info auch in einem zusätzlichen report/tabelle
@@ -124,8 +164,11 @@ class BalanceSheetStandardizer:
             es bräuchte so etwas wie zusätzliche clean regeln,
             z.B. nur einträge mit weniger nan beachten, falls nur report unterschiedlich
             oder generell nur tiefere report nr beachten.
+            
+            man könnte nans zählen für jede reihe zählen und dann nur die reihe mit weniger 
+            'nan's filtern.
 
             man könnte auch noch coregs entfernen und nur main zulassen..
 
             das ziel müsste sein, die main einträge möglichst vollständig zu haben.
-
+"""

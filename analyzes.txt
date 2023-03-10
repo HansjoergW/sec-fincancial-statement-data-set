@@ -13,4 +13,12 @@ example 2017q4
    and only the first BS report should be considered.
 
 
-Next Step -> Cash:
+Next Step -> Cash
+- Oftmals sind 2 Einträge vorhanden (10% der Fälle)
+- z.B. 0000713671-17-000074
+  (df[df.tag.isin(sum_list)].groupby(['adsh', 'coreg', 'report','ddate']).count().reset_index()
+- interessant, in 0000713671-17-000074 ist für CasEqui der gleiche Wert wie für DueBank vorhanden
+- 0001379895-17-000016 hat z.B. 2 verschiedene .. Werte
+
+- man müsste sicher CashAndCashEqui bevorzugen.. und dann vielleicht noch other Cash summieren
+und nur other cash verwenden, wenn cash and cashEqui nicht vorhanden..

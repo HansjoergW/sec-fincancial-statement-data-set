@@ -11,6 +11,7 @@ if __name__ == '__main__':
 
     fs_df = reader.merge_for_period()
     fs_df = fs_df[fs_df.form.isin(['10-K', '10-Q'])]
+    #fs_df = fs_df[fs_df.adsh.isin(['0001096906-17-000798'])]
 
     standardizer = BalanceSheetStandardizer()
 

@@ -227,3 +227,6 @@ class BaseReportReader(ABC):
             pd.DataFrame: the content for the read filetype
         """
         pass
+
+
+nicht pivotierende methode hinzufügen

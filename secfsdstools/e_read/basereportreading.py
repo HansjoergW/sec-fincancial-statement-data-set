@@ -109,16 +109,17 @@ class BaseReportReader(ABC):
         self._read_raw_data()  # lazy load the data if necessary
         return self.sub_df.copy()
 
-    def financial_statements_for_tags(self,
-                                      use_period: bool = True,
-                                      use_previous_period: bool = False,
-                                      tags: Optional[List[str]] = None,
-                                      ) -> pd.DataFrame:
+    def merge_pre_and_num(self,
+                          use_period: bool = True,
+                          use_previous_period: bool = False,
+                          tags: Optional[List[str]] = None,
+                          ) -> pd.DataFrame:
         """
-        formats the raw data in a way, that it reflects the presentation of the
-        primary financial statements (balance sheet, income statement, cash flow)
-        of the original filed report. Meaning the statements are grouped per report
-        and per type and have the same order as the appear in the report itself.
+        merges the raw data of pre and num together.
+        depending on the parameters, it just uses the  period date and the previouis period date.
+        furthermore, also the tags could be restricted.
+
+        Note: default for use_period is True
 
         Args:
             use_period (bool, True): indicates that only the values are filtered which
@@ -130,11 +131,10 @@ class BaseReportReader(ABC):
 
             tags (List[str], optional, None): if set, only the tags listet in this
             parameter are returned
-
         Returns:
-            pd.DataFrame: the filtered and transformed data
-        """
+            pd.DataFrame: pandas dataframe
 
+        """
         self._read_raw_data()  # lazy load the data if necessary
         num_df_filtered_for_dates = self.num_df
 
@@ -162,6 +162,41 @@ class BaseReportReader(ABC):
         num_pre_merged_df = pd.merge(num_df_filtered_for_dates,
                                      pre_filtered_for_tags,
                                      on=['adsh', 'tag', 'version'])
+
+        return num_pre_merged_df
+
+    def financial_statements_for_tags(self,
+                                      use_period: bool = True,
+                                      use_previous_period: bool = False,
+                                      tags: Optional[List[str]] = None,
+                                      ) -> pd.DataFrame:
+        """
+        formats the raw data in a way, that it reflects the presentation of the
+        primary financial statements (balance sheet, income statement, cash flow)
+        of the original filed report. Meaning the statements are grouped per report
+        and per type and have the same order as they appear in the report itself.
+        moreover, the data is pivoted, so that every ddate has its own column
+
+        Args:
+            use_period (bool, True): indicates that only the values are filtered which
+            ddates machtes the period of the report.
+
+            use_previous_period (bool, False): indicates that only the values  are filtered
+            which ddates matches the period of the report and the previous year. If this is set
+            to True, then the value of use_period is ignored
+
+            tags (List[str], optional, None): if set, only the tags listet in this
+            parameter are returned
+
+        Returns:
+            pd.DataFrame: the filtered and transformed data
+        """
+
+        ## transform the data
+        # merge num and pre together. only rows in num are considered for which entries in pre exist
+        num_pre_merged_df = self.merge_pre_and_num(use_period=use_period,
+                                                   use_previous_period=use_previous_period,
+                                                   tags=tags)
 
         # pivot the data, so that ddate appears as a column
         num_pre_merged_pivot_df = num_pre_merged_df.pivot_table(
@@ -227,6 +262,3 @@ class BaseReportReader(ABC):
             pd.DataFrame: the content for the read filetype
         """
         pass
-
-
-nicht pivotierende methode hinzufügen

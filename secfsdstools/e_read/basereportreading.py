@@ -65,9 +65,11 @@ class BaseReportReader(ABC):
         inside the object. used in a lazy loading manner.
         """
         if self.num_df is None:
-            self.num_df = self._read_df_from_raw(file_in_zip=NUM_TXT)
-            self.pre_df = self._read_df_from_raw(file_in_zip=PRE_TXT)
-            self.sub_df = self._read_df_from_raw(file_in_zip=SUB_TXT)
+            self.num_df = self._read_df_from_raw(file_type=NUM_TXT)
+            # pandas pivot works better if coreg is not nan, so we set it here to a simple dash
+            self.num_df.loc[self.num_df.coreg.isna(), 'coreg'] = '-'
+            self.pre_df = self._read_df_from_raw(file_type=PRE_TXT)
+            self.sub_df = self._read_df_from_raw(file_type=SUB_TXT)
             self.adsh_form_map = \
                 self.sub_df[['adsh', 'form']].set_index('adsh').to_dict()['form']
             self.adsh_period_map = \
@@ -163,13 +165,13 @@ class BaseReportReader(ABC):
 
         # pivot the data, so that ddate appears as a column
         num_pre_merged_pivot_df = num_pre_merged_df.pivot_table(
-            index=['adsh', 'tag', 'version', 'stmt', 'report', 'line', 'uom', 'negating', 'inpth'],
+            index=['adsh', 'coreg', 'tag', 'version', 'stmt', 'report', 'line', 'uom', 'negating', 'inpth'],
             columns='ddate',
             values='value')
 
         # some cleanup and ordering
         num_pre_merged_pivot_df.rename_axis(None, axis=1, inplace=True)
-        num_pre_merged_pivot_df.sort_values(['adsh', 'stmt', 'report', 'line', 'inpth'],
+        num_pre_merged_pivot_df.sort_values(['adsh', 'coreg', 'stmt', 'report', 'line', 'inpth'],
                                             inplace=True)
         num_pre_merged_pivot_df.reset_index(drop=False, inplace=True)
 
@@ -214,8 +216,14 @@ class BaseReportReader(ABC):
 
     @abstractmethod
     def _read_df_from_raw(self,
-                          file_in_zip: str,
-                          usecols: List[str] = None,
-                          column_names: List[str] = None) \
+                          file_type: str) \
             -> pd.DataFrame:
+        """
+
+        Args:
+            file_type: SUB_TXT, PRE_TXT, or NUM_TXT
+
+        Returns:
+            pd.DataFrame: the content for the read filetype
+        """
         pass

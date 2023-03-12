@@ -4,8 +4,9 @@ if __name__ == '__main__':
 
     apple_cik = 320193
 
-    apple_collector = CompanyCollector.get_company_collector(apple_cik)
+    apple_collector = CompanyCollector.get_company_collector(cik=apple_cik, forms=['10-K'])
 
     #result = apple_collector.collect(['10-K', '10-Q'])
-    result = apple_collector.collect(['10-K'])
+    fin_df = apple_collector.financial_statements_for_period()
+    print(fin_df)
 

@@ -48,17 +48,12 @@ class ZipReportReader(BaseReportReader):
         super().__init__()
         self.zipfile = zipfile
 
-    def _read_df_from_raw(self,
-                          file_in_zip: str,
-                          usecols: List[str] = None,
-                          column_names: List[str] = None) \
-            -> pd.DataFrame:
+    def _read_df_from_raw(self, file_type: str) -> pd.DataFrame:
         """
         reads the raw data of a zipfile
         """
         return read_df_from_file_in_zip(zip_file=self.zipfile,
-                                        file_to_extract=file_in_zip,
-                                        usecols=column_names)
+                                        file_to_extract=file_type)
 
     def statistics(self) -> ZipFileStats:
         """

@@ -9,20 +9,21 @@ import pandas as pd
 from secfsdstools.a_config.configmgt import Configuration, ConfigurationManager
 from secfsdstools.a_utils.parallelexecution import ParallelExecutor
 from secfsdstools.d_index.indexdataaccess import DBIndexingAccessor, IndexReport
-from secfsdstools.e_read.basereportreading import NUM_TXT, PRE_TXT, SUB_TXT
+from secfsdstools.e_read.basereportreading import NUM_TXT, PRE_TXT, SUB_TXT, BaseReportReader
 from secfsdstools.e_read.reportreading import ReportReader
 
 
-class CompanyCollector:
+class CompanyCollector(BaseReportReader):
 
     @classmethod
-    def get_company_collector(cls, cik: int, configuration: Optional[Configuration] = None):
+    def get_company_collector(cls, cik: int, forms: Optional[List[str]] = None, configuration: Optional[Configuration] = None):
         """
         creates a company_collector instance for the provided cik. If no configuration object is passed,
         it reads the configuration from the config file.
 
         Args:
             cik (int): the central identification key which is assigned by the sec for every company
+            forms: a list of forms which should be collected, like 10-K, or 10 Q
             configuration (Configuration, optional, None): Optional configuration object
 
         Returns:
@@ -30,24 +31,26 @@ class CompanyCollector:
         """
         if configuration is None:
             configuration = ConfigurationManager.read_config_file()
-        return CompanyCollector(cik, DBIndexingAccessor(db_dir=configuration.db_dir))
+        return CompanyCollector(cik, forms=forms, dbaccessor=DBIndexingAccessor(db_dir=configuration.db_dir))
 
-    def __init__(self, cik: int, dbaccessor: DBIndexingAccessor):
+    def __init__(self, cik: int, dbaccessor: DBIndexingAccessor, forms: Optional[List[str]] = None):
+        super().__init__()
         self.cik = cik
         self.dbaccessor = dbaccessor
+        self.forms = forms
 
-    def collect(self, forms: Optional[List[str]] = None) -> Dict[str, pd.DataFrame]:
+        self.collected_data: Dict[str, pd.DataFrame] = {}
+
+    def _collect(self) -> Dict[str, pd.DataFrame]:
         """
         Collects
-        Args:
-            forms: a list of forms which should be collected, like 10-K, or 10 Q
 
         Returns:
             Dict[str, pd.DataFrame]: key is file (Sub, Num, Pre) value is the content as pd.DataFrame
         """
 
         # Achtung: reports können in mehreren Zips stehen - daily oder Quarter
-        reports: List[IndexReport] = self.dbaccessor.read_index_reports_for_cik(self.cik, forms)
+        reports: List[IndexReport] = self.dbaccessor.read_index_reports_for_cik(self.cik, self.forms)
 
         def get_entries() -> List[IndexReport]:
             return reports
@@ -81,5 +84,12 @@ class CompanyCollector:
 
         result, _ = executor.execute() # we ignore the missing, since get_entries always returns the whole list
 
-        print(len(reports))
         return result[0]
+
+    def _read_raw_data(self):
+        self.collected_data = self._collect()
+        super()._read_raw_data()
+
+    def _read_df_from_raw(self, file_type: str) -> pd.DataFrame:
+        return self.collected_data[file_type]
+

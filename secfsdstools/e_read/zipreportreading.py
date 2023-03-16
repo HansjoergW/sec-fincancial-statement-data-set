@@ -2,7 +2,7 @@
 reading the data of a whole zip file.
 """
 from dataclasses import dataclass
-from typing import List, Dict, Optional
+from typing import Dict, Optional
 
 import pandas as pd
 

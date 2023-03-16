@@ -154,6 +154,36 @@ class DBIndexingAccessor(DB):
                     ORDER BY originFileType DESC"""
         return self.execute_fetchall_typed(sql, IndexReport)[0]
 
+    def read_index_reports_for_adshs(self, adshs: List[str]) -> List[IndexReport]:
+        """
+        returns the IndexReport instances for the provided adshs
+
+        Args:
+            adshs (List[str]):  adshs
+        Returns:
+            List[IndexReport]: the reports for the provided adshs
+        """
+
+        adshs_str = ", ".join(["'" + x.upper() + "'" for x in adshs])
+        # sorting by originfiletype, so we prefer official data from SEC,
+        # over the daily files, in case both should be present.
+        sql = f"""SELECT *
+                    FROM {self.INDEX_REPORTS_TABLE}
+                    WHERE adsh in ({adshs_str})
+                    ORDER BY adsh, originFileType DESC"""
+
+        reports: List[IndexReport] = self.execute_fetchall_typed(sql, IndexReport)
+
+        last_adsh = None
+        filtered_reports: List[IndexReport] = []
+        for report in reports:
+            if last_adsh == report.adsh:
+                continue
+            last_adsh = report.adsh
+            filtered_reports.append(report)
+
+        return filtered_reports
+
     def read_index_reports_for_cik(self, cik: int, forms: Optional[List[str]] = None) \
             -> List[IndexReport]:
         """

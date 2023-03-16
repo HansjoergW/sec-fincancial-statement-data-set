@@ -28,16 +28,16 @@ def test_financial_statements_for_tags(zipreader):
     # read only for the actual period
     fin_stmts_df = zipreader.financial_statements_for_period()
 
-    assert fin_stmts_df.shape == (59521, 17)
+    assert fin_stmts_df.shape == (61245, 18)
 
     # read for the actual period and the previous period
     fin_stmts_df = zipreader.financial_statements_for_period_and_previous_period()
 
-    assert fin_stmts_df.shape == (60515, 24)
+    assert fin_stmts_df.shape == (62255, 25)
 
     # read only for the actual period
     fin_stmts_df = zipreader.financial_statements_for_period(tags=['Assets'])
-    assert fin_stmts_df.shape == (496, 17)
+    assert fin_stmts_df.shape == (513, 18)
 
 
 def test_statistics(zipreader):

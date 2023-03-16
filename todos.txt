@@ -8,10 +8,21 @@ New Release
 
 
 v.0.4.0
+- multi report reader and tests
+- company collector and tests
+- pure merge method added and tests
+- doku
+- notebook reading data
+
+BugFix:
+- coreg was not considered
+
+
+next
+- export load function, oder cache for MultiReportReader..
 - - warning, falls daten nicht indexiert sind
     -> Hinweis Message beim Laden der Config
     -> config for autocheck to download / autodownload
-
 
 later
 -build timeline for company

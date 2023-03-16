@@ -200,7 +200,8 @@ class BaseReportReader(ABC):
 
         # pivot the data, so that ddate appears as a column
         num_pre_merged_pivot_df = num_pre_merged_df.pivot_table(
-            index=['adsh', 'coreg', 'tag', 'version', 'stmt', 'report', 'line', 'uom', 'negating', 'inpth'],
+            index=['adsh', 'coreg', 'tag', 'version', 'stmt',
+                   'report', 'line', 'uom', 'negating', 'inpth'],
             columns='ddate',
             values='value')
 
@@ -261,4 +262,3 @@ class BaseReportReader(ABC):
         Returns:
             pd.DataFrame: the content for the read filetype
         """
-        pass

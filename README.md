@@ -33,7 +33,7 @@ and therefore providing a possibility to receive the latest filings on a daily b
 # Links
 * [API Documentation](https://hansjoergw.github.io/sec-fincancial-statement-data-set/secfsdstools/)
 * [QuickStart Jupyter Notebook](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/01_quickstart.ipynb)
-* [Connect to the daily-sec-financial-statement-dataset Notebook](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/v0.3.0/notebooks/02_connect_rapidapi.ipynb) 
+* [Connect to the daily-sec-financial-statement-dataset Notebook](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/02_connect_rapidapi.ipynb) 
 
 # Installation
 

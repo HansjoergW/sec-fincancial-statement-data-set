@@ -13,9 +13,8 @@ v.0.4.0
 - pure merge method added and tests
 - doku
 - notebook reading data
-
-BugFix:
-- coreg was not considered
+- BugFix:
+  - coreg was not considered
 
 
 next
@@ -40,6 +39,12 @@ build, release & docu
 - coverage report padge
 - release to readthedocs
 
+
+
+Checkout für Visualisierung
+- https://gist.github.com/mwouts/a2de16feb90d33fd89334fb09f62742f
+- https://www.linkedin.com/pulse/interactive-dataframes-jupyter-google-colab-vs-code-pycharm-wouts/?trk=articles_directory
+- https://pbpython.com/dataframe-gui-overview.html
 
 Ideen
 -----

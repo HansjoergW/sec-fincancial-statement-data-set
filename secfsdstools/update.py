@@ -15,7 +15,7 @@ def update(config: Configuration = None):
     ensures that all available zip files are downloaded and that the index is created.
     """
     # check if a logger is active if not, make sure it logs to the console
-    if logging.root.level == logging.NOTSET:
+    if len(logging.root.handlers) == 0:
         logging.basicConfig(
             level=logging.INFO,
             format="%(asctime)s [%(levelname)s] %(module)s  %(message)s",

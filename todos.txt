@@ -13,6 +13,7 @@ v.0.4.0
 - pure merge method added and tests
 - doku
 - notebook reading data
+- caching für merged but not pivoted data einfügen
 - BugFix:
   - coreg was not considered
 

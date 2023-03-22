@@ -122,8 +122,9 @@ class MultiReportReader(BaseReportReader):
 
     def _read_raw_data(self):
         # we need to overwrite the base class methods, since we first need to read the data
-        self.collected_data = self._collect()
-        super()._read_raw_data()
+        if self.num_df is None:
+            self.collected_data = self._collect()
+            super()._read_raw_data()
 
     def _read_df_from_raw(self, file_type: str) -> pd.DataFrame:
         # we need to overwrite this method, since files are not read directly from the file,

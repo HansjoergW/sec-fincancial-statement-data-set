@@ -7,18 +7,15 @@ New Release
 - merge back into main
 
 
-v.0.4.0
-- multi report reader and tests
-- company collector and tests
-- pure merge method added and tests
-- doku
-- notebook reading data
-- caching für merged but not pivoted data einfügen
-- BugFix:
-  - coreg was not considered
-
+v.0.5.0
+- MergeReader -> merges the content of several reader together
+  -> or Merge class method, or method
+- save method -> store and read as zip reader
 
 next
+- in company collector -> eine sicht für sämtlich Jahre zeigen -> mit Jahren als spalten, aber
+   - versuchen die selben Tags zu zeigen, notfalls mit null...
+
 - export load function, oder cache for MultiReportReader..
 - - warning, falls daten nicht indexiert sind
     -> Hinweis Message beim Laden der Config

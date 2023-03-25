@@ -1,8 +1,12 @@
+"""
+Examples for MultiReportreader
+"""
 from secfsdstools.e_read.multireportreading import MultiReportReader
 
 if __name__ == '__main__':
     # The MultiReportreader enables the user to read multiple reports from different zipfiles.
-    # This can either be done by providing a list of adsh numbers or by a list if IndexReport instances
+    # This can either be done by providing a list of adsh numbers or by a list if IndexReport
+    #  instances
 
     # the following reader reads the 10-K reports of apple from the years 2020,2021, and 2022
     multi_report_reader = MultiReportReader.get_reports_by_adshs(
@@ -19,11 +23,15 @@ if __name__ == '__main__':
     raw_pre_df = multi_report_reader.get_raw_pre_data()
     raw_num_df = multi_report_reader.get_raw_num_data()
 
-    # again, it is the same interface as the other readers. So we return a filtered dataset only containing
-    # the data which are valid at the period-date of the report or the period-date of the report and the previous year
+    # it is the same interface as the other readers. So we return a filtered dataset only containing
+    # the data which are valid at the period-date of the report or the period-date of the report and
+    # the previous year
 
     # merging the data from num and pre together and produce the primary financial statements
+    # The first dataframe set contains just the data that are valid for the current year
     current_year_df = multi_report_reader.financial_statements_for_period()
+
+    # The second dataframe contains the data that are for the current and the previous year
     current_and_previous_year_df = \
         multi_report_reader.financial_statements_for_period_and_previous_period()
 

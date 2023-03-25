@@ -4,6 +4,15 @@
 * more example notebooks
 * use parquet as storing format instead of zipfiles with csv files
 
+## 0.4.0 2023-Mar-25
+* new MultiReportReader - reads reports from different zipfiles at once
+* new CompanyCollector - reads reports for one company from different zipfiles at once
+* new merge_pre_and_num() method which only merges the pre and num data but does not pivot it
+* new notebook that shows how the data can be analyzed with an interactive jupyter notebook 
+
+BugFixes:
+* coreg was not considered correctly when merging the data
+
 ## 0.3.0 2023-Feb-04
 * integration of https://rapidapi.com/hansjoerg.wingeier/api/daily-sec-financial-statement-dataset. Daily updates instead of quarterly updates.
 

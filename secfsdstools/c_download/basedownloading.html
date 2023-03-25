@@ -104,8 +104,7 @@ class BaseDownloader(ABC):
         executor.set_process_element_function(self._download_file)
         executor.set_post_process_chunk_function(lambda x: x)
 
-        self.result = executor.execute()
-        executor.pool.close()</code></pre>
+        self.result = executor.execute()</code></pre>
 </details>
 </section>
 <section>
@@ -189,8 +188,7 @@ from an url and store it.</p></div>
         executor.set_process_element_function(self._download_file)
         executor.set_post_process_chunk_function(lambda x: x)
 
-        self.result = executor.execute()
-        executor.pool.close()</code></pre>
+        self.result = executor.execute()</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -227,8 +225,7 @@ from an url and store it.</p></div>
     executor.set_process_element_function(self._download_file)
     executor.set_post_process_chunk_function(lambda x: x)
 
-    self.result = executor.execute()
-    executor.pool.close()</code></pre>
+    self.result = executor.execute()</code></pre>
 </details>
 </dd>
 </dl>

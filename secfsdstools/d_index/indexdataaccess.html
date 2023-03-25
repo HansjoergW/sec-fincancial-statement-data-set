@@ -183,6 +183,36 @@ class DBIndexingAccessor(DB):
                     ORDER BY originFileType DESC&#34;&#34;&#34;
         return self.execute_fetchall_typed(sql, IndexReport)[0]
 
+    def read_index_reports_for_adshs(self, adshs: List[str]) -&gt; List[IndexReport]:
+        &#34;&#34;&#34;
+        returns the IndexReport instances for the provided adshs
+
+        Args:
+            adshs (List[str]):  adshs
+        Returns:
+            List[IndexReport]: the reports for the provided adshs
+        &#34;&#34;&#34;
+
+        adshs_str = &#34;, &#34;.join([&#34;&#39;&#34; + x.upper() + &#34;&#39;&#34; for x in adshs])
+        # sorting by originfiletype, so we prefer official data from SEC,
+        # over the daily files, in case both should be present.
+        sql = f&#34;&#34;&#34;SELECT *
+                    FROM {self.INDEX_REPORTS_TABLE}
+                    WHERE adsh in ({adshs_str})
+                    ORDER BY adsh, originFileType DESC&#34;&#34;&#34;
+
+        reports: List[IndexReport] = self.execute_fetchall_typed(sql, IndexReport)
+
+        last_adsh = None
+        filtered_reports: List[IndexReport] = []
+        for report in reports:
+            if last_adsh == report.adsh:
+                continue
+            last_adsh = report.adsh
+            filtered_reports.append(report)
+
+        return filtered_reports
+
     def read_index_reports_for_cik(self, cik: int, forms: Optional[List[str]] = None) \
             -&gt; List[IndexReport]:
         &#34;&#34;&#34;
@@ -385,6 +415,36 @@ class DBIndexingAccessor(DB):
                     WHERE adsh = &#39;{adsh}&#39;
                     ORDER BY originFileType DESC&#34;&#34;&#34;
         return self.execute_fetchall_typed(sql, IndexReport)[0]
+
+    def read_index_reports_for_adshs(self, adshs: List[str]) -&gt; List[IndexReport]:
+        &#34;&#34;&#34;
+        returns the IndexReport instances for the provided adshs
+
+        Args:
+            adshs (List[str]):  adshs
+        Returns:
+            List[IndexReport]: the reports for the provided adshs
+        &#34;&#34;&#34;
+
+        adshs_str = &#34;, &#34;.join([&#34;&#39;&#34; + x.upper() + &#34;&#39;&#34; for x in adshs])
+        # sorting by originfiletype, so we prefer official data from SEC,
+        # over the daily files, in case both should be present.
+        sql = f&#34;&#34;&#34;SELECT *
+                    FROM {self.INDEX_REPORTS_TABLE}
+                    WHERE adsh in ({adshs_str})
+                    ORDER BY adsh, originFileType DESC&#34;&#34;&#34;
+
+        reports: List[IndexReport] = self.execute_fetchall_typed(sql, IndexReport)
+
+        last_adsh = None
+        filtered_reports: List[IndexReport] = []
+        for report in reports:
+            if last_adsh == report.adsh:
+                continue
+            last_adsh = report.adsh
+            filtered_reports.append(report)
+
+        return filtered_reports
 
     def read_index_reports_for_cik(self, cik: int, forms: Optional[List[str]] = None) \
             -&gt; List[IndexReport]:
@@ -782,6 +842,56 @@ Lower and uppercase are ignored.</p>
     return self.execute_fetchall_typed(sql, IndexReport)[0]</code></pre>
 </details>
 </dd>
+<dt id="secfsdstools.d_index.indexdataaccess.DBIndexingAccessor.read_index_reports_for_adshs"><code class="name flex">
+<span>def <span class="ident">read_index_reports_for_adshs</span></span>(<span>self, adshs: List[str]) ‑> List[<a title="secfsdstools.d_index.indexdataaccess.IndexReport" href="#secfsdstools.d_index.indexdataaccess.IndexReport">IndexReport</a>]</span>
+</code></dt>
+<dd>
+<div class="desc"><p>returns the IndexReport instances for the provided adshs</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>adshs</code></strong> :&ensp;<code>List[str]</code></dt>
+<dd>adshs</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>List[<a title="secfsdstools.d_index.indexdataaccess.IndexReport" href="#secfsdstools.d_index.indexdataaccess.IndexReport">IndexReport</a>]</code></dt>
+<dd>the reports for the provided adshs</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def read_index_reports_for_adshs(self, adshs: List[str]) -&gt; List[IndexReport]:
+    &#34;&#34;&#34;
+    returns the IndexReport instances for the provided adshs
+
+    Args:
+        adshs (List[str]):  adshs
+    Returns:
+        List[IndexReport]: the reports for the provided adshs
+    &#34;&#34;&#34;
+
+    adshs_str = &#34;, &#34;.join([&#34;&#39;&#34; + x.upper() + &#34;&#39;&#34; for x in adshs])
+    # sorting by originfiletype, so we prefer official data from SEC,
+    # over the daily files, in case both should be present.
+    sql = f&#34;&#34;&#34;SELECT *
+                FROM {self.INDEX_REPORTS_TABLE}
+                WHERE adsh in ({adshs_str})
+                ORDER BY adsh, originFileType DESC&#34;&#34;&#34;
+
+    reports: List[IndexReport] = self.execute_fetchall_typed(sql, IndexReport)
+
+    last_adsh = None
+    filtered_reports: List[IndexReport] = []
+    for report in reports:
+        if last_adsh == report.adsh:
+            continue
+        last_adsh = report.adsh
+        filtered_reports.append(report)
+
+    return filtered_reports</code></pre>
+</details>
+</dd>
 <dt id="secfsdstools.d_index.indexdataaccess.DBIndexingAccessor.read_index_reports_for_cik"><code class="name flex">
 <span>def <span class="ident">read_index_reports_for_cik</span></span>(<span>self, cik: int, forms: Optional[List[str]] = None) ‑> List[<a title="secfsdstools.d_index.indexdataaccess.IndexReport" href="#secfsdstools.d_index.indexdataaccess.IndexReport">IndexReport</a>]</span>
 </code></dt>
@@ -1028,6 +1138,7 @@ forms that should be returned</p>
 <li><code><a title="secfsdstools.d_index.indexdataaccess.DBIndexingAccessor.read_all_indexreports_df" href="#secfsdstools.d_index.indexdataaccess.DBIndexingAccessor.read_all_indexreports_df">read_all_indexreports_df</a></code></li>
 <li><code><a title="secfsdstools.d_index.indexdataaccess.DBIndexingAccessor.read_index_file_for_filename" href="#secfsdstools.d_index.indexdataaccess.DBIndexingAccessor.read_index_file_for_filename">read_index_file_for_filename</a></code></li>
 <li><code><a title="secfsdstools.d_index.indexdataaccess.DBIndexingAccessor.read_index_report_for_adsh" href="#secfsdstools.d_index.indexdataaccess.DBIndexingAccessor.read_index_report_for_adsh">read_index_report_for_adsh</a></code></li>
+<li><code><a title="secfsdstools.d_index.indexdataaccess.DBIndexingAccessor.read_index_reports_for_adshs" href="#secfsdstools.d_index.indexdataaccess.DBIndexingAccessor.read_index_reports_for_adshs">read_index_reports_for_adshs</a></code></li>
 <li><code><a title="secfsdstools.d_index.indexdataaccess.DBIndexingAccessor.read_index_reports_for_cik" href="#secfsdstools.d_index.indexdataaccess.DBIndexingAccessor.read_index_reports_for_cik">read_index_reports_for_cik</a></code></li>
 <li><code><a title="secfsdstools.d_index.indexdataaccess.DBIndexingAccessor.read_index_reports_for_cik_df" href="#secfsdstools.d_index.indexdataaccess.DBIndexingAccessor.read_index_reports_for_cik_df">read_index_reports_for_cik_df</a></code></li>
 </ul>

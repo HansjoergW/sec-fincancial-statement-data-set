@@ -31,7 +31,7 @@
 reading the data of a whole zip file.
 &#34;&#34;&#34;
 from dataclasses import dataclass
-from typing import List, Dict, Optional
+from typing import Dict, Optional
 
 import pandas as pd
 
@@ -77,17 +77,12 @@ class ZipReportReader(BaseReportReader):
         super().__init__()
         self.zipfile = zipfile
 
-    def _read_df_from_raw(self,
-                          file_in_zip: str,
-                          usecols: List[str] = None,
-                          column_names: List[str] = None) \
-            -&gt; pd.DataFrame:
+    def _read_df_from_raw(self, file_type: str) -&gt; pd.DataFrame:
         &#34;&#34;&#34;
         reads the raw data of a zipfile
         &#34;&#34;&#34;
         return read_df_from_file_in_zip(zip_file=self.zipfile,
-                                        file_to_extract=file_in_zip,
-                                        usecols=column_names)
+                                        file_to_extract=file_type)
 
     def statistics(self) -&gt; ZipFileStats:
         &#34;&#34;&#34;
@@ -204,17 +199,12 @@ class ZipReportReader(BaseReportReader):
         super().__init__()
         self.zipfile = zipfile
 
-    def _read_df_from_raw(self,
-                          file_in_zip: str,
-                          usecols: List[str] = None,
-                          column_names: List[str] = None) \
-            -&gt; pd.DataFrame:
+    def _read_df_from_raw(self, file_type: str) -&gt; pd.DataFrame:
         &#34;&#34;&#34;
         reads the raw data of a zipfile
         &#34;&#34;&#34;
         return read_df_from_file_in_zip(zip_file=self.zipfile,
-                                        file_to_extract=file_in_zip,
-                                        usecols=column_names)
+                                        file_to_extract=file_type)
 
     def statistics(self) -&gt; ZipFileStats:
         &#34;&#34;&#34;
@@ -340,6 +330,7 @@ def get_zip_by_name(cls, name: str, configuration: Optional[Configuration] = Non
 <li><code><a title="secfsdstools.e_read.basereportreading.BaseReportReader.get_raw_num_data" href="basereportreading.html#secfsdstools.e_read.basereportreading.BaseReportReader.get_raw_num_data">get_raw_num_data</a></code></li>
 <li><code><a title="secfsdstools.e_read.basereportreading.BaseReportReader.get_raw_pre_data" href="basereportreading.html#secfsdstools.e_read.basereportreading.BaseReportReader.get_raw_pre_data">get_raw_pre_data</a></code></li>
 <li><code><a title="secfsdstools.e_read.basereportreading.BaseReportReader.get_raw_sub_data" href="basereportreading.html#secfsdstools.e_read.basereportreading.BaseReportReader.get_raw_sub_data">get_raw_sub_data</a></code></li>
+<li><code><a title="secfsdstools.e_read.basereportreading.BaseReportReader.merge_pre_and_num" href="basereportreading.html#secfsdstools.e_read.basereportreading.BaseReportReader.merge_pre_and_num">merge_pre_and_num</a></code></li>
 </ul>
 </li>
 </ul>

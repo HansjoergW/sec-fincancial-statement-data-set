@@ -42,6 +42,10 @@ def run():
 
     zip_report_reader = ZipReportReader.get_zip_by_name(name=zip_file_2010q1)
 
+    # reading the raw content of the sub file
+    # this returns a list all reports that are read by the reader
+    raw_sub_df = zip_report_reader.get_raw_sub_data()
+
     # reading the raw content of the num and pre files
     raw_pre_df = zip_report_reader.get_raw_pre_data()
     raw_num_df = zip_report_reader.get_raw_num_data()
@@ -62,6 +66,7 @@ def run():
     # Filter for CashFlow
     cf_df = current_and_previous_year_df[
         current_and_previous_year_df.stmt == &#39;CF&#39;]
+
 
 if __name__ == &#39;__main__&#39;:
     run()</code></pre>
@@ -91,6 +96,10 @@ if __name__ == &#39;__main__&#39;:
     zip_file_2010q1 = &#34;2010q1.zip&#34;
 
     zip_report_reader = ZipReportReader.get_zip_by_name(name=zip_file_2010q1)
+
+    # reading the raw content of the sub file
+    # this returns a list all reports that are read by the reader
+    raw_sub_df = zip_report_reader.get_raw_sub_data()
 
     # reading the raw content of the num and pre files
     raw_pre_df = zip_report_reader.get_raw_pre_data()

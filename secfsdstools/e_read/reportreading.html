@@ -103,25 +103,19 @@ class ReportReader(BaseReportReader):
         self.report = report
         self.adsh_pattern = re.compile(f&#39;^{report.adsh}.*$&#39;, re.MULTILINE)
 
-    def _read_df_from_raw(self,
-                          file_in_zip: str,
-                          usecols: List[str] = None,
-                          column_names: List[str] = None) \
-            -&gt; pd.DataFrame:
+    def _read_df_from_raw(self, file_type: str) -&gt; pd.DataFrame:
         &#34;&#34;&#34;
         reads the num.txt or pre.txt directly from the zip file into a df.
         uses re to first filter only the rows that belong to the report
         and only then actually create the df
-
         &#34;&#34;&#34;
 
-        content = read_content_from_file_in_zip(self.report.fullPath, file_in_zip)
+        content = read_content_from_file_in_zip(self.report.fullPath, file_type)
 
         lines: List[str] = [re.search(ReportReader.FIRST_LINE_PATTERN, content).group()]
         lines.extend(match_group_iter(self.adsh_pattern.finditer(content)))
         data_str = &#34;\n&#34;.join(lines)
-        return pd.read_csv(StringIO(data_str), sep=&#34;\t&#34;, header=0,
-                           names=column_names, usecols=usecols)
+        return pd.read_csv(StringIO(data_str), sep=&#34;\t&#34;, header=0)
 
     def submission_data(self) -&gt; Dict[str, Union[str, int]]:
         &#34;&#34;&#34;
@@ -273,25 +267,19 @@ to prepare and aggregate the raw data</p></div>
         self.report = report
         self.adsh_pattern = re.compile(f&#39;^{report.adsh}.*$&#39;, re.MULTILINE)
 
-    def _read_df_from_raw(self,
-                          file_in_zip: str,
-                          usecols: List[str] = None,
-                          column_names: List[str] = None) \
-            -&gt; pd.DataFrame:
+    def _read_df_from_raw(self, file_type: str) -&gt; pd.DataFrame:
         &#34;&#34;&#34;
         reads the num.txt or pre.txt directly from the zip file into a df.
         uses re to first filter only the rows that belong to the report
         and only then actually create the df
-
         &#34;&#34;&#34;
 
-        content = read_content_from_file_in_zip(self.report.fullPath, file_in_zip)
+        content = read_content_from_file_in_zip(self.report.fullPath, file_type)
 
         lines: List[str] = [re.search(ReportReader.FIRST_LINE_PATTERN, content).group()]
         lines.extend(match_group_iter(self.adsh_pattern.finditer(content)))
         data_str = &#34;\n&#34;.join(lines)
-        return pd.read_csv(StringIO(data_str), sep=&#34;\t&#34;, header=0,
-                           names=column_names, usecols=usecols)
+        return pd.read_csv(StringIO(data_str), sep=&#34;\t&#34;, header=0)
 
     def submission_data(self) -&gt; Dict[str, Union[str, int]]:
         &#34;&#34;&#34;
@@ -508,6 +496,7 @@ def get_report_by_indexreport(cls, index_report: IndexReport):
 <li><code><a title="secfsdstools.e_read.basereportreading.BaseReportReader.get_raw_num_data" href="basereportreading.html#secfsdstools.e_read.basereportreading.BaseReportReader.get_raw_num_data">get_raw_num_data</a></code></li>
 <li><code><a title="secfsdstools.e_read.basereportreading.BaseReportReader.get_raw_pre_data" href="basereportreading.html#secfsdstools.e_read.basereportreading.BaseReportReader.get_raw_pre_data">get_raw_pre_data</a></code></li>
 <li><code><a title="secfsdstools.e_read.basereportreading.BaseReportReader.get_raw_sub_data" href="basereportreading.html#secfsdstools.e_read.basereportreading.BaseReportReader.get_raw_sub_data">get_raw_sub_data</a></code></li>
+<li><code><a title="secfsdstools.e_read.basereportreading.BaseReportReader.merge_pre_and_num" href="basereportreading.html#secfsdstools.e_read.basereportreading.BaseReportReader.merge_pre_and_num">merge_pre_and_num</a></code></li>
 </ul>
 </li>
 </ul>

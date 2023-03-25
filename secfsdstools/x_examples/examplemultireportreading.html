@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.10.0" />
-<title>secfsdstools.x_examples API documentation</title>
-<meta name="description" content="" />
+<title>secfsdstools.x_examples.examplemultireportreading API documentation</title>
+<meta name="description" content="Examples for MultiReportreader" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
 <link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
@@ -19,34 +19,65 @@
 <main>
 <article id="content">
 <header>
-<h1 class="title">Module <code>secfsdstools.x_examples</code></h1>
+<h1 class="title">Module <code>secfsdstools.x_examples.examplemultireportreading</code></h1>
 </header>
 <section id="section-intro">
+<p>Examples for MultiReportreader</p>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">&#34;&#34;&#34;
+Examples for MultiReportreader
+&#34;&#34;&#34;
+from secfsdstools.e_read.multireportreading import MultiReportReader
+
+if __name__ == &#39;__main__&#39;:
+    # The MultiReportreader enables the user to read multiple reports from different zipfiles.
+    # This can either be done by providing a list of adsh numbers or by a list if IndexReport
+    #  instances
+
+    # the following reader reads the 10-K reports of apple from the years 2020,2021, and 2022
+    multi_report_reader = MultiReportReader.get_reports_by_adshs(
+        adshs=[&#39;0000320193-22-000108&#39;, &#39;0000320193-21-000105&#39;, &#39;0000320193-20-000096&#39;])
+
+    # the interface is the same was with the standard reader
+
+    # this returns a list all reports that are read by the reader
+    raw_sub_df = multi_report_reader.get_raw_sub_data()
+    # we expect 3 reports
+    assert len(raw_sub_df) == 3
+
+    # reading the raw content of the num and pre files
+    raw_pre_df = multi_report_reader.get_raw_pre_data()
+    raw_num_df = multi_report_reader.get_raw_num_data()
+
+    # it is the same interface as the other readers. So we return a filtered dataset only containing
+    # the data which are valid at the period-date of the report or the period-date of the report and
+    # the previous year
+
+    # merging the data from num and pre together and produce the primary financial statements
+    # The first dataframe set contains just the data that are valid for the current year
+    current_year_df = multi_report_reader.financial_statements_for_period()
+
+    # The second dataframe contains the data that are for the current and the previous year
+    current_and_previous_year_df = \
+        multi_report_reader.financial_statements_for_period_and_previous_period()
+
+    # Filter for BalanceSheets
+    bs_df = current_and_previous_year_df[
+        current_and_previous_year_df.stmt == &#39;BS&#39;]
+
+    # Filter for IncomeStatement
+    is_df = current_and_previous_year_df[
+        current_and_previous_year_df.stmt == &#39;IS&#39;]
+
+    # Filter for CashFlow
+    cf_df = current_and_previous_year_df[
+        current_and_previous_year_df.stmt == &#39;CF&#39;]</code></pre>
+</details>
 </section>
 <section>
-<h2 class="section-title" id="header-submodules">Sub-modules</h2>
-<dl>
-<dt><code class="name"><a title="secfsdstools.x_examples.examplecompanycollection" href="examplecompanycollection.html">secfsdstools.x_examples.examplecompanycollection</a></code></dt>
-<dd>
-<div class="desc"><p>Example for CompanyCollector</p></div>
-</dd>
-<dt><code class="name"><a title="secfsdstools.x_examples.examplecompanyreading" href="examplecompanyreading.html">secfsdstools.x_examples.examplecompanyreading</a></code></dt>
-<dd>
-<div class="desc"><p>Examples for CompanyReader</p></div>
-</dd>
-<dt><code class="name"><a title="secfsdstools.x_examples.examplecreportreading" href="examplecreportreading.html">secfsdstools.x_examples.examplecreportreading</a></code></dt>
-<dd>
-<div class="desc"><p>Examples for ReportReader</p></div>
-</dd>
-<dt><code class="name"><a title="secfsdstools.x_examples.examplemultireportreading" href="examplemultireportreading.html">secfsdstools.x_examples.examplemultireportreading</a></code></dt>
-<dd>
-<div class="desc"><p>Examples for MultiReportreader</p></div>
-</dd>
-<dt><code class="name"><a title="secfsdstools.x_examples.examplezipreportreading" href="examplezipreportreading.html">secfsdstools.x_examples.examplezipreportreading</a></code></dt>
-<dd>
-<div class="desc"><p>Examples for ZipReportReader</p></div>
-</dd>
-</dl>
 </section>
 <section>
 </section>
@@ -63,16 +94,7 @@
 <ul id="index">
 <li><h3>Super-module</h3>
 <ul>
-<li><code><a title="secfsdstools" href="../index.html">secfsdstools</a></code></li>
-</ul>
-</li>
-<li><h3><a href="#header-submodules">Sub-modules</a></h3>
-<ul>
-<li><code><a title="secfsdstools.x_examples.examplecompanycollection" href="examplecompanycollection.html">secfsdstools.x_examples.examplecompanycollection</a></code></li>
-<li><code><a title="secfsdstools.x_examples.examplecompanyreading" href="examplecompanyreading.html">secfsdstools.x_examples.examplecompanyreading</a></code></li>
-<li><code><a title="secfsdstools.x_examples.examplecreportreading" href="examplecreportreading.html">secfsdstools.x_examples.examplecreportreading</a></code></li>
-<li><code><a title="secfsdstools.x_examples.examplemultireportreading" href="examplemultireportreading.html">secfsdstools.x_examples.examplemultireportreading</a></code></li>
-<li><code><a title="secfsdstools.x_examples.examplezipreportreading" href="examplezipreportreading.html">secfsdstools.x_examples.examplezipreportreading</a></code></li>
+<li><code><a title="secfsdstools.x_examples" href="index.html">secfsdstools.x_examples</a></code></li>
 </ul>
 </li>
 </ul>

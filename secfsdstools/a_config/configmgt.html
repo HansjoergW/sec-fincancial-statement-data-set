@@ -84,6 +84,17 @@ class ConfigurationManager:
         Returns:
             Configuration: configuration instance
         &#34;&#34;&#34;
+
+        # check if a logger is active if not, make sure it logs to the console
+        if len(logging.root.handlers) == 0:
+            logging.basicConfig(
+                level=logging.INFO,
+                format=&#34;%(asctime)s [%(levelname)s] %(module)s  %(message)s&#34;,
+                handlers=[
+                    logging.StreamHandler()
+                ]
+            )
+
         env_config_file = os.getenv(SECFSDSTOOLS_ENV_VAR_NAME)
         if env_config_file:
             LOGGER.info(&#39;read configuration from %s&#39;, env_config_file)
@@ -324,6 +335,17 @@ If the file does not exist, it will create one in the current directory</p></div
         Returns:
             Configuration: configuration instance
         &#34;&#34;&#34;
+
+        # check if a logger is active if not, make sure it logs to the console
+        if len(logging.root.handlers) == 0:
+            logging.basicConfig(
+                level=logging.INFO,
+                format=&#34;%(asctime)s [%(levelname)s] %(module)s  %(message)s&#34;,
+                handlers=[
+                    logging.StreamHandler()
+                ]
+            )
+
         env_config_file = os.getenv(SECFSDSTOOLS_ENV_VAR_NAME)
         if env_config_file:
             LOGGER.info(&#39;read configuration from %s&#39;, env_config_file)
@@ -611,6 +633,17 @@ def read_config_file() -&gt; Configuration:
     Returns:
         Configuration: configuration instance
     &#34;&#34;&#34;
+
+    # check if a logger is active if not, make sure it logs to the console
+    if len(logging.root.handlers) == 0:
+        logging.basicConfig(
+            level=logging.INFO,
+            format=&#34;%(asctime)s [%(levelname)s] %(module)s  %(message)s&#34;,
+            handlers=[
+                logging.StreamHandler()
+            ]
+        )
+
     env_config_file = os.getenv(SECFSDSTOOLS_ENV_VAR_NAME)
     if env_config_file:
         LOGGER.info(&#39;read configuration from %s&#39;, env_config_file)

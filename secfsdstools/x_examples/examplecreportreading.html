@@ -49,6 +49,14 @@ def run():
     raw_pre_df = apple_10k_2022_reader.get_raw_pre_data()
     raw_num_df = apple_10k_2022_reader.get_raw_num_data()
 
+    # just merge the data of the num and pre dataframes, without pivoting the data
+    # -&gt; the ddate stays as column
+    # setting the use_period parameter to true, we will just keep the data for the current year.
+    # if we also set the use_previous_period parameter to True, we would also keep the data
+    # of the previous year.
+    apple_10k_2020_current_year_merged = apple_10k_2022_reader.merge_pre_and_num(use_period=True)
+
+
     # merging the data from num and pre together and produce the primary financial statements
     apple_10k_2022_current_year_df = apple_10k_2022_reader.financial_statements_for_period()
     apple_10k_2022_current_and_previous_year_df = \
@@ -101,6 +109,14 @@ if __name__ == &#39;__main__&#39;:
     # reading the raw content of the num and pre files
     raw_pre_df = apple_10k_2022_reader.get_raw_pre_data()
     raw_num_df = apple_10k_2022_reader.get_raw_num_data()
+
+    # just merge the data of the num and pre dataframes, without pivoting the data
+    # -&gt; the ddate stays as column
+    # setting the use_period parameter to true, we will just keep the data for the current year.
+    # if we also set the use_previous_period parameter to True, we would also keep the data
+    # of the previous year.
+    apple_10k_2020_current_year_merged = apple_10k_2022_reader.merge_pre_and_num(use_period=True)
+
 
     # merging the data from num and pre together and produce the primary financial statements
     apple_10k_2022_current_year_df = apple_10k_2022_reader.financial_statements_for_period()

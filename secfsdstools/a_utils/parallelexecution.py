@@ -77,8 +77,6 @@ class ParallelExecutor(Generic[IT, PT, OT]):
             else:
                 self.min_roundtrip_time = float(processes) / max_calls_per_sec
 
-        self.pool = Pool(self.processes)
-
         self.get_entries_function: Optional[Callable[[], List[IT]]] = None
         self.process_element_function: Optional[Callable[[IT], PT]] = None
         self.post_process_chunk_function: Optional[Callable[[List[PT]], List[OT]]] = None
@@ -127,7 +125,8 @@ class ParallelExecutor(Generic[IT, PT, OT]):
         return result
 
     def _execute_parallel(self, chunk: List[IT]) -> List[PT]:
-        return self.pool.map(self._process_throttled, chunk)
+        with Pool(self.processes) as pool:
+            return pool.map(self._process_throttled, chunk)
 
     def _execute_serial(self, chunk: List[IT]) -> List[PT]:
         results: List[PT] = []

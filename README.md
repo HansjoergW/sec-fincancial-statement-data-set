@@ -27,13 +27,16 @@ This library simplifies the process of working with this data and provides a
 convenient way to extract information from the primary financial statements - the balance sheet, income statement, and
 statement of cash flows.
 
-It also provides an integration with the https://rapidapi.com/hansjoerg.wingeier/api/daily-sec-financial-statement-dataset API 
+It also provides an integration with
+the https://rapidapi.com/hansjoerg.wingeier/api/daily-sec-financial-statement-dataset API
 and therefore providing a possibility to receive the latest filings on a daily basis and not just every three months.
 
 # Links
+
 * [API Documentation](https://hansjoergw.github.io/sec-fincancial-statement-data-set/secfsdstools/)
 * [QuickStart Jupyter Notebook](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/01_quickstart.ipynb)
-* [Connect to the daily-sec-financial-statement-dataset Notebook](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/v0.3.0/notebooks/02_connect_rapidapi.ipynb) 
+* [Connect to the daily-sec-financial-statement-dataset Notebook](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/02_connect_rapidapi.ipynb)
+* [Explore the data with an interactive Notebook](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/03_explore_with_interactive_notebook.ipynb)
 
 # Installation
 
@@ -76,7 +79,8 @@ The db directory is the directory in which the sqllite db is created.
 The useragentemail is used in the requests made to the sec.gov website.
 
 If you call `update()` without a configuration file, an error message will appear. However, a default config file will
-be created in the user home directory. If you are satisfied with the default settings (download directory is set to "<home>
+be created in the user home directory. If you are satisfied with the default settings (download directory is set
+to "<home>
 /secfsdstools/data/dld" and the database directory is set to "secfsdstools/data/db"), you can simply rerun `update()`.
 
 # Downloading the data files from sec and index the content
@@ -198,7 +202,7 @@ ___
 **Note:** the code in this chapter is available in the module `secfsdstools.x_examples.examplecreportreading`.
 ___
 
-The ReportReader class enables us to access the real data of a report. It provides two class methods which
+The ReportReader class enables us to access the real data of a single report. It provides two class methods which
 help to create a ReportReader either by the unique report id "adsh" or by an instance of IndexReport
 (which is returned by one of the methods shown in the last section).
 
@@ -226,8 +230,20 @@ In order to get the raw content of them, there are the following methods availab
 However, the data is more useful if the data of these two datasets is merged together, so that
 the primary financial statements (BalanceSheet, IncomeStatement, CashFlow) can be reproduced.
 
-There are two methods, which do exactly do that. The first one returns only the data of the current period and the second
-also returns the content for the previous year. (provided that this information is present in the report)
+There are several methods that can be used. First, let's have a look at the `merge_pre_and_num` method.
+
+```
+    # just merge the data of the num and pre dataframes, without pivoting the data -> the ddate stays as column
+    # setting the use_period parameter to true, we will just keep the data for the current year.
+    # if we also set the use_previous_period parameter to True, we would also keep the data of the previous year.
+    apple_10k_2020_current_year_merged = apple_10k_2022_reader.merge_pre_and_num(use_period=True)
+```
+
+Second, let's hava a look at the methods, which also pivot the data. This means that every ddate value has its own
+column.
+
+There are two methods, which do exactly do that. The first one returns only the data of the current period and the
+second also returns the content for the previous year. (provided that this information is present in the report)
 
 ```
     # merging the data from num and pre together and produce the primary financial statements
@@ -257,9 +273,21 @@ If you compare the content of the balance sheet dataframe with
 [apple's 10-K report from 2022](https://www.sec.gov/ix?doc=/Archives/edgar/data/320193/000032019322000108/aapl-20220924.htm#ief5efb7a728d4285b6b4af1e880101bc_85)
 you see that the structure and the content is indeed the same.
 
+The following readers, which share the basic interface of the ReportReader (methods `merge_pre_and_num`
+, `financial_statements_for_period`,
+`financial_statements_for_period_and_previous_period`), are also available. Please have a look at the Quickstart Jupyter
+Notebook to get an idea about how they can be used.
+
+* ZipReportReader <br> Reads all reports of a single zipfile at once
+* MultiReportReader <br> Reads several reports of different zipfiles and concats their data in the same dataframes.
+* CompanyCollector <br> Reads all reports of one company from different zipfile and concats the data into the same dataframes.
+
+
 Also checkout the example Jupyter Notebooks:
+
 * [QuickStart Jupyter Notebook](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/01_quickstart.ipynb)
 * [Connect to the daily-sec-financial-statement-dataset Notebook](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/02_connect_rapidapi.ipynb) 
+* [Explore the data with an interactive Notebook](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/03_explore_with_interactive_notebook.ipynb)
 
 
 

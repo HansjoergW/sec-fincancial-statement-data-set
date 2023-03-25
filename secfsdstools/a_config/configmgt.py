@@ -55,6 +55,17 @@ class ConfigurationManager:
         Returns:
             Configuration: configuration instance
         """
+
+        # check if a logger is active if not, make sure it logs to the console
+        if len(logging.root.handlers) == 0:
+            logging.basicConfig(
+                level=logging.INFO,
+                format="%(asctime)s [%(levelname)s] %(module)s  %(message)s",
+                handlers=[
+                    logging.StreamHandler()
+                ]
+            )
+
         env_config_file = os.getenv(SECFSDSTOOLS_ENV_VAR_NAME)
         if env_config_file:
             LOGGER.info('read configuration from %s', env_config_file)

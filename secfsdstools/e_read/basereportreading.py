@@ -65,9 +65,11 @@ class BaseReportReader(ABC):
         inside the object. used in a lazy loading manner.
         """
         if self.num_df is None:
-            self.num_df = self._read_df_from_raw(file_in_zip=NUM_TXT)
-            self.pre_df = self._read_df_from_raw(file_in_zip=PRE_TXT)
-            self.sub_df = self._read_df_from_raw(file_in_zip=SUB_TXT)
+            self.num_df = self._read_df_from_raw(file_type=NUM_TXT)
+            # pandas pivot works better if coreg is not nan, so we set it here to a simple dash
+            self.num_df.loc[self.num_df.coreg.isna(), 'coreg'] = '-'
+            self.pre_df = self._read_df_from_raw(file_type=PRE_TXT)
+            self.sub_df = self._read_df_from_raw(file_type=SUB_TXT)
             self.adsh_form_map = \
                 self.sub_df[['adsh', 'form']].set_index('adsh').to_dict()['form']
             self.adsh_period_map = \
@@ -107,16 +109,17 @@ class BaseReportReader(ABC):
         self._read_raw_data()  # lazy load the data if necessary
         return self.sub_df.copy()
 
-    def financial_statements_for_tags(self,
-                                      use_period: bool = True,
-                                      use_previous_period: bool = False,
-                                      tags: Optional[List[str]] = None,
-                                      ) -> pd.DataFrame:
+    def merge_pre_and_num(self,
+                          use_period: bool = True,
+                          use_previous_period: bool = False,
+                          tags: Optional[List[str]] = None,
+                          ) -> pd.DataFrame:
         """
-        formats the raw data in a way, that it reflects the presentation of the
-        primary financial statements (balance sheet, income statement, cash flow)
-        of the original filed report. Meaning the statements are grouped per report
-        and per type and have the same order as the appear in the report itself.
+        merges the raw data of pre and num together.
+        depending on the parameters, it just uses the  period date and the previouis period date.
+        furthermore, also the tags could be restricted.
+
+        Note: default for use_period is True
 
         Args:
             use_period (bool, True): indicates that only the values are filtered which
@@ -128,11 +131,10 @@ class BaseReportReader(ABC):
 
             tags (List[str], optional, None): if set, only the tags listet in this
             parameter are returned
-
         Returns:
-            pd.DataFrame: the filtered and transformed data
-        """
+            pd.DataFrame: pandas dataframe
 
+        """
         self._read_raw_data()  # lazy load the data if necessary
         num_df_filtered_for_dates = self.num_df
 
@@ -161,15 +163,51 @@ class BaseReportReader(ABC):
                                      pre_filtered_for_tags,
                                      on=['adsh', 'tag', 'version'])
 
+        return num_pre_merged_df
+
+    def financial_statements_for_tags(self,
+                                      use_period: bool = True,
+                                      use_previous_period: bool = False,
+                                      tags: Optional[List[str]] = None,
+                                      ) -> pd.DataFrame:
+        """
+        formats the raw data in a way, that it reflects the presentation of the
+        primary financial statements (balance sheet, income statement, cash flow)
+        of the original filed report. Meaning the statements are grouped per report
+        and per type and have the same order as they appear in the report itself.
+        moreover, the data is pivoted, so that every ddate has its own column
+
+        Args:
+            use_period (bool, True): indicates that only the values are filtered which
+            ddates machtes the period of the report.
+
+            use_previous_period (bool, False): indicates that only the values  are filtered
+            which ddates matches the period of the report and the previous year. If this is set
+            to True, then the value of use_period is ignored
+
+            tags (List[str], optional, None): if set, only the tags listet in this
+            parameter are returned
+
+        Returns:
+            pd.DataFrame: the filtered and transformed data
+        """
+
+        ## transform the data
+        # merge num and pre together. only rows in num are considered for which entries in pre exist
+        num_pre_merged_df = self.merge_pre_and_num(use_period=use_period,
+                                                   use_previous_period=use_previous_period,
+                                                   tags=tags)
+
         # pivot the data, so that ddate appears as a column
         num_pre_merged_pivot_df = num_pre_merged_df.pivot_table(
-            index=['adsh', 'tag', 'version', 'stmt', 'report', 'line', 'uom', 'negating', 'inpth'],
+            index=['adsh', 'coreg', 'tag', 'version', 'stmt',
+                   'report', 'line', 'uom', 'negating', 'inpth'],
             columns='ddate',
             values='value')
 
         # some cleanup and ordering
         num_pre_merged_pivot_df.rename_axis(None, axis=1, inplace=True)
-        num_pre_merged_pivot_df.sort_values(['adsh', 'stmt', 'report', 'line', 'inpth'],
+        num_pre_merged_pivot_df.sort_values(['adsh', 'coreg', 'stmt', 'report', 'line', 'inpth'],
                                             inplace=True)
         num_pre_merged_pivot_df.reset_index(drop=False, inplace=True)
 
@@ -214,8 +252,13 @@ class BaseReportReader(ABC):
 
     @abstractmethod
     def _read_df_from_raw(self,
-                          file_in_zip: str,
-                          usecols: List[str] = None,
-                          column_names: List[str] = None) \
+                          file_type: str) \
             -> pd.DataFrame:
-        pass
+        """
+
+        Args:
+            file_type: SUB_TXT, PRE_TXT, or NUM_TXT
+
+        Returns:
+            pd.DataFrame: the content for the read filetype
+        """

@@ -76,4 +76,3 @@ class BaseDownloader(ABC):
         executor.set_post_process_chunk_function(lambda x: x)
 
         self.result = executor.execute()
-        executor.pool.close()

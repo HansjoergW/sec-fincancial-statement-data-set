@@ -74,25 +74,19 @@ class ReportReader(BaseReportReader):
         self.report = report
         self.adsh_pattern = re.compile(f'^{report.adsh}.*$', re.MULTILINE)
 
-    def _read_df_from_raw(self,
-                          file_in_zip: str,
-                          usecols: List[str] = None,
-                          column_names: List[str] = None) \
-            -> pd.DataFrame:
+    def _read_df_from_raw(self, file_type: str) -> pd.DataFrame:
         """
         reads the num.txt or pre.txt directly from the zip file into a df.
         uses re to first filter only the rows that belong to the report
         and only then actually create the df
-
         """
 
-        content = read_content_from_file_in_zip(self.report.fullPath, file_in_zip)
+        content = read_content_from_file_in_zip(self.report.fullPath, file_type)
 
         lines: List[str] = [re.search(ReportReader.FIRST_LINE_PATTERN, content).group()]
         lines.extend(match_group_iter(self.adsh_pattern.finditer(content)))
         data_str = "\n".join(lines)
-        return pd.read_csv(StringIO(data_str), sep="\t", header=0,
-                           names=column_names, usecols=usecols)
+        return pd.read_csv(StringIO(data_str), sep="\t", header=0)
 
     def submission_data(self) -> Dict[str, Union[str, int]]:
         """

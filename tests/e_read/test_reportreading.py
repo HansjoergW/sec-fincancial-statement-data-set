@@ -32,16 +32,16 @@ def test_financial_statements(reportreader):
     # read only for the actual period
     fin_stmts_df = reportreader.financial_statements_for_period()
 
-    assert fin_stmts_df.shape == (74, 11)
+    assert fin_stmts_df.shape == (74, 12)
 
     # read for the actual period and the previous period
     fin_stmts_df = reportreader.financial_statements_for_period_and_previous_period()
 
-    assert fin_stmts_df.shape == (74, 12)
+    assert fin_stmts_df.shape == (74, 13)
 
     # read only for the actual period
     fin_stmts_df = reportreader.financial_statements_for_period(tags=['Assets'])
-    assert fin_stmts_df.shape == (1, 11)
+    assert fin_stmts_df.shape == (1, 12)
 
 
 def test_submission_data(reportreader):

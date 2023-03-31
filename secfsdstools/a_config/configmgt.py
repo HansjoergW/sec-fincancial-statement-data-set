@@ -22,6 +22,7 @@ class Configuration:
     """ Basic configuration settings """
     download_dir: str
     db_dir: str
+    parquet_dir: str
     user_agent_email: str
     rapid_api_key: Optional[str] = None
     rapid_api_plan: Optional[str] = 'basic'
@@ -34,7 +35,8 @@ class Configuration:
 DEFAULT_CONFIGURATION = Configuration(
     download_dir=os.path.join(os.path.expanduser('~'), 'secfsdstools/data/dld'),
     db_dir=os.path.join(os.path.expanduser('~'), 'secfsdstools/data/db'),
-    user_agent_email='your.email@goeshere.com'
+    parquet_dir=os.path.join(os.path.expanduser('~'), 'secfsdstools/data/parquet'),
+    user_agent_email='your.email@goeshere.com',
 )
 
 
@@ -116,6 +118,7 @@ class ConfigurationManager:
         config = Configuration(
             download_dir=config['DEFAULT'].get('DownloadDirectory', ),
             db_dir=config['DEFAULT'].get('DbDirectory'),
+            parquet_dir=config['DEFAULT'].get('ParquetDirectory'),
             user_agent_email=config['DEFAULT'].get('UserAgentEmail'),
             rapid_api_key=config['DEFAULT'].get('RapidApiKey', None),
             rapid_api_plan=config['DEFAULT'].get('RapidApiPlan', 'basic')
@@ -166,6 +169,13 @@ class ConfigurationManager:
             LOGGER.info("Download directory does not exist, creating it at %s", config.download_dir)
             os.makedirs(config.download_dir, exist_ok=True)
 
+        if not os.path.isdir(config.parquet_dir):
+            LOGGER.info("Parquet directory does not exist, creating it at %s", config.parquet_dir)
+            os.makedirs(config.parquet_dir, exist_ok=True)
+            os.makedirs(os.path.join(config.parquet_dir, 'quarter'), exist_ok=True)
+            os.makedirs(os.path.join(config.parquet_dir, 'daily'), exist_ok=True)
+
+
         if not ConfigurationManager._is_valid_email(config.user_agent_email):
             messages.append(
                 f'The defined UserAgentEmail is not a valid format: {config.user_agent_email}')
@@ -215,6 +225,7 @@ class ConfigurationManager:
         config = configparser.ConfigParser()
         config['DEFAULT'] = {'DownloadDirectory': configuration.download_dir,
                              'DbDirectory': configuration.db_dir,
+                             'ParquetDirectory': configuration.parquet_dir,
                              'UserAgentEmail': configuration.user_agent_email}
         with open(file_path, 'w', encoding="utf8") as configfile:
             config.write(configfile)

@@ -22,6 +22,19 @@ def get_filenames_in_directory(filter_string: str) -> List[str]:
     return [os.path.basename(x) for x in zip_list]
 
 
+def get_directories_in_directory(directory: str) -> List[str]:
+    """
+    returns a list with the subdirectory in a directory.
+
+    Returns:
+        List[str]: list subdirectories in the directory
+    """
+    subdirectories: List[str] = [
+        entry.path for entry in os.scandir(directory) if entry.is_dir()
+    ]
+    return subdirectories
+
+
 def read_df_from_file_in_zip(zip_file: str, file_to_extract: str,
                              dtype: Optional[Dict[str, object]] = None,
                              usecols: Optional[List[str]] = None) -> pd.DataFrame:

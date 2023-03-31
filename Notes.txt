@@ -45,6 +45,36 @@ Automatisierter Ablauf mit GitHubAction
 --------------------------------------
 -> Template benützen (neuer Workflow), bzw. https://github.com/pypa/gh-action-pypi-publish
 
+
+Parquet Format
+--------------
+Wo Schritt einbauen, so dass es in das bestehende reinpasst?
+- Variante -> nach download
+  -> prüfen ob file im Parquet Verzeichnis existiert und falls nein, verarbeiten
+  -> Vorteil, geht nur auf bestehende Verzeichnis und Struktur
+  => bessere Variante
+
+- Variante -> mit Status, passt aber nicht in den Ablauf
+
+Wie Processing machen?
+- Variante, wie bisher über das ZipFile und Parquet Storage nur "berechnen"
+
+- Processing nur aufgrund von Parquet und Inhalte von Zip löschen, bzw. anpassen, sodass nur noch parquet infos in der index_reports
+  Tabelle sind?
+
+=>
+-> Evtl. einen Task machen, der vorgängig läuft und das bestehende konvertiert,
+   bzw. Inhalt der Tabellen löscht und neu aufbaut -> so quasi nach download zip aufsetzt,
+   umwandelt nach parquet und neu indexiert
+   -> neu konvertieren -> überall status zurücksetzen -> quasi auf leer und danach zu konvertieren nach parquet
+      -> und danach neu prozessieren.
+
+
+
+
+
+
+
 Download Stats
 -----------------
 

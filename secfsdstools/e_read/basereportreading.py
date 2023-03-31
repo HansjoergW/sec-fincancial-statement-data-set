@@ -7,15 +7,7 @@ from typing import List, Optional, Dict
 
 import pandas as pd
 
-NUM_TXT = "num.txt"
-PRE_TXT = "pre.txt"
-SUB_TXT = "sub.txt"
-
-NUM_COLS = ['adsh', 'tag', 'version', 'coreg', 'ddate', 'qtrs', 'uom', 'value', 'footnote']
-PRE_COLS = ['adsh', 'report', 'line', 'stmt', 'inpth', 'rfile',
-            'tag', 'version', 'plabel', 'negating']
-
-SUB_COLS = ['adsh', 'form', 'period', 'filed', 'cik']
+from secfsdstools.a_utils.constants import NUM_TXT, PRE_TXT, SUB_TXT, SUB_COLS, NUM_COLS, PRE_COLS
 
 
 def match_group_iter(match_iter):

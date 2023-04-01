@@ -146,6 +146,8 @@ class ParallelExecutor(Generic[IT, PT, OT]):
         last_missing = None
         missing: List[IT] = self.get_entries_function()
         result_list: List[OT] = []
+        if len(missing) == 0:
+            return [], []
 
         # we retry as long as we were able to process additional entries with in the while loop.
         while (last_missing is None) or (last_missing > len(missing)):
@@ -176,5 +178,7 @@ class ParallelExecutor(Generic[IT, PT, OT]):
             # call get_entries_function again to check whether there have been
             # entries that couldn't be processed
             missing = self.get_entries_function()
+            if len(missing) == 0:
+                break
 
         return result_list, missing

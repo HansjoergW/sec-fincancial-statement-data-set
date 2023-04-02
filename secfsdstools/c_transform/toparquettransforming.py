@@ -12,7 +12,7 @@ from secfsdstools.a_utils.parallelexecution import ParallelExecutor
 
 LOGGER = logging.getLogger(__name__)
 
-todo logging unit tests
+# todo unit tests
 
 class ToParquetTransformer:
 
@@ -40,7 +40,6 @@ class ToParquetTransformer:
         target_path = os.path.join(self.parquet_dir, self.file_type, zip_file_name)
         try:
             os.makedirs(target_path, exist_ok=True)
-            print(zip_file_name)
             sub_df = read_df_from_file_in_zip(zip_file=zip_file_path, file_to_extract=SUB_TXT, dtype=SUB_DTYPE)
             pre_df = read_df_from_file_in_zip(zip_file=zip_file_path, file_to_extract=PRE_TXT, dtype=PRE_DTYPE)
             num_df = read_df_from_file_in_zip(zip_file=zip_file_path, file_to_extract=NUM_TXT, dtype=NUM_DTYPE)
@@ -57,6 +56,7 @@ class ToParquetTransformer:
             return self._calculate_not_transformed()
 
         def process_element(element: Tuple[str, str]) -> Tuple[str, str]:
+            LOGGER.info('processing %s', element[0])
             self._transform_zip_file(element[0], element[1])
             return element
 

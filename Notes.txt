@@ -46,6 +46,16 @@ Automatisierter Ablauf mit GitHubAction
 -> Template benützen (neuer Workflow), bzw. https://github.com/pypa/gh-action-pypi-publish
 
 
+Logging
+-------
+Multiprocessing
+-> jeder Prozess hat seinen eigenen logger, dieser muss konfiguriert werden.
+-> entweder hat man irgendwo ein config, die man setzen kann, oder mann manuell die config kopieren,
+   aber nicht in einem einzigen Schritt
+-> in den parallen prozessen kann aber auch mit dem definierten LOGGER geschrieben werden
+
+
+
 Parquet Format
 --------------
 Wo Schritt einbauen, so dass es in das bestehende reinpasst?

@@ -81,6 +81,13 @@ class ParallelExecutor(Generic[IT, PT, OT]):
         self.process_element_function: Optional[Callable[[IT], PT]] = None
         self.post_process_chunk_function: Optional[Callable[[List[PT]], List[OT]]] = None
 
+        if len(logging.root.handlers) > 0:
+            formatter = logging.root.handlers[0].formatter
+            # Get the format string of the formatter
+            self.format_string = formatter._fmt
+        else:
+            self.format_string = "%(asctime)s [%(levelname)s] %(module)s  %(message)s"
+
     def set_get_entries_function(self, get_entries: Callable[[], List[IT]]):
         """
         set the function which returns the list of the items that have not been processed.
@@ -124,9 +131,17 @@ class ParallelExecutor(Generic[IT, PT, OT]):
 
         return result
 
+    def _process_throttled_parallel(self, data: IT) -> PT:
+        logger = logging.getLogger()
+        logger.setLevel(logging.INFO)
+        handler = logging.StreamHandler()
+        handler.setFormatter(logging.Formatter(self.format_string))
+        logger.addHandler(handler)
+        return self._process_throttled(data)
+
     def _execute_parallel(self, chunk: List[IT]) -> List[PT]:
         with Pool(self.processes) as pool:
-            return pool.map(self._process_throttled, chunk)
+            return pool.map(self._process_throttled_parallel, chunk)
 
     def _execute_serial(self, chunk: List[IT]) -> List[PT]:
         results: List[PT] = []

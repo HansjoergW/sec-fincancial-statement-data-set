@@ -53,7 +53,8 @@ Multiprocessing
 -> entweder hat man irgendwo ein config, die man setzen kann, oder mann manuell die config kopieren,
    aber nicht in einem einzigen Schritt
 -> in den parallen prozessen kann aber auch mit dem definierten LOGGER geschrieben werden
-
+-> Parallel Executor wird einfach das format des ersten handlers kopiert und damit ein StreamHandler konfiguriert,
+   so dass wenigstens eine Ausgabe vorhanden ist.
 
 
 Parquet Format

@@ -1,11 +1,8 @@
 import logging
-import logging.config
 
 from secfsdstools.c_transform.toparquettransforming import ToParquetTransformer
 
-
 if __name__ == '__main__':
-
     logging.basicConfig(
         level=logging.INFO,
         format="%(asctime)s [%(levelname)s] %(module)s  %(message)s",
@@ -13,8 +10,6 @@ if __name__ == '__main__':
             logging.StreamHandler()
         ]
     )
-
-
 
     zip_dir = "../data/dld"
     parquet_dir = "../data/parquet"

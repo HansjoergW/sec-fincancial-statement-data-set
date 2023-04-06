@@ -59,7 +59,8 @@ def test_cm_get_zip_by_name():
         zipreader = ZipReportReader.get_zip_by_name(name="2010q1.zip",
                                                     configuration=Configuration(db_dir="",
                                                                                 download_dir="",
-                                                                                user_agent_email=""))
+                                                                                user_agent_email="",
+                                                                                parquet_dir=""))
         zipreader._read_raw_data()
         assert zipreader.get_raw_num_data().shape == (151692, 9)
 

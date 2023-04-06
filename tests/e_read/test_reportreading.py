@@ -70,6 +70,7 @@ def test_cm_get_report_by_adsh():
             adsh=APPLE_ADSH_10Q_2010_Q1,
             configuration=Configuration(db_dir="",
                                         download_dir="",
-                                        user_agent_email=""))
+                                        user_agent_email="",
+                                        parquet_dir=""))
         reportreader._read_raw_data()
         assert reportreader.num_df.shape == (145, 9)

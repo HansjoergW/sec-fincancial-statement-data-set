@@ -3,7 +3,8 @@ Examples for MultiReportreader
 """
 from secfsdstools.e_read.multireportreading import MultiReportReader
 
-if __name__ == '__main__':
+
+def run():
     # The MultiReportreader enables the user to read multiple reports from different zipfiles.
     # This can either be done by providing a list of adsh numbers or by a list if IndexReport
     #  instances
@@ -46,3 +47,7 @@ if __name__ == '__main__':
     # Filter for CashFlow
     cf_df = current_and_previous_year_df[
         current_and_previous_year_df.stmt == 'CF']
+
+
+if __name__ == '__main__':
+    run()

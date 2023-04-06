@@ -26,6 +26,7 @@ def test_get_company_reader():
     reader = CompanyReader.get_company_reader(cik=123,
                                               configuration=Configuration(db_dir="",
                                                                           download_dir="",
-                                                                          user_agent_email=""))
+                                                                          user_agent_email="",
+                                                                          parquet_dir=""))
 
     assert reader is not None

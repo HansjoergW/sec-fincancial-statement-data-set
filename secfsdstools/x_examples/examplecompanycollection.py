@@ -3,7 +3,7 @@ Example for CompanyCollector
 """
 from secfsdstools.e_read.companycollecting import CompanyReportCollector
 
-if __name__ == '__main__':
+def run():
     # The CompanyReportCollector enables the user to read multiple reports of the
     # same company (cik number) from different zipfiles. This can be done by providing
     # a cik number and the list of forms that should be read
@@ -55,3 +55,6 @@ if __name__ == '__main__':
 
     # let's see, how the Value for Assets has increased over the years
     print(assets_value_for_all_years_df.value.tolist())
+
+if __name__ == '__main__':
+    run()

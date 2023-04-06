@@ -32,13 +32,13 @@ class IndexFileProcessingState:
     processTime: str  # pylint: disable=C0103
 
 
-class DBIndexingAccessor(DB):
+class DBIndexingAccessorBase(DB):
     """ Dataaccess class for index related tables"""
-    INDEX_REPORTS_TABLE = 'index_reports'
-    INDEX_PROCESSING_TABLE = 'index_file_processing_state'
 
-    def __init__(self, db_dir: str):
+    def __init__(self, db_dir: str, index_reports_table: str, index_processing_table: str):
         super().__init__(db_dir=db_dir)
+        self.index_reports_table = index_reports_table
+        self.index_processing_table = index_processing_table
 
     def read_all_indexreports(self) -> List[IndexReport]:
         """
@@ -47,7 +47,7 @@ class DBIndexingAccessor(DB):
         Returns:
             List[IndexReport]: List with IndexReport objects
         """
-        sql = f'SELECT * FROM {self.INDEX_REPORTS_TABLE}'
+        sql = f'SELECT * FROM {self.index_reports_table}'
         return self.execute_fetchall_typed(sql, IndexReport)
 
     def read_all_indexreports_df(self) -> pd.DataFrame:
@@ -57,7 +57,7 @@ class DBIndexingAccessor(DB):
         Returns:
             pd.DataFrame: pandas DataFrame
         """
-        sql = f'SELECT * FROM {self.INDEX_REPORTS_TABLE}'
+        sql = f'SELECT * FROM {self.index_reports_table}'
         return self.execute_read_as_df(sql)
 
     def read_all_indexfileprocessing(self) -> List[IndexFileProcessingState]:
@@ -67,7 +67,7 @@ class DBIndexingAccessor(DB):
         Returns:
             List[IndexFileProcessingState]: List with IndexFileProcessingState objects
         """
-        sql = f'SELECT * FROM {self.INDEX_PROCESSING_TABLE}'
+        sql = f'SELECT * FROM {self.index_processing_table}'
         return self.execute_fetchall_typed(sql, IndexFileProcessingState)
 
     def read_all_indexfileprocessing_df(self) -> pd.DataFrame:
@@ -77,7 +77,7 @@ class DBIndexingAccessor(DB):
         Returns:
             pd.DataFrame: pandas DataFrame
         """
-        sql = f'SELECT * FROM {self.INDEX_PROCESSING_TABLE}'
+        sql = f'SELECT * FROM {self.index_processing_table}'
         return self.execute_read_as_df(sql)
 
     def read_index_file_for_filename(self, filename: str) -> IndexFileProcessingState:
@@ -89,7 +89,7 @@ class DBIndexingAccessor(DB):
         Returns:
             IndexFileProcessingState: the processing state instance
         """
-        sql = f"SELECT * FROM {self.INDEX_PROCESSING_TABLE} WHERE fileName = '{filename}'"
+        sql = f"SELECT * FROM {self.index_processing_table} WHERE fileName = '{filename}'"
         return self.execute_fetchall_typed(sql, IndexFileProcessingState)[0]
 
     def insert_indexreport(self, data: IndexReport):
@@ -98,7 +98,7 @@ class DBIndexingAccessor(DB):
         Args:
             data (IndexReport): IndexReport data object
         """
-        sql = self.create_insert_statement_for_dataclass(self.INDEX_REPORTS_TABLE, data)
+        sql = self.create_insert_statement_for_dataclass(self.index_reports_table, data)
         self.execute_single(sql)
 
     def append_indexreport_df(self, dataframe: pd.DataFrame):
@@ -108,7 +108,7 @@ class DBIndexingAccessor(DB):
         Args:
             dataframe (pd.DataFrame): the dataframe to be appended
         """
-        self.append_df_to_table(table_name=self.INDEX_REPORTS_TABLE, dataframe=dataframe)
+        self.append_df_to_table(table_name=self.index_reports_table, dataframe=dataframe)
 
     def insert_indexfileprocessing(self, data: IndexFileProcessingState):
         """
@@ -117,7 +117,7 @@ class DBIndexingAccessor(DB):
         Args:
             data (IndexFileProcessingState): IndexFileProcessingState data object to insert
         """
-        sql = self.create_insert_statement_for_dataclass(self.INDEX_PROCESSING_TABLE, data)
+        sql = self.create_insert_statement_for_dataclass(self.index_processing_table, data)
         self.execute_single(sql)
 
     def find_latest_company_report(self, cik: int) -> IndexReport:
@@ -132,7 +132,7 @@ class DBIndexingAccessor(DB):
         """
 
         sql = f"""SELECT *
-                    FROM {self.INDEX_REPORTS_TABLE}
+                    FROM {self.index_reports_table}
                     WHERE cik = {cik} and originFileType = 'quarter'
                     ORDER BY period DESC"""
         return self.execute_fetchall_typed(sql, IndexReport)[0]
@@ -149,7 +149,7 @@ class DBIndexingAccessor(DB):
         # sorting by originfiletype, so we prefer official data from SEC,
         # over the daily files, in case both should be present.
         sql = f"""SELECT *
-                    FROM {self.INDEX_REPORTS_TABLE}
+                    FROM {self.index_reports_table}
                     WHERE adsh = '{adsh}'
                     ORDER BY originFileType DESC"""
         return self.execute_fetchall_typed(sql, IndexReport)[0]
@@ -168,7 +168,7 @@ class DBIndexingAccessor(DB):
         # sorting by originfiletype, so we prefer official data from SEC,
         # over the daily files, in case both should be present.
         sql = f"""SELECT *
-                    FROM {self.INDEX_REPORTS_TABLE}
+                    FROM {self.index_reports_table}
                     WHERE adsh in ({adshs_str})
                     ORDER BY adsh, originFileType DESC"""
 
@@ -198,7 +198,7 @@ class DBIndexingAccessor(DB):
         Returns:
             List[IndexReport]
         """
-        sql = f'SELECT * FROM {self.INDEX_REPORTS_TABLE} WHERE cik = {cik}'
+        sql = f'SELECT * FROM {self.index_reports_table} WHERE cik = {cik}'
         if forms is not None:
             forms_str = ", ".join(["'" + x.upper() + "'" for x in forms])
             sql = sql + f' and form in ({forms_str}) '
@@ -220,7 +220,7 @@ class DBIndexingAccessor(DB):
         Returns:
             pd.DataFrame
         """
-        sql = f'SELECT * FROM {self.INDEX_REPORTS_TABLE} WHERE cik = {cik}'
+        sql = f'SELECT * FROM {self.index_reports_table} WHERE cik = {cik}'
         if forms is not None:
             forms_str = ", ".join(["'" + x.upper() + "'" for x in forms])
             sql = sql + f' and form in ({forms_str}) '
@@ -240,7 +240,27 @@ class DBIndexingAccessor(DB):
             pd.DataFrame: with columns name and cik
         """
         sql = f"""
-                SELECT DISTINCT name, cik from {self.INDEX_REPORTS_TABLE} 
+                SELECT DISTINCT name, cik from {self.index_reports_table} 
                 WHERE name like '%{name_part}%' 
                 ORDER BY name"""
         return self.execute_read_as_df(sql)
+
+
+class DBIndexingAccessor(DBIndexingAccessorBase):
+    """ Dataaccess class for index related tables"""
+    INDEX_REPORTS_TABLE = 'index_reports'
+    INDEX_PROCESSING_TABLE = 'index_file_processing_state'
+
+    def __init__(self, db_dir: str):
+        super().__init__(db_dir=db_dir, index_reports_table=self.INDEX_REPORTS_TABLE,
+                         index_processing_table=self.INDEX_PROCESSING_TABLE)
+
+
+class ParquetDBIndexingAccessor(DBIndexingAccessorBase):
+    """ Dataaccess class for index related tables of parquet files"""
+    INDEX_REPORTS_TABLE = 'index_parquet_reports'
+    INDEX_PROCESSING_TABLE = 'index_parquet_processing_state'
+
+    def __init__(self, db_dir: str):
+        super().__init__(db_dir=db_dir, index_reports_table=self.INDEX_REPORTS_TABLE,
+                         index_processing_table=self.INDEX_PROCESSING_TABLE)

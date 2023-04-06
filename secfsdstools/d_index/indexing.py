@@ -1,24 +1,28 @@
 """Indexing the downloaded to data"""
 import logging
 import os
+from abc import ABC, abstractmethod
 from datetime import datetime, timezone
-from typing import List
+from typing import List, Tuple
+
+import pandas as pd
 
 from secfsdstools.a_utils.fileutils import read_df_from_file_in_zip, get_filenames_in_directory
-from secfsdstools.d_index.indexdataaccess import DBIndexingAccessor, IndexFileProcessingState
+from secfsdstools.d_index.indexdataaccess import DBIndexingAccessor, IndexFileProcessingState, \
+    DBIndexingAccessorBase
 
 LOGGER = logging.getLogger(__name__)
 
 
-class ReportZipIndexer:
+class BaseReportZipIndexer(ABC):
     """
     Index the reports.
     """
     PROCESSED_STR: str = 'processed'
     URL_PREFIX: str = 'https://www.sec.gov/Archives/edgar/data/'
 
-    def __init__(self, db_dir: str, zip_dir: str, file_type: str):
-        self.dbaccessor = DBIndexingAccessor(db_dir=db_dir)
+    def __init__(self, accessor: DBIndexingAccessorBase, zip_dir: str, file_type: str):
+        self.dbaccessor = accessor
         self.zip_dir = zip_dir
         self.file_type = file_type
 
@@ -29,32 +33,30 @@ class ReportZipIndexer:
 
         self.process_time = iso_date
 
+    @abstractmethod
+    def get_present_files(self) -> List[str]:
+        pass
+
     def _calculate_not_indexed(self) -> List[str]:
-        downloaded_zipfiles = get_filenames_in_directory(os.path.join(self.zip_dir, "*.zip"))
+        present_files = self.get_present_files()
         processed_indexfiles_df = self.dbaccessor.read_all_indexfileprocessing_df()
 
         indexed_df = processed_indexfiles_df[processed_indexfiles_df.status == self.PROCESSED_STR]
         indexed_files = indexed_df.fileName.to_list()
 
-        not_indexed = set(downloaded_zipfiles) - set(indexed_files)
+        not_indexed = set(present_files) - set(indexed_files)
         return list(not_indexed)
+
+    @abstractmethod
+    def get_sub_df(self, file_name: str) -> List[str]:
+        pass
 
     def _index_file(self, file_name: str):
         LOGGER.info("indexing file %s", file_name)
-        path = os.path.join(self.zip_dir, file_name)
-        full_path = os.path.realpath(path)
 
         # todo: check if table already contains entries
         #  will fail at the moment, since the the primary key is defined
-        sub_df = read_df_from_file_in_zip(zip_file=full_path, file_to_extract="sub.txt",
-                                          usecols=['adsh',
-                                                   'cik',
-                                                   'name',
-                                                   'form',
-                                                   'filed',
-                                                   'period'],
-                                          dtype={'period': 'Int64',
-                                                 'filed': 'Int64'})
+        sub_df, full_path = self.get_sub_df(file_name)
 
         sub_df['fullPath'] = full_path
         sub_df['originFile'] = file_name
@@ -80,3 +82,25 @@ class ReportZipIndexer:
         not_indexed_files = self._calculate_not_indexed()
         for not_indexed_file in not_indexed_files:
             self._index_file(file_name=not_indexed_file)
+
+
+class ReportZipIndexer(BaseReportZipIndexer):
+    def __init__(self, db_dir: str, zip_dir: str, file_type: str):
+        super().__init__(DBIndexingAccessor(db_dir=db_dir), zip_dir, file_type)
+
+    def get_present_files(self) -> List[str]:
+        return get_filenames_in_directory(os.path.join(self.zip_dir, "*.zip"))
+
+    def get_sub_df(self, file_name: str) -> Tuple[pd.DataFrame, str]:
+        path = os.path.join(self.zip_dir, file_name)
+        full_path = os.path.realpath(path)
+
+        return read_df_from_file_in_zip(zip_file=full_path, file_to_extract="sub.txt",
+                                        usecols=['adsh',
+                                                 'cik',
+                                                 'name',
+                                                 'form',
+                                                 'filed',
+                                                 'period'],
+                                        dtype={'period': 'Int64',
+                                               'filed': 'Int64'}), full_path

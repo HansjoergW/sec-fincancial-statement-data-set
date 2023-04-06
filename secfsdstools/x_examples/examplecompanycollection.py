@@ -4,6 +4,11 @@ Example for CompanyCollector
 from secfsdstools.e_read.companycollecting import CompanyReportCollector
 
 def run():
+    # pylint: disable=W0612
+    """
+    run the example
+    """
+
     # The CompanyReportCollector enables the user to read multiple reports of the
     # same company (cik number) from different zipfiles. This can be done by providing
     # a cik number and the list of forms that should be read

@@ -5,6 +5,11 @@ from secfsdstools.e_read.multireportreading import MultiReportReader
 
 
 def run():
+    # pylint: disable=W0612
+    """
+    run the example
+    """
+
     # The MultiReportreader enables the user to read multiple reports from different zipfiles.
     # This can either be done by providing a list of adsh numbers or by a list if IndexReport
     #  instances

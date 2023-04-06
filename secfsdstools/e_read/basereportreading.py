@@ -7,7 +7,7 @@ from typing import List, Optional, Dict
 
 import pandas as pd
 
-from secfsdstools.a_utils.constants import NUM_TXT, PRE_TXT, SUB_TXT, SUB_COLS, NUM_COLS, PRE_COLS
+from secfsdstools.a_utils.constants import NUM_TXT, PRE_TXT, SUB_TXT
 
 
 def match_group_iter(match_iter):
@@ -39,9 +39,9 @@ class BaseReportReader(ABC):
     @staticmethod
     def _calculate_previous_period(period: int) -> int:
         previous_value = period - 10_000
-        period_monthday = period % 10_000
-        period_year = period // 10_000
+        period_year, period_monthday = divmod(period, 10_000)
 
+        # is the period date on a 29th of Feb, then the previous period has to end on a 28th Feb
         if period % 10_000 == 229:
             previous_value = previous_value - 1
 

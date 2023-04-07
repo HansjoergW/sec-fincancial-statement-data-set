@@ -7,23 +7,24 @@ from typing import List, Tuple
 
 import pandas as pd
 
-from secfsdstools.a_utils.fileutils import read_df_from_file_in_zip, get_filenames_in_directory
+from secfsdstools.a_utils.constants import SUB_TXT
+from secfsdstools.a_utils.fileutils import read_df_from_file_in_zip, get_filenames_in_directory, \
+    get_directories_in_directory
 from secfsdstools.d_index.indexdataaccess import DBIndexingAccessor, IndexFileProcessingState, \
-    DBIndexingAccessorBase
+    DBIndexingAccessorBase, ParquetDBIndexingAccessor
 
 LOGGER = logging.getLogger(__name__)
 
 
 class BaseReportZipIndexer(ABC):
     """
-    Index the reports.
+    Base class to index the reports.
     """
     PROCESSED_STR: str = 'processed'
     URL_PREFIX: str = 'https://www.sec.gov/Archives/edgar/data/'
 
-    def __init__(self, accessor: DBIndexingAccessorBase, zip_dir: str, file_type: str):
+    def __init__(self, accessor: DBIndexingAccessorBase, file_type: str):
         self.dbaccessor = accessor
-        self.zip_dir = zip_dir
         self.file_type = file_type
 
         # get current datetime in UTC
@@ -65,15 +66,14 @@ class BaseReportZipIndexer(ABC):
         sub_df['url'] = sub_df['url'] + sub_df['cik'].astype(str) + '/' + \
                         sub_df['adsh'].str.replace('-', '') + '/' + sub_df['adsh'] + '-index.htm'
 
-        self.dbaccessor.append_indexreport_df(sub_df)
-        self.dbaccessor.insert_indexfileprocessing(
-            IndexFileProcessingState(
-                fileName=file_name,
-                fullPath=full_path,
-                status=self.PROCESSED_STR,
-                entries=len(sub_df),
-                processTime=self.process_time
-            ))
+        self.dbaccessor.add_index_report(sub_df,
+                                         IndexFileProcessingState(
+                                             fileName=file_name,
+                                             fullPath=full_path,
+                                             status=self.PROCESSED_STR,
+                                             entries=len(sub_df),
+                                             processTime=self.process_time
+                                         ))
 
     def process(self):
         """
@@ -85,8 +85,13 @@ class BaseReportZipIndexer(ABC):
 
 
 class ReportZipIndexer(BaseReportZipIndexer):
+    """
+    Index the reports in zip files.
+    """
+
     def __init__(self, db_dir: str, zip_dir: str, file_type: str):
-        super().__init__(DBIndexingAccessor(db_dir=db_dir), zip_dir, file_type)
+        super().__init__(DBIndexingAccessor(db_dir=db_dir), file_type)
+        self.zip_dir = zip_dir
 
     def get_present_files(self) -> List[str]:
         return get_filenames_in_directory(os.path.join(self.zip_dir, "*.zip"))
@@ -104,3 +109,29 @@ class ReportZipIndexer(BaseReportZipIndexer):
                                                  'period'],
                                         dtype={'period': 'Int64',
                                                'filed': 'Int64'}), full_path
+
+
+class ReportParquetIndexer(BaseReportZipIndexer):
+    """
+    Index the reports in parquet files.
+    """
+
+    def __init__(self, db_dir: str, parquet_dir: str, file_type: str):
+        super().__init__(ParquetDBIndexingAccessor(db_dir=db_dir), file_type)
+        self.parquet_dir = parquet_dir
+
+    def get_present_files(self) -> List[str]:
+        return get_directories_in_directory(
+            os.path.join(self.parquet_dir, self.file_type))
+
+    def get_sub_df(self, file_name: str) -> Tuple[pd.DataFrame, str]:
+        path = os.path.join(self.parquet_dir, self.file_type, file_name)
+        full_path = os.path.realpath(path)
+        sub_file = os.path.join(full_path, f"{SUB_TXT}.parquet")
+        usecols = ['adsh',
+                   'cik',
+                   'name',
+                   'form',
+                   'filed',
+                   'period']
+        return pd.read_parquet(sub_file, columns=usecols), full_path

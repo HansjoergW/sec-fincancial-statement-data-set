@@ -50,35 +50,6 @@ class DB(ABC):
         finally:
             conn.close()
 
-    def execute_single(self, sql: str):
-        """
-        executes a single sql statement without any parameters.
-        Args:
-             sql (str): sql string, not paramterized
-        """
-        conn = self.get_connection()
-        try:
-            LOGGER.debug("execute %s", sql)
-            conn.execute(sql)
-            conn.commit()
-        finally:
-            conn.close()
-
-    def execute_many(self, sql: str, params: List[Tuple]):
-        """
-        executes a parameterized statement for every tuple in the params list
-        Args:
-             sql (str): parameterized statement
-             params (List[Tuple]): list with tuples containing the parameters
-        """
-        conn = self.get_connection()
-        try:
-            LOGGER.debug("execute %s", sql)
-            conn.executemany(sql, params)
-            conn.commit()
-        finally:
-            conn.close()
-
     def execute_fetchall(self, sql: str) -> List[Tuple]:
         """
         returns all results of the sql
@@ -117,7 +88,28 @@ class DB(ABC):
         finally:
             conn.close()
 
-    def append_df_to_table(self, table_name: str, dataframe: pd.DataFrame):
+    def execute_single(self, sql: str, conn: sqlite3.Connection):
+        """
+        executes a single sql statement without any parameters.
+        Args:
+             sql (str): sql string, not paramterized
+             conn (sqlite3.Connection): connection to use
+        """
+        LOGGER.debug("execute %s", sql)
+        conn.execute(sql)
+
+    def execute_many(self, sql: str, params: List[Tuple], conn: sqlite3.Connection):
+        """
+        executes a parameterized statement for every tuple in the params list
+        Args:
+             sql (str): parameterized statement
+             params (List[Tuple]): list with tuples containing the parameters
+             conn (sqlite3.Connection): connection to use
+        """
+        LOGGER.debug("execute %s", sql)
+        conn.executemany(sql, params)
+
+    def append_df_to_table(self, table_name: str, dataframe: pd.DataFrame, conn: sqlite3.Connection):
         """
         add the content of a df to the table. The name of the columns in df
         and table have to match
@@ -125,12 +117,9 @@ class DB(ABC):
         Args:
              table_name (str): name of the table to append the data
              dataframe (pd.DataFrame):  the df with the data
+             conn (sqlite3.Connection): connection to use
         """
-        conn = self.get_connection()
-        try:
-            dataframe.to_sql(table_name, conn, if_exists="append", index=False)
-        finally:
-            conn.close()
+        dataframe.to_sql(table_name, conn, if_exists="append", index=False)
 
     def create_insert_statement_for_dataclass(self, table_name: str, data) -> str:
         """

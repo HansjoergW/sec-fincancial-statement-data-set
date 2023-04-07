@@ -28,7 +28,8 @@ sql_create = """
 
 def test_db(db):
     # create simple table
-    db.execute_single(sql_create)
+    with db.get_connection() as conn:
+        db.execute_single(sql_create, conn)
 
     # read the content
     result = db.execute_fetchall("SELECT * FROM testtable1")
@@ -37,7 +38,8 @@ def test_db(db):
     # insert entries with execute_many
     sql = "INSERT INTO testtable1 ('col1', 'col2') VALUES (?, ?)"
 
-    db.execute_many(sql, [('row1-1', 'row1-2'), ('row2-1', 'row2-2')])
+    with db.get_connection() as conn:
+        db.execute_many(sql, [('row1-1', 'row1-2'), ('row2-1', 'row2-2')], conn)
 
     # read the content without typing
     result = db.execute_fetchall("SELECT * FROM testtable1")
@@ -62,7 +64,8 @@ def test_insert_dataclass(db):
         col2: int
 
     # create simple table
-    db.execute_single(sql_create)
+    with db.get_connection() as conn:
+        db.execute_single(sql_create, conn)
     
     data = Row(col1='col1', col2=123)
     insert_sql = db.create_insert_statement_for_dataclass(table_name='testtable1', data=data)

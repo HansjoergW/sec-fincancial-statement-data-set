@@ -1,4 +1,5 @@
 """Database logic to hanlde the indexing"""
+import sqlite3
 from dataclasses import dataclass
 from typing import List, Optional
 
@@ -99,16 +100,33 @@ class DBIndexingAccessorBase(DB):
             data (IndexReport): IndexReport data object
         """
         sql = self.create_insert_statement_for_dataclass(self.index_reports_table, data)
-        self.execute_single(sql)
+        with self.get_connection() as conn:
+            self.execute_single(sql, conn)
 
-    def append_indexreport_df(self, dataframe: pd.DataFrame):
+    def add_index_report(self, sub_df: pd.DataFrame, processingState: IndexFileProcessingState):
+        """
+        adds the submissions in the sub_df into the index table and stores the processing state
+        in the processing table
+        Args:
+            sub_df: dataframe with submissions
+            processingState: state entry to write
+
+        Returns:
+
+        """
+
+        with self.get_connection() as conn:
+            self._append_indexreport_df(sub_df, conn)
+            self._insert_indexfileprocessing(processingState, conn)
+
+    def _append_indexreport_df(self, dataframe: pd.DataFrame, conn: sqlite3.Connection):
         """
         append the content of the df to the index report table
 
         Args:
             dataframe (pd.DataFrame): the dataframe to be appended
         """
-        self.append_df_to_table(table_name=self.index_reports_table, dataframe=dataframe)
+        self.append_df_to_table(table_name=self.index_reports_table, dataframe=dataframe, conn=conn)
 
     def insert_indexfileprocessing(self, data: IndexFileProcessingState):
         """
@@ -117,8 +135,18 @@ class DBIndexingAccessorBase(DB):
         Args:
             data (IndexFileProcessingState): IndexFileProcessingState data object to insert
         """
+        with self.get_connection() as conn:
+            self._insert_indexfileprocessing(data, conn)
+
+    def _insert_indexfileprocessing(self, data: IndexFileProcessingState, conn: sqlite3.Connection):
+        """
+        inserts an entry into the index_file_processing_state table
+
+        Args:
+            data (IndexFileProcessingState): IndexFileProcessingState data object to insert
+        """
         sql = self.create_insert_statement_for_dataclass(self.index_processing_table, data)
-        self.execute_single(sql)
+        self.execute_single(sql, conn)
 
     def find_latest_company_report(self, cik: int) -> IndexReport:
         """

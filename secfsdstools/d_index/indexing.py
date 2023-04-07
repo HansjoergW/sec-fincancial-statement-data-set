@@ -36,7 +36,24 @@ class BaseReportZipIndexer(ABC):
 
     @abstractmethod
     def get_present_files(self) -> List[str]:
-        pass
+        """
+        returns the list with the filenames that are already present
+        Returns:
+            List[str]: list with the zip filenames that are already present
+        """
+
+    @abstractmethod
+    def get_sub_df(self, file_name: str) -> Tuple[pd.DataFrame, str]:
+        """
+        loads the content of sub_txt into a dataframe and returns the dataframe and the
+        fullpath to the data as a tuple.
+        Args:
+            file_name: name of the original zip file
+
+        Returns:
+            Tuple[pd.Dataframe, str]: DataFrame with the content in the sub_txt file, file path
+
+        """
 
     def _calculate_not_indexed(self) -> List[str]:
         present_files = self.get_present_files()
@@ -47,10 +64,6 @@ class BaseReportZipIndexer(ABC):
 
         not_indexed = set(present_files) - set(indexed_files)
         return list(not_indexed)
-
-    @abstractmethod
-    def get_sub_df(self, file_name: str) -> List[str]:
-        pass
 
     def _index_file(self, file_name: str):
         LOGGER.info("indexing file %s", file_name)

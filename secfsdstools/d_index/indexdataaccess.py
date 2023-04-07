@@ -103,13 +103,13 @@ class DBIndexingAccessorBase(DB):
         with self.get_connection() as conn:
             self.execute_single(sql, conn)
 
-    def add_index_report(self, sub_df: pd.DataFrame, processingState: IndexFileProcessingState):
+    def add_index_report(self, sub_df: pd.DataFrame, processing_state: IndexFileProcessingState):
         """
         adds the submissions in the sub_df into the index table and stores the processing state
         in the processing table
         Args:
             sub_df: dataframe with submissions
-            processingState: state entry to write
+            processing_state: state entry to write
 
         Returns:
 
@@ -117,7 +117,7 @@ class DBIndexingAccessorBase(DB):
 
         with self.get_connection() as conn:
             self._append_indexreport_df(sub_df, conn)
-            self._insert_indexfileprocessing(processingState, conn)
+            self._insert_indexfileprocessing(processing_state, conn)
 
     def _append_indexreport_df(self, dataframe: pd.DataFrame, conn: sqlite3.Connection):
         """

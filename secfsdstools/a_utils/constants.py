@@ -39,7 +39,7 @@ NUM_DTYPE = {'adsh': str,
 
 PRE_DTYPE = {'adsh':str,
              'report':int,
-             'line':float, # todo: ist in den daten falsch
+             'line':float, # may be nan in some entries
              'stmt':str,
              'inpth':int,
              'tag':str,

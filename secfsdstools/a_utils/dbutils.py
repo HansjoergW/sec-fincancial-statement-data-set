@@ -109,7 +109,8 @@ class DB(ABC):
         LOGGER.debug("execute %s", sql)
         conn.executemany(sql, params)
 
-    def append_df_to_table(self, table_name: str, dataframe: pd.DataFrame, conn: sqlite3.Connection):
+    def append_df_to_table(self, table_name: str, dataframe: pd.DataFrame,
+                           conn: sqlite3.Connection):
         """
         add the content of a df to the table. The name of the columns in df
         and table have to match

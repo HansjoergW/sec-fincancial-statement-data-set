@@ -8,7 +8,7 @@ import pandas as pd
 
 from secfsdstools.a_config.configmgt import Configuration, ConfigurationManager
 from secfsdstools.a_utils.parallelexecution import ParallelExecutor
-from secfsdstools.d_index.indexdataaccess import DBIndexingAccessor, IndexReport
+from secfsdstools.d_index.indexdataaccess import IndexReport, create_index_accessor
 from secfsdstools.e_read.basereportreading import BaseReportReader, SUB_TXT, PRE_TXT, NUM_TXT
 from secfsdstools.e_read.reportreading import ReportReader
 
@@ -50,7 +50,8 @@ class MultiReportReader(BaseReportReader):
         if configuration is None:
             configuration = ConfigurationManager.read_config_file()
 
-        dbaccessor = DBIndexingAccessor(db_dir=configuration.db_dir)
+        dbaccessor = create_index_accessor(accessor_type=configuration.get_accessor_type(),
+                                           db_dir=configuration.db_dir)
 
         index_reports = dbaccessor.read_index_reports_for_adshs(adshs=adshs)
         return MultiReportReader(index_reports)
@@ -126,10 +127,11 @@ class MultiReportReader(BaseReportReader):
             self.collected_data = self._collect()
             super()._read_raw_data()
 
-    def _read_df_from_raw(self, file_type: str) -> pd.DataFrame:
+    def _read_df_from_raw(self,
+                          file: str) -> pd.DataFrame:
         # we need to overwrite this method, since files are not read directly from the file,
         # but were loaded in a previous step
-        return self.collected_data[file_type]
+        return self.collected_data[file]
 
     def statistics(self) -> MultiReportStats:
         """

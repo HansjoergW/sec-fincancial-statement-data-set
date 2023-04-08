@@ -6,6 +6,7 @@ import logging
 import os
 import re
 from dataclasses import dataclass
+from enum import Enum
 from typing import Optional, List
 
 from secfsdstools.a_utils.downloadutils import UrlDownloader
@@ -17,6 +18,15 @@ SECFSDSTOOLS_ENV_VAR_NAME: str = 'SECFSDSTOOLS_CFG'
 LOGGER = logging.getLogger(__name__)
 
 
+class AccessorType(Enum):
+    """
+    Defines the AccessType which depends on how the data is stored
+    """
+    ZIP = 1
+    PARQUET = 2
+
+# todo: useparquet muss noch ins config file rein ..
+
 @dataclass
 class Configuration:
     """ Basic configuration settings """
@@ -27,9 +37,19 @@ class Configuration:
     rapid_api_key: Optional[str] = None
     rapid_api_plan: Optional[str] = 'basic'
     daily_download_dir: Optional[str] = None
+    use_parquet: Optional[bool] = True
 
     def __post_init__(self):
         self.daily_download_dir = os.path.join(self.download_dir, "daily")
+
+    def get_accessor_type(self) -> AccessorType:
+        """
+        returns the access type, depending on how the flag use_parquet is set
+        Returns:
+            AccessorType: accessor type, whether to use parquet or csv in zip
+
+        """
+        return AccessorType.PARQUET if self.use_parquet else AccessorType.ZIP
 
 
 DEFAULT_CONFIGURATION = Configuration(
@@ -174,7 +194,6 @@ class ConfigurationManager:
             os.makedirs(config.parquet_dir, exist_ok=True)
             os.makedirs(os.path.join(config.parquet_dir, 'quarter'), exist_ok=True)
             os.makedirs(os.path.join(config.parquet_dir, 'daily'), exist_ok=True)
-
 
         if not ConfigurationManager._is_valid_email(config.user_agent_email):
             messages.append(

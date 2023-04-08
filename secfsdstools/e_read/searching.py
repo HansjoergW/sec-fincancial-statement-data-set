@@ -6,13 +6,14 @@ from typing import Optional
 import pandas as pd
 
 from secfsdstools.a_config.configmgt import Configuration, ConfigurationManager
-from secfsdstools.d_index.indexdataaccess import DBIndexingAccessor
+from secfsdstools.d_index.indexdataaccess import DBIndexingAccessorBase, \
+    create_index_accessor
 
 
 class IndexSearch:
     """Provides search methods on the index_report table."""
 
-    def __init__(self, dbaccessor: DBIndexingAccessor):
+    def __init__(self, dbaccessor: DBIndexingAccessorBase):
         self.dbaccessor = dbaccessor
 
     @classmethod
@@ -29,8 +30,11 @@ class IndexSearch:
         """
         if configuration is None:
             configuration = ConfigurationManager.read_config_file()
-        return IndexSearch(DBIndexingAccessor(db_dir=configuration.db_dir))
 
+        accessor: DBIndexingAccessorBase = create_index_accessor(
+            accessor_type=configuration.get_accessor_type(),
+            db_dir=configuration.db_dir)
+        return IndexSearch(accessor)
 
     def find_company_by_name(self, name_part: str) -> pd.DataFrame:
         """

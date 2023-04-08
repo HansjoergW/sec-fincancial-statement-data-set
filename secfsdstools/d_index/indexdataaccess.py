@@ -1,10 +1,12 @@
 """Database logic to hanlde the indexing"""
+import os
 import sqlite3
 from dataclasses import dataclass
 from typing import List, Optional
 
 import pandas as pd
 
+from secfsdstools.a_config.configmgt import AccessorType
 from secfsdstools.a_utils.dbutils import DB
 
 
@@ -21,6 +23,14 @@ class IndexReport:
     originFile: str  # pylint: disable=C0103
     originFileType: str  # pylint: disable=C0103
     url: str
+
+    def is_parquet(self) -> bool:
+        """
+        Check whether this path is in parquet format
+        Returns:
+            bool: True if parquet, False if csv file
+        """
+        return os.path.isdir(self.fullPath)
 
 
 @dataclass
@@ -292,3 +302,21 @@ class ParquetDBIndexingAccessor(DBIndexingAccessorBase):
     def __init__(self, db_dir: str):
         super().__init__(db_dir=db_dir, index_reports_table=self.INDEX_REPORTS_TABLE,
                          index_processing_table=self.INDEX_PROCESSING_TABLE)
+
+
+def create_index_accessor(accessor_type: AccessorType, db_dir: str) -> DBIndexingAccessorBase:
+    """
+    Factory method to create the indexaccessor instance based on the type
+    Args:
+        type: type of index accessor to create (e.g. zip or parquet)
+        db_dir: path to the sqllite db file
+
+    Returns:
+        DBIndexingAccessorBase: instantiated instance
+    """
+    if accessor_type == AccessorType.ZIP:
+        return DBIndexingAccessor(db_dir=db_dir)
+    if accessor_type == AccessorType.PARQUET:
+        return ParquetDBIndexingAccessor(db_dir=db_dir)
+
+    raise ValueError(f"unssupported type {accessor_type}")

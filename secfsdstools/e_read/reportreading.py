@@ -1,7 +1,7 @@
 """
 reading the data for a single report.
 """
-
+import os
 import re
 from dataclasses import dataclass
 from io import StringIO
@@ -12,7 +12,7 @@ import pandas as pd
 
 from secfsdstools.a_config.configmgt import Configuration, ConfigurationManager
 from secfsdstools.a_utils.fileutils import read_content_from_file_in_zip
-from secfsdstools.d_index.indexdataaccess import IndexReport, DBIndexingAccessor
+from secfsdstools.d_index.indexdataaccess import IndexReport, create_index_accessor
 from secfsdstools.e_read.basereportreading import match_group_iter, BaseReportReader
 
 
@@ -52,7 +52,8 @@ class ReportReader(BaseReportReader):
         if configuration is None:
             configuration = ConfigurationManager.read_config_file()
 
-        dbaccessor = DBIndexingAccessor(db_dir=configuration.db_dir)
+        dbaccessor = create_index_accessor(accessor_type=configuration.get_accessor_type(),
+                                           db_dir=configuration.db_dir)
         return ReportReader.get_report_by_indexreport(
             dbaccessor.read_index_report_for_adsh(adsh=adsh))
 
@@ -72,21 +73,33 @@ class ReportReader(BaseReportReader):
     def __init__(self, report: IndexReport):
         super().__init__()
         self.report = report
+        self.is_parquet = self.report.is_parquet()
         self.adsh_pattern = re.compile(f'^{report.adsh}.*$', re.MULTILINE)
 
-    def _read_df_from_raw(self, file_type: str) -> pd.DataFrame:
+    def _read_df_from_raw(self,
+                          file: str) -> pd.DataFrame:
+        if self.is_parquet:
+            return self._read_df_from_raw_parquet(file)
+        return self._read_df_from_raw_zip(file)
+
+    def _read_df_from_raw_zip(self, file: str) -> pd.DataFrame:
         """
         reads the num.txt or pre.txt directly from the zip file into a df.
         uses re to first filter only the rows that belong to the report
         and only then actually create the df
         """
 
-        content = read_content_from_file_in_zip(self.report.fullPath, file_type)
+        content = read_content_from_file_in_zip(self.report.fullPath, file)
 
         lines: List[str] = [re.search(ReportReader.FIRST_LINE_PATTERN, content).group()]
         lines.extend(match_group_iter(self.adsh_pattern.finditer(content)))
         data_str = "\n".join(lines)
         return pd.read_csv(StringIO(data_str), sep="\t", header=0)
+
+    def _read_df_from_raw_parquet(self,
+                                  file: str) -> pd.DataFrame:
+        return pd.read_parquet(os.path.join(self.report.fullPath, f'{file}.parquet'),
+                               filters=[('adsh', '==', self.report.adsh)])
 
     def submission_data(self) -> Dict[str, Union[str, int]]:
         """

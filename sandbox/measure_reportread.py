@@ -13,9 +13,9 @@ if __name__ == '__main__':
 
     for _ in range(10):
         reader.num_df = None
-        reader._read_df_from_raw(NUM_TXT)
-        reader._read_df_from_raw(PRE_TXT)
-        reader._read_df_from_raw(SUB_TXT)
+        reader._read_df_from_raw_zip(NUM_TXT)
+        reader._read_df_from_raw_zip(PRE_TXT)
+        reader._read_df_from_raw_zip(SUB_TXT)
 
     end_time = time.time()
     dauer = end_time - start_time

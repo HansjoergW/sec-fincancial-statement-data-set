@@ -71,6 +71,7 @@ def test_cm_get_report_by_adsh():
             configuration=Configuration(db_dir="",
                                         download_dir="",
                                         user_agent_email="",
-                                        parquet_dir=""))
+                                        parquet_dir="",
+                                        use_parquet=False))
         reportreader._read_raw_data()
         assert reportreader.num_df.shape == (145, 9)

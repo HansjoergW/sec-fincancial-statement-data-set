@@ -81,9 +81,22 @@ Wie Processing machen?
       -> und danach neu prozessieren.
 
 
+Wo definieren wir für das laden wie geladen wird (parquet/zip)?
+- es soll generisch sein, so dass es für Parquet und zip funktioniert
+- es ist aber abhänging vom index eintrag (indexreport)
+- es ist auch im basereader entscheidend. und hier wird erst noch je nach report typ unterschiedlich geladen
+- es muss auch sichergestellt werden, dass der richtige IndexAccessor verwendet wird
+- Der IndexAccessor wird in den ClassMethoden getbyadsh verwendet-> hier hat man eigentlich nur die config
+  zur Verfügung
+- in den anderen Methoden könnte man höchsten per IndexReport entscheiden, oder dann im Constructor der Reader
+  einen Hint mitgeben
+- wenn es in den indexreports instanzen als info mitkommt, dann könnte im gleichen set die daten verschieden geladen
+  werden. etwas was nicht gewollt ist, da man so nicht optimieren kann.
+- wenn die Reader mit Flag konfiguriert werden, verändert das die ganze API, was nicht gut
+  ist
 
-
-
+=> IndexReport sollte information beinhalten, so dass basierend auf diesen Infos entschieden wird.
+   Das kann auch über zusätzliche Methode, die den Pfad prüft gemacht werden!
 
 
 Download Stats

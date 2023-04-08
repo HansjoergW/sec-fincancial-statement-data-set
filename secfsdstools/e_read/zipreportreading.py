@@ -1,6 +1,7 @@
 """
 reading the data of a whole zip file.
 """
+import os
 from dataclasses import dataclass
 from typing import Dict, Optional
 
@@ -8,7 +9,7 @@ import pandas as pd
 
 from secfsdstools.a_config.configmgt import Configuration, ConfigurationManager
 from secfsdstools.a_utils.fileutils import read_df_from_file_in_zip
-from secfsdstools.d_index.indexdataaccess import DBIndexingAccessor
+from secfsdstools.d_index.indexdataaccess import create_index_accessor
 from secfsdstools.e_read.basereportreading import BaseReportReader
 
 
@@ -40,20 +41,29 @@ class ZipReportReader(BaseReportReader):
         if configuration is None:
             configuration = ConfigurationManager.read_config_file()
 
-        accessor = DBIndexingAccessor(configuration.db_dir)
-        zipfilepath = accessor.read_index_file_for_filename(filename=name).fullPath
-        return ZipReportReader(zipfile=zipfilepath)
+        dbaccessor = create_index_accessor(accessor_type=configuration.get_accessor_type(),
+                                           db_dir=configuration.db_dir)
 
-    def __init__(self, zipfile: str):
+        datapath = dbaccessor.read_index_file_for_filename(filename=name).fullPath
+        return ZipReportReader(datapath=datapath)
+
+    def __init__(self, datapath: str):
         super().__init__()
-        self.zipfile = zipfile
+        self.datapath = datapath
 
-    def _read_df_from_raw(self, file_type: str) -> pd.DataFrame:
-        """
-        reads the raw data of a zipfile
-        """
-        return read_df_from_file_in_zip(zip_file=self.zipfile,
-                                        file_to_extract=file_type)
+    def _read_df_from_raw(self,
+                          file: str) -> pd.DataFrame:
+        if os.path.isdir(self.datapath):
+            return self._read_df_from_raw_parquet(file)
+        return self._read_df_from_raw_zip(file)
+
+    def _read_df_from_raw_zip(self, file: str) -> pd.DataFrame:
+        return read_df_from_file_in_zip(zip_file=self.datapath,
+                                        file_to_extract=file)
+
+    def _read_df_from_raw_parquet(self,
+                                  file: str) -> pd.DataFrame:
+        return pd.read_parquet(os.path.join(self.datapath, f'{file}.parquet'))
 
     def statistics(self) -> ZipFileStats:
         """

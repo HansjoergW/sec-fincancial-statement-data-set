@@ -57,11 +57,14 @@ class BaseReportReader(ABC):
         inside the object. used in a lazy loading manner.
         """
         if self.num_df is None:
-            self.num_df = self._read_df_from_raw(file_type=NUM_TXT)
+
+            self.num_df = self._read_df_from_raw(file=NUM_TXT)
+            self.pre_df = self._read_df_from_raw(file=PRE_TXT)
+            self.sub_df = self._read_df_from_raw(file=SUB_TXT)
+
             # pandas pivot works better if coreg is not nan, so we set it here to a simple dash
             self.num_df.loc[self.num_df.coreg.isna(), 'coreg'] = '-'
-            self.pre_df = self._read_df_from_raw(file_type=PRE_TXT)
-            self.sub_df = self._read_df_from_raw(file_type=SUB_TXT)
+
             self.adsh_form_map = \
                 self.sub_df[['adsh', 'form']].set_index('adsh').to_dict()['form']
             self.adsh_period_map = \
@@ -244,12 +247,12 @@ class BaseReportReader(ABC):
 
     @abstractmethod
     def _read_df_from_raw(self,
-                          file_type: str) \
+                              file: str) \
             -> pd.DataFrame:
         """
 
         Args:
-            file_type: SUB_TXT, PRE_TXT, or NUM_TXT
+            file: SUB_TXT, PRE_TXT, or NUM_TXT
 
         Returns:
             pd.DataFrame: the content for the read filetype

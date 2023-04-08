@@ -8,7 +8,8 @@ import pandas as pd
 
 from secfsdstools.a_config.configmgt import Configuration, ConfigurationManager
 from secfsdstools.a_utils.fileutils import read_content_from_file_in_zip
-from secfsdstools.d_index.indexdataaccess import DBIndexingAccessor, IndexReport
+from secfsdstools.d_index.indexdataaccess import DBIndexingAccessorBase, IndexReport, \
+    create_index_accessor
 from secfsdstools.e_read.basereportreading import SUB_TXT
 
 
@@ -32,9 +33,11 @@ class CompanyReader:
         """
         if configuration is None:
             configuration = ConfigurationManager.read_config_file()
-        return CompanyReader(cik, DBIndexingAccessor(db_dir=configuration.db_dir))
+        dbaccessor = create_index_accessor(accessor_type=configuration.get_accessor_type(),
+                                           db_dir=configuration.db_dir)
+        return CompanyReader(cik, dbaccessor=dbaccessor)
 
-    def __init__(self, cik: int, dbaccessor: DBIndexingAccessor):
+    def __init__(self, cik: int, dbaccessor: DBIndexingAccessorBase):
         self.cik = cik
         self.dbaccessor = dbaccessor
 

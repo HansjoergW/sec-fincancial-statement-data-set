@@ -13,7 +13,7 @@ PATH_TO_ZIP = CURRENT_DIR + '/testdata/2010q1.zip'
 
 @pytest.fixture
 def zipreader():
-    zipreader = ZipReportReader(zipfile=PATH_TO_ZIP)
+    zipreader = ZipReportReader(datapath=PATH_TO_ZIP)
     zipreader._read_raw_data()
     return zipreader
 
@@ -60,7 +60,8 @@ def test_cm_get_zip_by_name():
                                                     configuration=Configuration(db_dir="",
                                                                                 download_dir="",
                                                                                 user_agent_email="",
-                                                                                parquet_dir=""))
+                                                                                parquet_dir="",
+                                                                                use_parquet=False))
         zipreader._read_raw_data()
         assert zipreader.get_raw_num_data().shape == (151692, 9)
 

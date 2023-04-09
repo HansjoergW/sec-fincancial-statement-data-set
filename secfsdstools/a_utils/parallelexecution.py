@@ -133,10 +133,11 @@ class ParallelExecutor(Generic[IT, PT, OT]):
 
     def _process_throttled_parallel(self, data: IT) -> PT:
         logger = logging.getLogger()
-        logger.setLevel(logging.INFO)
-        handler = logging.StreamHandler()
-        handler.setFormatter(logging.Formatter(self.format_string))
-        logger.addHandler(handler)
+        if not logger.hasHandlers():
+            logger.setLevel(logging.INFO)
+            handler = logging.StreamHandler()
+            handler.setFormatter(logging.Formatter(self.format_string))
+            logger.addHandler(handler)
         return self._process_throttled(data)
 
     def _execute_parallel(self, chunk: List[IT]) -> List[PT]:

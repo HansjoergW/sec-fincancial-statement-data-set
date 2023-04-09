@@ -17,31 +17,31 @@ SUB_COLS = ['adsh', 'form', 'period', 'filed', 'cik']
 SUB_DTYPE = {'adsh': str,
              'cik': int,
              'name': str,
-             'sic':float, # has to be read as float, since it could be empty in quarterly zips
+             'sic': float,  # has to be read as float, since it could be empty in quarterly zips
              'fye': str,
-             'form':str,
-             'period':float,
-             'filed':float,
-             'accepted':str,
-             'fy':float, # has to be read as float, since it could be empty in quarterly zips
-             'fp':str,
-             'aciks':str}
+             'form': str,
+             'period': float,
+             'filed': int,
+             'accepted': str,
+             'fy': float,  # has to be read as float, since it could be empty in quarterly zips
+             'fp': str,
+             'aciks': str}
 
 NUM_DTYPE = {'adsh': str,
              'tag': str,
-             'version':str,
-             'coreg':str,
-             'ddate':float,
-             'qtrs':int,
-             'uom':str,
-             'value': str,
+             'version': str,
+             'coreg': str,
+             'ddate': int,
+             'qtrs': int,
+             'uom': str,
+             'value': float,
              'footnote': str}
 
-PRE_DTYPE = {'adsh':str,
-             'report':int,
-             'line':float, # may be nan in some entries
-             'stmt':str,
-             'inpth':int,
-             'tag':str,
-             'version':str,
+PRE_DTYPE = {'adsh': str,
+             'report': int,
+             'line': float,  # may be nan in some entries
+             'stmt': str,
+             'inpth': int,
+             'tag': str,
+             'version': str,
              'negating': int}

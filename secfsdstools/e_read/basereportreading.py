@@ -57,7 +57,6 @@ class BaseReportReader(ABC):
         inside the object. used in a lazy loading manner.
         """
         if self.num_df is None:
-
             self.num_df = self._read_df_from_raw(file=NUM_TXT)
             self.pre_df = self._read_df_from_raw(file=PRE_TXT)
             self.sub_df = self._read_df_from_raw(file=SUB_TXT)
@@ -154,11 +153,9 @@ class BaseReportReader(ABC):
 
         ## transform the data
         # merge num and pre together. only rows in num are considered for which entries in pre exist
-        num_pre_merged_df = pd.merge(num_df_filtered_for_dates,
-                                     pre_filtered_for_tags,
-                                     on=['adsh', 'tag', 'version'])
-
-        return num_pre_merged_df
+        return pd.merge(num_df_filtered_for_dates,
+                        pre_filtered_for_tags,
+                        on=['adsh', 'tag', 'version']) # don't produce index_x and index_y columns
 
     def financial_statements_for_tags(self,
                                       use_period: bool = True,
@@ -247,7 +244,7 @@ class BaseReportReader(ABC):
 
     @abstractmethod
     def _read_df_from_raw(self,
-                              file: str) \
+                          file: str) \
             -> pd.DataFrame:
         """
 

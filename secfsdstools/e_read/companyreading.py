@@ -1,6 +1,7 @@
 """
 Reads company information.
 """
+import os
 import re
 from typing import Dict, Optional, List
 
@@ -50,6 +51,12 @@ class CompanyReader:
              report as present in the sub.txt file.
         """
         latest_report = self.dbaccessor.find_latest_company_report(self.cik)
+        if latest_report.is_parquet():
+            return self._get_latest_company_filing_parquet(latest_report)
+        else:
+            return self._get_latest_company_filing_zip(latest_report)
+
+    def _get_latest_company_filing_zip(self, latest_report: IndexReport) -> Dict[str, str]:
         content = read_content_from_file_in_zip(latest_report.fullPath, SUB_TXT)
 
         newline_index = content.index('\n')
@@ -61,6 +68,12 @@ class CompanyReader:
         value_dict: Dict[str, str] = \
             {x[0]: x[1] for x in zip(colnames.split('\t'), values.split('\t'))}
         return value_dict
+
+    def _get_latest_company_filing_parquet(self, latest_report: IndexReport) -> Dict[str, str]:
+        df = pd.read_parquet(os.path.join(latest_report.fullPath, f'{SUB_TXT}.parquet'),
+                             filters=[('adsh', '==', latest_report.adsh)])
+
+        return df.iloc[0].to_dict()
 
     def get_all_company_reports(self, forms: Optional[List[str]] = None) -> List[IndexReport]:
         """

@@ -73,6 +73,12 @@ class ToParquetTransformer:
         num_df = read_df_from_file_in_zip(zip_file=zip_file_path, file_to_extract=NUM_TXT,
                                           dtype=NUM_DTYPE)
 
+        # ensure period columns are valid ints
+        # some report types don't have a value set for period
+        sub_df['period'] = sub_df['period'].fillna(-1).astype(int)
+        # same for line
+        pre_df['line'] = pre_df['line'].fillna(-1).astype(int)
+
         sub_df.to_parquet(os.path.join(target_path, f'{SUB_TXT}.parquet'))
         pre_df.to_parquet(os.path.join(target_path, f'{PRE_TXT}.parquet'))
         num_df.to_parquet(os.path.join(target_path, f'{NUM_TXT}.parquet'))

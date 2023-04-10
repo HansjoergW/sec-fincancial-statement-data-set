@@ -53,8 +53,7 @@ class CompanyReader:
         latest_report = self.dbaccessor.find_latest_company_report(self.cik)
         if latest_report.is_parquet():
             return self._get_latest_company_filing_parquet(latest_report)
-        else:
-            return self._get_latest_company_filing_zip(latest_report)
+        return self._get_latest_company_filing_zip(latest_report)
 
     def _get_latest_company_filing_zip(self, latest_report: IndexReport) -> Dict[str, str]:
         content = read_content_from_file_in_zip(latest_report.fullPath, SUB_TXT)
@@ -70,10 +69,10 @@ class CompanyReader:
         return value_dict
 
     def _get_latest_company_filing_parquet(self, latest_report: IndexReport) -> Dict[str, str]:
-        df = pd.read_parquet(os.path.join(latest_report.fullPath, f'{SUB_TXT}.parquet'),
-                             filters=[('adsh', '==', latest_report.adsh)])
+        latest_filing = pd.read_parquet(os.path.join(latest_report.fullPath, f'{SUB_TXT}.parquet'),
+                                        filters=[('adsh', '==', latest_report.adsh)])
 
-        return df.iloc[0].to_dict()
+        return latest_filing.iloc[0].to_dict()
 
     def get_all_company_reports(self, forms: Optional[List[str]] = None) -> List[IndexReport]:
         """

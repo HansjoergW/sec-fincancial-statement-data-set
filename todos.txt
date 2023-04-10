@@ -1,6 +1,9 @@
 Todos
 ------
 
+Errors:
+
+
 New Release
 - adapt readme
 - adapt releases in project.toml
@@ -20,8 +23,12 @@ v.0.5.0
      -> checked einmal pro Tag, ob neue Files vorhanden sind
 - sicherstellen, dass nicht bei jeder config initialisierung daily-api abgefragt wird
 
-
-
+- parallels verarbeiten mit joblib
+- download und index sollte im selben task erfolgen
+- prüfen, welche zips zur verfügung stehen
+- prüfen, welche parquet vorhanden sind enthält alle 3 files
+- für fehlende prüfen, ob zip heruntergeladen werden muss
+- falls ja, herunterladen und indexieren
 
 
 next

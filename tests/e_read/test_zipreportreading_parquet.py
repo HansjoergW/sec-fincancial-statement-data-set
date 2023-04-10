@@ -8,7 +8,7 @@ from secfsdstools.d_index.indexdataaccess import IndexFileProcessingState
 from secfsdstools.e_read.zipreportreading import ZipReportReader
 
 CURRENT_DIR, _ = os.path.split(__file__)
-PATH_TO_ZIP = f'{CURRENT_DIR}/testdata/2010q1.zip'
+PATH_TO_ZIP = f'{CURRENT_DIR}/testdataparquet/quarter/2010q1.zip'
 
 
 @pytest.fixture
@@ -54,14 +54,14 @@ def test_cm_get_zip_by_name():
     instance = IndexFileProcessingState(fileName="", status="", entries=0, processTime="",
                                         fullPath=PATH_TO_ZIP)
 
-    with patch("secfsdstools.d_index.indexdataaccess.DBIndexingAccessor.read_index_file_for_filename",
-               return_value=instance):
+    with patch(
+            "secfsdstools.d_index.indexdataaccess.ParquetDBIndexingAccessor.read_index_file_for_filename",
+            return_value=instance):
         zipreader = ZipReportReader.get_zip_by_name(name="2010q1.zip",
                                                     configuration=Configuration(db_dir="",
                                                                                 download_dir="",
                                                                                 user_agent_email="",
                                                                                 parquet_dir="",
-                                                                                use_parquet=False))
+                                                                                use_parquet=True))
         zipreader._read_raw_data()
         assert zipreader.get_raw_num_data().shape == (151692, 9)
-

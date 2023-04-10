@@ -30,14 +30,14 @@ def get_directories_in_directory(directory: str) -> List[str]:
         List[str]: list subdirectories in the directory
     """
     subdirectories: List[str] = [
-        entry.path for entry in os.scandir(directory) if entry.is_dir()
+        entry.name for entry in os.scandir(directory) if entry.is_dir()
     ]
     return subdirectories
 
 
 def read_df_from_file_in_zip(zip_file: str, file_to_extract: str,
                              dtype: Optional[Dict[str, object]] = None,
-                             usecols: Optional[List[str]] = None) -> pd.DataFrame:
+                             usecols: Optional[List[str]] = None, **kwargs) -> pd.DataFrame:
     """
     reads the content of a file inside a zip file directly into dataframe
 
@@ -53,7 +53,7 @@ def read_df_from_file_in_zip(zip_file: str, file_to_extract: str,
     with zipfile.ZipFile(zip_file, "r") as zip_fp:
         file = Path(file_to_extract).name
         return pd.read_csv(zip_fp.open(file), header=0, delimiter="\t",
-                           dtype=dtype, usecols=usecols)
+                           dtype=dtype, usecols=usecols, **kwargs)
 
 
 def read_content_from_file_in_zip(zip_file: str, file_to_extract: str) -> str:

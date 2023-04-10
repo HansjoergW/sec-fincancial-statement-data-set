@@ -16,7 +16,7 @@ from secfsdstools.d_index.indexdataaccess import DBIndexingAccessor, IndexFilePr
 LOGGER = logging.getLogger(__name__)
 
 
-class BaseReportZipIndexer(ABC):
+class BaseReportIndexer(ABC):
     """
     Base class to index the reports.
     """
@@ -97,7 +97,7 @@ class BaseReportZipIndexer(ABC):
             self._index_file(file_name=not_indexed_file)
 
 
-class ReportZipIndexer(BaseReportZipIndexer):
+class ReportZipIndexer(BaseReportIndexer):
     """
     Index the reports in zip files.
     """
@@ -124,7 +124,7 @@ class ReportZipIndexer(BaseReportZipIndexer):
                                                'filed': 'Int64'}), full_path
 
 
-class ReportParquetIndexer(BaseReportZipIndexer):
+class ReportParquetIndexer(BaseReportIndexer):
     """
     Index the reports in parquet files.
     """

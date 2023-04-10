@@ -5,6 +5,8 @@ from secfsdstools.a_config.configmgt import ConfigurationManager, Configuration
 from secfsdstools.b_setup.setupdb import DbCreator
 from secfsdstools.c_download.rapiddownloading import RapidZipDownloader
 from secfsdstools.c_download.secdownloading import SecZipDownloader
+from secfsdstools.c_transform.toparquettransforming import ToParquetTransformer
+from secfsdstools.d_index.indexing import ReportParquetIndexer
 from secfsdstools.d_index.indexing import ReportZipIndexer
 
 LOGGER = logging.getLogger(__name__)
@@ -42,7 +44,7 @@ def update(config: Configuration = None):
             LOGGER.info("check if there are new files to download from rapid...")
             rapiddownloader = RapidZipDownloader.get_downloader(configuration=config)
             rapiddownloader.download()
-        except Exception as ex: # pylint: disable=W0703
+        except Exception as ex:  # pylint: disable=W0703
             LOGGER.warning("Failed to get data from rapid api, please check rapid-api-key. ")
             LOGGER.warning("Only using data from Sec.gov because of: %s", ex)
     else:
@@ -50,7 +52,7 @@ def update(config: Configuration = None):
               + "If you are interested in daily updates, please have a look at "
               + "https://rapidapi.com/hansjoerg.wingeier/api/daily-sec-financial-statement-dataset")
 
-    # create index of reports
+    # create index of zip reports
     LOGGER.info("start to index downloaded files ...")
     qrtr_indexer = ReportZipIndexer(db_dir=config.db_dir,
                                     zip_dir=config.download_dir,
@@ -61,6 +63,30 @@ def update(config: Configuration = None):
                                      zip_dir=config.daily_download_dir,
                                      file_type='daily')
     daily_indexer.process()
+
+    # transform to parquet
+    LOGGER.info("start to transform to parquet format ...")
+    qrtr_transformer = ToParquetTransformer(zip_dir=config.download_dir,
+                                            parquet_dir=config.parquet_dir,
+                                            file_type='quarter')
+    qrtr_transformer.process()
+
+    daily_transformer = ToParquetTransformer(zip_dir=config.daily_download_dir,
+                                             parquet_dir=config.parquet_dir,
+                                             file_type='daily')
+    daily_transformer.process()
+
+    # create parquet index
+    LOGGER.info("start to index parquet files ...")
+    qrtr_parquet_indexer = ReportParquetIndexer(db_dir=config.db_dir,
+                                                parquet_dir=config.parquet_dir,
+                                                file_type='quarter')
+    qrtr_parquet_indexer.process()
+
+    daily_parquet_indexer = ReportParquetIndexer(db_dir=config.db_dir,
+                                                 parquet_dir=config.parquet_dir,
+                                                 file_type='daily')
+    daily_parquet_indexer.process()
 
 
 if __name__ == '__main__':

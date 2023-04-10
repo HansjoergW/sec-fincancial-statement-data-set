@@ -2,6 +2,13 @@ Todos
 ------
 
 Errors:
+ in den dailyzips sind values als String vorhanden (welche Börse)
+    2023-04-10 07:14:17,461 [ERROR] toparquettransforming  failed to process C:\Users\hansj\secfsdstools/data/dld\daily\20230126.zip
+    2023-04-10 07:14:17,462 [ERROR] toparquettransforming  could not convert string to float: 'NYSE'
+ die optionen error_bad_lines=False, warn_bad_lines=True, bei read_csv scheinen nichts zu bringen
+
+
+performance Tests -> lesen mit Parquet,  lesen mit Zip
 
 
 New Release

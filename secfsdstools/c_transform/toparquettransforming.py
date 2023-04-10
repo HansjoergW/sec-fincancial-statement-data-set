@@ -59,7 +59,7 @@ class ToParquetTransformer:
         try:
             os.makedirs(target_path, exist_ok=True)
             self._inner_transform_zip_file(target_path, zip_file_path)
-        except Exception as ex: # pylint: disable=W0703  # we need to catch all exceptions
+        except Exception as ex:  # pylint: disable=W0703  # we need to catch all exceptions
             LOGGER.error('failed to process %s', zip_file_path)
             LOGGER.error(ex)
             # the created dir has to be removed with all its content
@@ -70,6 +70,7 @@ class ToParquetTransformer:
                                           dtype=SUB_DTYPE)
         pre_df = read_df_from_file_in_zip(zip_file=zip_file_path, file_to_extract=PRE_TXT,
                                           dtype=PRE_DTYPE)
+
         num_df = read_df_from_file_in_zip(zip_file=zip_file_path, file_to_extract=NUM_TXT,
                                           dtype=NUM_DTYPE)
 
@@ -91,6 +92,7 @@ class ToParquetTransformer:
         Returns:
             List[Tuple[str, str]]:
         """
+
         def get_entries() -> List[Tuple[str, str]]:
             return self._calculate_not_transformed()
 

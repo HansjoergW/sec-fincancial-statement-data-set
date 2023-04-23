@@ -1,14 +1,8 @@
 Todos
 ------
 
-Errors:
- in den dailyzips sind values als String vorhanden (welche Börse)
-    2023-04-10 07:14:17,461 [ERROR] toparquettransforming  failed to process C:\Users\hansj\secfsdstools/data/dld\daily\20230126.zip
-    2023-04-10 07:14:17,462 [ERROR] toparquettransforming  could not convert string to float: 'NYSE'
- die optionen error_bad_lines=False, warn_bad_lines=True, bei read_csv scheinen nichts zu bringen
-
-
-performance Tests -> lesen mit Parquet,  lesen mit Zip
+performance Tests
+ -> lesen mit Parquet,  lesen mit Zip -> deutlich besser, vor allem beim interaktiven anzeigen
 
 
 New Release
@@ -22,13 +16,16 @@ v.0.6.0
   -> or Merge class method, or method
 - save method -> store and read as zip reader
 
+
 v.0.5.0
 - Parquet support
 - automatisierung beim download der files verbessern
   -> first start erkennen
   -> autodownload option
      -> checked einmal pro Tag, ob neue Files vorhanden sind
+
 - sicherstellen, dass nicht bei jeder config initialisierung daily-api abgefragt wird
+- -> last check einfügen -> nur einmal pro tag
 
 - parallels verarbeiten mit joblib
 - download und index sollte im selben task erfolgen

@@ -34,7 +34,7 @@ NUM_DTYPE = {'adsh': str,
              'ddate': int,
              'qtrs': int,
              'uom': str,
-             'value': float,
+             'value': str, # daily files can also contain ticker name and stockexchange as strings
              'footnote': str}
 
 PRE_DTYPE = {'adsh': str,

@@ -80,6 +80,11 @@ class ToParquetTransformer:
         # same for line
         pre_df['line'] = pre_df['line'].fillna(-1).astype(int)
 
+        # special handling for field value in num, since the daily files can also contain strings
+        if self.file_type == 'daily':
+            num_df = num_df[~num_df.tag.isin(['SecurityExchangeName', 'TradingSymbol'])]
+        num_df['value'] = num_df['value'].astype(float)
+
         sub_df.to_parquet(os.path.join(target_path, f'{SUB_TXT}.parquet'))
         pre_df.to_parquet(os.path.join(target_path, f'{PRE_TXT}.parquet'))
         num_df.to_parquet(os.path.join(target_path, f'{NUM_TXT}.parquet'))

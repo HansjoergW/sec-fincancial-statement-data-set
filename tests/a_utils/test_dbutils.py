@@ -26,6 +26,26 @@ sql_create = """
     """
 
 
+def test_db_file_exists_no():
+    assert DB(db_dir='blabli').db_file_exists() is False
+
+
+def test_db_file_exists_yes(db):
+    with db.get_connection() as conn:
+        db.execute_single(sql_create, conn)
+    assert db.db_file_exists() is True
+
+
+def test_table_exists(db):
+    assert db.table_exists('testtable1') is False
+
+    with db.get_connection() as conn:
+        db.execute_single(sql_create, conn)
+
+    assert db.table_exists('testtable1') is True
+    assert db.table_exists('bla') is False
+
+
 def test_db(db):
     # create simple table
     with db.get_connection() as conn:
@@ -57,6 +77,7 @@ def test_db(db):
 
     print('success')
 
+
 def test_insert_dataclass(db):
     @dataclass
     class Row:
@@ -66,7 +87,7 @@ def test_insert_dataclass(db):
     # create simple table
     with db.get_connection() as conn:
         db.execute_single(sql_create, conn)
-    
+
     data = Row(col1='col1', col2=123)
     insert_sql = db.create_insert_statement_for_dataclass(table_name='testtable1', data=data)
     assert insert_sql == "INSERT INTO testtable1 ('col1', 'col2') VALUES ('col1', 123)"

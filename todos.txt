@@ -18,7 +18,7 @@ v.0.6.0
 
 
 v.0.5.0
-- Parquet support
+- using parquet as storage format
 - automatisierung beim download der files verbessern
   -> first start erkennen
   -> autodownload option
@@ -28,11 +28,12 @@ v.0.5.0
 - -> last check einfügen -> nur einmal pro tag
 
 - parallels verarbeiten mit joblib
+
 - download und index sollte im selben task erfolgen
-- prüfen, welche zips zur verfügung stehen
-- prüfen, welche parquet vorhanden sind enthält alle 3 files
-- für fehlende prüfen, ob zip heruntergeladen werden muss
-- falls ja, herunterladen und indexieren
+    - prüfen, welche zips zur verfügung stehen
+    - prüfen, welche parquet vorhanden sind enthält alle 3 files
+    - für fehlende prüfen, ob zip heruntergeladen werden muss
+    - falls ja, herunterladen und indexieren
 
 
 next

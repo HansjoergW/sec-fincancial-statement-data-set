@@ -11,12 +11,20 @@ from typing import Optional, List
 
 from secfsdstools.a_utils.downloadutils import UrlDownloader
 from secfsdstools.a_utils.rapiddownloadutils import RapidUrlBuilder
+from secfsdstools.a_utils.dbutils import DB
 
 DEFAULT_CONFIG_FILE: str = '.secfsdstools.cfg'
 SECFSDSTOOLS_ENV_VAR_NAME: str = 'SECFSDSTOOLS_CFG'
 
 LOGGER = logging.getLogger(__name__)
 
+
+class DBStateAcessor(DB):
+    STATUS_TABLE_NAME = 'status'
+    KEY_COL_NAME = 'keyName'
+    VALUE_COL_NAME = 'value'
+
+    status handling methoden hinzufügen
 
 class AccessorType(Enum):
     """
@@ -25,7 +33,6 @@ class AccessorType(Enum):
     ZIP = 1
     PARQUET = 2
 
-# todo: useparquet muss noch ins config file rein ..
 
 @dataclass
 class Configuration:

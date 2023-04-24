@@ -26,6 +26,29 @@ class DB(ABC):
         self.db_dir = db_dir
         self.database = os.path.join(self.db_dir, 'secfsdstools.db')
 
+    def db_file_exists(self) -> bool:
+        """
+        Checks if the configured db files is actually present.
+
+        Returns:
+            bool: returns True, if the dbfile was found
+        """
+        return os.path.exists(self.database)
+
+    def table_exists(self, table_name: str) -> bool:
+        """
+        Checks whether a table exists.
+
+        Returns:
+            bool: True if the  table is present
+        """
+        if not self.db_file_exists():
+            return False
+
+        # using the sqlite_master table to check whether the table exists
+        sql = f"SELECT name FROM sqlite_master WHERE type='table' AND name='{table_name}'"
+        return len(self.execute_fetchall(sql)) > 0
+
     def get_connection(self) -> sqlite3.Connection:
         """
         creates a connection to the db.

@@ -4,27 +4,22 @@ Manage the configuration
 import configparser
 import logging
 import os
+import pprint
 import re
-from dataclasses import dataclass
+import sys
+from dataclasses import dataclass, asdict
 from enum import Enum
 from typing import Optional, List
 
+from secfsdstools.a_utils.dbutils import DBStateAcessor
 from secfsdstools.a_utils.downloadutils import UrlDownloader
 from secfsdstools.a_utils.rapiddownloadutils import RapidUrlBuilder
-from secfsdstools.a_utils.dbutils import DB
 
 DEFAULT_CONFIG_FILE: str = '.secfsdstools.cfg'
 SECFSDSTOOLS_ENV_VAR_NAME: str = 'SECFSDSTOOLS_CFG'
 
 LOGGER = logging.getLogger(__name__)
 
-
-class DBStateAcessor(DB):
-    STATUS_TABLE_NAME = 'status'
-    KEY_COL_NAME = 'keyName'
-    VALUE_COL_NAME = 'value'
-
-    status handling methoden hinzufügen
 
 class AccessorType(Enum):
     """
@@ -58,6 +53,9 @@ class Configuration:
         """
         return AccessorType.PARQUET if self.use_parquet else AccessorType.ZIP
 
+    def get_dict(self):
+        return dict(asdict(self))
+
 
 DEFAULT_CONFIGURATION = Configuration(
     download_dir=os.path.join(os.path.expanduser('~'), 'secfsdstools/data/dld'),
@@ -73,6 +71,8 @@ class ConfigurationManager:
     Configuration Manager. Reads the configuration from the config file.
     If the file does not exist, it will create one in the current directory
     """
+
+    SUCCESSFULL_RAPID_API_KEY: str = "RAPID_KEY"
 
     @staticmethod
     def read_config_file() -> Configuration:
@@ -107,10 +107,7 @@ class ConfigurationManager:
                 ConfigurationManager._write_configuration(env_config_file, DEFAULT_CONFIGURATION)
                 LOGGER.error('config file created at %s.', env_config_file)
                 LOGGER.error('please check the content ant then restart')
-                raise ValueError(
-                    f'environment variable {SECFSDSTOOLS_ENV_VAR_NAME}' +
-                    ' was set but config file was not present. ' +
-                    f'It was created at location {env_config_file}. Please check it and rerun')
+                ConfigurationManager._handle_first_start(env_config_file, DEFAULT_CONFIGURATION)
 
             return ConfigurationManager._read_configuration(env_config_file)
 
@@ -126,10 +123,42 @@ class ConfigurationManager:
             ConfigurationManager._write_configuration(home_cfg_file_path, DEFAULT_CONFIGURATION)
             LOGGER.error('Config file created at %s. Please check the content and then rerun.',
                          home_cfg_file_path)
-            raise ValueError(
-                'Config file not found at user home directory. ' +
-                f'It was created at location {home_cfg_file_path}. Please check content and rerun')
+            ConfigurationManager._handle_first_start(home_cfg_file_path, DEFAULT_CONFIGURATION)
+
         return ConfigurationManager._read_configuration(home_cfg_file_path)
+
+    @staticmethod
+    def _handle_first_start(file_path: str, config: Configuration):
+        print(' --------------------------------------------------------------------------')
+        print(' Wellcome!')
+        print(' It looks as if this is the first time you are using this package since no ')
+        print(f' configuration was found at {file_path} and one was created with the ')
+        print(' following default settings:\n')
+        pprint.pprint(config.get_dict())
+        print('')
+        print(' If you want to change the settings, you can exit and and change the settings ')
+        print(' and restart. This will then trigger the initial update process as described.')
+        print(' below.')
+        print(' If you are ok with the settings, you can directly press y or Y and the initial ')
+        print(' update process will start immediately. \n')
+        print(' The initial update process executes the following steps: ')
+        print(' 1. It downloads all available quarterly zip files from ' +
+              'https://www.sec.gov/dera/data/financial-statement-data-sets.html')
+        print(f'    into the folder {config.download_dir}')
+        print(' 2. It will transform the CSV files inside the zipfiles into parquet format and')
+        print(f'    store them under {config.parquet_dir}')
+        print(' 3. The original zip file will be deleted depending on your configuration')
+        print(' 4. The content of the SUB.TXT parquet files will be indexed in a simple ')
+        print(f'    sqlite database file (placed at {config.db_dir})')
+        print('')
+        print(' Note: The downloaded data will use about 2GB on your disk, the size doubles, if ')
+        print('        choose to keep the ZIP-files after transformation. ')
+        print(' Note: The initial update process will take several minutes.')
+        print('')
+        inputvalue = input(' Start initial update process [y]/n:')
+        if inputvalue in ['Y', 'y', '']:
+            print('let us go')
+        sys.exit(0)
 
     @staticmethod
     def _read_configuration(file_path: str) -> Configuration:
@@ -229,6 +258,14 @@ class ConfigurationManager:
                 ' Allowed values are basic, premium')
 
         if config.rapid_api_key is not None:
+
+            # only check rapid api key if it was changed or if
+            accessor = DBStateAcessor(db_dir=config.db_dir)
+            checked_rapid_key = accessor.get_key(ConfigurationManager.SUCCESSFULL_RAPID_API_KEY)
+
+            if checked_rapid_key == config.rapid_api_key:
+                return messages
+
             try:
                 rapidurlbuilder = RapidUrlBuilder(rapid_api_key=config.rapid_api_key,
                                                   rapid_plan='basic')
@@ -237,6 +274,9 @@ class ConfigurationManager:
                     headers=rapidurlbuilder.get_headers(),
                     max_tries=2
                 )
+                # store the key that was successfully tested
+                accessor.set_key(ConfigurationManager.SUCCESSFULL_RAPID_API_KEY,
+                                 config.rapid_api_key)
             except Exception as err:  # pylint: disable=W0703
                 messages.append(f'RapidApiKey {config.rapid_api_key} was set' +
                                 f' but seems to be not valid: {str(err)}\n' +
@@ -258,3 +298,7 @@ class ConfigurationManager:
                              'UseParquet': configuration.use_parquet}
         with open(file_path, 'w', encoding="utf8") as configfile:
             config.write(configfile)
+
+
+if __name__ == '__main__':
+    ConfigurationManager._handle_first_start("my/config/path", DEFAULT_CONFIGURATION)

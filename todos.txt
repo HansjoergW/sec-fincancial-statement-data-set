@@ -1,10 +1,6 @@
 Todos
 ------
 
-performance Tests
- -> lesen mit Parquet,  lesen mit Zip -> deutlich besser, vor allem beim interaktiven anzeigen
-
-
 New Release
 - adapt readme
 - adapt releases in project.toml
@@ -20,12 +16,11 @@ v.0.6.0
 v.0.5.0
 - using parquet as storage format
 - automatisierung beim download der files verbessern
-  -> first start erkennen
+  - first start erkennen
+  - remove zip depending on flag
+
   -> autodownload option
      -> checked einmal pro Tag, ob neue Files vorhanden sind
-
-- sicherstellen, dass nicht bei jeder config initialisierung daily-api abgefragt wird
-- -> last check einfügen -> nur einmal pro tag
 
 - parallels verarbeiten mit joblib
 

@@ -7,7 +7,7 @@ import os
 import sqlite3
 from abc import ABC
 from dataclasses import Field
-from typing import List, TypeVar, Tuple
+from typing import List, TypeVar, Tuple, Optional
 
 import pandas as pd
 
@@ -176,3 +176,53 @@ class DB(ABC):
         column_str = ', '.join(column_list)
         value_str = ', '.join(value_list)
         return f"INSERT INTO {table_name} ({column_str}) VALUES ({value_str})"
+
+
+class DBStateAcessor(DB):
+    """
+    Helper class to write and read values into the status table
+    """
+    STATUS_TABLE_NAME = 'status'
+    KEY_COL_NAME = 'keyName'
+    VALUE_COL_NAME = 'value'
+
+    def set_key(self, key: str, value: str):
+        """
+        Sets the provided key to the provided value.
+        Args:
+            key: key as string
+            value: value as string
+        """
+
+        sql = f"""INSERT INTO {DBStateAcessor.STATUS_TABLE_NAME}
+                                      ({DBStateAcessor.KEY_COL_NAME}, {DBStateAcessor.VALUE_COL_NAME})
+                         VALUES ('{key}', '{value}') """
+
+        # python 3.7 uses sqlite 3.21, which does not support the upsert functionality
+        # with ON CONFLICT DO UPDATE SET
+        # so we first have to check if the key exists and use update instead of insert
+        if self.get_key(key):
+            # update
+            sql = f"""UPDATE {DBStateAcessor.STATUS_TABLE_NAME} 
+                        SET {DBStateAcessor.VALUE_COL_NAME} = '{value}'
+                        WHERE {DBStateAcessor.KEY_COL_NAME} = '{key}'"""
+
+        with self.get_connection() as conn:
+            self.execute_single(sql, conn)
+
+    def get_key(self, key: str) -> Optional[str]:
+        """
+        Reads the value of key from the status table or returns None if the key is not present
+        Args:
+            key: key to read
+
+        Returns:
+            str: the stored value or None
+        """
+        sql = f"""SELECT {DBStateAcessor.VALUE_COL_NAME} 
+                   FROM  {DBStateAcessor.STATUS_TABLE_NAME} 
+                   WHERE {DBStateAcessor.KEY_COL_NAME} = '{key}'"""
+        result = self.execute_fetchall(sql)
+
+        return None if len(result) == 0 else result[0][0]
+

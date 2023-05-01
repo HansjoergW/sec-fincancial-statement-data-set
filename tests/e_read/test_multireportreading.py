@@ -2,7 +2,7 @@ import os
 
 import pytest
 
-from secfsdstools.d_index.indexdataaccess import IndexReport
+from secfsdstools.c_index.indexdataaccess import IndexReport
 from secfsdstools.e_read.multireportreading import MultiReportReader
 
 APPLE_ADSH_10Q_2010_Q1 = '0001193125-10-012085'

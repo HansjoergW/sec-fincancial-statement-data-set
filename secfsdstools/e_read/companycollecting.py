@@ -4,7 +4,7 @@ Collects all data for a company.
 from typing import Optional, List
 
 from secfsdstools.a_config.configmgt import Configuration, ConfigurationManager
-from secfsdstools.d_index.indexdataaccess import IndexReport, create_index_accessor
+from secfsdstools.c_index.indexdataaccess import IndexReport, create_index_accessor
 from secfsdstools.e_read.multireportreading import MultiReportReader
 
 

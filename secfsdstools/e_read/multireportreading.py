@@ -8,7 +8,7 @@ import pandas as pd
 
 from secfsdstools.a_config.configmgt import Configuration, ConfigurationManager
 from secfsdstools.a_utils.parallelexecution import ParallelExecutor
-from secfsdstools.d_index.indexdataaccess import IndexReport, create_index_accessor
+from secfsdstools.c_index.indexdataaccess import IndexReport, create_index_accessor
 from secfsdstools.e_read.basereportreading import BaseReportReader, SUB_TXT, PRE_TXT, NUM_TXT
 from secfsdstools.e_read.reportreading import ReportReader
 

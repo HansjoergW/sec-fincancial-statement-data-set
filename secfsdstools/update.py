@@ -6,8 +6,8 @@ from secfsdstools.b_setup.setupdb import DbCreator
 from secfsdstools.c_download.rapiddownloading import RapidZipDownloader
 from secfsdstools.c_download.secdownloading import SecZipDownloader
 from secfsdstools.c_transform.toparquettransforming import ToParquetTransformer
-from secfsdstools.d_index.indexing import ReportParquetIndexer
-from secfsdstools.d_index.indexing import ReportZipIndexer
+from secfsdstools.c_index.indexing import ReportParquetIndexer
+from secfsdstools.c_index.indexing import ReportZipIndexer
 
 LOGGER = logging.getLogger(__name__)
 

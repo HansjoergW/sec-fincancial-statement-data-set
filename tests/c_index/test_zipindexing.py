@@ -4,8 +4,8 @@ from unittest.mock import patch
 import pytest
 
 from secfsdstools.b_setup.setupdb import DbCreator
-from secfsdstools.d_index.indexdataaccess import IndexFileProcessingState
-from secfsdstools.d_index.indexing import ReportZipIndexer
+from secfsdstools.c_index.indexdataaccess import IndexFileProcessingState
+from secfsdstools.c_index.indexing import ReportZipIndexer
 
 
 @pytest.fixture
@@ -15,7 +15,7 @@ def zipreportindexer(tmp_path):
 
 
 def test_nothing_indexed(zipreportindexer):
-    with patch('secfsdstools.d_index.indexing.get_filenames_in_directory',
+    with patch('secfsdstools.c_index.indexing.get_filenames_in_directory',
                return_value=['file1', 'file2']):
         not_indexed = zipreportindexer._calculate_not_indexed()
         assert len(set(not_indexed) - {'file1', 'file2'}) == 0

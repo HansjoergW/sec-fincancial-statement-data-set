@@ -4,7 +4,7 @@ from unittest.mock import patch
 import pytest
 
 from secfsdstools.a_config.configmgt import Configuration
-from secfsdstools.d_index.indexdataaccess import IndexFileProcessingState
+from secfsdstools.c_index.indexdataaccess import IndexFileProcessingState
 from secfsdstools.e_read.zipreportreading import ZipReportReader
 
 CURRENT_DIR, _ = os.path.split(__file__)
@@ -55,7 +55,7 @@ def test_cm_get_zip_by_name():
                                         fullPath=PATH_TO_ZIP)
 
     with patch(
-            "secfsdstools.d_index.indexdataaccess.ParquetDBIndexingAccessor.read_index_file_for_filename",
+            "secfsdstools.c_index.indexdataaccess.ParquetDBIndexingAccessor.read_index_file_for_filename",
             return_value=instance):
         zipreader = ZipReportReader.get_zip_by_name(name="2010q1.zip",
                                                     configuration=Configuration(db_dir="",

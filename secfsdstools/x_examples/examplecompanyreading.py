@@ -3,7 +3,7 @@ Examples for CompanyReader
 """
 from typing import Dict, List
 
-from secfsdstools.d_index.indexdataaccess import IndexReport
+from secfsdstools.c_index.indexdataaccess import IndexReport
 from secfsdstools.e_read.companyreading import CompanyReader
 
 def run():

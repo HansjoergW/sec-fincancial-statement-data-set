@@ -10,7 +10,7 @@ import pandas as pd
 from secfsdstools.a_utils.constants import SUB_TXT
 from secfsdstools.a_utils.fileutils import read_df_from_file_in_zip, get_filenames_in_directory, \
     get_directories_in_directory
-from secfsdstools.d_index.indexdataaccess import DBIndexingAccessor, IndexFileProcessingState, \
+from secfsdstools.c_index.indexdataaccess import DBIndexingAccessor, IndexFileProcessingState, \
     DBIndexingAccessorBase, ParquetDBIndexingAccessor
 
 LOGGER = logging.getLogger(__name__)

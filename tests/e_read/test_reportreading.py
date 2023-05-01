@@ -4,7 +4,7 @@ from unittest.mock import patch
 import pytest
 
 from secfsdstools.a_config.configmgt import Configuration
-from secfsdstools.d_index.indexdataaccess import IndexReport
+from secfsdstools.c_index.indexdataaccess import IndexReport
 from secfsdstools.e_read.reportreading import ReportReader
 
 APPLE_ADSH_10Q_2010_Q1 = '0001193125-10-012085'
@@ -64,7 +64,7 @@ def test_cm_get_report_by_adsh():
                            adsh=APPLE_ADSH_10Q_2010_Q1,
                            fullPath=PATH_TO_ZIP)
 
-    with patch("secfsdstools.d_index.indexdataaccess.DBIndexingAccessor.read_index_report_for_adsh",
+    with patch("secfsdstools.c_index.indexdataaccess.DBIndexingAccessor.read_index_report_for_adsh",
                return_value=instance):
         reportreader = ReportReader.get_report_by_adsh(
             adsh=APPLE_ADSH_10Q_2010_Q1,

@@ -4,7 +4,7 @@ import pandas as pd
 import pytest
 
 from secfsdstools.b_setup.setupdb import DbCreator
-from secfsdstools.d_index.indexdataaccess import DBIndexingAccessor, IndexReport, \
+from secfsdstools.c_index.indexdataaccess import DBIndexingAccessor, IndexReport, \
     IndexFileProcessingState, ParquetDBIndexingAccessor
 
 

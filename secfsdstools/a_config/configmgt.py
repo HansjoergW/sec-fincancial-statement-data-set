@@ -157,8 +157,9 @@ class ConfigurationManager:
         print('')
         inputvalue = input(' Start initial update process [y]/n:')
         if inputvalue in ['Y', 'y', '']:
-            print('let us go')
-        sys.exit(0)
+            print('let us go')  # todo -> hier geht es weiter
+        else:
+            sys.exit(0)
 
     @staticmethod
     def _read_configuration(file_path: str) -> Configuration:

@@ -104,17 +104,16 @@ class RapidZipDownloader(BaseDownloader):
         # are bigger than the cutoff string
         missing_after_cut_off = [entry for entry in missing if entry[:8] > cutoff_str]
 
-        missing_tuple = [(filename, self.rapidurlbuilder.get_donwload_url(filename)) for filename in
+        return [(filename, self.rapidurlbuilder.get_donwload_url(filename)) for filename in
                          missing_after_cut_off]
-        return missing_tuple
+
 
     def _get_available_zips(self) -> List[str]:
         content = self._get_content()
         parsed_content = json.loads(content)
         daily_entries = parsed_content['daily']
 
-        available_files = [entry['file'] for entry in daily_entries if
+        return [entry['file'] for entry in daily_entries if
                            ((entry['subscription'] == 'basic') | (
                                    entry['subscription'] == self.rapidurlbuilder.rapid_plan))]
 
-        return available_files

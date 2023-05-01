@@ -2,7 +2,16 @@
 
 ## Upcoming
 * more example notebooks
-* use parquet as storing format instead of zipfiles with csv files
+* 
+
+## 0.5.0
+* use parquet as storing format instead of zipfiles with csv files -> 5-10x faster access to data
+
+
+ApiChanges:
+* package secfsdstools.d_index was renamed into secfsdstools.c_index
+
+
 
 ## 0.4.0 2023-Mar-25
 * new MultiReportReader - reads reports from different zipfiles at once

@@ -12,7 +12,7 @@ import pandas as pd
 
 from secfsdstools.a_config.configmgt import Configuration, ConfigurationManager
 from secfsdstools.a_utils.fileutils import read_content_from_file_in_zip
-from secfsdstools.d_index.indexdataaccess import IndexReport, create_index_accessor
+from secfsdstools.c_index.indexdataaccess import IndexReport, create_index_accessor
 from secfsdstools.e_read.basereportreading import match_group_iter, BaseReportReader
 
 

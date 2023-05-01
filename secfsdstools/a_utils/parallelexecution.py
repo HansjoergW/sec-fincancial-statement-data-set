@@ -6,9 +6,10 @@ using pathos.multiprocessing instead of multiprocessing, so that method function
 """
 
 import logging
+from abc import ABC, abstractmethod
 from time import time, sleep
 from typing import Generic, TypeVar, List, Callable, Optional, Tuple
-
+import concurrent.futures
 from pathos.multiprocessing import ProcessingPool as Pool
 from pathos.multiprocessing import cpu_count
 
@@ -17,7 +18,7 @@ PT = TypeVar("PT")  # processed type of the list to split
 OT = TypeVar("OT")  # PostProcessed Type
 
 
-class ParallelExecutor(Generic[IT, PT, OT]):
+class ParallelExecutorBase(Generic[IT, PT, OT], ABC):
     """
     this helper class supports in parallel processing of entries that are provided
     as a list, for instance to     download and process data.. like downloading and
@@ -140,14 +141,12 @@ class ParallelExecutor(Generic[IT, PT, OT]):
             logger.addHandler(handler)
         return self._process_throttled(data)
 
+    @abstractmethod
     def _execute_parallel(self, chunk: List[IT]) -> List[PT]:
-        with Pool(self.processes) as pool:
-            return pool.map(self._process_throttled_parallel, chunk)
+        pass
 
     def _execute_serial(self, chunk: List[IT]) -> List[PT]:
-        results: List[PT] = []
-        for entry in chunk:
-            results.append(self._process_throttled(entry))
+        results: List[PT] = [self._process_throttled(entry) for entry in chunk]
         return results
 
     def execute(self) -> Tuple[List[OT], List[IT]]:
@@ -198,3 +197,18 @@ class ParallelExecutor(Generic[IT, PT, OT]):
                 break
 
         return result_list, missing
+
+
+class ParallelExecutor(ParallelExecutorBase[IT, PT, OT]):
+
+    def _execute_parallel(self, chunk: List[IT]) -> List[PT]:
+        with Pool(self.processes) as pool:
+            return pool.map(self._process_throttled_parallel, chunk)
+
+class ThreadExecutor(ParallelExecutorBase[IT, PT, OT]):
+
+    def _execute_parallel(self, chunk: List[IT]) -> List[PT]:
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            # Herunterladen der Dateien parallel
+            return list(executor.map(self._process_throttled_parallel, chunk))
+

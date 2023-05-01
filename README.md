@@ -151,7 +151,7 @@ The following example shows how to create a `CompanyReader` instance for apple (
 ```
 from typing import Dict, List
 
-from secfsdstools.d_index.indexdataaccess import IndexReport
+from secfsdstools.c_index.indexdataaccess import IndexReport
 from secfsdstools.e_read.companyreading import CompanyReader
 
 
@@ -172,7 +172,7 @@ For details about the fields, see https://www.sec.gov/files/aqfs.pdf.
 ```
 
 Now, lets have a look at all the reports apple has filed. There are two methods, one of them returning a pandas
-dataframe and the other a list of `secfsdstools.d_index.indexdataaccess.IndexReport` instances.
+dataframe and the other a list of `secfsdstools.c_index.indexdataaccess.IndexReport` instances.
 
 ```
     # get basic infos of all the reports the company has filed.

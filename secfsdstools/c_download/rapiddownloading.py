@@ -22,11 +22,16 @@ class RapidZipDownloader(BaseDownloader):
     https://rapidapi.com/hansjoerg.wingeier/api/daily-sec-financial-statement-dataset
     """
 
-    def __init__(self, rapidurlbuilder: RapidUrlBuilder, daily_zip_dir: str, qrtr_zip_dir: str,
+    def __init__(self, rapidurlbuilder: RapidUrlBuilder,
+                 daily_zip_dir: str,
+                 qrtr_zip_dir: str,
+                 parquet_root_dir: str,
                  urldownloader: UrlDownloader,
                  execute_serial: bool = False):
-        super().__init__(zip_dir=daily_zip_dir, urldownloader=urldownloader,
-                         execute_serial=execute_serial)
+        super().__init__(zip_dir=daily_zip_dir,
+                         urldownloader=urldownloader,
+                         execute_serial=execute_serial,
+                         parquet_dir_typed=os.path.join(parquet_root_dir, 'quarter'))
         self.rapidurlbuilder = rapidurlbuilder
 
         self.qrtr_zip_dir = qrtr_zip_dir
@@ -58,7 +63,8 @@ class RapidZipDownloader(BaseDownloader):
         return RapidZipDownloader(rapidurlbuilder=rapidurlbuilder,
                                   daily_zip_dir=configuration.daily_download_dir,
                                   qrtr_zip_dir=configuration.download_dir,
-                                  urldownloader=urldownloader)
+                                  urldownloader=urldownloader,
+                                  parquet_root_dir=configuration.parquet_dir)
 
     def _get_headers(self) -> Dict[str, str]:
         return self.rapidurlbuilder.get_headers()
@@ -74,6 +80,24 @@ class RapidZipDownloader(BaseDownloader):
         return files[0]
 
     def _calculate_cut_off_for_qrtr_file(self, filename: str) -> str:
+        """
+        We only want to download daily files that are newer than the latest available
+        quarter file on the SEC side.
+
+        The idea is simple, we create a date-string of the quarter that starts after the quarter
+        defined in the filename, but we set the day to 00.
+
+        So if the filename is 2022q1
+        -> "2022" + "04" + "00"
+        if it is 2022q4
+        -> "2022" + "0100"
+
+        Args:
+            filename: filname of the quarter file
+
+        Returns:
+
+        """
         last_quarter_file_year = int(filename[:4])
         last_quarter_file_quarter = int(filename[5:6])
 
@@ -95,13 +119,17 @@ class RapidZipDownloader(BaseDownloader):
         # e.g., if the lates zip is 2022q4.zip, then the cutoff string looks like: '20230100'
         cutoff_str = self._calculate_cut_off_for_qrtr_file(latest_quarter_file)
 
-        dld_zip_files = self._get_downloaded_zips()
-        available_zips = self._get_available_zips()
+        downloaded_zip_files = self._get_downloaded_zips()
+        transformed_parquet = self._get_transformed_parquet()
+        available_zips_to_dld = self._get_available_zips()
 
-        missing = list(set(available_zips) - set(dld_zip_files))
+        # define which zip files don't have to be downloaded
+        download_or_transformed_zips = set(downloaded_zip_files).union(set(transformed_parquet))
+
+        missing = list(set(available_zips_to_dld) - set(download_or_transformed_zips))
 
         # only consider the filenames with names (without extension)
-        # are bigger than the cutoff string
+        # that are bigger than the cutoff string
         missing_after_cut_off = [entry for entry in missing if entry[:8] > cutoff_str]
 
         return [(filename, self.rapidurlbuilder.get_donwload_url(filename)) for filename in

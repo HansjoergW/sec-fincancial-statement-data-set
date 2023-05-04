@@ -20,7 +20,8 @@ class BaseDownloader(ABC):
     from an url and store it.
     """
 
-    def __init__(self, zip_dir: str, parquet_dir_typed: str,
+    def __init__(self, zip_dir: str,
+                 parquet_dir_typed: str,
                  urldownloader: UrlDownloader,
                  execute_serial: bool = False):
         self.urldownloader = urldownloader

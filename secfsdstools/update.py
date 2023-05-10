@@ -8,6 +8,7 @@ from secfsdstools.c_download.secdownloading import SecZipDownloader
 from secfsdstools.c_transform.toparquettransforming import ToParquetTransformer
 from secfsdstools.c_index.indexing import ReportParquetIndexer
 from secfsdstools.c_index.indexing import ReportZipIndexer
+from secfsdstools.c_update.updateprocess import Updater
 
 LOGGER = logging.getLogger(__name__)
 
@@ -32,61 +33,16 @@ def update(config: Configuration = None):
 
     # create the db
     DbCreator(db_dir=config.db_dir).create_db()
-
-    # download data from sec.gov
-    LOGGER.info("check if there are new files to download from sec.gov ...")
-    secdownloader = SecZipDownloader.get_downloader(configuration=config)
-    secdownloader.download()
-
-    # download data from rapid
-    if (config.rapid_api_key is not None) & (config.rapid_api_key != ''):
-        try:
-            LOGGER.info("check if there are new files to download from rapid...")
-            rapiddownloader = RapidZipDownloader.get_downloader(configuration=config)
-            rapiddownloader.download()
-        except Exception as ex:  # pylint: disable=W0703
-            LOGGER.warning("Failed to get data from rapid api, please check rapid-api-key. ")
-            LOGGER.warning("Only using data from Sec.gov because of: %s", ex)
-    else:
-        print("No rapid-api-key is set: \n"
-              + "If you are interested in daily updates, please have a look at "
-              + "https://rapidapi.com/hansjoerg.wingeier/api/daily-sec-financial-statement-dataset")
-
-    # create index of zip reports
-    LOGGER.info("start to index downloaded files ...")
-    qrtr_indexer = ReportZipIndexer(db_dir=config.db_dir,
-                                    zip_dir=config.download_dir,
-                                    file_type='quarter')
-    qrtr_indexer.process()
-
-    daily_indexer = ReportZipIndexer(db_dir=config.db_dir,
-                                     zip_dir=config.daily_download_dir,
-                                     file_type='daily')
-    daily_indexer.process()
-
-    # transform to parquet
-    LOGGER.info("start to transform to parquet format ...")
-    qrtr_transformer = ToParquetTransformer(zip_dir=config.download_dir,
-                                            parquet_dir=config.parquet_dir,
-                                            file_type='quarter')
-    qrtr_transformer.process()
-
-    daily_transformer = ToParquetTransformer(zip_dir=config.daily_download_dir,
-                                             parquet_dir=config.parquet_dir,
-                                             file_type='daily')
-    daily_transformer.process()
-
-    # create parquet index
-    LOGGER.info("start to index parquet files ...")
-    qrtr_parquet_indexer = ReportParquetIndexer(db_dir=config.db_dir,
-                                                parquet_dir=config.parquet_dir,
-                                                file_type='quarter')
-    qrtr_parquet_indexer.process()
-
-    daily_parquet_indexer = ReportParquetIndexer(db_dir=config.db_dir,
-                                                 parquet_dir=config.parquet_dir,
-                                                 file_type='daily')
-    daily_parquet_indexer.process()
+    updater = Updater(
+        db_dir=config.db_dir,
+        dld_dir=config.download_dir,
+        daily_dld_dir=config.daily_download_dir,
+        parquet_dir=config.parquet_dir,
+        user_agent=config.user_agent_email,
+        rapid_api_key=config.rapid_api_key,
+        rapid_api_plan=config.rapid_api_plan
+    )
+    updater.update()
 
 
 if __name__ == '__main__':

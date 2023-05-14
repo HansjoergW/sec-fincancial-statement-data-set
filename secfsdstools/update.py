@@ -33,15 +33,7 @@ def update(config: Configuration = None):
 
     # create the db
     DbCreator(db_dir=config.db_dir).create_db()
-    updater = Updater(
-        db_dir=config.db_dir,
-        dld_dir=config.download_dir,
-        daily_dld_dir=config.daily_download_dir,
-        parquet_dir=config.parquet_dir,
-        user_agent=config.user_agent_email,
-        rapid_api_key=config.rapid_api_key,
-        rapid_api_plan=config.rapid_api_plan
-    )
+    updater = Updater.get_instance(config)
     updater.update()
 
 

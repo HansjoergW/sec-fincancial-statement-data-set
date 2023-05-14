@@ -6,6 +6,7 @@ import logging
 import time
 from typing import Optional
 
+from secfsdstools.a_config.configmgt import Configuration
 from secfsdstools.a_utils.dbutils import DBStateAcessor
 from secfsdstools.a_utils.downloadutils import UrlDownloader
 from secfsdstools.a_utils.rapiddownloadutils import RapidUrlBuilder
@@ -21,6 +22,18 @@ class Updater:
     """Manages the update process: download zipfiles, transform to parquet, and index the reports"""
     LAST_UPDATE_CHECK_KEY: str = 'LAST_UPDATED'
     CHECK_EVERY_SECONDS: int = 24 * 60 * 60  # check every 24 hours
+
+    @classmethod
+    def get_instance(cls, config: Configuration):
+        return Updater(
+            db_dir=config.db_dir,
+            dld_dir=config.download_dir,
+            daily_dld_dir=config.daily_download_dir,
+            parquet_dir=config.parquet_dir,
+            user_agent=config.user_agent_email,
+            rapid_api_key=config.rapid_api_key,
+            rapid_api_plan=config.rapid_api_plan
+        )
 
     def __init__(self,
                  db_dir: str,

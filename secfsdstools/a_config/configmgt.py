@@ -132,8 +132,8 @@ class ConfigurationManager:
         print(' --------------------------------------------------------------------------')
         print(' Wellcome!')
         print(' It looks as if this is the first time you are using this package since no ')
-        print(f' configuration was found at {file_path} and one was created with the ')
-        print(' following default settings:\n')
+        print(f' configuration was found at {file_path}. A default configuration file was ')
+        print(' created at that location. It contains fhe following default values: \n')
         pprint.pprint(config.get_dict())
         print('')
         print(' If you want to change the settings, you can exit and and change the settings ')
@@ -155,11 +155,18 @@ class ConfigurationManager:
         print('        choose to keep the ZIP-files after transformation. ')
         print(' Note: The initial update process will take several minutes.')
         print('')
+
         inputvalue = input(' Start initial update process [y]/n:')
+
         if inputvalue in ['Y', 'y', '']:
-            print('let us go')  # todo -> hier geht es weiter
+            print('start initial report download process')
+            from secfsdstools.update import update
+            update(config)
         else:
-            sys.exit(0)
+            print(f'Please check the configuration at {file_path}.')
+
+            raise ValueError(
+                f'Please check the configuration at {file_path} and restart. ')
 
     @staticmethod
     def _read_configuration(file_path: str) -> Configuration:

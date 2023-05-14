@@ -1,19 +1,25 @@
 import os
+from io import StringIO
 from unittest.mock import patch
 
 import pytest
 
 from secfsdstools.a_config.configmgt import ConfigurationManager, Configuration, \
     SECFSDSTOOLS_ENV_VAR_NAME, DEFAULT_CONFIG_FILE
+from secfsdstools.b_setup.setupdb import DbCreator
 
 CURRENT_DIR = os.path.dirname(os.path.realpath(__file__))
-NOT_EXISTING_CFG = CURRENT_DIR + '/config.cfg'
+NOT_EXISTING_CFG = f'{CURRENT_DIR}/config.cfg'
 
 
-def test_environment_variable_no_file(tmp_path):
+def test_environment_variable_no_file(tmp_path, monkeypatch):
     # check if file is created if the env variable is set
-    config_file = str(tmp_path) + '/test.cfg'
+    config_file = f'{str(tmp_path)}/test.cfg'
     with patch.dict(os.environ, {SECFSDSTOOLS_ENV_VAR_NAME: config_file}, clear=True):
+
+        # configure command line input for _handle_first_start method
+        monkeypatch.setattr('sys.stdin', StringIO('n\n'))
+
         with pytest.raises(ValueError):
             ConfigurationManager.read_config_file()
 
@@ -26,7 +32,7 @@ def test_environment_variable_with_file(tmp_path):
     # check if file is read if the env variable is set
 
     # create the configuration at the expected location
-    config_file = str(tmp_path) + '/test.cfg'
+    config_file = f'{str(tmp_path)}/test.cfg'
     ConfigurationManager._write_configuration(config_file,
                                               Configuration(db_dir=os.path.join(tmp_path, 'blublu'),
                                                             download_dir=os.path.join(tmp_path, 'blublu'),
@@ -58,10 +64,13 @@ def test_config_file_in_cwd(tmp_path, monkeypatch: pytest.MonkeyPatch):
     assert configuration.db_dir.endswith('blabla')
 
 
-def test_no_config_file_in_home(tmp_path):
+def test_no_config_file_in_home(tmp_path, monkeypatch):
     # test if a file is created at the home directory
     with patch('os.path.expanduser') as mock_expanduser:
+
         mock_expanduser.return_value = str(tmp_path)
+        # configure command line input for _handle_first_start method
+        monkeypatch.setattr('sys.stdin', StringIO('n\n'))
 
         with pytest.raises(ValueError):
             ConfigurationManager.read_config_file()
@@ -99,6 +108,9 @@ def test_check_basic_configuration(tmp_path):
 
 
 def test_check_rapid_configuration(tmp_path):
+    # either to mock the db calls for get_key/set_key or providing a db db
+    DbCreator(db_dir=str(tmp_path)).create_db()
+
     invalid_rapid_plan = Configuration(db_dir=str(tmp_path),
                                        download_dir=str(tmp_path),
                                        user_agent_email='abc@xy.org',

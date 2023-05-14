@@ -24,11 +24,11 @@ v.0.5.0
 
 - automatisierung beim download der files verbessern
   - first start erkennen
-  - remove zip depending on flag
-  - todo: tests für c_udpate
 
-  -> autodownload option
+  -> autodownload option / upate option einbauen
      -> checked einmal pro Tag, ob neue Files vorhanden sind
+
+- remove zip depending on flag
 
 
 next

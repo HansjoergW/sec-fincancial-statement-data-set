@@ -1,17 +1,23 @@
+import os
 import time
 from pathlib import Path
 from unittest.mock import patch
 
 import pytest
 
+from secfsdstools.a_utils.fileutils import get_directories_in_directory
+from secfsdstools.b_setup.setupdb import DbCreator
+from secfsdstools.c_index.indexdataaccess import ParquetDBIndexingAccessor
 from secfsdstools.c_update.updateprocess import Updater
+
+current_dir, _ = os.path.split(__file__)
 
 
 @pytest.fixture
 def updater(tmp_path: Path) -> Updater:
     db_dir = str(tmp_path / 'db')
 
-    # DbCreator(db_dir=db_dir).create_db()
+    DbCreator(db_dir=db_dir).create_db()
 
     return Updater(
         db_dir=db_dir,
@@ -67,6 +73,57 @@ def test_do_download_with_rapid_api(updater):
         rapid_download.assert_called_once()
 
 
-wie reagiert daily_transformer, falls kein daily download dir vorhanden ist? müsste auch funktionieren
+def test_do_transform_none_existing_folder(updater):
+    updater.dld_dir = "./bla"
+    updater._do_transform()
 
-dito indexer
+
+def test_do_transform_and_index(updater):
+    updater.dld_dir = f'{current_dir}/testdata_zip'
+    updater._do_transform()
+
+    transformed = get_directories_in_directory(os.path.join(updater.parquet_dir, 'quarter'))
+    assert len(transformed) == 2
+
+    # test indexing
+    updater._do_index()
+
+    indexer = ParquetDBIndexingAccessor(db_dir=updater.db_dir)
+    indexed_files_df = indexer.read_all_indexfileprocessing_df()
+    assert len(indexed_files_df) == 2
+
+    reports_df = indexer.read_all_indexreports_df()
+    assert len(reports_df) == 1017
+
+
+def test_integration_test(updater):
+    updater.dld_dir = f'{current_dir}/testdata_zip'
+
+    # check that there is no state key at the beginning
+    last_check = updater.db_state_accesor.get_key(Updater.LAST_UPDATE_CHECK_KEY)
+    assert last_check is None
+
+    start_time = time.time()
+    with patch('secfsdstools.c_download.secdownloading.SecZipDownloader.download') \
+            as sec_download, \
+            patch('secfsdstools.c_download.rapiddownloading.RapidZipDownloader.download') \
+                    as rapid_download:
+
+        updater.update()
+
+        # Überprüfen, ob die download-Methode von SecZipDownloader aufgerufen wurde
+        sec_download.assert_called_once()
+        rapid_download.assert_not_called()
+
+        # check that both zip files had been processed
+        indexer = ParquetDBIndexingAccessor(db_dir=updater.db_dir)
+        indexed_files_df = indexer.read_all_indexfileprocessing_df()
+        assert len(indexed_files_df) == 2
+
+        reports_df = indexer.read_all_indexreports_df()
+        assert len(reports_df) == 1017
+
+        # check that
+        last_check = updater.db_state_accesor.get_key(Updater.LAST_UPDATE_CHECK_KEY)
+        assert start_time < int(last_check)
+

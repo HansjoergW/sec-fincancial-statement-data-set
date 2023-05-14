@@ -116,6 +116,8 @@ class ToParquetTransformer:
         executor.set_post_process_chunk_function(post_process)
 
         result, failed = executor.execute()
-        LOGGER.error("The following files could not be transformed: %s", failed)
+
+        if len(failed) > 0:
+            LOGGER.error("The following files could not be transformed: %s", failed)
 
         return result

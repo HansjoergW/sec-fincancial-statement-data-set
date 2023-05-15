@@ -1,13 +1,8 @@
 """ Getting everything ready to work with the data. """
 import logging
 
-from secfsdstools.a_config.configmgt import ConfigurationManager, Configuration
-from secfsdstools.b_setup.setupdb import DbCreator
-from secfsdstools.c_download.rapiddownloading import RapidZipDownloader
-from secfsdstools.c_download.secdownloading import SecZipDownloader
-from secfsdstools.c_transform.toparquettransforming import ToParquetTransformer
-from secfsdstools.c_index.indexing import ReportParquetIndexer
-from secfsdstools.c_index.indexing import ReportZipIndexer
+from secfsdstools.a_config.configmgt import ConfigurationManager
+from secfsdstools.a_config.configmodel import Configuration
 from secfsdstools.c_update.updateprocess import Updater
 
 LOGGER = logging.getLogger(__name__)
@@ -32,7 +27,6 @@ def update(config: Configuration = None):
         config = ConfigurationManager.read_config_file()
 
     # create the db
-    DbCreator(db_dir=config.db_dir).create_db()
     updater = Updater.get_instance(config)
     updater.update()
 

@@ -1,7 +1,7 @@
 import os
 from unittest.mock import MagicMock
 
-from secfsdstools.a_config.configmgt import Configuration
+from secfsdstools.a_config.configmodel import Configuration
 from secfsdstools.c_index.indexdataaccess import IndexReport
 from secfsdstools.e_read.companyreading import CompanyReader
 

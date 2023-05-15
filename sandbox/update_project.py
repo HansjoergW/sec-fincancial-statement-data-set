@@ -1,5 +1,5 @@
 from secfsdstools.update import update
-from secfsdstools.a_config.configmgt import Configuration
+from secfsdstools.a_config.configmodel import Configuration
 
 if __name__ == '__main__':
     config = Configuration(db_dir="./../data/db",

@@ -6,10 +6,11 @@ import logging
 import time
 from typing import Optional
 
-from secfsdstools.a_config.configmgt import Configuration
+from secfsdstools.a_config.configmodel import Configuration
 from secfsdstools.a_utils.dbutils import DBStateAcessor
 from secfsdstools.a_utils.downloadutils import UrlDownloader
 from secfsdstools.a_utils.rapiddownloadutils import RapidUrlBuilder
+from secfsdstools.b_setup.setupdb import DbCreator
 from secfsdstools.c_download.rapiddownloading import RapidZipDownloader
 from secfsdstools.c_download.secdownloading import SecZipDownloader
 from secfsdstools.c_index.indexing import ReportParquetIndexer
@@ -25,6 +26,15 @@ class Updater:
 
     @classmethod
     def get_instance(cls, config: Configuration):
+        """
+        Creates the Updater instance based on the provided Configuration object
+        Args:
+            config: Configuration object
+
+        Returns:
+            Updater: the instanc
+
+        """
         return Updater(
             db_dir=config.db_dir,
             dld_dir=config.download_dir,
@@ -83,13 +93,13 @@ class Updater:
                                                      urldownloader=urldownloader,
                                                      parquet_root_dir=self.parquet_dir)
                 rapiddownloader.download()
+                return
             except Exception as ex:  # pylint: disable=W0703
                 LOGGER.warning("Failed to get data from rapid api, please check rapid-api-key. ")
                 LOGGER.warning("Only using data from Sec.gov because of: %s", ex)
-        else:
-            print("No rapid-api-key is set: \n"
-                  + "If you are interested in daily updates, please have a look at "
-                  + "https://rapidapi.com/hansjoerg.wingeier/api/daily-sec-financial-statement-dataset")
+        print("No rapid-api-key is set: \n"
+              + "If you are interested in daily updates, please have a look at "
+              + "https://rapidapi.com/hansjoerg.wingeier/api/daily-sec-financial-statement-dataset")
 
     def _do_transform(self):
         LOGGER.info("start to transform to parquet format ...")
@@ -122,10 +132,18 @@ class Updater:
         self._do_index()
 
     def update(self):
+        """
+        execute the updated process if time has come to check for new upates.
+        Returns:
+
+        """
 
         if not self._check_for_update():
             LOGGER.info('Skipping update check since last check was done less than 24 hours ago')
             return
+
+        # create db if necessary
+        DbCreator(db_dir=self.db_dir).create_db()
 
         # execute the update logic
         self._update()

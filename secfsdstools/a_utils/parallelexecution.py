@@ -5,11 +5,12 @@ using pathos.multiprocessing instead of multiprocessing, so that method function
 -> pypi.org "pathos"
 """
 
+import concurrent.futures
 import logging
 from abc import ABC, abstractmethod
 from time import time, sleep
 from typing import Generic, TypeVar, List, Callable, Optional, Tuple
-import concurrent.futures
+
 from pathos.multiprocessing import ProcessingPool as Pool
 from pathos.multiprocessing import cpu_count
 
@@ -200,15 +201,19 @@ class ParallelExecutorBase(Generic[IT, PT, OT], ABC):
 
 
 class ParallelExecutor(ParallelExecutorBase[IT, PT, OT]):
-
+    """
+    Parallel executor that uses multiprocess package to parallelize
+    """
     def _execute_parallel(self, chunk: List[IT]) -> List[PT]:
         with Pool(self.processes) as pool:
             return pool.map(self._process_throttled_parallel, chunk)
 
-class ThreadExecutor(ParallelExecutorBase[IT, PT, OT]):
 
+class ThreadExecutor(ParallelExecutorBase[IT, PT, OT]):
+    """
+    Parallel exector that uses Threads to parallelize
+    """
     def _execute_parallel(self, chunk: List[IT]) -> List[PT]:
         with concurrent.futures.ThreadPoolExecutor() as executor:
             # Herunterladen der Dateien parallel
             return list(executor.map(self._process_throttled_parallel, chunk))
-

@@ -5,9 +5,8 @@ Logic to download the zipfiles from the rapid api.
 import json
 import logging
 import os
-from typing import List, Tuple, Optional, Dict
+from typing import List, Tuple, Dict
 
-from secfsdstools.a_config.configmgt import Configuration, ConfigurationManager
 from secfsdstools.a_utils.downloadutils import UrlDownloader
 from secfsdstools.a_utils.fileutils import get_filenames_in_directory
 from secfsdstools.a_utils.rapiddownloadutils import RapidUrlBuilder
@@ -39,32 +38,6 @@ class RapidZipDownloader(BaseDownloader):
         if not os.path.isdir(self.zip_dir):
             LOGGER.info("creating download folder: %s", self.zip_dir)
             os.makedirs(self.zip_dir)
-
-    @classmethod
-    def get_downloader(cls, configuration: Optional[Configuration] = None):
-        """
-        Creates a IndexSearch instance.
-        If no  configuration object is passed, it reads the configuration from
-        the config file.
-        Args:
-            configuration (Configuration, optional, None): configuration object
-
-        Returns:
-            RapidZipDownloader: instance of RapidZipDownloader
-        """
-        if configuration is None:
-            configuration = ConfigurationManager.read_config_file()
-
-        urldownloader = UrlDownloader(user_agent=configuration.user_agent_email)
-        rapidurlbuilder = RapidUrlBuilder(rapid_plan=configuration.rapid_api_plan,
-                                          rapid_api_key=configuration.rapid_api_key)
-        # overwrite zipdir
-
-        return RapidZipDownloader(rapidurlbuilder=rapidurlbuilder,
-                                  daily_zip_dir=configuration.daily_download_dir,
-                                  qrtr_zip_dir=configuration.download_dir,
-                                  urldownloader=urldownloader,
-                                  parquet_root_dir=configuration.parquet_dir)
 
     def _get_headers(self) -> Dict[str, str]:
         return self.rapidurlbuilder.get_headers()
@@ -133,8 +106,7 @@ class RapidZipDownloader(BaseDownloader):
         missing_after_cut_off = [entry for entry in missing if entry[:8] > cutoff_str]
 
         return [(filename, self.rapidurlbuilder.get_donwload_url(filename)) for filename in
-                         missing_after_cut_off]
-
+                missing_after_cut_off]
 
     def _get_available_zips(self) -> List[str]:
         content = self._get_content()
@@ -142,6 +114,5 @@ class RapidZipDownloader(BaseDownloader):
         daily_entries = parsed_content['daily']
 
         return [entry['file'] for entry in daily_entries if
-                           ((entry['subscription'] == 'basic') | (
-                                   entry['subscription'] == self.rapidurlbuilder.rapid_plan))]
-
+                ((entry['subscription'] == 'basic') | (
+                        entry['subscription'] == self.rapidurlbuilder.rapid_plan))]

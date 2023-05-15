@@ -1,6 +1,6 @@
 import time
 
-from secfsdstools.a_config.configmgt import Configuration
+from secfsdstools.a_config.configmodel import Configuration
 from secfsdstools.c_index.indexdataaccess import IndexReport
 from secfsdstools.c_index.indexing import BaseReportIndexer
 from secfsdstools.e_read.basereportreading import NUM_TXT, PRE_TXT, SUB_TXT

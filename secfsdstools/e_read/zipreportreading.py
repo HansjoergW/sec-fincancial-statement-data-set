@@ -7,7 +7,8 @@ from typing import Dict, Optional
 
 import pandas as pd
 
-from secfsdstools.a_config.configmgt import Configuration, ConfigurationManager
+from secfsdstools.a_config.configmgt import ConfigurationManager
+from secfsdstools.a_config.configmodel import Configuration
 from secfsdstools.a_utils.fileutils import read_df_from_file_in_zip
 from secfsdstools.c_index.indexdataaccess import create_index_accessor
 from secfsdstools.e_read.basereportreading import BaseReportReader

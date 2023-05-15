@@ -5,7 +5,8 @@ from typing import Optional
 
 import pandas as pd
 
-from secfsdstools.a_config.configmgt import Configuration, ConfigurationManager
+from secfsdstools.a_config.configmgt import ConfigurationManager
+from secfsdstools.a_config.configmodel import Configuration
 from secfsdstools.c_index.indexdataaccess import DBIndexingAccessorBase, \
     create_index_accessor
 

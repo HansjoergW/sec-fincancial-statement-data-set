@@ -6,56 +6,18 @@ import logging
 import os
 import pprint
 import re
-import sys
-from dataclasses import dataclass, asdict
-from enum import Enum
-from typing import Optional, List
+from typing import List
 
+from secfsdstools.a_config.configmodel import Configuration
 from secfsdstools.a_utils.dbutils import DBStateAcessor
 from secfsdstools.a_utils.downloadutils import UrlDownloader
 from secfsdstools.a_utils.rapiddownloadutils import RapidUrlBuilder
+from secfsdstools.c_update.updateprocess import Updater
 
 DEFAULT_CONFIG_FILE: str = '.secfsdstools.cfg'
 SECFSDSTOOLS_ENV_VAR_NAME: str = 'SECFSDSTOOLS_CFG'
 
 LOGGER = logging.getLogger(__name__)
-
-
-class AccessorType(Enum):
-    """
-    Defines the AccessType which depends on how the data is stored
-    """
-    ZIP = 1
-    PARQUET = 2
-
-
-@dataclass
-class Configuration:
-    """ Basic configuration settings """
-    download_dir: str
-    db_dir: str
-    parquet_dir: str
-    user_agent_email: str
-    rapid_api_key: Optional[str] = None
-    rapid_api_plan: Optional[str] = 'basic'
-    daily_download_dir: Optional[str] = None
-    use_parquet: Optional[bool] = True
-
-    def __post_init__(self):
-        self.daily_download_dir = os.path.join(self.download_dir, "daily")
-
-    def get_accessor_type(self) -> AccessorType:
-        """
-        returns the access type, depending on how the flag use_parquet is set
-        Returns:
-            AccessorType: accessor type, whether to use parquet or csv in zip
-
-        """
-        return AccessorType.PARQUET if self.use_parquet else AccessorType.ZIP
-
-    def get_dict(self):
-        return dict(asdict(self))
-
 
 DEFAULT_CONFIGURATION = Configuration(
     download_dir=os.path.join(os.path.expanduser('~'), 'secfsdstools/data/dld'),
@@ -107,7 +69,8 @@ class ConfigurationManager:
                 ConfigurationManager._write_configuration(env_config_file, DEFAULT_CONFIGURATION)
                 LOGGER.error('config file created at %s.', env_config_file)
                 LOGGER.error('please check the content ant then restart')
-                ConfigurationManager._handle_first_start(env_config_file, DEFAULT_CONFIGURATION)
+                return ConfigurationManager._handle_first_start(env_config_file,
+                                                                DEFAULT_CONFIGURATION)
 
             return ConfigurationManager._read_configuration(env_config_file)
 
@@ -123,7 +86,8 @@ class ConfigurationManager:
             ConfigurationManager._write_configuration(home_cfg_file_path, DEFAULT_CONFIGURATION)
             LOGGER.error('Config file created at %s. Please check the content and then rerun.',
                          home_cfg_file_path)
-            ConfigurationManager._handle_first_start(home_cfg_file_path, DEFAULT_CONFIGURATION)
+            return ConfigurationManager._handle_first_start(home_cfg_file_path,
+                                                            DEFAULT_CONFIGURATION)
 
         return ConfigurationManager._read_configuration(home_cfg_file_path)
 
@@ -159,14 +123,19 @@ class ConfigurationManager:
         inputvalue = input(' Start initial update process [y]/n:')
 
         if inputvalue in ['Y', 'y', '']:
-            print('start initial report download process')
-            from secfsdstools.update import update
-            update(config)
-        else:
-            print(f'Please check the configuration at {file_path}.')
+            ConfigurationManager._do_update(config)
+            return config
 
-            raise ValueError(
-                f'Please check the configuration at {file_path} and restart. ')
+        print(f'Please check the configuration at {file_path}.')
+        raise ValueError(
+            f'Please check the configuration at {file_path} and restart. ')
+
+    @staticmethod
+    def _do_update(config: Configuration):
+
+        print('start initial report download process')
+        updater = Updater.get_instance(config)
+        updater.update()
 
     @staticmethod
     def _read_configuration(file_path: str) -> Configuration:
@@ -306,7 +275,3 @@ class ConfigurationManager:
                              'UseParquet': configuration.use_parquet}
         with open(file_path, 'w', encoding="utf8") as configfile:
             config.write(configfile)
-
-
-if __name__ == '__main__':
-    ConfigurationManager._handle_first_start("my/config/path", DEFAULT_CONFIGURATION)

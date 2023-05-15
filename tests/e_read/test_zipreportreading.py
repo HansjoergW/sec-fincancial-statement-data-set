@@ -3,7 +3,7 @@ from unittest.mock import patch
 
 import pytest
 
-from secfsdstools.a_config.configmgt import Configuration
+from secfsdstools.a_config.configmodel import Configuration
 from secfsdstools.c_index.indexdataaccess import IndexFileProcessingState
 from secfsdstools.e_read.zipreportreading import ZipReportReader
 

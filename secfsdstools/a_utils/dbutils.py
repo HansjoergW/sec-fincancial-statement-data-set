@@ -203,7 +203,7 @@ class DBStateAcessor(DB):
         # so we first have to check if the key exists and use update instead of insert
         if self.get_key(key):
             # update
-            sql = f"""UPDATE {DBStateAcessor.STATUS_TABLE_NAME} 
+            sql = f"""UPDATE {DBStateAcessor.STATUS_TABLE_NAME}
                         SET {DBStateAcessor.VALUE_COL_NAME} = '{value}'
                         WHERE {DBStateAcessor.KEY_COL_NAME} = '{key}'"""
 
@@ -219,10 +219,9 @@ class DBStateAcessor(DB):
         Returns:
             str: the stored value or None
         """
-        sql = f"""SELECT {DBStateAcessor.VALUE_COL_NAME} 
-                   FROM  {DBStateAcessor.STATUS_TABLE_NAME} 
+        sql = f"""SELECT {DBStateAcessor.VALUE_COL_NAME}
+                   FROM  {DBStateAcessor.STATUS_TABLE_NAME}
                    WHERE {DBStateAcessor.KEY_COL_NAME} = '{key}'"""
         result = self.execute_fetchall(sql)
 
         return None if len(result) == 0 else result[0][0]
-

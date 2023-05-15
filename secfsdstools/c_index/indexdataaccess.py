@@ -6,7 +6,7 @@ from typing import List, Optional
 
 import pandas as pd
 
-from secfsdstools.a_config.configmgt import AccessorType
+from secfsdstools.a_config.configmodel import AccessorType
 from secfsdstools.a_utils.dbutils import DB
 
 

@@ -4,8 +4,8 @@ from unittest.mock import patch
 
 import pytest
 
-from secfsdstools.a_config.configmgt import ConfigurationManager, Configuration, \
-    SECFSDSTOOLS_ENV_VAR_NAME, DEFAULT_CONFIG_FILE
+from secfsdstools.a_config.configmgt import ConfigurationManager, SECFSDSTOOLS_ENV_VAR_NAME, DEFAULT_CONFIG_FILE
+from secfsdstools.a_config.configmodel import Configuration
 from secfsdstools.b_setup.setupdb import DbCreator
 
 CURRENT_DIR = os.path.dirname(os.path.realpath(__file__))
@@ -64,7 +64,7 @@ def test_config_file_in_cwd(tmp_path, monkeypatch: pytest.MonkeyPatch):
     assert configuration.db_dir.endswith('blabla')
 
 
-def test_no_config_file_in_home(tmp_path, monkeypatch):
+def test_no_config_file_in_home_no_update(tmp_path, monkeypatch):
     # test if a file is created at the home directory
     with patch('os.path.expanduser') as mock_expanduser:
 
@@ -78,6 +78,25 @@ def test_no_config_file_in_home(tmp_path, monkeypatch):
             # check if file is present
             home_cfg_file_path = os.path.join(os.path.expanduser('~'), DEFAULT_CONFIG_FILE)
             assert os.path.isfile(home_cfg_file_path)
+
+
+def test_no_config_file_in_home_with_update(tmp_path, monkeypatch):
+    # test if a file is created at the home directory
+    with patch('os.path.expanduser') as mock_expanduser, \
+         patch('secfsdstools.a_config.configmgt.ConfigurationManager._do_update') as mock_update:
+
+        mock_update.return_value = None
+        mock_expanduser.return_value = str(tmp_path)
+        # configure command line input for _handle_first_start method
+        monkeypatch.setattr('sys.stdin', StringIO('y\n'))
+
+        ConfigurationManager.read_config_file()
+
+        mock_update.assert_called_once()
+
+        # check if file is present
+        home_cfg_file_path = os.path.join(os.path.expanduser('~'), DEFAULT_CONFIG_FILE)
+        assert os.path.isfile(home_cfg_file_path)
 
 
 def test_config_file_in_home(tmp_path):
@@ -163,3 +182,4 @@ def test_check_rapid_configuration(tmp_path):
     results = ConfigurationManager.check_rapid_configuration(invalid_api_key)
     assert len(results) == 1
     assert 'RapidApiKey' in results[0]
+

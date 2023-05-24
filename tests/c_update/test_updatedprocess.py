@@ -104,11 +104,13 @@ def test_integration_test(updater):
     assert last_check is None
 
     start_time = time.time()
+    time.sleep(1) # make sure some time has past, before calling update
     with patch('secfsdstools.c_download.secdownloading.SecZipDownloader.download') \
             as sec_download, \
             patch('secfsdstools.c_download.rapiddownloading.RapidZipDownloader.download') \
                     as rapid_download:
 
+        # updates LAST_UPDATE_CHECK_KEY
         updater.update()
 
         # Überprüfen, ob die download-Methode von SecZipDownloader aufgerufen wurde
@@ -125,5 +127,5 @@ def test_integration_test(updater):
 
         # check that
         last_check = updater.db_state_accesor.get_key(Updater.LAST_UPDATE_CHECK_KEY)
-        assert start_time < int(last_check)
+        assert start_time < float(last_check)
 

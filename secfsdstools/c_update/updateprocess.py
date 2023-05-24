@@ -69,7 +69,7 @@ class Updater:
         if last_check is None:
             return True
 
-        return int(last_check) + Updater.CHECK_EVERY_SECONDS < time.time()
+        return float(last_check) + Updater.CHECK_EVERY_SECONDS < time.time()
 
     def _do_download(self):
         urldownloader = UrlDownloader(user_agent=self.user_agent)
@@ -149,4 +149,4 @@ class Updater:
         self._update()
 
         # update the timestamp of the last check
-        self.db_state_accesor.set_key(Updater.LAST_UPDATE_CHECK_KEY, str(int(time.time())))
+        self.db_state_accesor.set_key(Updater.LAST_UPDATE_CHECK_KEY, str(time.time()))

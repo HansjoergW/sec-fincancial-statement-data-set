@@ -4,7 +4,8 @@ from unittest.mock import patch
 
 import pytest
 
-from secfsdstools.a_config.configmgt import ConfigurationManager, SECFSDSTOOLS_ENV_VAR_NAME, DEFAULT_CONFIG_FILE
+from secfsdstools.a_config.configmgt import ConfigurationManager, SECFSDSTOOLS_ENV_VAR_NAME, \
+    DEFAULT_CONFIG_FILE
 from secfsdstools.a_config.configmodel import Configuration
 from secfsdstools.b_setup.setupdb import DbCreator
 
@@ -16,7 +17,6 @@ def test_environment_variable_no_file(tmp_path, monkeypatch):
     # check if file is created if the env variable is set
     config_file = f'{str(tmp_path)}/test.cfg'
     with patch.dict(os.environ, {SECFSDSTOOLS_ENV_VAR_NAME: config_file}, clear=True):
-
         # configure command line input for _handle_first_start method
         monkeypatch.setattr('sys.stdin', StringIO('n\n'))
 
@@ -33,11 +33,14 @@ def test_environment_variable_with_file(tmp_path):
 
     # create the configuration at the expected location
     config_file = f'{str(tmp_path)}/test.cfg'
-    ConfigurationManager._write_configuration(config_file,
-                                              Configuration(db_dir=os.path.join(tmp_path, 'blublu'),
-                                                            download_dir=os.path.join(tmp_path, 'blublu'),
-                                                            user_agent_email='user@email.com',
-                                                            parquet_dir=os.path.join(tmp_path, 'parquet')))
+    ConfigurationManager._write_configuration(
+        config_file,
+        Configuration(db_dir=os.path.join(tmp_path, 'blublu'),
+                      download_dir=os.path.join(tmp_path, 'blublu'),
+                      user_agent_email='user@email.com',
+                      parquet_dir=os.path.join(tmp_path, 'parquet'),
+                      auto_update=False  # prevent calling update
+                      ))
 
     with patch.dict(os.environ, {SECFSDSTOOLS_ENV_VAR_NAME: config_file}, clear=True):
         configuration = ConfigurationManager.read_config_file()
@@ -53,21 +56,25 @@ def test_config_file_in_cwd(tmp_path, monkeypatch: pytest.MonkeyPatch):
     monkeypatch.chdir(tmp_path)
     config_file = str(tmp_path / DEFAULT_CONFIG_FILE)
 
-    ConfigurationManager._write_configuration(config_file,
-                                              Configuration(db_dir=os.path.join(tmp_path, 'blabla'),
-                                                            download_dir=os.path.join(tmp_path, 'blabla'),
-                                                            user_agent_email='user@email.com',
-                                                            parquet_dir=os.path.join(tmp_path, 'parquet')))
+    ConfigurationManager._write_configuration(
+        config_file,
+        Configuration(db_dir=os.path.join(tmp_path, 'blabla'),
+                      download_dir=os.path.join(tmp_path, 'blabla'),
+                      user_agent_email='user@email.com',
+                      parquet_dir=os.path.join(tmp_path, 'parquet'),
+                      auto_update=False)) # prevent calling update
 
     configuration = ConfigurationManager.read_config_file()
     assert configuration is not None
     assert configuration.db_dir.endswith('blabla')
+    # check some default values
+    assert configuration.auto_update is False
+    assert configuration.keep_zip_files is False
 
 
 def test_no_config_file_in_home_no_update(tmp_path, monkeypatch):
     # test if a file is created at the home directory
     with patch('os.path.expanduser') as mock_expanduser:
-
         mock_expanduser.return_value = str(tmp_path)
         # configure command line input for _handle_first_start method
         monkeypatch.setattr('sys.stdin', StringIO('n\n'))
@@ -83,8 +90,8 @@ def test_no_config_file_in_home_no_update(tmp_path, monkeypatch):
 def test_no_config_file_in_home_with_update(tmp_path, monkeypatch):
     # test if a file is created at the home directory
     with patch('os.path.expanduser') as mock_expanduser, \
-         patch('secfsdstools.a_config.configmgt.ConfigurationManager._do_update') as mock_update:
-
+            patch(
+                'secfsdstools.a_config.configmgt.ConfigurationManager._do_initial_update') as mock_update:
         mock_update.return_value = None
         mock_expanduser.return_value = str(tmp_path)
         # configure command line input for _handle_first_start method
@@ -102,17 +109,47 @@ def test_no_config_file_in_home_with_update(tmp_path, monkeypatch):
 def test_config_file_in_home(tmp_path):
     config_file = str(tmp_path / DEFAULT_CONFIG_FILE)
 
-    ConfigurationManager._write_configuration(config_file,
-                                              Configuration(db_dir=os.path.join(tmp_path, 'bloblo'),
-                                                            download_dir=os.path.join(tmp_path, 'bloblo'),
-                                                            user_agent_email='user@email.com',
-                                                            parquet_dir=os.path.join(tmp_path, 'parquet')))
+    ConfigurationManager._write_configuration(
+        config_file,
+        Configuration(db_dir=os.path.join(tmp_path, 'bloblo'),
+                      download_dir=os.path.join(tmp_path, 'bloblo'),
+                      user_agent_email='user@email.com',
+                      parquet_dir=os.path.join(tmp_path, 'parquet'),
+                      auto_update=False)) # prevent calling update
+
     with patch('os.path.expanduser') as mock_expanduser:
         mock_expanduser.return_value = str(tmp_path)
 
         configuration = ConfigurationManager.read_config_file()
         assert configuration is not None
         assert configuration.db_dir.endswith('bloblo')
+        # check some default values
+        assert configuration.auto_update is False
+        assert configuration.keep_zip_files is False
+
+
+def test_config_file_in_home_call_to_updated(tmp_path):
+    # check if update-method is actually called
+    config_file = str(tmp_path / DEFAULT_CONFIG_FILE)
+
+    ConfigurationManager._write_configuration(
+        config_file,
+        Configuration(db_dir=os.path.join(tmp_path, 'bloblo'),
+                      download_dir=os.path.join(tmp_path, 'bloblo'),
+                      user_agent_email='user@email.com',
+                      parquet_dir=os.path.join(tmp_path, 'parquet')))
+
+    with patch('os.path.expanduser') as mock_expanduser, \
+            patch('secfsdstools.c_update.updateprocess.Updater.update') as update_mock:
+        mock_expanduser.return_value = str(tmp_path)
+
+        configuration = ConfigurationManager.read_config_file()
+        assert configuration is not None
+        assert configuration.db_dir.endswith('bloblo')
+        # check some default values
+        assert configuration.auto_update is True
+        assert configuration.keep_zip_files is False
+        update_mock.assert_called_once()
 
 
 def test_check_basic_configuration(tmp_path):
@@ -182,4 +219,3 @@ def test_check_rapid_configuration(tmp_path):
     results = ConfigurationManager.check_rapid_configuration(invalid_api_key)
     assert len(results) == 1
     assert 'RapidApiKey' in results[0]
-

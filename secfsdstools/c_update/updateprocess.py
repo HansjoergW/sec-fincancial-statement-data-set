@@ -139,9 +139,12 @@ class Updater:
         """
 
         if not self._check_for_update():
-            LOGGER.info('Skipping update check since last check was done less than 24 hours ago')
+            LOGGER.debug(
+                'Skipping update check since last check was done less than ' +
+                f'{Updater.CHECK_EVERY_SECONDS} seconds ago')
             return
 
+        LOGGER.info('Check if new report zip files are available...')
         # create db if necessary
         DbCreator(db_dir=self.db_dir).create_db()
 

@@ -27,6 +27,8 @@ class Configuration:
     rapid_api_plan: Optional[str] = 'basic'
     daily_download_dir: Optional[str] = None
     use_parquet: Optional[bool] = True
+    auto_update: Optional[bool] = True
+    keep_zip_files: Optional[bool] = False
 
     def __post_init__(self):
         self.daily_download_dir = os.path.join(self.download_dir, "daily")

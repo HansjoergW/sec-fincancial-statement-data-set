@@ -24,7 +24,9 @@ DEFAULT_CONFIGURATION = Configuration(
     db_dir=os.path.join(os.path.expanduser('~'), 'secfsdstools/data/db'),
     parquet_dir=os.path.join(os.path.expanduser('~'), 'secfsdstools/data/parquet'),
     user_agent_email='your.email@goeshere.com',
-    use_parquet=True
+    use_parquet=True,
+    auto_update=True,
+    keep_zip_files=False
 )
 
 
@@ -72,12 +74,13 @@ class ConfigurationManager:
                 return ConfigurationManager._handle_first_start(env_config_file,
                                                                 DEFAULT_CONFIGURATION)
 
-            return ConfigurationManager._read_configuration(env_config_file)
+            return ConfigurationManager._read_configuration_and_check_for_udpates(env_config_file)
 
         current_cfg_file_path = os.path.join(os.getcwd(), DEFAULT_CONFIG_FILE)
         if os.path.isfile(current_cfg_file_path):
             LOGGER.info('found config file at %s', current_cfg_file_path)
-            return ConfigurationManager._read_configuration(current_cfg_file_path)
+            return ConfigurationManager._read_configuration_and_check_for_udpates(
+                current_cfg_file_path)
 
             # check if file exists at home directory
         home_cfg_file_path = os.path.join(os.path.expanduser('~'), DEFAULT_CONFIG_FILE)
@@ -89,7 +92,7 @@ class ConfigurationManager:
             return ConfigurationManager._handle_first_start(home_cfg_file_path,
                                                             DEFAULT_CONFIGURATION)
 
-        return ConfigurationManager._read_configuration(home_cfg_file_path)
+        return ConfigurationManager._read_configuration_and_check_for_udpates(home_cfg_file_path)
 
     @staticmethod
     def _handle_first_start(file_path: str, config: Configuration):
@@ -123,7 +126,7 @@ class ConfigurationManager:
         inputvalue = input(' Start initial update process [y]/n:')
 
         if inputvalue in ['Y', 'y', '']:
-            ConfigurationManager._do_update(config)
+            ConfigurationManager._do_initial_update(config)
             return config
 
         print(f'Please check the configuration at {file_path}.')
@@ -131,11 +134,23 @@ class ConfigurationManager:
             f'Please check the configuration at {file_path} and restart. ')
 
     @staticmethod
-    def _do_update(config: Configuration):
-
+    def _do_initial_update(config: Configuration):
         print('start initial report download process')
         updater = Updater.get_instance(config)
         updater.update()
+
+    @staticmethod
+    def _read_configuration_and_check_for_udpates(file_path: str) -> Configuration:
+        config: Configuration = ConfigurationManager._read_configuration(file_path)
+        ConfigurationManager._check_for_update(config)
+        return config
+
+    @staticmethod
+    def _check_for_update(config: Configuration):
+        if config.auto_update:
+            LOGGER.debug('AutoUpdate is True, so check if new zip files are available')
+            updater = Updater.get_instance(config)
+            updater.update()
 
     @staticmethod
     def _read_configuration(file_path: str) -> Configuration:
@@ -156,7 +171,9 @@ class ConfigurationManager:
             user_agent_email=config['DEFAULT'].get('UserAgentEmail'),
             rapid_api_key=config['DEFAULT'].get('RapidApiKey', None),
             rapid_api_plan=config['DEFAULT'].get('RapidApiPlan', 'basic'),
-            use_parquet=config['DEFAULT'].getboolean('UserParquet', True)
+            use_parquet=config['DEFAULT'].getboolean('UserParquet', True),
+            auto_update=config['DEFAULT'].getboolean('AutoUpdate', True),
+            keep_zip_files=config['DEFAULT'].getboolean('KeepZipFiles', False)
         )
 
         check_messages = ConfigurationManager.check_basic_configuration(config)
@@ -272,6 +289,8 @@ class ConfigurationManager:
                              'DbDirectory': configuration.db_dir,
                              'ParquetDirectory': configuration.parquet_dir,
                              'UserAgentEmail': configuration.user_agent_email,
-                             'UseParquet': configuration.use_parquet}
+                             'UseParquet': configuration.use_parquet,
+                             'AutoUpdate': configuration.auto_update,
+                             'KeepZipFiles': configuration.keep_zip_files}
         with open(file_path, 'w', encoding="utf8") as configfile:
             config.write(configfile)

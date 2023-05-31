@@ -24,7 +24,6 @@ DEFAULT_CONFIGURATION = Configuration(
     db_dir=os.path.join(os.path.expanduser('~'), 'secfsdstools/data/db'),
     parquet_dir=os.path.join(os.path.expanduser('~'), 'secfsdstools/data/parquet'),
     user_agent_email='your.email@goeshere.com',
-    use_parquet=True,
     auto_update=True,
     keep_zip_files=False
 )
@@ -171,7 +170,6 @@ class ConfigurationManager:
             user_agent_email=config['DEFAULT'].get('UserAgentEmail'),
             rapid_api_key=config['DEFAULT'].get('RapidApiKey', None),
             rapid_api_plan=config['DEFAULT'].get('RapidApiPlan', 'basic'),
-            use_parquet=config['DEFAULT'].getboolean('UserParquet', True),
             auto_update=config['DEFAULT'].getboolean('AutoUpdate', True),
             keep_zip_files=config['DEFAULT'].getboolean('KeepZipFiles', False)
         )
@@ -289,7 +287,6 @@ class ConfigurationManager:
                              'DbDirectory': configuration.db_dir,
                              'ParquetDirectory': configuration.parquet_dir,
                              'UserAgentEmail': configuration.user_agent_email,
-                             'UseParquet': configuration.use_parquet,
                              'AutoUpdate': configuration.auto_update,
                              'KeepZipFiles': configuration.keep_zip_files}
         with open(file_path, 'w', encoding="utf8") as configfile:

@@ -9,7 +9,7 @@ from secfsdstools.e_read.reportreading import ReportReader
 
 APPLE_ADSH_10Q_2010_Q1 = '0001193125-10-012085'
 CURRENT_DIR, _ = os.path.split(__file__)
-PATH_TO_ZIP = f'{CURRENT_DIR}/testdata/2010q1.zip'
+PATH_TO_ZIP = f'{CURRENT_DIR}/testdataparquet/quarter/2010q1.zip'
 
 
 @pytest.fixture
@@ -64,14 +64,13 @@ def test_cm_get_report_by_adsh():
                            adsh=APPLE_ADSH_10Q_2010_Q1,
                            fullPath=PATH_TO_ZIP)
 
-    with patch("secfsdstools.c_index.indexdataaccess.DBIndexingAccessor.read_index_report_for_adsh",
+    with patch("secfsdstools.c_index.indexdataaccess.ParquetDBIndexingAccessor.read_index_report_for_adsh",
                return_value=instance):
         reportreader = ReportReader.get_report_by_adsh(
             adsh=APPLE_ADSH_10Q_2010_Q1,
             configuration=Configuration(db_dir="",
                                         download_dir="",
                                         user_agent_email="",
-                                        parquet_dir="",
-                                        use_parquet=False))
+                                        parquet_dir=""))
         reportreader._read_raw_data()
         assert reportreader.num_df.shape == (145, 9)

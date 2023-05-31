@@ -51,8 +51,7 @@ class MultiReportReader(BaseReportReader):
         if configuration is None:
             configuration = ConfigurationManager.read_config_file()
 
-        dbaccessor = create_index_accessor(accessor_type=configuration.get_accessor_type(),
-                                           db_dir=configuration.db_dir)
+        dbaccessor = create_index_accessor(db_dir=configuration.db_dir)
 
         index_reports = dbaccessor.read_index_reports_for_adshs(adshs=adshs)
         return MultiReportReader(index_reports)

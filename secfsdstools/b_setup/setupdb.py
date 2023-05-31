@@ -17,7 +17,7 @@ LOGGER = logging.getLogger(__name__)
 
 class DbCreator(DB):
     """
-    responsible to  create the databse.
+    responsible to  create the database.
     """
 
     def __init__(self, db_dir: str):

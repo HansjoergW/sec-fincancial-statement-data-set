@@ -2,14 +2,12 @@
 Reads company information.
 """
 import os
-import re
 from typing import Dict, Optional, List
 
 import pandas as pd
 
 from secfsdstools.a_config.configmgt import ConfigurationManager
 from secfsdstools.a_config.configmodel import Configuration
-from secfsdstools.a_utils.fileutils import read_content_from_file_in_zip
 from secfsdstools.c_index.indexdataaccess import DBIndexingAccessorBase, IndexReport, \
     create_index_accessor
 from secfsdstools.e_read.basereportreading import SUB_TXT
@@ -35,8 +33,7 @@ class CompanyReader:
         """
         if configuration is None:
             configuration = ConfigurationManager.read_config_file()
-        dbaccessor = create_index_accessor(accessor_type=configuration.get_accessor_type(),
-                                           db_dir=configuration.db_dir)
+        dbaccessor = create_index_accessor(db_dir=configuration.db_dir)
         return CompanyReader(cik, dbaccessor=dbaccessor)
 
     def __init__(self, cik: int, dbaccessor: DBIndexingAccessorBase):
@@ -52,22 +49,7 @@ class CompanyReader:
              report as present in the sub.txt file.
         """
         latest_report = self.dbaccessor.find_latest_company_report(self.cik)
-        if latest_report.is_parquet():
-            return self._get_latest_company_filing_parquet(latest_report)
-        return self._get_latest_company_filing_zip(latest_report)
-
-    def _get_latest_company_filing_zip(self, latest_report: IndexReport) -> Dict[str, str]:
-        content = read_content_from_file_in_zip(latest_report.fullPath, SUB_TXT)
-
-        newline_index = content.index('\n')
-        colnames = content[:newline_index]
-
-        adsh_pattern = re.compile(f'^{latest_report.adsh}.*$', re.MULTILINE)
-        values = adsh_pattern.search(content).group()
-
-        value_dict: Dict[str, str] = \
-            {x[0]: x[1] for x in zip(colnames.split('\t'), values.split('\t'))}
-        return value_dict
+        return self._get_latest_company_filing_parquet(latest_report)
 
     def _get_latest_company_filing_parquet(self, latest_report: IndexReport) -> Dict[str, str]:
         latest_filing = pd.read_parquet(os.path.join(latest_report.fullPath, f'{SUB_TXT}.parquet'),

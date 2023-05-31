@@ -54,14 +54,13 @@ def test_cm_get_zip_by_name():
     instance = IndexFileProcessingState(fileName="", status="", entries=0, processTime="",
                                         fullPath=PATH_TO_ZIP)
 
-    with patch("secfsdstools.c_index.indexdataaccess.DBIndexingAccessor.read_index_file_for_filename",
+    with patch("secfsdstools.c_index.indexdataaccess.ParquetDBIndexingAccessor.read_index_file_for_filename",
                return_value=instance):
         zipreader = ZipReportReader.get_zip_by_name(name="2010q1.zip",
                                                     configuration=Configuration(db_dir="",
                                                                                 download_dir="",
                                                                                 user_agent_email="",
-                                                                                parquet_dir="",
-                                                                                use_parquet=False))
+                                                                                parquet_dir=""))
         zipreader._read_raw_data()
         assert zipreader.get_raw_num_data().shape == (151692, 9)
 

@@ -8,9 +8,8 @@ from typing import List, Tuple
 import pandas as pd
 
 from secfsdstools.a_utils.constants import SUB_TXT
-from secfsdstools.a_utils.fileutils import read_df_from_file_in_zip, get_filenames_in_directory, \
-    get_directories_in_directory
-from secfsdstools.c_index.indexdataaccess import DBIndexingAccessor, IndexFileProcessingState, \
+from secfsdstools.a_utils.fileutils import get_directories_in_directory
+from secfsdstools.c_index.indexdataaccess import IndexFileProcessingState, \
     DBIndexingAccessorBase, ParquetDBIndexingAccessor
 
 LOGGER = logging.getLogger(__name__)
@@ -75,7 +74,7 @@ class BaseReportIndexer(ABC):
         sub_df['fullPath'] = full_path
         sub_df['originFile'] = file_name
         sub_df['originFileType'] = self.file_type
-        sub_df['url'] = ReportZipIndexer.URL_PREFIX
+        sub_df['url'] = BaseReportIndexer.URL_PREFIX
         sub_df['url'] = sub_df['url'] + sub_df['cik'].astype(str) + '/' + \
                         sub_df['adsh'].str.replace('-', '') + '/' + sub_df['adsh'] + '-index.htm'
 
@@ -95,33 +94,6 @@ class BaseReportIndexer(ABC):
         not_indexed_files = self._calculate_not_indexed()
         for not_indexed_file in not_indexed_files:
             self._index_file(file_name=not_indexed_file)
-
-
-class ReportZipIndexer(BaseReportIndexer):
-    """
-    Index the reports in zip files.
-    """
-
-    def __init__(self, db_dir: str, zip_dir: str, file_type: str):
-        super().__init__(DBIndexingAccessor(db_dir=db_dir), file_type)
-        self.zip_dir = zip_dir
-
-    def get_present_files(self) -> List[str]:
-        return get_filenames_in_directory(os.path.join(self.zip_dir, "*.zip"))
-
-    def get_sub_df(self, file_name: str) -> Tuple[pd.DataFrame, str]:
-        path = os.path.join(self.zip_dir, file_name)
-        full_path = os.path.realpath(path)
-
-        return read_df_from_file_in_zip(zip_file=full_path, file_to_extract="sub.txt",
-                                        usecols=['adsh',
-                                                 'cik',
-                                                 'name',
-                                                 'form',
-                                                 'filed',
-                                                 'period'],
-                                        dtype={'period': 'Int64',
-                                               'filed': 'Int64'}), full_path
 
 
 class ReportParquetIndexer(BaseReportIndexer):

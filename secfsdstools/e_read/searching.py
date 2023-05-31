@@ -33,7 +33,6 @@ class IndexSearch:
             configuration = ConfigurationManager.read_config_file()
 
         accessor: DBIndexingAccessorBase = create_index_accessor(
-            accessor_type=configuration.get_accessor_type(),
             db_dir=configuration.db_dir)
         return IndexSearch(accessor)
 

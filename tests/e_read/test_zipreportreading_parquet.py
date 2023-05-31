@@ -61,7 +61,6 @@ def test_cm_get_zip_by_name():
                                                     configuration=Configuration(db_dir="",
                                                                                 download_dir="",
                                                                                 user_agent_email="",
-                                                                                parquet_dir="",
-                                                                                use_parquet=True))
+                                                                                parquet_dir=""))
         zipreader._read_raw_data()
         assert zipreader.get_raw_num_data().shape == (151692, 9)

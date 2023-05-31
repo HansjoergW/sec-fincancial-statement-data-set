@@ -140,8 +140,8 @@ class Updater:
 
         if not self._check_for_update():
             LOGGER.debug(
-                'Skipping update check since last check was done less than ' +
-                f'{Updater.CHECK_EVERY_SECONDS} seconds ago')
+                'Skipping update: last check was done less than %d seconds ago',
+                Updater.CHECK_EVERY_SECONDS)
             return
 
         LOGGER.info('Check if new report zip files are available...')

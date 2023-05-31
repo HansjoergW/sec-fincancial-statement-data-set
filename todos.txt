@@ -22,7 +22,9 @@ v.0.5.0
 
 
 - remove zip depending on flag / logic
-- use parquet entfernen und gesamte Zip logic entfernen, auch Tabellen
+
+
+- use parquet entfernen und gesamte Zip logic entfernen, auch Tabellen, und use_parquet config
 
 
 next

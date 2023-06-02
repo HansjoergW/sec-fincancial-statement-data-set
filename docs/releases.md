@@ -4,13 +4,13 @@
 * more example notebooks
 * 
 
-## 0.5.0
+## 0.5.0 2023-Jun-02
 * use parquet as storing format instead of zipfiles with csv files -> 5-10x faster access to data
-
+* auto discover of new zip files on sec.gov
+* launch first time download of zip files without calling the update method
 
 ApiChanges:
 * package secfsdstools.d_index was renamed into secfsdstools.c_index
-
 
 
 ## 0.4.0 2023-Mar-25

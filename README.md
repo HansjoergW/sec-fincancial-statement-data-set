@@ -21,7 +21,7 @@ The SEC releases quarterly zip files, each containing four CSV files with numeri
 filed within that quarter.
 
 However, accessing data from the past 12 years can be time-consuming due to the large amount
-of data - over 120 million data points.
+of data - over 120 million data points in over 2GB of zip files.
 
 This library simplifies the process of working with this data and provides a
 convenient way to extract information from the primary financial statements - the balance sheet, income statement, and
@@ -54,34 +54,38 @@ The dependencies are defined in the requirements.txt file or use the pyproject.t
 # Principles
 
 To improve efficiency, the zip files are downloaded and indexed using a SQLite database table.
-The index table contains information on all filed reports, totaling over 500,000.
+The index table contains information on all filed reports, over 500,000 in total. The first
+download will take a couple of minutes but after that, all the data are on your local harddisk.
 
-Using the index allows for direct extraction of data for a specific report from the appropriate zip file,
-reducing the need to open and search through each zip file.
+Using the index in the sqlite db allows for direct extraction of data for a specific report from the 
+appropriate zip file, reducing the need to open and search through each zip file.
+
+Moreover, the downloaded zip files are converted to the parquet format which provides way faster read access
+to the data compared to reading the csv files in the zip files. 
 
 The library is designed to have a low memory footprint, only parsing and reading the data for a specific
-report into pandas dataframe tables
+report into pandas dataframe tables.
 
 # Configuration
 
-To configure the library, create a file called ".secfsdstools.cfg" in your home directory. The file only requires three
-entries:
+To configure the library, create a file called ".secfsdstools.cfg" in your home directory. The file only requires 
+the following entries:
 
 ```
 [DEFAULT]
 downloaddirectory = c:/users/me/secfsdstools/data/dld
+parquetdirectory = c:/users/me/secfsdstools/data/parquet
 dbdirectory = c:/users/me/secfsdstools/data/db
 useragentemail = your.email@goeshere.com
 ```
 
+If you don't provide a config file, it will create one the first time you use the api and put it inside your home
+directory. You can then change the content of it or directly start with the downloading of the data.
+
 The download directory is the place where quarterly zip files from the sec.gov are downloaded to.
+The parquet directory is the folder where the data is stored in parque format.
 The db directory is the directory in which the sqllite db is created.
 The useragentemail is used in the requests made to the sec.gov website.
-
-If you call `update()` without a configuration file, an error message will appear. However, a default config file will
-be created in the user home directory. If you are satisfied with the default settings (download directory is set
-to "<home>
-/secfsdstools/data/dld" and the database directory is set to "secfsdstools/data/db"), you can simply rerun `update()`.
 
 # Downloading the data files from sec and index the content
 
@@ -93,6 +97,17 @@ from secfsdstools.update import update
 update()
 ```
 
+The following tasks will be executed:
+1. All currently available zip-files are downloaded form sec.gov (over 50 files, needing over 2 GB of space)
+2. All the zipefiles are transformed and stored as parquet files. Per default, the zipfile is deleted. If you want to keep the zip files, set the parameter 'KeepZipFiles' in the config file to True.
+3. An index inside a sqlite db file is created
+
+If you don't call update, then the first time you call a function from the library, a download will be triggered.
+
+Moreover, at most once a day, it is checked if there is a new zip file available on sec.gov. If there is, a download will be started. 
+If you don't want 'auto-update', set the 'AutoUpdate' in your config file to False.
+
+
 # How to work with the data
 
 ## Using the index db with a db browser
@@ -103,9 +118,9 @@ such as [DB Browser for SQLite](https://sqlitebrowser.org/).
 (The location of the SQLite database file is specified in the "dbdirectory" field of the config file, which is set to
 "secfsdstools/data/db" in the default configuration. The database file is named "secfsdstools.db".)
 
-There are only two tables in the database: "index_reports" and "index_file_processing_state".
+There are only two relevant tables in the database: "index_parquet_reports" and "index_parquet_processing_state".
 
-The "index_reports" table provides an overview of all available reports in the downloaded
+The "index_parquet_reports" table provides an overview of all available reports in the downloaded
 data and includes the following relevant columns:
 
 * **adsh** <br>The unique id of the report (a string).

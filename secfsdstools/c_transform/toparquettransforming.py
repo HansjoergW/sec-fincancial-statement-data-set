@@ -1,4 +1,6 @@
 """Transform zip files to parquet format"""
+
+import contextlib
 import glob
 import logging
 import os
@@ -20,7 +22,7 @@ class ToParquetTransformer:
     parquet format.
     """
 
-    def __init__(self, zip_dir: str, parquet_dir: str, file_type: str):
+    def __init__(self, zip_dir: str, parquet_dir: str, file_type: str, keep_zip_files: bool):
         """
         Constructor.
         Args:
@@ -32,6 +34,7 @@ class ToParquetTransformer:
         self.zip_dir = zip_dir
         self.parquet_dir = parquet_dir
         self.file_type = file_type
+        self.keep_zip_files = keep_zip_files
 
     def _calculate_not_transformed(self) -> List[Tuple[str, str]]:
         """
@@ -59,6 +62,12 @@ class ToParquetTransformer:
         try:
             os.makedirs(target_path, exist_ok=True)
             self._inner_transform_zip_file(target_path, zip_file_path)
+
+            # remove the file if keep_zip_files is False
+            if not self.keep_zip_files:
+                with contextlib.suppress(OSError):
+                    os.remove(zip_file_path)
+
         except Exception as ex:  # pylint: disable=W0703  # we need to catch all exceptions
             LOGGER.error('failed to process %s', zip_file_path)
             LOGGER.error(ex)

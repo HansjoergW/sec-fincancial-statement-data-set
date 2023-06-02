@@ -41,6 +41,7 @@ class Updater:
             daily_dld_dir=config.daily_download_dir,
             parquet_dir=config.parquet_dir,
             user_agent=config.user_agent_email,
+            keep_zip_files=config.keep_zip_files,
             rapid_api_key=config.rapid_api_key,
             rapid_api_plan=config.rapid_api_plan
         )
@@ -51,6 +52,7 @@ class Updater:
                  daily_dld_dir: str,
                  parquet_dir: str,
                  user_agent: str,
+                 keep_zip_files: bool,
                  rapid_api_plan: Optional[str],
                  rapid_api_key: Optional[str]):
         self.db_state_accesor = DBStateAcessor(db_dir=db_dir)
@@ -61,6 +63,7 @@ class Updater:
         self.user_agent = user_agent
         self.rapid_api_plan = rapid_api_plan
         self.rapid_api_key = rapid_api_key
+        self.keep_zip_files = keep_zip_files
 
     def _check_for_update(self) -> bool:
         """checks if a new update check should be conducted."""
@@ -105,11 +108,13 @@ class Updater:
         LOGGER.info("start to transform to parquet format ...")
         qrtr_transformer = ToParquetTransformer(zip_dir=self.dld_dir,
                                                 parquet_dir=self.parquet_dir,
+                                                keep_zip_files=self.keep_zip_files,
                                                 file_type='quarter')
         qrtr_transformer.process()
 
         daily_transformer = ToParquetTransformer(zip_dir=self.daily_dld_dir,
                                                  parquet_dir=self.parquet_dir,
+                                                 keep_zip_files=self.keep_zip_files,
                                                  file_type='daily')
         daily_transformer.process()
 

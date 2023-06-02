@@ -25,6 +25,7 @@ def updater(tmp_path: Path) -> Updater:
         daily_dld_dir=str(tmp_path / 'dlddaily'),
         parquet_dir=str(tmp_path / 'parquet'),
         user_agent="me@here.com",
+        keep_zip_files=True,
         rapid_api_plan=None,
         rapid_api_key=None,
     )

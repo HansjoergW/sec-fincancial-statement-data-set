@@ -35,9 +35,10 @@ from typing import Dict, Optional, List
 
 import pandas as pd
 
-from secfsdstools.a_config.configmgt import Configuration, ConfigurationManager
+from secfsdstools.a_config.configmgt import ConfigurationManager
+from secfsdstools.a_config.configmodel import Configuration
 from secfsdstools.a_utils.parallelexecution import ParallelExecutor
-from secfsdstools.d_index.indexdataaccess import DBIndexingAccessor, IndexReport
+from secfsdstools.c_index.indexdataaccess import IndexReport, create_index_accessor
 from secfsdstools.e_read.basereportreading import BaseReportReader, SUB_TXT, PRE_TXT, NUM_TXT
 from secfsdstools.e_read.reportreading import ReportReader
 
@@ -79,7 +80,7 @@ class MultiReportReader(BaseReportReader):
         if configuration is None:
             configuration = ConfigurationManager.read_config_file()
 
-        dbaccessor = DBIndexingAccessor(db_dir=configuration.db_dir)
+        dbaccessor = create_index_accessor(db_dir=configuration.db_dir)
 
         index_reports = dbaccessor.read_index_reports_for_adshs(adshs=adshs)
         return MultiReportReader(index_reports)
@@ -155,10 +156,11 @@ class MultiReportReader(BaseReportReader):
             self.collected_data = self._collect()
             super()._read_raw_data()
 
-    def _read_df_from_raw(self, file_type: str) -&gt; pd.DataFrame:
+    def _read_df_from_raw(self,
+                          file: str) -&gt; pd.DataFrame:
         # we need to overwrite this method, since files are not read directly from the file,
         # but were loaded in a previous step
-        return self.collected_data[file_type]
+        return self.collected_data[file]
 
     def statistics(self) -&gt; MultiReportStats:
         &#34;&#34;&#34;
@@ -199,7 +201,7 @@ class MultiReportReader(BaseReportReader):
 <dl>
 <dt id="secfsdstools.e_read.multireportreading.MultiReportReader"><code class="flex name class">
 <span>class <span class="ident">MultiReportReader</span></span>
-<span>(</span><span>index_reports: List[<a title="secfsdstools.d_index.indexdataaccess.IndexReport" href="../d_index/indexdataaccess.html#secfsdstools.d_index.indexdataaccess.IndexReport">IndexReport</a>])</span>
+<span>(</span><span>index_reports: List[<a title="secfsdstools.c_index.indexdataaccess.IndexReport" href="../c_index/indexdataaccess.html#secfsdstools.c_index.indexdataaccess.IndexReport">IndexReport</a>])</span>
 </code></dt>
 <dd>
 <div class="desc"><p>The MultiReport Reader can read reports from different zip files
@@ -233,7 +235,7 @@ and provide their data in single pre, num, and sub DataFrames.</p></div>
         if configuration is None:
             configuration = ConfigurationManager.read_config_file()
 
-        dbaccessor = DBIndexingAccessor(db_dir=configuration.db_dir)
+        dbaccessor = create_index_accessor(db_dir=configuration.db_dir)
 
         index_reports = dbaccessor.read_index_reports_for_adshs(adshs=adshs)
         return MultiReportReader(index_reports)
@@ -309,10 +311,11 @@ and provide their data in single pre, num, and sub DataFrames.</p></div>
             self.collected_data = self._collect()
             super()._read_raw_data()
 
-    def _read_df_from_raw(self, file_type: str) -&gt; pd.DataFrame:
+    def _read_df_from_raw(self,
+                          file: str) -&gt; pd.DataFrame:
         # we need to overwrite this method, since files are not read directly from the file,
         # but were loaded in a previous step
-        return self.collected_data[file_type]
+        return self.collected_data[file]
 
     def statistics(self) -&gt; MultiReportStats:
         &#34;&#34;&#34;
@@ -349,7 +352,7 @@ and provide their data in single pre, num, and sub DataFrames.</p></div>
 <h3>Static methods</h3>
 <dl>
 <dt id="secfsdstools.e_read.multireportreading.MultiReportReader.get_reports_by_adshs"><code class="name flex">
-<span>def <span class="ident">get_reports_by_adshs</span></span>(<span>adshs: List[str], configuration: Optional[<a title="secfsdstools.a_config.configmgt.Configuration" href="../a_config/configmgt.html#secfsdstools.a_config.configmgt.Configuration">Configuration</a>] = None)</span>
+<span>def <span class="ident">get_reports_by_adshs</span></span>(<span>adshs: List[str], configuration: Optional[<a title="secfsdstools.a_config.configmodel.Configuration" href="../a_config/configmodel.html#secfsdstools.a_config.configmodel.Configuration">Configuration</a>] = None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>creates the MultiReportReader instance for a certain list of adshs.</p>
@@ -387,14 +390,14 @@ def get_reports_by_adshs(cls, adshs: List[str], configuration: Optional[Configur
     if configuration is None:
         configuration = ConfigurationManager.read_config_file()
 
-    dbaccessor = DBIndexingAccessor(db_dir=configuration.db_dir)
+    dbaccessor = create_index_accessor(db_dir=configuration.db_dir)
 
     index_reports = dbaccessor.read_index_reports_for_adshs(adshs=adshs)
     return MultiReportReader(index_reports)</code></pre>
 </details>
 </dd>
 <dt id="secfsdstools.e_read.multireportreading.MultiReportReader.get_reports_by_indexreport"><code class="name flex">
-<span>def <span class="ident">get_reports_by_indexreport</span></span>(<span>index_reports: List[<a title="secfsdstools.d_index.indexdataaccess.IndexReport" href="../d_index/indexdataaccess.html#secfsdstools.d_index.indexdataaccess.IndexReport">IndexReport</a>])</span>
+<span>def <span class="ident">get_reports_by_indexreport</span></span>(<span>index_reports: List[<a title="secfsdstools.c_index.indexdataaccess.IndexReport" href="../c_index/indexdataaccess.html#secfsdstools.c_index.indexdataaccess.IndexReport">IndexReport</a>])</span>
 </code></dt>
 <dd>
 <div class="desc"><p>crates the MultiReportReader instance based on IndexReport instances</p>

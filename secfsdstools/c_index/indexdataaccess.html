@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.10.0" />
-<title>secfsdstools.d_index.indexdataaccess API documentation</title>
+<title>secfsdstools.c_index.indexdataaccess API documentation</title>
 <meta name="description" content="Database logic to hanlde the indexing" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
@@ -19,7 +19,7 @@
 <main>
 <article id="content">
 <header>
-<h1 class="title">Module <code>secfsdstools.d_index.indexdataaccess</code></h1>
+<h1 class="title">Module <code>secfsdstools.c_index.indexdataaccess</code></h1>
 </header>
 <section id="section-intro">
 <p>Database logic to hanlde the indexing</p>
@@ -28,6 +28,7 @@
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">&#34;&#34;&#34;Database logic to hanlde the indexing&#34;&#34;&#34;
+import sqlite3
 from dataclasses import dataclass
 from typing import List, Optional
 
@@ -61,13 +62,13 @@ class IndexFileProcessingState:
     processTime: str  # pylint: disable=C0103
 
 
-class DBIndexingAccessor(DB):
+class DBIndexingAccessorBase(DB):
     &#34;&#34;&#34; Dataaccess class for index related tables&#34;&#34;&#34;
-    INDEX_REPORTS_TABLE = &#39;index_reports&#39;
-    INDEX_PROCESSING_TABLE = &#39;index_file_processing_state&#39;
 
-    def __init__(self, db_dir: str):
+    def __init__(self, db_dir: str, index_reports_table: str, index_processing_table: str):
         super().__init__(db_dir=db_dir)
+        self.index_reports_table = index_reports_table
+        self.index_processing_table = index_processing_table
 
     def read_all_indexreports(self) -&gt; List[IndexReport]:
         &#34;&#34;&#34;
@@ -76,7 +77,7 @@ class DBIndexingAccessor(DB):
         Returns:
             List[IndexReport]: List with IndexReport objects
         &#34;&#34;&#34;
-        sql = f&#39;SELECT * FROM {self.INDEX_REPORTS_TABLE}&#39;
+        sql = f&#39;SELECT * FROM {self.index_reports_table}&#39;
         return self.execute_fetchall_typed(sql, IndexReport)
 
     def read_all_indexreports_df(self) -&gt; pd.DataFrame:
@@ -86,7 +87,7 @@ class DBIndexingAccessor(DB):
         Returns:
             pd.DataFrame: pandas DataFrame
         &#34;&#34;&#34;
-        sql = f&#39;SELECT * FROM {self.INDEX_REPORTS_TABLE}&#39;
+        sql = f&#39;SELECT * FROM {self.index_reports_table}&#39;
         return self.execute_read_as_df(sql)
 
     def read_all_indexfileprocessing(self) -&gt; List[IndexFileProcessingState]:
@@ -96,7 +97,7 @@ class DBIndexingAccessor(DB):
         Returns:
             List[IndexFileProcessingState]: List with IndexFileProcessingState objects
         &#34;&#34;&#34;
-        sql = f&#39;SELECT * FROM {self.INDEX_PROCESSING_TABLE}&#39;
+        sql = f&#39;SELECT * FROM {self.index_processing_table}&#39;
         return self.execute_fetchall_typed(sql, IndexFileProcessingState)
 
     def read_all_indexfileprocessing_df(self) -&gt; pd.DataFrame:
@@ -106,7 +107,7 @@ class DBIndexingAccessor(DB):
         Returns:
             pd.DataFrame: pandas DataFrame
         &#34;&#34;&#34;
-        sql = f&#39;SELECT * FROM {self.INDEX_PROCESSING_TABLE}&#39;
+        sql = f&#39;SELECT * FROM {self.index_processing_table}&#39;
         return self.execute_read_as_df(sql)
 
     def read_index_file_for_filename(self, filename: str) -&gt; IndexFileProcessingState:
@@ -118,7 +119,7 @@ class DBIndexingAccessor(DB):
         Returns:
             IndexFileProcessingState: the processing state instance
         &#34;&#34;&#34;
-        sql = f&#34;SELECT * FROM {self.INDEX_PROCESSING_TABLE} WHERE fileName = &#39;{filename}&#39;&#34;
+        sql = f&#34;SELECT * FROM {self.index_processing_table} WHERE fileName = &#39;{filename}&#39;&#34;
         return self.execute_fetchall_typed(sql, IndexFileProcessingState)[0]
 
     def insert_indexreport(self, data: IndexReport):
@@ -127,17 +128,34 @@ class DBIndexingAccessor(DB):
         Args:
             data (IndexReport): IndexReport data object
         &#34;&#34;&#34;
-        sql = self.create_insert_statement_for_dataclass(self.INDEX_REPORTS_TABLE, data)
-        self.execute_single(sql)
+        sql = self.create_insert_statement_for_dataclass(self.index_reports_table, data)
+        with self.get_connection() as conn:
+            self.execute_single(sql, conn)
 
-    def append_indexreport_df(self, dataframe: pd.DataFrame):
+    def add_index_report(self, sub_df: pd.DataFrame, processing_state: IndexFileProcessingState):
+        &#34;&#34;&#34;
+        adds the submissions in the sub_df into the index table and stores the processing state
+        in the processing table
+        Args:
+            sub_df: dataframe with submissions
+            processing_state: state entry to write
+
+        Returns:
+
+        &#34;&#34;&#34;
+
+        with self.get_connection() as conn:
+            self._append_indexreport_df(sub_df, conn)
+            self._insert_indexfileprocessing(processing_state, conn)
+
+    def _append_indexreport_df(self, dataframe: pd.DataFrame, conn: sqlite3.Connection):
         &#34;&#34;&#34;
         append the content of the df to the index report table
 
         Args:
             dataframe (pd.DataFrame): the dataframe to be appended
         &#34;&#34;&#34;
-        self.append_df_to_table(table_name=self.INDEX_REPORTS_TABLE, dataframe=dataframe)
+        self.append_df_to_table(table_name=self.index_reports_table, dataframe=dataframe, conn=conn)
 
     def insert_indexfileprocessing(self, data: IndexFileProcessingState):
         &#34;&#34;&#34;
@@ -146,8 +164,18 @@ class DBIndexingAccessor(DB):
         Args:
             data (IndexFileProcessingState): IndexFileProcessingState data object to insert
         &#34;&#34;&#34;
-        sql = self.create_insert_statement_for_dataclass(self.INDEX_PROCESSING_TABLE, data)
-        self.execute_single(sql)
+        with self.get_connection() as conn:
+            self._insert_indexfileprocessing(data, conn)
+
+    def _insert_indexfileprocessing(self, data: IndexFileProcessingState, conn: sqlite3.Connection):
+        &#34;&#34;&#34;
+        inserts an entry into the index_file_processing_state table
+
+        Args:
+            data (IndexFileProcessingState): IndexFileProcessingState data object to insert
+        &#34;&#34;&#34;
+        sql = self.create_insert_statement_for_dataclass(self.index_processing_table, data)
+        self.execute_single(sql, conn)
 
     def find_latest_company_report(self, cik: int) -&gt; IndexReport:
         &#34;&#34;&#34;
@@ -161,7 +189,7 @@ class DBIndexingAccessor(DB):
         &#34;&#34;&#34;
 
         sql = f&#34;&#34;&#34;SELECT *
-                    FROM {self.INDEX_REPORTS_TABLE}
+                    FROM {self.index_reports_table}
                     WHERE cik = {cik} and originFileType = &#39;quarter&#39;
                     ORDER BY period DESC&#34;&#34;&#34;
         return self.execute_fetchall_typed(sql, IndexReport)[0]
@@ -178,7 +206,7 @@ class DBIndexingAccessor(DB):
         # sorting by originfiletype, so we prefer official data from SEC,
         # over the daily files, in case both should be present.
         sql = f&#34;&#34;&#34;SELECT *
-                    FROM {self.INDEX_REPORTS_TABLE}
+                    FROM {self.index_reports_table}
                     WHERE adsh = &#39;{adsh}&#39;
                     ORDER BY originFileType DESC&#34;&#34;&#34;
         return self.execute_fetchall_typed(sql, IndexReport)[0]
@@ -197,7 +225,7 @@ class DBIndexingAccessor(DB):
         # sorting by originfiletype, so we prefer official data from SEC,
         # over the daily files, in case both should be present.
         sql = f&#34;&#34;&#34;SELECT *
-                    FROM {self.INDEX_REPORTS_TABLE}
+                    FROM {self.index_reports_table}
                     WHERE adsh in ({adshs_str})
                     ORDER BY adsh, originFileType DESC&#34;&#34;&#34;
 
@@ -227,7 +255,7 @@ class DBIndexingAccessor(DB):
         Returns:
             List[IndexReport]
         &#34;&#34;&#34;
-        sql = f&#39;SELECT * FROM {self.INDEX_REPORTS_TABLE} WHERE cik = {cik}&#39;
+        sql = f&#39;SELECT * FROM {self.index_reports_table} WHERE cik = {cik}&#39;
         if forms is not None:
             forms_str = &#34;, &#34;.join([&#34;&#39;&#34; + x.upper() + &#34;&#39;&#34; for x in forms])
             sql = sql + f&#39; and form in ({forms_str}) &#39;
@@ -249,7 +277,7 @@ class DBIndexingAccessor(DB):
         Returns:
             pd.DataFrame
         &#34;&#34;&#34;
-        sql = f&#39;SELECT * FROM {self.INDEX_REPORTS_TABLE} WHERE cik = {cik}&#39;
+        sql = f&#39;SELECT * FROM {self.index_reports_table} WHERE cik = {cik}&#39;
         if forms is not None:
             forms_str = &#34;, &#34;.join([&#34;&#39;&#34; + x.upper() + &#34;&#39;&#34; for x in forms])
             sql = sql + f&#39; and form in ({forms_str}) &#39;
@@ -269,10 +297,34 @@ class DBIndexingAccessor(DB):
             pd.DataFrame: with columns name and cik
         &#34;&#34;&#34;
         sql = f&#34;&#34;&#34;
-                SELECT DISTINCT name, cik from {self.INDEX_REPORTS_TABLE} 
+                SELECT DISTINCT name, cik from {self.index_reports_table} 
                 WHERE name like &#39;%{name_part}%&#39; 
                 ORDER BY name&#34;&#34;&#34;
-        return self.execute_read_as_df(sql)</code></pre>
+        return self.execute_read_as_df(sql)
+
+
+class ParquetDBIndexingAccessor(DBIndexingAccessorBase):
+    &#34;&#34;&#34; Dataaccess class for index related tables of parquet files&#34;&#34;&#34;
+    INDEX_REPORTS_TABLE = &#39;index_parquet_reports&#39;
+    INDEX_PROCESSING_TABLE = &#39;index_parquet_processing_state&#39;
+
+    def __init__(self, db_dir: str):
+        super().__init__(db_dir=db_dir, index_reports_table=self.INDEX_REPORTS_TABLE,
+                         index_processing_table=self.INDEX_PROCESSING_TABLE)
+
+
+def create_index_accessor(db_dir: str) -&gt; DBIndexingAccessorBase:
+    &#34;&#34;&#34;
+    Factory method to create the indexaccessor instance based on the type
+    Args:
+        type: type of index accessor to create (e.g. zip or parquet)
+        db_dir: path to the sqllite db file
+
+    Returns:
+        DBIndexingAccessorBase: instantiated instance
+    &#34;&#34;&#34;
+
+    return ParquetDBIndexingAccessor(db_dir=db_dir)</code></pre>
 </details>
 </section>
 <section>
@@ -280,13 +332,51 @@ class DBIndexingAccessor(DB):
 <section>
 </section>
 <section>
+<h2 class="section-title" id="header-functions">Functions</h2>
+<dl>
+<dt id="secfsdstools.c_index.indexdataaccess.create_index_accessor"><code class="name flex">
+<span>def <span class="ident">create_index_accessor</span></span>(<span>db_dir: str) ‑> <a title="secfsdstools.c_index.indexdataaccess.DBIndexingAccessorBase" href="#secfsdstools.c_index.indexdataaccess.DBIndexingAccessorBase">DBIndexingAccessorBase</a></span>
+</code></dt>
+<dd>
+<div class="desc"><p>Factory method to create the indexaccessor instance based on the type</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>type</code></strong></dt>
+<dd>type of index accessor to create (e.g. zip or parquet)</dd>
+<dt><strong><code>db_dir</code></strong></dt>
+<dd>path to the sqllite db file</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code><a title="secfsdstools.c_index.indexdataaccess.DBIndexingAccessorBase" href="#secfsdstools.c_index.indexdataaccess.DBIndexingAccessorBase">DBIndexingAccessorBase</a></code></dt>
+<dd>instantiated instance</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def create_index_accessor(db_dir: str) -&gt; DBIndexingAccessorBase:
+    &#34;&#34;&#34;
+    Factory method to create the indexaccessor instance based on the type
+    Args:
+        type: type of index accessor to create (e.g. zip or parquet)
+        db_dir: path to the sqllite db file
+
+    Returns:
+        DBIndexingAccessorBase: instantiated instance
+    &#34;&#34;&#34;
+
+    return ParquetDBIndexingAccessor(db_dir=db_dir)</code></pre>
+</details>
+</dd>
+</dl>
 </section>
 <section>
 <h2 class="section-title" id="header-classes">Classes</h2>
 <dl>
-<dt id="secfsdstools.d_index.indexdataaccess.DBIndexingAccessor"><code class="flex name class">
-<span>class <span class="ident">DBIndexingAccessor</span></span>
-<span>(</span><span>db_dir: str)</span>
+<dt id="secfsdstools.c_index.indexdataaccess.DBIndexingAccessorBase"><code class="flex name class">
+<span>class <span class="ident">DBIndexingAccessorBase</span></span>
+<span>(</span><span>db_dir: str, index_reports_table: str, index_processing_table: str)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Dataaccess class for index related tables</p></div>
@@ -294,13 +384,13 @@ class DBIndexingAccessor(DB):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class DBIndexingAccessor(DB):
+<pre><code class="python">class DBIndexingAccessorBase(DB):
     &#34;&#34;&#34; Dataaccess class for index related tables&#34;&#34;&#34;
-    INDEX_REPORTS_TABLE = &#39;index_reports&#39;
-    INDEX_PROCESSING_TABLE = &#39;index_file_processing_state&#39;
 
-    def __init__(self, db_dir: str):
+    def __init__(self, db_dir: str, index_reports_table: str, index_processing_table: str):
         super().__init__(db_dir=db_dir)
+        self.index_reports_table = index_reports_table
+        self.index_processing_table = index_processing_table
 
     def read_all_indexreports(self) -&gt; List[IndexReport]:
         &#34;&#34;&#34;
@@ -309,7 +399,7 @@ class DBIndexingAccessor(DB):
         Returns:
             List[IndexReport]: List with IndexReport objects
         &#34;&#34;&#34;
-        sql = f&#39;SELECT * FROM {self.INDEX_REPORTS_TABLE}&#39;
+        sql = f&#39;SELECT * FROM {self.index_reports_table}&#39;
         return self.execute_fetchall_typed(sql, IndexReport)
 
     def read_all_indexreports_df(self) -&gt; pd.DataFrame:
@@ -319,7 +409,7 @@ class DBIndexingAccessor(DB):
         Returns:
             pd.DataFrame: pandas DataFrame
         &#34;&#34;&#34;
-        sql = f&#39;SELECT * FROM {self.INDEX_REPORTS_TABLE}&#39;
+        sql = f&#39;SELECT * FROM {self.index_reports_table}&#39;
         return self.execute_read_as_df(sql)
 
     def read_all_indexfileprocessing(self) -&gt; List[IndexFileProcessingState]:
@@ -329,7 +419,7 @@ class DBIndexingAccessor(DB):
         Returns:
             List[IndexFileProcessingState]: List with IndexFileProcessingState objects
         &#34;&#34;&#34;
-        sql = f&#39;SELECT * FROM {self.INDEX_PROCESSING_TABLE}&#39;
+        sql = f&#39;SELECT * FROM {self.index_processing_table}&#39;
         return self.execute_fetchall_typed(sql, IndexFileProcessingState)
 
     def read_all_indexfileprocessing_df(self) -&gt; pd.DataFrame:
@@ -339,7 +429,7 @@ class DBIndexingAccessor(DB):
         Returns:
             pd.DataFrame: pandas DataFrame
         &#34;&#34;&#34;
-        sql = f&#39;SELECT * FROM {self.INDEX_PROCESSING_TABLE}&#39;
+        sql = f&#39;SELECT * FROM {self.index_processing_table}&#39;
         return self.execute_read_as_df(sql)
 
     def read_index_file_for_filename(self, filename: str) -&gt; IndexFileProcessingState:
@@ -351,7 +441,7 @@ class DBIndexingAccessor(DB):
         Returns:
             IndexFileProcessingState: the processing state instance
         &#34;&#34;&#34;
-        sql = f&#34;SELECT * FROM {self.INDEX_PROCESSING_TABLE} WHERE fileName = &#39;{filename}&#39;&#34;
+        sql = f&#34;SELECT * FROM {self.index_processing_table} WHERE fileName = &#39;{filename}&#39;&#34;
         return self.execute_fetchall_typed(sql, IndexFileProcessingState)[0]
 
     def insert_indexreport(self, data: IndexReport):
@@ -360,17 +450,34 @@ class DBIndexingAccessor(DB):
         Args:
             data (IndexReport): IndexReport data object
         &#34;&#34;&#34;
-        sql = self.create_insert_statement_for_dataclass(self.INDEX_REPORTS_TABLE, data)
-        self.execute_single(sql)
+        sql = self.create_insert_statement_for_dataclass(self.index_reports_table, data)
+        with self.get_connection() as conn:
+            self.execute_single(sql, conn)
 
-    def append_indexreport_df(self, dataframe: pd.DataFrame):
+    def add_index_report(self, sub_df: pd.DataFrame, processing_state: IndexFileProcessingState):
+        &#34;&#34;&#34;
+        adds the submissions in the sub_df into the index table and stores the processing state
+        in the processing table
+        Args:
+            sub_df: dataframe with submissions
+            processing_state: state entry to write
+
+        Returns:
+
+        &#34;&#34;&#34;
+
+        with self.get_connection() as conn:
+            self._append_indexreport_df(sub_df, conn)
+            self._insert_indexfileprocessing(processing_state, conn)
+
+    def _append_indexreport_df(self, dataframe: pd.DataFrame, conn: sqlite3.Connection):
         &#34;&#34;&#34;
         append the content of the df to the index report table
 
         Args:
             dataframe (pd.DataFrame): the dataframe to be appended
         &#34;&#34;&#34;
-        self.append_df_to_table(table_name=self.INDEX_REPORTS_TABLE, dataframe=dataframe)
+        self.append_df_to_table(table_name=self.index_reports_table, dataframe=dataframe, conn=conn)
 
     def insert_indexfileprocessing(self, data: IndexFileProcessingState):
         &#34;&#34;&#34;
@@ -379,8 +486,18 @@ class DBIndexingAccessor(DB):
         Args:
             data (IndexFileProcessingState): IndexFileProcessingState data object to insert
         &#34;&#34;&#34;
-        sql = self.create_insert_statement_for_dataclass(self.INDEX_PROCESSING_TABLE, data)
-        self.execute_single(sql)
+        with self.get_connection() as conn:
+            self._insert_indexfileprocessing(data, conn)
+
+    def _insert_indexfileprocessing(self, data: IndexFileProcessingState, conn: sqlite3.Connection):
+        &#34;&#34;&#34;
+        inserts an entry into the index_file_processing_state table
+
+        Args:
+            data (IndexFileProcessingState): IndexFileProcessingState data object to insert
+        &#34;&#34;&#34;
+        sql = self.create_insert_statement_for_dataclass(self.index_processing_table, data)
+        self.execute_single(sql, conn)
 
     def find_latest_company_report(self, cik: int) -&gt; IndexReport:
         &#34;&#34;&#34;
@@ -394,7 +511,7 @@ class DBIndexingAccessor(DB):
         &#34;&#34;&#34;
 
         sql = f&#34;&#34;&#34;SELECT *
-                    FROM {self.INDEX_REPORTS_TABLE}
+                    FROM {self.index_reports_table}
                     WHERE cik = {cik} and originFileType = &#39;quarter&#39;
                     ORDER BY period DESC&#34;&#34;&#34;
         return self.execute_fetchall_typed(sql, IndexReport)[0]
@@ -411,7 +528,7 @@ class DBIndexingAccessor(DB):
         # sorting by originfiletype, so we prefer official data from SEC,
         # over the daily files, in case both should be present.
         sql = f&#34;&#34;&#34;SELECT *
-                    FROM {self.INDEX_REPORTS_TABLE}
+                    FROM {self.index_reports_table}
                     WHERE adsh = &#39;{adsh}&#39;
                     ORDER BY originFileType DESC&#34;&#34;&#34;
         return self.execute_fetchall_typed(sql, IndexReport)[0]
@@ -430,7 +547,7 @@ class DBIndexingAccessor(DB):
         # sorting by originfiletype, so we prefer official data from SEC,
         # over the daily files, in case both should be present.
         sql = f&#34;&#34;&#34;SELECT *
-                    FROM {self.INDEX_REPORTS_TABLE}
+                    FROM {self.index_reports_table}
                     WHERE adsh in ({adshs_str})
                     ORDER BY adsh, originFileType DESC&#34;&#34;&#34;
 
@@ -460,7 +577,7 @@ class DBIndexingAccessor(DB):
         Returns:
             List[IndexReport]
         &#34;&#34;&#34;
-        sql = f&#39;SELECT * FROM {self.INDEX_REPORTS_TABLE} WHERE cik = {cik}&#39;
+        sql = f&#39;SELECT * FROM {self.index_reports_table} WHERE cik = {cik}&#39;
         if forms is not None:
             forms_str = &#34;, &#34;.join([&#34;&#39;&#34; + x.upper() + &#34;&#39;&#34; for x in forms])
             sql = sql + f&#39; and form in ({forms_str}) &#39;
@@ -482,7 +599,7 @@ class DBIndexingAccessor(DB):
         Returns:
             pd.DataFrame
         &#34;&#34;&#34;
-        sql = f&#39;SELECT * FROM {self.INDEX_REPORTS_TABLE} WHERE cik = {cik}&#39;
+        sql = f&#39;SELECT * FROM {self.index_reports_table} WHERE cik = {cik}&#39;
         if forms is not None:
             forms_str = &#34;, &#34;.join([&#34;&#39;&#34; + x.upper() + &#34;&#39;&#34; for x in forms])
             sql = sql + f&#39; and form in ({forms_str}) &#39;
@@ -502,7 +619,7 @@ class DBIndexingAccessor(DB):
             pd.DataFrame: with columns name and cik
         &#34;&#34;&#34;
         sql = f&#34;&#34;&#34;
-                SELECT DISTINCT name, cik from {self.INDEX_REPORTS_TABLE} 
+                SELECT DISTINCT name, cik from {self.index_reports_table} 
                 WHERE name like &#39;%{name_part}%&#39; 
                 ORDER BY name&#34;&#34;&#34;
         return self.execute_read_as_df(sql)</code></pre>
@@ -512,44 +629,48 @@ class DBIndexingAccessor(DB):
 <li><a title="secfsdstools.a_utils.dbutils.DB" href="../a_utils/dbutils.html#secfsdstools.a_utils.dbutils.DB">DB</a></li>
 <li>abc.ABC</li>
 </ul>
-<h3>Class variables</h3>
-<dl>
-<dt id="secfsdstools.d_index.indexdataaccess.DBIndexingAccessor.INDEX_PROCESSING_TABLE"><code class="name">var <span class="ident">INDEX_PROCESSING_TABLE</span></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt id="secfsdstools.d_index.indexdataaccess.DBIndexingAccessor.INDEX_REPORTS_TABLE"><code class="name">var <span class="ident">INDEX_REPORTS_TABLE</span></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-</dl>
+<h3>Subclasses</h3>
+<ul class="hlist">
+<li><a title="secfsdstools.c_index.indexdataaccess.ParquetDBIndexingAccessor" href="#secfsdstools.c_index.indexdataaccess.ParquetDBIndexingAccessor">ParquetDBIndexingAccessor</a></li>
+</ul>
 <h3>Methods</h3>
 <dl>
-<dt id="secfsdstools.d_index.indexdataaccess.DBIndexingAccessor.append_indexreport_df"><code class="name flex">
-<span>def <span class="ident">append_indexreport_df</span></span>(<span>self, dataframe: pandas.core.frame.DataFrame)</span>
+<dt id="secfsdstools.c_index.indexdataaccess.DBIndexingAccessorBase.add_index_report"><code class="name flex">
+<span>def <span class="ident">add_index_report</span></span>(<span>self, sub_df: pandas.core.frame.DataFrame, processing_state: <a title="secfsdstools.c_index.indexdataaccess.IndexFileProcessingState" href="#secfsdstools.c_index.indexdataaccess.IndexFileProcessingState">IndexFileProcessingState</a>)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>append the content of the df to the index report table</p>
+<div class="desc"><p>adds the submissions in the sub_df into the index table and stores the processing state
+in the processing table</p>
 <h2 id="args">Args</h2>
 <dl>
-<dt><strong><code>dataframe</code></strong> :&ensp;<code>pd.DataFrame</code></dt>
-<dd>the dataframe to be appended</dd>
-</dl></div>
+<dt><strong><code>sub_df</code></strong></dt>
+<dd>dataframe with submissions</dd>
+<dt><strong><code>processing_state</code></strong></dt>
+<dd>state entry to write</dd>
+</dl>
+<p>Returns:</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def append_indexreport_df(self, dataframe: pd.DataFrame):
+<pre><code class="python">def add_index_report(self, sub_df: pd.DataFrame, processing_state: IndexFileProcessingState):
     &#34;&#34;&#34;
-    append the content of the df to the index report table
-
+    adds the submissions in the sub_df into the index table and stores the processing state
+    in the processing table
     Args:
-        dataframe (pd.DataFrame): the dataframe to be appended
+        sub_df: dataframe with submissions
+        processing_state: state entry to write
+
+    Returns:
+
     &#34;&#34;&#34;
-    self.append_df_to_table(table_name=self.INDEX_REPORTS_TABLE, dataframe=dataframe)</code></pre>
+
+    with self.get_connection() as conn:
+        self._append_indexreport_df(sub_df, conn)
+        self._insert_indexfileprocessing(processing_state, conn)</code></pre>
 </details>
 </dd>
-<dt id="secfsdstools.d_index.indexdataaccess.DBIndexingAccessor.find_company_by_name"><code class="name flex">
+<dt id="secfsdstools.c_index.indexdataaccess.DBIndexingAccessorBase.find_company_by_name"><code class="name flex">
 <span>def <span class="ident">find_company_by_name</span></span>(<span>self, name_part: str) ‑> pandas.core.frame.DataFrame</span>
 </code></dt>
 <dd>
@@ -581,14 +702,14 @@ Lower and uppercase are ignored.</p>
         pd.DataFrame: with columns name and cik
     &#34;&#34;&#34;
     sql = f&#34;&#34;&#34;
-            SELECT DISTINCT name, cik from {self.INDEX_REPORTS_TABLE} 
+            SELECT DISTINCT name, cik from {self.index_reports_table} 
             WHERE name like &#39;%{name_part}%&#39; 
             ORDER BY name&#34;&#34;&#34;
     return self.execute_read_as_df(sql)</code></pre>
 </details>
 </dd>
-<dt id="secfsdstools.d_index.indexdataaccess.DBIndexingAccessor.find_latest_company_report"><code class="name flex">
-<span>def <span class="ident">find_latest_company_report</span></span>(<span>self, cik: int) ‑> <a title="secfsdstools.d_index.indexdataaccess.IndexReport" href="#secfsdstools.d_index.indexdataaccess.IndexReport">IndexReport</a></span>
+<dt id="secfsdstools.c_index.indexdataaccess.DBIndexingAccessorBase.find_latest_company_report"><code class="name flex">
+<span>def <span class="ident">find_latest_company_report</span></span>(<span>self, cik: int) ‑> <a title="secfsdstools.c_index.indexdataaccess.IndexReport" href="#secfsdstools.c_index.indexdataaccess.IndexReport">IndexReport</a></span>
 </code></dt>
 <dd>
 <div class="desc"><p>returns the latest report of a company</p>
@@ -599,7 +720,7 @@ Lower and uppercase are ignored.</p>
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
-<dt><code><a title="secfsdstools.d_index.indexdataaccess.IndexReport" href="#secfsdstools.d_index.indexdataaccess.IndexReport">IndexReport</a></code></dt>
+<dt><code><a title="secfsdstools.c_index.indexdataaccess.IndexReport" href="#secfsdstools.c_index.indexdataaccess.IndexReport">IndexReport</a></code></dt>
 <dd>of the latest report of the company</dd>
 </dl></div>
 <details class="source">
@@ -618,20 +739,20 @@ Lower and uppercase are ignored.</p>
     &#34;&#34;&#34;
 
     sql = f&#34;&#34;&#34;SELECT *
-                FROM {self.INDEX_REPORTS_TABLE}
+                FROM {self.index_reports_table}
                 WHERE cik = {cik} and originFileType = &#39;quarter&#39;
                 ORDER BY period DESC&#34;&#34;&#34;
     return self.execute_fetchall_typed(sql, IndexReport)[0]</code></pre>
 </details>
 </dd>
-<dt id="secfsdstools.d_index.indexdataaccess.DBIndexingAccessor.insert_indexfileprocessing"><code class="name flex">
-<span>def <span class="ident">insert_indexfileprocessing</span></span>(<span>self, data: <a title="secfsdstools.d_index.indexdataaccess.IndexFileProcessingState" href="#secfsdstools.d_index.indexdataaccess.IndexFileProcessingState">IndexFileProcessingState</a>)</span>
+<dt id="secfsdstools.c_index.indexdataaccess.DBIndexingAccessorBase.insert_indexfileprocessing"><code class="name flex">
+<span>def <span class="ident">insert_indexfileprocessing</span></span>(<span>self, data: <a title="secfsdstools.c_index.indexdataaccess.IndexFileProcessingState" href="#secfsdstools.c_index.indexdataaccess.IndexFileProcessingState">IndexFileProcessingState</a>)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>inserts an entry into the index_file_processing_state table</p>
 <h2 id="args">Args</h2>
 <dl>
-<dt><strong><code>data</code></strong> :&ensp;<code><a title="secfsdstools.d_index.indexdataaccess.IndexFileProcessingState" href="#secfsdstools.d_index.indexdataaccess.IndexFileProcessingState">IndexFileProcessingState</a></code></dt>
+<dt><strong><code>data</code></strong> :&ensp;<code><a title="secfsdstools.c_index.indexdataaccess.IndexFileProcessingState" href="#secfsdstools.c_index.indexdataaccess.IndexFileProcessingState">IndexFileProcessingState</a></code></dt>
 <dd>IndexFileProcessingState data object to insert</dd>
 </dl></div>
 <details class="source">
@@ -645,18 +766,18 @@ Lower and uppercase are ignored.</p>
     Args:
         data (IndexFileProcessingState): IndexFileProcessingState data object to insert
     &#34;&#34;&#34;
-    sql = self.create_insert_statement_for_dataclass(self.INDEX_PROCESSING_TABLE, data)
-    self.execute_single(sql)</code></pre>
+    with self.get_connection() as conn:
+        self._insert_indexfileprocessing(data, conn)</code></pre>
 </details>
 </dd>
-<dt id="secfsdstools.d_index.indexdataaccess.DBIndexingAccessor.insert_indexreport"><code class="name flex">
-<span>def <span class="ident">insert_indexreport</span></span>(<span>self, data: <a title="secfsdstools.d_index.indexdataaccess.IndexReport" href="#secfsdstools.d_index.indexdataaccess.IndexReport">IndexReport</a>)</span>
+<dt id="secfsdstools.c_index.indexdataaccess.DBIndexingAccessorBase.insert_indexreport"><code class="name flex">
+<span>def <span class="ident">insert_indexreport</span></span>(<span>self, data: <a title="secfsdstools.c_index.indexdataaccess.IndexReport" href="#secfsdstools.c_index.indexdataaccess.IndexReport">IndexReport</a>)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>inserts an entry into the index_report table</p>
 <h2 id="args">Args</h2>
 <dl>
-<dt><strong><code>data</code></strong> :&ensp;<code><a title="secfsdstools.d_index.indexdataaccess.IndexReport" href="#secfsdstools.d_index.indexdataaccess.IndexReport">IndexReport</a></code></dt>
+<dt><strong><code>data</code></strong> :&ensp;<code><a title="secfsdstools.c_index.indexdataaccess.IndexReport" href="#secfsdstools.c_index.indexdataaccess.IndexReport">IndexReport</a></code></dt>
 <dd>IndexReport data object</dd>
 </dl></div>
 <details class="source">
@@ -669,18 +790,19 @@ Lower and uppercase are ignored.</p>
     Args:
         data (IndexReport): IndexReport data object
     &#34;&#34;&#34;
-    sql = self.create_insert_statement_for_dataclass(self.INDEX_REPORTS_TABLE, data)
-    self.execute_single(sql)</code></pre>
+    sql = self.create_insert_statement_for_dataclass(self.index_reports_table, data)
+    with self.get_connection() as conn:
+        self.execute_single(sql, conn)</code></pre>
 </details>
 </dd>
-<dt id="secfsdstools.d_index.indexdataaccess.DBIndexingAccessor.read_all_indexfileprocessing"><code class="name flex">
-<span>def <span class="ident">read_all_indexfileprocessing</span></span>(<span>self) ‑> List[<a title="secfsdstools.d_index.indexdataaccess.IndexFileProcessingState" href="#secfsdstools.d_index.indexdataaccess.IndexFileProcessingState">IndexFileProcessingState</a>]</span>
+<dt id="secfsdstools.c_index.indexdataaccess.DBIndexingAccessorBase.read_all_indexfileprocessing"><code class="name flex">
+<span>def <span class="ident">read_all_indexfileprocessing</span></span>(<span>self) ‑> List[<a title="secfsdstools.c_index.indexdataaccess.IndexFileProcessingState" href="#secfsdstools.c_index.indexdataaccess.IndexFileProcessingState">IndexFileProcessingState</a>]</span>
 </code></dt>
 <dd>
 <div class="desc"><p>reads all entries of the index_file_processing_state table</p>
 <h2 id="returns">Returns</h2>
 <dl>
-<dt><code>List[<a title="secfsdstools.d_index.indexdataaccess.IndexFileProcessingState" href="#secfsdstools.d_index.indexdataaccess.IndexFileProcessingState">IndexFileProcessingState</a>]</code></dt>
+<dt><code>List[<a title="secfsdstools.c_index.indexdataaccess.IndexFileProcessingState" href="#secfsdstools.c_index.indexdataaccess.IndexFileProcessingState">IndexFileProcessingState</a>]</code></dt>
 <dd>List with IndexFileProcessingState objects</dd>
 </dl></div>
 <details class="source">
@@ -694,11 +816,11 @@ Lower and uppercase are ignored.</p>
     Returns:
         List[IndexFileProcessingState]: List with IndexFileProcessingState objects
     &#34;&#34;&#34;
-    sql = f&#39;SELECT * FROM {self.INDEX_PROCESSING_TABLE}&#39;
+    sql = f&#39;SELECT * FROM {self.index_processing_table}&#39;
     return self.execute_fetchall_typed(sql, IndexFileProcessingState)</code></pre>
 </details>
 </dd>
-<dt id="secfsdstools.d_index.indexdataaccess.DBIndexingAccessor.read_all_indexfileprocessing_df"><code class="name flex">
+<dt id="secfsdstools.c_index.indexdataaccess.DBIndexingAccessorBase.read_all_indexfileprocessing_df"><code class="name flex">
 <span>def <span class="ident">read_all_indexfileprocessing_df</span></span>(<span>self) ‑> pandas.core.frame.DataFrame</span>
 </code></dt>
 <dd>
@@ -719,18 +841,18 @@ Lower and uppercase are ignored.</p>
     Returns:
         pd.DataFrame: pandas DataFrame
     &#34;&#34;&#34;
-    sql = f&#39;SELECT * FROM {self.INDEX_PROCESSING_TABLE}&#39;
+    sql = f&#39;SELECT * FROM {self.index_processing_table}&#39;
     return self.execute_read_as_df(sql)</code></pre>
 </details>
 </dd>
-<dt id="secfsdstools.d_index.indexdataaccess.DBIndexingAccessor.read_all_indexreports"><code class="name flex">
-<span>def <span class="ident">read_all_indexreports</span></span>(<span>self) ‑> List[<a title="secfsdstools.d_index.indexdataaccess.IndexReport" href="#secfsdstools.d_index.indexdataaccess.IndexReport">IndexReport</a>]</span>
+<dt id="secfsdstools.c_index.indexdataaccess.DBIndexingAccessorBase.read_all_indexreports"><code class="name flex">
+<span>def <span class="ident">read_all_indexreports</span></span>(<span>self) ‑> List[<a title="secfsdstools.c_index.indexdataaccess.IndexReport" href="#secfsdstools.c_index.indexdataaccess.IndexReport">IndexReport</a>]</span>
 </code></dt>
 <dd>
 <div class="desc"><p>reads all entries of the index_reports table</p>
 <h2 id="returns">Returns</h2>
 <dl>
-<dt><code>List[<a title="secfsdstools.d_index.indexdataaccess.IndexReport" href="#secfsdstools.d_index.indexdataaccess.IndexReport">IndexReport</a>]</code></dt>
+<dt><code>List[<a title="secfsdstools.c_index.indexdataaccess.IndexReport" href="#secfsdstools.c_index.indexdataaccess.IndexReport">IndexReport</a>]</code></dt>
 <dd>List with IndexReport objects</dd>
 </dl></div>
 <details class="source">
@@ -744,11 +866,11 @@ Lower and uppercase are ignored.</p>
     Returns:
         List[IndexReport]: List with IndexReport objects
     &#34;&#34;&#34;
-    sql = f&#39;SELECT * FROM {self.INDEX_REPORTS_TABLE}&#39;
+    sql = f&#39;SELECT * FROM {self.index_reports_table}&#39;
     return self.execute_fetchall_typed(sql, IndexReport)</code></pre>
 </details>
 </dd>
-<dt id="secfsdstools.d_index.indexdataaccess.DBIndexingAccessor.read_all_indexreports_df"><code class="name flex">
+<dt id="secfsdstools.c_index.indexdataaccess.DBIndexingAccessorBase.read_all_indexreports_df"><code class="name flex">
 <span>def <span class="ident">read_all_indexreports_df</span></span>(<span>self) ‑> pandas.core.frame.DataFrame</span>
 </code></dt>
 <dd>
@@ -769,12 +891,12 @@ Lower and uppercase are ignored.</p>
     Returns:
         pd.DataFrame: pandas DataFrame
     &#34;&#34;&#34;
-    sql = f&#39;SELECT * FROM {self.INDEX_REPORTS_TABLE}&#39;
+    sql = f&#39;SELECT * FROM {self.index_reports_table}&#39;
     return self.execute_read_as_df(sql)</code></pre>
 </details>
 </dd>
-<dt id="secfsdstools.d_index.indexdataaccess.DBIndexingAccessor.read_index_file_for_filename"><code class="name flex">
-<span>def <span class="ident">read_index_file_for_filename</span></span>(<span>self, filename: str) ‑> <a title="secfsdstools.d_index.indexdataaccess.IndexFileProcessingState" href="#secfsdstools.d_index.indexdataaccess.IndexFileProcessingState">IndexFileProcessingState</a></span>
+<dt id="secfsdstools.c_index.indexdataaccess.DBIndexingAccessorBase.read_index_file_for_filename"><code class="name flex">
+<span>def <span class="ident">read_index_file_for_filename</span></span>(<span>self, filename: str) ‑> <a title="secfsdstools.c_index.indexdataaccess.IndexFileProcessingState" href="#secfsdstools.c_index.indexdataaccess.IndexFileProcessingState">IndexFileProcessingState</a></span>
 </code></dt>
 <dd>
 <div class="desc"><p>returns the IndexFileProcessingState instance for the provided filename</p>
@@ -785,7 +907,7 @@ Lower and uppercase are ignored.</p>
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
-<dt><code><a title="secfsdstools.d_index.indexdataaccess.IndexFileProcessingState" href="#secfsdstools.d_index.indexdataaccess.IndexFileProcessingState">IndexFileProcessingState</a></code></dt>
+<dt><code><a title="secfsdstools.c_index.indexdataaccess.IndexFileProcessingState" href="#secfsdstools.c_index.indexdataaccess.IndexFileProcessingState">IndexFileProcessingState</a></code></dt>
 <dd>the processing state instance</dd>
 </dl></div>
 <details class="source">
@@ -801,12 +923,12 @@ Lower and uppercase are ignored.</p>
     Returns:
         IndexFileProcessingState: the processing state instance
     &#34;&#34;&#34;
-    sql = f&#34;SELECT * FROM {self.INDEX_PROCESSING_TABLE} WHERE fileName = &#39;{filename}&#39;&#34;
+    sql = f&#34;SELECT * FROM {self.index_processing_table} WHERE fileName = &#39;{filename}&#39;&#34;
     return self.execute_fetchall_typed(sql, IndexFileProcessingState)[0]</code></pre>
 </details>
 </dd>
-<dt id="secfsdstools.d_index.indexdataaccess.DBIndexingAccessor.read_index_report_for_adsh"><code class="name flex">
-<span>def <span class="ident">read_index_report_for_adsh</span></span>(<span>self, adsh: str) ‑> <a title="secfsdstools.d_index.indexdataaccess.IndexReport" href="#secfsdstools.d_index.indexdataaccess.IndexReport">IndexReport</a></span>
+<dt id="secfsdstools.c_index.indexdataaccess.DBIndexingAccessorBase.read_index_report_for_adsh"><code class="name flex">
+<span>def <span class="ident">read_index_report_for_adsh</span></span>(<span>self, adsh: str) ‑> <a title="secfsdstools.c_index.indexdataaccess.IndexReport" href="#secfsdstools.c_index.indexdataaccess.IndexReport">IndexReport</a></span>
 </code></dt>
 <dd>
 <div class="desc"><p>returns the IndexReport instance for the provided adsh</p>
@@ -817,7 +939,7 @@ Lower and uppercase are ignored.</p>
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
-<dt><code><a title="secfsdstools.d_index.indexdataaccess.IndexReport" href="#secfsdstools.d_index.indexdataaccess.IndexReport">IndexReport</a></code></dt>
+<dt><code><a title="secfsdstools.c_index.indexdataaccess.IndexReport" href="#secfsdstools.c_index.indexdataaccess.IndexReport">IndexReport</a></code></dt>
 <dd>the report for the provided adsh</dd>
 </dl></div>
 <details class="source">
@@ -836,14 +958,14 @@ Lower and uppercase are ignored.</p>
     # sorting by originfiletype, so we prefer official data from SEC,
     # over the daily files, in case both should be present.
     sql = f&#34;&#34;&#34;SELECT *
-                FROM {self.INDEX_REPORTS_TABLE}
+                FROM {self.index_reports_table}
                 WHERE adsh = &#39;{adsh}&#39;
                 ORDER BY originFileType DESC&#34;&#34;&#34;
     return self.execute_fetchall_typed(sql, IndexReport)[0]</code></pre>
 </details>
 </dd>
-<dt id="secfsdstools.d_index.indexdataaccess.DBIndexingAccessor.read_index_reports_for_adshs"><code class="name flex">
-<span>def <span class="ident">read_index_reports_for_adshs</span></span>(<span>self, adshs: List[str]) ‑> List[<a title="secfsdstools.d_index.indexdataaccess.IndexReport" href="#secfsdstools.d_index.indexdataaccess.IndexReport">IndexReport</a>]</span>
+<dt id="secfsdstools.c_index.indexdataaccess.DBIndexingAccessorBase.read_index_reports_for_adshs"><code class="name flex">
+<span>def <span class="ident">read_index_reports_for_adshs</span></span>(<span>self, adshs: List[str]) ‑> List[<a title="secfsdstools.c_index.indexdataaccess.IndexReport" href="#secfsdstools.c_index.indexdataaccess.IndexReport">IndexReport</a>]</span>
 </code></dt>
 <dd>
 <div class="desc"><p>returns the IndexReport instances for the provided adshs</p>
@@ -854,7 +976,7 @@ Lower and uppercase are ignored.</p>
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
-<dt><code>List[<a title="secfsdstools.d_index.indexdataaccess.IndexReport" href="#secfsdstools.d_index.indexdataaccess.IndexReport">IndexReport</a>]</code></dt>
+<dt><code>List[<a title="secfsdstools.c_index.indexdataaccess.IndexReport" href="#secfsdstools.c_index.indexdataaccess.IndexReport">IndexReport</a>]</code></dt>
 <dd>the reports for the provided adshs</dd>
 </dl></div>
 <details class="source">
@@ -875,7 +997,7 @@ Lower and uppercase are ignored.</p>
     # sorting by originfiletype, so we prefer official data from SEC,
     # over the daily files, in case both should be present.
     sql = f&#34;&#34;&#34;SELECT *
-                FROM {self.INDEX_REPORTS_TABLE}
+                FROM {self.index_reports_table}
                 WHERE adsh in ({adshs_str})
                 ORDER BY adsh, originFileType DESC&#34;&#34;&#34;
 
@@ -892,8 +1014,8 @@ Lower and uppercase are ignored.</p>
     return filtered_reports</code></pre>
 </details>
 </dd>
-<dt id="secfsdstools.d_index.indexdataaccess.DBIndexingAccessor.read_index_reports_for_cik"><code class="name flex">
-<span>def <span class="ident">read_index_reports_for_cik</span></span>(<span>self, cik: int, forms: Optional[List[str]] = None) ‑> List[<a title="secfsdstools.d_index.indexdataaccess.IndexReport" href="#secfsdstools.d_index.indexdataaccess.IndexReport">IndexReport</a>]</span>
+<dt id="secfsdstools.c_index.indexdataaccess.DBIndexingAccessorBase.read_index_reports_for_cik"><code class="name flex">
+<span>def <span class="ident">read_index_reports_for_cik</span></span>(<span>self, cik: int, forms: Optional[List[str]] = None) ‑> List[<a title="secfsdstools.c_index.indexdataaccess.IndexReport" href="#secfsdstools.c_index.indexdataaccess.IndexReport">IndexReport</a>]</span>
 </code></dt>
 <dd>
 <div class="desc"><p>gets all reports as IndexReport instances for a company identified by its cik.
@@ -927,7 +1049,7 @@ forms that should be returned</p>
     Returns:
         List[IndexReport]
     &#34;&#34;&#34;
-    sql = f&#39;SELECT * FROM {self.INDEX_REPORTS_TABLE} WHERE cik = {cik}&#39;
+    sql = f&#39;SELECT * FROM {self.index_reports_table} WHERE cik = {cik}&#39;
     if forms is not None:
         forms_str = &#34;, &#34;.join([&#34;&#39;&#34; + x.upper() + &#34;&#39;&#34; for x in forms])
         sql = sql + f&#39; and form in ({forms_str}) &#39;
@@ -936,7 +1058,7 @@ forms that should be returned</p>
     return self.execute_fetchall_typed(sql, IndexReport)</code></pre>
 </details>
 </dd>
-<dt id="secfsdstools.d_index.indexdataaccess.DBIndexingAccessor.read_index_reports_for_cik_df"><code class="name flex">
+<dt id="secfsdstools.c_index.indexdataaccess.DBIndexingAccessorBase.read_index_reports_for_cik_df"><code class="name flex">
 <span>def <span class="ident">read_index_reports_for_cik_df</span></span>(<span>self, cik: int, forms: Optional[List[str]] = None) ‑> pandas.core.frame.DataFrame</span>
 </code></dt>
 <dd>
@@ -971,7 +1093,7 @@ forms that should be returned</p>
     Returns:
         pd.DataFrame
     &#34;&#34;&#34;
-    sql = f&#39;SELECT * FROM {self.INDEX_REPORTS_TABLE} WHERE cik = {cik}&#39;
+    sql = f&#39;SELECT * FROM {self.index_reports_table} WHERE cik = {cik}&#39;
     if forms is not None:
         forms_str = &#34;, &#34;.join([&#34;&#39;&#34; + x.upper() + &#34;&#39;&#34; for x in forms])
         sql = sql + f&#39; and form in ({forms_str}) &#39;
@@ -987,17 +1109,19 @@ forms that should be returned</p>
 <ul class="hlist">
 <li><code><a title="secfsdstools.a_utils.dbutils.DB.append_df_to_table" href="../a_utils/dbutils.html#secfsdstools.a_utils.dbutils.DB.append_df_to_table">append_df_to_table</a></code></li>
 <li><code><a title="secfsdstools.a_utils.dbutils.DB.create_insert_statement_for_dataclass" href="../a_utils/dbutils.html#secfsdstools.a_utils.dbutils.DB.create_insert_statement_for_dataclass">create_insert_statement_for_dataclass</a></code></li>
+<li><code><a title="secfsdstools.a_utils.dbutils.DB.db_file_exists" href="../a_utils/dbutils.html#secfsdstools.a_utils.dbutils.DB.db_file_exists">db_file_exists</a></code></li>
 <li><code><a title="secfsdstools.a_utils.dbutils.DB.execute_fetchall" href="../a_utils/dbutils.html#secfsdstools.a_utils.dbutils.DB.execute_fetchall">execute_fetchall</a></code></li>
 <li><code><a title="secfsdstools.a_utils.dbutils.DB.execute_fetchall_typed" href="../a_utils/dbutils.html#secfsdstools.a_utils.dbutils.DB.execute_fetchall_typed">execute_fetchall_typed</a></code></li>
 <li><code><a title="secfsdstools.a_utils.dbutils.DB.execute_many" href="../a_utils/dbutils.html#secfsdstools.a_utils.dbutils.DB.execute_many">execute_many</a></code></li>
 <li><code><a title="secfsdstools.a_utils.dbutils.DB.execute_read_as_df" href="../a_utils/dbutils.html#secfsdstools.a_utils.dbutils.DB.execute_read_as_df">execute_read_as_df</a></code></li>
 <li><code><a title="secfsdstools.a_utils.dbutils.DB.execute_single" href="../a_utils/dbutils.html#secfsdstools.a_utils.dbutils.DB.execute_single">execute_single</a></code></li>
 <li><code><a title="secfsdstools.a_utils.dbutils.DB.get_connection" href="../a_utils/dbutils.html#secfsdstools.a_utils.dbutils.DB.get_connection">get_connection</a></code></li>
+<li><code><a title="secfsdstools.a_utils.dbutils.DB.table_exists" href="../a_utils/dbutils.html#secfsdstools.a_utils.dbutils.DB.table_exists">table_exists</a></code></li>
 </ul>
 </li>
 </ul>
 </dd>
-<dt id="secfsdstools.d_index.indexdataaccess.IndexFileProcessingState"><code class="flex name class">
+<dt id="secfsdstools.c_index.indexdataaccess.IndexFileProcessingState"><code class="flex name class">
 <span>class <span class="ident">IndexFileProcessingState</span></span>
 <span>(</span><span>fileName: str, fullPath: str, status: str, entries: int, processTime: str)</span>
 </code></dt>
@@ -1017,29 +1141,29 @@ forms that should be returned</p>
 </details>
 <h3>Class variables</h3>
 <dl>
-<dt id="secfsdstools.d_index.indexdataaccess.IndexFileProcessingState.entries"><code class="name">var <span class="ident">entries</span> : int</code></dt>
+<dt id="secfsdstools.c_index.indexdataaccess.IndexFileProcessingState.entries"><code class="name">var <span class="ident">entries</span> : int</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="secfsdstools.d_index.indexdataaccess.IndexFileProcessingState.fileName"><code class="name">var <span class="ident">fileName</span> : str</code></dt>
+<dt id="secfsdstools.c_index.indexdataaccess.IndexFileProcessingState.fileName"><code class="name">var <span class="ident">fileName</span> : str</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="secfsdstools.d_index.indexdataaccess.IndexFileProcessingState.fullPath"><code class="name">var <span class="ident">fullPath</span> : str</code></dt>
+<dt id="secfsdstools.c_index.indexdataaccess.IndexFileProcessingState.fullPath"><code class="name">var <span class="ident">fullPath</span> : str</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="secfsdstools.d_index.indexdataaccess.IndexFileProcessingState.processTime"><code class="name">var <span class="ident">processTime</span> : str</code></dt>
+<dt id="secfsdstools.c_index.indexdataaccess.IndexFileProcessingState.processTime"><code class="name">var <span class="ident">processTime</span> : str</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="secfsdstools.d_index.indexdataaccess.IndexFileProcessingState.status"><code class="name">var <span class="ident">status</span> : str</code></dt>
+<dt id="secfsdstools.c_index.indexdataaccess.IndexFileProcessingState.status"><code class="name">var <span class="ident">status</span> : str</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
 </dl>
 </dd>
-<dt id="secfsdstools.d_index.indexdataaccess.IndexReport"><code class="flex name class">
+<dt id="secfsdstools.c_index.indexdataaccess.IndexReport"><code class="flex name class">
 <span>class <span class="ident">IndexReport</span></span>
 <span>(</span><span>adsh: str, cik: int, name: str, form: str, filed: int, period: int, fullPath: str, originFile: str, originFileType: str, url: str)</span>
 </code></dt>
@@ -1064,47 +1188,115 @@ forms that should be returned</p>
 </details>
 <h3>Class variables</h3>
 <dl>
-<dt id="secfsdstools.d_index.indexdataaccess.IndexReport.adsh"><code class="name">var <span class="ident">adsh</span> : str</code></dt>
+<dt id="secfsdstools.c_index.indexdataaccess.IndexReport.adsh"><code class="name">var <span class="ident">adsh</span> : str</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="secfsdstools.d_index.indexdataaccess.IndexReport.cik"><code class="name">var <span class="ident">cik</span> : int</code></dt>
+<dt id="secfsdstools.c_index.indexdataaccess.IndexReport.cik"><code class="name">var <span class="ident">cik</span> : int</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="secfsdstools.d_index.indexdataaccess.IndexReport.filed"><code class="name">var <span class="ident">filed</span> : int</code></dt>
+<dt id="secfsdstools.c_index.indexdataaccess.IndexReport.filed"><code class="name">var <span class="ident">filed</span> : int</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="secfsdstools.d_index.indexdataaccess.IndexReport.form"><code class="name">var <span class="ident">form</span> : str</code></dt>
+<dt id="secfsdstools.c_index.indexdataaccess.IndexReport.form"><code class="name">var <span class="ident">form</span> : str</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="secfsdstools.d_index.indexdataaccess.IndexReport.fullPath"><code class="name">var <span class="ident">fullPath</span> : str</code></dt>
+<dt id="secfsdstools.c_index.indexdataaccess.IndexReport.fullPath"><code class="name">var <span class="ident">fullPath</span> : str</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="secfsdstools.d_index.indexdataaccess.IndexReport.name"><code class="name">var <span class="ident">name</span> : str</code></dt>
+<dt id="secfsdstools.c_index.indexdataaccess.IndexReport.name"><code class="name">var <span class="ident">name</span> : str</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="secfsdstools.d_index.indexdataaccess.IndexReport.originFile"><code class="name">var <span class="ident">originFile</span> : str</code></dt>
+<dt id="secfsdstools.c_index.indexdataaccess.IndexReport.originFile"><code class="name">var <span class="ident">originFile</span> : str</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="secfsdstools.d_index.indexdataaccess.IndexReport.originFileType"><code class="name">var <span class="ident">originFileType</span> : str</code></dt>
+<dt id="secfsdstools.c_index.indexdataaccess.IndexReport.originFileType"><code class="name">var <span class="ident">originFileType</span> : str</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="secfsdstools.d_index.indexdataaccess.IndexReport.period"><code class="name">var <span class="ident">period</span> : int</code></dt>
+<dt id="secfsdstools.c_index.indexdataaccess.IndexReport.period"><code class="name">var <span class="ident">period</span> : int</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="secfsdstools.d_index.indexdataaccess.IndexReport.url"><code class="name">var <span class="ident">url</span> : str</code></dt>
+<dt id="secfsdstools.c_index.indexdataaccess.IndexReport.url"><code class="name">var <span class="ident">url</span> : str</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
 </dl>
+</dd>
+<dt id="secfsdstools.c_index.indexdataaccess.ParquetDBIndexingAccessor"><code class="flex name class">
+<span>class <span class="ident">ParquetDBIndexingAccessor</span></span>
+<span>(</span><span>db_dir: str)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Dataaccess class for index related tables of parquet files</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class ParquetDBIndexingAccessor(DBIndexingAccessorBase):
+    &#34;&#34;&#34; Dataaccess class for index related tables of parquet files&#34;&#34;&#34;
+    INDEX_REPORTS_TABLE = &#39;index_parquet_reports&#39;
+    INDEX_PROCESSING_TABLE = &#39;index_parquet_processing_state&#39;
+
+    def __init__(self, db_dir: str):
+        super().__init__(db_dir=db_dir, index_reports_table=self.INDEX_REPORTS_TABLE,
+                         index_processing_table=self.INDEX_PROCESSING_TABLE)</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="secfsdstools.c_index.indexdataaccess.DBIndexingAccessorBase" href="#secfsdstools.c_index.indexdataaccess.DBIndexingAccessorBase">DBIndexingAccessorBase</a></li>
+<li><a title="secfsdstools.a_utils.dbutils.DB" href="../a_utils/dbutils.html#secfsdstools.a_utils.dbutils.DB">DB</a></li>
+<li>abc.ABC</li>
+</ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="secfsdstools.c_index.indexdataaccess.ParquetDBIndexingAccessor.INDEX_PROCESSING_TABLE"><code class="name">var <span class="ident">INDEX_PROCESSING_TABLE</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="secfsdstools.c_index.indexdataaccess.ParquetDBIndexingAccessor.INDEX_REPORTS_TABLE"><code class="name">var <span class="ident">INDEX_REPORTS_TABLE</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="secfsdstools.c_index.indexdataaccess.DBIndexingAccessorBase" href="#secfsdstools.c_index.indexdataaccess.DBIndexingAccessorBase">DBIndexingAccessorBase</a></b></code>:
+<ul class="hlist">
+<li><code><a title="secfsdstools.c_index.indexdataaccess.DBIndexingAccessorBase.add_index_report" href="#secfsdstools.c_index.indexdataaccess.DBIndexingAccessorBase.add_index_report">add_index_report</a></code></li>
+<li><code><a title="secfsdstools.c_index.indexdataaccess.DBIndexingAccessorBase.append_df_to_table" href="../a_utils/dbutils.html#secfsdstools.a_utils.dbutils.DB.append_df_to_table">append_df_to_table</a></code></li>
+<li><code><a title="secfsdstools.c_index.indexdataaccess.DBIndexingAccessorBase.create_insert_statement_for_dataclass" href="../a_utils/dbutils.html#secfsdstools.a_utils.dbutils.DB.create_insert_statement_for_dataclass">create_insert_statement_for_dataclass</a></code></li>
+<li><code><a title="secfsdstools.c_index.indexdataaccess.DBIndexingAccessorBase.db_file_exists" href="../a_utils/dbutils.html#secfsdstools.a_utils.dbutils.DB.db_file_exists">db_file_exists</a></code></li>
+<li><code><a title="secfsdstools.c_index.indexdataaccess.DBIndexingAccessorBase.execute_fetchall" href="../a_utils/dbutils.html#secfsdstools.a_utils.dbutils.DB.execute_fetchall">execute_fetchall</a></code></li>
+<li><code><a title="secfsdstools.c_index.indexdataaccess.DBIndexingAccessorBase.execute_fetchall_typed" href="../a_utils/dbutils.html#secfsdstools.a_utils.dbutils.DB.execute_fetchall_typed">execute_fetchall_typed</a></code></li>
+<li><code><a title="secfsdstools.c_index.indexdataaccess.DBIndexingAccessorBase.execute_many" href="../a_utils/dbutils.html#secfsdstools.a_utils.dbutils.DB.execute_many">execute_many</a></code></li>
+<li><code><a title="secfsdstools.c_index.indexdataaccess.DBIndexingAccessorBase.execute_read_as_df" href="../a_utils/dbutils.html#secfsdstools.a_utils.dbutils.DB.execute_read_as_df">execute_read_as_df</a></code></li>
+<li><code><a title="secfsdstools.c_index.indexdataaccess.DBIndexingAccessorBase.execute_single" href="../a_utils/dbutils.html#secfsdstools.a_utils.dbutils.DB.execute_single">execute_single</a></code></li>
+<li><code><a title="secfsdstools.c_index.indexdataaccess.DBIndexingAccessorBase.find_company_by_name" href="#secfsdstools.c_index.indexdataaccess.DBIndexingAccessorBase.find_company_by_name">find_company_by_name</a></code></li>
+<li><code><a title="secfsdstools.c_index.indexdataaccess.DBIndexingAccessorBase.find_latest_company_report" href="#secfsdstools.c_index.indexdataaccess.DBIndexingAccessorBase.find_latest_company_report">find_latest_company_report</a></code></li>
+<li><code><a title="secfsdstools.c_index.indexdataaccess.DBIndexingAccessorBase.get_connection" href="../a_utils/dbutils.html#secfsdstools.a_utils.dbutils.DB.get_connection">get_connection</a></code></li>
+<li><code><a title="secfsdstools.c_index.indexdataaccess.DBIndexingAccessorBase.insert_indexfileprocessing" href="#secfsdstools.c_index.indexdataaccess.DBIndexingAccessorBase.insert_indexfileprocessing">insert_indexfileprocessing</a></code></li>
+<li><code><a title="secfsdstools.c_index.indexdataaccess.DBIndexingAccessorBase.insert_indexreport" href="#secfsdstools.c_index.indexdataaccess.DBIndexingAccessorBase.insert_indexreport">insert_indexreport</a></code></li>
+<li><code><a title="secfsdstools.c_index.indexdataaccess.DBIndexingAccessorBase.read_all_indexfileprocessing" href="#secfsdstools.c_index.indexdataaccess.DBIndexingAccessorBase.read_all_indexfileprocessing">read_all_indexfileprocessing</a></code></li>
+<li><code><a title="secfsdstools.c_index.indexdataaccess.DBIndexingAccessorBase.read_all_indexfileprocessing_df" href="#secfsdstools.c_index.indexdataaccess.DBIndexingAccessorBase.read_all_indexfileprocessing_df">read_all_indexfileprocessing_df</a></code></li>
+<li><code><a title="secfsdstools.c_index.indexdataaccess.DBIndexingAccessorBase.read_all_indexreports" href="#secfsdstools.c_index.indexdataaccess.DBIndexingAccessorBase.read_all_indexreports">read_all_indexreports</a></code></li>
+<li><code><a title="secfsdstools.c_index.indexdataaccess.DBIndexingAccessorBase.read_all_indexreports_df" href="#secfsdstools.c_index.indexdataaccess.DBIndexingAccessorBase.read_all_indexreports_df">read_all_indexreports_df</a></code></li>
+<li><code><a title="secfsdstools.c_index.indexdataaccess.DBIndexingAccessorBase.read_index_file_for_filename" href="#secfsdstools.c_index.indexdataaccess.DBIndexingAccessorBase.read_index_file_for_filename">read_index_file_for_filename</a></code></li>
+<li><code><a title="secfsdstools.c_index.indexdataaccess.DBIndexingAccessorBase.read_index_report_for_adsh" href="#secfsdstools.c_index.indexdataaccess.DBIndexingAccessorBase.read_index_report_for_adsh">read_index_report_for_adsh</a></code></li>
+<li><code><a title="secfsdstools.c_index.indexdataaccess.DBIndexingAccessorBase.read_index_reports_for_adshs" href="#secfsdstools.c_index.indexdataaccess.DBIndexingAccessorBase.read_index_reports_for_adshs">read_index_reports_for_adshs</a></code></li>
+<li><code><a title="secfsdstools.c_index.indexdataaccess.DBIndexingAccessorBase.read_index_reports_for_cik" href="#secfsdstools.c_index.indexdataaccess.DBIndexingAccessorBase.read_index_reports_for_cik">read_index_reports_for_cik</a></code></li>
+<li><code><a title="secfsdstools.c_index.indexdataaccess.DBIndexingAccessorBase.read_index_reports_for_cik_df" href="#secfsdstools.c_index.indexdataaccess.DBIndexingAccessorBase.read_index_reports_for_cik_df">read_index_reports_for_cik_df</a></code></li>
+<li><code><a title="secfsdstools.c_index.indexdataaccess.DBIndexingAccessorBase.table_exists" href="../a_utils/dbutils.html#secfsdstools.a_utils.dbutils.DB.table_exists">table_exists</a></code></li>
+</ul>
+</li>
+</ul>
 </dd>
 </dl>
 </section>
@@ -1117,55 +1309,65 @@ forms that should be returned</p>
 <ul id="index">
 <li><h3>Super-module</h3>
 <ul>
-<li><code><a title="secfsdstools.d_index" href="index.html">secfsdstools.d_index</a></code></li>
+<li><code><a title="secfsdstools.c_index" href="index.html">secfsdstools.c_index</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-functions">Functions</a></h3>
+<ul class="">
+<li><code><a title="secfsdstools.c_index.indexdataaccess.create_index_accessor" href="#secfsdstools.c_index.indexdataaccess.create_index_accessor">create_index_accessor</a></code></li>
 </ul>
 </li>
 <li><h3><a href="#header-classes">Classes</a></h3>
 <ul>
 <li>
-<h4><code><a title="secfsdstools.d_index.indexdataaccess.DBIndexingAccessor" href="#secfsdstools.d_index.indexdataaccess.DBIndexingAccessor">DBIndexingAccessor</a></code></h4>
+<h4><code><a title="secfsdstools.c_index.indexdataaccess.DBIndexingAccessorBase" href="#secfsdstools.c_index.indexdataaccess.DBIndexingAccessorBase">DBIndexingAccessorBase</a></code></h4>
 <ul class="">
-<li><code><a title="secfsdstools.d_index.indexdataaccess.DBIndexingAccessor.INDEX_PROCESSING_TABLE" href="#secfsdstools.d_index.indexdataaccess.DBIndexingAccessor.INDEX_PROCESSING_TABLE">INDEX_PROCESSING_TABLE</a></code></li>
-<li><code><a title="secfsdstools.d_index.indexdataaccess.DBIndexingAccessor.INDEX_REPORTS_TABLE" href="#secfsdstools.d_index.indexdataaccess.DBIndexingAccessor.INDEX_REPORTS_TABLE">INDEX_REPORTS_TABLE</a></code></li>
-<li><code><a title="secfsdstools.d_index.indexdataaccess.DBIndexingAccessor.append_indexreport_df" href="#secfsdstools.d_index.indexdataaccess.DBIndexingAccessor.append_indexreport_df">append_indexreport_df</a></code></li>
-<li><code><a title="secfsdstools.d_index.indexdataaccess.DBIndexingAccessor.find_company_by_name" href="#secfsdstools.d_index.indexdataaccess.DBIndexingAccessor.find_company_by_name">find_company_by_name</a></code></li>
-<li><code><a title="secfsdstools.d_index.indexdataaccess.DBIndexingAccessor.find_latest_company_report" href="#secfsdstools.d_index.indexdataaccess.DBIndexingAccessor.find_latest_company_report">find_latest_company_report</a></code></li>
-<li><code><a title="secfsdstools.d_index.indexdataaccess.DBIndexingAccessor.insert_indexfileprocessing" href="#secfsdstools.d_index.indexdataaccess.DBIndexingAccessor.insert_indexfileprocessing">insert_indexfileprocessing</a></code></li>
-<li><code><a title="secfsdstools.d_index.indexdataaccess.DBIndexingAccessor.insert_indexreport" href="#secfsdstools.d_index.indexdataaccess.DBIndexingAccessor.insert_indexreport">insert_indexreport</a></code></li>
-<li><code><a title="secfsdstools.d_index.indexdataaccess.DBIndexingAccessor.read_all_indexfileprocessing" href="#secfsdstools.d_index.indexdataaccess.DBIndexingAccessor.read_all_indexfileprocessing">read_all_indexfileprocessing</a></code></li>
-<li><code><a title="secfsdstools.d_index.indexdataaccess.DBIndexingAccessor.read_all_indexfileprocessing_df" href="#secfsdstools.d_index.indexdataaccess.DBIndexingAccessor.read_all_indexfileprocessing_df">read_all_indexfileprocessing_df</a></code></li>
-<li><code><a title="secfsdstools.d_index.indexdataaccess.DBIndexingAccessor.read_all_indexreports" href="#secfsdstools.d_index.indexdataaccess.DBIndexingAccessor.read_all_indexreports">read_all_indexreports</a></code></li>
-<li><code><a title="secfsdstools.d_index.indexdataaccess.DBIndexingAccessor.read_all_indexreports_df" href="#secfsdstools.d_index.indexdataaccess.DBIndexingAccessor.read_all_indexreports_df">read_all_indexreports_df</a></code></li>
-<li><code><a title="secfsdstools.d_index.indexdataaccess.DBIndexingAccessor.read_index_file_for_filename" href="#secfsdstools.d_index.indexdataaccess.DBIndexingAccessor.read_index_file_for_filename">read_index_file_for_filename</a></code></li>
-<li><code><a title="secfsdstools.d_index.indexdataaccess.DBIndexingAccessor.read_index_report_for_adsh" href="#secfsdstools.d_index.indexdataaccess.DBIndexingAccessor.read_index_report_for_adsh">read_index_report_for_adsh</a></code></li>
-<li><code><a title="secfsdstools.d_index.indexdataaccess.DBIndexingAccessor.read_index_reports_for_adshs" href="#secfsdstools.d_index.indexdataaccess.DBIndexingAccessor.read_index_reports_for_adshs">read_index_reports_for_adshs</a></code></li>
-<li><code><a title="secfsdstools.d_index.indexdataaccess.DBIndexingAccessor.read_index_reports_for_cik" href="#secfsdstools.d_index.indexdataaccess.DBIndexingAccessor.read_index_reports_for_cik">read_index_reports_for_cik</a></code></li>
-<li><code><a title="secfsdstools.d_index.indexdataaccess.DBIndexingAccessor.read_index_reports_for_cik_df" href="#secfsdstools.d_index.indexdataaccess.DBIndexingAccessor.read_index_reports_for_cik_df">read_index_reports_for_cik_df</a></code></li>
+<li><code><a title="secfsdstools.c_index.indexdataaccess.DBIndexingAccessorBase.add_index_report" href="#secfsdstools.c_index.indexdataaccess.DBIndexingAccessorBase.add_index_report">add_index_report</a></code></li>
+<li><code><a title="secfsdstools.c_index.indexdataaccess.DBIndexingAccessorBase.find_company_by_name" href="#secfsdstools.c_index.indexdataaccess.DBIndexingAccessorBase.find_company_by_name">find_company_by_name</a></code></li>
+<li><code><a title="secfsdstools.c_index.indexdataaccess.DBIndexingAccessorBase.find_latest_company_report" href="#secfsdstools.c_index.indexdataaccess.DBIndexingAccessorBase.find_latest_company_report">find_latest_company_report</a></code></li>
+<li><code><a title="secfsdstools.c_index.indexdataaccess.DBIndexingAccessorBase.insert_indexfileprocessing" href="#secfsdstools.c_index.indexdataaccess.DBIndexingAccessorBase.insert_indexfileprocessing">insert_indexfileprocessing</a></code></li>
+<li><code><a title="secfsdstools.c_index.indexdataaccess.DBIndexingAccessorBase.insert_indexreport" href="#secfsdstools.c_index.indexdataaccess.DBIndexingAccessorBase.insert_indexreport">insert_indexreport</a></code></li>
+<li><code><a title="secfsdstools.c_index.indexdataaccess.DBIndexingAccessorBase.read_all_indexfileprocessing" href="#secfsdstools.c_index.indexdataaccess.DBIndexingAccessorBase.read_all_indexfileprocessing">read_all_indexfileprocessing</a></code></li>
+<li><code><a title="secfsdstools.c_index.indexdataaccess.DBIndexingAccessorBase.read_all_indexfileprocessing_df" href="#secfsdstools.c_index.indexdataaccess.DBIndexingAccessorBase.read_all_indexfileprocessing_df">read_all_indexfileprocessing_df</a></code></li>
+<li><code><a title="secfsdstools.c_index.indexdataaccess.DBIndexingAccessorBase.read_all_indexreports" href="#secfsdstools.c_index.indexdataaccess.DBIndexingAccessorBase.read_all_indexreports">read_all_indexreports</a></code></li>
+<li><code><a title="secfsdstools.c_index.indexdataaccess.DBIndexingAccessorBase.read_all_indexreports_df" href="#secfsdstools.c_index.indexdataaccess.DBIndexingAccessorBase.read_all_indexreports_df">read_all_indexreports_df</a></code></li>
+<li><code><a title="secfsdstools.c_index.indexdataaccess.DBIndexingAccessorBase.read_index_file_for_filename" href="#secfsdstools.c_index.indexdataaccess.DBIndexingAccessorBase.read_index_file_for_filename">read_index_file_for_filename</a></code></li>
+<li><code><a title="secfsdstools.c_index.indexdataaccess.DBIndexingAccessorBase.read_index_report_for_adsh" href="#secfsdstools.c_index.indexdataaccess.DBIndexingAccessorBase.read_index_report_for_adsh">read_index_report_for_adsh</a></code></li>
+<li><code><a title="secfsdstools.c_index.indexdataaccess.DBIndexingAccessorBase.read_index_reports_for_adshs" href="#secfsdstools.c_index.indexdataaccess.DBIndexingAccessorBase.read_index_reports_for_adshs">read_index_reports_for_adshs</a></code></li>
+<li><code><a title="secfsdstools.c_index.indexdataaccess.DBIndexingAccessorBase.read_index_reports_for_cik" href="#secfsdstools.c_index.indexdataaccess.DBIndexingAccessorBase.read_index_reports_for_cik">read_index_reports_for_cik</a></code></li>
+<li><code><a title="secfsdstools.c_index.indexdataaccess.DBIndexingAccessorBase.read_index_reports_for_cik_df" href="#secfsdstools.c_index.indexdataaccess.DBIndexingAccessorBase.read_index_reports_for_cik_df">read_index_reports_for_cik_df</a></code></li>
 </ul>
 </li>
 <li>
-<h4><code><a title="secfsdstools.d_index.indexdataaccess.IndexFileProcessingState" href="#secfsdstools.d_index.indexdataaccess.IndexFileProcessingState">IndexFileProcessingState</a></code></h4>
+<h4><code><a title="secfsdstools.c_index.indexdataaccess.IndexFileProcessingState" href="#secfsdstools.c_index.indexdataaccess.IndexFileProcessingState">IndexFileProcessingState</a></code></h4>
 <ul class="">
-<li><code><a title="secfsdstools.d_index.indexdataaccess.IndexFileProcessingState.entries" href="#secfsdstools.d_index.indexdataaccess.IndexFileProcessingState.entries">entries</a></code></li>
-<li><code><a title="secfsdstools.d_index.indexdataaccess.IndexFileProcessingState.fileName" href="#secfsdstools.d_index.indexdataaccess.IndexFileProcessingState.fileName">fileName</a></code></li>
-<li><code><a title="secfsdstools.d_index.indexdataaccess.IndexFileProcessingState.fullPath" href="#secfsdstools.d_index.indexdataaccess.IndexFileProcessingState.fullPath">fullPath</a></code></li>
-<li><code><a title="secfsdstools.d_index.indexdataaccess.IndexFileProcessingState.processTime" href="#secfsdstools.d_index.indexdataaccess.IndexFileProcessingState.processTime">processTime</a></code></li>
-<li><code><a title="secfsdstools.d_index.indexdataaccess.IndexFileProcessingState.status" href="#secfsdstools.d_index.indexdataaccess.IndexFileProcessingState.status">status</a></code></li>
+<li><code><a title="secfsdstools.c_index.indexdataaccess.IndexFileProcessingState.entries" href="#secfsdstools.c_index.indexdataaccess.IndexFileProcessingState.entries">entries</a></code></li>
+<li><code><a title="secfsdstools.c_index.indexdataaccess.IndexFileProcessingState.fileName" href="#secfsdstools.c_index.indexdataaccess.IndexFileProcessingState.fileName">fileName</a></code></li>
+<li><code><a title="secfsdstools.c_index.indexdataaccess.IndexFileProcessingState.fullPath" href="#secfsdstools.c_index.indexdataaccess.IndexFileProcessingState.fullPath">fullPath</a></code></li>
+<li><code><a title="secfsdstools.c_index.indexdataaccess.IndexFileProcessingState.processTime" href="#secfsdstools.c_index.indexdataaccess.IndexFileProcessingState.processTime">processTime</a></code></li>
+<li><code><a title="secfsdstools.c_index.indexdataaccess.IndexFileProcessingState.status" href="#secfsdstools.c_index.indexdataaccess.IndexFileProcessingState.status">status</a></code></li>
 </ul>
 </li>
 <li>
-<h4><code><a title="secfsdstools.d_index.indexdataaccess.IndexReport" href="#secfsdstools.d_index.indexdataaccess.IndexReport">IndexReport</a></code></h4>
+<h4><code><a title="secfsdstools.c_index.indexdataaccess.IndexReport" href="#secfsdstools.c_index.indexdataaccess.IndexReport">IndexReport</a></code></h4>
 <ul class="two-column">
-<li><code><a title="secfsdstools.d_index.indexdataaccess.IndexReport.adsh" href="#secfsdstools.d_index.indexdataaccess.IndexReport.adsh">adsh</a></code></li>
-<li><code><a title="secfsdstools.d_index.indexdataaccess.IndexReport.cik" href="#secfsdstools.d_index.indexdataaccess.IndexReport.cik">cik</a></code></li>
-<li><code><a title="secfsdstools.d_index.indexdataaccess.IndexReport.filed" href="#secfsdstools.d_index.indexdataaccess.IndexReport.filed">filed</a></code></li>
-<li><code><a title="secfsdstools.d_index.indexdataaccess.IndexReport.form" href="#secfsdstools.d_index.indexdataaccess.IndexReport.form">form</a></code></li>
-<li><code><a title="secfsdstools.d_index.indexdataaccess.IndexReport.fullPath" href="#secfsdstools.d_index.indexdataaccess.IndexReport.fullPath">fullPath</a></code></li>
-<li><code><a title="secfsdstools.d_index.indexdataaccess.IndexReport.name" href="#secfsdstools.d_index.indexdataaccess.IndexReport.name">name</a></code></li>
-<li><code><a title="secfsdstools.d_index.indexdataaccess.IndexReport.originFile" href="#secfsdstools.d_index.indexdataaccess.IndexReport.originFile">originFile</a></code></li>
-<li><code><a title="secfsdstools.d_index.indexdataaccess.IndexReport.originFileType" href="#secfsdstools.d_index.indexdataaccess.IndexReport.originFileType">originFileType</a></code></li>
-<li><code><a title="secfsdstools.d_index.indexdataaccess.IndexReport.period" href="#secfsdstools.d_index.indexdataaccess.IndexReport.period">period</a></code></li>
-<li><code><a title="secfsdstools.d_index.indexdataaccess.IndexReport.url" href="#secfsdstools.d_index.indexdataaccess.IndexReport.url">url</a></code></li>
+<li><code><a title="secfsdstools.c_index.indexdataaccess.IndexReport.adsh" href="#secfsdstools.c_index.indexdataaccess.IndexReport.adsh">adsh</a></code></li>
+<li><code><a title="secfsdstools.c_index.indexdataaccess.IndexReport.cik" href="#secfsdstools.c_index.indexdataaccess.IndexReport.cik">cik</a></code></li>
+<li><code><a title="secfsdstools.c_index.indexdataaccess.IndexReport.filed" href="#secfsdstools.c_index.indexdataaccess.IndexReport.filed">filed</a></code></li>
+<li><code><a title="secfsdstools.c_index.indexdataaccess.IndexReport.form" href="#secfsdstools.c_index.indexdataaccess.IndexReport.form">form</a></code></li>
+<li><code><a title="secfsdstools.c_index.indexdataaccess.IndexReport.fullPath" href="#secfsdstools.c_index.indexdataaccess.IndexReport.fullPath">fullPath</a></code></li>
+<li><code><a title="secfsdstools.c_index.indexdataaccess.IndexReport.name" href="#secfsdstools.c_index.indexdataaccess.IndexReport.name">name</a></code></li>
+<li><code><a title="secfsdstools.c_index.indexdataaccess.IndexReport.originFile" href="#secfsdstools.c_index.indexdataaccess.IndexReport.originFile">originFile</a></code></li>
+<li><code><a title="secfsdstools.c_index.indexdataaccess.IndexReport.originFileType" href="#secfsdstools.c_index.indexdataaccess.IndexReport.originFileType">originFileType</a></code></li>
+<li><code><a title="secfsdstools.c_index.indexdataaccess.IndexReport.period" href="#secfsdstools.c_index.indexdataaccess.IndexReport.period">period</a></code></li>
+<li><code><a title="secfsdstools.c_index.indexdataaccess.IndexReport.url" href="#secfsdstools.c_index.indexdataaccess.IndexReport.url">url</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="secfsdstools.c_index.indexdataaccess.ParquetDBIndexingAccessor" href="#secfsdstools.c_index.indexdataaccess.ParquetDBIndexingAccessor">ParquetDBIndexingAccessor</a></code></h4>
+<ul class="">
+<li><code><a title="secfsdstools.c_index.indexdataaccess.ParquetDBIndexingAccessor.INDEX_PROCESSING_TABLE" href="#secfsdstools.c_index.indexdataaccess.ParquetDBIndexingAccessor.INDEX_PROCESSING_TABLE">INDEX_PROCESSING_TABLE</a></code></li>
+<li><code><a title="secfsdstools.c_index.indexdataaccess.ParquetDBIndexingAccessor.INDEX_REPORTS_TABLE" href="#secfsdstools.c_index.indexdataaccess.ParquetDBIndexingAccessor.INDEX_REPORTS_TABLE">INDEX_REPORTS_TABLE</a></code></li>
 </ul>
 </li>
 </ul>

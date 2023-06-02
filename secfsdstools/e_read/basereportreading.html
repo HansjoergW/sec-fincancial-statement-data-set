@@ -36,15 +36,7 @@ from typing import List, Optional, Dict
 
 import pandas as pd
 
-NUM_TXT = &#34;num.txt&#34;
-PRE_TXT = &#34;pre.txt&#34;
-SUB_TXT = &#34;sub.txt&#34;
-
-NUM_COLS = [&#39;adsh&#39;, &#39;tag&#39;, &#39;version&#39;, &#39;coreg&#39;, &#39;ddate&#39;, &#39;qtrs&#39;, &#39;uom&#39;, &#39;value&#39;, &#39;footnote&#39;]
-PRE_COLS = [&#39;adsh&#39;, &#39;report&#39;, &#39;line&#39;, &#39;stmt&#39;, &#39;inpth&#39;, &#39;rfile&#39;,
-            &#39;tag&#39;, &#39;version&#39;, &#39;plabel&#39;, &#39;negating&#39;]
-
-SUB_COLS = [&#39;adsh&#39;, &#39;form&#39;, &#39;period&#39;, &#39;filed&#39;, &#39;cik&#39;]
+from secfsdstools.a_utils.constants import NUM_TXT, PRE_TXT, SUB_TXT
 
 
 def match_group_iter(match_iter):
@@ -76,9 +68,9 @@ class BaseReportReader(ABC):
     @staticmethod
     def _calculate_previous_period(period: int) -&gt; int:
         previous_value = period - 10_000
-        period_monthday = period % 10_000
-        period_year = period // 10_000
+        period_year, period_monthday = divmod(period, 10_000)
 
+        # is the period date on a 29th of Feb, then the previous period has to end on a 28th Feb
         if period % 10_000 == 229:
             previous_value = previous_value - 1
 
@@ -94,11 +86,13 @@ class BaseReportReader(ABC):
         inside the object. used in a lazy loading manner.
         &#34;&#34;&#34;
         if self.num_df is None:
-            self.num_df = self._read_df_from_raw(file_type=NUM_TXT)
+            self.num_df = self._read_df_from_raw(file=NUM_TXT)
+            self.pre_df = self._read_df_from_raw(file=PRE_TXT)
+            self.sub_df = self._read_df_from_raw(file=SUB_TXT)
+
             # pandas pivot works better if coreg is not nan, so we set it here to a simple dash
             self.num_df.loc[self.num_df.coreg.isna(), &#39;coreg&#39;] = &#39;-&#39;
-            self.pre_df = self._read_df_from_raw(file_type=PRE_TXT)
-            self.sub_df = self._read_df_from_raw(file_type=SUB_TXT)
+
             self.adsh_form_map = \
                 self.sub_df[[&#39;adsh&#39;, &#39;form&#39;]].set_index(&#39;adsh&#39;).to_dict()[&#39;form&#39;]
             self.adsh_period_map = \
@@ -188,11 +182,9 @@ class BaseReportReader(ABC):
 
         ## transform the data
         # merge num and pre together. only rows in num are considered for which entries in pre exist
-        num_pre_merged_df = pd.merge(num_df_filtered_for_dates,
-                                     pre_filtered_for_tags,
-                                     on=[&#39;adsh&#39;, &#39;tag&#39;, &#39;version&#39;])
-
-        return num_pre_merged_df
+        return pd.merge(num_df_filtered_for_dates,
+                        pre_filtered_for_tags,
+                        on=[&#39;adsh&#39;, &#39;tag&#39;, &#39;version&#39;]) # don&#39;t produce index_x and index_y columns
 
     def financial_statements_for_tags(self,
                                       use_period: bool = True,
@@ -281,12 +273,12 @@ class BaseReportReader(ABC):
 
     @abstractmethod
     def _read_df_from_raw(self,
-                          file_type: str) \
+                          file: str) \
             -&gt; pd.DataFrame:
         &#34;&#34;&#34;
 
         Args:
-            file_type: SUB_TXT, PRE_TXT, or NUM_TXT
+            file: SUB_TXT, PRE_TXT, or NUM_TXT
 
         Returns:
             pd.DataFrame: the content for the read filetype
@@ -359,9 +351,9 @@ class BaseReportReader(ABC):
     @staticmethod
     def _calculate_previous_period(period: int) -&gt; int:
         previous_value = period - 10_000
-        period_monthday = period % 10_000
-        period_year = period // 10_000
+        period_year, period_monthday = divmod(period, 10_000)
 
+        # is the period date on a 29th of Feb, then the previous period has to end on a 28th Feb
         if period % 10_000 == 229:
             previous_value = previous_value - 1
 
@@ -377,11 +369,13 @@ class BaseReportReader(ABC):
         inside the object. used in a lazy loading manner.
         &#34;&#34;&#34;
         if self.num_df is None:
-            self.num_df = self._read_df_from_raw(file_type=NUM_TXT)
+            self.num_df = self._read_df_from_raw(file=NUM_TXT)
+            self.pre_df = self._read_df_from_raw(file=PRE_TXT)
+            self.sub_df = self._read_df_from_raw(file=SUB_TXT)
+
             # pandas pivot works better if coreg is not nan, so we set it here to a simple dash
             self.num_df.loc[self.num_df.coreg.isna(), &#39;coreg&#39;] = &#39;-&#39;
-            self.pre_df = self._read_df_from_raw(file_type=PRE_TXT)
-            self.sub_df = self._read_df_from_raw(file_type=SUB_TXT)
+
             self.adsh_form_map = \
                 self.sub_df[[&#39;adsh&#39;, &#39;form&#39;]].set_index(&#39;adsh&#39;).to_dict()[&#39;form&#39;]
             self.adsh_period_map = \
@@ -471,11 +465,9 @@ class BaseReportReader(ABC):
 
         ## transform the data
         # merge num and pre together. only rows in num are considered for which entries in pre exist
-        num_pre_merged_df = pd.merge(num_df_filtered_for_dates,
-                                     pre_filtered_for_tags,
-                                     on=[&#39;adsh&#39;, &#39;tag&#39;, &#39;version&#39;])
-
-        return num_pre_merged_df
+        return pd.merge(num_df_filtered_for_dates,
+                        pre_filtered_for_tags,
+                        on=[&#39;adsh&#39;, &#39;tag&#39;, &#39;version&#39;]) # don&#39;t produce index_x and index_y columns
 
     def financial_statements_for_tags(self,
                                       use_period: bool = True,
@@ -564,12 +556,12 @@ class BaseReportReader(ABC):
 
     @abstractmethod
     def _read_df_from_raw(self,
-                          file_type: str) \
+                          file: str) \
             -&gt; pd.DataFrame:
         &#34;&#34;&#34;
 
         Args:
-            file_type: SUB_TXT, PRE_TXT, or NUM_TXT
+            file: SUB_TXT, PRE_TXT, or NUM_TXT
 
         Returns:
             pd.DataFrame: the content for the read filetype
@@ -913,11 +905,9 @@ to True, then the value of use_period is ignored</p>
 
     ## transform the data
     # merge num and pre together. only rows in num are considered for which entries in pre exist
-    num_pre_merged_df = pd.merge(num_df_filtered_for_dates,
-                                 pre_filtered_for_tags,
-                                 on=[&#39;adsh&#39;, &#39;tag&#39;, &#39;version&#39;])
-
-    return num_pre_merged_df</code></pre>
+    return pd.merge(num_df_filtered_for_dates,
+                    pre_filtered_for_tags,
+                    on=[&#39;adsh&#39;, &#39;tag&#39;, &#39;version&#39;]) # don&#39;t produce index_x and index_y columns</code></pre>
 </details>
 </dd>
 </dl>

@@ -32,7 +32,83 @@ Examples for MultiReportreader
 &#34;&#34;&#34;
 from secfsdstools.e_read.multireportreading import MultiReportReader
 
+
+def run():
+    # pylint: disable=W0612
+    &#34;&#34;&#34;
+    run the example
+    &#34;&#34;&#34;
+
+    # The MultiReportreader enables the user to read multiple reports from different zipfiles.
+    # This can either be done by providing a list of adsh numbers or by a list if IndexReport
+    #  instances
+
+    # the following reader reads the 10-K reports of apple from the years 2020,2021, and 2022
+    multi_report_reader = MultiReportReader.get_reports_by_adshs(
+        adshs=[&#39;0000320193-22-000108&#39;, &#39;0000320193-21-000105&#39;, &#39;0000320193-20-000096&#39;])
+
+    # the interface is the same was with the standard reader
+
+    # this returns a list all reports that are read by the reader
+    raw_sub_df = multi_report_reader.get_raw_sub_data()
+    # we expect 3 reports
+    assert len(raw_sub_df) == 3
+
+    # reading the raw content of the num and pre files
+    raw_pre_df = multi_report_reader.get_raw_pre_data()
+    raw_num_df = multi_report_reader.get_raw_num_data()
+
+    # it is the same interface as the other readers. So we return a filtered dataset only containing
+    # the data which are valid at the period-date of the report or the period-date of the report and
+    # the previous year
+
+    # merging the data from num and pre together and produce the primary financial statements
+    # The first dataframe set contains just the data that are valid for the current year
+    current_year_df = multi_report_reader.financial_statements_for_period()
+
+    # The second dataframe contains the data that are for the current and the previous year
+    current_and_previous_year_df = \
+        multi_report_reader.financial_statements_for_period_and_previous_period()
+
+    # Filter for BalanceSheets
+    bs_df = current_and_previous_year_df[
+        current_and_previous_year_df.stmt == &#39;BS&#39;]
+
+    # Filter for IncomeStatement
+    is_df = current_and_previous_year_df[
+        current_and_previous_year_df.stmt == &#39;IS&#39;]
+
+    # Filter for CashFlow
+    cf_df = current_and_previous_year_df[
+        current_and_previous_year_df.stmt == &#39;CF&#39;]
+
+
 if __name__ == &#39;__main__&#39;:
+    run()</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-functions">Functions</h2>
+<dl>
+<dt id="secfsdstools.x_examples.examplemultireportreading.run"><code class="name flex">
+<span>def <span class="ident">run</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>run the example</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def run():
+    # pylint: disable=W0612
+    &#34;&#34;&#34;
+    run the example
+    &#34;&#34;&#34;
+
     # The MultiReportreader enables the user to read multiple reports from different zipfiles.
     # This can either be done by providing a list of adsh numbers or by a list if IndexReport
     #  instances
@@ -76,12 +152,8 @@ if __name__ == &#39;__main__&#39;:
     cf_df = current_and_previous_year_df[
         current_and_previous_year_df.stmt == &#39;CF&#39;]</code></pre>
 </details>
-</section>
-<section>
-</section>
-<section>
-</section>
-<section>
+</dd>
+</dl>
 </section>
 <section>
 </section>
@@ -95,6 +167,11 @@ if __name__ == &#39;__main__&#39;:
 <li><h3>Super-module</h3>
 <ul>
 <li><code><a title="secfsdstools.x_examples" href="index.html">secfsdstools.x_examples</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-functions">Functions</a></h3>
+<ul class="">
+<li><code><a title="secfsdstools.x_examples.examplemultireportreading.run" href="#secfsdstools.x_examples.examplemultireportreading.run">run</a></code></li>
 </ul>
 </li>
 </ul>

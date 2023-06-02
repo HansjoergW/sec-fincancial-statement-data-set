@@ -33,37 +33,28 @@ Manage the configuration
 import configparser
 import logging
 import os
+import pprint
 import re
-from dataclasses import dataclass
-from typing import Optional, List
+from typing import List
 
+from secfsdstools.a_config.configmodel import Configuration
+from secfsdstools.a_utils.dbutils import DBStateAcessor
 from secfsdstools.a_utils.downloadutils import UrlDownloader
 from secfsdstools.a_utils.rapiddownloadutils import RapidUrlBuilder
+from secfsdstools.c_update.updateprocess import Updater
 
 DEFAULT_CONFIG_FILE: str = &#39;.secfsdstools.cfg&#39;
 SECFSDSTOOLS_ENV_VAR_NAME: str = &#39;SECFSDSTOOLS_CFG&#39;
 
 LOGGER = logging.getLogger(__name__)
 
-
-@dataclass
-class Configuration:
-    &#34;&#34;&#34; Basic configuration settings &#34;&#34;&#34;
-    download_dir: str
-    db_dir: str
-    user_agent_email: str
-    rapid_api_key: Optional[str] = None
-    rapid_api_plan: Optional[str] = &#39;basic&#39;
-    daily_download_dir: Optional[str] = None
-
-    def __post_init__(self):
-        self.daily_download_dir = os.path.join(self.download_dir, &#34;daily&#34;)
-
-
 DEFAULT_CONFIGURATION = Configuration(
     download_dir=os.path.join(os.path.expanduser(&#39;~&#39;), &#39;secfsdstools/data/dld&#39;),
     db_dir=os.path.join(os.path.expanduser(&#39;~&#39;), &#39;secfsdstools/data/db&#39;),
-    user_agent_email=&#39;your.email@goeshere.com&#39;
+    parquet_dir=os.path.join(os.path.expanduser(&#39;~&#39;), &#39;secfsdstools/data/parquet&#39;),
+    user_agent_email=&#39;your.email@goeshere.com&#39;,
+    auto_update=True,
+    keep_zip_files=False
 )
 
 
@@ -72,6 +63,8 @@ class ConfigurationManager:
     Configuration Manager. Reads the configuration from the config file.
     If the file does not exist, it will create one in the current directory
     &#34;&#34;&#34;
+
+    SUCCESSFULL_RAPID_API_KEY: str = &#34;RAPID_KEY&#34;
 
     @staticmethod
     def read_config_file() -&gt; Configuration:
@@ -106,17 +99,16 @@ class ConfigurationManager:
                 ConfigurationManager._write_configuration(env_config_file, DEFAULT_CONFIGURATION)
                 LOGGER.error(&#39;config file created at %s.&#39;, env_config_file)
                 LOGGER.error(&#39;please check the content ant then restart&#39;)
-                raise ValueError(
-                    f&#39;environment variable {SECFSDSTOOLS_ENV_VAR_NAME}&#39; +
-                    &#39; was set but config file was not present. &#39; +
-                    f&#39;It was created at location {env_config_file}. Please check it and rerun&#39;)
+                return ConfigurationManager._handle_first_start(env_config_file,
+                                                                DEFAULT_CONFIGURATION)
 
-            return ConfigurationManager._read_configuration(env_config_file)
+            return ConfigurationManager._read_configuration_and_check_for_udpates(env_config_file)
 
         current_cfg_file_path = os.path.join(os.getcwd(), DEFAULT_CONFIG_FILE)
         if os.path.isfile(current_cfg_file_path):
             LOGGER.info(&#39;found config file at %s&#39;, current_cfg_file_path)
-            return ConfigurationManager._read_configuration(current_cfg_file_path)
+            return ConfigurationManager._read_configuration_and_check_for_udpates(
+                current_cfg_file_path)
 
             # check if file exists at home directory
         home_cfg_file_path = os.path.join(os.path.expanduser(&#39;~&#39;), DEFAULT_CONFIG_FILE)
@@ -125,10 +117,68 @@ class ConfigurationManager:
             ConfigurationManager._write_configuration(home_cfg_file_path, DEFAULT_CONFIGURATION)
             LOGGER.error(&#39;Config file created at %s. Please check the content and then rerun.&#39;,
                          home_cfg_file_path)
-            raise ValueError(
-                &#39;Config file not found at user home directory. &#39; +
-                f&#39;It was created at location {home_cfg_file_path}. Please check content and rerun&#39;)
-        return ConfigurationManager._read_configuration(home_cfg_file_path)
+            return ConfigurationManager._handle_first_start(home_cfg_file_path,
+                                                            DEFAULT_CONFIGURATION)
+
+        return ConfigurationManager._read_configuration_and_check_for_udpates(home_cfg_file_path)
+
+    @staticmethod
+    def _handle_first_start(file_path: str, config: Configuration):
+        print(&#39; --------------------------------------------------------------------------&#39;)
+        print(&#39; Wellcome!&#39;)
+        print(&#39; It looks as if this is the first time you are using this package since no &#39;)
+        print(f&#39; configuration was found at {file_path}. A default configuration file was &#39;)
+        print(&#39; created at that location. It contains fhe following default values: \n&#39;)
+        pprint.pprint(config.get_dict())
+        print(&#39;&#39;)
+        print(&#39; If you want to change the settings, you can exit and and change the settings &#39;)
+        print(&#39; and restart. This will then trigger the initial update process as described.&#39;)
+        print(&#39; below.&#39;)
+        print(&#39; If you are ok with the settings, you can directly press y or Y and the initial &#39;)
+        print(&#39; update process will start immediately. \n&#39;)
+        print(&#39; The initial update process executes the following steps: &#39;)
+        print(&#39; 1. It downloads all available quarterly zip files from &#39; +
+              &#39;https://www.sec.gov/dera/data/financial-statement-data-sets.html&#39;)
+        print(f&#39;    into the folder {config.download_dir}&#39;)
+        print(&#39; 2. It will transform the CSV files inside the zipfiles into parquet format and&#39;)
+        print(f&#39;    store them under {config.parquet_dir}&#39;)
+        print(&#39; 3. The original zip file will be deleted depending on your configuration&#39;)
+        print(&#39; 4. The content of the SUB.TXT parquet files will be indexed in a simple &#39;)
+        print(f&#39;    sqlite database file (placed at {config.db_dir})&#39;)
+        print(&#39;&#39;)
+        print(&#39; Note: The downloaded data will use about 2GB on your disk, the size doubles, if &#39;)
+        print(&#39;        choose to keep the ZIP-files after transformation. &#39;)
+        print(&#39; Note: The initial update process will take several minutes.&#39;)
+        print(&#39;&#39;)
+
+        inputvalue = input(&#39; Start initial update process [y]/n:&#39;)
+
+        if inputvalue in [&#39;Y&#39;, &#39;y&#39;, &#39;&#39;]:
+            ConfigurationManager._do_initial_update(config)
+            return config
+
+        print(f&#39;Please check the configuration at {file_path}.&#39;)
+        raise ValueError(
+            f&#39;Please check the configuration at {file_path} and restart. &#39;)
+
+    @staticmethod
+    def _do_initial_update(config: Configuration):
+        print(&#39;start initial report download process&#39;)
+        updater = Updater.get_instance(config)
+        updater.update()
+
+    @staticmethod
+    def _read_configuration_and_check_for_udpates(file_path: str) -&gt; Configuration:
+        config: Configuration = ConfigurationManager._read_configuration(file_path)
+        ConfigurationManager._check_for_update(config)
+        return config
+
+    @staticmethod
+    def _check_for_update(config: Configuration):
+        if config.auto_update:
+            LOGGER.debug(&#39;AutoUpdate is True, so check if new zip files are available&#39;)
+            updater = Updater.get_instance(config)
+            updater.update()
 
     @staticmethod
     def _read_configuration(file_path: str) -&gt; Configuration:
@@ -145,9 +195,12 @@ class ConfigurationManager:
         config = Configuration(
             download_dir=config[&#39;DEFAULT&#39;].get(&#39;DownloadDirectory&#39;, ),
             db_dir=config[&#39;DEFAULT&#39;].get(&#39;DbDirectory&#39;),
+            parquet_dir=config[&#39;DEFAULT&#39;].get(&#39;ParquetDirectory&#39;),
             user_agent_email=config[&#39;DEFAULT&#39;].get(&#39;UserAgentEmail&#39;),
             rapid_api_key=config[&#39;DEFAULT&#39;].get(&#39;RapidApiKey&#39;, None),
-            rapid_api_plan=config[&#39;DEFAULT&#39;].get(&#39;RapidApiPlan&#39;, &#39;basic&#39;)
+            rapid_api_plan=config[&#39;DEFAULT&#39;].get(&#39;RapidApiPlan&#39;, &#39;basic&#39;),
+            auto_update=config[&#39;DEFAULT&#39;].getboolean(&#39;AutoUpdate&#39;, True),
+            keep_zip_files=config[&#39;DEFAULT&#39;].getboolean(&#39;KeepZipFiles&#39;, False)
         )
 
         check_messages = ConfigurationManager.check_basic_configuration(config)
@@ -195,6 +248,12 @@ class ConfigurationManager:
             LOGGER.info(&#34;Download directory does not exist, creating it at %s&#34;, config.download_dir)
             os.makedirs(config.download_dir, exist_ok=True)
 
+        if not os.path.isdir(config.parquet_dir):
+            LOGGER.info(&#34;Parquet directory does not exist, creating it at %s&#34;, config.parquet_dir)
+            os.makedirs(config.parquet_dir, exist_ok=True)
+            os.makedirs(os.path.join(config.parquet_dir, &#39;quarter&#39;), exist_ok=True)
+            os.makedirs(os.path.join(config.parquet_dir, &#39;daily&#39;), exist_ok=True)
+
         if not ConfigurationManager._is_valid_email(config.user_agent_email):
             messages.append(
                 f&#39;The defined UserAgentEmail is not a valid format: {config.user_agent_email}&#39;)
@@ -220,6 +279,14 @@ class ConfigurationManager:
                 &#39; Allowed values are basic, premium&#39;)
 
         if config.rapid_api_key is not None:
+
+            # only check rapid api key if it was changed or if
+            accessor = DBStateAcessor(db_dir=config.db_dir)
+            checked_rapid_key = accessor.get_key(ConfigurationManager.SUCCESSFULL_RAPID_API_KEY)
+
+            if checked_rapid_key == config.rapid_api_key:
+                return messages
+
             try:
                 rapidurlbuilder = RapidUrlBuilder(rapid_api_key=config.rapid_api_key,
                                                   rapid_plan=&#39;basic&#39;)
@@ -228,6 +295,9 @@ class ConfigurationManager:
                     headers=rapidurlbuilder.get_headers(),
                     max_tries=2
                 )
+                # store the key that was successfully tested
+                accessor.set_key(ConfigurationManager.SUCCESSFULL_RAPID_API_KEY,
+                                 config.rapid_api_key)
             except Exception as err:  # pylint: disable=W0703
                 messages.append(f&#39;RapidApiKey {config.rapid_api_key} was set&#39; +
                                 f&#39; but seems to be not valid: {str(err)}\n&#39; +
@@ -244,7 +314,10 @@ class ConfigurationManager:
         config = configparser.ConfigParser()
         config[&#39;DEFAULT&#39;] = {&#39;DownloadDirectory&#39;: configuration.download_dir,
                              &#39;DbDirectory&#39;: configuration.db_dir,
-                             &#39;UserAgentEmail&#39;: configuration.user_agent_email}
+                             &#39;ParquetDirectory&#39;: configuration.parquet_dir,
+                             &#39;UserAgentEmail&#39;: configuration.user_agent_email,
+                             &#39;AutoUpdate&#39;: configuration.auto_update,
+                             &#39;KeepZipFiles&#39;: configuration.keep_zip_files}
         with open(file_path, &#39;w&#39;, encoding=&#34;utf8&#34;) as configfile:
             config.write(configfile)</code></pre>
 </details>
@@ -258,56 +331,6 @@ class ConfigurationManager:
 <section>
 <h2 class="section-title" id="header-classes">Classes</h2>
 <dl>
-<dt id="secfsdstools.a_config.configmgt.Configuration"><code class="flex name class">
-<span>class <span class="ident">Configuration</span></span>
-<span>(</span><span>download_dir: str, db_dir: str, user_agent_email: str, rapid_api_key: Optional[str] = None, rapid_api_plan: Optional[str] = 'basic', daily_download_dir: Optional[str] = None)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Basic configuration settings</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">class Configuration:
-    &#34;&#34;&#34; Basic configuration settings &#34;&#34;&#34;
-    download_dir: str
-    db_dir: str
-    user_agent_email: str
-    rapid_api_key: Optional[str] = None
-    rapid_api_plan: Optional[str] = &#39;basic&#39;
-    daily_download_dir: Optional[str] = None
-
-    def __post_init__(self):
-        self.daily_download_dir = os.path.join(self.download_dir, &#34;daily&#34;)</code></pre>
-</details>
-<h3>Class variables</h3>
-<dl>
-<dt id="secfsdstools.a_config.configmgt.Configuration.daily_download_dir"><code class="name">var <span class="ident">daily_download_dir</span> : Optional[str]</code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt id="secfsdstools.a_config.configmgt.Configuration.db_dir"><code class="name">var <span class="ident">db_dir</span> : str</code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt id="secfsdstools.a_config.configmgt.Configuration.download_dir"><code class="name">var <span class="ident">download_dir</span> : str</code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt id="secfsdstools.a_config.configmgt.Configuration.rapid_api_key"><code class="name">var <span class="ident">rapid_api_key</span> : Optional[str]</code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt id="secfsdstools.a_config.configmgt.Configuration.rapid_api_plan"><code class="name">var <span class="ident">rapid_api_plan</span> : Optional[str]</code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt id="secfsdstools.a_config.configmgt.Configuration.user_agent_email"><code class="name">var <span class="ident">user_agent_email</span> : str</code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-</dl>
-</dd>
 <dt id="secfsdstools.a_config.configmgt.ConfigurationManager"><code class="flex name class">
 <span>class <span class="ident">ConfigurationManager</span></span>
 </code></dt>
@@ -324,6 +347,8 @@ If the file does not exist, it will create one in the current directory</p></div
     If the file does not exist, it will create one in the current directory
     &#34;&#34;&#34;
 
+    SUCCESSFULL_RAPID_API_KEY: str = &#34;RAPID_KEY&#34;
+
     @staticmethod
     def read_config_file() -&gt; Configuration:
         &#34;&#34;&#34;
@@ -357,17 +382,16 @@ If the file does not exist, it will create one in the current directory</p></div
                 ConfigurationManager._write_configuration(env_config_file, DEFAULT_CONFIGURATION)
                 LOGGER.error(&#39;config file created at %s.&#39;, env_config_file)
                 LOGGER.error(&#39;please check the content ant then restart&#39;)
-                raise ValueError(
-                    f&#39;environment variable {SECFSDSTOOLS_ENV_VAR_NAME}&#39; +
-                    &#39; was set but config file was not present. &#39; +
-                    f&#39;It was created at location {env_config_file}. Please check it and rerun&#39;)
+                return ConfigurationManager._handle_first_start(env_config_file,
+                                                                DEFAULT_CONFIGURATION)
 
-            return ConfigurationManager._read_configuration(env_config_file)
+            return ConfigurationManager._read_configuration_and_check_for_udpates(env_config_file)
 
         current_cfg_file_path = os.path.join(os.getcwd(), DEFAULT_CONFIG_FILE)
         if os.path.isfile(current_cfg_file_path):
             LOGGER.info(&#39;found config file at %s&#39;, current_cfg_file_path)
-            return ConfigurationManager._read_configuration(current_cfg_file_path)
+            return ConfigurationManager._read_configuration_and_check_for_udpates(
+                current_cfg_file_path)
 
             # check if file exists at home directory
         home_cfg_file_path = os.path.join(os.path.expanduser(&#39;~&#39;), DEFAULT_CONFIG_FILE)
@@ -376,10 +400,68 @@ If the file does not exist, it will create one in the current directory</p></div
             ConfigurationManager._write_configuration(home_cfg_file_path, DEFAULT_CONFIGURATION)
             LOGGER.error(&#39;Config file created at %s. Please check the content and then rerun.&#39;,
                          home_cfg_file_path)
-            raise ValueError(
-                &#39;Config file not found at user home directory. &#39; +
-                f&#39;It was created at location {home_cfg_file_path}. Please check content and rerun&#39;)
-        return ConfigurationManager._read_configuration(home_cfg_file_path)
+            return ConfigurationManager._handle_first_start(home_cfg_file_path,
+                                                            DEFAULT_CONFIGURATION)
+
+        return ConfigurationManager._read_configuration_and_check_for_udpates(home_cfg_file_path)
+
+    @staticmethod
+    def _handle_first_start(file_path: str, config: Configuration):
+        print(&#39; --------------------------------------------------------------------------&#39;)
+        print(&#39; Wellcome!&#39;)
+        print(&#39; It looks as if this is the first time you are using this package since no &#39;)
+        print(f&#39; configuration was found at {file_path}. A default configuration file was &#39;)
+        print(&#39; created at that location. It contains fhe following default values: \n&#39;)
+        pprint.pprint(config.get_dict())
+        print(&#39;&#39;)
+        print(&#39; If you want to change the settings, you can exit and and change the settings &#39;)
+        print(&#39; and restart. This will then trigger the initial update process as described.&#39;)
+        print(&#39; below.&#39;)
+        print(&#39; If you are ok with the settings, you can directly press y or Y and the initial &#39;)
+        print(&#39; update process will start immediately. \n&#39;)
+        print(&#39; The initial update process executes the following steps: &#39;)
+        print(&#39; 1. It downloads all available quarterly zip files from &#39; +
+              &#39;https://www.sec.gov/dera/data/financial-statement-data-sets.html&#39;)
+        print(f&#39;    into the folder {config.download_dir}&#39;)
+        print(&#39; 2. It will transform the CSV files inside the zipfiles into parquet format and&#39;)
+        print(f&#39;    store them under {config.parquet_dir}&#39;)
+        print(&#39; 3. The original zip file will be deleted depending on your configuration&#39;)
+        print(&#39; 4. The content of the SUB.TXT parquet files will be indexed in a simple &#39;)
+        print(f&#39;    sqlite database file (placed at {config.db_dir})&#39;)
+        print(&#39;&#39;)
+        print(&#39; Note: The downloaded data will use about 2GB on your disk, the size doubles, if &#39;)
+        print(&#39;        choose to keep the ZIP-files after transformation. &#39;)
+        print(&#39; Note: The initial update process will take several minutes.&#39;)
+        print(&#39;&#39;)
+
+        inputvalue = input(&#39; Start initial update process [y]/n:&#39;)
+
+        if inputvalue in [&#39;Y&#39;, &#39;y&#39;, &#39;&#39;]:
+            ConfigurationManager._do_initial_update(config)
+            return config
+
+        print(f&#39;Please check the configuration at {file_path}.&#39;)
+        raise ValueError(
+            f&#39;Please check the configuration at {file_path} and restart. &#39;)
+
+    @staticmethod
+    def _do_initial_update(config: Configuration):
+        print(&#39;start initial report download process&#39;)
+        updater = Updater.get_instance(config)
+        updater.update()
+
+    @staticmethod
+    def _read_configuration_and_check_for_udpates(file_path: str) -&gt; Configuration:
+        config: Configuration = ConfigurationManager._read_configuration(file_path)
+        ConfigurationManager._check_for_update(config)
+        return config
+
+    @staticmethod
+    def _check_for_update(config: Configuration):
+        if config.auto_update:
+            LOGGER.debug(&#39;AutoUpdate is True, so check if new zip files are available&#39;)
+            updater = Updater.get_instance(config)
+            updater.update()
 
     @staticmethod
     def _read_configuration(file_path: str) -&gt; Configuration:
@@ -396,9 +478,12 @@ If the file does not exist, it will create one in the current directory</p></div
         config = Configuration(
             download_dir=config[&#39;DEFAULT&#39;].get(&#39;DownloadDirectory&#39;, ),
             db_dir=config[&#39;DEFAULT&#39;].get(&#39;DbDirectory&#39;),
+            parquet_dir=config[&#39;DEFAULT&#39;].get(&#39;ParquetDirectory&#39;),
             user_agent_email=config[&#39;DEFAULT&#39;].get(&#39;UserAgentEmail&#39;),
             rapid_api_key=config[&#39;DEFAULT&#39;].get(&#39;RapidApiKey&#39;, None),
-            rapid_api_plan=config[&#39;DEFAULT&#39;].get(&#39;RapidApiPlan&#39;, &#39;basic&#39;)
+            rapid_api_plan=config[&#39;DEFAULT&#39;].get(&#39;RapidApiPlan&#39;, &#39;basic&#39;),
+            auto_update=config[&#39;DEFAULT&#39;].getboolean(&#39;AutoUpdate&#39;, True),
+            keep_zip_files=config[&#39;DEFAULT&#39;].getboolean(&#39;KeepZipFiles&#39;, False)
         )
 
         check_messages = ConfigurationManager.check_basic_configuration(config)
@@ -446,6 +531,12 @@ If the file does not exist, it will create one in the current directory</p></div
             LOGGER.info(&#34;Download directory does not exist, creating it at %s&#34;, config.download_dir)
             os.makedirs(config.download_dir, exist_ok=True)
 
+        if not os.path.isdir(config.parquet_dir):
+            LOGGER.info(&#34;Parquet directory does not exist, creating it at %s&#34;, config.parquet_dir)
+            os.makedirs(config.parquet_dir, exist_ok=True)
+            os.makedirs(os.path.join(config.parquet_dir, &#39;quarter&#39;), exist_ok=True)
+            os.makedirs(os.path.join(config.parquet_dir, &#39;daily&#39;), exist_ok=True)
+
         if not ConfigurationManager._is_valid_email(config.user_agent_email):
             messages.append(
                 f&#39;The defined UserAgentEmail is not a valid format: {config.user_agent_email}&#39;)
@@ -471,6 +562,14 @@ If the file does not exist, it will create one in the current directory</p></div
                 &#39; Allowed values are basic, premium&#39;)
 
         if config.rapid_api_key is not None:
+
+            # only check rapid api key if it was changed or if
+            accessor = DBStateAcessor(db_dir=config.db_dir)
+            checked_rapid_key = accessor.get_key(ConfigurationManager.SUCCESSFULL_RAPID_API_KEY)
+
+            if checked_rapid_key == config.rapid_api_key:
+                return messages
+
             try:
                 rapidurlbuilder = RapidUrlBuilder(rapid_api_key=config.rapid_api_key,
                                                   rapid_plan=&#39;basic&#39;)
@@ -479,6 +578,9 @@ If the file does not exist, it will create one in the current directory</p></div
                     headers=rapidurlbuilder.get_headers(),
                     max_tries=2
                 )
+                # store the key that was successfully tested
+                accessor.set_key(ConfigurationManager.SUCCESSFULL_RAPID_API_KEY,
+                                 config.rapid_api_key)
             except Exception as err:  # pylint: disable=W0703
                 messages.append(f&#39;RapidApiKey {config.rapid_api_key} was set&#39; +
                                 f&#39; but seems to be not valid: {str(err)}\n&#39; +
@@ -495,20 +597,30 @@ If the file does not exist, it will create one in the current directory</p></div
         config = configparser.ConfigParser()
         config[&#39;DEFAULT&#39;] = {&#39;DownloadDirectory&#39;: configuration.download_dir,
                              &#39;DbDirectory&#39;: configuration.db_dir,
-                             &#39;UserAgentEmail&#39;: configuration.user_agent_email}
+                             &#39;ParquetDirectory&#39;: configuration.parquet_dir,
+                             &#39;UserAgentEmail&#39;: configuration.user_agent_email,
+                             &#39;AutoUpdate&#39;: configuration.auto_update,
+                             &#39;KeepZipFiles&#39;: configuration.keep_zip_files}
         with open(file_path, &#39;w&#39;, encoding=&#34;utf8&#34;) as configfile:
             config.write(configfile)</code></pre>
 </details>
+<h3>Class variables</h3>
+<dl>
+<dt id="secfsdstools.a_config.configmgt.ConfigurationManager.SUCCESSFULL_RAPID_API_KEY"><code class="name">var <span class="ident">SUCCESSFULL_RAPID_API_KEY</span> : str</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
 <h3>Static methods</h3>
 <dl>
 <dt id="secfsdstools.a_config.configmgt.ConfigurationManager.check_basic_configuration"><code class="name flex">
-<span>def <span class="ident">check_basic_configuration</span></span>(<span>config: <a title="secfsdstools.a_config.configmgt.Configuration" href="#secfsdstools.a_config.configmgt.Configuration">Configuration</a>) ‑> List[str]</span>
+<span>def <span class="ident">check_basic_configuration</span></span>(<span>config: <a title="secfsdstools.a_config.configmodel.Configuration" href="configmodel.html#secfsdstools.a_config.configmodel.Configuration">Configuration</a>) ‑> List[str]</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Validates the basic configuration:</p>
 <h2 id="args">Args</h2>
 <dl>
-<dt><strong><code>config</code></strong> :&ensp;<code><a title="secfsdstools.a_config.configmgt.Configuration" href="#secfsdstools.a_config.configmgt.Configuration">Configuration</a></code></dt>
+<dt><strong><code>config</code></strong> :&ensp;<code>Configuration</code></dt>
 <dd>the configuration to be validated</dd>
 </dl>
 <h2 id="returns">Returns</h2>
@@ -542,6 +654,12 @@ def check_basic_configuration(config: Configuration) -&gt; List[str]:
         LOGGER.info(&#34;Download directory does not exist, creating it at %s&#34;, config.download_dir)
         os.makedirs(config.download_dir, exist_ok=True)
 
+    if not os.path.isdir(config.parquet_dir):
+        LOGGER.info(&#34;Parquet directory does not exist, creating it at %s&#34;, config.parquet_dir)
+        os.makedirs(config.parquet_dir, exist_ok=True)
+        os.makedirs(os.path.join(config.parquet_dir, &#39;quarter&#39;), exist_ok=True)
+        os.makedirs(os.path.join(config.parquet_dir, &#39;daily&#39;), exist_ok=True)
+
     if not ConfigurationManager._is_valid_email(config.user_agent_email):
         messages.append(
             f&#39;The defined UserAgentEmail is not a valid format: {config.user_agent_email}&#39;)
@@ -550,13 +668,13 @@ def check_basic_configuration(config: Configuration) -&gt; List[str]:
 </details>
 </dd>
 <dt id="secfsdstools.a_config.configmgt.ConfigurationManager.check_rapid_configuration"><code class="name flex">
-<span>def <span class="ident">check_rapid_configuration</span></span>(<span>config: <a title="secfsdstools.a_config.configmgt.Configuration" href="#secfsdstools.a_config.configmgt.Configuration">Configuration</a>) ‑> List[str]</span>
+<span>def <span class="ident">check_rapid_configuration</span></span>(<span>config: <a title="secfsdstools.a_config.configmodel.Configuration" href="configmodel.html#secfsdstools.a_config.configmodel.Configuration">Configuration</a>) ‑> List[str]</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Validates the rapid configuration:</p>
 <h2 id="args">Args</h2>
 <dl>
-<dt><strong><code>config</code></strong> :&ensp;<code><a title="secfsdstools.a_config.configmgt.Configuration" href="#secfsdstools.a_config.configmgt.Configuration">Configuration</a></code></dt>
+<dt><strong><code>config</code></strong> :&ensp;<code>Configuration</code></dt>
 <dd>the configuration to be validated</dd>
 </dl>
 <h2 id="returns">Returns</h2>
@@ -587,6 +705,14 @@ def check_rapid_configuration(config: Configuration) -&gt; List[str]:
             &#39; Allowed values are basic, premium&#39;)
 
     if config.rapid_api_key is not None:
+
+        # only check rapid api key if it was changed or if
+        accessor = DBStateAcessor(db_dir=config.db_dir)
+        checked_rapid_key = accessor.get_key(ConfigurationManager.SUCCESSFULL_RAPID_API_KEY)
+
+        if checked_rapid_key == config.rapid_api_key:
+            return messages
+
         try:
             rapidurlbuilder = RapidUrlBuilder(rapid_api_key=config.rapid_api_key,
                                               rapid_plan=&#39;basic&#39;)
@@ -595,6 +721,9 @@ def check_rapid_configuration(config: Configuration) -&gt; List[str]:
                 headers=rapidurlbuilder.get_headers(),
                 max_tries=2
             )
+            # store the key that was successfully tested
+            accessor.set_key(ConfigurationManager.SUCCESSFULL_RAPID_API_KEY,
+                             config.rapid_api_key)
         except Exception as err:  # pylint: disable=W0703
             messages.append(f&#39;RapidApiKey {config.rapid_api_key} was set&#39; +
                             f&#39; but seems to be not valid: {str(err)}\n&#39; +
@@ -605,7 +734,7 @@ def check_rapid_configuration(config: Configuration) -&gt; List[str]:
 </details>
 </dd>
 <dt id="secfsdstools.a_config.configmgt.ConfigurationManager.read_config_file"><code class="name flex">
-<span>def <span class="ident">read_config_file</span></span>(<span>) ‑> <a title="secfsdstools.a_config.configmgt.Configuration" href="#secfsdstools.a_config.configmgt.Configuration">Configuration</a></span>
+<span>def <span class="ident">read_config_file</span></span>(<span>) ‑> <a title="secfsdstools.a_config.configmodel.Configuration" href="configmodel.html#secfsdstools.a_config.configmodel.Configuration">Configuration</a></span>
 </code></dt>
 <dd>
 <div class="desc"><p>reads the configuration object:
@@ -615,7 +744,7 @@ directory
 3. checks if it is in the user home</p>
 <h2 id="returns">Returns</h2>
 <dl>
-<dt><code><a title="secfsdstools.a_config.configmgt.Configuration" href="#secfsdstools.a_config.configmgt.Configuration">Configuration</a></code></dt>
+<dt><code>Configuration</code></dt>
 <dd>configuration instance</dd>
 </dl></div>
 <details class="source">
@@ -655,17 +784,16 @@ def read_config_file() -&gt; Configuration:
             ConfigurationManager._write_configuration(env_config_file, DEFAULT_CONFIGURATION)
             LOGGER.error(&#39;config file created at %s.&#39;, env_config_file)
             LOGGER.error(&#39;please check the content ant then restart&#39;)
-            raise ValueError(
-                f&#39;environment variable {SECFSDSTOOLS_ENV_VAR_NAME}&#39; +
-                &#39; was set but config file was not present. &#39; +
-                f&#39;It was created at location {env_config_file}. Please check it and rerun&#39;)
+            return ConfigurationManager._handle_first_start(env_config_file,
+                                                            DEFAULT_CONFIGURATION)
 
-        return ConfigurationManager._read_configuration(env_config_file)
+        return ConfigurationManager._read_configuration_and_check_for_udpates(env_config_file)
 
     current_cfg_file_path = os.path.join(os.getcwd(), DEFAULT_CONFIG_FILE)
     if os.path.isfile(current_cfg_file_path):
         LOGGER.info(&#39;found config file at %s&#39;, current_cfg_file_path)
-        return ConfigurationManager._read_configuration(current_cfg_file_path)
+        return ConfigurationManager._read_configuration_and_check_for_udpates(
+            current_cfg_file_path)
 
         # check if file exists at home directory
     home_cfg_file_path = os.path.join(os.path.expanduser(&#39;~&#39;), DEFAULT_CONFIG_FILE)
@@ -674,10 +802,10 @@ def read_config_file() -&gt; Configuration:
         ConfigurationManager._write_configuration(home_cfg_file_path, DEFAULT_CONFIGURATION)
         LOGGER.error(&#39;Config file created at %s. Please check the content and then rerun.&#39;,
                      home_cfg_file_path)
-        raise ValueError(
-            &#39;Config file not found at user home directory. &#39; +
-            f&#39;It was created at location {home_cfg_file_path}. Please check content and rerun&#39;)
-    return ConfigurationManager._read_configuration(home_cfg_file_path)</code></pre>
+        return ConfigurationManager._handle_first_start(home_cfg_file_path,
+                                                        DEFAULT_CONFIGURATION)
+
+    return ConfigurationManager._read_configuration_and_check_for_udpates(home_cfg_file_path)</code></pre>
 </details>
 </dd>
 </dl>
@@ -699,19 +827,9 @@ def read_config_file() -&gt; Configuration:
 <li><h3><a href="#header-classes">Classes</a></h3>
 <ul>
 <li>
-<h4><code><a title="secfsdstools.a_config.configmgt.Configuration" href="#secfsdstools.a_config.configmgt.Configuration">Configuration</a></code></h4>
-<ul class="two-column">
-<li><code><a title="secfsdstools.a_config.configmgt.Configuration.daily_download_dir" href="#secfsdstools.a_config.configmgt.Configuration.daily_download_dir">daily_download_dir</a></code></li>
-<li><code><a title="secfsdstools.a_config.configmgt.Configuration.db_dir" href="#secfsdstools.a_config.configmgt.Configuration.db_dir">db_dir</a></code></li>
-<li><code><a title="secfsdstools.a_config.configmgt.Configuration.download_dir" href="#secfsdstools.a_config.configmgt.Configuration.download_dir">download_dir</a></code></li>
-<li><code><a title="secfsdstools.a_config.configmgt.Configuration.rapid_api_key" href="#secfsdstools.a_config.configmgt.Configuration.rapid_api_key">rapid_api_key</a></code></li>
-<li><code><a title="secfsdstools.a_config.configmgt.Configuration.rapid_api_plan" href="#secfsdstools.a_config.configmgt.Configuration.rapid_api_plan">rapid_api_plan</a></code></li>
-<li><code><a title="secfsdstools.a_config.configmgt.Configuration.user_agent_email" href="#secfsdstools.a_config.configmgt.Configuration.user_agent_email">user_agent_email</a></code></li>
-</ul>
-</li>
-<li>
 <h4><code><a title="secfsdstools.a_config.configmgt.ConfigurationManager" href="#secfsdstools.a_config.configmgt.ConfigurationManager">ConfigurationManager</a></code></h4>
 <ul class="">
+<li><code><a title="secfsdstools.a_config.configmgt.ConfigurationManager.SUCCESSFULL_RAPID_API_KEY" href="#secfsdstools.a_config.configmgt.ConfigurationManager.SUCCESSFULL_RAPID_API_KEY">SUCCESSFULL_RAPID_API_KEY</a></code></li>
 <li><code><a title="secfsdstools.a_config.configmgt.ConfigurationManager.check_basic_configuration" href="#secfsdstools.a_config.configmgt.ConfigurationManager.check_basic_configuration">check_basic_configuration</a></code></li>
 <li><code><a title="secfsdstools.a_config.configmgt.ConfigurationManager.check_rapid_configuration" href="#secfsdstools.a_config.configmgt.ConfigurationManager.check_rapid_configuration">check_rapid_configuration</a></code></li>
 <li><code><a title="secfsdstools.a_config.configmgt.ConfigurationManager.read_config_file" href="#secfsdstools.a_config.configmgt.ConfigurationManager.read_config_file">read_config_file</a></code></li>

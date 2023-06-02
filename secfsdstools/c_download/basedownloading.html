@@ -37,8 +37,8 @@ from abc import ABC, abstractmethod
 from typing import Tuple, List, Dict
 
 from secfsdstools.a_utils.downloadutils import UrlDownloader
-from secfsdstools.a_utils.fileutils import get_filenames_in_directory
-from secfsdstools.a_utils.parallelexecution import ParallelExecutor
+from secfsdstools.a_utils.fileutils import get_filenames_in_directory, get_directories_in_directory
+from secfsdstools.a_utils.parallelexecution import ThreadExecutor
 
 LOGGER = logging.getLogger(__name__)
 
@@ -49,8 +49,13 @@ class BaseDownloader(ABC):
     from an url and store it.
     &#34;&#34;&#34;
 
-    def __init__(self, zip_dir: str, urldownloader: UrlDownloader, execute_serial: bool = False):
+    def __init__(self, zip_dir: str,
+                 parquet_dir_typed: str,
+                 urldownloader: UrlDownloader,
+                 execute_serial: bool = False):
         self.urldownloader = urldownloader
+        self.parquet_dir_typed = parquet_dir_typed
+
         self.execute_serial = execute_serial
 
         self.result = None
@@ -79,11 +84,13 @@ class BaseDownloader(ABC):
         url: str = data[1]
 
         LOGGER.info(&#39;    start to download %s &#39;, file)
-        result = self._download_zip(url=url, file=file)
-        return result
+        return self._download_zip(url=url, file=file)
 
     def _get_downloaded_zips(self) -&gt; List[str]:
         return get_filenames_in_directory(os.path.join(self.zip_dir, &#39;*.zip&#39;))
+
+    def _get_transformed_parquet(self) -&gt; List[str]:
+        return get_directories_in_directory(self.parquet_dir_typed)
 
     @abstractmethod
     def _calculate_missing_zips(self) -&gt; List[Tuple[str, str]]:
@@ -94,10 +101,11 @@ class BaseDownloader(ABC):
         downloads the missing quarterly zip files from the sec.
         &#34;&#34;&#34;
 
-        executor = ParallelExecutor[Tuple[str, str], str, type(None)](
+        executor = ThreadExecutor[Tuple[str, str], str, type(None)](
+            processes=3,
             max_calls_per_sec=8,
-            chunksize=20,
-            execute_serial=True
+            chunksize=3,
+            execute_serial=False
             # execute_serial=self.execute_serial
         )
         executor.set_get_entries_function(self._calculate_missing_zips)
@@ -118,7 +126,7 @@ class BaseDownloader(ABC):
 <dl>
 <dt id="secfsdstools.c_download.basedownloading.BaseDownloader"><code class="flex name class">
 <span>class <span class="ident">BaseDownloader</span></span>
-<span>(</span><span>zip_dir: str, urldownloader: <a title="secfsdstools.a_utils.downloadutils.UrlDownloader" href="../a_utils/downloadutils.html#secfsdstools.a_utils.downloadutils.UrlDownloader">UrlDownloader</a>, execute_serial: bool = False)</span>
+<span>(</span><span>zip_dir: str, parquet_dir_typed: str, urldownloader: <a title="secfsdstools.a_utils.downloadutils.UrlDownloader" href="../a_utils/downloadutils.html#secfsdstools.a_utils.downloadutils.UrlDownloader">UrlDownloader</a>, execute_serial: bool = False)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Base class for Downloaders. Implements basic methods to download files
@@ -133,8 +141,13 @@ from an url and store it.</p></div>
     from an url and store it.
     &#34;&#34;&#34;
 
-    def __init__(self, zip_dir: str, urldownloader: UrlDownloader, execute_serial: bool = False):
+    def __init__(self, zip_dir: str,
+                 parquet_dir_typed: str,
+                 urldownloader: UrlDownloader,
+                 execute_serial: bool = False):
         self.urldownloader = urldownloader
+        self.parquet_dir_typed = parquet_dir_typed
+
         self.execute_serial = execute_serial
 
         self.result = None
@@ -163,11 +176,13 @@ from an url and store it.</p></div>
         url: str = data[1]
 
         LOGGER.info(&#39;    start to download %s &#39;, file)
-        result = self._download_zip(url=url, file=file)
-        return result
+        return self._download_zip(url=url, file=file)
 
     def _get_downloaded_zips(self) -&gt; List[str]:
         return get_filenames_in_directory(os.path.join(self.zip_dir, &#39;*.zip&#39;))
+
+    def _get_transformed_parquet(self) -&gt; List[str]:
+        return get_directories_in_directory(self.parquet_dir_typed)
 
     @abstractmethod
     def _calculate_missing_zips(self) -&gt; List[Tuple[str, str]]:
@@ -178,10 +193,11 @@ from an url and store it.</p></div>
         downloads the missing quarterly zip files from the sec.
         &#34;&#34;&#34;
 
-        executor = ParallelExecutor[Tuple[str, str], str, type(None)](
+        executor = ThreadExecutor[Tuple[str, str], str, type(None)](
+            processes=3,
             max_calls_per_sec=8,
-            chunksize=20,
-            execute_serial=True
+            chunksize=3,
+            execute_serial=False
             # execute_serial=self.execute_serial
         )
         executor.set_get_entries_function(self._calculate_missing_zips)
@@ -215,10 +231,11 @@ from an url and store it.</p></div>
     downloads the missing quarterly zip files from the sec.
     &#34;&#34;&#34;
 
-    executor = ParallelExecutor[Tuple[str, str], str, type(None)](
+    executor = ThreadExecutor[Tuple[str, str], str, type(None)](
+        processes=3,
         max_calls_per_sec=8,
-        chunksize=20,
-        execute_serial=True
+        chunksize=3,
+        execute_serial=False
         # execute_serial=self.execute_serial
     )
     executor.set_get_entries_function(self._calculate_missing_zips)

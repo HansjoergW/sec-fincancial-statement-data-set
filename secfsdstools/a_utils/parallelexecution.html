@@ -36,7 +36,9 @@ using pathos.multiprocessing instead of multiprocessing, so that method function
 -&gt; pypi.org &#34;pathos&#34;
 &#34;&#34;&#34;
 
+import concurrent.futures
 import logging
+from abc import ABC, abstractmethod
 from time import time, sleep
 from typing import Generic, TypeVar, List, Callable, Optional, Tuple
 
@@ -48,7 +50,7 @@ PT = TypeVar(&#34;PT&#34;)  # processed type of the list to split
 OT = TypeVar(&#34;OT&#34;)  # PostProcessed Type
 
 
-class ParallelExecutor(Generic[IT, PT, OT]):
+class ParallelExecutorBase(Generic[IT, PT, OT], ABC):
     &#34;&#34;&#34;
     this helper class supports in parallel processing of entries that are provided
     as a list, for instance to     download and process data.. like downloading and
@@ -112,6 +114,13 @@ class ParallelExecutor(Generic[IT, PT, OT]):
         self.process_element_function: Optional[Callable[[IT], PT]] = None
         self.post_process_chunk_function: Optional[Callable[[List[PT]], List[OT]]] = None
 
+        if len(logging.root.handlers) &gt; 0:
+            formatter = logging.root.handlers[0].formatter
+            # Get the format string of the formatter
+            self.format_string = formatter._fmt
+        else:
+            self.format_string = &#34;%(asctime)s [%(levelname)s] %(module)s  %(message)s&#34;
+
     def set_get_entries_function(self, get_entries: Callable[[], List[IT]]):
         &#34;&#34;&#34;
         set the function which returns the list of the items that have not been processed.
@@ -155,14 +164,21 @@ class ParallelExecutor(Generic[IT, PT, OT]):
 
         return result
 
+    def _process_throttled_parallel(self, data: IT) -&gt; PT:
+        logger = logging.getLogger()
+        if not logger.hasHandlers():
+            logger.setLevel(logging.INFO)
+            handler = logging.StreamHandler()
+            handler.setFormatter(logging.Formatter(self.format_string))
+            logger.addHandler(handler)
+        return self._process_throttled(data)
+
+    @abstractmethod
     def _execute_parallel(self, chunk: List[IT]) -&gt; List[PT]:
-        with Pool(self.processes) as pool:
-            return pool.map(self._process_throttled, chunk)
+        pass
 
     def _execute_serial(self, chunk: List[IT]) -&gt; List[PT]:
-        results: List[PT] = []
-        for entry in chunk:
-            results.append(self._process_throttled(entry))
+        results: List[PT] = [self._process_throttled(entry) for entry in chunk]
         return results
 
     def execute(self) -&gt; Tuple[List[OT], List[IT]]:
@@ -177,6 +193,8 @@ class ParallelExecutor(Generic[IT, PT, OT]):
         last_missing = None
         missing: List[IT] = self.get_entries_function()
         result_list: List[OT] = []
+        if len(missing) == 0:
+            return [], []
 
         # we retry as long as we were able to process additional entries with in the while loop.
         while (last_missing is None) or (last_missing &gt; len(missing)):
@@ -207,8 +225,29 @@ class ParallelExecutor(Generic[IT, PT, OT]):
             # call get_entries_function again to check whether there have been
             # entries that couldn&#39;t be processed
             missing = self.get_entries_function()
+            if len(missing) == 0:
+                break
 
-        return result_list, missing</code></pre>
+        return result_list, missing
+
+
+class ParallelExecutor(ParallelExecutorBase[IT, PT, OT]):
+    &#34;&#34;&#34;
+    Parallel executor that uses multiprocess package to parallelize
+    &#34;&#34;&#34;
+    def _execute_parallel(self, chunk: List[IT]) -&gt; List[PT]:
+        with Pool(self.processes) as pool:
+            return pool.map(self._process_throttled_parallel, chunk)
+
+
+class ThreadExecutor(ParallelExecutorBase[IT, PT, OT]):
+    &#34;&#34;&#34;
+    Parallel exector that uses Threads to parallelize
+    &#34;&#34;&#34;
+    def _execute_parallel(self, chunk: List[IT]) -&gt; List[PT]:
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            # Herunterladen der Dateien parallel
+            return list(executor.map(self._process_throttled_parallel, chunk))</code></pre>
 </details>
 </section>
 <section>
@@ -222,6 +261,59 @@ class ParallelExecutor(Generic[IT, PT, OT]):
 <dl>
 <dt id="secfsdstools.a_utils.parallelexecution.ParallelExecutor"><code class="flex name class">
 <span>class <span class="ident">ParallelExecutor</span></span>
+<span>(</span><span>processes: int = 2, chunksize: int = 100, max_calls_per_sec: int = 0, intend: str = '
+', execute_serial: bool = False)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Parallel executor that uses multiprocess package to parallelize</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt>processes (int, optional, cpu_count()): number of parallel processes,</dt>
+<dt>default is cpu_count</dt>
+<dt><strong><code>chunksize</code></strong> :&ensp;<code>int</code>, optional<code>, 100</code></dt>
+<dd>size of chunk - think of it as a commit,</dd>
+<dt>default is 100</dt>
+<dt><strong><code>max_calls_per_sec</code></strong> :&ensp;<code>int</code>, optional<code>, 0</code></dt>
+<dd>how many calls may be made per</dd>
+<dt>second (for all processes), default is 0, meaning no limit</dt>
+<dt>intend (str, optional, '
+'): how much log messages should be intended</dt>
+<dt><strong><code>execute_serial</code></strong> :&ensp;<code>bool</code>, optional<code>, False</code></dt>
+<dd>for easier debugging, this</dd>
+</dl>
+<p>flag ensures that all data areprocessed in the main thread</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class ParallelExecutor(ParallelExecutorBase[IT, PT, OT]):
+    &#34;&#34;&#34;
+    Parallel executor that uses multiprocess package to parallelize
+    &#34;&#34;&#34;
+    def _execute_parallel(self, chunk: List[IT]) -&gt; List[PT]:
+        with Pool(self.processes) as pool:
+            return pool.map(self._process_throttled_parallel, chunk)</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="secfsdstools.a_utils.parallelexecution.ParallelExecutorBase" href="#secfsdstools.a_utils.parallelexecution.ParallelExecutorBase">ParallelExecutorBase</a></li>
+<li>typing.Generic</li>
+<li>abc.ABC</li>
+</ul>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="secfsdstools.a_utils.parallelexecution.ParallelExecutorBase" href="#secfsdstools.a_utils.parallelexecution.ParallelExecutorBase">ParallelExecutorBase</a></b></code>:
+<ul class="hlist">
+<li><code><a title="secfsdstools.a_utils.parallelexecution.ParallelExecutorBase.execute" href="#secfsdstools.a_utils.parallelexecution.ParallelExecutorBase.execute">execute</a></code></li>
+<li><code><a title="secfsdstools.a_utils.parallelexecution.ParallelExecutorBase.set_get_entries_function" href="#secfsdstools.a_utils.parallelexecution.ParallelExecutorBase.set_get_entries_function">set_get_entries_function</a></code></li>
+<li><code><a title="secfsdstools.a_utils.parallelexecution.ParallelExecutorBase.set_post_process_chunk_function" href="#secfsdstools.a_utils.parallelexecution.ParallelExecutorBase.set_post_process_chunk_function">set_post_process_chunk_function</a></code></li>
+<li><code><a title="secfsdstools.a_utils.parallelexecution.ParallelExecutorBase.set_process_element_function" href="#secfsdstools.a_utils.parallelexecution.ParallelExecutorBase.set_process_element_function">set_process_element_function</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+<dt id="secfsdstools.a_utils.parallelexecution.ParallelExecutorBase"><code class="flex name class">
+<span>class <span class="ident">ParallelExecutorBase</span></span>
 <span>(</span><span>processes: int = 2, chunksize: int = 100, max_calls_per_sec: int = 0, intend: str = '
 ', execute_serial: bool = False)</span>
 </code></dt>
@@ -270,7 +362,7 @@ get_entries_function, these entries will not be part of</p>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class ParallelExecutor(Generic[IT, PT, OT]):
+<pre><code class="python">class ParallelExecutorBase(Generic[IT, PT, OT], ABC):
     &#34;&#34;&#34;
     this helper class supports in parallel processing of entries that are provided
     as a list, for instance to     download and process data.. like downloading and
@@ -334,6 +426,13 @@ get_entries_function, these entries will not be part of</p>
         self.process_element_function: Optional[Callable[[IT], PT]] = None
         self.post_process_chunk_function: Optional[Callable[[List[PT]], List[OT]]] = None
 
+        if len(logging.root.handlers) &gt; 0:
+            formatter = logging.root.handlers[0].formatter
+            # Get the format string of the formatter
+            self.format_string = formatter._fmt
+        else:
+            self.format_string = &#34;%(asctime)s [%(levelname)s] %(module)s  %(message)s&#34;
+
     def set_get_entries_function(self, get_entries: Callable[[], List[IT]]):
         &#34;&#34;&#34;
         set the function which returns the list of the items that have not been processed.
@@ -377,14 +476,21 @@ get_entries_function, these entries will not be part of</p>
 
         return result
 
+    def _process_throttled_parallel(self, data: IT) -&gt; PT:
+        logger = logging.getLogger()
+        if not logger.hasHandlers():
+            logger.setLevel(logging.INFO)
+            handler = logging.StreamHandler()
+            handler.setFormatter(logging.Formatter(self.format_string))
+            logger.addHandler(handler)
+        return self._process_throttled(data)
+
+    @abstractmethod
     def _execute_parallel(self, chunk: List[IT]) -&gt; List[PT]:
-        with Pool(self.processes) as pool:
-            return pool.map(self._process_throttled, chunk)
+        pass
 
     def _execute_serial(self, chunk: List[IT]) -&gt; List[PT]:
-        results: List[PT] = []
-        for entry in chunk:
-            results.append(self._process_throttled(entry))
+        results: List[PT] = [self._process_throttled(entry) for entry in chunk]
         return results
 
     def execute(self) -&gt; Tuple[List[OT], List[IT]]:
@@ -399,6 +505,8 @@ get_entries_function, these entries will not be part of</p>
         last_missing = None
         missing: List[IT] = self.get_entries_function()
         result_list: List[OT] = []
+        if len(missing) == 0:
+            return [], []
 
         # we retry as long as we were able to process additional entries with in the while loop.
         while (last_missing is None) or (last_missing &gt; len(missing)):
@@ -429,16 +537,24 @@ get_entries_function, these entries will not be part of</p>
             # call get_entries_function again to check whether there have been
             # entries that couldn&#39;t be processed
             missing = self.get_entries_function()
+            if len(missing) == 0:
+                break
 
         return result_list, missing</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li>typing.Generic</li>
+<li>abc.ABC</li>
+</ul>
+<h3>Subclasses</h3>
+<ul class="hlist">
+<li><a title="secfsdstools.a_utils.parallelexecution.ParallelExecutor" href="#secfsdstools.a_utils.parallelexecution.ParallelExecutor">ParallelExecutor</a></li>
+<li><a title="secfsdstools.a_utils.parallelexecution.ThreadExecutor" href="#secfsdstools.a_utils.parallelexecution.ThreadExecutor">ThreadExecutor</a></li>
 </ul>
 <h3>Methods</h3>
 <dl>
-<dt id="secfsdstools.a_utils.parallelexecution.ParallelExecutor.execute"><code class="name flex">
+<dt id="secfsdstools.a_utils.parallelexecution.ParallelExecutorBase.execute"><code class="name flex">
 <span>def <span class="ident">execute</span></span>(<span>self) ‑> Tuple[List[~OT], List[~IT]]</span>
 </code></dt>
 <dd>
@@ -465,6 +581,8 @@ the second list are the entries that couldn't be processed</dd>
     last_missing = None
     missing: List[IT] = self.get_entries_function()
     result_list: List[OT] = []
+    if len(missing) == 0:
+        return [], []
 
     # we retry as long as we were able to process additional entries with in the while loop.
     while (last_missing is None) or (last_missing &gt; len(missing)):
@@ -495,11 +613,13 @@ the second list are the entries that couldn't be processed</dd>
         # call get_entries_function again to check whether there have been
         # entries that couldn&#39;t be processed
         missing = self.get_entries_function()
+        if len(missing) == 0:
+            break
 
     return result_list, missing</code></pre>
 </details>
 </dd>
-<dt id="secfsdstools.a_utils.parallelexecution.ParallelExecutor.set_get_entries_function"><code class="name flex">
+<dt id="secfsdstools.a_utils.parallelexecution.ParallelExecutorBase.set_get_entries_function"><code class="name flex">
 <span>def <span class="ident">set_get_entries_function</span></span>(<span>self, get_entries: Callable[[], List[~IT]])</span>
 </code></dt>
 <dd>
@@ -524,7 +644,7 @@ the second list are the entries that couldn't be processed</dd>
     self.get_entries_function = get_entries</code></pre>
 </details>
 </dd>
-<dt id="secfsdstools.a_utils.parallelexecution.ParallelExecutor.set_post_process_chunk_function"><code class="name flex">
+<dt id="secfsdstools.a_utils.parallelexecution.ParallelExecutorBase.set_post_process_chunk_function"><code class="name flex">
 <span>def <span class="ident">set_post_process_chunk_function</span></span>(<span>self, post_process: Callable[[List[~PT]], List[~OT]])</span>
 </code></dt>
 <dd>
@@ -550,7 +670,7 @@ the state of these elements accordingly</p>
     self.post_process_chunk_function = post_process</code></pre>
 </details>
 </dd>
-<dt id="secfsdstools.a_utils.parallelexecution.ParallelExecutor.set_process_element_function"><code class="name flex">
+<dt id="secfsdstools.a_utils.parallelexecution.ParallelExecutorBase.set_process_element_function"><code class="name flex">
 <span>def <span class="ident">set_process_element_function</span></span>(<span>self, process_element: Callable[[~IT], ~PT])</span>
 </code></dt>
 <dd>
@@ -576,6 +696,60 @@ the state of these elements accordingly</p>
 </dd>
 </dl>
 </dd>
+<dt id="secfsdstools.a_utils.parallelexecution.ThreadExecutor"><code class="flex name class">
+<span>class <span class="ident">ThreadExecutor</span></span>
+<span>(</span><span>processes: int = 2, chunksize: int = 100, max_calls_per_sec: int = 0, intend: str = '
+', execute_serial: bool = False)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Parallel exector that uses Threads to parallelize</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt>processes (int, optional, cpu_count()): number of parallel processes,</dt>
+<dt>default is cpu_count</dt>
+<dt><strong><code>chunksize</code></strong> :&ensp;<code>int</code>, optional<code>, 100</code></dt>
+<dd>size of chunk - think of it as a commit,</dd>
+<dt>default is 100</dt>
+<dt><strong><code>max_calls_per_sec</code></strong> :&ensp;<code>int</code>, optional<code>, 0</code></dt>
+<dd>how many calls may be made per</dd>
+<dt>second (for all processes), default is 0, meaning no limit</dt>
+<dt>intend (str, optional, '
+'): how much log messages should be intended</dt>
+<dt><strong><code>execute_serial</code></strong> :&ensp;<code>bool</code>, optional<code>, False</code></dt>
+<dd>for easier debugging, this</dd>
+</dl>
+<p>flag ensures that all data areprocessed in the main thread</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class ThreadExecutor(ParallelExecutorBase[IT, PT, OT]):
+    &#34;&#34;&#34;
+    Parallel exector that uses Threads to parallelize
+    &#34;&#34;&#34;
+    def _execute_parallel(self, chunk: List[IT]) -&gt; List[PT]:
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            # Herunterladen der Dateien parallel
+            return list(executor.map(self._process_throttled_parallel, chunk))</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="secfsdstools.a_utils.parallelexecution.ParallelExecutorBase" href="#secfsdstools.a_utils.parallelexecution.ParallelExecutorBase">ParallelExecutorBase</a></li>
+<li>typing.Generic</li>
+<li>abc.ABC</li>
+</ul>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="secfsdstools.a_utils.parallelexecution.ParallelExecutorBase" href="#secfsdstools.a_utils.parallelexecution.ParallelExecutorBase">ParallelExecutorBase</a></b></code>:
+<ul class="hlist">
+<li><code><a title="secfsdstools.a_utils.parallelexecution.ParallelExecutorBase.execute" href="#secfsdstools.a_utils.parallelexecution.ParallelExecutorBase.execute">execute</a></code></li>
+<li><code><a title="secfsdstools.a_utils.parallelexecution.ParallelExecutorBase.set_get_entries_function" href="#secfsdstools.a_utils.parallelexecution.ParallelExecutorBase.set_get_entries_function">set_get_entries_function</a></code></li>
+<li><code><a title="secfsdstools.a_utils.parallelexecution.ParallelExecutorBase.set_post_process_chunk_function" href="#secfsdstools.a_utils.parallelexecution.ParallelExecutorBase.set_post_process_chunk_function">set_post_process_chunk_function</a></code></li>
+<li><code><a title="secfsdstools.a_utils.parallelexecution.ParallelExecutorBase.set_process_element_function" href="#secfsdstools.a_utils.parallelexecution.ParallelExecutorBase.set_process_element_function">set_process_element_function</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
 </dl>
 </section>
 </article>
@@ -594,12 +768,18 @@ the state of these elements accordingly</p>
 <ul>
 <li>
 <h4><code><a title="secfsdstools.a_utils.parallelexecution.ParallelExecutor" href="#secfsdstools.a_utils.parallelexecution.ParallelExecutor">ParallelExecutor</a></code></h4>
+</li>
+<li>
+<h4><code><a title="secfsdstools.a_utils.parallelexecution.ParallelExecutorBase" href="#secfsdstools.a_utils.parallelexecution.ParallelExecutorBase">ParallelExecutorBase</a></code></h4>
 <ul class="">
-<li><code><a title="secfsdstools.a_utils.parallelexecution.ParallelExecutor.execute" href="#secfsdstools.a_utils.parallelexecution.ParallelExecutor.execute">execute</a></code></li>
-<li><code><a title="secfsdstools.a_utils.parallelexecution.ParallelExecutor.set_get_entries_function" href="#secfsdstools.a_utils.parallelexecution.ParallelExecutor.set_get_entries_function">set_get_entries_function</a></code></li>
-<li><code><a title="secfsdstools.a_utils.parallelexecution.ParallelExecutor.set_post_process_chunk_function" href="#secfsdstools.a_utils.parallelexecution.ParallelExecutor.set_post_process_chunk_function">set_post_process_chunk_function</a></code></li>
-<li><code><a title="secfsdstools.a_utils.parallelexecution.ParallelExecutor.set_process_element_function" href="#secfsdstools.a_utils.parallelexecution.ParallelExecutor.set_process_element_function">set_process_element_function</a></code></li>
+<li><code><a title="secfsdstools.a_utils.parallelexecution.ParallelExecutorBase.execute" href="#secfsdstools.a_utils.parallelexecution.ParallelExecutorBase.execute">execute</a></code></li>
+<li><code><a title="secfsdstools.a_utils.parallelexecution.ParallelExecutorBase.set_get_entries_function" href="#secfsdstools.a_utils.parallelexecution.ParallelExecutorBase.set_get_entries_function">set_get_entries_function</a></code></li>
+<li><code><a title="secfsdstools.a_utils.parallelexecution.ParallelExecutorBase.set_post_process_chunk_function" href="#secfsdstools.a_utils.parallelexecution.ParallelExecutorBase.set_post_process_chunk_function">set_post_process_chunk_function</a></code></li>
+<li><code><a title="secfsdstools.a_utils.parallelexecution.ParallelExecutorBase.set_process_element_function" href="#secfsdstools.a_utils.parallelexecution.ParallelExecutorBase.set_process_element_function">set_process_element_function</a></code></li>
 </ul>
+</li>
+<li>
+<h4><code><a title="secfsdstools.a_utils.parallelexecution.ThreadExecutor" href="#secfsdstools.a_utils.parallelexecution.ThreadExecutor">ThreadExecutor</a></code></h4>
 </li>
 </ul>
 </li>

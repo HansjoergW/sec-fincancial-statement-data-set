@@ -34,9 +34,8 @@ Logic to download the zipfiles from the rapid api.
 import json
 import logging
 import os
-from typing import List, Tuple, Optional, Dict
+from typing import List, Tuple, Dict
 
-from secfsdstools.a_config.configmgt import Configuration, ConfigurationManager
 from secfsdstools.a_utils.downloadutils import UrlDownloader
 from secfsdstools.a_utils.fileutils import get_filenames_in_directory
 from secfsdstools.a_utils.rapiddownloadutils import RapidUrlBuilder
@@ -51,11 +50,16 @@ class RapidZipDownloader(BaseDownloader):
     https://rapidapi.com/hansjoerg.wingeier/api/daily-sec-financial-statement-dataset
     &#34;&#34;&#34;
 
-    def __init__(self, rapidurlbuilder: RapidUrlBuilder, daily_zip_dir: str, qrtr_zip_dir: str,
+    def __init__(self, rapidurlbuilder: RapidUrlBuilder,
+                 daily_zip_dir: str,
+                 qrtr_zip_dir: str,
+                 parquet_root_dir: str,
                  urldownloader: UrlDownloader,
                  execute_serial: bool = False):
-        super().__init__(zip_dir=daily_zip_dir, urldownloader=urldownloader,
-                         execute_serial=execute_serial)
+        super().__init__(zip_dir=daily_zip_dir,
+                         urldownloader=urldownloader,
+                         execute_serial=execute_serial,
+                         parquet_dir_typed=os.path.join(parquet_root_dir, &#39;quarter&#39;))
         self.rapidurlbuilder = rapidurlbuilder
 
         self.qrtr_zip_dir = qrtr_zip_dir
@@ -63,31 +67,6 @@ class RapidZipDownloader(BaseDownloader):
         if not os.path.isdir(self.zip_dir):
             LOGGER.info(&#34;creating download folder: %s&#34;, self.zip_dir)
             os.makedirs(self.zip_dir)
-
-    @classmethod
-    def get_downloader(cls, configuration: Optional[Configuration] = None):
-        &#34;&#34;&#34;
-        Creates a IndexSearch instance.
-        If no  configuration object is passed, it reads the configuration from
-        the config file.
-        Args:
-            configuration (Configuration, optional, None): configuration object
-
-        Returns:
-            RapidZipDownloader: instance of RapidZipDownloader
-        &#34;&#34;&#34;
-        if configuration is None:
-            configuration = ConfigurationManager.read_config_file()
-
-        urldownloader = UrlDownloader(user_agent=configuration.user_agent_email)
-        rapidurlbuilder = RapidUrlBuilder(rapid_plan=configuration.rapid_api_plan,
-                                          rapid_api_key=configuration.rapid_api_key)
-        # overwrite zipdir
-
-        return RapidZipDownloader(rapidurlbuilder=rapidurlbuilder,
-                                  daily_zip_dir=configuration.daily_download_dir,
-                                  qrtr_zip_dir=configuration.download_dir,
-                                  urldownloader=urldownloader)
 
     def _get_headers(self) -&gt; Dict[str, str]:
         return self.rapidurlbuilder.get_headers()
@@ -103,6 +82,24 @@ class RapidZipDownloader(BaseDownloader):
         return files[0]
 
     def _calculate_cut_off_for_qrtr_file(self, filename: str) -&gt; str:
+        &#34;&#34;&#34;
+        We only want to download daily files that are newer than the latest available
+        quarter file on the SEC side.
+
+        The idea is simple, we create a date-string of the quarter that starts after the quarter
+        defined in the filename, but we set the day to 00.
+
+        So if the filename is 2022q1
+        -&gt; &#34;2022&#34; + &#34;04&#34; + &#34;00&#34;
+        if it is 2022q4
+        -&gt; &#34;2022&#34; + &#34;0100&#34;
+
+        Args:
+            filename: filname of the quarter file
+
+        Returns:
+
+        &#34;&#34;&#34;
         last_quarter_file_year = int(filename[:4])
         last_quarter_file_quarter = int(filename[5:6])
 
@@ -124,29 +121,30 @@ class RapidZipDownloader(BaseDownloader):
         # e.g., if the lates zip is 2022q4.zip, then the cutoff string looks like: &#39;20230100&#39;
         cutoff_str = self._calculate_cut_off_for_qrtr_file(latest_quarter_file)
 
-        dld_zip_files = self._get_downloaded_zips()
-        available_zips = self._get_available_zips()
+        downloaded_zip_files = self._get_downloaded_zips()
+        transformed_parquet = self._get_transformed_parquet()
+        available_zips_to_dld = self._get_available_zips()
 
-        missing = list(set(available_zips) - set(dld_zip_files))
+        # define which zip files don&#39;t have to be downloaded
+        download_or_transformed_zips = set(downloaded_zip_files).union(set(transformed_parquet))
+
+        missing = list(set(available_zips_to_dld) - set(download_or_transformed_zips))
 
         # only consider the filenames with names (without extension)
-        # are bigger than the cutoff string
+        # that are bigger than the cutoff string
         missing_after_cut_off = [entry for entry in missing if entry[:8] &gt; cutoff_str]
 
-        missing_tuple = [(filename, self.rapidurlbuilder.get_donwload_url(filename)) for filename in
-                         missing_after_cut_off]
-        return missing_tuple
+        return [(filename, self.rapidurlbuilder.get_donwload_url(filename)) for filename in
+                missing_after_cut_off]
 
     def _get_available_zips(self) -&gt; List[str]:
         content = self._get_content()
         parsed_content = json.loads(content)
         daily_entries = parsed_content[&#39;daily&#39;]
 
-        available_files = [entry[&#39;file&#39;] for entry in daily_entries if
-                           ((entry[&#39;subscription&#39;] == &#39;basic&#39;) | (
-                                   entry[&#39;subscription&#39;] == self.rapidurlbuilder.rapid_plan))]
-
-        return available_files</code></pre>
+        return [entry[&#39;file&#39;] for entry in daily_entries if
+                ((entry[&#39;subscription&#39;] == &#39;basic&#39;) | (
+                        entry[&#39;subscription&#39;] == self.rapidurlbuilder.rapid_plan))]</code></pre>
 </details>
 </section>
 <section>
@@ -160,7 +158,7 @@ class RapidZipDownloader(BaseDownloader):
 <dl>
 <dt id="secfsdstools.c_download.rapiddownloading.RapidZipDownloader"><code class="flex name class">
 <span>class <span class="ident">RapidZipDownloader</span></span>
-<span>(</span><span>rapidurlbuilder: <a title="secfsdstools.a_utils.rapiddownloadutils.RapidUrlBuilder" href="../a_utils/rapiddownloadutils.html#secfsdstools.a_utils.rapiddownloadutils.RapidUrlBuilder">RapidUrlBuilder</a>, daily_zip_dir: str, qrtr_zip_dir: str, urldownloader: <a title="secfsdstools.a_utils.downloadutils.UrlDownloader" href="../a_utils/downloadutils.html#secfsdstools.a_utils.downloadutils.UrlDownloader">UrlDownloader</a>, execute_serial: bool = False)</span>
+<span>(</span><span>rapidurlbuilder: <a title="secfsdstools.a_utils.rapiddownloadutils.RapidUrlBuilder" href="../a_utils/rapiddownloadutils.html#secfsdstools.a_utils.rapiddownloadutils.RapidUrlBuilder">RapidUrlBuilder</a>, daily_zip_dir: str, qrtr_zip_dir: str, parquet_root_dir: str, urldownloader: <a title="secfsdstools.a_utils.downloadutils.UrlDownloader" href="../a_utils/downloadutils.html#secfsdstools.a_utils.downloadutils.UrlDownloader">UrlDownloader</a>, execute_serial: bool = False)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Class which coordinates downloading form the rapidapi api
@@ -175,11 +173,16 @@ class RapidZipDownloader(BaseDownloader):
     https://rapidapi.com/hansjoerg.wingeier/api/daily-sec-financial-statement-dataset
     &#34;&#34;&#34;
 
-    def __init__(self, rapidurlbuilder: RapidUrlBuilder, daily_zip_dir: str, qrtr_zip_dir: str,
+    def __init__(self, rapidurlbuilder: RapidUrlBuilder,
+                 daily_zip_dir: str,
+                 qrtr_zip_dir: str,
+                 parquet_root_dir: str,
                  urldownloader: UrlDownloader,
                  execute_serial: bool = False):
-        super().__init__(zip_dir=daily_zip_dir, urldownloader=urldownloader,
-                         execute_serial=execute_serial)
+        super().__init__(zip_dir=daily_zip_dir,
+                         urldownloader=urldownloader,
+                         execute_serial=execute_serial,
+                         parquet_dir_typed=os.path.join(parquet_root_dir, &#39;quarter&#39;))
         self.rapidurlbuilder = rapidurlbuilder
 
         self.qrtr_zip_dir = qrtr_zip_dir
@@ -187,31 +190,6 @@ class RapidZipDownloader(BaseDownloader):
         if not os.path.isdir(self.zip_dir):
             LOGGER.info(&#34;creating download folder: %s&#34;, self.zip_dir)
             os.makedirs(self.zip_dir)
-
-    @classmethod
-    def get_downloader(cls, configuration: Optional[Configuration] = None):
-        &#34;&#34;&#34;
-        Creates a IndexSearch instance.
-        If no  configuration object is passed, it reads the configuration from
-        the config file.
-        Args:
-            configuration (Configuration, optional, None): configuration object
-
-        Returns:
-            RapidZipDownloader: instance of RapidZipDownloader
-        &#34;&#34;&#34;
-        if configuration is None:
-            configuration = ConfigurationManager.read_config_file()
-
-        urldownloader = UrlDownloader(user_agent=configuration.user_agent_email)
-        rapidurlbuilder = RapidUrlBuilder(rapid_plan=configuration.rapid_api_plan,
-                                          rapid_api_key=configuration.rapid_api_key)
-        # overwrite zipdir
-
-        return RapidZipDownloader(rapidurlbuilder=rapidurlbuilder,
-                                  daily_zip_dir=configuration.daily_download_dir,
-                                  qrtr_zip_dir=configuration.download_dir,
-                                  urldownloader=urldownloader)
 
     def _get_headers(self) -&gt; Dict[str, str]:
         return self.rapidurlbuilder.get_headers()
@@ -227,6 +205,24 @@ class RapidZipDownloader(BaseDownloader):
         return files[0]
 
     def _calculate_cut_off_for_qrtr_file(self, filename: str) -&gt; str:
+        &#34;&#34;&#34;
+        We only want to download daily files that are newer than the latest available
+        quarter file on the SEC side.
+
+        The idea is simple, we create a date-string of the quarter that starts after the quarter
+        defined in the filename, but we set the day to 00.
+
+        So if the filename is 2022q1
+        -&gt; &#34;2022&#34; + &#34;04&#34; + &#34;00&#34;
+        if it is 2022q4
+        -&gt; &#34;2022&#34; + &#34;0100&#34;
+
+        Args:
+            filename: filname of the quarter file
+
+        Returns:
+
+        &#34;&#34;&#34;
         last_quarter_file_year = int(filename[:4])
         last_quarter_file_quarter = int(filename[5:6])
 
@@ -248,86 +244,36 @@ class RapidZipDownloader(BaseDownloader):
         # e.g., if the lates zip is 2022q4.zip, then the cutoff string looks like: &#39;20230100&#39;
         cutoff_str = self._calculate_cut_off_for_qrtr_file(latest_quarter_file)
 
-        dld_zip_files = self._get_downloaded_zips()
-        available_zips = self._get_available_zips()
+        downloaded_zip_files = self._get_downloaded_zips()
+        transformed_parquet = self._get_transformed_parquet()
+        available_zips_to_dld = self._get_available_zips()
 
-        missing = list(set(available_zips) - set(dld_zip_files))
+        # define which zip files don&#39;t have to be downloaded
+        download_or_transformed_zips = set(downloaded_zip_files).union(set(transformed_parquet))
+
+        missing = list(set(available_zips_to_dld) - set(download_or_transformed_zips))
 
         # only consider the filenames with names (without extension)
-        # are bigger than the cutoff string
+        # that are bigger than the cutoff string
         missing_after_cut_off = [entry for entry in missing if entry[:8] &gt; cutoff_str]
 
-        missing_tuple = [(filename, self.rapidurlbuilder.get_donwload_url(filename)) for filename in
-                         missing_after_cut_off]
-        return missing_tuple
+        return [(filename, self.rapidurlbuilder.get_donwload_url(filename)) for filename in
+                missing_after_cut_off]
 
     def _get_available_zips(self) -&gt; List[str]:
         content = self._get_content()
         parsed_content = json.loads(content)
         daily_entries = parsed_content[&#39;daily&#39;]
 
-        available_files = [entry[&#39;file&#39;] for entry in daily_entries if
-                           ((entry[&#39;subscription&#39;] == &#39;basic&#39;) | (
-                                   entry[&#39;subscription&#39;] == self.rapidurlbuilder.rapid_plan))]
-
-        return available_files</code></pre>
+        return [entry[&#39;file&#39;] for entry in daily_entries if
+                ((entry[&#39;subscription&#39;] == &#39;basic&#39;) | (
+                        entry[&#39;subscription&#39;] == self.rapidurlbuilder.rapid_plan))]</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li><a title="secfsdstools.c_download.basedownloading.BaseDownloader" href="basedownloading.html#secfsdstools.c_download.basedownloading.BaseDownloader">BaseDownloader</a></li>
 <li>abc.ABC</li>
 </ul>
-<h3>Static methods</h3>
-<dl>
-<dt id="secfsdstools.c_download.rapiddownloading.RapidZipDownloader.get_downloader"><code class="name flex">
-<span>def <span class="ident">get_downloader</span></span>(<span>configuration: Optional[<a title="secfsdstools.a_config.configmgt.Configuration" href="../a_config/configmgt.html#secfsdstools.a_config.configmgt.Configuration">Configuration</a>] = None)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Creates a IndexSearch instance.
-If no
-configuration object is passed, it reads the configuration from
-the config file.</p>
-<h2 id="args">Args</h2>
-<dl>
-<dt><strong><code>configuration</code></strong> :&ensp;<code>Configuration</code>, optional<code>, None</code></dt>
-<dd>configuration object</dd>
-</dl>
-<h2 id="returns">Returns</h2>
-<dl>
-<dt><code><a title="secfsdstools.c_download.rapiddownloading.RapidZipDownloader" href="#secfsdstools.c_download.rapiddownloading.RapidZipDownloader">RapidZipDownloader</a></code></dt>
-<dd>instance of RapidZipDownloader</dd>
-</dl></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">@classmethod
-def get_downloader(cls, configuration: Optional[Configuration] = None):
-    &#34;&#34;&#34;
-    Creates a IndexSearch instance.
-    If no  configuration object is passed, it reads the configuration from
-    the config file.
-    Args:
-        configuration (Configuration, optional, None): configuration object
-
-    Returns:
-        RapidZipDownloader: instance of RapidZipDownloader
-    &#34;&#34;&#34;
-    if configuration is None:
-        configuration = ConfigurationManager.read_config_file()
-
-    urldownloader = UrlDownloader(user_agent=configuration.user_agent_email)
-    rapidurlbuilder = RapidUrlBuilder(rapid_plan=configuration.rapid_api_plan,
-                                      rapid_api_key=configuration.rapid_api_key)
-    # overwrite zipdir
-
-    return RapidZipDownloader(rapidurlbuilder=rapidurlbuilder,
-                              daily_zip_dir=configuration.daily_download_dir,
-                              qrtr_zip_dir=configuration.download_dir,
-                              urldownloader=urldownloader)</code></pre>
-</details>
-</dd>
-</dl>
 <h3>Inherited members</h3>
 <ul class="hlist">
 <li><code><b><a title="secfsdstools.c_download.basedownloading.BaseDownloader" href="basedownloading.html#secfsdstools.c_download.basedownloading.BaseDownloader">BaseDownloader</a></b></code>:
@@ -355,9 +301,6 @@ def get_downloader(cls, configuration: Optional[Configuration] = None):
 <ul>
 <li>
 <h4><code><a title="secfsdstools.c_download.rapiddownloading.RapidZipDownloader" href="#secfsdstools.c_download.rapiddownloading.RapidZipDownloader">RapidZipDownloader</a></code></h4>
-<ul class="">
-<li><code><a title="secfsdstools.c_download.rapiddownloading.RapidZipDownloader.get_downloader" href="#secfsdstools.c_download.rapiddownloading.RapidZipDownloader.get_downloader">get_downloader</a></code></li>
-</ul>
 </li>
 </ul>
 </li>

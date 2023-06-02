@@ -30,11 +30,9 @@
 <pre><code class="python">&#34;&#34;&#34; Getting everything ready to work with the data. &#34;&#34;&#34;
 import logging
 
-from secfsdstools.a_config.configmgt import ConfigurationManager, Configuration
-from secfsdstools.b_setup.setupdb import DbCreator
-from secfsdstools.c_download.rapiddownloading import RapidZipDownloader
-from secfsdstools.c_download.secdownloading import SecZipDownloader
-from secfsdstools.d_index.indexing import ReportZipIndexer
+from secfsdstools.a_config.configmgt import ConfigurationManager
+from secfsdstools.a_config.configmodel import Configuration
+from secfsdstools.c_update.updateprocess import Updater
 
 LOGGER = logging.getLogger(__name__)
 
@@ -58,38 +56,8 @@ def update(config: Configuration = None):
         config = ConfigurationManager.read_config_file()
 
     # create the db
-    DbCreator(db_dir=config.db_dir).create_db()
-
-    # download data from sec.gov
-    LOGGER.info(&#34;check if there are new files to download from sec.gov ...&#34;)
-    secdownloader = SecZipDownloader.get_downloader(configuration=config)
-    secdownloader.download()
-
-    # download data from rapid
-    if (config.rapid_api_key is not None) &amp; (config.rapid_api_key != &#39;&#39;):
-        try:
-            LOGGER.info(&#34;check if there are new files to download from rapid...&#34;)
-            rapiddownloader = RapidZipDownloader.get_downloader(configuration=config)
-            rapiddownloader.download()
-        except Exception as ex: # pylint: disable=W0703
-            LOGGER.warning(&#34;Failed to get data from rapid api, please check rapid-api-key. &#34;)
-            LOGGER.warning(&#34;Only using data from Sec.gov because of: %s&#34;, ex)
-    else:
-        print(&#34;No rapid-api-key is set: \n&#34;
-              + &#34;If you are interested in daily updates, please have a look at &#34;
-              + &#34;https://rapidapi.com/hansjoerg.wingeier/api/daily-sec-financial-statement-dataset&#34;)
-
-    # create index of reports
-    LOGGER.info(&#34;start to index downloaded files ...&#34;)
-    qrtr_indexer = ReportZipIndexer(db_dir=config.db_dir,
-                                    zip_dir=config.download_dir,
-                                    file_type=&#39;quarter&#39;)
-    qrtr_indexer.process()
-
-    daily_indexer = ReportZipIndexer(db_dir=config.db_dir,
-                                     zip_dir=config.daily_download_dir,
-                                     file_type=&#39;daily&#39;)
-    daily_indexer.process()
+    updater = Updater.get_instance(config)
+    updater.update()
 
 
 if __name__ == &#39;__main__&#39;:
@@ -109,7 +77,7 @@ if __name__ == &#39;__main__&#39;:
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
 <dt id="secfsdstools.update.update"><code class="name flex">
-<span>def <span class="ident">update</span></span>(<span>config: <a title="secfsdstools.a_config.configmgt.Configuration" href="a_config/configmgt.html#secfsdstools.a_config.configmgt.Configuration">Configuration</a> = None)</span>
+<span>def <span class="ident">update</span></span>(<span>config: <a title="secfsdstools.a_config.configmodel.Configuration" href="a_config/configmodel.html#secfsdstools.a_config.configmodel.Configuration">Configuration</a> = None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>ensures that all available zip files are downloaded and that the index is created.</p></div>
@@ -136,38 +104,8 @@ if __name__ == &#39;__main__&#39;:
         config = ConfigurationManager.read_config_file()
 
     # create the db
-    DbCreator(db_dir=config.db_dir).create_db()
-
-    # download data from sec.gov
-    LOGGER.info(&#34;check if there are new files to download from sec.gov ...&#34;)
-    secdownloader = SecZipDownloader.get_downloader(configuration=config)
-    secdownloader.download()
-
-    # download data from rapid
-    if (config.rapid_api_key is not None) &amp; (config.rapid_api_key != &#39;&#39;):
-        try:
-            LOGGER.info(&#34;check if there are new files to download from rapid...&#34;)
-            rapiddownloader = RapidZipDownloader.get_downloader(configuration=config)
-            rapiddownloader.download()
-        except Exception as ex: # pylint: disable=W0703
-            LOGGER.warning(&#34;Failed to get data from rapid api, please check rapid-api-key. &#34;)
-            LOGGER.warning(&#34;Only using data from Sec.gov because of: %s&#34;, ex)
-    else:
-        print(&#34;No rapid-api-key is set: \n&#34;
-              + &#34;If you are interested in daily updates, please have a look at &#34;
-              + &#34;https://rapidapi.com/hansjoerg.wingeier/api/daily-sec-financial-statement-dataset&#34;)
-
-    # create index of reports
-    LOGGER.info(&#34;start to index downloaded files ...&#34;)
-    qrtr_indexer = ReportZipIndexer(db_dir=config.db_dir,
-                                    zip_dir=config.download_dir,
-                                    file_type=&#39;quarter&#39;)
-    qrtr_indexer.process()
-
-    daily_indexer = ReportZipIndexer(db_dir=config.db_dir,
-                                     zip_dir=config.daily_download_dir,
-                                     file_type=&#39;daily&#39;)
-    daily_indexer.process()</code></pre>
+    updater = Updater.get_instance(config)
+    updater.update()</code></pre>
 </details>
 </dd>
 </dl>

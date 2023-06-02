@@ -30,19 +30,18 @@
 <pre><code class="python">&#34;&#34;&#34;
 reading the data for a single report.
 &#34;&#34;&#34;
-
+import os
 import re
 from dataclasses import dataclass
-from io import StringIO
 from typing import Optional, List, Dict, Union
 
 import numpy as np
 import pandas as pd
 
-from secfsdstools.a_config.configmgt import Configuration, ConfigurationManager
-from secfsdstools.a_utils.fileutils import read_content_from_file_in_zip
-from secfsdstools.d_index.indexdataaccess import IndexReport, DBIndexingAccessor
-from secfsdstools.e_read.basereportreading import match_group_iter, BaseReportReader
+from secfsdstools.a_config.configmgt import ConfigurationManager
+from secfsdstools.a_config.configmodel import Configuration
+from secfsdstools.c_index.indexdataaccess import IndexReport, create_index_accessor
+from secfsdstools.e_read.basereportreading import BaseReportReader
 
 
 @dataclass
@@ -81,7 +80,7 @@ class ReportReader(BaseReportReader):
         if configuration is None:
             configuration = ConfigurationManager.read_config_file()
 
-        dbaccessor = DBIndexingAccessor(db_dir=configuration.db_dir)
+        dbaccessor = create_index_accessor(db_dir=configuration.db_dir)
         return ReportReader.get_report_by_indexreport(
             dbaccessor.read_index_report_for_adsh(adsh=adsh))
 
@@ -103,19 +102,14 @@ class ReportReader(BaseReportReader):
         self.report = report
         self.adsh_pattern = re.compile(f&#39;^{report.adsh}.*$&#39;, re.MULTILINE)
 
-    def _read_df_from_raw(self, file_type: str) -&gt; pd.DataFrame:
-        &#34;&#34;&#34;
-        reads the num.txt or pre.txt directly from the zip file into a df.
-        uses re to first filter only the rows that belong to the report
-        and only then actually create the df
-        &#34;&#34;&#34;
+    def _read_df_from_raw(self,
+                          file: str) -&gt; pd.DataFrame:
+        return self._read_df_from_raw_parquet(file)
 
-        content = read_content_from_file_in_zip(self.report.fullPath, file_type)
-
-        lines: List[str] = [re.search(ReportReader.FIRST_LINE_PATTERN, content).group()]
-        lines.extend(match_group_iter(self.adsh_pattern.finditer(content)))
-        data_str = &#34;\n&#34;.join(lines)
-        return pd.read_csv(StringIO(data_str), sep=&#34;\t&#34;, header=0)
+    def _read_df_from_raw_parquet(self,
+                                  file: str) -&gt; pd.DataFrame:
+        return pd.read_parquet(os.path.join(self.report.fullPath, f&#39;{file}.parquet&#39;),
+                               filters=[(&#39;adsh&#39;, &#39;==&#39;, self.report.adsh)])
 
     def submission_data(self) -&gt; Dict[str, Union[str, int]]:
         &#34;&#34;&#34;
@@ -212,7 +206,7 @@ class ReportReader(BaseReportReader):
 </dd>
 <dt id="secfsdstools.e_read.reportreading.ReportReader"><code class="flex name class">
 <span>class <span class="ident">ReportReader</span></span>
-<span>(</span><span>report: <a title="secfsdstools.d_index.indexdataaccess.IndexReport" href="../d_index/indexdataaccess.html#secfsdstools.d_index.indexdataaccess.IndexReport">IndexReport</a>)</span>
+<span>(</span><span>report: <a title="secfsdstools.c_index.indexdataaccess.IndexReport" href="../c_index/indexdataaccess.html#secfsdstools.c_index.indexdataaccess.IndexReport">IndexReport</a>)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>reading the data for a single report. also provides several convenient methods
@@ -245,7 +239,7 @@ to prepare and aggregate the raw data</p></div>
         if configuration is None:
             configuration = ConfigurationManager.read_config_file()
 
-        dbaccessor = DBIndexingAccessor(db_dir=configuration.db_dir)
+        dbaccessor = create_index_accessor(db_dir=configuration.db_dir)
         return ReportReader.get_report_by_indexreport(
             dbaccessor.read_index_report_for_adsh(adsh=adsh))
 
@@ -267,19 +261,14 @@ to prepare and aggregate the raw data</p></div>
         self.report = report
         self.adsh_pattern = re.compile(f&#39;^{report.adsh}.*$&#39;, re.MULTILINE)
 
-    def _read_df_from_raw(self, file_type: str) -&gt; pd.DataFrame:
-        &#34;&#34;&#34;
-        reads the num.txt or pre.txt directly from the zip file into a df.
-        uses re to first filter only the rows that belong to the report
-        and only then actually create the df
-        &#34;&#34;&#34;
+    def _read_df_from_raw(self,
+                          file: str) -&gt; pd.DataFrame:
+        return self._read_df_from_raw_parquet(file)
 
-        content = read_content_from_file_in_zip(self.report.fullPath, file_type)
-
-        lines: List[str] = [re.search(ReportReader.FIRST_LINE_PATTERN, content).group()]
-        lines.extend(match_group_iter(self.adsh_pattern.finditer(content)))
-        data_str = &#34;\n&#34;.join(lines)
-        return pd.read_csv(StringIO(data_str), sep=&#34;\t&#34;, header=0)
+    def _read_df_from_raw_parquet(self,
+                                  file: str) -&gt; pd.DataFrame:
+        return pd.read_parquet(os.path.join(self.report.fullPath, f&#39;{file}.parquet&#39;),
+                               filters=[(&#39;adsh&#39;, &#39;==&#39;, self.report.adsh)])
 
     def submission_data(self) -&gt; Dict[str, Union[str, int]]:
         &#34;&#34;&#34;
@@ -335,7 +324,7 @@ to prepare and aggregate the raw data</p></div>
 <h3>Static methods</h3>
 <dl>
 <dt id="secfsdstools.e_read.reportreading.ReportReader.get_report_by_adsh"><code class="name flex">
-<span>def <span class="ident">get_report_by_adsh</span></span>(<span>adsh: str, configuration: Optional[<a title="secfsdstools.a_config.configmgt.Configuration" href="../a_config/configmgt.html#secfsdstools.a_config.configmgt.Configuration">Configuration</a>] = None)</span>
+<span>def <span class="ident">get_report_by_adsh</span></span>(<span>adsh: str, configuration: Optional[<a title="secfsdstools.a_config.configmodel.Configuration" href="../a_config/configmodel.html#secfsdstools.a_config.configmodel.Configuration">Configuration</a>] = None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>creates the ReportReader instance for a certain adsh.
@@ -373,13 +362,13 @@ def get_report_by_adsh(cls, adsh: str, configuration: Optional[Configuration] = 
     if configuration is None:
         configuration = ConfigurationManager.read_config_file()
 
-    dbaccessor = DBIndexingAccessor(db_dir=configuration.db_dir)
+    dbaccessor = create_index_accessor(db_dir=configuration.db_dir)
     return ReportReader.get_report_by_indexreport(
         dbaccessor.read_index_report_for_adsh(adsh=adsh))</code></pre>
 </details>
 </dd>
 <dt id="secfsdstools.e_read.reportreading.ReportReader.get_report_by_indexreport"><code class="name flex">
-<span>def <span class="ident">get_report_by_indexreport</span></span>(<span>index_report: <a title="secfsdstools.d_index.indexdataaccess.IndexReport" href="../d_index/indexdataaccess.html#secfsdstools.d_index.indexdataaccess.IndexReport">IndexReport</a>)</span>
+<span>def <span class="ident">get_report_by_indexreport</span></span>(<span>index_report: <a title="secfsdstools.c_index.indexdataaccess.IndexReport" href="../c_index/indexdataaccess.html#secfsdstools.c_index.indexdataaccess.IndexReport">IndexReport</a>)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>crates the ReportReader instance based on the IndexReport instance</p>

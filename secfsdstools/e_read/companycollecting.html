@@ -32,8 +32,9 @@ Collects all data for a company.
 &#34;&#34;&#34;
 from typing import Optional, List
 
-from secfsdstools.a_config.configmgt import Configuration, ConfigurationManager
-from secfsdstools.d_index.indexdataaccess import DBIndexingAccessor, IndexReport
+from secfsdstools.a_config.configmgt import ConfigurationManager
+from secfsdstools.a_config.configmodel import Configuration
+from secfsdstools.c_index.indexdataaccess import IndexReport, create_index_accessor
 from secfsdstools.e_read.multireportreading import MultiReportReader
 
 
@@ -63,7 +64,8 @@ class CompanyReportCollector:
         if configuration is None:
             configuration = ConfigurationManager.read_config_file()
 
-        dbaccessor = DBIndexingAccessor(db_dir=configuration.db_dir)
+        dbaccessor = create_index_accessor(db_dir=configuration.db_dir)
+
         index_reports: List[IndexReport] = dbaccessor.read_index_reports_for_cik(cik, forms)
 
         return MultiReportReader(index_reports=index_reports)</code></pre>
@@ -115,7 +117,8 @@ For instance, it is a simple to read all 10-K reports.</p></div>
         if configuration is None:
             configuration = ConfigurationManager.read_config_file()
 
-        dbaccessor = DBIndexingAccessor(db_dir=configuration.db_dir)
+        dbaccessor = create_index_accessor(db_dir=configuration.db_dir)
+
         index_reports: List[IndexReport] = dbaccessor.read_index_reports_for_cik(cik, forms)
 
         return MultiReportReader(index_reports=index_reports)</code></pre>
@@ -123,7 +126,7 @@ For instance, it is a simple to read all 10-K reports.</p></div>
 <h3>Static methods</h3>
 <dl>
 <dt id="secfsdstools.e_read.companycollecting.CompanyReportCollector.get_company_collector"><code class="name flex">
-<span>def <span class="ident">get_company_collector</span></span>(<span>cik: int, forms: Optional[List[str]] = None, configuration: Optional[<a title="secfsdstools.a_config.configmgt.Configuration" href="../a_config/configmgt.html#secfsdstools.a_config.configmgt.Configuration">Configuration</a>] = None)</span>
+<span>def <span class="ident">get_company_collector</span></span>(<span>cik: int, forms: Optional[List[str]] = None, configuration: Optional[<a title="secfsdstools.a_config.configmodel.Configuration" href="../a_config/configmodel.html#secfsdstools.a_config.configmodel.Configuration">Configuration</a>] = None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>creates a MulitReportReader instance for the provided cik and forms (e.g. 10-K..)
@@ -167,7 +170,8 @@ def get_company_collector(cls, cik: int, forms: Optional[List[str]] = None,
     if configuration is None:
         configuration = ConfigurationManager.read_config_file()
 
-    dbaccessor = DBIndexingAccessor(db_dir=configuration.db_dir)
+    dbaccessor = create_index_accessor(db_dir=configuration.db_dir)
+
     index_reports: List[IndexReport] = dbaccessor.read_index_reports_for_cik(cik, forms)
 
     return MultiReportReader(index_reports=index_reports)</code></pre>

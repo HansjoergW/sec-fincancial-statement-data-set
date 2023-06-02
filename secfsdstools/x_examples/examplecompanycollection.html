@@ -32,7 +32,90 @@ Example for CompanyCollector
 &#34;&#34;&#34;
 from secfsdstools.e_read.companycollecting import CompanyReportCollector
 
+def run():
+    # pylint: disable=W0612
+    &#34;&#34;&#34;
+    run the example
+    &#34;&#34;&#34;
+
+    # The CompanyReportCollector enables the user to read multiple reports of the
+    # same company (cik number) from different zipfiles. This can be done by providing
+    # a cik number and the list of forms that should be read
+
+    # the following reader reads all available 10-K reports of apple
+    company_collector = CompanyReportCollector.get_company_collector(cik=320193, forms=[&#39;10-K&#39;])
+
+    # the interface is the same was with the standard reader
+
+    # this returns a list all reports that are read by the reader
+    raw_sub_df = company_collector.get_raw_sub_data()
+
+    # reading the raw content of the num and pre files
+    raw_pre_df = company_collector.get_raw_pre_data()
+    raw_num_df = company_collector.get_raw_num_data()
+
+    # it is the same interface as the other readers. So we return a filtered dataset
+    # only containing the data which are valid at the period-date of the report or
+    # the period-date of the report and the previous year
+
+    # merging the data from num and pre together and produce the primary financial statements
+    # The first dataframe set contains just the data that are valid for the year of the report
+    current_year_df = company_collector.financial_statements_for_period()
+
+    # The second dataframe contains the data that are for the current and the previous year
+    current_and_previous_year_df = \
+        company_collector.financial_statements_for_period_and_previous_period()
+
+    # Filter for BalanceSheets
+    bs_df = current_and_previous_year_df[
+        current_and_previous_year_df.stmt == &#39;BS&#39;]
+
+    # Filter for IncomeStatement
+    is_df = current_and_previous_year_df[
+        current_and_previous_year_df.stmt == &#39;IS&#39;]
+
+    # Filter for CashFlow
+    cf_df = current_and_previous_year_df[
+        current_and_previous_year_df.stmt == &#39;CF&#39;]
+
+    # the previous methods returned the data pivoted, meaning every all report &#34;period&#34;
+    # dates appear as columns for certain analysis, it might be preferred to receive keep
+    # the date as a value in the column. this can be done using just the merge method
+    current_year_unpivoted_df = company_collector.merge_pre_and_num(use_period=True)
+
+    # for instance, get just the Assets Tag for all years
+    assets_value_for_all_years_df = \
+        current_year_unpivoted_df[current_year_unpivoted_df.tag == &#39;Assets&#39;].sort_values([&#39;ddate&#39;])
+
+    # let&#39;s see, how the Value for Assets has increased over the years
+    print(assets_value_for_all_years_df.value.tolist())
+
 if __name__ == &#39;__main__&#39;:
+    run()</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-functions">Functions</h2>
+<dl>
+<dt id="secfsdstools.x_examples.examplecompanycollection.run"><code class="name flex">
+<span>def <span class="ident">run</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>run the example</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def run():
+    # pylint: disable=W0612
+    &#34;&#34;&#34;
+    run the example
+    &#34;&#34;&#34;
+
     # The CompanyReportCollector enables the user to read multiple reports of the
     # same company (cik number) from different zipfiles. This can be done by providing
     # a cik number and the list of forms that should be read
@@ -85,12 +168,8 @@ if __name__ == &#39;__main__&#39;:
     # let&#39;s see, how the Value for Assets has increased over the years
     print(assets_value_for_all_years_df.value.tolist())</code></pre>
 </details>
-</section>
-<section>
-</section>
-<section>
-</section>
-<section>
+</dd>
+</dl>
 </section>
 <section>
 </section>
@@ -104,6 +183,11 @@ if __name__ == &#39;__main__&#39;:
 <li><h3>Super-module</h3>
 <ul>
 <li><code><a title="secfsdstools.x_examples" href="index.html">secfsdstools.x_examples</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-functions">Functions</a></h3>
+<ul class="">
+<li><code><a title="secfsdstools.x_examples.examplecompanycollection.run" href="#secfsdstools.x_examples.examplecompanycollection.run">run</a></code></li>
 </ul>
 </li>
 </ul>

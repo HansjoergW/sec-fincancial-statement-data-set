@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.10.0" />
-<title>secfsdstools.e_read.searching API documentation</title>
-<meta name="description" content="company search logic." />
+<title>secfsdstools.a_config.configmodel API documentation</title>
+<meta name="description" content="Base Model for configuration." />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
 <link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
@@ -19,64 +19,46 @@
 <main>
 <article id="content">
 <header>
-<h1 class="title">Module <code>secfsdstools.e_read.searching</code></h1>
+<h1 class="title">Module <code>secfsdstools.a_config.configmodel</code></h1>
 </header>
 <section id="section-intro">
-<p>company search logic.</p>
+<p>Base Model for configuration.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">&#34;&#34;&#34;
-company search logic.
+Base Model for configuration.
 &#34;&#34;&#34;
+
+import os
+from dataclasses import dataclass, asdict
 from typing import Optional
 
-import pandas as pd
 
-from secfsdstools.a_config.configmgt import ConfigurationManager
-from secfsdstools.a_config.configmodel import Configuration
-from secfsdstools.c_index.indexdataaccess import DBIndexingAccessorBase, \
-    create_index_accessor
+@dataclass
+class Configuration:
+    &#34;&#34;&#34; Basic configuration settings &#34;&#34;&#34;
+    download_dir: str
+    db_dir: str
+    parquet_dir: str
+    user_agent_email: str
+    rapid_api_key: Optional[str] = None
+    rapid_api_plan: Optional[str] = &#39;basic&#39;
+    daily_download_dir: Optional[str] = None
+    auto_update: Optional[bool] = True
+    keep_zip_files: Optional[bool] = False
 
+    def __post_init__(self):
+        self.daily_download_dir = os.path.join(self.download_dir, &#34;daily&#34;)
 
-class IndexSearch:
-    &#34;&#34;&#34;Provides search methods on the index_report table.&#34;&#34;&#34;
-
-    def __init__(self, dbaccessor: DBIndexingAccessorBase):
-        self.dbaccessor = dbaccessor
-
-    @classmethod
-    def get_index_search(cls, configuration: Optional[Configuration] = None):
+    def get_dict(self):
         &#34;&#34;&#34;
-        Creates a IndexSearch instance.
-        If no  configuration object is passed, it reads the configuration from
-        the config file.
-        Args:
-            configuration (Configuration, optional, None): configuration object
-
+        returns the configuration as a dictionary
         Returns:
-            IndexSearch: instance of IndexSearch
+            the configuration as a dictionary
         &#34;&#34;&#34;
-        if configuration is None:
-            configuration = ConfigurationManager.read_config_file()
-
-        accessor: DBIndexingAccessorBase = create_index_accessor(
-            db_dir=configuration.db_dir)
-        return IndexSearch(accessor)
-
-    def find_company_by_name(self, name_part: str) -&gt; pd.DataFrame:
-        &#34;&#34;&#34;
-        Searches entries by the given name part. Upper/lower case is ignored.
-
-        Args:
-            name_part:
-
-        Returns:
-            pd.DataFrame: with columns &#39;cik&#39;, &#39;name&#39;
-        &#34;&#34;&#34;
-
-        return self.dbaccessor.find_company_by_name(name_part=name_part)</code></pre>
+        return dict(asdict(self))</code></pre>
 </details>
 </section>
 <section>
@@ -88,129 +70,98 @@ class IndexSearch:
 <section>
 <h2 class="section-title" id="header-classes">Classes</h2>
 <dl>
-<dt id="secfsdstools.e_read.searching.IndexSearch"><code class="flex name class">
-<span>class <span class="ident">IndexSearch</span></span>
-<span>(</span><span>dbaccessor: <a title="secfsdstools.c_index.indexdataaccess.DBIndexingAccessorBase" href="../c_index/indexdataaccess.html#secfsdstools.c_index.indexdataaccess.DBIndexingAccessorBase">DBIndexingAccessorBase</a>)</span>
+<dt id="secfsdstools.a_config.configmodel.Configuration"><code class="flex name class">
+<span>class <span class="ident">Configuration</span></span>
+<span>(</span><span>download_dir: str, db_dir: str, parquet_dir: str, user_agent_email: str, rapid_api_key: Optional[str] = None, rapid_api_plan: Optional[str] = 'basic', daily_download_dir: Optional[str] = None, auto_update: Optional[bool] = True, keep_zip_files: Optional[bool] = False)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Provides search methods on the index_report table.</p></div>
+<div class="desc"><p>Basic configuration settings</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class IndexSearch:
-    &#34;&#34;&#34;Provides search methods on the index_report table.&#34;&#34;&#34;
+<pre><code class="python">class Configuration:
+    &#34;&#34;&#34; Basic configuration settings &#34;&#34;&#34;
+    download_dir: str
+    db_dir: str
+    parquet_dir: str
+    user_agent_email: str
+    rapid_api_key: Optional[str] = None
+    rapid_api_plan: Optional[str] = &#39;basic&#39;
+    daily_download_dir: Optional[str] = None
+    auto_update: Optional[bool] = True
+    keep_zip_files: Optional[bool] = False
 
-    def __init__(self, dbaccessor: DBIndexingAccessorBase):
-        self.dbaccessor = dbaccessor
+    def __post_init__(self):
+        self.daily_download_dir = os.path.join(self.download_dir, &#34;daily&#34;)
 
-    @classmethod
-    def get_index_search(cls, configuration: Optional[Configuration] = None):
+    def get_dict(self):
         &#34;&#34;&#34;
-        Creates a IndexSearch instance.
-        If no  configuration object is passed, it reads the configuration from
-        the config file.
-        Args:
-            configuration (Configuration, optional, None): configuration object
-
+        returns the configuration as a dictionary
         Returns:
-            IndexSearch: instance of IndexSearch
+            the configuration as a dictionary
         &#34;&#34;&#34;
-        if configuration is None:
-            configuration = ConfigurationManager.read_config_file()
-
-        accessor: DBIndexingAccessorBase = create_index_accessor(
-            db_dir=configuration.db_dir)
-        return IndexSearch(accessor)
-
-    def find_company_by_name(self, name_part: str) -&gt; pd.DataFrame:
-        &#34;&#34;&#34;
-        Searches entries by the given name part. Upper/lower case is ignored.
-
-        Args:
-            name_part:
-
-        Returns:
-            pd.DataFrame: with columns &#39;cik&#39;, &#39;name&#39;
-        &#34;&#34;&#34;
-
-        return self.dbaccessor.find_company_by_name(name_part=name_part)</code></pre>
+        return dict(asdict(self))</code></pre>
 </details>
-<h3>Static methods</h3>
+<h3>Class variables</h3>
 <dl>
-<dt id="secfsdstools.e_read.searching.IndexSearch.get_index_search"><code class="name flex">
-<span>def <span class="ident">get_index_search</span></span>(<span>configuration: Optional[<a title="secfsdstools.a_config.configmodel.Configuration" href="../a_config/configmodel.html#secfsdstools.a_config.configmodel.Configuration">Configuration</a>] = None)</span>
-</code></dt>
+<dt id="secfsdstools.a_config.configmodel.Configuration.auto_update"><code class="name">var <span class="ident">auto_update</span> : Optional[bool]</code></dt>
 <dd>
-<div class="desc"><p>Creates a IndexSearch instance.
-If no
-configuration object is passed, it reads the configuration from
-the config file.</p>
-<h2 id="args">Args</h2>
-<dl>
-<dt><strong><code>configuration</code></strong> :&ensp;<code>Configuration</code>, optional<code>, None</code></dt>
-<dd>configuration object</dd>
-</dl>
-<h2 id="returns">Returns</h2>
-<dl>
-<dt><code><a title="secfsdstools.e_read.searching.IndexSearch" href="#secfsdstools.e_read.searching.IndexSearch">IndexSearch</a></code></dt>
-<dd>instance of IndexSearch</dd>
-</dl></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">@classmethod
-def get_index_search(cls, configuration: Optional[Configuration] = None):
-    &#34;&#34;&#34;
-    Creates a IndexSearch instance.
-    If no  configuration object is passed, it reads the configuration from
-    the config file.
-    Args:
-        configuration (Configuration, optional, None): configuration object
-
-    Returns:
-        IndexSearch: instance of IndexSearch
-    &#34;&#34;&#34;
-    if configuration is None:
-        configuration = ConfigurationManager.read_config_file()
-
-    accessor: DBIndexingAccessorBase = create_index_accessor(
-        db_dir=configuration.db_dir)
-    return IndexSearch(accessor)</code></pre>
-</details>
+<div class="desc"></div>
+</dd>
+<dt id="secfsdstools.a_config.configmodel.Configuration.daily_download_dir"><code class="name">var <span class="ident">daily_download_dir</span> : Optional[str]</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="secfsdstools.a_config.configmodel.Configuration.db_dir"><code class="name">var <span class="ident">db_dir</span> : str</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="secfsdstools.a_config.configmodel.Configuration.download_dir"><code class="name">var <span class="ident">download_dir</span> : str</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="secfsdstools.a_config.configmodel.Configuration.keep_zip_files"><code class="name">var <span class="ident">keep_zip_files</span> : Optional[bool]</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="secfsdstools.a_config.configmodel.Configuration.parquet_dir"><code class="name">var <span class="ident">parquet_dir</span> : str</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="secfsdstools.a_config.configmodel.Configuration.rapid_api_key"><code class="name">var <span class="ident">rapid_api_key</span> : Optional[str]</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="secfsdstools.a_config.configmodel.Configuration.rapid_api_plan"><code class="name">var <span class="ident">rapid_api_plan</span> : Optional[str]</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="secfsdstools.a_config.configmodel.Configuration.user_agent_email"><code class="name">var <span class="ident">user_agent_email</span> : str</code></dt>
+<dd>
+<div class="desc"></div>
 </dd>
 </dl>
 <h3>Methods</h3>
 <dl>
-<dt id="secfsdstools.e_read.searching.IndexSearch.find_company_by_name"><code class="name flex">
-<span>def <span class="ident">find_company_by_name</span></span>(<span>self, name_part: str) ‑> pandas.core.frame.DataFrame</span>
+<dt id="secfsdstools.a_config.configmodel.Configuration.get_dict"><code class="name flex">
+<span>def <span class="ident">get_dict</span></span>(<span>self)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Searches entries by the given name part. Upper/lower case is ignored.</p>
-<h2 id="args">Args</h2>
-<p>name_part:</p>
+<div class="desc"><p>returns the configuration as a dictionary</p>
 <h2 id="returns">Returns</h2>
-<dl>
-<dt><code>pd.DataFrame</code></dt>
-<dd>with columns 'cik', 'name'</dd>
-</dl></div>
+<p>the configuration as a dictionary</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def find_company_by_name(self, name_part: str) -&gt; pd.DataFrame:
+<pre><code class="python">def get_dict(self):
     &#34;&#34;&#34;
-    Searches entries by the given name part. Upper/lower case is ignored.
-
-    Args:
-        name_part:
-
+    returns the configuration as a dictionary
     Returns:
-        pd.DataFrame: with columns &#39;cik&#39;, &#39;name&#39;
+        the configuration as a dictionary
     &#34;&#34;&#34;
-
-    return self.dbaccessor.find_company_by_name(name_part=name_part)</code></pre>
+    return dict(asdict(self))</code></pre>
 </details>
 </dd>
 </dl>
@@ -226,16 +177,24 @@ def get_index_search(cls, configuration: Optional[Configuration] = None):
 <ul id="index">
 <li><h3>Super-module</h3>
 <ul>
-<li><code><a title="secfsdstools.e_read" href="index.html">secfsdstools.e_read</a></code></li>
+<li><code><a title="secfsdstools.a_config" href="index.html">secfsdstools.a_config</a></code></li>
 </ul>
 </li>
 <li><h3><a href="#header-classes">Classes</a></h3>
 <ul>
 <li>
-<h4><code><a title="secfsdstools.e_read.searching.IndexSearch" href="#secfsdstools.e_read.searching.IndexSearch">IndexSearch</a></code></h4>
-<ul class="">
-<li><code><a title="secfsdstools.e_read.searching.IndexSearch.find_company_by_name" href="#secfsdstools.e_read.searching.IndexSearch.find_company_by_name">find_company_by_name</a></code></li>
-<li><code><a title="secfsdstools.e_read.searching.IndexSearch.get_index_search" href="#secfsdstools.e_read.searching.IndexSearch.get_index_search">get_index_search</a></code></li>
+<h4><code><a title="secfsdstools.a_config.configmodel.Configuration" href="#secfsdstools.a_config.configmodel.Configuration">Configuration</a></code></h4>
+<ul class="two-column">
+<li><code><a title="secfsdstools.a_config.configmodel.Configuration.auto_update" href="#secfsdstools.a_config.configmodel.Configuration.auto_update">auto_update</a></code></li>
+<li><code><a title="secfsdstools.a_config.configmodel.Configuration.daily_download_dir" href="#secfsdstools.a_config.configmodel.Configuration.daily_download_dir">daily_download_dir</a></code></li>
+<li><code><a title="secfsdstools.a_config.configmodel.Configuration.db_dir" href="#secfsdstools.a_config.configmodel.Configuration.db_dir">db_dir</a></code></li>
+<li><code><a title="secfsdstools.a_config.configmodel.Configuration.download_dir" href="#secfsdstools.a_config.configmodel.Configuration.download_dir">download_dir</a></code></li>
+<li><code><a title="secfsdstools.a_config.configmodel.Configuration.get_dict" href="#secfsdstools.a_config.configmodel.Configuration.get_dict">get_dict</a></code></li>
+<li><code><a title="secfsdstools.a_config.configmodel.Configuration.keep_zip_files" href="#secfsdstools.a_config.configmodel.Configuration.keep_zip_files">keep_zip_files</a></code></li>
+<li><code><a title="secfsdstools.a_config.configmodel.Configuration.parquet_dir" href="#secfsdstools.a_config.configmodel.Configuration.parquet_dir">parquet_dir</a></code></li>
+<li><code><a title="secfsdstools.a_config.configmodel.Configuration.rapid_api_key" href="#secfsdstools.a_config.configmodel.Configuration.rapid_api_key">rapid_api_key</a></code></li>
+<li><code><a title="secfsdstools.a_config.configmodel.Configuration.rapid_api_plan" href="#secfsdstools.a_config.configmodel.Configuration.rapid_api_plan">rapid_api_plan</a></code></li>
+<li><code><a title="secfsdstools.a_config.configmodel.Configuration.user_agent_email" href="#secfsdstools.a_config.configmodel.Configuration.user_agent_email">user_agent_email</a></code></li>
 </ul>
 </li>
 </ul>

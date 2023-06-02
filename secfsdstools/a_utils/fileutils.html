@@ -51,9 +51,25 @@ def get_filenames_in_directory(filter_string: str) -&gt; List[str]:
     return [os.path.basename(x) for x in zip_list]
 
 
+def get_directories_in_directory(directory: str) -&gt; List[str]:
+    &#34;&#34;&#34;
+    returns a list with the subdirectory in a directory.
+
+    Returns:
+        List[str]: list subdirectories in the directory
+    &#34;&#34;&#34;
+    if not os.path.exists(directory):
+        return []
+
+    subdirectories: List[str] = [
+        entry.name for entry in os.scandir(directory) if entry.is_dir()
+    ]
+    return subdirectories
+
+
 def read_df_from_file_in_zip(zip_file: str, file_to_extract: str,
                              dtype: Optional[Dict[str, object]] = None,
-                             usecols: Optional[List[str]] = None) -&gt; pd.DataFrame:
+                             usecols: Optional[List[str]] = None, **kwargs) -&gt; pd.DataFrame:
     &#34;&#34;&#34;
     reads the content of a file inside a zip file directly into dataframe
 
@@ -69,7 +85,7 @@ def read_df_from_file_in_zip(zip_file: str, file_to_extract: str,
     with zipfile.ZipFile(zip_file, &#34;r&#34;) as zip_fp:
         file = Path(file_to_extract).name
         return pd.read_csv(zip_fp.open(file), header=0, delimiter=&#34;\t&#34;,
-                           dtype=dtype, usecols=usecols)
+                           dtype=dtype, usecols=usecols, **kwargs)
 
 
 def read_content_from_file_in_zip(zip_file: str, file_to_extract: str) -&gt; str:
@@ -99,7 +115,7 @@ def write_content_to_zip(content: str, filename: str) -&gt; str:
     Returns:
         str: path to the zipfile that was ritten
     &#34;&#34;&#34;
-    zip_filename = filename + &#34;.zip&#34;
+    zip_filename = f&#34;{filename}.zip&#34;
     with zipfile.ZipFile(zip_filename, mode=&#34;w&#34;, compression=zipfile.ZIP_DEFLATED) as zf_fp:
         file = Path(filename).name
         zf_fp.writestr(file, content)
@@ -115,7 +131,7 @@ def read_content_from_zip(filename: str) -&gt; str:
     Returns:
         str: the content of a zipfile
     &#34;&#34;&#34;
-    with zipfile.ZipFile(filename + &#34;.zip&#34;, mode=&#34;r&#34;) as zf_fp:
+    with zipfile.ZipFile(f&#34;{filename}.zip&#34;, mode=&#34;r&#34;) as zf_fp:
         file = Path(filename).name
         return zf_fp.read(file).decode(&#34;utf-8&#34;)</code></pre>
 </details>
@@ -127,6 +143,36 @@ def read_content_from_zip(filename: str) -&gt; str:
 <section>
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
+<dt id="secfsdstools.a_utils.fileutils.get_directories_in_directory"><code class="name flex">
+<span>def <span class="ident">get_directories_in_directory</span></span>(<span>directory: str) ‑> List[str]</span>
+</code></dt>
+<dd>
+<div class="desc"><p>returns a list with the subdirectory in a directory.</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>List[str]</code></dt>
+<dd>list subdirectories in the directory</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_directories_in_directory(directory: str) -&gt; List[str]:
+    &#34;&#34;&#34;
+    returns a list with the subdirectory in a directory.
+
+    Returns:
+        List[str]: list subdirectories in the directory
+    &#34;&#34;&#34;
+    if not os.path.exists(directory):
+        return []
+
+    subdirectories: List[str] = [
+        entry.name for entry in os.scandir(directory) if entry.is_dir()
+    ]
+    return subdirectories</code></pre>
+</details>
+</dd>
 <dt id="secfsdstools.a_utils.fileutils.get_filenames_in_directory"><code class="name flex">
 <span>def <span class="ident">get_filenames_in_directory</span></span>(<span>filter_string: str) ‑> List[str]</span>
 </code></dt>
@@ -219,13 +265,13 @@ the filter can also contain a folder structure.</p>
     Returns:
         str: the content of a zipfile
     &#34;&#34;&#34;
-    with zipfile.ZipFile(filename + &#34;.zip&#34;, mode=&#34;r&#34;) as zf_fp:
+    with zipfile.ZipFile(f&#34;{filename}.zip&#34;, mode=&#34;r&#34;) as zf_fp:
         file = Path(filename).name
         return zf_fp.read(file).decode(&#34;utf-8&#34;)</code></pre>
 </details>
 </dd>
 <dt id="secfsdstools.a_utils.fileutils.read_df_from_file_in_zip"><code class="name flex">
-<span>def <span class="ident">read_df_from_file_in_zip</span></span>(<span>zip_file: str, file_to_extract: str, dtype: Optional[Dict[str, object]] = None, usecols: Optional[List[str]] = None) ‑> pandas.core.frame.DataFrame</span>
+<span>def <span class="ident">read_df_from_file_in_zip</span></span>(<span>zip_file: str, file_to_extract: str, dtype: Optional[Dict[str, object]] = None, usecols: Optional[List[str]] = None, **kwargs) ‑> pandas.core.frame.DataFrame</span>
 </code></dt>
 <dd>
 <div class="desc"><p>reads the content of a file inside a zip file directly into dataframe</p>
@@ -252,7 +298,7 @@ the filter can also contain a folder structure.</p>
 </summary>
 <pre><code class="python">def read_df_from_file_in_zip(zip_file: str, file_to_extract: str,
                              dtype: Optional[Dict[str, object]] = None,
-                             usecols: Optional[List[str]] = None) -&gt; pd.DataFrame:
+                             usecols: Optional[List[str]] = None, **kwargs) -&gt; pd.DataFrame:
     &#34;&#34;&#34;
     reads the content of a file inside a zip file directly into dataframe
 
@@ -268,7 +314,7 @@ the filter can also contain a folder structure.</p>
     with zipfile.ZipFile(zip_file, &#34;r&#34;) as zip_fp:
         file = Path(file_to_extract).name
         return pd.read_csv(zip_fp.open(file), header=0, delimiter=&#34;\t&#34;,
-                           dtype=dtype, usecols=usecols)</code></pre>
+                           dtype=dtype, usecols=usecols, **kwargs)</code></pre>
 </details>
 </dd>
 <dt id="secfsdstools.a_utils.fileutils.write_content_to_zip"><code class="name flex">
@@ -303,7 +349,7 @@ the filter can also contain a folder structure.</p>
     Returns:
         str: path to the zipfile that was ritten
     &#34;&#34;&#34;
-    zip_filename = filename + &#34;.zip&#34;
+    zip_filename = f&#34;{filename}.zip&#34;
     with zipfile.ZipFile(zip_filename, mode=&#34;w&#34;, compression=zipfile.ZIP_DEFLATED) as zf_fp:
         file = Path(filename).name
         zf_fp.writestr(file, content)
@@ -328,6 +374,7 @@ the filter can also contain a folder structure.</p>
 </li>
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
+<li><code><a title="secfsdstools.a_utils.fileutils.get_directories_in_directory" href="#secfsdstools.a_utils.fileutils.get_directories_in_directory">get_directories_in_directory</a></code></li>
 <li><code><a title="secfsdstools.a_utils.fileutils.get_filenames_in_directory" href="#secfsdstools.a_utils.fileutils.get_filenames_in_directory">get_filenames_in_directory</a></code></li>
 <li><code><a title="secfsdstools.a_utils.fileutils.read_content_from_file_in_zip" href="#secfsdstools.a_utils.fileutils.read_content_from_file_in_zip">read_content_from_file_in_zip</a></code></li>
 <li><code><a title="secfsdstools.a_utils.fileutils.read_content_from_zip" href="#secfsdstools.a_utils.fileutils.read_content_from_zip">read_content_from_zip</a></code></li>

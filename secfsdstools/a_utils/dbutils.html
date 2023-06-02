@@ -36,7 +36,7 @@ import os
 import sqlite3
 from abc import ABC
 from dataclasses import Field
-from typing import List, TypeVar, Tuple
+from typing import List, TypeVar, Tuple, Optional
 
 import pandas as pd
 
@@ -54,6 +54,29 @@ class DB(ABC):
     def __init__(self, db_dir=&#34;db/&#34;):
         self.db_dir = db_dir
         self.database = os.path.join(self.db_dir, &#39;secfsdstools.db&#39;)
+
+    def db_file_exists(self) -&gt; bool:
+        &#34;&#34;&#34;
+        Checks if the configured db files is actually present.
+
+        Returns:
+            bool: returns True, if the dbfile was found
+        &#34;&#34;&#34;
+        return os.path.exists(self.database)
+
+    def table_exists(self, table_name: str) -&gt; bool:
+        &#34;&#34;&#34;
+        Checks whether a table exists.
+
+        Returns:
+            bool: True if the  table is present
+        &#34;&#34;&#34;
+        if not self.db_file_exists():
+            return False
+
+        # using the sqlite_master table to check whether the table exists
+        sql = f&#34;SELECT name FROM sqlite_master WHERE type=&#39;table&#39; AND name=&#39;{table_name}&#39;&#34;
+        return len(self.execute_fetchall(sql)) &gt; 0
 
     def get_connection(self) -&gt; sqlite3.Connection:
         &#34;&#34;&#34;
@@ -76,35 +99,6 @@ class DB(ABC):
         try:
             LOGGER.debug(&#34;execute %s&#34;, sql)
             return pd.read_sql_query(sql, conn)
-        finally:
-            conn.close()
-
-    def execute_single(self, sql: str):
-        &#34;&#34;&#34;
-        executes a single sql statement without any parameters.
-        Args:
-             sql (str): sql string, not paramterized
-        &#34;&#34;&#34;
-        conn = self.get_connection()
-        try:
-            LOGGER.debug(&#34;execute %s&#34;, sql)
-            conn.execute(sql)
-            conn.commit()
-        finally:
-            conn.close()
-
-    def execute_many(self, sql: str, params: List[Tuple]):
-        &#34;&#34;&#34;
-        executes a parameterized statement for every tuple in the params list
-        Args:
-             sql (str): parameterized statement
-             params (List[Tuple]): list with tuples containing the parameters
-        &#34;&#34;&#34;
-        conn = self.get_connection()
-        try:
-            LOGGER.debug(&#34;execute %s&#34;, sql)
-            conn.executemany(sql, params)
-            conn.commit()
         finally:
             conn.close()
 
@@ -146,7 +140,29 @@ class DB(ABC):
         finally:
             conn.close()
 
-    def append_df_to_table(self, table_name: str, dataframe: pd.DataFrame):
+    def execute_single(self, sql: str, conn: sqlite3.Connection):
+        &#34;&#34;&#34;
+        executes a single sql statement without any parameters.
+        Args:
+             sql (str): sql string, not paramterized
+             conn (sqlite3.Connection): connection to use
+        &#34;&#34;&#34;
+        LOGGER.debug(&#34;execute %s&#34;, sql)
+        conn.execute(sql)
+
+    def execute_many(self, sql: str, params: List[Tuple], conn: sqlite3.Connection):
+        &#34;&#34;&#34;
+        executes a parameterized statement for every tuple in the params list
+        Args:
+             sql (str): parameterized statement
+             params (List[Tuple]): list with tuples containing the parameters
+             conn (sqlite3.Connection): connection to use
+        &#34;&#34;&#34;
+        LOGGER.debug(&#34;execute %s&#34;, sql)
+        conn.executemany(sql, params)
+
+    def append_df_to_table(self, table_name: str, dataframe: pd.DataFrame,
+                           conn: sqlite3.Connection):
         &#34;&#34;&#34;
         add the content of a df to the table. The name of the columns in df
         and table have to match
@@ -154,12 +170,9 @@ class DB(ABC):
         Args:
              table_name (str): name of the table to append the data
              dataframe (pd.DataFrame):  the df with the data
+             conn (sqlite3.Connection): connection to use
         &#34;&#34;&#34;
-        conn = self.get_connection()
-        try:
-            dataframe.to_sql(table_name, conn, if_exists=&#34;append&#34;, index=False)
-        finally:
-            conn.close()
+        dataframe.to_sql(table_name, conn, if_exists=&#34;append&#34;, index=False)
 
     def create_insert_statement_for_dataclass(self, table_name: str, data) -&gt; str:
         &#34;&#34;&#34;
@@ -191,7 +204,56 @@ class DB(ABC):
 
         column_str = &#39;, &#39;.join(column_list)
         value_str = &#39;, &#39;.join(value_list)
-        return f&#34;INSERT INTO {table_name} ({column_str}) VALUES ({value_str})&#34;</code></pre>
+        return f&#34;INSERT INTO {table_name} ({column_str}) VALUES ({value_str})&#34;
+
+
+class DBStateAcessor(DB):
+    &#34;&#34;&#34;
+    Helper class to write and read values into the status table
+    &#34;&#34;&#34;
+    STATUS_TABLE_NAME = &#39;status&#39;
+    KEY_COL_NAME = &#39;keyName&#39;
+    VALUE_COL_NAME = &#39;value&#39;
+
+    def set_key(self, key: str, value: str):
+        &#34;&#34;&#34;
+        Sets the provided key to the provided value.
+        Args:
+            key: key as string
+            value: value as string
+        &#34;&#34;&#34;
+
+        sql = f&#34;&#34;&#34;INSERT INTO {DBStateAcessor.STATUS_TABLE_NAME}
+                                      ({DBStateAcessor.KEY_COL_NAME}, {DBStateAcessor.VALUE_COL_NAME})
+                         VALUES (&#39;{key}&#39;, &#39;{value}&#39;) &#34;&#34;&#34;
+
+        # python 3.7 uses sqlite 3.21, which does not support the upsert functionality
+        # with ON CONFLICT DO UPDATE SET
+        # so we first have to check if the key exists and use update instead of insert
+        if self.get_key(key):
+            # update
+            sql = f&#34;&#34;&#34;UPDATE {DBStateAcessor.STATUS_TABLE_NAME}
+                        SET {DBStateAcessor.VALUE_COL_NAME} = &#39;{value}&#39;
+                        WHERE {DBStateAcessor.KEY_COL_NAME} = &#39;{key}&#39;&#34;&#34;&#34;
+
+        with self.get_connection() as conn:
+            self.execute_single(sql, conn)
+
+    def get_key(self, key: str) -&gt; Optional[str]:
+        &#34;&#34;&#34;
+        Reads the value of key from the status table or returns None if the key is not present
+        Args:
+            key: key to read
+
+        Returns:
+            str: the stored value or None
+        &#34;&#34;&#34;
+        sql = f&#34;&#34;&#34;SELECT {DBStateAcessor.VALUE_COL_NAME}
+                   FROM  {DBStateAcessor.STATUS_TABLE_NAME}
+                   WHERE {DBStateAcessor.KEY_COL_NAME} = &#39;{key}&#39;&#34;&#34;&#34;
+        result = self.execute_fetchall(sql)
+
+        return None if len(result) == 0 else result[0][0]</code></pre>
 </details>
 </section>
 <section>
@@ -222,6 +284,29 @@ class DB(ABC):
         self.db_dir = db_dir
         self.database = os.path.join(self.db_dir, &#39;secfsdstools.db&#39;)
 
+    def db_file_exists(self) -&gt; bool:
+        &#34;&#34;&#34;
+        Checks if the configured db files is actually present.
+
+        Returns:
+            bool: returns True, if the dbfile was found
+        &#34;&#34;&#34;
+        return os.path.exists(self.database)
+
+    def table_exists(self, table_name: str) -&gt; bool:
+        &#34;&#34;&#34;
+        Checks whether a table exists.
+
+        Returns:
+            bool: True if the  table is present
+        &#34;&#34;&#34;
+        if not self.db_file_exists():
+            return False
+
+        # using the sqlite_master table to check whether the table exists
+        sql = f&#34;SELECT name FROM sqlite_master WHERE type=&#39;table&#39; AND name=&#39;{table_name}&#39;&#34;
+        return len(self.execute_fetchall(sql)) &gt; 0
+
     def get_connection(self) -&gt; sqlite3.Connection:
         &#34;&#34;&#34;
         creates a connection to the db.
@@ -243,35 +328,6 @@ class DB(ABC):
         try:
             LOGGER.debug(&#34;execute %s&#34;, sql)
             return pd.read_sql_query(sql, conn)
-        finally:
-            conn.close()
-
-    def execute_single(self, sql: str):
-        &#34;&#34;&#34;
-        executes a single sql statement without any parameters.
-        Args:
-             sql (str): sql string, not paramterized
-        &#34;&#34;&#34;
-        conn = self.get_connection()
-        try:
-            LOGGER.debug(&#34;execute %s&#34;, sql)
-            conn.execute(sql)
-            conn.commit()
-        finally:
-            conn.close()
-
-    def execute_many(self, sql: str, params: List[Tuple]):
-        &#34;&#34;&#34;
-        executes a parameterized statement for every tuple in the params list
-        Args:
-             sql (str): parameterized statement
-             params (List[Tuple]): list with tuples containing the parameters
-        &#34;&#34;&#34;
-        conn = self.get_connection()
-        try:
-            LOGGER.debug(&#34;execute %s&#34;, sql)
-            conn.executemany(sql, params)
-            conn.commit()
         finally:
             conn.close()
 
@@ -313,7 +369,29 @@ class DB(ABC):
         finally:
             conn.close()
 
-    def append_df_to_table(self, table_name: str, dataframe: pd.DataFrame):
+    def execute_single(self, sql: str, conn: sqlite3.Connection):
+        &#34;&#34;&#34;
+        executes a single sql statement without any parameters.
+        Args:
+             sql (str): sql string, not paramterized
+             conn (sqlite3.Connection): connection to use
+        &#34;&#34;&#34;
+        LOGGER.debug(&#34;execute %s&#34;, sql)
+        conn.execute(sql)
+
+    def execute_many(self, sql: str, params: List[Tuple], conn: sqlite3.Connection):
+        &#34;&#34;&#34;
+        executes a parameterized statement for every tuple in the params list
+        Args:
+             sql (str): parameterized statement
+             params (List[Tuple]): list with tuples containing the parameters
+             conn (sqlite3.Connection): connection to use
+        &#34;&#34;&#34;
+        LOGGER.debug(&#34;execute %s&#34;, sql)
+        conn.executemany(sql, params)
+
+    def append_df_to_table(self, table_name: str, dataframe: pd.DataFrame,
+                           conn: sqlite3.Connection):
         &#34;&#34;&#34;
         add the content of a df to the table. The name of the columns in df
         and table have to match
@@ -321,12 +399,9 @@ class DB(ABC):
         Args:
              table_name (str): name of the table to append the data
              dataframe (pd.DataFrame):  the df with the data
+             conn (sqlite3.Connection): connection to use
         &#34;&#34;&#34;
-        conn = self.get_connection()
-        try:
-            dataframe.to_sql(table_name, conn, if_exists=&#34;append&#34;, index=False)
-        finally:
-            conn.close()
+        dataframe.to_sql(table_name, conn, if_exists=&#34;append&#34;, index=False)
 
     def create_insert_statement_for_dataclass(self, table_name: str, data) -&gt; str:
         &#34;&#34;&#34;
@@ -366,13 +441,14 @@ class DB(ABC):
 </ul>
 <h3>Subclasses</h3>
 <ul class="hlist">
+<li><a title="secfsdstools.a_utils.dbutils.DBStateAcessor" href="#secfsdstools.a_utils.dbutils.DBStateAcessor">DBStateAcessor</a></li>
 <li><a title="secfsdstools.b_setup.setupdb.DbCreator" href="../b_setup/setupdb.html#secfsdstools.b_setup.setupdb.DbCreator">DbCreator</a></li>
-<li><a title="secfsdstools.d_index.indexdataaccess.DBIndexingAccessor" href="../d_index/indexdataaccess.html#secfsdstools.d_index.indexdataaccess.DBIndexingAccessor">DBIndexingAccessor</a></li>
+<li><a title="secfsdstools.c_index.indexdataaccess.DBIndexingAccessorBase" href="../c_index/indexdataaccess.html#secfsdstools.c_index.indexdataaccess.DBIndexingAccessorBase">DBIndexingAccessorBase</a></li>
 </ul>
 <h3>Methods</h3>
 <dl>
 <dt id="secfsdstools.a_utils.dbutils.DB.append_df_to_table"><code class="name flex">
-<span>def <span class="ident">append_df_to_table</span></span>(<span>self, table_name: str, dataframe: pandas.core.frame.DataFrame)</span>
+<span>def <span class="ident">append_df_to_table</span></span>(<span>self, table_name: str, dataframe: pandas.core.frame.DataFrame, conn: sqlite3.Connection)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>add the content of a df to the table. The name of the columns in df
@@ -383,12 +459,15 @@ and table have to match</p>
 <dd>name of the table to append the data</dd>
 <dt><strong><code>dataframe</code></strong> :&ensp;<code>pd.DataFrame</code></dt>
 <dd>the df with the data</dd>
+<dt><strong><code>conn</code></strong> :&ensp;<code>sqlite3.Connection</code></dt>
+<dd>connection to use</dd>
 </dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def append_df_to_table(self, table_name: str, dataframe: pd.DataFrame):
+<pre><code class="python">def append_df_to_table(self, table_name: str, dataframe: pd.DataFrame,
+                       conn: sqlite3.Connection):
     &#34;&#34;&#34;
     add the content of a df to the table. The name of the columns in df
     and table have to match
@@ -396,12 +475,9 @@ and table have to match</p>
     Args:
          table_name (str): name of the table to append the data
          dataframe (pd.DataFrame):  the df with the data
+         conn (sqlite3.Connection): connection to use
     &#34;&#34;&#34;
-    conn = self.get_connection()
-    try:
-        dataframe.to_sql(table_name, conn, if_exists=&#34;append&#34;, index=False)
-    finally:
-        conn.close()</code></pre>
+    dataframe.to_sql(table_name, conn, if_exists=&#34;append&#34;, index=False)</code></pre>
 </details>
 </dd>
 <dt id="secfsdstools.a_utils.dbutils.DB.create_insert_statement_for_dataclass"><code class="name flex">
@@ -456,6 +532,30 @@ and table have to match</p>
     column_str = &#39;, &#39;.join(column_list)
     value_str = &#39;, &#39;.join(value_list)
     return f&#34;INSERT INTO {table_name} ({column_str}) VALUES ({value_str})&#34;</code></pre>
+</details>
+</dd>
+<dt id="secfsdstools.a_utils.dbutils.DB.db_file_exists"><code class="name flex">
+<span>def <span class="ident">db_file_exists</span></span>(<span>self) ‑> bool</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Checks if the configured db files is actually present.</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>bool</code></dt>
+<dd>returns True, if the dbfile was found</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def db_file_exists(self) -&gt; bool:
+    &#34;&#34;&#34;
+    Checks if the configured db files is actually present.
+
+    Returns:
+        bool: returns True, if the dbfile was found
+    &#34;&#34;&#34;
+    return os.path.exists(self.database)</code></pre>
 </details>
 </dd>
 <dt id="secfsdstools.a_utils.dbutils.DB.execute_fetchall"><code class="name flex">
@@ -542,7 +642,7 @@ name in the dataclass of type T.</p>
 </details>
 </dd>
 <dt id="secfsdstools.a_utils.dbutils.DB.execute_many"><code class="name flex">
-<span>def <span class="ident">execute_many</span></span>(<span>self, sql: str, params: List[Tuple[]])</span>
+<span>def <span class="ident">execute_many</span></span>(<span>self, sql: str, params: List[Tuple[]], conn: sqlite3.Connection)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>executes a parameterized statement for every tuple in the params list</p>
@@ -552,25 +652,23 @@ name in the dataclass of type T.</p>
 <dd>parameterized statement</dd>
 <dt><strong><code>params</code></strong> :&ensp;<code>List[Tuple]</code></dt>
 <dd>list with tuples containing the parameters</dd>
+<dt><strong><code>conn</code></strong> :&ensp;<code>sqlite3.Connection</code></dt>
+<dd>connection to use</dd>
 </dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def execute_many(self, sql: str, params: List[Tuple]):
+<pre><code class="python">def execute_many(self, sql: str, params: List[Tuple], conn: sqlite3.Connection):
     &#34;&#34;&#34;
     executes a parameterized statement for every tuple in the params list
     Args:
          sql (str): parameterized statement
          params (List[Tuple]): list with tuples containing the parameters
+         conn (sqlite3.Connection): connection to use
     &#34;&#34;&#34;
-    conn = self.get_connection()
-    try:
-        LOGGER.debug(&#34;execute %s&#34;, sql)
-        conn.executemany(sql, params)
-        conn.commit()
-    finally:
-        conn.close()</code></pre>
+    LOGGER.debug(&#34;execute %s&#34;, sql)
+    conn.executemany(sql, params)</code></pre>
 </details>
 </dd>
 <dt id="secfsdstools.a_utils.dbutils.DB.execute_read_as_df"><code class="name flex">
@@ -609,7 +707,7 @@ name in the dataclass of type T.</p>
 </details>
 </dd>
 <dt id="secfsdstools.a_utils.dbutils.DB.execute_single"><code class="name flex">
-<span>def <span class="ident">execute_single</span></span>(<span>self, sql: str)</span>
+<span>def <span class="ident">execute_single</span></span>(<span>self, sql: str, conn: sqlite3.Connection)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>executes a single sql statement without any parameters.</p>
@@ -617,24 +715,22 @@ name in the dataclass of type T.</p>
 <dl>
 <dt><strong><code>sql</code></strong> :&ensp;<code>str</code></dt>
 <dd>sql string, not paramterized</dd>
+<dt><strong><code>conn</code></strong> :&ensp;<code>sqlite3.Connection</code></dt>
+<dd>connection to use</dd>
 </dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def execute_single(self, sql: str):
+<pre><code class="python">def execute_single(self, sql: str, conn: sqlite3.Connection):
     &#34;&#34;&#34;
     executes a single sql statement without any parameters.
     Args:
          sql (str): sql string, not paramterized
+         conn (sqlite3.Connection): connection to use
     &#34;&#34;&#34;
-    conn = self.get_connection()
-    try:
-        LOGGER.debug(&#34;execute %s&#34;, sql)
-        conn.execute(sql)
-        conn.commit()
-    finally:
-        conn.close()</code></pre>
+    LOGGER.debug(&#34;execute %s&#34;, sql)
+    conn.execute(sql)</code></pre>
 </details>
 </dd>
 <dt id="secfsdstools.a_utils.dbutils.DB.get_connection"><code class="name flex">
@@ -661,7 +757,213 @@ name in the dataclass of type T.</p>
     return sqlite3.connect(self.database)</code></pre>
 </details>
 </dd>
+<dt id="secfsdstools.a_utils.dbutils.DB.table_exists"><code class="name flex">
+<span>def <span class="ident">table_exists</span></span>(<span>self, table_name: str) ‑> bool</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Checks whether a table exists.</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>bool</code></dt>
+<dd>True if the
+table is present</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def table_exists(self, table_name: str) -&gt; bool:
+    &#34;&#34;&#34;
+    Checks whether a table exists.
+
+    Returns:
+        bool: True if the  table is present
+    &#34;&#34;&#34;
+    if not self.db_file_exists():
+        return False
+
+    # using the sqlite_master table to check whether the table exists
+    sql = f&#34;SELECT name FROM sqlite_master WHERE type=&#39;table&#39; AND name=&#39;{table_name}&#39;&#34;
+    return len(self.execute_fetchall(sql)) &gt; 0</code></pre>
+</details>
+</dd>
 </dl>
+</dd>
+<dt id="secfsdstools.a_utils.dbutils.DBStateAcessor"><code class="flex name class">
+<span>class <span class="ident">DBStateAcessor</span></span>
+<span>(</span><span>db_dir='db/')</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Helper class to write and read values into the status table</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class DBStateAcessor(DB):
+    &#34;&#34;&#34;
+    Helper class to write and read values into the status table
+    &#34;&#34;&#34;
+    STATUS_TABLE_NAME = &#39;status&#39;
+    KEY_COL_NAME = &#39;keyName&#39;
+    VALUE_COL_NAME = &#39;value&#39;
+
+    def set_key(self, key: str, value: str):
+        &#34;&#34;&#34;
+        Sets the provided key to the provided value.
+        Args:
+            key: key as string
+            value: value as string
+        &#34;&#34;&#34;
+
+        sql = f&#34;&#34;&#34;INSERT INTO {DBStateAcessor.STATUS_TABLE_NAME}
+                                      ({DBStateAcessor.KEY_COL_NAME}, {DBStateAcessor.VALUE_COL_NAME})
+                         VALUES (&#39;{key}&#39;, &#39;{value}&#39;) &#34;&#34;&#34;
+
+        # python 3.7 uses sqlite 3.21, which does not support the upsert functionality
+        # with ON CONFLICT DO UPDATE SET
+        # so we first have to check if the key exists and use update instead of insert
+        if self.get_key(key):
+            # update
+            sql = f&#34;&#34;&#34;UPDATE {DBStateAcessor.STATUS_TABLE_NAME}
+                        SET {DBStateAcessor.VALUE_COL_NAME} = &#39;{value}&#39;
+                        WHERE {DBStateAcessor.KEY_COL_NAME} = &#39;{key}&#39;&#34;&#34;&#34;
+
+        with self.get_connection() as conn:
+            self.execute_single(sql, conn)
+
+    def get_key(self, key: str) -&gt; Optional[str]:
+        &#34;&#34;&#34;
+        Reads the value of key from the status table or returns None if the key is not present
+        Args:
+            key: key to read
+
+        Returns:
+            str: the stored value or None
+        &#34;&#34;&#34;
+        sql = f&#34;&#34;&#34;SELECT {DBStateAcessor.VALUE_COL_NAME}
+                   FROM  {DBStateAcessor.STATUS_TABLE_NAME}
+                   WHERE {DBStateAcessor.KEY_COL_NAME} = &#39;{key}&#39;&#34;&#34;&#34;
+        result = self.execute_fetchall(sql)
+
+        return None if len(result) == 0 else result[0][0]</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="secfsdstools.a_utils.dbutils.DB" href="#secfsdstools.a_utils.dbutils.DB">DB</a></li>
+<li>abc.ABC</li>
+</ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="secfsdstools.a_utils.dbutils.DBStateAcessor.KEY_COL_NAME"><code class="name">var <span class="ident">KEY_COL_NAME</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="secfsdstools.a_utils.dbutils.DBStateAcessor.STATUS_TABLE_NAME"><code class="name">var <span class="ident">STATUS_TABLE_NAME</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="secfsdstools.a_utils.dbutils.DBStateAcessor.VALUE_COL_NAME"><code class="name">var <span class="ident">VALUE_COL_NAME</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="secfsdstools.a_utils.dbutils.DBStateAcessor.get_key"><code class="name flex">
+<span>def <span class="ident">get_key</span></span>(<span>self, key: str) ‑> Optional[str]</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Reads the value of key from the status table or returns None if the key is not present</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>key</code></strong></dt>
+<dd>key to read</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>str</code></dt>
+<dd>the stored value or None</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_key(self, key: str) -&gt; Optional[str]:
+    &#34;&#34;&#34;
+    Reads the value of key from the status table or returns None if the key is not present
+    Args:
+        key: key to read
+
+    Returns:
+        str: the stored value or None
+    &#34;&#34;&#34;
+    sql = f&#34;&#34;&#34;SELECT {DBStateAcessor.VALUE_COL_NAME}
+               FROM  {DBStateAcessor.STATUS_TABLE_NAME}
+               WHERE {DBStateAcessor.KEY_COL_NAME} = &#39;{key}&#39;&#34;&#34;&#34;
+    result = self.execute_fetchall(sql)
+
+    return None if len(result) == 0 else result[0][0]</code></pre>
+</details>
+</dd>
+<dt id="secfsdstools.a_utils.dbutils.DBStateAcessor.set_key"><code class="name flex">
+<span>def <span class="ident">set_key</span></span>(<span>self, key: str, value: str)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Sets the provided key to the provided value.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>key</code></strong></dt>
+<dd>key as string</dd>
+<dt><strong><code>value</code></strong></dt>
+<dd>value as string</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def set_key(self, key: str, value: str):
+    &#34;&#34;&#34;
+    Sets the provided key to the provided value.
+    Args:
+        key: key as string
+        value: value as string
+    &#34;&#34;&#34;
+
+    sql = f&#34;&#34;&#34;INSERT INTO {DBStateAcessor.STATUS_TABLE_NAME}
+                                  ({DBStateAcessor.KEY_COL_NAME}, {DBStateAcessor.VALUE_COL_NAME})
+                     VALUES (&#39;{key}&#39;, &#39;{value}&#39;) &#34;&#34;&#34;
+
+    # python 3.7 uses sqlite 3.21, which does not support the upsert functionality
+    # with ON CONFLICT DO UPDATE SET
+    # so we first have to check if the key exists and use update instead of insert
+    if self.get_key(key):
+        # update
+        sql = f&#34;&#34;&#34;UPDATE {DBStateAcessor.STATUS_TABLE_NAME}
+                    SET {DBStateAcessor.VALUE_COL_NAME} = &#39;{value}&#39;
+                    WHERE {DBStateAcessor.KEY_COL_NAME} = &#39;{key}&#39;&#34;&#34;&#34;
+
+    with self.get_connection() as conn:
+        self.execute_single(sql, conn)</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="secfsdstools.a_utils.dbutils.DB" href="#secfsdstools.a_utils.dbutils.DB">DB</a></b></code>:
+<ul class="hlist">
+<li><code><a title="secfsdstools.a_utils.dbutils.DB.append_df_to_table" href="#secfsdstools.a_utils.dbutils.DB.append_df_to_table">append_df_to_table</a></code></li>
+<li><code><a title="secfsdstools.a_utils.dbutils.DB.create_insert_statement_for_dataclass" href="#secfsdstools.a_utils.dbutils.DB.create_insert_statement_for_dataclass">create_insert_statement_for_dataclass</a></code></li>
+<li><code><a title="secfsdstools.a_utils.dbutils.DB.db_file_exists" href="#secfsdstools.a_utils.dbutils.DB.db_file_exists">db_file_exists</a></code></li>
+<li><code><a title="secfsdstools.a_utils.dbutils.DB.execute_fetchall" href="#secfsdstools.a_utils.dbutils.DB.execute_fetchall">execute_fetchall</a></code></li>
+<li><code><a title="secfsdstools.a_utils.dbutils.DB.execute_fetchall_typed" href="#secfsdstools.a_utils.dbutils.DB.execute_fetchall_typed">execute_fetchall_typed</a></code></li>
+<li><code><a title="secfsdstools.a_utils.dbutils.DB.execute_many" href="#secfsdstools.a_utils.dbutils.DB.execute_many">execute_many</a></code></li>
+<li><code><a title="secfsdstools.a_utils.dbutils.DB.execute_read_as_df" href="#secfsdstools.a_utils.dbutils.DB.execute_read_as_df">execute_read_as_df</a></code></li>
+<li><code><a title="secfsdstools.a_utils.dbutils.DB.execute_single" href="#secfsdstools.a_utils.dbutils.DB.execute_single">execute_single</a></code></li>
+<li><code><a title="secfsdstools.a_utils.dbutils.DB.get_connection" href="#secfsdstools.a_utils.dbutils.DB.get_connection">get_connection</a></code></li>
+<li><code><a title="secfsdstools.a_utils.dbutils.DB.table_exists" href="#secfsdstools.a_utils.dbutils.DB.table_exists">table_exists</a></code></li>
+</ul>
+</li>
+</ul>
 </dd>
 </dl>
 </section>
@@ -684,12 +986,24 @@ name in the dataclass of type T.</p>
 <ul class="">
 <li><code><a title="secfsdstools.a_utils.dbutils.DB.append_df_to_table" href="#secfsdstools.a_utils.dbutils.DB.append_df_to_table">append_df_to_table</a></code></li>
 <li><code><a title="secfsdstools.a_utils.dbutils.DB.create_insert_statement_for_dataclass" href="#secfsdstools.a_utils.dbutils.DB.create_insert_statement_for_dataclass">create_insert_statement_for_dataclass</a></code></li>
+<li><code><a title="secfsdstools.a_utils.dbutils.DB.db_file_exists" href="#secfsdstools.a_utils.dbutils.DB.db_file_exists">db_file_exists</a></code></li>
 <li><code><a title="secfsdstools.a_utils.dbutils.DB.execute_fetchall" href="#secfsdstools.a_utils.dbutils.DB.execute_fetchall">execute_fetchall</a></code></li>
 <li><code><a title="secfsdstools.a_utils.dbutils.DB.execute_fetchall_typed" href="#secfsdstools.a_utils.dbutils.DB.execute_fetchall_typed">execute_fetchall_typed</a></code></li>
 <li><code><a title="secfsdstools.a_utils.dbutils.DB.execute_many" href="#secfsdstools.a_utils.dbutils.DB.execute_many">execute_many</a></code></li>
 <li><code><a title="secfsdstools.a_utils.dbutils.DB.execute_read_as_df" href="#secfsdstools.a_utils.dbutils.DB.execute_read_as_df">execute_read_as_df</a></code></li>
 <li><code><a title="secfsdstools.a_utils.dbutils.DB.execute_single" href="#secfsdstools.a_utils.dbutils.DB.execute_single">execute_single</a></code></li>
 <li><code><a title="secfsdstools.a_utils.dbutils.DB.get_connection" href="#secfsdstools.a_utils.dbutils.DB.get_connection">get_connection</a></code></li>
+<li><code><a title="secfsdstools.a_utils.dbutils.DB.table_exists" href="#secfsdstools.a_utils.dbutils.DB.table_exists">table_exists</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="secfsdstools.a_utils.dbutils.DBStateAcessor" href="#secfsdstools.a_utils.dbutils.DBStateAcessor">DBStateAcessor</a></code></h4>
+<ul class="">
+<li><code><a title="secfsdstools.a_utils.dbutils.DBStateAcessor.KEY_COL_NAME" href="#secfsdstools.a_utils.dbutils.DBStateAcessor.KEY_COL_NAME">KEY_COL_NAME</a></code></li>
+<li><code><a title="secfsdstools.a_utils.dbutils.DBStateAcessor.STATUS_TABLE_NAME" href="#secfsdstools.a_utils.dbutils.DBStateAcessor.STATUS_TABLE_NAME">STATUS_TABLE_NAME</a></code></li>
+<li><code><a title="secfsdstools.a_utils.dbutils.DBStateAcessor.VALUE_COL_NAME" href="#secfsdstools.a_utils.dbutils.DBStateAcessor.VALUE_COL_NAME">VALUE_COL_NAME</a></code></li>
+<li><code><a title="secfsdstools.a_utils.dbutils.DBStateAcessor.get_key" href="#secfsdstools.a_utils.dbutils.DBStateAcessor.get_key">get_key</a></code></li>
+<li><code><a title="secfsdstools.a_utils.dbutils.DBStateAcessor.set_key" href="#secfsdstools.a_utils.dbutils.DBStateAcessor.set_key">set_key</a></code></li>
 </ul>
 </li>
 </ul>

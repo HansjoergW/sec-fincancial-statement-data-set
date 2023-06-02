@@ -46,7 +46,7 @@ LOGGER = logging.getLogger(__name__)
 
 class DbCreator(DB):
     &#34;&#34;&#34;
-    responsible to  create the databse.
+    responsible to  create the database.
     &#34;&#34;&#34;
 
     def __init__(self, db_dir: str):
@@ -57,18 +57,16 @@ class DbCreator(DB):
         reads the ddl files from the ddl directory and creates the tables
         &#34;&#34;&#34;
 
-        sqlfiles = list(glob.glob(DDL_PATH + &#34;/*.sql&#34;))
+        sqlfiles = list(glob.glob(f&#34;{DDL_PATH}/*.sql&#34;))
 
         indexes_dict: Dict[int, str] = {}
         for sqlfile in sqlfiles:
             LOGGER.debug(&#34;extract version from sql file %s ... &#34;, sqlfile)
-            index = int(sqlfile[sqlfile.rfind(os.path.sep + &#39;V&#39;) + 2:sqlfile.find(&#39;__&#39;)])
+            index = int(sqlfile[sqlfile.rfind(f&#39;{os.path.sep}V&#39;) + 2:sqlfile.find(&#39;__&#39;)])
             LOGGER.debug(&#34; ... extracted version: %d&#34;, index)
             indexes_dict[index] = sqlfile
 
-        indexes = list(indexes_dict.keys())
-        indexes.sort()
-
+        indexes = sorted(indexes_dict.keys())
         if not os.path.isdir(self.db_dir):
             LOGGER.info(&#34;creating folder for db: %s&#34;, self.db_dir)
             os.makedirs(self.db_dir)
@@ -100,14 +98,14 @@ class DbCreator(DB):
 </code></dt>
 <dd>
 <div class="desc"><p>responsible to
-create the databse.</p></div>
+create the database.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class DbCreator(DB):
     &#34;&#34;&#34;
-    responsible to  create the databse.
+    responsible to  create the database.
     &#34;&#34;&#34;
 
     def __init__(self, db_dir: str):
@@ -118,18 +116,16 @@ create the databse.</p></div>
         reads the ddl files from the ddl directory and creates the tables
         &#34;&#34;&#34;
 
-        sqlfiles = list(glob.glob(DDL_PATH + &#34;/*.sql&#34;))
+        sqlfiles = list(glob.glob(f&#34;{DDL_PATH}/*.sql&#34;))
 
         indexes_dict: Dict[int, str] = {}
         for sqlfile in sqlfiles:
             LOGGER.debug(&#34;extract version from sql file %s ... &#34;, sqlfile)
-            index = int(sqlfile[sqlfile.rfind(os.path.sep + &#39;V&#39;) + 2:sqlfile.find(&#39;__&#39;)])
+            index = int(sqlfile[sqlfile.rfind(f&#39;{os.path.sep}V&#39;) + 2:sqlfile.find(&#39;__&#39;)])
             LOGGER.debug(&#34; ... extracted version: %d&#34;, index)
             indexes_dict[index] = sqlfile
 
-        indexes = list(indexes_dict.keys())
-        indexes.sort()
-
+        indexes = sorted(indexes_dict.keys())
         if not os.path.isdir(self.db_dir):
             LOGGER.info(&#34;creating folder for db: %s&#34;, self.db_dir)
             os.makedirs(self.db_dir)
@@ -166,18 +162,16 @@ create the databse.</p></div>
     reads the ddl files from the ddl directory and creates the tables
     &#34;&#34;&#34;
 
-    sqlfiles = list(glob.glob(DDL_PATH + &#34;/*.sql&#34;))
+    sqlfiles = list(glob.glob(f&#34;{DDL_PATH}/*.sql&#34;))
 
     indexes_dict: Dict[int, str] = {}
     for sqlfile in sqlfiles:
         LOGGER.debug(&#34;extract version from sql file %s ... &#34;, sqlfile)
-        index = int(sqlfile[sqlfile.rfind(os.path.sep + &#39;V&#39;) + 2:sqlfile.find(&#39;__&#39;)])
+        index = int(sqlfile[sqlfile.rfind(f&#39;{os.path.sep}V&#39;) + 2:sqlfile.find(&#39;__&#39;)])
         LOGGER.debug(&#34; ... extracted version: %d&#34;, index)
         indexes_dict[index] = sqlfile
 
-    indexes = list(indexes_dict.keys())
-    indexes.sort()
-
+    indexes = sorted(indexes_dict.keys())
     if not os.path.isdir(self.db_dir):
         LOGGER.info(&#34;creating folder for db: %s&#34;, self.db_dir)
         os.makedirs(self.db_dir)
@@ -201,12 +195,14 @@ create the databse.</p></div>
 <ul class="hlist">
 <li><code><a title="secfsdstools.a_utils.dbutils.DB.append_df_to_table" href="../a_utils/dbutils.html#secfsdstools.a_utils.dbutils.DB.append_df_to_table">append_df_to_table</a></code></li>
 <li><code><a title="secfsdstools.a_utils.dbutils.DB.create_insert_statement_for_dataclass" href="../a_utils/dbutils.html#secfsdstools.a_utils.dbutils.DB.create_insert_statement_for_dataclass">create_insert_statement_for_dataclass</a></code></li>
+<li><code><a title="secfsdstools.a_utils.dbutils.DB.db_file_exists" href="../a_utils/dbutils.html#secfsdstools.a_utils.dbutils.DB.db_file_exists">db_file_exists</a></code></li>
 <li><code><a title="secfsdstools.a_utils.dbutils.DB.execute_fetchall" href="../a_utils/dbutils.html#secfsdstools.a_utils.dbutils.DB.execute_fetchall">execute_fetchall</a></code></li>
 <li><code><a title="secfsdstools.a_utils.dbutils.DB.execute_fetchall_typed" href="../a_utils/dbutils.html#secfsdstools.a_utils.dbutils.DB.execute_fetchall_typed">execute_fetchall_typed</a></code></li>
 <li><code><a title="secfsdstools.a_utils.dbutils.DB.execute_many" href="../a_utils/dbutils.html#secfsdstools.a_utils.dbutils.DB.execute_many">execute_many</a></code></li>
 <li><code><a title="secfsdstools.a_utils.dbutils.DB.execute_read_as_df" href="../a_utils/dbutils.html#secfsdstools.a_utils.dbutils.DB.execute_read_as_df">execute_read_as_df</a></code></li>
 <li><code><a title="secfsdstools.a_utils.dbutils.DB.execute_single" href="../a_utils/dbutils.html#secfsdstools.a_utils.dbutils.DB.execute_single">execute_single</a></code></li>
 <li><code><a title="secfsdstools.a_utils.dbutils.DB.get_connection" href="../a_utils/dbutils.html#secfsdstools.a_utils.dbutils.DB.get_connection">get_connection</a></code></li>
+<li><code><a title="secfsdstools.a_utils.dbutils.DB.table_exists" href="../a_utils/dbutils.html#secfsdstools.a_utils.dbutils.DB.table_exists">table_exists</a></code></li>
 </ul>
 </li>
 </ul>

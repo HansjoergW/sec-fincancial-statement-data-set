@@ -10,17 +10,6 @@ import pandas as pd
 from secfsdstools.a_utils.constants import NUM_TXT, PRE_TXT, SUB_TXT
 
 
-def match_group_iter(match_iter):
-    """
-    returns an iterator that returns the group() of the matching iterator
-    Args:
-        match_iter: a re match iterator
-
-    Returns:
-        group content iterator
-    """
-    for match in match_iter:
-        yield match.group()
 
 
 class BaseReportReader(ABC):

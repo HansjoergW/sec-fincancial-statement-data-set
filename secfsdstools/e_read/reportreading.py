@@ -32,7 +32,6 @@ class ReportReader(BaseReportReader):
     reading the data for a single report. also provides several convenient methods
     to prepare and aggregate the raw data
     """
-    FIRST_LINE_PATTERN = re.compile("^.*$", re.MULTILINE)
 
     @classmethod
     def get_report_by_adsh(cls, adsh: str, configuration: Optional[Configuration] = None):
@@ -71,7 +70,6 @@ class ReportReader(BaseReportReader):
     def __init__(self, report: IndexReport):
         super().__init__()
         self.report = report
-        self.adsh_pattern = re.compile(f'^{report.adsh}.*$', re.MULTILINE)
 
     def _read_df_from_raw(self,
                           file: str) -> pd.DataFrame:

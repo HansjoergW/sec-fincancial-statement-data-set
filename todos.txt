@@ -15,15 +15,6 @@ v.0.6.0
 - save method -> store and read as zip reader
 
 
-v.0.5.0
-- renamed d_index to c_index, so that all download, transform, index logic is in the same "layer"
-- using parquet as storage format
-- initial update/download option when package is used the first time
-- auto_update: if true check once a day if there are new zipfiles
-- remove zip depending on flag / logic
-
-
-
 
 next
 - update des config files

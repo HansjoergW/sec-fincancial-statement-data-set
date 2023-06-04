@@ -7,9 +7,8 @@ from typing import List, Optional, Dict
 
 import pandas as pd
 
+from secfsdstools.a_utils.basic import calculate_previous_period
 from secfsdstools.a_utils.constants import NUM_TXT, PRE_TXT, SUB_TXT
-
-
 
 
 class BaseReportReader(ABC):
@@ -24,21 +23,6 @@ class BaseReportReader(ABC):
         self.adsh_form_map: Optional[Dict[str, int]] = None
         self.adsh_period_map: Optional[Dict[str, int]] = None
         self.adsh_previous_map: Optional[Dict[str, int]] = {}
-
-    @staticmethod
-    def _calculate_previous_period(period: int) -> int:
-        previous_value = period - 10_000
-        period_year, period_monthday = divmod(period, 10_000)
-
-        # is the period date on a 29th of Feb, then the previous period has to end on a 28th Feb
-        if period % 10_000 == 229:
-            previous_value = previous_value - 1
-
-        # was the previous year a leap year and is the period for end of february
-        if (((period_year - 1) % 4) == 0) & (period_monthday == 228):
-            previous_value = previous_value + 1
-
-        return previous_value
 
     def _read_raw_data(self):
         """
@@ -59,7 +43,7 @@ class BaseReportReader(ABC):
                 self.sub_df[['adsh', 'period']].set_index('adsh').to_dict()['period']
 
             # caculate the date for the previous year
-            self.adsh_previous_map = {adsh: BaseReportReader._calculate_previous_period(period)
+            self.adsh_previous_map = {adsh: calculate_previous_period(period)
                                       for adsh, period in self.adsh_period_map.items()}
 
     def get_raw_num_data(self) -> pd.DataFrame:
@@ -144,7 +128,7 @@ class BaseReportReader(ABC):
         # merge num and pre together. only rows in num are considered for which entries in pre exist
         return pd.merge(num_df_filtered_for_dates,
                         pre_filtered_for_tags,
-                        on=['adsh', 'tag', 'version']) # don't produce index_x and index_y columns
+                        on=['adsh', 'tag', 'version'])  # don't produce index_x and index_y columns
 
     def financial_statements_for_tags(self,
                                       use_period: bool = True,

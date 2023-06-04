@@ -1,41 +1,26 @@
+"""
+Defines the container that keeps the data of sub.txt, num.txt, and  pre.txt together.
+"""
+
+import os
 from typing import Dict, Optional, List
 
 import pandas as pd
 
+from secfsdstools.a_utils.basic import calculate_previous_period
+from secfsdstools.a_utils.constants import SUB_TXT, PRE_TXT, NUM_TXT
+
 
 class DataBag:
+    """
+    Container class to keep the data for sub.txt, pre.txt, and num.txt together.
+    """
 
     @classmethod
     def create(cls, sub_df: pd.DataFrame, pre_df: pd.DataFrame, num_df: pd.DataFrame):
         bag = DataBag(sub_df=sub_df, pre_df=pre_df, num_df=num_df)
         bag._init_internal_structures()
         return bag
-
-    @staticmethod
-    def _calculate_previous_period(period: int) -> int:
-        # the date of period is provided as an int int the format yyyymmdd
-        # so to calculate the end of the previous period (the period a year ago)
-        # only 10000 has to be subtracted, e.g. 20230101 -> 20230101 - 10000 = 20220101
-        previous_value = period - 10_000
-
-        # however, if the current period or the previous period was a leap year and
-        # the current period is end of February, we have to adjust
-
-        # so get the year and the month_and_day value from the period
-        period_year, period_monthday = divmod(period, 10_000)
-
-        # is the period date on a 29th of Feb, then the previous period has to end on a 28th Feb
-        # therefore, adjust the previous_value
-        if period_monthday == 229:
-            previous_value = previous_value - 1
-
-        # was the previous year a leap year and is the current period for end of february
-        # then the previous period ends on the 29th of Feb
-        # therefore, adjust the previous value
-        if (((period_year - 1) % 4) == 0) & (period_monthday == 228):
-            previous_value = previous_value + 1
-
-        return previous_value
 
     def __init__(self, sub_df: pd.DataFrame, pre_df: pd.DataFrame, num_df: pd.DataFrame):
         self.sub_df = sub_df
@@ -55,7 +40,6 @@ class DataBag:
         self.adsh_previous_period_map: Optional[Dict[str, int]] = None
 
     def _init_internal_structures(self):
-
         self.adsh_form_map = \
             self.sub_df[['adsh', 'form']].set_index('adsh').to_dict()['form']
 
@@ -63,13 +47,14 @@ class DataBag:
             self.sub_df[['adsh', 'period']].set_index('adsh').to_dict()['period']
 
         # caculate the date for the previous year
-        self.adsh_previous_period_map = {adsh: DataBag._calculate_previous_period(period)
+        self.adsh_previous_period_map = {adsh: calculate_previous_period(period)
                                          for adsh, period in self.adsh_period_map.items()}
 
 
-def merge(bags: List[DataBag]) -> DataBag:
+def concat(bags: List[DataBag]) -> DataBag:
     """
     Merges multiple Bags together into one bag.
+    Note: merge does not check if DataBags with the same reports are merged together.
 
     Args:
         bags: List of bags to be merged
@@ -78,30 +63,53 @@ def merge(bags: List[DataBag]) -> DataBag:
         DataBag: a Bag with the merged content
 
     """
-    return None
+    # todo: maybe it might make sense to check if the same report is not in different bags
+    sub_dfs = [db.sub_df for db in bags]
+    pre_dfs = [db.pre_df for db in bags]
+    num_dfs = [db.num_df for db in bags]
+
+    # todo: might be more efficient if the contained maps were just combined
+    #       instead of being recalculated
+    return DataBag.create(sub_df=pd.concat(sub_dfs),
+                          pre_df=pd.concat(pre_dfs),
+                          num_df=pd.concat(num_dfs))
 
 
-def save(databag: DataBag, path: str):
+def save(databag: DataBag, target_path: str):
     """
     Stores the bag under the given directory.
+    The directory has to exist and must be empty.
 
     Args:
         databag: the bag to be saved
-        path: the directory under which three parquet files for sub_txt, pre_text, and num_txt
-              will be created
+        target_path: the directory under which three parquet files for sub_txt, pre_text,
+              and num_txt will be created
 
     """
-    pass
+    if not os.path.isdir(target_path):
+        raise ValueError(f"the path {target_path} does not exist")
+
+    if len(os.listdir(target_path)) > 0:
+        raise ValueError(f"the target_path {target_path} is not empty")
+
+    databag.sub_df.to_parquet(os.path.join(target_path, f'{SUB_TXT}.parquet'))
+    databag.pre_df.to_parquet(os.path.join(target_path, f'{PRE_TXT}.parquet'))
+    databag.num_df.to_parquet(os.path.join(target_path, f'{NUM_TXT}.parquet'))
 
 
-def load(path: str) -> DataBag:
+def load(target_path: str) -> DataBag:
     """
     Loads the content of the current bag at the specified location.
 
     Args:
-        path: the directory which contains the three parquet files for sub_txt, pre_txt, and num_txt
+        target_path: the directory which contains the three parquet files for sub_txt, pre_txt,
+         and num_txt
 
     Returns:
         DataBag: the loaded Databag
     """
-    return None
+    sub_df = pd.read_parquet(os.path.join(target_path, f'{SUB_TXT}.parquet'))
+    pre_df = pd.read_parquet(os.path.join(target_path, f'{PRE_TXT}.parquet'))
+    num_df = pd.read_parquet(os.path.join(target_path, f'{NUM_TXT}.parquet'))
+
+    return DataBag.create(sub_df=sub_df, pre_df=pre_df, num_df=num_df)

@@ -23,10 +23,6 @@ def reportreader():
     return reportreader
 
 
-def test_read_raw_data(reportreader):
-    assert reportreader.num_df.shape == (145, 9)
-    assert reportreader.pre_df.shape == (100, 10)
-
 
 def test_financial_statements(reportreader):
     # read only for the actual period

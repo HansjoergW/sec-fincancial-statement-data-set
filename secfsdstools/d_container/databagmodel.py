@@ -50,6 +50,33 @@ class DataBag:
         self.adsh_previous_period_map = {adsh: calculate_previous_period(period)
                                          for adsh, period in self.adsh_period_map.items()}
 
+    def get_sub_copy(self) -> pd.DataFrame:
+        """
+        Returns a copy of the sub.txt dataframe.
+
+        Returns:
+            pd.DataFrame: copy of the sub.txt dataframe.
+        """
+        return self.sub_df.copy()
+
+    def get_pre_copy(self) -> pd.DataFrame:
+        """
+        Returns a copy of the pre.txt dataframe.
+
+        Returns:
+            pd.DataFrame: copy of the pre.txt dataframe.
+        """
+        return self.pre_df.copy()
+
+    def get_num_copy(self) -> pd.DataFrame:
+        """
+        Returns a copy of the num.txt dataframe.
+
+        Returns:
+            pd.DataFrame: copy of the num.txt dataframe.
+        """
+        return self.num_df.copy()
+
 
 def concat(bags: List[DataBag]) -> DataBag:
     """

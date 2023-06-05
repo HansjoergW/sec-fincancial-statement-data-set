@@ -9,6 +9,15 @@ New Release
 - merge back into main
 
 
+v.1.0.0
+- DataBag
+- collectors producing DataBags
+- searching moved from e_read to c_index
+
+
+
+
+
 v.0.6.0
 - MergeReader -> merges the content of several reader together
   -> or Merge class method, or method

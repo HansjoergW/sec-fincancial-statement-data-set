@@ -13,7 +13,7 @@ from secfsdstools.c_index.indexdataaccess import DBIndexingAccessorBase, IndexRe
 from secfsdstools.e_read.basereportreading import SUB_TXT
 
 
-class CompanyReader:
+class CompanyIndexReader:
     """
     reads information for a single company
     """
@@ -29,12 +29,12 @@ class CompanyReader:
             configuration (Configuration, optional, None): Optional configuration object
 
         Returns:
-            CompanyReader: instance of Company Reader
+            CompanyIndexReader: instance of Company Reader
         """
         if configuration is None:
             configuration = ConfigurationManager.read_config_file()
         dbaccessor = create_index_accessor(db_dir=configuration.db_dir)
-        return CompanyReader(cik, dbaccessor=dbaccessor)
+        return CompanyIndexReader(cik, dbaccessor=dbaccessor)
 
     def __init__(self, cik: int, dbaccessor: DBIndexingAccessorBase):
         self.cik = cik

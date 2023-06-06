@@ -13,15 +13,10 @@ v.1.0.0
 - DataBag
 - collectors producing DataBags
 - searching moved from e_read to c_index
+- companyreading moved from e_read to c_index as companyindexreading / CompanyIndexReader
 
 
 
-
-
-v.0.6.0
-- MergeReader -> merges the content of several reader together
-  -> or Merge class method, or method
-- save method -> store and read as zip reader
 
 
 

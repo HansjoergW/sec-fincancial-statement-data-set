@@ -1,17 +1,18 @@
 """
-reading the data of a whole zip file.
+loads all the data from one single zip file, resp. the folder with the three parquet files to
+which the zip file was transformed to.
 """
 import os
 from dataclasses import dataclass
-from typing import Dict, Optional
+from typing import Optional, Dict
 
 import pandas as pd
 
 from secfsdstools.a_config.configmgt import ConfigurationManager
 from secfsdstools.a_config.configmodel import Configuration
-from secfsdstools.a_utils.fileutils import read_df_from_file_in_zip
+from secfsdstools.a_utils.constants import NUM_TXT, PRE_TXT, SUB_TXT
 from secfsdstools.c_index.indexdataaccess import create_index_accessor
-from secfsdstools.e_read.basereportreading import BaseReportReader
+from secfsdstools.d_container.databagmodel import DataBag
 
 
 @dataclass
@@ -26,9 +27,10 @@ class ZipFileStats:
     reports_per_period_date: Dict[int, int]
 
 
-class ZipReportReader(BaseReportReader):
+class ZipCollector:
     """
-    ZipReport Reader, reads the data of a whole zip file
+    Reads all the data from a single zip file, resp. the folder containing the data in the
+    parquet format to which the zip file was transformed into.
     """
 
     @classmethod
@@ -45,25 +47,31 @@ class ZipReportReader(BaseReportReader):
         dbaccessor = create_index_accessor(db_dir=configuration.db_dir)
 
         datapath = dbaccessor.read_index_file_for_filename(filename=name).fullPath
-        return ZipReportReader(datapath=datapath)
+        return ZipCollector(datapath=datapath)
 
     def __init__(self, datapath: str):
         super().__init__()
         self.datapath = datapath
-
-    def _read_df_from_raw(self,
-                          file: str) -> pd.DataFrame:
-        if os.path.isdir(self.datapath):
-            return self._read_df_from_raw_parquet(file)
-        return self._read_df_from_raw_zip(file)
-
-    def _read_df_from_raw_zip(self, file: str) -> pd.DataFrame:
-        return read_df_from_file_in_zip(zip_file=self.datapath,
-                                        file_to_extract=file)
+        self.databag: Optional[DataBag] = None
 
     def _read_df_from_raw_parquet(self,
                                   file: str) -> pd.DataFrame:
         return pd.read_parquet(os.path.join(self.datapath, f'{file}.parquet'))
+
+    def collect(self) -> DataBag:
+        """
+        collects the data and returns a Databag
+
+        Returns:
+            DataBag: the collected Data
+        """
+        if self.databag is None:
+            num_df = self._read_df_from_raw_parquet(file=NUM_TXT)
+            pre_df = self._read_df_from_raw_parquet(file=PRE_TXT)
+            sub_df = self._read_df_from_raw_parquet(file=SUB_TXT)
+
+            self.databag = DataBag.create(sub_df=sub_df, pre_df=pre_df, num_df=num_df)
+        return self.databag
 
     def statistics(self) -> ZipFileStats:
         """
@@ -78,12 +86,12 @@ class ZipReportReader(BaseReportReader):
             ZipFileStats: instance with basic report infos
         """
 
-        self._read_raw_data()  # lazy load the data if necessary
-        num_entries = len(self.num_df)
-        pre_entries = len(self.pre_df)
-        number_of_reports = len(self.sub_df)
-        reports_per_period_date: Dict[int, int] = self.sub_df.period.value_counts().to_dict()
-        reports_per_form: Dict[str, int] = self.sub_df.form.value_counts().to_dict()
+        databag = self.collect()
+        num_entries = len(databag.num_df)
+        pre_entries = len(databag.pre_df)
+        number_of_reports = len(databag.sub_df)
+        reports_per_period_date: Dict[int, int] = databag.sub_df.period.value_counts().to_dict()
+        reports_per_form: Dict[str, int] = databag.sub_df.form.value_counts().to_dict()
 
         return ZipFileStats(num_entries=num_entries,
                             pre_entries=pre_entries,

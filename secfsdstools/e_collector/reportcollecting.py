@@ -1,7 +1,7 @@
 """ contains collector, that reads a single report """
 import os
 from dataclasses import dataclass
-from typing import Optional, Dict, List
+from typing import Optional, Dict, List, Union
 
 import numpy as np
 import pandas as pd
@@ -83,12 +83,23 @@ class SingleReportCollector:
             DataBag: the collected Data
 
         """
-        num_df = self._read_df_from_raw_parquet(file=NUM_TXT)
-        pre_df = self._read_df_from_raw_parquet(file=PRE_TXT)
-        sub_df = self._read_df_from_raw_parquet(file=SUB_TXT)
+        if self.databag is None:
+            num_df = self._read_df_from_raw_parquet(file=NUM_TXT)
+            pre_df = self._read_df_from_raw_parquet(file=PRE_TXT)
+            sub_df = self._read_df_from_raw_parquet(file=SUB_TXT)
 
-        self.databag = DataBag.create(sub_df=sub_df, pre_df=pre_df, num_df=num_df)
+            self.databag = DataBag.create(sub_df=sub_df, pre_df=pre_df, num_df=num_df)
         return self.databag
+
+    def submission_data(self) -> Dict[str, Union[str, int]]:
+        """
+        returns the data from the submission txt file as dictionary
+
+        Returns:
+            Dict[str, Union[str, int]]: data from submission txt file as dictionary
+        """
+        databag = self.collect()
+        return databag.sub_df.loc[0].to_dict()
 
     def statistics(self) -> BasicReportStats:
         """
@@ -102,16 +113,15 @@ class SingleReportCollector:
         Rreturns:
             BasicReportsStats: instance with basic report infos
         """
-        if self.databag is None:
-            raise AttributeError('The collect() method has to be called first')
+        databag = self.collect()
 
-        num_entries = len(self.databag.num_df)
-        pre_entries = len(self.databag.pre_df)
-        facts_per_date: Dict[int, int] = self.databag.num_df.ddate.value_counts().to_dict()
-        list_of_statements: List[str] = self.databag.pre_df.stmt.unique().tolist()
+        num_entries = len(databag.num_df)
+        pre_entries = len(databag.pre_df)
+        facts_per_date: Dict[int, int] = databag.num_df.ddate.value_counts().to_dict()
+        list_of_statements: List[str] = databag.pre_df.stmt.unique().tolist()
 
         tags_per_statement_raw: Dict[str, np.array] = \
-            self.databag.pre_df[['stmt', 'tag']].groupby('stmt')['tag'].unique().to_dict()
+            databag.pre_df[['stmt', 'tag']].groupby('stmt')['tag'].unique().to_dict()
         tags_per_statement: Dict[str, List[str]] = \
             {k: v.tolist() for k, v in tags_per_statement_raw.items()}
 

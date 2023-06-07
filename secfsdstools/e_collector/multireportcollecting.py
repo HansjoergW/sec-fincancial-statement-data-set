@@ -4,14 +4,12 @@ Reads several reports from different files parallel
 from dataclasses import dataclass
 from typing import Dict, Optional, List
 
-import pandas as pd
-
 from secfsdstools.a_config.configmgt import ConfigurationManager
 from secfsdstools.a_config.configmodel import Configuration
 from secfsdstools.a_utils.parallelexecution import ParallelExecutor
 from secfsdstools.c_index.indexdataaccess import IndexReport, create_index_accessor
-from secfsdstools.e_read.basereportreading import BaseReportReader, SUB_TXT, PRE_TXT, NUM_TXT
-from secfsdstools.e_read.reportreading import ReportReader
+from secfsdstools.d_container.databagmodel import DataBag, concat
+from secfsdstools.e_collector.reportcollecting import SingleReportCollector
 
 
 @dataclass
@@ -26,18 +24,17 @@ class MultiReportStats:
     reports_per_period_date: Dict[int, int]
 
 
-class MultiReportReader(BaseReportReader):
+@dataclass
+class MultiReportCollector:
     """
     The MultiReport Reader can read reports from different zip files
-    and provide their data in single pre, num, and sub DataFrames.
-
-
+    and provide their data in single DataBag.
     """
 
     @classmethod
     def get_reports_by_adshs(cls, adshs: List[str], configuration: Optional[Configuration] = None):
         """
-        creates the MultiReportReader instance for a certain list of adshs.
+        creates the MultiReportCollector instance for a certain list of adshs.
 
         if no configuration is passed, it reads the config from the config file
 
@@ -46,7 +43,7 @@ class MultiReportReader(BaseReportReader):
             configuration (Configuration optional, default=None): Optional configuration object
 
         Returns:
-            MultiReportReader: instance of MultiReportReader
+            MultiReportCollector: instance of MultiReportCollector
         """
         if configuration is None:
             configuration = ConfigurationManager.read_config_file()
@@ -54,61 +51,51 @@ class MultiReportReader(BaseReportReader):
         dbaccessor = create_index_accessor(db_dir=configuration.db_dir)
 
         index_reports = dbaccessor.read_index_reports_for_adshs(adshs=adshs)
-        return MultiReportReader(index_reports)
+        return MultiReportCollector(index_reports)
 
     @classmethod
     def get_reports_by_indexreport(cls, index_reports: List[IndexReport]):
         """
-        crates the MultiReportReader instance based on IndexReport instances
+        crates the MultiReportCollector instance based on IndexReport instances
 
         Args:
             index_reports (List[IndexReport]): instances of IndexReport
 
         Returns:
-            MultiReportReader: isntance of MultiReportReader
+            MultiReportCollector: instance of MultiReportCollector
         """
-        return MultiReportReader(index_reports)
+        return MultiReportCollector(index_reports)
 
     def __init__(self, index_reports: List[IndexReport]):
         super().__init__()
         self.index_reports = index_reports
 
-        self.collected_data: Dict[str, pd.DataFrame] = {}
+        self.databag: Optional[DataBag] = None
 
-    def _collect(self) -> Dict[str, pd.DataFrame]:
+    def _collect(self) -> DataBag:
         """
         Reads the list of defined index_reports parallel and concats the content in single
-        SUB, NUM, and PRE DataFrames.
+        DataBag.
 
         Returns:
-            Dict[str, pd.DataFrame]: key is file (Sub, Num, Pre) value
-            is the content as pd.DataFrame
+            DataBag: a single DataBag containing all the collected reports
         """
-
+        # todo: consider optimization to group by the same source file
+        #   and use the filter option on pd.read_parquet()
         reports: List[IndexReport] = self.index_reports
 
         def get_entries() -> List[IndexReport]:
             return reports
 
-        def process_element(element: IndexReport) -> Dict[str, pd.DataFrame]:
+        def process_element(element: IndexReport) -> DataBag:
             print(element.adsh)
-            reader = ReportReader.get_report_by_indexreport(index_report=element)
-            pre_df = reader.get_raw_pre_data()
-            num_df = reader.get_raw_num_data()
-            sub_df = reader.get_raw_sub_data()
+            collector = SingleReportCollector.get_report_by_indexreport(index_report=element)
 
-            return {SUB_TXT: sub_df,
-                    PRE_TXT: pre_df,
-                    NUM_TXT: num_df}
+            return collector.collect()
 
-        def post_process(parts: List[Dict[str, pd.DataFrame]]) -> List[Dict[str, pd.DataFrame]]:
-            keys = parts[0].keys()
-            concated_frames: Dict[str, pd.DataFrame] = {}
-
-            for key in keys:
-                concated_frames[key] = pd.concat([x[key] for x in parts]).reset_index()
-
-            return [concated_frames]
+        def post_process(parts: List[DataBag]) -> List[DataBag]:
+            # do nothing
+            return parts
 
         executor = ParallelExecutor(chunksize=0)
 
@@ -117,21 +104,21 @@ class MultiReportReader(BaseReportReader):
         executor.set_post_process_chunk_function(post_process)
 
         # we ignore the missing, since get_entries always returns the whole list
-        result, _ = executor.execute()
+        collected_reports: List[DataBag]
+        collected_reports, _ = executor.execute()
 
-        return result[0]
+        return concat(collected_reports)
 
-    def _read_raw_data(self):
-        # we need to overwrite the base class methods, since we first need to read the data
-        if self.num_df is None:
-            self.collected_data = self._collect()
-            super()._read_raw_data()
+    def collect(self) -> DataBag:
+        """
+        collects the data and returns a Databag
 
-    def _read_df_from_raw(self,
-                          file: str) -> pd.DataFrame:
-        # we need to overwrite this method, since files are not read directly from the file,
-        # but were loaded in a previous step
-        return self.collected_data[file]
+        Returns:
+            DataBag: the collected Data
+        """
+        if self.databag is None:
+            self.databag = self._collect()
+        return self.databag
 
     def statistics(self) -> MultiReportStats:
         """
@@ -145,13 +132,13 @@ class MultiReportReader(BaseReportReader):
         Rreturns:
             ZipFileStats: instance with basic report infos
         """
+        databag = self.collect()
 
-        self._read_raw_data()  # lazy load the data if necessary
-        num_entries = len(self.num_df)
-        pre_entries = len(self.pre_df)
-        number_of_reports = len(self.sub_df)
-        reports_per_period_date: Dict[int, int] = self.sub_df.period.value_counts().to_dict()
-        reports_per_form: Dict[str, int] = self.sub_df.form.value_counts().to_dict()
+        num_entries = len(databag.num_df)
+        pre_entries = len(databag.pre_df)
+        number_of_reports = len(databag.sub_df)
+        reports_per_period_date: Dict[int, int] = databag.sub_df.period.value_counts().to_dict()
+        reports_per_form: Dict[str, int] = databag.sub_df.form.value_counts().to_dict()
 
         return MultiReportStats(num_entries=num_entries,
                                 pre_entries=pre_entries,

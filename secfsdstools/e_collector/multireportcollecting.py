@@ -7,8 +7,8 @@ from typing import Dict, Optional, List
 from secfsdstools.a_config.configmgt import ConfigurationManager
 from secfsdstools.a_config.configmodel import Configuration
 from secfsdstools.a_utils.parallelexecution import ParallelExecutor
-from secfsdstools.c_index.indexdataaccess import IndexReport, create_index_accessor
-from secfsdstools.d_container.databagmodel import DataBag, concat
+from secfsdstools.c_index.indexdataaccess import IndexReport, ParquetDBIndexingAccessor
+from secfsdstools.d_container.databagmodel import RawDataBag
 from secfsdstools.e_collector.reportcollecting import SingleReportCollector
 
 
@@ -28,7 +28,7 @@ class MultiReportStats:
 class MultiReportCollector:
     """
     The MultiReport Reader can read reports from different zip files
-    and provide their data in single DataBag.
+    and provide their data in single RawDataBag.
     """
 
     @classmethod
@@ -48,13 +48,13 @@ class MultiReportCollector:
         if configuration is None:
             configuration = ConfigurationManager.read_config_file()
 
-        dbaccessor = create_index_accessor(db_dir=configuration.db_dir)
+        dbaccessor = ParquetDBIndexingAccessor(db_dir=configuration.db_dir)
 
         index_reports = dbaccessor.read_index_reports_for_adshs(adshs=adshs)
         return MultiReportCollector(index_reports)
 
     @classmethod
-    def get_reports_by_indexreport(cls, index_reports: List[IndexReport]):
+    def get_reports_by_indexreports(cls, index_reports: List[IndexReport]):
         """
         crates the MultiReportCollector instance based on IndexReport instances
 
@@ -70,15 +70,15 @@ class MultiReportCollector:
         super().__init__()
         self.index_reports = index_reports
 
-        self.databag: Optional[DataBag] = None
+        self.databag: Optional[RawDataBag] = None
 
-    def _collect(self) -> DataBag:
+    def _collect(self) -> RawDataBag:
         """
         Reads the list of defined index_reports parallel and concats the content in single
         DataBag.
 
         Returns:
-            DataBag: a single DataBag containing all the collected reports
+            RawDataBag: a single DataBag containing all the collected reports
         """
         # todo: consider optimization to group by the same source file
         #   and use the filter option on pd.read_parquet()
@@ -87,13 +87,13 @@ class MultiReportCollector:
         def get_entries() -> List[IndexReport]:
             return reports
 
-        def process_element(element: IndexReport) -> DataBag:
+        def process_element(element: IndexReport) -> RawDataBag:
             print(element.adsh)
             collector = SingleReportCollector.get_report_by_indexreport(index_report=element)
 
             return collector.collect()
 
-        def post_process(parts: List[DataBag]) -> List[DataBag]:
+        def post_process(parts: List[RawDataBag]) -> List[RawDataBag]:
             # do nothing
             return parts
 
@@ -104,17 +104,17 @@ class MultiReportCollector:
         executor.set_post_process_chunk_function(post_process)
 
         # we ignore the missing, since get_entries always returns the whole list
-        collected_reports: List[DataBag]
+        collected_reports: List[RawDataBag]
         collected_reports, _ = executor.execute()
 
-        return concat(collected_reports)
+        return RawDataBag.concat(collected_reports)
 
-    def collect(self) -> DataBag:
+    def collect(self) -> RawDataBag:
         """
         collects the data and returns a Databag
 
         Returns:
-            DataBag: the collected Data
+            RawDataBag: the collected Data
         """
         if self.databag is None:
             self.databag = self._collect()

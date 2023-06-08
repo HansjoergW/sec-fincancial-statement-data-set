@@ -3,22 +3,24 @@ Defines the container that keeps the data of sub.txt, num.txt, and  pre.txt toge
 """
 
 import os
-from typing import Dict, Optional, List
+from typing import Dict, Optional, List, TypeVar
 
 import pandas as pd
 
 from secfsdstools.a_utils.basic import calculate_previous_period
 from secfsdstools.a_utils.constants import SUB_TXT, PRE_TXT, NUM_TXT
 
+RAW = TypeVar('RAW', bound='RawDataBag')
 
-class DataBag:
+
+class RawDataBag:
     """
     Container class to keep the data for sub.txt, pre.txt, and num.txt together.
     """
 
     @classmethod
     def create(cls, sub_df: pd.DataFrame, pre_df: pd.DataFrame, num_df: pd.DataFrame):
-        bag = DataBag(sub_df=sub_df, pre_df=pre_df, num_df=num_df)
+        bag = RawDataBag(sub_df=sub_df, pre_df=pre_df, num_df=num_df)
         bag._init_internal_structures()
         return bag
 
@@ -77,66 +79,66 @@ class DataBag:
         """
         return self.num_df.copy()
 
+    @staticmethod
+    def concat(bags: List[RAW]) -> RAW:
+        """
+        Merges multiple Bags together into one bag.
+        Note: merge does not check if DataBags with the same reports are merged together.
 
-def concat(bags: List[DataBag]) -> DataBag:
-    """
-    Merges multiple Bags together into one bag.
-    Note: merge does not check if DataBags with the same reports are merged together.
+        Args:
+            bags: List of bags to be merged
 
-    Args:
-        bags: List of bags to be merged
+        Returns:
+            RawDataBag: a Bag with the merged content
 
-    Returns:
-        DataBag: a Bag with the merged content
+        """
+        # todo: maybe it might make sense to check if the same report is not in different bags
+        sub_dfs = [db.sub_df for db in bags]
+        pre_dfs = [db.pre_df for db in bags]
+        num_dfs = [db.num_df for db in bags]
 
-    """
-    # todo: maybe it might make sense to check if the same report is not in different bags
-    sub_dfs = [db.sub_df for db in bags]
-    pre_dfs = [db.pre_df for db in bags]
-    num_dfs = [db.num_df for db in bags]
+        # todo: might be more efficient if the contained maps were just combined
+        #       instead of being recalculated
+        return RawDataBag.create(sub_df=pd.concat(sub_dfs),
+                                 pre_df=pd.concat(pre_dfs),
+                                 num_df=pd.concat(num_dfs))
 
-    # todo: might be more efficient if the contained maps were just combined
-    #       instead of being recalculated
-    return DataBag.create(sub_df=pd.concat(sub_dfs),
-                          pre_df=pd.concat(pre_dfs),
-                          num_df=pd.concat(num_dfs))
+    @staticmethod
+    def save(databag: RAW, target_path: str):
+        """
+        Stores the bag under the given directory.
+        The directory has to exist and must be empty.
 
+        Args:
+            databag: the bag to be saved
+            target_path: the directory under which three parquet files for sub_txt, pre_text,
+                  and num_txt will be created
 
-def save(databag: DataBag, target_path: str):
-    """
-    Stores the bag under the given directory.
-    The directory has to exist and must be empty.
+        """
+        if not os.path.isdir(target_path):
+            raise ValueError(f"the path {target_path} does not exist")
 
-    Args:
-        databag: the bag to be saved
-        target_path: the directory under which three parquet files for sub_txt, pre_text,
-              and num_txt will be created
+        if len(os.listdir(target_path)) > 0:
+            raise ValueError(f"the target_path {target_path} is not empty")
 
-    """
-    if not os.path.isdir(target_path):
-        raise ValueError(f"the path {target_path} does not exist")
+        databag.sub_df.to_parquet(os.path.join(target_path, f'{SUB_TXT}.parquet'))
+        databag.pre_df.to_parquet(os.path.join(target_path, f'{PRE_TXT}.parquet'))
+        databag.num_df.to_parquet(os.path.join(target_path, f'{NUM_TXT}.parquet'))
 
-    if len(os.listdir(target_path)) > 0:
-        raise ValueError(f"the target_path {target_path} is not empty")
+    @staticmethod
+    def load(target_path: str) -> RAW:
+        """
+        Loads the content of the current bag at the specified location.
 
-    databag.sub_df.to_parquet(os.path.join(target_path, f'{SUB_TXT}.parquet'))
-    databag.pre_df.to_parquet(os.path.join(target_path, f'{PRE_TXT}.parquet'))
-    databag.num_df.to_parquet(os.path.join(target_path, f'{NUM_TXT}.parquet'))
+        Args:
+            target_path: the directory which contains the three parquet files for sub_txt, pre_txt,
+             and num_txt
 
+        Returns:
+            RawDataBag: the loaded Databag
+        """
+        sub_df = pd.read_parquet(os.path.join(target_path, f'{SUB_TXT}.parquet'))
+        pre_df = pd.read_parquet(os.path.join(target_path, f'{PRE_TXT}.parquet'))
+        num_df = pd.read_parquet(os.path.join(target_path, f'{NUM_TXT}.parquet'))
 
-def load(target_path: str) -> DataBag:
-    """
-    Loads the content of the current bag at the specified location.
-
-    Args:
-        target_path: the directory which contains the three parquet files for sub_txt, pre_txt,
-         and num_txt
-
-    Returns:
-        DataBag: the loaded Databag
-    """
-    sub_df = pd.read_parquet(os.path.join(target_path, f'{SUB_TXT}.parquet'))
-    pre_df = pd.read_parquet(os.path.join(target_path, f'{PRE_TXT}.parquet'))
-    num_df = pd.read_parquet(os.path.join(target_path, f'{NUM_TXT}.parquet'))
-
-    return DataBag.create(sub_df=sub_df, pre_df=pre_df, num_df=num_df)
+        return RawDataBag.create(sub_df=sub_df, pre_df=pre_df, num_df=num_df)

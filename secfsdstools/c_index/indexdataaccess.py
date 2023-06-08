@@ -283,16 +283,3 @@ class ParquetDBIndexingAccessor(DBIndexingAccessorBase):
         super().__init__(db_dir=db_dir, index_reports_table=self.INDEX_REPORTS_TABLE,
                          index_processing_table=self.INDEX_PROCESSING_TABLE)
 
-
-def create_index_accessor(db_dir: str) -> DBIndexingAccessorBase:
-    """
-    Factory method to create the indexaccessor instance based on the type
-    Args:
-        type: type of index accessor to create (e.g. zip or parquet)
-        db_dir: path to the sqllite db file
-
-    Returns:
-        DBIndexingAccessorBase: instantiated instance
-    """
-
-    return ParquetDBIndexingAccessor(db_dir=db_dir)

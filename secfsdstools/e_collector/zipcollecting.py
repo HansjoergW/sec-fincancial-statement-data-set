@@ -11,8 +11,8 @@ import pandas as pd
 from secfsdstools.a_config.configmgt import ConfigurationManager
 from secfsdstools.a_config.configmodel import Configuration
 from secfsdstools.a_utils.constants import NUM_TXT, PRE_TXT, SUB_TXT
-from secfsdstools.c_index.indexdataaccess import create_index_accessor
-from secfsdstools.d_container.databagmodel import DataBag
+from secfsdstools.c_index.indexdataaccess import ParquetDBIndexingAccessor
+from secfsdstools.d_container.databagmodel import RawDataBag
 
 
 @dataclass
@@ -44,7 +44,7 @@ class ZipCollector:
         if configuration is None:
             configuration = ConfigurationManager.read_config_file()
 
-        dbaccessor = create_index_accessor(db_dir=configuration.db_dir)
+        dbaccessor = ParquetDBIndexingAccessor(db_dir=configuration.db_dir)
 
         datapath = dbaccessor.read_index_file_for_filename(filename=name).fullPath
         return ZipCollector(datapath=datapath)
@@ -52,25 +52,25 @@ class ZipCollector:
     def __init__(self, datapath: str):
         super().__init__()
         self.datapath = datapath
-        self.databag: Optional[DataBag] = None
+        self.databag: Optional[RawDataBag] = None
 
     def _read_df_from_raw_parquet(self,
                                   file: str) -> pd.DataFrame:
         return pd.read_parquet(os.path.join(self.datapath, f'{file}.parquet'))
 
-    def collect(self) -> DataBag:
+    def collect(self) -> RawDataBag:
         """
         collects the data and returns a Databag
 
         Returns:
-            DataBag: the collected Data
+            RawDataBag: the collected Data
         """
         if self.databag is None:
             num_df = self._read_df_from_raw_parquet(file=NUM_TXT)
             pre_df = self._read_df_from_raw_parquet(file=PRE_TXT)
             sub_df = self._read_df_from_raw_parquet(file=SUB_TXT)
 
-            self.databag = DataBag.create(sub_df=sub_df, pre_df=pre_df, num_df=num_df)
+            self.databag = RawDataBag.create(sub_df=sub_df, pre_df=pre_df, num_df=num_df)
         return self.databag
 
     def statistics(self) -> ZipFileStats:

@@ -8,7 +8,7 @@ import pandas as pd
 from secfsdstools.a_config.configmgt import ConfigurationManager
 from secfsdstools.a_config.configmodel import Configuration
 from secfsdstools.c_index.indexdataaccess import DBIndexingAccessorBase, \
-    create_index_accessor
+    ParquetDBIndexingAccessor
 
 
 class IndexSearch:
@@ -32,8 +32,7 @@ class IndexSearch:
         if configuration is None:
             configuration = ConfigurationManager.read_config_file()
 
-        accessor: DBIndexingAccessorBase = create_index_accessor(
-            db_dir=configuration.db_dir)
+        accessor: DBIndexingAccessorBase = ParquetDBIndexingAccessor(db_dir=configuration.db_dir)
         return IndexSearch(accessor)
 
     def find_company_by_name(self, name_part: str) -> pd.DataFrame:

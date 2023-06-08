@@ -4,7 +4,7 @@ Collector interface definition
 
 from typing import Protocol
 
-from secfsdstools.d_container.databagmodel import DataBag
+from secfsdstools.d_container.databagmodel import RawDataBag
 
 
 class Collector(Protocol):
@@ -12,11 +12,11 @@ class Collector(Protocol):
     Interface for classes who collect data of one or several reports
     """
 
-    def collect(self) -> DataBag:
+    def collect(self) -> RawDataBag:
         """
         collects the data and returns a Databag
 
         Returns:
-            DataBag: the collected Data
+            RawDataBag: the collected Data
 
         """

@@ -5,8 +5,8 @@ from typing import Optional, List
 
 from secfsdstools.a_config.configmgt import ConfigurationManager
 from secfsdstools.a_config.configmodel import Configuration
-from secfsdstools.c_index.indexdataaccess import IndexReport, create_index_accessor
-from secfsdstools.e_read.multireportreading import MultiReportReader
+from secfsdstools.c_index.indexdataaccess import IndexReport, ParquetDBIndexingAccessor
+from secfsdstools.e_collector.multireportcollecting import MultiReportCollector
 
 
 class CompanyReportCollector:
@@ -19,7 +19,7 @@ class CompanyReportCollector:
     def get_company_collector(cls, cik: int, forms: Optional[List[str]] = None,
                               configuration: Optional[Configuration] = None):
         """
-        creates a MulitReportReader instance for the provided cik and forms (e.g. 10-K..)
+        creates a MultiReportCollector instance for the provided cik and forms (e.g. 10-K..)
         If no configuration object is passed,
         it reads the configuration from the config file.
 
@@ -35,8 +35,8 @@ class CompanyReportCollector:
         if configuration is None:
             configuration = ConfigurationManager.read_config_file()
 
-        dbaccessor = create_index_accessor(db_dir=configuration.db_dir)
+        dbaccessor = ParquetDBIndexingAccessor(db_dir=configuration.db_dir)
 
         index_reports: List[IndexReport] = dbaccessor.read_index_reports_for_cik(cik, forms)
 
-        return MultiReportReader(index_reports=index_reports)
+        return MultiReportCollector.get_reports_by_indexreports(index_reports=index_reports)

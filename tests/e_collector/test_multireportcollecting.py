@@ -25,7 +25,7 @@ def multireportcollector():
 
     reports = [report1, report2]
 
-    collector = MultiReportCollector.get_reports_by_indexreport(index_reports=reports)
+    collector = MultiReportCollector.get_reports_by_indexreports(index_reports=reports)
     collector.collect()
     return collector
 

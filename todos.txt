@@ -16,7 +16,18 @@ v.1.0.0
 - companyreading moved from e_read to c_index as companyindexreading / CompanyIndexReader
 
 
+direktes parquet filtern ist etwa 10% schneller, nicht wirklich viel, vor allem weil
+der code einiges komplizierter wird
+Was man noch testen könnte ist wenn stmts und tags auch gefiltert werden?
 
+
+
+
+- Wie und wo filtern wir für period, previous period, tags..?
+- fitern wir auf raw, oder also auf joined?
+- was liefern filter zurück? ein neues df (copy), oder nur das gefilterte?
+- oder sind filter so gar auf collector möglich? so dass man direkt beim parquet lesen filtern kann?
+- bzw.,  was sind spezial filter für period und previous period?
 
 
 

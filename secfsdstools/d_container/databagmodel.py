@@ -8,9 +8,76 @@ from typing import Dict, Optional, List, TypeVar
 import pandas as pd
 
 from secfsdstools.a_utils.basic import calculate_previous_period
-from secfsdstools.a_utils.constants import SUB_TXT, PRE_TXT, NUM_TXT
+from secfsdstools.a_utils.constants import SUB_TXT, PRE_TXT, NUM_TXT, PRE_NUM_TXT
 
 RAW = TypeVar('RAW', bound='RawDataBag')
+JOINED = TypeVar('JOINED', bound='JoinedDataBag')
+
+
+class JoinedDataBag:
+
+    @classmethod
+    def create(cls, sub_df: pd.DataFrame, pre_num_df: pd.DataFrame) -> JOINED:
+        return JoinedDataBag(sub_df=sub_df, pre_num_df=pre_num_df)
+
+    def __init__(self, sub_df: pd.DataFrame, pre_num_df: pd.DataFrame):
+        self.sub_df = sub_df
+        self.pre_num_df = pre_num_df
+
+    def get_sub_copy(self) -> pd.DataFrame:
+        """
+        Returns a copy of the sub dataframe.
+
+        Returns:
+            pd.DataFrame: copy of the sub dataframe.
+        """
+        return self.sub_df.copy()
+
+    def get_pre_num_copy(self) -> pd.DataFrame:
+        """
+        Returns a copy of the joined pre_num dataframe.
+
+        Returns:
+            pd.DataFrame: copy of joined pre_num dataframe.
+        """
+        return self.pre_num_df.copy()
+
+    @staticmethod
+    def save(databag: JOINED, target_path: str):
+        """
+        Stores the bag under the given directory.
+        The directory has to exist and must be empty.
+
+        Args:
+            databag: the bag to be saved
+            target_path: the directory under which the parquet files for sub and pre_num
+                  will be created
+
+        """
+        if not os.path.isdir(target_path):
+            raise ValueError(f"the path {target_path} does not exist")
+
+        if len(os.listdir(target_path)) > 0:
+            raise ValueError(f"the target_path {target_path} is not empty")
+
+        databag.sub_df.to_parquet(os.path.join(target_path, f'{SUB_TXT}.parquet'))
+        databag.pre_num_df.to_parquet(os.path.join(target_path, f'{PRE_TXT}.parquet'))
+
+    @staticmethod
+    def load(target_path: str) -> JOINED:
+        """
+        Loads the content of the current bag at the specified location.
+
+        Args:
+            target_path: the directory which contains the parquet files for sub and pre_num
+
+        Returns:
+            JoinedDataBag: the loaded Databag
+        """
+        sub_df = pd.read_parquet(os.path.join(target_path, f'{SUB_TXT}.parquet'))
+        pre_num_df = pd.read_parquet(os.path.join(target_path, f'{PRE_NUM_TXT}.parquet'))
+
+        return JoinedDataBag.create(sub_df=sub_df, pre_num_df=pre_num_df)
 
 
 class RawDataBag:
@@ -19,7 +86,7 @@ class RawDataBag:
     """
 
     @classmethod
-    def create(cls, sub_df: pd.DataFrame, pre_df: pd.DataFrame, num_df: pd.DataFrame):
+    def create(cls, sub_df: pd.DataFrame, pre_df: pd.DataFrame, num_df: pd.DataFrame) -> RAW:
         bag = RawDataBag(sub_df=sub_df, pre_df=pre_df, num_df=num_df)
         bag._init_internal_structures()
         return bag
@@ -78,6 +145,40 @@ class RawDataBag:
             pd.DataFrame: copy of the num.txt dataframe.
         """
         return self.num_df.copy()
+
+    # wie
+    # soll
+    # gefiltert
+    # werden? für
+    # period, previous
+    # period, tags, ...
+    # wie
+    # wird
+    # neues
+    # Objekt
+    # erzeugt? ist
+    # das
+    # effizient
+    # effizienter
+    # könnte
+    # immer
+    # über
+    # einne
+    # eigenen
+    # Collector
+    # gemacht
+    # werdne
+
+    def get_joined_bag(self) -> JoinedDataBag:
+
+        ## transform the data
+        # merge num and pre together. only rows in num are considered for which entries in pre exist
+        pre_num_df = pd.merge(self.num_df,
+                              self.pre_df,
+                              on=['adsh', 'tag',
+                                  'version'])  # don't produce index_x and index_y columns
+
+        return JoinedDataBag.create(sub_df=self.sub_df, pre_num_df=pre_num_df)
 
     @staticmethod
     def concat(bags: List[RAW]) -> RAW:

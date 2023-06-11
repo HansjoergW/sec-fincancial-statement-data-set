@@ -24,57 +24,8 @@ class BaseReportReader(ABC):
         self.adsh_period_map: Optional[Dict[str, int]] = None
         self.adsh_previous_map: Optional[Dict[str, int]] = {}
 
-    def _read_raw_data(self):
-        """
-        read the raw data from the num and pre file into dataframes and store them
-        inside the object. used in a lazy loading manner.
-        """
-        if self.num_df is None:
-            self.num_df = self._read_df_from_raw(file=NUM_TXT)
-            self.pre_df = self._read_df_from_raw(file=PRE_TXT)
-            self.sub_df = self._read_df_from_raw(file=SUB_TXT)
 
-            # pandas pivot works better if coreg is not nan, so we set it here to a simple dash
-            self.num_df.loc[self.num_df.coreg.isna(), 'coreg'] = '-'
 
-            self.adsh_form_map = \
-                self.sub_df[['adsh', 'form']].set_index('adsh').to_dict()['form']
-            self.adsh_period_map = \
-                self.sub_df[['adsh', 'period']].set_index('adsh').to_dict()['period']
-
-            # caculate the date for the previous year
-            self.adsh_previous_map = {adsh: calculate_previous_period(period)
-                                      for adsh, period in self.adsh_period_map.items()}
-
-    def get_raw_num_data(self) -> pd.DataFrame:
-        """
-        returns a copy of the raw dataframe for the num.txt file of this report
-
-        Returns:
-            pd.DataFrame: pandas dataframe
-        """
-        self._read_raw_data()  # lazy load the data if necessary
-        return self.num_df.copy()
-
-    def get_raw_pre_data(self) -> pd.DataFrame:
-        """
-        returns a copy of the raw dataframe for the pre.txt file of this report
-
-        Returns:
-            pd.DataFrame: pandas dataframe
-        """
-        self._read_raw_data()  # lazy load the data if necessary
-        return self.pre_df.copy()
-
-    def get_raw_sub_data(self) -> pd.DataFrame:
-        """
-        returns a copy of the raw dataframe for the sub.txt file of this report
-
-        Returns:
-            pd.DataFrame: pandas dataframe
-        """
-        self._read_raw_data()  # lazy load the data if necessary
-        return self.sub_df.copy()
 
     def merge_pre_and_num(self,
                           use_period: bool = True,
@@ -214,16 +165,3 @@ class BaseReportReader(ABC):
         """
 
         return self.financial_statements_for_tags(use_previous_period=True, tags=tags)
-
-    @abstractmethod
-    def _read_df_from_raw(self,
-                          file: str) \
-            -> pd.DataFrame:
-        """
-
-        Args:
-            file: SUB_TXT, PRE_TXT, or NUM_TXT
-
-        Returns:
-            pd.DataFrame: the content for the read filetype
-        """

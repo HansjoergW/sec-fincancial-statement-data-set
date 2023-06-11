@@ -5,6 +5,7 @@ base constant values
 NUM_TXT = "num.txt"
 PRE_TXT = "pre.txt"
 SUB_TXT = "sub.txt"
+PRE_NUM_TXT = "pre_num.txt"
 
 NUM_COLS = ['adsh', 'tag', 'version', 'coreg', 'ddate', 'qtrs', 'uom', 'value', 'footnote']
 PRE_COLS = ['adsh', 'report', 'line', 'stmt', 'inpth', 'rfile',

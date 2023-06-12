@@ -4,7 +4,7 @@ which the zip file was transformed to.
 """
 import os
 from dataclasses import dataclass
-from typing import Optional, Dict
+from typing import Optional, Dict, List
 
 import pandas as pd
 
@@ -34,7 +34,12 @@ class ZipCollector:
     """
 
     @classmethod
-    def get_zip_by_name(cls, name: str, configuration: Optional[Configuration] = None):
+    def get_zip_by_name(cls,
+                        name: str,
+                        forms_filter: Optional[List[str]] = None,
+                        stmt_filter: Optional[List[str]] = None,
+                        tag_filter: Optional[List[str]] = None,
+                        configuration: Optional[Configuration] = None):
         """
         creates a ZipReportReader instance for the given name of the zipfile.
         Args:
@@ -47,16 +52,28 @@ class ZipCollector:
         dbaccessor = ParquetDBIndexingAccessor(db_dir=configuration.db_dir)
 
         datapath = dbaccessor.read_index_file_for_filename(filename=name).fullPath
-        return ZipCollector(datapath=datapath)
+        return ZipCollector(datapath=datapath,
+                            forms_filter=forms_filter,
+                            stmt_filter=stmt_filter,
+                            tag_filter=tag_filter)
 
-    def __init__(self, datapath: str):
+    def __init__(self,
+                 datapath: str,
+                 forms_filter: Optional[List[str]] = None,
+                 stmt_filter: Optional[List[str]] = None,
+                 tag_filter: Optional[List[str]] = None):
         super().__init__()
         self.datapath = datapath
         self.databag: Optional[RawDataBag] = None
+        self.forms_filter = forms_filter
+        self.stmt_filter = stmt_filter
+        self.tag_filter = tag_filter
 
     def _read_df_from_raw_parquet(self,
-                                  file: str) -> pd.DataFrame:
-        return pd.read_parquet(os.path.join(self.datapath, f'{file}.parquet'))
+                                  file: str,
+                                  filters=None) -> pd.DataFrame:
+        return pd.read_parquet(os.path.join(self.datapath, f'{file}.parquet'),
+                               filters=filters)
 
     def collect(self) -> RawDataBag:
         """
@@ -66,9 +83,41 @@ class ZipCollector:
             RawDataBag: the collected Data
         """
         if self.databag is None:
-            num_df = self._read_df_from_raw_parquet(file=NUM_TXT)
-            pre_df = self._read_df_from_raw_parquet(file=PRE_TXT)
-            sub_df = self._read_df_from_raw_parquet(file=SUB_TXT)
+            # bsp chat gpt
+            # filter_expression = pd.Series(['column_name']).isin(accepted_values)
+            # df = pd.read_parquet('data.parquet', filters={'column_name': filter_expression})
+
+            sub_filter = []
+            pre_filter = []
+            num_filter = []
+
+            if self.forms_filter:
+                sub_filter.append(('form', 'in', self.forms_filter))
+
+            sub_df = self._read_df_from_raw_parquet(
+                file=SUB_TXT, filters=sub_filter if sub_filter else None)
+
+            if self.forms_filter:
+                adshs = sub_df.adsh.to_list()
+                adsh_filter_expression = ('adsh', 'in', adshs)
+                pre_filter.append(adsh_filter_expression)
+                num_filter.append(adsh_filter_expression)
+
+            if self.stmt_filter:
+                pre_filter.append(('stmt', 'in', self.stmt_filter))
+
+            if self.tag_filter:
+                tag_filter_expression = ('tag', 'in', self.tag_filter)
+                pre_filter.append(tag_filter_expression)
+                num_filter.append(tag_filter_expression)
+
+            pre_df = self._read_df_from_raw_parquet(
+                file=PRE_TXT, filters=pre_filter if pre_filter else None
+            )
+
+            num_df = self._read_df_from_raw_parquet(
+                file=NUM_TXT, filters=num_filter if num_filter else None
+            )
 
             self.databag = RawDataBag.create(sub_df=sub_df, pre_df=pre_df, num_df=num_df)
         return self.databag

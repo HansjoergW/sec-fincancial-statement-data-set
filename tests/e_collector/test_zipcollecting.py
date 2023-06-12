@@ -1,6 +1,7 @@
 import os
 from unittest.mock import patch
 
+import pandas as pd
 import pytest
 
 from secfsdstools.a_config.configmodel import Configuration
@@ -47,3 +48,28 @@ def test_statistics(zipcollector):
     assert stats.number_of_reports == 495
     assert stats.reports_per_form['10-Q'] == 80
     assert stats.reports_per_period_date[20091231] == 434
+
+
+def test_forms_filter():
+    zipcollector = ZipCollector(datapath=PATH_TO_ZIP, forms_filter=['10-K'])
+    bag = zipcollector.collect()
+
+    merged_pre_df = pd.merge(bag.sub_df[['adsh', 'form']], bag.pre_df, on=['adsh'])
+    assert merged_pre_df.form.unique().tolist() == ['10-K']
+
+    merged_num_df = pd.merge(bag.sub_df[['adsh', 'form']], bag.num_df, on=['adsh'])
+    assert merged_num_df.form.unique().tolist() == ['10-K']
+
+
+def test_stmt_filter():
+    zipcollector = ZipCollector(datapath=PATH_TO_ZIP, stmt_filter=['BS'])
+    bag = zipcollector.collect()
+
+    assert bag.pre_df.stmt.unique().tolist() == ['BS']
+
+def test_tag_filter():
+    zipcollector = ZipCollector(datapath=PATH_TO_ZIP, tag_filter=['Assets'])
+    bag = zipcollector.collect()
+
+    assert bag.pre_df.tag.unique().tolist() == ['Assets']
+    assert bag.num_df.tag.unique().tolist() == ['Assets']

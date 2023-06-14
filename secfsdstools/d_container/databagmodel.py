@@ -3,6 +3,7 @@ Defines the container that keeps the data of sub.txt, num.txt, and  pre.txt toge
 """
 
 import os
+from dataclasses import dataclass
 from typing import Dict, Optional, List, TypeVar
 
 import pandas as pd
@@ -80,6 +81,18 @@ class JoinedDataBag:
         return JoinedDataBag.create(sub_df=sub_df, pre_num_df=pre_num_df)
 
 
+@dataclass
+class RawDataBagStats:
+    """
+    Contains simple statistics of a report.
+    """
+    num_entries: int
+    pre_entries: int
+    number_of_reports: int
+    reports_per_form: Dict[str, int]
+    reports_per_period_date: Dict[int, int]
+
+
 class RawDataBag:
     """
     Container class to keep the data for sub.txt, pre.txt, and num.txt together.
@@ -146,29 +159,6 @@ class RawDataBag:
         """
         return self.num_df.copy()
 
-    # wie
-    # soll
-    # gefiltert
-    # werden? für
-    # period, previous
-    # period, tags, ...
-    # wie
-    # wird
-    # neues
-    # Objekt
-    # erzeugt? ist
-    # das
-    # effizient
-    # effizienter
-    # könnte
-    # immer
-    # über
-    # einne
-    # eigenen
-    # Collector
-    # gemacht
-    # werdne
-
     def get_joined_bag(self) -> JoinedDataBag:
 
         ## transform the data
@@ -179,6 +169,32 @@ class RawDataBag:
                                   'version'])  # don't produce index_x and index_y columns
 
         return JoinedDataBag.create(sub_df=self.sub_df, pre_num_df=pre_num_df)
+
+    def statistics(self) -> RawDataBagStats:
+        """
+        calculate a few simple statistics of a report.
+        - number of entries in the num-file
+        - number of entries in the pre-file
+        - number of reports in the zip-file (equals number of entries in sub-file)
+        - number of reports per form (10-K, 10-Q, ...)
+        - number of reports per period date (counts per value in the period column of sub-file)
+
+        Rreturns:
+            RawDataBagStats: instance with basic report infos
+        """
+
+        num_entries = len(self.num_df)
+        pre_entries = len(self.pre_df)
+        number_of_reports = len(self.sub_df)
+        reports_per_period_date: Dict[int, int] = self.sub_df.period.value_counts().to_dict()
+        reports_per_form: Dict[str, int] = self.sub_df.form.value_counts().to_dict()
+
+        return RawDataBagStats(num_entries=num_entries,
+                            pre_entries=pre_entries,
+                            number_of_reports=number_of_reports,
+                            reports_per_form=reports_per_form,
+                            reports_per_period_date=reports_per_period_date
+                            )
 
     @staticmethod
     def concat(bags: List[RAW]) -> RAW:

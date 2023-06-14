@@ -2,7 +2,7 @@
 Reads several reports from different files parallel
 """
 from dataclasses import dataclass
-from typing import Dict, Optional, List
+from typing import Optional, List
 
 from secfsdstools.a_config.configmgt import ConfigurationManager
 from secfsdstools.a_config.configmodel import Configuration
@@ -13,18 +13,6 @@ from secfsdstools.e_collector.reportcollecting import SingleReportCollector
 
 
 @dataclass
-class MultiReportStats:
-    """
-    Contains simple statistics of a report.
-    """
-    num_entries: int
-    pre_entries: int
-    number_of_reports: int
-    reports_per_form: Dict[str, int]
-    reports_per_period_date: Dict[int, int]
-
-
-@dataclass
 class MultiReportCollector:
     """
     The MultiReport Reader can read reports from different zip files
@@ -32,7 +20,10 @@ class MultiReportCollector:
     """
 
     @classmethod
-    def get_reports_by_adshs(cls, adshs: List[str], configuration: Optional[Configuration] = None):
+    def get_reports_by_adshs(cls, adshs: List[str],
+                             stmt_filter: Optional[List[str]] = None,
+                             tag_filter: Optional[List[str]] = None,
+                             configuration: Optional[Configuration] = None):
         """
         creates the MultiReportCollector instance for a certain list of adshs.
 
@@ -40,6 +31,11 @@ class MultiReportCollector:
 
         Args:
             adshs (List[str]): List with unique report ids to load
+            stmt_filter (List[str], optional, None):
+                List of stmts that should be read (BS, IS, ...)
+            tag_filter (List[str], optional, None:
+                List of tags that should be read (Assets, Liabilities, ...)
+
             configuration (Configuration optional, default=None): Optional configuration object
 
         Returns:
@@ -51,24 +47,40 @@ class MultiReportCollector:
         dbaccessor = ParquetDBIndexingAccessor(db_dir=configuration.db_dir)
 
         index_reports = dbaccessor.read_index_reports_for_adshs(adshs=adshs)
-        return MultiReportCollector(index_reports)
+        return MultiReportCollector(index_reports=index_reports,
+                                    stmt_filter=stmt_filter,
+                                    tag_filter=tag_filter)
 
     @classmethod
-    def get_reports_by_indexreports(cls, index_reports: List[IndexReport]):
+    def get_reports_by_indexreports(cls,
+                                    index_reports: List[IndexReport],
+                                    stmt_filter: Optional[List[str]] = None,
+                                    tag_filter: Optional[List[str]] = None,
+                                    ):
         """
         crates the MultiReportCollector instance based on IndexReport instances
 
         Args:
             index_reports (List[IndexReport]): instances of IndexReport
+            stmt_filter (List[str], optional, None):
+                List of stmts that should be read (BS, IS, ...)
+            tag_filter (List[str], optional, None:
+                List of tags that should be read (Assets, Liabilities, ...)
 
         Returns:
             MultiReportCollector: instance of MultiReportCollector
         """
-        return MultiReportCollector(index_reports)
+        return MultiReportCollector(index_reports=index_reports,
+                                    stmt_filter=stmt_filter,
+                                    tag_filter=tag_filter)
 
-    def __init__(self, index_reports: List[IndexReport]):
+    def __init__(self, index_reports: List[IndexReport],
+                 stmt_filter: Optional[List[str]] = None,
+                 tag_filter: Optional[List[str]] = None):
         super().__init__()
         self.index_reports = index_reports
+        self.stmt_filter = stmt_filter
+        self.tag_filter = tag_filter
 
         self.databag: Optional[RawDataBag] = None
 
@@ -89,7 +101,8 @@ class MultiReportCollector:
 
         def process_element(element: IndexReport) -> RawDataBag:
             print(element.adsh)
-            collector = SingleReportCollector.get_report_by_indexreport(index_report=element)
+            collector = SingleReportCollector.get_report_by_indexreport(
+                index_report=element, stmt_filter=self.stmt_filter, tag_filter=self.tag_filter)
 
             return collector.collect()
 
@@ -119,30 +132,3 @@ class MultiReportCollector:
         if self.databag is None:
             self.databag = self._collect()
         return self.databag
-
-    def statistics(self) -> MultiReportStats:
-        """
-        calculate a few simple statistics of a report.
-        - number of entries in the num-file
-        - number of entries in the pre-file
-        - number of reports in the zip-file (equals number of entries in sub-file)
-        - number of reports per form (10-K, 10-Q, ...)
-        - number of reports per period date (counts per value in the period column of sub-file)
-
-        Rreturns:
-            ZipFileStats: instance with basic report infos
-        """
-        databag = self.collect()
-
-        num_entries = len(databag.num_df)
-        pre_entries = len(databag.pre_df)
-        number_of_reports = len(databag.sub_df)
-        reports_per_period_date: Dict[int, int] = databag.sub_df.period.value_counts().to_dict()
-        reports_per_form: Dict[str, int] = databag.sub_df.form.value_counts().to_dict()
-
-        return MultiReportStats(num_entries=num_entries,
-                                pre_entries=pre_entries,
-                                number_of_reports=number_of_reports,
-                                reports_per_form=reports_per_form,
-                                reports_per_period_date=reports_per_period_date
-                                )

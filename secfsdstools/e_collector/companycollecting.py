@@ -16,7 +16,10 @@ class CompanyReportCollector:
     """
 
     @classmethod
-    def get_company_collector(cls, cik: int, forms: Optional[List[str]] = None,
+    def get_company_collector(cls, cik: int,
+                              forms_filter: Optional[List[str]] = None,
+                              stmt_filter: Optional[List[str]] = None,
+                              tag_filter: Optional[List[str]] = None,
                               configuration: Optional[Configuration] = None):
         """
         creates a MultiReportCollector instance for the provided cik and forms (e.g. 10-K..)
@@ -25,7 +28,12 @@ class CompanyReportCollector:
 
         Args:
             cik (int): the central identification key which is assigned by the sec for every company
-            forms: a list of forms which should be collected, like 10-K, or 10 Q
+            forms_filter (List[str], optional, None):
+                List of forms that should be read (10-K, 10-Q, ...)
+            stmt_filter (List[str], optional, None):
+                List of stmts that should be read (BS, IS, ...)
+            tag_filter (List[str], optional, None:
+                List of tags that should be read (Assets, Liabilities, ...)
             configuration (Configuration, optional, None): Optional configuration object
 
         Returns:
@@ -37,6 +45,9 @@ class CompanyReportCollector:
 
         dbaccessor = ParquetDBIndexingAccessor(db_dir=configuration.db_dir)
 
-        index_reports: List[IndexReport] = dbaccessor.read_index_reports_for_cik(cik, forms)
+        index_reports: List[IndexReport] = dbaccessor.read_index_reports_for_cik(cik, forms_filter)
 
-        return MultiReportCollector.get_reports_by_indexreports(index_reports=index_reports)
+        return MultiReportCollector.get_reports_by_indexreports(index_reports=index_reports,
+                                                                stmt_filter=stmt_filter,
+                                                                tag_filter=tag_filter
+                                                                )

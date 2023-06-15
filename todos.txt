@@ -17,10 +17,8 @@ v.1.0.0
 
 
 Next:
-- gemeinsame Base Collector Klasse für Filter logik,
-  so dass die für forms, stmt, tag und adsh überall gleich funktioniert
-
-  pre_num_filtering könnte noch in basisklasse verschoben werden (report und zipcollector logik)
+ - Tests für collector Klassen aufarbeiten
+   Test für BaseCollector Klasse
 
 
 direktes parquet filtern ist etwa 10% schneller, nicht wirklich viel, vor allem weil

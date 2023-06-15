@@ -33,13 +33,13 @@ class IndexFileProcessingState:
     processTime: str  # pylint: disable=C0103
 
 
-class DBIndexingAccessorBase(DB):
-    """ Dataaccess class for index related tables"""
+class ParquetDBIndexingAccessor(DB):
+    """ Dataaccess class for index related tables of parquet files"""
+    index_reports_table = 'index_parquet_reports'
+    index_processing_table = 'index_parquet_processing_state'
 
-    def __init__(self, db_dir: str, index_reports_table: str, index_processing_table: str):
+    def __init__(self, db_dir: str):
         super().__init__(db_dir=db_dir)
-        self.index_reports_table = index_reports_table
-        self.index_processing_table = index_processing_table
 
     def read_all_indexreports(self) -> List[IndexReport]:
         """
@@ -272,14 +272,3 @@ class DBIndexingAccessorBase(DB):
                 WHERE name like '%{name_part}%' 
                 ORDER BY name"""
         return self.execute_read_as_df(sql)
-
-
-class ParquetDBIndexingAccessor(DBIndexingAccessorBase):
-    """ Dataaccess class for index related tables of parquet files"""
-    INDEX_REPORTS_TABLE = 'index_parquet_reports'
-    INDEX_PROCESSING_TABLE = 'index_parquet_processing_state'
-
-    def __init__(self, db_dir: str):
-        super().__init__(db_dir=db_dir, index_reports_table=self.INDEX_REPORTS_TABLE,
-                         index_processing_table=self.INDEX_PROCESSING_TABLE)
-

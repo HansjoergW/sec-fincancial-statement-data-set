@@ -1,9 +1,8 @@
 """ contains collector, that reads a single report """
-from typing import Optional, Dict, List, Union
+from typing import Optional, List
 
 from secfsdstools.a_config.configmgt import ConfigurationManager
 from secfsdstools.a_config.configmodel import Configuration
-from secfsdstools.a_utils.constants import NUM_TXT, PRE_TXT, SUB_TXT
 from secfsdstools.c_index.indexdataaccess import ParquetDBIndexingAccessor, IndexReport
 from secfsdstools.d_container.databagmodel import RawDataBag
 from secfsdstools.e_collector.basecollector import BaseCollector
@@ -71,11 +70,9 @@ class SingleReportCollector(BaseCollector):
                  report: IndexReport,
                  stmt_filter: Optional[List[str]] = None,
                  tag_filter: Optional[List[str]] = None):
-        super().__init__()
+        super().__init__(datapath=report.fullPath, stmt_filter=stmt_filter, tag_filter=tag_filter)
         self.report = report
         self.databag: Optional[RawDataBag] = None
-        self.stmt_filter = stmt_filter
-        self.tag_filter = tag_filter
 
     def collect(self) -> RawDataBag:
         """
@@ -85,34 +82,5 @@ class SingleReportCollector(BaseCollector):
             RawDataBag: the collected Data
 
         """
-        if self.databag is None:
-            adsh_filter = ('adsh', '==', self.report.adsh)
-            sub_df = self._read_df_from_raw_parquet(file=SUB_TXT,
-                                                    path=self.report.fullPath,
-                                                    filters=[adsh_filter])
-
-            pre_filter, num_filter = self._get_pre_num_filters(adshs=[self.report.adsh],
-                                                               stmts=self.stmt_filter,
-                                                               tags=self.tag_filter)
-
-            pre_df = self._read_df_from_raw_parquet(
-                file=PRE_TXT, path=self.report.fullPath, filters=pre_filter if pre_filter else None
-            )
-
-            num_df = self._read_df_from_raw_parquet(
-                file=NUM_TXT, path=self.report.fullPath, filters=num_filter if num_filter else None
-            )
-
-            self.databag = RawDataBag.create(sub_df=sub_df, pre_df=pre_df, num_df=num_df)
-
-        return self.databag
-
-    def submission_data(self) -> Dict[str, Union[str, int]]:
-        """
-        returns the data from the submission txt file as dictionary
-
-        Returns:
-            Dict[str, Union[str, int]]: data from submission txt file as dictionary
-        """
-        databag = self.collect()
-        return databag.sub_df.loc[0].to_dict()
+        adsh_filter = ('adsh', '==', self.report.adsh)
+        return self._collect(sub_df_filter=adsh_filter)

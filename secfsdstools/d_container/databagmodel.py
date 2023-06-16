@@ -43,8 +43,7 @@ class JoinedDataBag:
         """
         return self.pre_num_df.copy()
 
-    @staticmethod
-    def save(databag: JOINED, target_path: str):
+    def save(self, target_path: str):
         """
         Stores the bag under the given directory.
         The directory has to exist and must be empty.
@@ -61,8 +60,8 @@ class JoinedDataBag:
         if len(os.listdir(target_path)) > 0:
             raise ValueError(f"the target_path {target_path} is not empty")
 
-        databag.sub_df.to_parquet(os.path.join(target_path, f'{SUB_TXT}.parquet'))
-        databag.pre_num_df.to_parquet(os.path.join(target_path, f'{PRE_TXT}.parquet'))
+        self.sub_df.to_parquet(os.path.join(target_path, f'{SUB_TXT}.parquet'))
+        self.pre_num_df.to_parquet(os.path.join(target_path, f'{PRE_NUM_TXT}.parquet'))
 
     @staticmethod
     def load(target_path: str) -> JOINED:
@@ -79,6 +78,25 @@ class JoinedDataBag:
         pre_num_df = pd.read_parquet(os.path.join(target_path, f'{PRE_NUM_TXT}.parquet'))
 
         return JoinedDataBag.create(sub_df=sub_df, pre_num_df=pre_num_df)
+
+    @staticmethod
+    def concat(bags: List[JOINED]) -> JOINED:
+        """
+        Merges multiple Bags together into one bag.
+        Note: merge does not check if DataBags with the same reports are merged together.
+
+        Args:
+            bags: List of bags to be merged
+
+        Returns:
+            JoinedDataBag: a Bag with the merged content
+
+        """
+        sub_dfs = [db.sub_df for db in bags]
+        pre_num_dfs = [db.pre_num_df for db in bags]
+
+        return JoinedDataBag.create(sub_df=pd.concat(sub_dfs),
+                                    pre_num_df=pd.concat(pre_num_dfs))
 
 
 @dataclass
@@ -159,12 +177,56 @@ class RawDataBag:
         """
         return self.num_df.copy()
 
-    def get_joined_bag(self) -> JoinedDataBag:
+    def get_joined_bag(self,
+                       use_period: bool = True,
+                       use_previous_period: bool = False,
+                       tags: Optional[List[str]] = None) -> JoinedDataBag:
+        """
+        merges the raw data of pre and num together.
+        depending on the parameters, it just uses the  period date and the previouis period date.
+        furthermore, also the tags could be restricted.
+
+        Note: default for use_period is True
+
+        Args:
+            use_period (bool, True): indicates that only the values are filtered which
+            ddates machtes the period of the report.
+
+            use_previous_period (bool, False): indicates that only the values  are filtered
+            which ddates matches the period of the report and the previous year. If this is set
+            to True, then the value of use_period is ignored
+
+            tags (List[str], optional, None): if set, only the tags listet in this
+            parameter are returned
+        Returns:
+        JoinedDataBag: the DataBag where pre and num are merged
+
+        """
+        num_df_filtered_for_dates = self.num_df
+
+        ## only consider the entries in num.df that have ddates according to the set
+        ## use_report and use_previoius_report
+
+        # if use_previous_report, then use_period is ignored
+        if use_period and not use_previous_period:
+            mask = self.num_df['adsh'].map(self.adsh_period_map) == self.num_df['ddate']
+            num_df_filtered_for_dates = num_df_filtered_for_dates[mask]
+
+        if use_previous_period:
+            mask = (self.num_df['adsh'].map(self.adsh_period_map) == self.num_df['ddate']) | \
+                   (self.num_df['adsh'].map(self.adsh_previous_period_map) == self.num_df['ddate'])
+
+            num_df_filtered_for_dates = num_df_filtered_for_dates[mask]
+
+        ## only consider the entries in pre which tag names are defined in the tags parameter
+        pre_filtered_for_tags = self.pre_df
+        if tags:
+            pre_filtered_for_tags = self.pre_df[self.pre_df.tag.isin(tags)]
 
         ## transform the data
         # merge num and pre together. only rows in num are considered for which entries in pre exist
-        pre_num_df = pd.merge(self.num_df,
-                              self.pre_df,
+        pre_num_df = pd.merge(num_df_filtered_for_dates,
+                              pre_filtered_for_tags,
                               on=['adsh', 'tag',
                                   'version'])  # don't produce index_x and index_y columns
 
@@ -179,7 +241,7 @@ class RawDataBag:
         - number of reports per form (10-K, 10-Q, ...)
         - number of reports per period date (counts per value in the period column of sub-file)
 
-        Rreturns:
+        Returns:
             RawDataBagStats: instance with basic report infos
         """
 
@@ -190,38 +252,13 @@ class RawDataBag:
         reports_per_form: Dict[str, int] = self.sub_df.form.value_counts().to_dict()
 
         return RawDataBagStats(num_entries=num_entries,
-                            pre_entries=pre_entries,
-                            number_of_reports=number_of_reports,
-                            reports_per_form=reports_per_form,
-                            reports_per_period_date=reports_per_period_date
-                            )
+                               pre_entries=pre_entries,
+                               number_of_reports=number_of_reports,
+                               reports_per_form=reports_per_form,
+                               reports_per_period_date=reports_per_period_date
+                               )
 
-    @staticmethod
-    def concat(bags: List[RAW]) -> RAW:
-        """
-        Merges multiple Bags together into one bag.
-        Note: merge does not check if DataBags with the same reports are merged together.
-
-        Args:
-            bags: List of bags to be merged
-
-        Returns:
-            RawDataBag: a Bag with the merged content
-
-        """
-        # todo: maybe it might make sense to check if the same report is not in different bags
-        sub_dfs = [db.sub_df for db in bags]
-        pre_dfs = [db.pre_df for db in bags]
-        num_dfs = [db.num_df for db in bags]
-
-        # todo: might be more efficient if the contained maps were just combined
-        #       instead of being recalculated
-        return RawDataBag.create(sub_df=pd.concat(sub_dfs),
-                                 pre_df=pd.concat(pre_dfs),
-                                 num_df=pd.concat(num_dfs))
-
-    @staticmethod
-    def save(databag: RAW, target_path: str):
+    def save(self, target_path: str):
         """
         Stores the bag under the given directory.
         The directory has to exist and must be empty.
@@ -238,9 +275,9 @@ class RawDataBag:
         if len(os.listdir(target_path)) > 0:
             raise ValueError(f"the target_path {target_path} is not empty")
 
-        databag.sub_df.to_parquet(os.path.join(target_path, f'{SUB_TXT}.parquet'))
-        databag.pre_df.to_parquet(os.path.join(target_path, f'{PRE_TXT}.parquet'))
-        databag.num_df.to_parquet(os.path.join(target_path, f'{NUM_TXT}.parquet'))
+        self.sub_df.to_parquet(os.path.join(target_path, f'{SUB_TXT}.parquet'))
+        self.pre_df.to_parquet(os.path.join(target_path, f'{PRE_TXT}.parquet'))
+        self.num_df.to_parquet(os.path.join(target_path, f'{NUM_TXT}.parquet'))
 
     @staticmethod
     def load(target_path: str) -> RAW:
@@ -259,3 +296,26 @@ class RawDataBag:
         num_df = pd.read_parquet(os.path.join(target_path, f'{NUM_TXT}.parquet'))
 
         return RawDataBag.create(sub_df=sub_df, pre_df=pre_df, num_df=num_df)
+
+    @staticmethod
+    def concat(bags: List[RAW]) -> RAW:
+        """
+        Merges multiple Bags together into one bag.
+        Note: merge does not check if DataBags with the same reports are merged together.
+
+        Args:
+            bags: List of bags to be merged
+
+        Returns:
+            RawDataBag: a Bag with the merged content
+
+        """
+        sub_dfs = [db.sub_df for db in bags]
+        pre_dfs = [db.pre_df for db in bags]
+        num_dfs = [db.num_df for db in bags]
+
+        # todo: might be more efficient if the contained maps were just combined
+        #       instead of being recalculated
+        return RawDataBag.create(sub_df=pd.concat(sub_dfs),
+                                 pre_df=pd.concat(pre_dfs),
+                                 num_df=pd.concat(num_dfs))

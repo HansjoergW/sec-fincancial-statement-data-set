@@ -1,6 +1,6 @@
 import os
 
-from secfsdstools.d_container.databagmodel import RawDataBag
+from secfsdstools.d_container.databagmodel import RawDataBag, RawDataBagStats, JoinedDataBag
 
 CURRENT_DIR, _ = os.path.split(__file__)
 PATH_TO_BAG_1 = f'{CURRENT_DIR}/testdata/bag1'
@@ -38,10 +38,100 @@ def test_concat():
 def test_save(tmp_path):
     bag1: RawDataBag = RawDataBag.load(PATH_TO_BAG_1)
 
-    RawDataBag.save(bag1, str(tmp_path))
+    bag1.save(str(tmp_path))
 
     bag1_load: RawDataBag = RawDataBag.load(str(tmp_path))
 
     assert bag1_load.sub_df.shape == bag1.sub_df.shape
     assert bag1_load.num_df.shape == bag1.num_df.shape
     assert bag1_load.pre_df.shape == bag1.pre_df.shape
+
+
+def test_statistics():
+    bag1: RawDataBag = RawDataBag.load(PATH_TO_BAG_1)
+
+    stats: RawDataBagStats = bag1.statistics()
+
+    assert stats.pre_entries == 88378
+    assert stats.num_entries == 151692
+    assert stats.number_of_reports == 495
+    assert len(stats.reports_per_period_date) == 7
+    assert len(stats.reports_per_form) == 8
+
+
+def test_get_joined_bag_no_options():
+    bag1: RawDataBag = RawDataBag.load(PATH_TO_BAG_1)
+
+    joined_bag: JoinedDataBag = bag1.get_joined_bag(use_period=False,
+                                                    use_previous_period=False,
+                                                    tags=None)
+
+    assert joined_bag.sub_df.shape == (495, 36)
+    assert joined_bag.pre_num_df.shape == (165456, 16)
+
+
+def test_get_joined_bag_only_period_date():
+    bag1: RawDataBag = RawDataBag.load(PATH_TO_BAG_1)
+
+    joined_bag: JoinedDataBag = bag1.get_joined_bag(use_period=True,
+                                                    use_previous_period=False,
+                                                    tags=None)
+
+    assert joined_bag.sub_df.shape == (495, 36)
+    assert joined_bag.pre_num_df.shape == (62444, 16)
+
+
+def test_get_joined_bag_only_previous_and_period_date():
+    bag1: RawDataBag = RawDataBag.load(PATH_TO_BAG_1)
+
+    joined_bag: JoinedDataBag = bag1.get_joined_bag(use_period=False,  # ignored when previous True
+                                                    use_previous_period=True,
+                                                    tags=None)
+
+    assert joined_bag.sub_df.shape == (495, 36)
+    assert joined_bag.pre_num_df.shape == (122239, 16)
+
+
+def test_get_joined_bag_with_tag_filter():
+    bag1: RawDataBag = RawDataBag.load(PATH_TO_BAG_1)
+
+    joined_bag: JoinedDataBag = bag1.get_joined_bag(use_period=False,  # ignored when previous True
+                                                    use_previous_period=False,
+                                                    tags=["Assets", "Liabilities"])
+
+    assert joined_bag.sub_df.shape == (495, 36)
+    assert joined_bag.pre_num_df.shape == (1656, 16)
+    assert len(set(joined_bag.pre_num_df.tag.unique().tolist()) - {"Assets", "Liabilities"}) == 0
+
+
+def test_load_save_joined_bag(tmp_path):
+    bag1: RawDataBag = RawDataBag.load(PATH_TO_BAG_1)
+
+    joined_bag: JoinedDataBag = bag1.get_joined_bag(use_period=False,  # ignored when previous True
+                                                    use_previous_period=False,
+                                                    tags=["Assets", "Liabilities"])
+
+    joined_bag.save(str(tmp_path))
+
+    joined_bag_load: JoinedDataBag = JoinedDataBag.load(str(tmp_path))
+
+    assert joined_bag.sub_df.shape == joined_bag_load.sub_df.shape
+    assert joined_bag.pre_num_df.shape == joined_bag_load.pre_num_df.shape
+
+
+def test_merge_joined_bag():
+    bag1: RawDataBag = RawDataBag.load(PATH_TO_BAG_1)
+    bag2: RawDataBag = RawDataBag.load(PATH_TO_BAG_2)
+
+    joined_bag_1: JoinedDataBag = bag1.get_joined_bag(use_period=False,
+                                                      use_previous_period=False,
+                                                      tags=["Assets", "Liabilities"])
+
+    joined_bag_2: JoinedDataBag = bag2.get_joined_bag(use_period=False,
+                                                      use_previous_period=False,
+                                                      tags=["Assets", "Liabilities"])
+
+    concatenated: JoinedDataBag = JoinedDataBag.concat([joined_bag_1, joined_bag_2])
+
+    assert concatenated.sub_df.shape == (1017, 36)
+    assert concatenated.pre_num_df.shape == (3468, 16)

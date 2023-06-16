@@ -8,8 +8,7 @@ import pandas as pd
 
 from secfsdstools.a_config.configmgt import ConfigurationManager
 from secfsdstools.a_config.configmodel import Configuration
-from secfsdstools.c_index.indexdataaccess import DBIndexingAccessorBase, IndexReport, \
-    ParquetDBIndexingAccessor
+from secfsdstools.c_index.indexdataaccess import IndexReport, ParquetDBIndexingAccessor
 from secfsdstools.e_read.basereportreading import SUB_TXT
 
 
@@ -36,7 +35,7 @@ class CompanyIndexReader:
         dbaccessor = ParquetDBIndexingAccessor(db_dir=configuration.db_dir)
         return CompanyIndexReader(cik, dbaccessor=dbaccessor)
 
-    def __init__(self, cik: int, dbaccessor: DBIndexingAccessorBase):
+    def __init__(self, cik: int, dbaccessor: ParquetDBIndexingAccessor):
         self.cik = cik
         self.dbaccessor = dbaccessor
 

@@ -4,6 +4,7 @@ from unittest.mock import patch
 import pytest
 
 from secfsdstools.c_index.indexdataaccess import IndexReport
+from secfsdstools.d_container.databagmodel import RawDataBag
 from secfsdstools.e_collector.multireportcollecting import MultiReportCollector
 
 APPLE_ADSH_10Q_2010_Q1 = '0001193125-10-012085'
@@ -25,9 +26,7 @@ def multireportcollector():
 
     reports = [report1, report2]
 
-    collector = MultiReportCollector.get_reports_by_indexreports(index_reports=reports)
-    collector.collect()
-    return collector
+    return MultiReportCollector.get_reports_by_indexreports(index_reports=reports)
 
 
 def test_cm_get_report_by_adshs():
@@ -52,17 +51,7 @@ def test_cm_get_report_by_adshs():
 
 
 def test_read_raw_data(multireportcollector):
-    assert multireportcollector.databag.sub_df.shape == (2, 36)
-    assert multireportcollector.databag.num_df.shape == (321, 9)
-    assert multireportcollector.databag.pre_df.shape == (211, 10)
-
-
-def test_statistics(multireportcollector):
-    stats = multireportcollector.statistics()
-
-    assert stats.number_of_reports == 2
-    assert stats.num_entries == 321
-    assert stats.pre_entries == 211
-    assert stats.reports_per_form['10-Q'] == 2
-    assert stats.reports_per_period_date[20091231] == 1
-    assert stats.reports_per_period_date[20100331] == 1
+    databag: RawDataBag = multireportcollector.collect()
+    assert databag.sub_df.shape == (2, 36)
+    assert databag.num_df.shape == (321, 9)
+    assert databag.pre_df.shape == (211, 10)

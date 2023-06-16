@@ -3,27 +3,12 @@ Collector interface definition
 """
 import os
 from abc import ABC, abstractmethod
-from typing import Protocol, List, Optional, Tuple, Union
+from typing import List, Optional, Tuple, Union
 
 import pandas as pd
 
 from secfsdstools.a_utils.constants import NUM_TXT, PRE_TXT, SUB_TXT
 from secfsdstools.d_container.databagmodel import RawDataBag
-
-
-class Collector(Protocol):
-    """
-    Interface for classes who collect data of one or several reports
-    """
-
-    def collect(self) -> RawDataBag:
-        """
-        collects the data and returns a Databag
-
-        Returns:
-            RawDataBag: the collected Data
-
-        """
 
 
 class BaseCollector(ABC):
@@ -63,7 +48,7 @@ class BaseCollector(ABC):
 
         return pre_filter, num_filter
 
-    def _collect(self, sub_df_filter: Tuple[str, str, Union[str, List[str]]]):
+    def _collect(self, sub_df_filter: Tuple[str, str, Union[str, List[str]]]) -> RawDataBag:
 
         sub_df = self._read_df_from_raw_parquet(file=SUB_TXT,
                                                 filters=[sub_df_filter] if sub_df_filter else None)
@@ -80,7 +65,7 @@ class BaseCollector(ABC):
             file=NUM_TXT, filters=num_filter if num_filter else None
         )
 
-        self.databag = RawDataBag.create(sub_df=sub_df, pre_df=pre_df, num_df=num_df)
+        return RawDataBag.create(sub_df=sub_df, pre_df=pre_df, num_df=num_df)
 
     @abstractmethod
     def collect(self) -> RawDataBag:

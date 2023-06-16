@@ -26,61 +26,6 @@ class BaseReportReader(ABC):
 
 
 
-
-    def merge_pre_and_num(self,
-                          use_period: bool = True,
-                          use_previous_period: bool = False,
-                          tags: Optional[List[str]] = None,
-                          ) -> pd.DataFrame:
-        """
-        merges the raw data of pre and num together.
-        depending on the parameters, it just uses the  period date and the previouis period date.
-        furthermore, also the tags could be restricted.
-
-        Note: default for use_period is True
-
-        Args:
-            use_period (bool, True): indicates that only the values are filtered which
-            ddates machtes the period of the report.
-
-            use_previous_period (bool, False): indicates that only the values  are filtered
-            which ddates matches the period of the report and the previous year. If this is set
-            to True, then the value of use_period is ignored
-
-            tags (List[str], optional, None): if set, only the tags listet in this
-            parameter are returned
-        Returns:
-            pd.DataFrame: pandas dataframe
-
-        """
-        self._read_raw_data()  # lazy load the data if necessary
-        num_df_filtered_for_dates = self.num_df
-
-        ## only consider the entries in num.df that have ddates according to the set
-        ## use_report and use_previoius_report
-
-        # if use_previous_report, then use_period is ignored
-        if use_period and not use_previous_period:
-            mask = self.num_df['adsh'].map(self.adsh_period_map) == self.num_df['ddate']
-            num_df_filtered_for_dates = num_df_filtered_for_dates[mask]
-
-        if use_previous_period:
-            mask = (self.num_df['adsh'].map(self.adsh_period_map) == self.num_df['ddate']) | \
-                   (self.num_df['adsh'].map(self.adsh_previous_map) == self.num_df['ddate'])
-
-            num_df_filtered_for_dates = num_df_filtered_for_dates[mask]
-
-        ## only consider the entries in pre which tag names are defined in the tags parameter
-        pre_filtered_for_tags = self.pre_df
-        if tags:
-            pre_filtered_for_tags = self.pre_df[self.pre_df.tag.isin(tags)]
-
-        ## transform the data
-        # merge num and pre together. only rows in num are considered for which entries in pre exist
-        return pd.merge(num_df_filtered_for_dates,
-                        pre_filtered_for_tags,
-                        on=['adsh', 'tag', 'version'])  # don't produce index_x and index_y columns
-
     def financial_statements_for_tags(self,
                                       use_period: bool = True,
                                       use_previous_period: bool = False,

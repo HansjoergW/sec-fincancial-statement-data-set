@@ -18,9 +18,7 @@ def reportcollector():
                          form='10-Q', filed=20100125, period=20091231, originFile='2010q1.zip',
                          originFileType='quarter', fullPath=PATH_TO_ZIP, url='')
 
-    reportcollector = SingleReportCollector(report=report)
-    reportcollector.collect()
-    return reportcollector
+    return SingleReportCollector(report=report)
 
 
 def test_cm_get_report_by_adsh():
@@ -42,20 +40,6 @@ def test_cm_get_report_by_adsh():
 
 
 def test_read_raw_data(reportcollector):
-    assert reportcollector.collect().num_df.shape == (145, 9)
-    assert reportcollector.collect().pre_df.shape == (100, 10)
-
-
-def test_submission_data(reportcollector):
-    data = reportcollector.submission_data()
-
-    assert data['adsh'] == APPLE_ADSH_10Q_2010_Q1
-    assert data['cik'] == 320193
-
-
-def test_statistics(reportcollector):
-    stats = reportcollector.statistics()
-
-    assert stats.num_entries == 145
-    assert stats.pre_entries == 100
-    assert len(set(stats.list_of_statements) - {'BS', 'CF', 'CP', 'IS'}) == 0
+    bag = reportcollector.collect()
+    assert bag.num_df.shape == (145, 9)
+    assert bag.pre_df.shape == (100, 10)

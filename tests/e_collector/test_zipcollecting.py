@@ -40,16 +40,6 @@ def test_read_raw_data(zipcollector):
     assert zipcollector.collect().sub_df.shape == (495, 36)
 
 
-def test_statistics(zipcollector):
-    stats = zipcollector.statistics()
-
-    assert stats.num_entries == 151692
-    assert stats.pre_entries == 88378
-    assert stats.number_of_reports == 495
-    assert stats.reports_per_form['10-Q'] == 80
-    assert stats.reports_per_period_date[20091231] == 434
-
-
 def test_forms_filter():
     zipcollector = ZipCollector(datapath=PATH_TO_ZIP, forms_filter=['10-K'])
     bag = zipcollector.collect()

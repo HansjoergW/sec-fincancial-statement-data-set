@@ -82,9 +82,7 @@ class MultiReportCollector:
         self.stmt_filter = stmt_filter
         self.tag_filter = tag_filter
 
-        self.databag: Optional[RawDataBag] = None
-
-    def _collect(self) -> RawDataBag:
+    def _multi_collect(self) -> RawDataBag:
         """
         Reads the list of defined index_reports parallel and concats the content in single
         DataBag.
@@ -129,6 +127,4 @@ class MultiReportCollector:
         Returns:
             RawDataBag: the collected Data
         """
-        if self.databag is None:
-            self.databag = self._collect()
-        return self.databag
+        return self._multi_collect()

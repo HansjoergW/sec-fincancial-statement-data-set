@@ -9,8 +9,7 @@ import pandas as pd
 
 from secfsdstools.a_utils.constants import SUB_TXT
 from secfsdstools.a_utils.fileutils import get_directories_in_directory
-from secfsdstools.c_index.indexdataaccess import IndexFileProcessingState, \
-    DBIndexingAccessorBase, ParquetDBIndexingAccessor
+from secfsdstools.c_index.indexdataaccess import IndexFileProcessingState, ParquetDBIndexingAccessor
 
 LOGGER = logging.getLogger(__name__)
 
@@ -22,7 +21,7 @@ class BaseReportIndexer(ABC):
     PROCESSED_STR: str = 'processed'
     URL_PREFIX: str = 'https://www.sec.gov/Archives/edgar/data/'
 
-    def __init__(self, accessor: DBIndexingAccessorBase, file_type: str):
+    def __init__(self, accessor: ParquetDBIndexingAccessor, file_type: str):
         self.dbaccessor = accessor
         self.file_type = file_type
 

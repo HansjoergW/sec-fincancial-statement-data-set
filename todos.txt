@@ -17,6 +17,9 @@ v.1.0.0
 - Filter in eigene Fitlerklassen ausgelagert
 
 Next:
+- Filter interface kann so nicht verkettet werden, oder doch( bag2 = bag1.filter(filter1).filter(filter2)
+  -> wir haben noch keine Fiter Methode auf
+- könnte man [] direkt auf filter mappen
 
 - das ganze basis testing muss sauber neu aufgeräumt werden
 - für die tests sollte man ein zentrales fixture haben, welches die configuration erzeugt,

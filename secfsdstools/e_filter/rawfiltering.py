@@ -7,9 +7,10 @@ from typing import List
 
 from secfsdstools.a_utils.basic import calculate_previous_period
 from secfsdstools.d_container.databagmodel import RawDataBag
+from secfsdstools.d_container.filter import FilterBase
 
 
-class ReportPeriodRawFilter:
+class ReportPeriodRawFilter(FilterBase[RawDataBag]):
     """
     Filters the data so that only datapoints are contained which ddate-attribute equals the
     period date of the report. Therefore, the filter operates on the num_df dataframe.
@@ -37,7 +38,7 @@ class ReportPeriodRawFilter:
                                  num_df=num_filtered_for_ddates)
 
 
-class ReportPeriodAndPreviousPeriodRawFilter:
+class ReportPeriodAndPreviousPeriodRawFilter(FilterBase[RawDataBag]):
     """
     Filters the data so that only datapoints are contained which ddate-attribute equals the
     period date of the report or the period date of the previous (a year ago) report.
@@ -73,7 +74,7 @@ class ReportPeriodAndPreviousPeriodRawFilter:
                                  num_df=num_filtered_for_ddates)
 
 
-class TagRawFilter:
+class TagRawFilter(FilterBase[RawDataBag]):
     """
     Filters the data by a list of tags. This filter operates on the pre_df and the num_df.
     """

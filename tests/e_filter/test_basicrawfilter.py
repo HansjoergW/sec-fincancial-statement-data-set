@@ -51,3 +51,20 @@ def test_filter_TagRawFilter():
 
     assert len(filtered_bag.pre_df.tag.unique()) == 2
     assert len(filtered_bag.num_df.tag.unique()) == 2
+
+def test_concatenation():
+    bag1: RawDataBag = RawDataBag.load(PATH_TO_BAG_1)
+
+    filter1 = ReportPeriodRawFilter()
+    filter2 = TagRawFilter(tags=["Assets", "Liabilities"])
+
+    filtered_bag = bag1.filter(filter1).filter(filter2)
+    assert filtered_bag.sub_df.shape == bag1.sub_df.shape
+    assert filtered_bag.pre_df.shape == (795, 10)
+    assert filtered_bag.num_df.shape == (820, 9)
+
+    # using index operator
+    filtered_bag = bag1[filter1][filter2]
+    assert filtered_bag.sub_df.shape == bag1.sub_df.shape
+    assert filtered_bag.pre_df.shape == (795, 10)
+    assert filtered_bag.num_df.shape == (820, 9)

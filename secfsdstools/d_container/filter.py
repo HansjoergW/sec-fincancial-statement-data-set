@@ -1,27 +1,14 @@
 from abc import ABC, abstractmethod
 
-from secfsdstools.d_container.databagmodel import RawDataBag, JoinedDataBag
 
+from typing import TypeVar, Generic
 
-class RawFilterBase(ABC):
+T = TypeVar('T')
 
-    @abstractmethod
-    def filter(self, databag: RawDataBag) -> RawDataBag:
-        """
-        implements a simple filter on the RawDataBag and produces a new databag
-        Args:
-            databag (RawDataBag): the RawDataBag to apply the filter to
-
-        Returns:
-            RawDataBag: the new  RawDataBag with the filtered content
-
-        """
-
-
-class JoinedFilterBase(ABC):
+class FilterBase(Generic[T]):
 
     @abstractmethod
-    def filter(self, databag: JoinedDataBag) -> JoinedDataBag:
+    def filter(self, databag: T) -> T:
         """
         implements a simple filter on the RawDataBag and produces a new databag
         Args:

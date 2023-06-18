@@ -9,6 +9,7 @@ from typing import Dict, List, TypeVar
 import pandas as pd
 
 from secfsdstools.a_utils.constants import SUB_TXT, PRE_TXT, NUM_TXT, PRE_NUM_TXT
+from secfsdstools.d_container.filter import FilterBase
 
 RAW = TypeVar('RAW', bound='RawDataBag')
 JOINED = TypeVar('JOINED', bound='JoinedDataBag')
@@ -126,6 +127,12 @@ class RawDataBag:
 
         # pandas pivot works better if coreg is not nan, so we set it here to a simple dash
         self.num_df.loc[self.num_df.coreg.isna(), 'coreg'] = '-'
+
+    def __getitem__(self, filter):
+        return self.filter(filter)
+
+    def filter(self, filter: FilterBase[RAW]) -> RAW:
+        return filter.filter(self)
 
     def get_sub_copy(self) -> pd.DataFrame:
         """

@@ -24,7 +24,8 @@ class BaseReportReader(ABC):
         self.adsh_period_map: Optional[Dict[str, int]] = None
         self.adsh_previous_map: Optional[Dict[str, int]] = {}
 
-
+        self.adsh_form_map = \
+            self.sub_df[['adsh', 'form']].set_index('adsh').to_dict()['form']
 
     def financial_statements_for_tags(self,
                                       use_period: bool = True,

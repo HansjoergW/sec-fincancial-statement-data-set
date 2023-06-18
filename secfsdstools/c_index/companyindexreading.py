@@ -18,7 +18,7 @@ class CompanyIndexReader:
     """
 
     @classmethod
-    def get_company_reader(cls, cik: int, configuration: Optional[Configuration] = None):
+    def get_company_index_reader(cls, cik: int, configuration: Optional[Configuration] = None):
         """
         creates a company instance for the provided cik. If no  configuration object is passed,
         it reads the configuration from the config file.

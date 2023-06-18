@@ -4,11 +4,10 @@ Defines the container that keeps the data of sub.txt, num.txt, and  pre.txt toge
 
 import os
 from dataclasses import dataclass
-from typing import Dict, Optional, List, TypeVar
+from typing import Dict, List, TypeVar
 
 import pandas as pd
 
-from secfsdstools.a_utils.basic import calculate_previous_period
 from secfsdstools.a_utils.constants import SUB_TXT, PRE_TXT, NUM_TXT, PRE_NUM_TXT
 
 RAW = TypeVar('RAW', bound='RawDataBag')
@@ -118,9 +117,7 @@ class RawDataBag:
 
     @classmethod
     def create(cls, sub_df: pd.DataFrame, pre_df: pd.DataFrame, num_df: pd.DataFrame) -> RAW:
-        bag = RawDataBag(sub_df=sub_df, pre_df=pre_df, num_df=num_df)
-        bag._init_internal_structures()
-        return bag
+        return RawDataBag(sub_df=sub_df, pre_df=pre_df, num_df=num_df)
 
     def __init__(self, sub_df: pd.DataFrame, pre_df: pd.DataFrame, num_df: pd.DataFrame):
         self.sub_df = sub_df
@@ -129,26 +126,6 @@ class RawDataBag:
 
         # pandas pivot works better if coreg is not nan, so we set it here to a simple dash
         self.num_df.loc[self.num_df.coreg.isna(), 'coreg'] = '-'
-
-        # simple dict which directly returns the 'form' (10-k, 10q, ..) of a report
-        self.adsh_form_map: Optional[Dict[str, str]] = None
-
-        # simple dict which directly returns the period date of the report as int
-        self.adsh_period_map: Optional[Dict[str, int]] = None
-
-        # simple dict which directly returns the previous (a year before) period date as int
-        self.adsh_previous_period_map: Optional[Dict[str, int]] = None
-
-    def _init_internal_structures(self):
-        self.adsh_form_map = \
-            self.sub_df[['adsh', 'form']].set_index('adsh').to_dict()['form']
-
-        self.adsh_period_map = \
-            self.sub_df[['adsh', 'period']].set_index('adsh').to_dict()['period']
-
-        # caculate the date for the previous year
-        self.adsh_previous_period_map = {adsh: calculate_previous_period(period)
-                                         for adsh, period in self.adsh_period_map.items()}
 
     def get_sub_copy(self) -> pd.DataFrame:
         """
@@ -177,56 +154,18 @@ class RawDataBag:
         """
         return self.num_df.copy()
 
-    def get_joined_bag(self,
-                       use_period: bool = True,
-                       use_previous_period: bool = False,
-                       tags: Optional[List[str]] = None) -> JoinedDataBag:
+    def get_joined_bag(self) -> JoinedDataBag:
         """
         merges the raw data of pre and num together.
-        depending on the parameters, it just uses the  period date and the previouis period date.
-        furthermore, also the tags could be restricted.
 
-        Note: default for use_period is True
-
-        Args:
-            use_period (bool, True): indicates that only the values are filtered which
-            ddates machtes the period of the report.
-
-            use_previous_period (bool, False): indicates that only the values  are filtered
-            which ddates matches the period of the report and the previous year. If this is set
-            to True, then the value of use_period is ignored
-
-            tags (List[str], optional, None): if set, only the tags listet in this
-            parameter are returned
         Returns:
-        JoinedDataBag: the DataBag where pre and num are merged
+            JoinedDataBag: the DataBag where pre and num are merged
 
         """
-        num_df_filtered_for_dates = self.num_df
 
-        ## only consider the entries in num.df that have ddates according to the set
-        ## use_report and use_previoius_report
-
-        # if use_previous_report, then use_period is ignored
-        if use_period and not use_previous_period:
-            mask = self.num_df['adsh'].map(self.adsh_period_map) == self.num_df['ddate']
-            num_df_filtered_for_dates = num_df_filtered_for_dates[mask]
-
-        if use_previous_period:
-            mask = (self.num_df['adsh'].map(self.adsh_period_map) == self.num_df['ddate']) | \
-                   (self.num_df['adsh'].map(self.adsh_previous_period_map) == self.num_df['ddate'])
-
-            num_df_filtered_for_dates = num_df_filtered_for_dates[mask]
-
-        ## only consider the entries in pre which tag names are defined in the tags parameter
-        pre_filtered_for_tags = self.pre_df
-        if tags:
-            pre_filtered_for_tags = self.pre_df[self.pre_df.tag.isin(tags)]
-
-        ## transform the data
         # merge num and pre together. only rows in num are considered for which entries in pre exist
-        pre_num_df = pd.merge(num_df_filtered_for_dates,
-                              pre_filtered_for_tags,
+        pre_num_df = pd.merge(self.num_df,
+                              self.pre_df,
                               on=['adsh', 'tag',
                                   'version'])  # don't produce index_x and index_y columns
 

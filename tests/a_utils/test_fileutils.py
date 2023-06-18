@@ -24,7 +24,7 @@ def test_write_content_to_zip():
 
 
 def test_read_df_from_file_in_zip():
-    zip_file = CURRENT_DIR + '/testdata/2009q3.zip'
+    zip_file = CURRENT_DIR + '/../_testdata/zip/2009q3.zip'
     file = 'sub.txt'
     no_options_df = read_df_from_file_in_zip(zip_file=zip_file, file_to_extract=file)
 

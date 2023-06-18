@@ -6,7 +6,7 @@ import pandas as pd
 from secfsdstools.c_transform.toparquettransforming import ToParquetTransformer
 
 CURRENT_DIR, _ = os.path.split(__file__)
-ZIP_DIR = os.path.join(CURRENT_DIR, 'testdata')
+ZIP_DIR = os.path.join(CURRENT_DIR, '../_testdata/zip')
 
 
 def test_transformation(tmp_path):

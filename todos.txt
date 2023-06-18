@@ -14,14 +14,22 @@ v.1.0.0
 - collectors producing DataBags
 - searching moved from e_read to c_index
 - companyreading moved from e_read to c_index as companyindexreading / CompanyIndexReader
-
+- Filter in eigene Fitlerklassen ausgelagert
 
 Next:
+
+- das ganze basis testing muss sauber neu aufgeräumt werden
+- für die tests sollte man ein zentrales fixture haben, welches die configuration erzeugt,
+  so dass diese für die Tests verwendet werden kann, ohne dass jedesmal eine neue config gelesen,
+  oder aber die "richtige" config gelesen wird
+  oder ich benötige ein konzept, wie das organsiert werden soll
+
 - Presentation Pivots
   -> zuerst alte Logik komplett integrieren
 
-- Filter logik
 
+- Pipelines: einfaches Konzept um Standard Flows zu kapseln
+  z.B. Collector als Input bis zur Presentation
 
 
 direktes parquet filtern ist etwa 10% schneller, nicht wirklich viel, vor allem weil

@@ -12,6 +12,7 @@ from secfsdstools.c_update.updateprocess import Updater
 
 current_dir, _ = os.path.split(__file__)
 
+achtung: testdaten folder hat geändert und neu sind 3 zip files vorhanden
 
 @pytest.fixture
 def updater(tmp_path: Path) -> Updater:
@@ -80,18 +81,18 @@ def test_do_transform_none_existing_folder(updater):
 
 
 def test_do_transform_and_index(updater):
-    updater.dld_dir = f'{current_dir}/testdata_zip'
+    updater.dld_dir = f'{current_dir}/../_testdata/zip'
     updater._do_transform()
 
     transformed = get_directories_in_directory(os.path.join(updater.parquet_dir, 'quarter'))
-    assert len(transformed) == 2
+    assert len(transformed) == 3
 
     # test indexing
     updater._do_index()
 
     indexer = ParquetDBIndexingAccessor(db_dir=updater.db_dir)
     indexed_files_df = indexer.read_all_indexfileprocessing_df()
-    assert len(indexed_files_df) == 2
+    assert len(indexed_files_df) == 3
 
     reports_df = indexer.read_all_indexreports_df()
     assert len(reports_df) == 1017
@@ -121,7 +122,7 @@ def test_integration_test(updater):
         # check that both zip files had been processed
         indexer = ParquetDBIndexingAccessor(db_dir=updater.db_dir)
         indexed_files_df = indexer.read_all_indexfileprocessing_df()
-        assert len(indexed_files_df) == 2
+        assert len(indexed_files_df) == 3
 
         reports_df = indexer.read_all_indexreports_df()
         assert len(reports_df) == 1017

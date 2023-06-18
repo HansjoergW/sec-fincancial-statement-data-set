@@ -9,7 +9,7 @@ from secfsdstools.e_collector.reportcollecting import SingleReportCollector
 
 APPLE_ADSH_10Q_2010_Q1 = '0001193125-10-012085'
 CURRENT_DIR, _ = os.path.split(__file__)
-PATH_TO_ZIP = f'{CURRENT_DIR}/testdataparquet/quarter/2010q1.zip'
+PATH_TO_ZIP = f'{CURRENT_DIR}/../_testdata/parquet/quarter/2010q1.zip'
 
 
 @pytest.fixture

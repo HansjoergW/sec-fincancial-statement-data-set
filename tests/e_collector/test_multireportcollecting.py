@@ -11,8 +11,8 @@ APPLE_ADSH_10Q_2010_Q1 = '0001193125-10-012085'
 APPLE_ADSH_10Q_2010_Q2 = '0001193125-10-088957'
 
 CURRENT_DIR, _ = os.path.split(__file__)
-PATH_TO_PARQUET_Q1 = f'{CURRENT_DIR}/testdataparquet/quarter/2010q1.zip'
-PATH_TO_PARQUET_Q2 = f'{CURRENT_DIR}/testdataparquet/quarter/2010q2.zip'
+PATH_TO_PARQUET_Q1 = f'{CURRENT_DIR}/../_testdata/parquet/quarter/2010q1.zip'
+PATH_TO_PARQUET_Q2 = f'{CURRENT_DIR}/../_testdata/parquet/quarter/2010q2.zip'
 
 
 @pytest.fixture

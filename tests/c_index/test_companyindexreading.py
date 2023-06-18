@@ -2,15 +2,18 @@ import os
 from unittest.mock import MagicMock
 
 from secfsdstools.a_config.configmodel import Configuration
+from secfsdstools.c_index.companyindexreading import CompanyIndexReader
 from secfsdstools.c_index.indexdataaccess import IndexReport
-from secfsdstools.e_read.companyreading import CompanyReader
 
 CURRENT_DIR, _ = os.path.split(__file__)
-PATH_TO_PARQUET = f'{CURRENT_DIR}/testdataparquet/'
+PATH_TO_PARQUET = f'{CURRENT_DIR}/../_testdata/parquet/'
 
+todo ..
 
 def test_get_latest_company_information_parquet():
-    reader = CompanyReader(cik=320193, dbaccessor=MagicMock())
+
+
+    reader = CompanyIndexReader.get_company_index_reader(cik=320193)
 
     reader.dbaccessor.find_latest_company_report = lambda x: IndexReport(
         adsh='0001193125-10-012085',

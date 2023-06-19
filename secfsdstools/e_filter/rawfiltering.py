@@ -10,6 +10,61 @@ from secfsdstools.d_container.databagmodel import RawDataBag
 from secfsdstools.d_container.filter import FilterBase
 
 
+class AdshRawFilter(FilterBase[RawDataBag]):
+    """
+    Filters the data by a list of adshs. This filter operates on the sub, pre_df and the num_df.
+    """
+
+    def __init__(self, adshs: List[str]):
+        self.adshs = adshs
+
+    def filter(self, databag: RawDataBag) -> RawDataBag:
+        """
+        filters the databag so that only datapoints of reports defined by the adshs list
+        are contained.
+
+        Args:
+            databag(RawDataBag) : rawdatabag to apply the filter to
+
+        Returns:
+            RawDataBag: the databag with the filtered data
+        """
+        sub_filtered_for_adshs = databag.sub_df[databag.sub_df.adsh.isin(self.adshs)]
+        pre_filtered_for_adshs = databag.pre_df[databag.pre_df.adsh.isin(self.adshs)]
+        num_filtered_for_adshs = databag.num_df[databag.num_df.adsh.isin(self.adshs)]
+
+        return RawDataBag.create(sub_df=sub_filtered_for_adshs,
+                                 pre_df=pre_filtered_for_adshs,
+                                 num_df=num_filtered_for_adshs)
+
+
+class StmtsRawFilter(FilterBase[RawDataBag]):
+    """
+    Filters the data by a list of statement type (BS, IS, CF, ...).
+    This filter operates on the pre_df.
+    """
+
+    def __init__(self, stmts: List[str]):
+        self.stmts = stmts
+
+    def filter(self, databag: RawDataBag) -> RawDataBag:
+        """
+        filters the databag so that only datapoints of reports defined by the adshs list
+        are contained.
+
+        Args:
+            databag(RawDataBag) : rawdatabag to apply the filter to
+
+        Returns:
+            RawDataBag: the databag with the filtered data
+        """
+        pre_filtered_for_stmts = databag.pre_df[databag.pre_df.stmt.isin(self.stmts)]
+
+        return RawDataBag.create(sub_df=databag.sub_df,
+                                 pre_df=pre_filtered_for_stmts,
+                                 num_df=databag.num_df)
+
+
 class ReportPeriodRawFilter(FilterBase[RawDataBag]):
     """
     Filters the data so that only datapoints are contained which ddate-attribute equals the
@@ -100,3 +155,23 @@ class TagRawFilter(FilterBase[RawDataBag]):
                                  num_df=num_filtered_for_tags)
 
 
+class MainCoregFilter(FilterBase[RawDataBag]):
+    """
+    Filters only for the main coreg entries (coreg == '')
+    """
+
+    def filter(self, databag: RawDataBag) -> RawDataBag:
+        """
+        filters the databag so that only the main coreg entries are contained
+        (no data subsidiaries).
+        Args:
+            databag(RawDataBag) : rawdatabag to apply the filter to
+
+        Returns:
+            RawDataBag: the databag with the filtered data
+        """
+        num_filtered_for_tags = databag.num_df[databag.num_df.coreg == '']
+
+        return RawDataBag.create(sub_df=databag.sub_df,
+                                 pre_df=databag.pre_df,
+                                 num_df=num_filtered_for_tags)

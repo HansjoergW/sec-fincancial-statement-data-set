@@ -4,18 +4,57 @@ Defines the container that keeps the data of sub.txt, num.txt, and  pre.txt toge
 
 import os
 from dataclasses import dataclass
-from typing import Dict, List, TypeVar
+from typing import Dict, List, TypeVar, Generic
 
 import pandas as pd
 
 from secfsdstools.a_utils.constants import SUB_TXT, PRE_TXT, NUM_TXT, PRE_NUM_TXT
 from secfsdstools.d_container.filter import FilterBase
+from secfsdstools.d_container.presentation import PresenterBase
 
 RAW = TypeVar('RAW', bound='RawDataBag')
 JOINED = TypeVar('JOINED', bound='JoinedDataBag')
+T = TypeVar('T')
 
 
-class JoinedDataBag:
+class DataBagBase(Generic[T]):
+
+    def __getitem__(self, filter: FilterBase[T]) -> T:
+        """
+        forwards to the filter method, so that filters can be chained in a simple syntax:
+        bag[filter1][filter2] is equal to bag.filter(filter1).filter(filter2)
+
+        Args:
+            filter: the filter to be applied
+
+        Returns:
+            RawDataBag: the databag with the filtered content
+        """
+
+        return self.filter(filter)
+
+    def filter(self, filter: FilterBase[T]) -> T:
+        """
+        applies a filter to the bag and produces a new bag based on the filter.
+        instead of using the filter, you can also use the "index" syntax to apply filters:
+        bag[filter1][filter2] is equal to bag.filter(filter1).filter(filter2)
+
+        Args:
+            filter: the filter to be applied
+
+        Returns:
+            RawDataBag: the databag with the filtered content
+        """
+        return filter.filter(self)
+
+    def present(self, presenter: PresenterBase[T]) -> pd.DataFrame:
+        """
+        apply a presenter
+        """
+        return presenter.present(self)
+
+
+class JoinedDataBag(DataBagBase[JOINED]):
 
     @classmethod
     def create(cls, sub_df: pd.DataFrame, pre_num_df: pd.DataFrame) -> JOINED:
@@ -111,7 +150,7 @@ class RawDataBagStats:
     reports_per_period_date: Dict[int, int]
 
 
-class RawDataBag:
+class RawDataBag(DataBagBase[RAW]):
     """
     Container class to keep the data for sub.txt, pre.txt, and num.txt together.
     """
@@ -126,35 +165,7 @@ class RawDataBag:
         self.num_df = num_df
 
         # pandas pivot works better if coreg is not nan, so we set it here to a simple dash
-        self.num_df.loc[self.num_df.coreg.isna(), 'coreg'] = '-'
-
-    def __getitem__(self, filter: FilterBase[RAW]) -> RAW:
-        """
-        forwards to the filter method, so that filters can be chained in a simple syntax:
-        bag[filter1][filter2] is equal to bag.filter(filter1).filter(filter2)
-
-        Args:
-            filter: the filter to be applied
-
-        Returns:
-            RawDataBag: the databag with the filtered content
-        """
-
-        return self.filter(filter)
-
-    def filter(self, filter: FilterBase[RAW]) -> RAW:
-        """
-        applies a filter to the bag and produces a new bag based on the filter.
-        instead of using the filter, you can also use the "index" syntax to apply filters:
-        bag[filter1][filter2] is equal to bag.filter(filter1).filter(filter2)
-
-        Args:
-            filter: the filter to be applied
-
-        Returns:
-            RawDataBag: the databag with the filtered content
-        """
-        return filter.filter(self)
+        self.num_df.loc[self.num_df.coreg.isna(), 'coreg'] = ''
 
     def get_sub_copy(self) -> pd.DataFrame:
         """

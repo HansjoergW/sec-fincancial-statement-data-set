@@ -12,7 +12,6 @@ from secfsdstools.c_update.updateprocess import Updater
 
 current_dir, _ = os.path.split(__file__)
 
-achtung: testdaten folder hat geändert und neu sind 3 zip files vorhanden
 
 @pytest.fixture
 def updater(tmp_path: Path) -> Updater:
@@ -95,23 +94,22 @@ def test_do_transform_and_index(updater):
     assert len(indexed_files_df) == 3
 
     reports_df = indexer.read_all_indexreports_df()
-    assert len(reports_df) == 1017
+    assert len(reports_df) == 1456
 
 
 def test_integration_test(updater):
-    updater.dld_dir = f'{current_dir}/testdata_zip'
+    updater.dld_dir = f'{current_dir}/../_testdata/zip'
 
     # check that there is no state key at the beginning
     last_check = updater.db_state_accesor.get_key(Updater.LAST_UPDATE_CHECK_KEY)
     assert last_check is None
 
     start_time = time.time()
-    time.sleep(1) # make sure some time has past, before calling update
+    time.sleep(1)  # make sure some time has past, before calling update
     with patch('secfsdstools.c_download.secdownloading.SecZipDownloader.download') \
             as sec_download, \
             patch('secfsdstools.c_download.rapiddownloading.RapidZipDownloader.download') \
                     as rapid_download:
-
         # updates LAST_UPDATE_CHECK_KEY
         updater.update()
 
@@ -125,9 +123,8 @@ def test_integration_test(updater):
         assert len(indexed_files_df) == 3
 
         reports_df = indexer.read_all_indexreports_df()
-        assert len(reports_df) == 1017
+        assert len(reports_df) == 1456
 
         # check that
         last_check = updater.db_state_accesor.get_key(Updater.LAST_UPDATE_CHECK_KEY)
         assert start_time < float(last_check)
-

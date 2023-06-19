@@ -17,13 +17,6 @@ v.1.0.0
 - Filter in eigene Fitlerklassen ausgelagert
 
 Next:
-
-- das ganze basis testing muss sauber neu aufgeräumt werden
-- für die tests sollte man ein zentrales fixture haben, welches die configuration erzeugt,
-  so dass diese für die Tests verwendet werden kann, ohne dass jedesmal eine neue config gelesen,
-  oder aber die "richtige" config gelesen wird
-  oder ich benötige ein konzept, wie das organsiert werden soll
-
 - Presentation Pivots
   -> zuerst alte Logik komplett integrieren
 
@@ -31,23 +24,10 @@ Next:
 - Pipelines: einfaches Konzept um Standard Flows zu kapseln
   z.B. Collector als Input bis zur Presentation
 
+- operatoren überladen, so könnte man z.B
+  collector >> [filter1] [filter2] >>
+            collect().filter(filter1).filter(filter2).get_joined()
 
-direktes parquet filtern ist etwa 10% schneller, nicht wirklich viel, vor allem weil
-der code einiges komplizierter wird
-Was man noch testen könnte ist wenn stmts und tags auch gefiltert werden?
-
-
-Filter ist ein einfaches interface -> kann verkettet werden
-fitler Methode auf Bag, Nimmt direkt Filter auf
-
- "filter(self, filter: RawFilter) -> RawDataBag"
-
-
-- Wie und wo filtern wir für period, previous period, tags..?
-- fitern wir auf raw, oder auch auf joined?
-- was liefern filter zurück? ein neues df (copy), oder nur das gefilterte?
-- oder sind filter so gar auf collector möglich? so dass man direkt beim parquet lesen filtern kann?
-- bzw.,  was sind spezial filter für period und previous period?
 
 
 

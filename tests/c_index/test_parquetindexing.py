@@ -49,7 +49,7 @@ def test_all_indexed(parquetreportindexer):
 def test_add_reports(parquetreportindexer):
     current_dir, _ = os.path.split(__file__)
 
-    parquetreportindexer.parquet_dir = f"{current_dir}/testdataparquet/"
+    parquetreportindexer.parquet_dir = f"{current_dir}/../_testdata/parquet/"
 
     parquetreportindexer._index_file(file_name='2010q1.zip')
 

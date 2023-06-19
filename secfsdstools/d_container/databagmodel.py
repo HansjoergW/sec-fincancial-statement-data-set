@@ -128,10 +128,32 @@ class RawDataBag:
         # pandas pivot works better if coreg is not nan, so we set it here to a simple dash
         self.num_df.loc[self.num_df.coreg.isna(), 'coreg'] = '-'
 
-    def __getitem__(self, filter):
+    def __getitem__(self, filter: FilterBase[RAW]) -> RAW:
+        """
+        forwards to the filter method, so that filters can be chained in a simple syntax:
+        bag[filter1][filter2] is equal to bag.filter(filter1).filter(filter2)
+
+        Args:
+            filter: the filter to be applied
+
+        Returns:
+            RawDataBag: the databag with the filtered content
+        """
+
         return self.filter(filter)
 
     def filter(self, filter: FilterBase[RAW]) -> RAW:
+        """
+        applies a filter to the bag and produces a new bag based on the filter.
+        instead of using the filter, you can also use the "index" syntax to apply filters:
+        bag[filter1][filter2] is equal to bag.filter(filter1).filter(filter2)
+
+        Args:
+            filter: the filter to be applied
+
+        Returns:
+            RawDataBag: the databag with the filtered content
+        """
         return filter.filter(self)
 
     def get_sub_copy(self) -> pd.DataFrame:

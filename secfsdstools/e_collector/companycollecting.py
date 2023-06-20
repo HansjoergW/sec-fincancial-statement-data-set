@@ -16,11 +16,12 @@ class CompanyReportCollector:
     """
 
     @classmethod
-    def get_company_collector(cls, cik: int,
-                              forms_filter: Optional[List[str]] = None,
-                              stmt_filter: Optional[List[str]] = None,
-                              tag_filter: Optional[List[str]] = None,
-                              configuration: Optional[Configuration] = None):
+    def get_company_collector(
+            cls, cik: int,
+            forms_filter: Optional[List[str]] = None,
+            stmt_filter: Optional[List[str]] = None,
+            tag_filter: Optional[List[str]] = None,
+            configuration: Optional[Configuration] = None) -> MultiReportCollector:
         """
         creates a MultiReportCollector instance for the provided cik and forms (e.g. 10-K..)
         If no configuration object is passed,
@@ -37,7 +38,7 @@ class CompanyReportCollector:
             configuration (Configuration, optional, None): Optional configuration object
 
         Returns:
-            MultiReportReader: instance of Multi Collector
+            MultiReportCollector: instance of MultiReportCollector
         """
 
         if configuration is None:

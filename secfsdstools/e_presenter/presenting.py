@@ -10,7 +10,7 @@ class StandardStatementPresenter(PresenterBase[JoinedDataBag]):
     financial statements are presented.
     """
 
-    def __init__(self, flatten_index: bool = False, add_form_column: bool = False):
+    def __init__(self, flatten_index: bool = True, add_form_column: bool = False):
         """
 
         Args:

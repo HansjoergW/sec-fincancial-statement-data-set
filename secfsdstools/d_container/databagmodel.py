@@ -164,9 +164,6 @@ class RawDataBag(DataBagBase[RAW]):
         self.pre_df = pre_df
         self.num_df = num_df
 
-        # pandas pivot works better if coreg is not nan, so we set it here to a simple dash
-        self.num_df.loc[self.num_df.coreg.isna(), 'coreg'] = ''
-
     def get_sub_copy(self) -> pd.DataFrame:
         """
         Returns a copy of the sub.txt dataframe.
@@ -295,6 +292,6 @@ class RawDataBag(DataBagBase[RAW]):
 
         # todo: might be more efficient if the contained maps were just combined
         #       instead of being recalculated
-        return RawDataBag.create(sub_df=pd.concat(sub_dfs),
-                                 pre_df=pd.concat(pre_dfs),
-                                 num_df=pd.concat(num_dfs))
+        return RawDataBag.create(sub_df=pd.concat(sub_dfs, ignore_index=True),
+                                 pre_df=pd.concat(pre_dfs, ignore_index=True),
+                                 num_df=pd.concat(num_dfs, ignore_index=True))

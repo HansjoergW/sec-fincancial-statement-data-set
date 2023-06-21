@@ -168,7 +168,7 @@ class ParallelExecutorBase(Generic[IT, PT, OT], ABC):
         # we retry as long as we were able to process additional entries with in the while loop.
         while (last_missing is None) or (last_missing > len(missing)):
             last_missing = len(missing)
-            logging.info("%smissing entries %d", self.intend, len(missing))
+            logging.info("%sitems to process: %d", self.intend, len(missing))
 
             # break up the list of missing entries in chunks and process every chunk in parallel
             chunk_entries = self.chunksize

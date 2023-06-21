@@ -18,14 +18,11 @@ v.1.0.0
 - Presenter
 
 Next:
-- da ist ein warning beim company collecting beispiel, nicht ganz klar, welcher code das verursacht,
-  irgendwo beim parallelen laden
+- multi cik reading in companycollecting
+- if daily in index, then reports are read twice for company collector
+  maybe also for report collector?
 
-    C:\ieu\Anaconda3\envs\secfsdstools37\lib\site-packages\pandas\core\indexing.py:1763: SettingWithCopyWarning:
-    A value is trying to be set on a copy of a slice from a DataFrame.
-    Try using .loc[row_indexer,col_indexer] = value instead
-    See the caveats in the documentation: https://pandas.pydata.org/pandas-docs/stable/user_guide/indexing.html#returning-a-view-versus-a-copy
-      isetter(loc, value)
+
 
 
 - redo examples

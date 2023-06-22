@@ -9,7 +9,7 @@ import pandas as pd
 from secfsdstools.a_config.configmgt import ConfigurationManager
 from secfsdstools.a_config.configmodel import Configuration
 from secfsdstools.c_index.indexdataaccess import IndexReport, ParquetDBIndexingAccessor
-from secfsdstools.e_read.basereportreading import SUB_TXT
+from secfsdstools.a_utils.constants import SUB_TXT
 
 
 class CompanyIndexReader:
@@ -69,7 +69,7 @@ class CompanyIndexReader:
         Returns:
             List[IndexReport]: the list of matching reports as a list of IndexReport instances
         """
-        return self.dbaccessor.read_index_reports_for_cik(self.cik, forms)
+        return self.dbaccessor.read_index_reports_for_ciks([self.cik], forms)
 
     def get_all_company_reports_df(self, forms: Optional[List[str]] = None) -> pd.DataFrame:
         """
@@ -84,4 +84,4 @@ class CompanyIndexReader:
         Returns:
             pd.DataFrame: the list of matching reports as a panas Dataframe
         """
-        return self.dbaccessor.read_index_reports_for_cik_df(self.cik, forms)
+        return self.dbaccessor.read_index_reports_for_ciks_df([self.cik], forms)

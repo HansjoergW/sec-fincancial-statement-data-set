@@ -18,14 +18,11 @@ v.1.0.0
 - Presenter
 
 Next:
-- multi cik reading in companycollecting
+- redo examples
+
 - if daily in index, then reports are read twice for company collector
   maybe also for report collector?
 
-
-
-
-- redo examples
 - redo notebooks
 
 

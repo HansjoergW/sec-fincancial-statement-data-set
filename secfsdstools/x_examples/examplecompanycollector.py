@@ -17,15 +17,15 @@ def run():
     # single company (cik number) from different zipfiles. This can be done by providing
     # a cik number and the list of forms that should be read
 
-    # the following reader reads all available 10-K reports of apple
-    company_collector = CompanyReportCollector.get_company_collector(cik=320193,
+    # The following reader reads all available 10-K reports of apple
+    company_collector = CompanyReportCollector.get_company_collector(ciks=[320193],
                                                                      forms_filter=['10-K'])
-    # the interface is the same was with the collecters: collect()
-    # when calling the collect method, all the available 10-K reports from apple
+    # The interface is the same for all collectors: a simple collect() method
+    # when calling the collect() method, all the available 10-K reports from apple
     # are packed into a single instance of RawDataBag
     apple_10k_bag: RawDataBag = company_collector.collect()
 
-    # the RawDataBag contains the merged dataframes for the data from sub_txt, pre_txt, and num_txt
+    # The RawDataBag contains the merged dataframes for the data from sub_txt, pre_txt, and num_txt
     raw_sub_df = apple_10k_bag.sub_df
     raw_pre_df = apple_10k_bag.pre_df
     raw_num_df = apple_10k_bag.num_df
@@ -36,21 +36,21 @@ def run():
     # from the 10-K from 2021, and so on. However, since we anyway have collected all the
     # available reports, we only need the datapoints that are for main year of the report.
 
-    # this can be done with the ReportPeriodRawFilter
+    # This can be done with the ReportPeriodRawFilter
     apple_10k_bag_main_period: RawDataBag = apple_10k_bag.filter(ReportPeriodRawFilter())
 
     # There are many more filters, like filtering for certain Tags, or certain statements
     # (BS, IS, CF, ..). Moreover, it is simply interface, so you can define your own filters as
     # well.
 
-    # The pre and the num data have a strong relation together. The data i the pre_txt
+    # The pre and the num data have a strong relation. The data in the pre_txt
     # actually shows how the information of the num_text is "presented".
-    # That means, that pre_txt and num_text can be joined.
+    # That means, that pre_txt and num_text are often being joined.
 
-    # In order to do that, the RawDataBag class provides the
+    # In order to do that, the RawDataBag class provides the get_joined_bag method
     apple_10k_bag_main_period_joined: JoinedDataBag = apple_10k_bag_main_period.get_joined_bag()
 
-    # this databag contains dataframes for the sub_text and the joined pre_num_txt
+    # the JoinedDataBag databag contains dataframes for the sub_text and the joined pre_num_txt
     joined_sub_df = apple_10k_bag_main_period_joined.sub_df
     joined_pre_num_df = apple_10k_bag_main_period_joined.pre_num_df
 

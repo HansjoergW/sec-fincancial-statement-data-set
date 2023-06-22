@@ -1,6 +1,6 @@
-import secfsdstools.x_examples.examplecompanycollection as collect
-import secfsdstools.x_examples.examplecompanyreading as company
-import secfsdstools.x_examples.examplecreportreading as report
+import secfsdstools.x_examples.examplecompanycollector as collect
+import secfsdstools.x_examples.examplecompanyindex as company
+import secfsdstools.x_examples.examplereportcollector as report
 import secfsdstools.x_examples.examplemultireportreading as multi
 import secfsdstools.x_examples.examplezipreportreading as zip
 

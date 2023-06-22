@@ -212,21 +212,22 @@ class ParquetDBIndexingAccessor(DB):
 
         return filtered_reports
 
-    def read_index_reports_for_cik(self, cik: int, forms: Optional[List[str]] = None) \
+    def read_index_reports_for_ciks(self, ciks: List[int], forms: Optional[List[str]] = None) \
             -> List[IndexReport]:
         """
-        gets all reports as IndexReport instances for a company identified by its cik.
+        gets all reports as IndexReport instances for the companies identified by their cik numbers.
         if forms is not set, all forms are returned, otherwise forms is a list of the
          forms that should be returned
 
         Args:
-            cik (int): cik of the company
+            ciks (List[int]): ciks of the companies
             forms (List[str], optional, None): list of the forms to be returend,
              like ['10-Q', '10-K']
         Returns:
             List[IndexReport]
         """
-        sql = f'SELECT * FROM {self.index_reports_table} WHERE cik = {cik}'
+        ciks_str = [str(cik) for cik in ciks]
+        sql = f'SELECT * FROM {self.index_reports_table} WHERE cik in ({",".join(ciks_str)})'
         if forms is not None:
             forms_str = ", ".join(["'" + x.upper() + "'" for x in forms])
             sql = sql + f' and form in ({forms_str}) '
@@ -234,21 +235,22 @@ class ParquetDBIndexingAccessor(DB):
 
         return self.execute_fetchall_typed(sql, IndexReport)
 
-    def read_index_reports_for_cik_df(self, cik: int, forms: Optional[List[str]] = None) \
+    def read_index_reports_for_ciks_df(self, ciks: List[int], forms: Optional[List[str]] = None) \
             -> pd.DataFrame:
         """
-        gets all reports as IndexReport instances for a company identified by its cik.
+        gets all reports as IndexReport instances for the companies identified by their cik numbers.
         if forms is not set, all forms are returned, otherwise forms is a list of the
          forms that should be returned
 
         Args:
-            cik (int): cik of the company
+            ciks (List[int]): ciks of the companies
             forms (List[str], optional, None):  list of the forms to be returend,
              like ['10-Q', '10-K']
         Returns:
             pd.DataFrame
         """
-        sql = f'SELECT * FROM {self.index_reports_table} WHERE cik = {cik}'
+        ciks_str = [str(cik) for cik in ciks]
+        sql = f'SELECT * FROM {self.index_reports_table} WHERE cik in ({",".join(ciks_str)})'
         if forms is not None:
             forms_str = ", ".join(["'" + x.upper() + "'" for x in forms])
             sql = sql + f' and form in ({forms_str}) '

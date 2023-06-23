@@ -26,10 +26,11 @@ def multireportcollector():
 
     reports = [report1, report2]
 
-    return MultiReportCollector.get_reports_by_indexreports(index_reports=reports)
+    return MultiReportCollector.get_reports_by_indexreports(index_reports=reports,
+                                                            )
 
 
-def test_cm_get_report_by_adshs():
+def test_cm_get_report_by_adshs(basicconf):
     indexreports = [
         IndexReport(cik=320193, name="", form="", filed=0, period=0, originFile="",
                     originFileType="", url="",
@@ -45,7 +46,8 @@ def test_cm_get_report_by_adshs():
             "secfsdstools.c_index.indexdataaccess.ParquetDBIndexingAccessor.read_index_reports_for_adshs",
             return_value=indexreports):
         collector = MultiReportCollector.get_reports_by_adshs(
-            [APPLE_ADSH_10Q_2010_Q1, APPLE_ADSH_10Q_2010_Q2])
+            adshs=[APPLE_ADSH_10Q_2010_Q1, APPLE_ADSH_10Q_2010_Q2],
+            configuration=basicconf)
 
         assert collector.collect().num_df.shape == (321, 9)
 

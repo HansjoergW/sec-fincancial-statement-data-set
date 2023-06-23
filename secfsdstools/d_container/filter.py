@@ -1,3 +1,6 @@
+"""
+Base class for Filter implementations.
+"""
 from abc import abstractmethod
 
 from typing import TypeVar, Generic
@@ -6,6 +9,9 @@ T = TypeVar('T')
 
 
 class FilterBase(Generic[T]):
+    """
+    Basic filter definition.
+    """
 
     @abstractmethod
     def filter(self, databag: T) -> T:

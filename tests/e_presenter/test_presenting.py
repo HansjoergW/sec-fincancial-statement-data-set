@@ -20,18 +20,18 @@ def test_StandardStatementPresenter():
 
     presentation: pd.DataFrame = joined_bag.present(StandardStatementPresenter())
 
-    assert presentation.shape == (74, 1)
+    assert presentation.shape == (74, 11)
 
 
-def test_StandardStatementPresenter_flatten():
+def test_StandardStatementPresenter_not_flatten():
     bag1: RawDataBag = RawDataBag.load(PATH_TO_BAG_1)
 
     joined_bag: JoinedDataBag = \
         bag1[AdshRawFilter([APPLE_10Q_2010Q1])][ReportPeriodRawFilter()].get_joined_bag()
 
-    presentation: pd.DataFrame = joined_bag.present(StandardStatementPresenter(flatten_index=True))
+    presentation: pd.DataFrame = joined_bag.present(StandardStatementPresenter(flatten_index=False))
 
-    assert presentation.shape == (74, 11)
+    assert presentation.shape == (74, 1)
 
 
 def test_StandardStatementPresenter_form_col():

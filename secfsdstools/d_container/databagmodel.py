@@ -18,34 +18,37 @@ T = TypeVar('T')
 
 
 class DataBagBase(Generic[T]):
+    """
+    Base class for the DataBag types
+    """
 
-    def __getitem__(self, filter: FilterBase[T]) -> T:
+    def __getitem__(self, bagfilter: FilterBase[T]) -> T:
         """
         forwards to the filter method, so that filters can be chained in a simple syntax:
         bag[filter1][filter2] is equal to bag.filter(filter1).filter(filter2)
 
         Args:
-            filter: the filter to be applied
+            bagfilter: the filter to be applied
 
         Returns:
             RawDataBag: the databag with the filtered content
         """
 
-        return self.filter(filter)
+        return self.filter(bagfilter)
 
-    def filter(self, filter: FilterBase[T]) -> T:
+    def filter(self, bagfilter: FilterBase[T]) -> T:
         """
         applies a filter to the bag and produces a new bag based on the filter.
         instead of using the filter, you can also use the "index" syntax to apply filters:
         bag[filter1][filter2] is equal to bag.filter(filter1).filter(filter2)
 
         Args:
-            filter: the filter to be applied
+            bagfilter: the filter to be applied
 
         Returns:
             RawDataBag: the databag with the filtered content
         """
-        return filter.filter(self)
+        return bagfilter.filter(self)
 
     def present(self, presenter: PresenterBase[T]) -> pd.DataFrame:
         """
@@ -55,12 +58,32 @@ class DataBagBase(Generic[T]):
 
 
 class JoinedDataBag(DataBagBase[JOINED]):
+    """
+    the DataBag in which the pre.txt and the num.txt are joined based on the
+    adsh, tag, and version.
+    """
 
     @classmethod
     def create(cls, sub_df: pd.DataFrame, pre_num_df: pd.DataFrame) -> JOINED:
+        """
+        create a new JoinedDataBag.
+
+        Args:
+            sub_df: sub.txt dataframe
+            pre_num_df: joined pre.txt and num.txt dataframe
+
+        Returns:
+            JoinedDataBag: new instance of JoinedDataBag
+        """
         return JoinedDataBag(sub_df=sub_df, pre_num_df=pre_num_df)
 
     def __init__(self, sub_df: pd.DataFrame, pre_num_df: pd.DataFrame):
+        """
+        constructor.
+        Args:
+            sub_df: sub.txt dataframe
+            pre_num_df: joined pre.txt and num.txt dataframe
+        """
         self.sub_df = sub_df
         self.pre_num_df = pre_num_df
 
@@ -157,6 +180,16 @@ class RawDataBag(DataBagBase[RAW]):
 
     @classmethod
     def create(cls, sub_df: pd.DataFrame, pre_df: pd.DataFrame, num_df: pd.DataFrame) -> RAW:
+        """
+        create method for RawDataBag
+        Args:
+            sub_df(pd.DataFrame): sub.txt dataframe
+            pre_df(pd.DataFrame): pre.txt dataframe
+            num_df(pd.DataFrame): num.txt dataframe
+
+        Returns:
+            RawDataBag:
+        """
         return RawDataBag(sub_df=sub_df, pre_df=pre_df, num_df=num_df)
 
     def __init__(self, sub_df: pd.DataFrame, pre_df: pd.DataFrame, num_df: pd.DataFrame):

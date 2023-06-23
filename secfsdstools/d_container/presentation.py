@@ -1,3 +1,6 @@
+"""
+Base class for Presenter implementations.
+"""
 from abc import abstractmethod
 
 from typing import TypeVar, Generic
@@ -8,6 +11,9 @@ T = TypeVar('T')
 
 
 class PresenterBase(Generic[T]):
+    """
+    The base class for presenter implementations.
+    """
 
     @abstractmethod
     def present(self, databag: T) -> pd.DataFrame:

@@ -1,8 +1,8 @@
 import secfsdstools.x_examples.examplecompanycollector as collect
 import secfsdstools.x_examples.examplecompanyindex as company
 import secfsdstools.x_examples.examplereportcollector as report
-import secfsdstools.x_examples.examplemultireportreading as multi
-import secfsdstools.x_examples.examplezipreportreading as zip
+import secfsdstools.x_examples.examplemultireporcollector as multi
+import secfsdstools.x_examples.examplezipcollector as zip
 
 
 def test_companyreading(tmp_path):

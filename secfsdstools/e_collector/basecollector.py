@@ -1,5 +1,5 @@
 """
-Collector interface definition
+Collector Base Class
 """
 import os
 from abc import ABC, abstractmethod
@@ -12,6 +12,9 @@ from secfsdstools.d_container.databagmodel import RawDataBag
 
 
 class BaseCollector(ABC):
+    """
+    Base class for Collector implementations
+    """
 
     def __init__(self, datapath: str,
                  stmt_filter: Optional[List[str]] = None,

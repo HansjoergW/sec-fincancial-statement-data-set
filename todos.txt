@@ -18,13 +18,11 @@ v.1.0.0
 - Presenter
 
 Next:
-- redo examples
 
 - if daily in index, then reports are read twice for company collector
   maybe also for report collector?
 
 - redo notebooks
-
 
 - Es wäre gut, wenn der StandardStatementPresenter noch eine Kolonne "year", noch welcher auch sortiert ist
   die sortierung über adsh alleine ermöglicht keine sauber sortierung pro jahr

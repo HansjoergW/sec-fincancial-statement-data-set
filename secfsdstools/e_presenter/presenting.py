@@ -1,3 +1,6 @@
+"""
+Default Presenter implementations.
+"""
 import pandas as pd
 
 from secfsdstools.d_container.databagmodel import JoinedDataBag

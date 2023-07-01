@@ -16,7 +16,7 @@ def test_StandardStatementPresenter():
     bag1: RawDataBag = RawDataBag.load(PATH_TO_BAG_1)
 
     joined_bag: JoinedDataBag = \
-        bag1[AdshRawFilter([APPLE_10Q_2010Q1])][ReportPeriodRawFilter()].get_joined_bag()
+        bag1[AdshRawFilter([APPLE_10Q_2010Q1])][ReportPeriodRawFilter()].join()
 
     presentation: pd.DataFrame = joined_bag.present(StandardStatementPresenter())
 
@@ -27,7 +27,7 @@ def test_StandardStatementPresenter_not_flatten():
     bag1: RawDataBag = RawDataBag.load(PATH_TO_BAG_1)
 
     joined_bag: JoinedDataBag = \
-        bag1[AdshRawFilter([APPLE_10Q_2010Q1])][ReportPeriodRawFilter()].get_joined_bag()
+        bag1[AdshRawFilter([APPLE_10Q_2010Q1])][ReportPeriodRawFilter()].join()
 
     presentation: pd.DataFrame = joined_bag.present(StandardStatementPresenter(flatten_index=False))
 
@@ -38,7 +38,7 @@ def test_StandardStatementPresenter_form_col():
     bag1: RawDataBag = RawDataBag.load(PATH_TO_BAG_1)
 
     joined_bag: JoinedDataBag = \
-        bag1[AdshRawFilter([APPLE_10Q_2010Q1])][ReportPeriodRawFilter()].get_joined_bag()
+        bag1[AdshRawFilter([APPLE_10Q_2010Q1])][ReportPeriodRawFilter()].join()
 
     presentation: pd.DataFrame = \
         joined_bag.present(StandardStatementPresenter(flatten_index=True, add_form_column=True))

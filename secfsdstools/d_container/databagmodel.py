@@ -224,7 +224,7 @@ class RawDataBag(DataBagBase[RAW]):
         """
         return self.num_df.copy()
 
-    def get_joined_bag(self) -> JoinedDataBag:
+    def join(self) -> JoinedDataBag:
         """
         merges the raw data of pre and num together.
 

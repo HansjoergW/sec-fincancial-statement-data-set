@@ -51,7 +51,7 @@ def run():
 
     # In order to do that, the RawDataBag class provides the get_joined_bag method
     apple_selected_10ks_bag_filtered_joined: JoinedDataBag = \
-        apple_selected_10ks_filtered_bag.get_joined_bag()
+        apple_selected_10ks_filtered_bag.join()
 
     # the JoinedDataBag databag contains dataframes for the sub_text and the joined pre_num_txt
     joined_sub_df = apple_selected_10ks_bag_filtered_joined.sub_df

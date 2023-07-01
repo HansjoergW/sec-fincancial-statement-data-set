@@ -40,7 +40,7 @@ def run():
     # That means, that pre_txt and num_text are often being joined.
 
     # In order to do that, the RawDataBag class provides the get_joined_bag method
-    zip_2010q1_BS_bag_joined: JoinedDataBag = zip_2010q1_BS_bag.get_joined_bag()
+    zip_2010q1_BS_bag_joined: JoinedDataBag = zip_2010q1_BS_bag.join()
 
     # the JoinedDataBag databag contains dataframes for the sub_text and the joined pre_num_txt
     joined_sub_df = zip_2010q1_BS_bag_joined.sub_df

@@ -58,7 +58,7 @@ def test_statistics():
 def test_get_joined_bag():
     bag1: RawDataBag = RawDataBag.load(PATH_TO_BAG_1)
 
-    joined_bag: JoinedDataBag = bag1.get_joined_bag()
+    joined_bag: JoinedDataBag = bag1.join()
 
     assert joined_bag.sub_df.shape == (495, 36)
     assert joined_bag.pre_num_df.shape == (165456, 16)
@@ -68,7 +68,7 @@ def test_get_joined_bag():
 def test_load_save_joined_bag(tmp_path):
     bag1: RawDataBag = RawDataBag.load(PATH_TO_BAG_1)
 
-    joined_bag: JoinedDataBag = bag1.get_joined_bag()
+    joined_bag: JoinedDataBag = bag1.join()
 
     joined_bag.save(str(tmp_path))
 
@@ -82,9 +82,9 @@ def test_merge_joined_bag():
     bag1: RawDataBag = RawDataBag.load(PATH_TO_BAG_1)
     bag2: RawDataBag = RawDataBag.load(PATH_TO_BAG_2)
 
-    joined_bag_1: JoinedDataBag = bag1.get_joined_bag()
+    joined_bag_1: JoinedDataBag = bag1.join()
 
-    joined_bag_2: JoinedDataBag = bag2.get_joined_bag()
+    joined_bag_2: JoinedDataBag = bag2.join()
 
     concatenated: JoinedDataBag = JoinedDataBag.concat([joined_bag_1, joined_bag_2])
 

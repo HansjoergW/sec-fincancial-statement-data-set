@@ -27,4 +27,20 @@ jobs:
       - name: linting
         run: pylint --disable=R0913,R0903,W0511,R0902,R0801,R0201 secfsdstools
 
-
+  publish-doc:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+          python-version: 3.8
+      - name: install dependencies
+        run: pip install .
+      - run: pip install pdoc3==0.10
+      - run: mkdir -p docs/_build/html
+      - run: pdoc3 --html --force -o docs/api secfsdstools
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: docs/api

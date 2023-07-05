@@ -18,16 +18,19 @@ v.1.0.0
 - Presenter
 
 Next:
+- Documentation soll für mehrere Versionen möglich sein
+  1. Pfad für Hautpdoku muss in githubpages und damit in README.angepasst werden.
+     -> in latest folder
+     -> muss auf dem Hauptbranch erfolgen
 
 - if daily in index, then reports are read twice for company collector
   maybe also for report collector?
 
-- redo notebooks
+- redo notebooks, include overview pic
 
 - Es wäre gut, wenn der StandardStatementPresenter noch eine Kolonne "year", noch welcher auch sortiert ist
   die sortierung über adsh alleine ermöglicht keine sauber sortierung pro jahr
   man könnte hierfür auch das report year aus sub verwenden
-
 
 - Pipelines: einfaches Konzept um Standard Flows zu kapseln
   z.B. Collector als Input bis zur Presentation
@@ -35,6 +38,9 @@ Next:
 - operatoren überladen, so könnte man z.B
   collector >> [filter1] [filter2] >>
             collect().filter(filter1).filter(filter2).get_joined()
+
+- update readme, include overview pic
+- imporove docs api
 
 
 

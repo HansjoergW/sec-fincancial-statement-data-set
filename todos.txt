@@ -18,6 +18,8 @@ v.1.0.0
 - Presenter
 
 Next:
+- check edgartools
+
 - Documentation soll für mehrere Versionen möglich sein
   1. Pfad für Hautpdoku muss in githubpages und damit in README.angepasst werden.
      -> in latest folder

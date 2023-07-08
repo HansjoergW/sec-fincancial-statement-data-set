@@ -93,6 +93,7 @@ Ideen
 - cli
 - https://streamlit.io/ ui
 
+
 look at
 -------
 - https://pypi.org/project/edgartools/1.6.0/

@@ -42,10 +42,9 @@ jobs:
       - run: mkdir -p docs/_build/html
       - run: pdoc3 --html --force -o docs/api secfsdstools
       - name: Build Documentation
-        run:
-            pip install jekyll
-            cd _docs
-            jekyll build --config=../_config.yml --destination=../docs
+        uses: jekyll/jekyll-action@v2
+        with:
+          args: build --config _config.yml --destination docs
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:

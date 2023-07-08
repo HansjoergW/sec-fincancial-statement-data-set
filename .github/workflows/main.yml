@@ -45,7 +45,7 @@ jobs:
         run:
             pip install jekyll
             cd _docs
-            jekyll build --config ../_config.yml --destination ../docs
+            jekyll build --config=../_config.yml --destination=../docs
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:

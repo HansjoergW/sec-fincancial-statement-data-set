@@ -41,16 +41,13 @@ jobs:
       - run: pip install pdoc3==0.10
       - run: mkdir -p docs/_build/html
       - run: pdoc3 --html --force -o docs/api secfsdstools
-      - name: Build Documentation
-        uses: jekyll/jekyll-action@v2
-        with:
-          args: build --config _config.yml --destination docs
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: "docs"
           destination_dir: ${{ github.ref_name }}
+          enable_jekyll: true
       - name: Trigger GitHub pages rebuild
         run: |
           curl --fail --request POST \

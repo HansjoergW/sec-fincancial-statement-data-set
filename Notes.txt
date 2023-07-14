@@ -114,3 +114,13 @@ jupyter lab
 -----------
 pip install jupyterlab
 jupyter lab --notebook-dir=.
+
+
+Jekyll Dokumentation
+-------------------
+- landing zone content wird direkt in gh-pages branch geführt
+- versionierter content muss kopiert werden
+- verwendetes theme
+  -> https://pages-themes.github.io/minimal/
+     https://github.com/pages-themes/minimal/blob/master/index.md?plain=1
+

@@ -119,6 +119,7 @@ jupyter lab --notebook-dir=.
 Jekyll Dokumentation
 -------------------
 - landing zone content wird direkt in gh-pages branch geführt
+  -> Release Notes aber nicht, oder?
 - versionierter content muss kopiert werden
 - verwendetes theme
   -> https://pages-themes.github.io/minimal/

@@ -1,5 +1,5 @@
 ---
-layout: home
+layout: default
 ---
 
-= Sec Financial Statement Data Sets Tools
+# Sec Financial Statement Data Sets Tools

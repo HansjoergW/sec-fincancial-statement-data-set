@@ -1,0 +1,6 @@
+/.idea/
+/data/
+/notebooks/.ipynb_checkpoints/
+/tests/
+/secrets.txt
+/docs/

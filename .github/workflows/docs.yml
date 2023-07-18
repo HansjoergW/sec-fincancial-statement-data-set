@@ -38,7 +38,7 @@ jobs:
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: docs
-          destination_dir: latest
+          destination_dir: doc_latest
 
 
 #  deploy:

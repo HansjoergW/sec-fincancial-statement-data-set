@@ -31,6 +31,7 @@ jobs:
       - name: install dependencies
         run: pip install .
       - run: pip install pdoc3==0.10
+      - run: cp README.md ./docs/read.md
       - run: mkdir -p docs/_build/html
       - run: pdoc3 --html --force -o docs/api secfsdstools
       - name: Deploy to GitHub Pages

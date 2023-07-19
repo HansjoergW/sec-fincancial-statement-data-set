@@ -43,6 +43,6 @@ and therefore providing a possibility to receive the latest filings on a daily b
 * [Financial Statement Data Sets @ sec.gov](https://www.sec.gov/dera/data/financial-statement-data-sets)
 
 ## Versions
-* [in development](doc_main/entry.html)
-* [latest stable version](doc_latest/entry.html)
-* [0.5.0](doc_v0.5.1/entry.html)
+* [in development (main branch in Github repository)](doc_main/index.html)
+* [latest stable version](doc_latest/index.html)
+* [0.5.0](doc_v0.5.1/index.html)

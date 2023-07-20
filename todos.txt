@@ -17,13 +17,11 @@ v.1.0.0
 - Filter in eigene Fitlerklassen ausgelagert
 - Presenter
 
-Next:
-- check edgartools
 
-- Documentation soll für mehrere Versionen möglich sein
-  1. Pfad für Hautpdoku muss in githubpages und damit in README.angepasst werden.
-     -> in latest folder
-     -> muss auf dem Hauptbranch erfolgen
+
+Next:
+- update readme for v 1, include overview pic
+- improve docs api
 
 - if daily in index, then reports are read twice for company collector
   maybe also for report collector?
@@ -41,17 +39,6 @@ Next:
   collector >> [filter1] [filter2] >>
             collect().filter(filter1).filter(filter2).get_joined()
 
-- update readme, include overview pic
-- imporove docs api
-
-doc
-- readme into doku von version
-  -> evtl. copy umbenennen
-- sicherstellen, dass v.5.0 mit doku ok ist
-- merge version 1.0 in main ->
-
-
-next
 - update des config files
   fehlende Inhalte müssen gesetzt und auf default gesetzt werden, oder?
   überflüssige Inhalte müssen entfernt werden
@@ -72,7 +59,6 @@ next
 later
 -build timeline for company
 -correct quarter naming -> was meine ich damit?
--parquet support
 -db-version for updates
 
 features
@@ -83,7 +69,6 @@ features
 
 build, release & docu
 - coverage report padge
-- release to readthedocs
 
 
 
@@ -91,6 +76,7 @@ Checkout für Visualisierung
 - https://gist.github.com/mwouts/a2de16feb90d33fd89334fb09f62742f
 - https://www.linkedin.com/pulse/interactive-dataframes-jupyter-google-colab-vs-code-pycharm-wouts/?trk=articles_directory
 - https://pbpython.com/dataframe-gui-overview.html
+
 
 Ideen
 -----

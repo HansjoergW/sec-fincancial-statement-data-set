@@ -44,6 +44,11 @@ Next:
 - update readme, include overview pic
 - imporove docs api
 
+doc
+- readme into doku von version
+  -> evtl. copy umbenennen
+- sicherstellen, dass v.5.0 mit doku ok ist
+- merge version 1.0 in main ->
 
 
 next

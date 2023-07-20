@@ -41,12 +41,13 @@ jobs:
       - run: pip install pdoc3==0.10
       - run: mkdir -p docs/_build/html
       - run: pdoc3 --html --force -o docs/api secfsdstools
+      - run: cp README.md ./docs/read.md
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: "docs"
-          destination_dir: dev_${{ github.ref_name }}
+          destination_dir: doc_${{ github.ref_name }}
           enable_jekyll: true
       - name: Trigger GitHub pages rebuild
         run: |

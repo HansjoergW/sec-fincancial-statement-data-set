@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.10.0" />
-<title>secfsdstools.c_index API documentation</title>
-<meta name="description" content="" />
+<title>secfsdstools.d_container.presentation API documentation</title>
+<meta name="description" content="Base class for Presenter implementations." />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
 <link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
@@ -19,36 +19,125 @@
 <main>
 <article id="content">
 <header>
-<h1 class="title">Module <code>secfsdstools.c_index</code></h1>
+<h1 class="title">Module <code>secfsdstools.d_container.presentation</code></h1>
 </header>
 <section id="section-intro">
+<p>Base class for Presenter implementations.</p>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">&#34;&#34;&#34;
+Base class for Presenter implementations.
+&#34;&#34;&#34;
+from abc import abstractmethod
+
+from typing import TypeVar, Generic
+
+import pandas as pd
+
+T = TypeVar(&#39;T&#39;)
+
+
+class PresenterBase(Generic[T]):
+    &#34;&#34;&#34;
+    The base class for presenter implementations.
+    &#34;&#34;&#34;
+
+    @abstractmethod
+    def present(self, databag: T) -&gt; pd.DataFrame:
+        &#34;&#34;&#34;
+        implements a presenter which reformats the bag into dataframe.
+        Args:
+            databag (T): the bag to transform into presentation df
+
+        Returns:
+            pd.DataFrame: the data to be presented
+
+        &#34;&#34;&#34;</code></pre>
+</details>
 </section>
 <section>
-<h2 class="section-title" id="header-submodules">Sub-modules</h2>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
 <dl>
-<dt><code class="name"><a title="secfsdstools.c_index.companyindexreading" href="companyindexreading.html">secfsdstools.c_index.companyindexreading</a></code></dt>
+<dt id="secfsdstools.d_container.presentation.PresenterBase"><code class="flex name class">
+<span>class <span class="ident">PresenterBase</span></span>
+<span>(</span><span>*args, **kwds)</span>
+</code></dt>
 <dd>
-<div class="desc"><p>Reads company information.</p></div>
-</dd>
-<dt><code class="name"><a title="secfsdstools.c_index.indexdataaccess" href="indexdataaccess.html">secfsdstools.c_index.indexdataaccess</a></code></dt>
+<div class="desc"><p>The base class for presenter implementations.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class PresenterBase(Generic[T]):
+    &#34;&#34;&#34;
+    The base class for presenter implementations.
+    &#34;&#34;&#34;
+
+    @abstractmethod
+    def present(self, databag: T) -&gt; pd.DataFrame:
+        &#34;&#34;&#34;
+        implements a presenter which reformats the bag into dataframe.
+        Args:
+            databag (T): the bag to transform into presentation df
+
+        Returns:
+            pd.DataFrame: the data to be presented
+
+        &#34;&#34;&#34;</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>typing.Generic</li>
+</ul>
+<h3>Subclasses</h3>
+<ul class="hlist">
+<li><a title="secfsdstools.e_presenter.presenting.StandardStatementPresenter" href="../e_presenter/presenting.html#secfsdstools.e_presenter.presenting.StandardStatementPresenter">StandardStatementPresenter</a></li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="secfsdstools.d_container.presentation.PresenterBase.present"><code class="name flex">
+<span>def <span class="ident">present</span></span>(<span>self, databag: ~T) ‑> pandas.core.frame.DataFrame</span>
+</code></dt>
 <dd>
-<div class="desc"><p>Database logic to hanlde the indexing</p></div>
-</dd>
-<dt><code class="name"><a title="secfsdstools.c_index.indexing" href="indexing.html">secfsdstools.c_index.indexing</a></code></dt>
-<dd>
-<div class="desc"><p>Indexing the downloaded to data</p></div>
-</dd>
-<dt><code class="name"><a title="secfsdstools.c_index.searching" href="searching.html">secfsdstools.c_index.searching</a></code></dt>
-<dd>
-<div class="desc"><p>company search logic.</p></div>
+<div class="desc"><p>implements a presenter which reformats the bag into dataframe.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>databag</code></strong> :&ensp;<code>T</code></dt>
+<dd>the bag to transform into presentation df</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>pd.DataFrame</code></dt>
+<dd>the data to be presented</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@abstractmethod
+def present(self, databag: T) -&gt; pd.DataFrame:
+    &#34;&#34;&#34;
+    implements a presenter which reformats the bag into dataframe.
+    Args:
+        databag (T): the bag to transform into presentation df
+
+    Returns:
+        pd.DataFrame: the data to be presented
+
+    &#34;&#34;&#34;</code></pre>
+</details>
 </dd>
 </dl>
-</section>
-<section>
-</section>
-<section>
-</section>
-<section>
+</dd>
+</dl>
 </section>
 </article>
 <nav id="sidebar">
@@ -59,15 +148,17 @@
 <ul id="index">
 <li><h3>Super-module</h3>
 <ul>
-<li><code><a title="secfsdstools" href="../index.html">secfsdstools</a></code></li>
+<li><code><a title="secfsdstools.d_container" href="index.html">secfsdstools.d_container</a></code></li>
 </ul>
 </li>
-<li><h3><a href="#header-submodules">Sub-modules</a></h3>
+<li><h3><a href="#header-classes">Classes</a></h3>
 <ul>
-<li><code><a title="secfsdstools.c_index.companyindexreading" href="companyindexreading.html">secfsdstools.c_index.companyindexreading</a></code></li>
-<li><code><a title="secfsdstools.c_index.indexdataaccess" href="indexdataaccess.html">secfsdstools.c_index.indexdataaccess</a></code></li>
-<li><code><a title="secfsdstools.c_index.indexing" href="indexing.html">secfsdstools.c_index.indexing</a></code></li>
-<li><code><a title="secfsdstools.c_index.searching" href="searching.html">secfsdstools.c_index.searching</a></code></li>
+<li>
+<h4><code><a title="secfsdstools.d_container.presentation.PresenterBase" href="#secfsdstools.d_container.presentation.PresenterBase">PresenterBase</a></code></h4>
+<ul class="">
+<li><code><a title="secfsdstools.d_container.presentation.PresenterBase.present" href="#secfsdstools.d_container.presentation.PresenterBase.present">present</a></code></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>

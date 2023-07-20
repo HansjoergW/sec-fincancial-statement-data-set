@@ -31,24 +31,6 @@ It also provides an integration with
 the https://rapidapi.com/hansjoerg.wingeier/api/daily-sec-financial-statement-dataset API
 and therefore providing a possibility to receive the latest filings on a daily basis and not just every three months.
 
-# Principles
-
-The goal is bulk processing of the data.
-
-To improve efficiency, the zip files are downloaded and indexed using a SQLite database table.
-The index table contains information on all filed reports, over 500,000 in total. The first
-download will take a couple of minutes but after that, all the data is on your local harddisk.
-
-Using the index in the sqlite db allows for direct extraction of data for a specific report from the
-appropriate zip file, reducing the need to open and search through each zip file.
-
-Moreover, the downloaded zip files are converted to the parquet format which provides faster read access
-to the data compared to reading the csv files inside the zip files.
-
-The library is designed to have a low memory footprint, only parsing and reading the data for a specific
-report into pandas dataframe tables.
-
-
 # Links
 
 * [Release Notes](https://hansjoergw.github.io/sec-fincancial-statement-data-set/secfsdstools/realeases.md)
@@ -70,7 +52,20 @@ The library has been tested for python version 3.7, 3.8, 3.9, and 3.10
 If you want to contribute, just clone the project and use a python 3.7 environment.
 The dependencies are defined in the requirements.txt file or use the pyproject.toml to install them.
 
+# Principles
 
+To improve efficiency, the zip files are downloaded and indexed using a SQLite database table.
+The index table contains information on all filed reports, over 500,000 in total. The first
+download will take a couple of minutes but after that, all the data are on your local harddisk.
+
+Using the index in the sqlite db allows for direct extraction of data for a specific report from the 
+appropriate zip file, reducing the need to open and search through each zip file.
+
+Moreover, the downloaded zip files are converted to the parquet format which provides way faster read access
+to the data compared to reading the csv files in the zip files. 
+
+The library is designed to have a low memory footprint, only parsing and reading the data for a specific
+report into pandas dataframe tables.
 
 # Configuration
 

@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.10.0" />
-<title>secfsdstools.x_examples.examplezipreportreading API documentation</title>
-<meta name="description" content="Examples for ZipReportReader" />
+<title>secfsdstools.a_utils.basic API documentation</title>
+<meta name="description" content="General utility methods" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
 <link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
@@ -19,57 +19,56 @@
 <main>
 <article id="content">
 <header>
-<h1 class="title">Module <code>secfsdstools.x_examples.examplezipreportreading</code></h1>
+<h1 class="title">Module <code>secfsdstools.a_utils.basic</code></h1>
 </header>
 <section id="section-intro">
-<p>Examples for ZipReportReader</p>
+<p>General utility methods</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">&#34;&#34;&#34;
-Examples for ZipReportReader
+General utility methods
 &#34;&#34;&#34;
-from secfsdstools.e_read.zipreportreading import ZipReportReader
 
 
-def run():
-    # pylint: disable=W0612
+def calculate_previous_period(period: int) -&gt; int:
     &#34;&#34;&#34;
-    run the example
+    calculates the previous period (a year before) for the provided period.
+    since the provided period is an int in the format YYYYMMDD, the previous period is
+    simply the period - 10&#39;000. However, if the period is the end of February and if the
+    current year or the previous year is a leap year, then this has to be handled accordingly.
+
+    Args:
+        period(int): the period for which the previous period shall be calculated
+
+    Returns:
+        int: the previous period as int
     &#34;&#34;&#34;
-    zip_file_2010q1 = &#34;2010q1.zip&#34;
 
-    zip_report_reader = ZipReportReader.get_zip_by_name(name=zip_file_2010q1)
+    # the date of period is provided as an int int the format yyyymmdd
+    # so to calculate the end of the previous period (the period a year ago)
+    # only 10000 has to be subtracted, e.g. 20230101 -&gt; 20230101 - 10000 = 20220101
+    previous_value = period - 10_000
 
-    # reading the raw content of the sub file
-    # this returns a list all reports that are read by the reader
-    raw_sub_df = zip_report_reader.get_raw_sub_data()
+    # however, if the current period or the previous period was a leap year and
+    # the current period is end of February, we have to adjust
 
-    # reading the raw content of the num and pre files
-    raw_pre_df = zip_report_reader.get_raw_pre_data()
-    raw_num_df = zip_report_reader.get_raw_num_data()
+    # so get the year and the month_and_day value from the period
+    period_year, period_monthday = divmod(period, 10_000)
 
-    # merging the data from num and pre together and produce the primary financial statements
-    current_year_df = zip_report_reader.financial_statements_for_period()
-    current_and_previous_year_df = \
-        zip_report_reader.financial_statements_for_period_and_previous_period()
+    # is the period date on a 29th of Feb, then the previous period has to end on a 28th Feb
+    # therefore, adjust the previous_value
+    if period_monthday == 229:
+        previous_value = previous_value - 1
 
-    # Filter for BalanceSheets
-    bs_df = current_and_previous_year_df[
-        current_and_previous_year_df.stmt == &#39;BS&#39;]
+    # was the previous year a leap year and is the current period for end of february
+    # then the previous period ends on the 29th of Feb
+    # therefore, adjust the previous value
+    if (((period_year - 1) % 4) == 0) &amp; (period_monthday == 228):
+        previous_value = previous_value + 1
 
-    # Filter for IncomeStatement
-    is_df = current_and_previous_year_df[
-        current_and_previous_year_df.stmt == &#39;IS&#39;]
-
-    # Filter for CashFlow
-    cf_df = current_and_previous_year_df[
-        current_and_previous_year_df.stmt == &#39;CF&#39;]
-
-
-if __name__ == &#39;__main__&#39;:
-    run()</code></pre>
+    return previous_value</code></pre>
 </details>
 </section>
 <section>
@@ -79,48 +78,62 @@ if __name__ == &#39;__main__&#39;:
 <section>
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
-<dt id="secfsdstools.x_examples.examplezipreportreading.run"><code class="name flex">
-<span>def <span class="ident">run</span></span>(<span>)</span>
+<dt id="secfsdstools.a_utils.basic.calculate_previous_period"><code class="name flex">
+<span>def <span class="ident">calculate_previous_period</span></span>(<span>period: int) ‑> int</span>
 </code></dt>
 <dd>
-<div class="desc"><p>run the example</p></div>
+<div class="desc"><p>calculates the previous period (a year before) for the provided period.
+since the provided period is an int in the format YYYYMMDD, the previous period is
+simply the period - 10'000. However, if the period is the end of February and if the
+current year or the previous year is a leap year, then this has to be handled accordingly.</p>
+<h2 id="args">Args</h2>
+<p>period(int): the period for which the previous period shall be calculated</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>int</code></dt>
+<dd>the previous period as int</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def run():
-    # pylint: disable=W0612
+<pre><code class="python">def calculate_previous_period(period: int) -&gt; int:
     &#34;&#34;&#34;
-    run the example
+    calculates the previous period (a year before) for the provided period.
+    since the provided period is an int in the format YYYYMMDD, the previous period is
+    simply the period - 10&#39;000. However, if the period is the end of February and if the
+    current year or the previous year is a leap year, then this has to be handled accordingly.
+
+    Args:
+        period(int): the period for which the previous period shall be calculated
+
+    Returns:
+        int: the previous period as int
     &#34;&#34;&#34;
-    zip_file_2010q1 = &#34;2010q1.zip&#34;
 
-    zip_report_reader = ZipReportReader.get_zip_by_name(name=zip_file_2010q1)
+    # the date of period is provided as an int int the format yyyymmdd
+    # so to calculate the end of the previous period (the period a year ago)
+    # only 10000 has to be subtracted, e.g. 20230101 -&gt; 20230101 - 10000 = 20220101
+    previous_value = period - 10_000
 
-    # reading the raw content of the sub file
-    # this returns a list all reports that are read by the reader
-    raw_sub_df = zip_report_reader.get_raw_sub_data()
+    # however, if the current period or the previous period was a leap year and
+    # the current period is end of February, we have to adjust
 
-    # reading the raw content of the num and pre files
-    raw_pre_df = zip_report_reader.get_raw_pre_data()
-    raw_num_df = zip_report_reader.get_raw_num_data()
+    # so get the year and the month_and_day value from the period
+    period_year, period_monthday = divmod(period, 10_000)
 
-    # merging the data from num and pre together and produce the primary financial statements
-    current_year_df = zip_report_reader.financial_statements_for_period()
-    current_and_previous_year_df = \
-        zip_report_reader.financial_statements_for_period_and_previous_period()
+    # is the period date on a 29th of Feb, then the previous period has to end on a 28th Feb
+    # therefore, adjust the previous_value
+    if period_monthday == 229:
+        previous_value = previous_value - 1
 
-    # Filter for BalanceSheets
-    bs_df = current_and_previous_year_df[
-        current_and_previous_year_df.stmt == &#39;BS&#39;]
+    # was the previous year a leap year and is the current period for end of february
+    # then the previous period ends on the 29th of Feb
+    # therefore, adjust the previous value
+    if (((period_year - 1) % 4) == 0) &amp; (period_monthday == 228):
+        previous_value = previous_value + 1
 
-    # Filter for IncomeStatement
-    is_df = current_and_previous_year_df[
-        current_and_previous_year_df.stmt == &#39;IS&#39;]
-
-    # Filter for CashFlow
-    cf_df = current_and_previous_year_df[
-        current_and_previous_year_df.stmt == &#39;CF&#39;]</code></pre>
+    return previous_value</code></pre>
 </details>
 </dd>
 </dl>
@@ -136,12 +149,12 @@ if __name__ == &#39;__main__&#39;:
 <ul id="index">
 <li><h3>Super-module</h3>
 <ul>
-<li><code><a title="secfsdstools.x_examples" href="index.html">secfsdstools.x_examples</a></code></li>
+<li><code><a title="secfsdstools.a_utils" href="index.html">secfsdstools.a_utils</a></code></li>
 </ul>
 </li>
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
-<li><code><a title="secfsdstools.x_examples.examplezipreportreading.run" href="#secfsdstools.x_examples.examplezipreportreading.run">run</a></code></li>
+<li><code><a title="secfsdstools.a_utils.basic.calculate_previous_period" href="#secfsdstools.a_utils.basic.calculate_previous_period">calculate_previous_period</a></code></li>
 </ul>
 </li>
 </ul>

@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.10.0" />
-<title>secfsdstools.x_examples.examplecompanycollection API documentation</title>
-<meta name="description" content="Example for CompanyCollector" />
+<title>secfsdstools.x_examples.examplezipcollector API documentation</title>
+<meta name="description" content="Examples for ZipReportReader" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
 <link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
@@ -19,76 +19,70 @@
 <main>
 <article id="content">
 <header>
-<h1 class="title">Module <code>secfsdstools.x_examples.examplecompanycollection</code></h1>
+<h1 class="title">Module <code>secfsdstools.x_examples.examplezipcollector</code></h1>
 </header>
 <section id="section-intro">
-<p>Example for CompanyCollector</p>
+<p>Examples for ZipReportReader</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">&#34;&#34;&#34;
-Example for CompanyCollector
+Examples for ZipReportReader
 &#34;&#34;&#34;
-from secfsdstools.e_read.companycollecting import CompanyReportCollector
+from secfsdstools.d_container.databagmodel import RawDataBag, JoinedDataBag
+from secfsdstools.e_collector.zipcollecting import ZipCollector
+from secfsdstools.e_filter.rawfiltering import StmtsRawFilter
+from secfsdstools.e_presenter.presenting import StandardStatementPresenter
+
 
 def run():
-    # pylint: disable=W0612
+    # pylint: disable=W0612,C0103
     &#34;&#34;&#34;
     run the example
     &#34;&#34;&#34;
+    zip_file_2010q1 = &#34;2010q1.zip&#34;
 
-    # The CompanyReportCollector enables the user to read multiple reports of the
-    # same company (cik number) from different zipfiles. This can be done by providing
-    # a cik number and the list of forms that should be read
+    zip_collector = ZipCollector.get_zip_by_name(name=zip_file_2010q1)
 
-    # the following reader reads all available 10-K reports of apple
-    company_collector = CompanyReportCollector.get_company_collector(cik=320193, forms=[&#39;10-K&#39;])
+    # The interface is the same for all collectors: a simple collect() method
+    # when calling the collect() method, all reports from that quarter are loaded
+    # and packed into a single instance of RawDataBag
+    zip_2010q1_bag: RawDataBag = zip_collector.collect()
 
-    # the interface is the same was with the standard reader
+    # The RawDataBag contains the merged dataframes for the data from sub_txt, pre_txt, and num_txt
+    raw_sub_df = zip_2010q1_bag.sub_df
+    raw_pre_df = zip_2010q1_bag.pre_df
+    raw_num_df = zip_2010q1_bag.num_df
 
-    # this returns a list all reports that are read by the reader
-    raw_sub_df = company_collector.get_raw_sub_data()
+    # On the bag itself, we can apply filters.
+    # Maybe we are just interested in all the information of the Balance Sheets, therefore,
+    # we apply a StmtsRawFilter.
 
-    # reading the raw content of the num and pre files
-    raw_pre_df = company_collector.get_raw_pre_data()
-    raw_num_df = company_collector.get_raw_num_data()
+    zip_2010q1_BS_bag: RawDataBag = zip_2010q1_bag.filter(StmtsRawFilter(stmts=[&#39;BS&#39;]))
 
-    # it is the same interface as the other readers. So we return a filtered dataset
-    # only containing the data which are valid at the period-date of the report or
-    # the period-date of the report and the previous year
+    # There are many more filters, like filtering for certain Tags. Moreover, it is simply
+    # interface, so you can define your own filters as well.
 
-    # merging the data from num and pre together and produce the primary financial statements
-    # The first dataframe set contains just the data that are valid for the year of the report
-    current_year_df = company_collector.financial_statements_for_period()
+    # The pre and the num data have a strong relation. The data in the pre_txt
+    # actually shows how the information of the num_text is &#34;presented&#34;.
+    # That means, that pre_txt and num_text are often being joined.
 
-    # The second dataframe contains the data that are for the current and the previous year
-    current_and_previous_year_df = \
-        company_collector.financial_statements_for_period_and_previous_period()
+    # In order to do that, the RawDataBag class provides the get_joined_bag method
+    zip_2010q1_BS_bag_joined: JoinedDataBag = zip_2010q1_BS_bag.join()
 
-    # Filter for BalanceSheets
-    bs_df = current_and_previous_year_df[
-        current_and_previous_year_df.stmt == &#39;BS&#39;]
+    # the JoinedDataBag databag contains dataframes for the sub_text and the joined pre_num_txt
+    joined_sub_df = zip_2010q1_BS_bag_joined.sub_df
+    joined_pre_num_df = zip_2010q1_BS_bag_joined.pre_num_df
 
-    # Filter for IncomeStatement
-    is_df = current_and_previous_year_df[
-        current_and_previous_year_df.stmt == &#39;IS&#39;]
+    # if you want to get the same representation of the data like they appear in the real
+    # financial report, then you can use the StandardStatementPresenter.
+    # This creates a dataframe where you the same order of the tags how they appear in the
+    # official report. Moreover, there is a column for every report date (the &#34;period&#34; of the
+    # report.
 
-    # Filter for CashFlow
-    cf_df = current_and_previous_year_df[
-        current_and_previous_year_df.stmt == &#39;CF&#39;]
+    bs_report_presentation_df = zip_2010q1_BS_bag_joined.present(StandardStatementPresenter())
 
-    # the previous methods returned the data pivoted, meaning every all report &#34;period&#34;
-    # dates appear as columns for certain analysis, it might be preferred to receive keep
-    # the date as a value in the column. this can be done using just the merge method
-    current_year_unpivoted_df = company_collector.merge_pre_and_num(use_period=True)
-
-    # for instance, get just the Assets Tag for all years
-    assets_value_for_all_years_df = \
-        current_year_unpivoted_df[current_year_unpivoted_df.tag == &#39;Assets&#39;].sort_values([&#39;ddate&#39;])
-
-    # let&#39;s see, how the Value for Assets has increased over the years
-    print(assets_value_for_all_years_df.value.tolist())
 
 if __name__ == &#39;__main__&#39;:
     run()</code></pre>
@@ -101,7 +95,7 @@ if __name__ == &#39;__main__&#39;:
 <section>
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
-<dt id="secfsdstools.x_examples.examplecompanycollection.run"><code class="name flex">
+<dt id="secfsdstools.x_examples.examplezipcollector.run"><code class="name flex">
 <span>def <span class="ident">run</span></span>(<span>)</span>
 </code></dt>
 <dd>
@@ -111,62 +105,51 @@ if __name__ == &#39;__main__&#39;:
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def run():
-    # pylint: disable=W0612
+    # pylint: disable=W0612,C0103
     &#34;&#34;&#34;
     run the example
     &#34;&#34;&#34;
+    zip_file_2010q1 = &#34;2010q1.zip&#34;
 
-    # The CompanyReportCollector enables the user to read multiple reports of the
-    # same company (cik number) from different zipfiles. This can be done by providing
-    # a cik number and the list of forms that should be read
+    zip_collector = ZipCollector.get_zip_by_name(name=zip_file_2010q1)
 
-    # the following reader reads all available 10-K reports of apple
-    company_collector = CompanyReportCollector.get_company_collector(cik=320193, forms=[&#39;10-K&#39;])
+    # The interface is the same for all collectors: a simple collect() method
+    # when calling the collect() method, all reports from that quarter are loaded
+    # and packed into a single instance of RawDataBag
+    zip_2010q1_bag: RawDataBag = zip_collector.collect()
 
-    # the interface is the same was with the standard reader
+    # The RawDataBag contains the merged dataframes for the data from sub_txt, pre_txt, and num_txt
+    raw_sub_df = zip_2010q1_bag.sub_df
+    raw_pre_df = zip_2010q1_bag.pre_df
+    raw_num_df = zip_2010q1_bag.num_df
 
-    # this returns a list all reports that are read by the reader
-    raw_sub_df = company_collector.get_raw_sub_data()
+    # On the bag itself, we can apply filters.
+    # Maybe we are just interested in all the information of the Balance Sheets, therefore,
+    # we apply a StmtsRawFilter.
 
-    # reading the raw content of the num and pre files
-    raw_pre_df = company_collector.get_raw_pre_data()
-    raw_num_df = company_collector.get_raw_num_data()
+    zip_2010q1_BS_bag: RawDataBag = zip_2010q1_bag.filter(StmtsRawFilter(stmts=[&#39;BS&#39;]))
 
-    # it is the same interface as the other readers. So we return a filtered dataset
-    # only containing the data which are valid at the period-date of the report or
-    # the period-date of the report and the previous year
+    # There are many more filters, like filtering for certain Tags. Moreover, it is simply
+    # interface, so you can define your own filters as well.
 
-    # merging the data from num and pre together and produce the primary financial statements
-    # The first dataframe set contains just the data that are valid for the year of the report
-    current_year_df = company_collector.financial_statements_for_period()
+    # The pre and the num data have a strong relation. The data in the pre_txt
+    # actually shows how the information of the num_text is &#34;presented&#34;.
+    # That means, that pre_txt and num_text are often being joined.
 
-    # The second dataframe contains the data that are for the current and the previous year
-    current_and_previous_year_df = \
-        company_collector.financial_statements_for_period_and_previous_period()
+    # In order to do that, the RawDataBag class provides the get_joined_bag method
+    zip_2010q1_BS_bag_joined: JoinedDataBag = zip_2010q1_BS_bag.join()
 
-    # Filter for BalanceSheets
-    bs_df = current_and_previous_year_df[
-        current_and_previous_year_df.stmt == &#39;BS&#39;]
+    # the JoinedDataBag databag contains dataframes for the sub_text and the joined pre_num_txt
+    joined_sub_df = zip_2010q1_BS_bag_joined.sub_df
+    joined_pre_num_df = zip_2010q1_BS_bag_joined.pre_num_df
 
-    # Filter for IncomeStatement
-    is_df = current_and_previous_year_df[
-        current_and_previous_year_df.stmt == &#39;IS&#39;]
+    # if you want to get the same representation of the data like they appear in the real
+    # financial report, then you can use the StandardStatementPresenter.
+    # This creates a dataframe where you the same order of the tags how they appear in the
+    # official report. Moreover, there is a column for every report date (the &#34;period&#34; of the
+    # report.
 
-    # Filter for CashFlow
-    cf_df = current_and_previous_year_df[
-        current_and_previous_year_df.stmt == &#39;CF&#39;]
-
-    # the previous methods returned the data pivoted, meaning every all report &#34;period&#34;
-    # dates appear as columns for certain analysis, it might be preferred to receive keep
-    # the date as a value in the column. this can be done using just the merge method
-    current_year_unpivoted_df = company_collector.merge_pre_and_num(use_period=True)
-
-    # for instance, get just the Assets Tag for all years
-    assets_value_for_all_years_df = \
-        current_year_unpivoted_df[current_year_unpivoted_df.tag == &#39;Assets&#39;].sort_values([&#39;ddate&#39;])
-
-    # let&#39;s see, how the Value for Assets has increased over the years
-    print(assets_value_for_all_years_df.value.tolist())</code></pre>
+    bs_report_presentation_df = zip_2010q1_BS_bag_joined.present(StandardStatementPresenter())</code></pre>
 </details>
 </dd>
 </dl>
@@ -187,7 +170,7 @@ if __name__ == &#39;__main__&#39;:
 </li>
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
-<li><code><a title="secfsdstools.x_examples.examplecompanycollection.run" href="#secfsdstools.x_examples.examplecompanycollection.run">run</a></code></li>
+<li><code><a title="secfsdstools.x_examples.examplezipcollector.run" href="#secfsdstools.x_examples.examplezipcollector.run">run</a></code></li>
 </ul>
 </li>
 </ul>

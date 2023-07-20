@@ -62,335 +62,13 @@ class IndexFileProcessingState:
     processTime: str  # pylint: disable=C0103
 
 
-class DBIndexingAccessorBase(DB):
-    &#34;&#34;&#34; Dataaccess class for index related tables&#34;&#34;&#34;
-
-    def __init__(self, db_dir: str, index_reports_table: str, index_processing_table: str):
-        super().__init__(db_dir=db_dir)
-        self.index_reports_table = index_reports_table
-        self.index_processing_table = index_processing_table
-
-    def read_all_indexreports(self) -&gt; List[IndexReport]:
-        &#34;&#34;&#34;
-        reads all entries of the index_reports table
-
-        Returns:
-            List[IndexReport]: List with IndexReport objects
-        &#34;&#34;&#34;
-        sql = f&#39;SELECT * FROM {self.index_reports_table}&#39;
-        return self.execute_fetchall_typed(sql, IndexReport)
-
-    def read_all_indexreports_df(self) -&gt; pd.DataFrame:
-        &#34;&#34;&#34;
-        reads all entries of the index_reports table as a pandas DataFrame
-
-        Returns:
-            pd.DataFrame: pandas DataFrame
-        &#34;&#34;&#34;
-        sql = f&#39;SELECT * FROM {self.index_reports_table}&#39;
-        return self.execute_read_as_df(sql)
-
-    def read_all_indexfileprocessing(self) -&gt; List[IndexFileProcessingState]:
-        &#34;&#34;&#34;
-        reads all entries of the index_file_processing_state table
-
-        Returns:
-            List[IndexFileProcessingState]: List with IndexFileProcessingState objects
-        &#34;&#34;&#34;
-        sql = f&#39;SELECT * FROM {self.index_processing_table}&#39;
-        return self.execute_fetchall_typed(sql, IndexFileProcessingState)
-
-    def read_all_indexfileprocessing_df(self) -&gt; pd.DataFrame:
-        &#34;&#34;&#34;
-        reads all entries of the index_file_processing_state table as a pandas DataFrame
-
-        Returns:
-            pd.DataFrame: pandas DataFrame
-        &#34;&#34;&#34;
-        sql = f&#39;SELECT * FROM {self.index_processing_table}&#39;
-        return self.execute_read_as_df(sql)
-
-    def read_index_file_for_filename(self, filename: str) -&gt; IndexFileProcessingState:
-        &#34;&#34;&#34;
-        returns the IndexFileProcessingState instance for the provided filename
-        Args:
-            filename (str): the filename of the file
-
-        Returns:
-            IndexFileProcessingState: the processing state instance
-        &#34;&#34;&#34;
-        sql = f&#34;SELECT * FROM {self.index_processing_table} WHERE fileName = &#39;{filename}&#39;&#34;
-        return self.execute_fetchall_typed(sql, IndexFileProcessingState)[0]
-
-    def insert_indexreport(self, data: IndexReport):
-        &#34;&#34;&#34;
-        inserts an entry into the index_report table
-        Args:
-            data (IndexReport): IndexReport data object
-        &#34;&#34;&#34;
-        sql = self.create_insert_statement_for_dataclass(self.index_reports_table, data)
-        with self.get_connection() as conn:
-            self.execute_single(sql, conn)
-
-    def add_index_report(self, sub_df: pd.DataFrame, processing_state: IndexFileProcessingState):
-        &#34;&#34;&#34;
-        adds the submissions in the sub_df into the index table and stores the processing state
-        in the processing table
-        Args:
-            sub_df: dataframe with submissions
-            processing_state: state entry to write
-
-        Returns:
-
-        &#34;&#34;&#34;
-
-        with self.get_connection() as conn:
-            self._append_indexreport_df(sub_df, conn)
-            self._insert_indexfileprocessing(processing_state, conn)
-
-    def _append_indexreport_df(self, dataframe: pd.DataFrame, conn: sqlite3.Connection):
-        &#34;&#34;&#34;
-        append the content of the df to the index report table
-
-        Args:
-            dataframe (pd.DataFrame): the dataframe to be appended
-        &#34;&#34;&#34;
-        self.append_df_to_table(table_name=self.index_reports_table, dataframe=dataframe, conn=conn)
-
-    def insert_indexfileprocessing(self, data: IndexFileProcessingState):
-        &#34;&#34;&#34;
-        inserts an entry into the index_file_processing_state table
-
-        Args:
-            data (IndexFileProcessingState): IndexFileProcessingState data object to insert
-        &#34;&#34;&#34;
-        with self.get_connection() as conn:
-            self._insert_indexfileprocessing(data, conn)
-
-    def _insert_indexfileprocessing(self, data: IndexFileProcessingState, conn: sqlite3.Connection):
-        &#34;&#34;&#34;
-        inserts an entry into the index_file_processing_state table
-
-        Args:
-            data (IndexFileProcessingState): IndexFileProcessingState data object to insert
-        &#34;&#34;&#34;
-        sql = self.create_insert_statement_for_dataclass(self.index_processing_table, data)
-        self.execute_single(sql, conn)
-
-    def find_latest_company_report(self, cik: int) -&gt; IndexReport:
-        &#34;&#34;&#34;
-        returns the latest report of a company
-
-        Args:
-            cik (int): the cik of the company
-
-        Returns:
-            IndexReport: of the latest report of the company
-        &#34;&#34;&#34;
-
-        sql = f&#34;&#34;&#34;SELECT *
-                    FROM {self.index_reports_table}
-                    WHERE cik = {cik} and originFileType = &#39;quarter&#39;
-                    ORDER BY period DESC&#34;&#34;&#34;
-        return self.execute_fetchall_typed(sql, IndexReport)[0]
-
-    def read_index_report_for_adsh(self, adsh: str) -&gt; IndexReport:
-        &#34;&#34;&#34;
-        returns the IndexReport instance for the provided adsh
-
-        Args:
-            adsh (str):  adsh
-        Returns:
-            IndexReport: the report for the provided adsh
-        &#34;&#34;&#34;
-        # sorting by originfiletype, so we prefer official data from SEC,
-        # over the daily files, in case both should be present.
-        sql = f&#34;&#34;&#34;SELECT *
-                    FROM {self.index_reports_table}
-                    WHERE adsh = &#39;{adsh}&#39;
-                    ORDER BY originFileType DESC&#34;&#34;&#34;
-        return self.execute_fetchall_typed(sql, IndexReport)[0]
-
-    def read_index_reports_for_adshs(self, adshs: List[str]) -&gt; List[IndexReport]:
-        &#34;&#34;&#34;
-        returns the IndexReport instances for the provided adshs
-
-        Args:
-            adshs (List[str]):  adshs
-        Returns:
-            List[IndexReport]: the reports for the provided adshs
-        &#34;&#34;&#34;
-
-        adshs_str = &#34;, &#34;.join([&#34;&#39;&#34; + x.upper() + &#34;&#39;&#34; for x in adshs])
-        # sorting by originfiletype, so we prefer official data from SEC,
-        # over the daily files, in case both should be present.
-        sql = f&#34;&#34;&#34;SELECT *
-                    FROM {self.index_reports_table}
-                    WHERE adsh in ({adshs_str})
-                    ORDER BY adsh, originFileType DESC&#34;&#34;&#34;
-
-        reports: List[IndexReport] = self.execute_fetchall_typed(sql, IndexReport)
-
-        last_adsh = None
-        filtered_reports: List[IndexReport] = []
-        for report in reports:
-            if last_adsh == report.adsh:
-                continue
-            last_adsh = report.adsh
-            filtered_reports.append(report)
-
-        return filtered_reports
-
-    def read_index_reports_for_cik(self, cik: int, forms: Optional[List[str]] = None) \
-            -&gt; List[IndexReport]:
-        &#34;&#34;&#34;
-        gets all reports as IndexReport instances for a company identified by its cik.
-        if forms is not set, all forms are returned, otherwise forms is a list of the
-         forms that should be returned
-
-        Args:
-            cik (int): cik of the company
-            forms (List[str], optional, None): list of the forms to be returend,
-             like [&#39;10-Q&#39;, &#39;10-K&#39;]
-        Returns:
-            List[IndexReport]
-        &#34;&#34;&#34;
-        sql = f&#39;SELECT * FROM {self.index_reports_table} WHERE cik = {cik}&#39;
-        if forms is not None:
-            forms_str = &#34;, &#34;.join([&#34;&#39;&#34; + x.upper() + &#34;&#39;&#34; for x in forms])
-            sql = sql + f&#39; and form in ({forms_str}) &#39;
-        sql = sql + &#39; ORDER BY period DESC&#39;
-
-        return self.execute_fetchall_typed(sql, IndexReport)
-
-    def read_index_reports_for_cik_df(self, cik: int, forms: Optional[List[str]] = None) \
-            -&gt; pd.DataFrame:
-        &#34;&#34;&#34;
-        gets all reports as IndexReport instances for a company identified by its cik.
-        if forms is not set, all forms are returned, otherwise forms is a list of the
-         forms that should be returned
-
-        Args:
-            cik (int): cik of the company
-            forms (List[str], optional, None):  list of the forms to be returend,
-             like [&#39;10-Q&#39;, &#39;10-K&#39;]
-        Returns:
-            pd.DataFrame
-        &#34;&#34;&#34;
-        sql = f&#39;SELECT * FROM {self.index_reports_table} WHERE cik = {cik}&#39;
-        if forms is not None:
-            forms_str = &#34;, &#34;.join([&#34;&#39;&#34; + x.upper() + &#34;&#39;&#34; for x in forms])
-            sql = sql + f&#39; and form in ({forms_str}) &#39;
-        sql = sql + &#39; ORDER BY period DESC&#39;
-
-        return self.execute_read_as_df(sql)
-
-    def find_company_by_name(self, name_part: str) -&gt; pd.DataFrame:
-        &#34;&#34;&#34;
-        Finds companies in the index based on the provided part of the name.
-        Lower and uppercase are ignored.
-
-        Args:
-            name_part: the part of the name
-
-        Returns:
-            pd.DataFrame: with columns name and cik
-        &#34;&#34;&#34;
-        sql = f&#34;&#34;&#34;
-                SELECT DISTINCT name, cik from {self.index_reports_table} 
-                WHERE name like &#39;%{name_part}%&#39; 
-                ORDER BY name&#34;&#34;&#34;
-        return self.execute_read_as_df(sql)
-
-
-class ParquetDBIndexingAccessor(DBIndexingAccessorBase):
+class ParquetDBIndexingAccessor(DB):
     &#34;&#34;&#34; Dataaccess class for index related tables of parquet files&#34;&#34;&#34;
-    INDEX_REPORTS_TABLE = &#39;index_parquet_reports&#39;
-    INDEX_PROCESSING_TABLE = &#39;index_parquet_processing_state&#39;
+    index_reports_table = &#39;index_parquet_reports&#39;
+    index_processing_table = &#39;index_parquet_processing_state&#39;
 
     def __init__(self, db_dir: str):
-        super().__init__(db_dir=db_dir, index_reports_table=self.INDEX_REPORTS_TABLE,
-                         index_processing_table=self.INDEX_PROCESSING_TABLE)
-
-
-def create_index_accessor(db_dir: str) -&gt; DBIndexingAccessorBase:
-    &#34;&#34;&#34;
-    Factory method to create the indexaccessor instance based on the type
-    Args:
-        type: type of index accessor to create (e.g. zip or parquet)
-        db_dir: path to the sqllite db file
-
-    Returns:
-        DBIndexingAccessorBase: instantiated instance
-    &#34;&#34;&#34;
-
-    return ParquetDBIndexingAccessor(db_dir=db_dir)</code></pre>
-</details>
-</section>
-<section>
-</section>
-<section>
-</section>
-<section>
-<h2 class="section-title" id="header-functions">Functions</h2>
-<dl>
-<dt id="secfsdstools.c_index.indexdataaccess.create_index_accessor"><code class="name flex">
-<span>def <span class="ident">create_index_accessor</span></span>(<span>db_dir: str) ‑> <a title="secfsdstools.c_index.indexdataaccess.DBIndexingAccessorBase" href="#secfsdstools.c_index.indexdataaccess.DBIndexingAccessorBase">DBIndexingAccessorBase</a></span>
-</code></dt>
-<dd>
-<div class="desc"><p>Factory method to create the indexaccessor instance based on the type</p>
-<h2 id="args">Args</h2>
-<dl>
-<dt><strong><code>type</code></strong></dt>
-<dd>type of index accessor to create (e.g. zip or parquet)</dd>
-<dt><strong><code>db_dir</code></strong></dt>
-<dd>path to the sqllite db file</dd>
-</dl>
-<h2 id="returns">Returns</h2>
-<dl>
-<dt><code><a title="secfsdstools.c_index.indexdataaccess.DBIndexingAccessorBase" href="#secfsdstools.c_index.indexdataaccess.DBIndexingAccessorBase">DBIndexingAccessorBase</a></code></dt>
-<dd>instantiated instance</dd>
-</dl></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def create_index_accessor(db_dir: str) -&gt; DBIndexingAccessorBase:
-    &#34;&#34;&#34;
-    Factory method to create the indexaccessor instance based on the type
-    Args:
-        type: type of index accessor to create (e.g. zip or parquet)
-        db_dir: path to the sqllite db file
-
-    Returns:
-        DBIndexingAccessorBase: instantiated instance
-    &#34;&#34;&#34;
-
-    return ParquetDBIndexingAccessor(db_dir=db_dir)</code></pre>
-</details>
-</dd>
-</dl>
-</section>
-<section>
-<h2 class="section-title" id="header-classes">Classes</h2>
-<dl>
-<dt id="secfsdstools.c_index.indexdataaccess.DBIndexingAccessorBase"><code class="flex name class">
-<span>class <span class="ident">DBIndexingAccessorBase</span></span>
-<span>(</span><span>db_dir: str, index_reports_table: str, index_processing_table: str)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Dataaccess class for index related tables</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">class DBIndexingAccessorBase(DB):
-    &#34;&#34;&#34; Dataaccess class for index related tables&#34;&#34;&#34;
-
-    def __init__(self, db_dir: str, index_reports_table: str, index_processing_table: str):
         super().__init__(db_dir=db_dir)
-        self.index_reports_table = index_reports_table
-        self.index_processing_table = index_processing_table
 
     def read_all_indexreports(self) -&gt; List[IndexReport]:
         &#34;&#34;&#34;
@@ -563,21 +241,22 @@ def create_index_accessor(db_dir: str) -&gt; DBIndexingAccessorBase:
 
         return filtered_reports
 
-    def read_index_reports_for_cik(self, cik: int, forms: Optional[List[str]] = None) \
+    def read_index_reports_for_ciks(self, ciks: List[int], forms: Optional[List[str]] = None) \
             -&gt; List[IndexReport]:
         &#34;&#34;&#34;
-        gets all reports as IndexReport instances for a company identified by its cik.
+        gets all reports as IndexReport instances for the companies identified by their cik numbers.
         if forms is not set, all forms are returned, otherwise forms is a list of the
          forms that should be returned
 
         Args:
-            cik (int): cik of the company
+            ciks (List[int]): ciks of the companies
             forms (List[str], optional, None): list of the forms to be returend,
              like [&#39;10-Q&#39;, &#39;10-K&#39;]
         Returns:
             List[IndexReport]
         &#34;&#34;&#34;
-        sql = f&#39;SELECT * FROM {self.index_reports_table} WHERE cik = {cik}&#39;
+        ciks_str = [str(cik) for cik in ciks]
+        sql = f&#39;SELECT * FROM {self.index_reports_table} WHERE cik in ({&#34;,&#34;.join(ciks_str)})&#39;
         if forms is not None:
             forms_str = &#34;, &#34;.join([&#34;&#39;&#34; + x.upper() + &#34;&#39;&#34; for x in forms])
             sql = sql + f&#39; and form in ({forms_str}) &#39;
@@ -585,21 +264,22 @@ def create_index_accessor(db_dir: str) -&gt; DBIndexingAccessorBase:
 
         return self.execute_fetchall_typed(sql, IndexReport)
 
-    def read_index_reports_for_cik_df(self, cik: int, forms: Optional[List[str]] = None) \
+    def read_index_reports_for_ciks_df(self, ciks: List[int], forms: Optional[List[str]] = None) \
             -&gt; pd.DataFrame:
         &#34;&#34;&#34;
-        gets all reports as IndexReport instances for a company identified by its cik.
+        gets all reports as IndexReport instances for the companies identified by their cik numbers.
         if forms is not set, all forms are returned, otherwise forms is a list of the
          forms that should be returned
 
         Args:
-            cik (int): cik of the company
+            ciks (List[int]): ciks of the companies
             forms (List[str], optional, None):  list of the forms to be returend,
              like [&#39;10-Q&#39;, &#39;10-K&#39;]
         Returns:
             pd.DataFrame
         &#34;&#34;&#34;
-        sql = f&#39;SELECT * FROM {self.index_reports_table} WHERE cik = {cik}&#39;
+        ciks_str = [str(cik) for cik in ciks]
+        sql = f&#39;SELECT * FROM {self.index_reports_table} WHERE cik in ({&#34;,&#34;.join(ciks_str)})&#39;
         if forms is not None:
             forms_str = &#34;, &#34;.join([&#34;&#39;&#34; + x.upper() + &#34;&#39;&#34; for x in forms])
             sql = sql + f&#39; and form in ({forms_str}) &#39;
@@ -624,503 +304,16 @@ def create_index_accessor(db_dir: str) -&gt; DBIndexingAccessorBase:
                 ORDER BY name&#34;&#34;&#34;
         return self.execute_read_as_df(sql)</code></pre>
 </details>
-<h3>Ancestors</h3>
-<ul class="hlist">
-<li><a title="secfsdstools.a_utils.dbutils.DB" href="../a_utils/dbutils.html#secfsdstools.a_utils.dbutils.DB">DB</a></li>
-<li>abc.ABC</li>
-</ul>
-<h3>Subclasses</h3>
-<ul class="hlist">
-<li><a title="secfsdstools.c_index.indexdataaccess.ParquetDBIndexingAccessor" href="#secfsdstools.c_index.indexdataaccess.ParquetDBIndexingAccessor">ParquetDBIndexingAccessor</a></li>
-</ul>
-<h3>Methods</h3>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
 <dl>
-<dt id="secfsdstools.c_index.indexdataaccess.DBIndexingAccessorBase.add_index_report"><code class="name flex">
-<span>def <span class="ident">add_index_report</span></span>(<span>self, sub_df: pandas.core.frame.DataFrame, processing_state: <a title="secfsdstools.c_index.indexdataaccess.IndexFileProcessingState" href="#secfsdstools.c_index.indexdataaccess.IndexFileProcessingState">IndexFileProcessingState</a>)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>adds the submissions in the sub_df into the index table and stores the processing state
-in the processing table</p>
-<h2 id="args">Args</h2>
-<dl>
-<dt><strong><code>sub_df</code></strong></dt>
-<dd>dataframe with submissions</dd>
-<dt><strong><code>processing_state</code></strong></dt>
-<dd>state entry to write</dd>
-</dl>
-<p>Returns:</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def add_index_report(self, sub_df: pd.DataFrame, processing_state: IndexFileProcessingState):
-    &#34;&#34;&#34;
-    adds the submissions in the sub_df into the index table and stores the processing state
-    in the processing table
-    Args:
-        sub_df: dataframe with submissions
-        processing_state: state entry to write
-
-    Returns:
-
-    &#34;&#34;&#34;
-
-    with self.get_connection() as conn:
-        self._append_indexreport_df(sub_df, conn)
-        self._insert_indexfileprocessing(processing_state, conn)</code></pre>
-</details>
-</dd>
-<dt id="secfsdstools.c_index.indexdataaccess.DBIndexingAccessorBase.find_company_by_name"><code class="name flex">
-<span>def <span class="ident">find_company_by_name</span></span>(<span>self, name_part: str) ‑> pandas.core.frame.DataFrame</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Finds companies in the index based on the provided part of the name.
-Lower and uppercase are ignored.</p>
-<h2 id="args">Args</h2>
-<dl>
-<dt><strong><code>name_part</code></strong></dt>
-<dd>the part of the name</dd>
-</dl>
-<h2 id="returns">Returns</h2>
-<dl>
-<dt><code>pd.DataFrame</code></dt>
-<dd>with columns name and cik</dd>
-</dl></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def find_company_by_name(self, name_part: str) -&gt; pd.DataFrame:
-    &#34;&#34;&#34;
-    Finds companies in the index based on the provided part of the name.
-    Lower and uppercase are ignored.
-
-    Args:
-        name_part: the part of the name
-
-    Returns:
-        pd.DataFrame: with columns name and cik
-    &#34;&#34;&#34;
-    sql = f&#34;&#34;&#34;
-            SELECT DISTINCT name, cik from {self.index_reports_table} 
-            WHERE name like &#39;%{name_part}%&#39; 
-            ORDER BY name&#34;&#34;&#34;
-    return self.execute_read_as_df(sql)</code></pre>
-</details>
-</dd>
-<dt id="secfsdstools.c_index.indexdataaccess.DBIndexingAccessorBase.find_latest_company_report"><code class="name flex">
-<span>def <span class="ident">find_latest_company_report</span></span>(<span>self, cik: int) ‑> <a title="secfsdstools.c_index.indexdataaccess.IndexReport" href="#secfsdstools.c_index.indexdataaccess.IndexReport">IndexReport</a></span>
-</code></dt>
-<dd>
-<div class="desc"><p>returns the latest report of a company</p>
-<h2 id="args">Args</h2>
-<dl>
-<dt><strong><code>cik</code></strong> :&ensp;<code>int</code></dt>
-<dd>the cik of the company</dd>
-</dl>
-<h2 id="returns">Returns</h2>
-<dl>
-<dt><code><a title="secfsdstools.c_index.indexdataaccess.IndexReport" href="#secfsdstools.c_index.indexdataaccess.IndexReport">IndexReport</a></code></dt>
-<dd>of the latest report of the company</dd>
-</dl></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def find_latest_company_report(self, cik: int) -&gt; IndexReport:
-    &#34;&#34;&#34;
-    returns the latest report of a company
-
-    Args:
-        cik (int): the cik of the company
-
-    Returns:
-        IndexReport: of the latest report of the company
-    &#34;&#34;&#34;
-
-    sql = f&#34;&#34;&#34;SELECT *
-                FROM {self.index_reports_table}
-                WHERE cik = {cik} and originFileType = &#39;quarter&#39;
-                ORDER BY period DESC&#34;&#34;&#34;
-    return self.execute_fetchall_typed(sql, IndexReport)[0]</code></pre>
-</details>
-</dd>
-<dt id="secfsdstools.c_index.indexdataaccess.DBIndexingAccessorBase.insert_indexfileprocessing"><code class="name flex">
-<span>def <span class="ident">insert_indexfileprocessing</span></span>(<span>self, data: <a title="secfsdstools.c_index.indexdataaccess.IndexFileProcessingState" href="#secfsdstools.c_index.indexdataaccess.IndexFileProcessingState">IndexFileProcessingState</a>)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>inserts an entry into the index_file_processing_state table</p>
-<h2 id="args">Args</h2>
-<dl>
-<dt><strong><code>data</code></strong> :&ensp;<code><a title="secfsdstools.c_index.indexdataaccess.IndexFileProcessingState" href="#secfsdstools.c_index.indexdataaccess.IndexFileProcessingState">IndexFileProcessingState</a></code></dt>
-<dd>IndexFileProcessingState data object to insert</dd>
-</dl></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def insert_indexfileprocessing(self, data: IndexFileProcessingState):
-    &#34;&#34;&#34;
-    inserts an entry into the index_file_processing_state table
-
-    Args:
-        data (IndexFileProcessingState): IndexFileProcessingState data object to insert
-    &#34;&#34;&#34;
-    with self.get_connection() as conn:
-        self._insert_indexfileprocessing(data, conn)</code></pre>
-</details>
-</dd>
-<dt id="secfsdstools.c_index.indexdataaccess.DBIndexingAccessorBase.insert_indexreport"><code class="name flex">
-<span>def <span class="ident">insert_indexreport</span></span>(<span>self, data: <a title="secfsdstools.c_index.indexdataaccess.IndexReport" href="#secfsdstools.c_index.indexdataaccess.IndexReport">IndexReport</a>)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>inserts an entry into the index_report table</p>
-<h2 id="args">Args</h2>
-<dl>
-<dt><strong><code>data</code></strong> :&ensp;<code><a title="secfsdstools.c_index.indexdataaccess.IndexReport" href="#secfsdstools.c_index.indexdataaccess.IndexReport">IndexReport</a></code></dt>
-<dd>IndexReport data object</dd>
-</dl></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def insert_indexreport(self, data: IndexReport):
-    &#34;&#34;&#34;
-    inserts an entry into the index_report table
-    Args:
-        data (IndexReport): IndexReport data object
-    &#34;&#34;&#34;
-    sql = self.create_insert_statement_for_dataclass(self.index_reports_table, data)
-    with self.get_connection() as conn:
-        self.execute_single(sql, conn)</code></pre>
-</details>
-</dd>
-<dt id="secfsdstools.c_index.indexdataaccess.DBIndexingAccessorBase.read_all_indexfileprocessing"><code class="name flex">
-<span>def <span class="ident">read_all_indexfileprocessing</span></span>(<span>self) ‑> List[<a title="secfsdstools.c_index.indexdataaccess.IndexFileProcessingState" href="#secfsdstools.c_index.indexdataaccess.IndexFileProcessingState">IndexFileProcessingState</a>]</span>
-</code></dt>
-<dd>
-<div class="desc"><p>reads all entries of the index_file_processing_state table</p>
-<h2 id="returns">Returns</h2>
-<dl>
-<dt><code>List[<a title="secfsdstools.c_index.indexdataaccess.IndexFileProcessingState" href="#secfsdstools.c_index.indexdataaccess.IndexFileProcessingState">IndexFileProcessingState</a>]</code></dt>
-<dd>List with IndexFileProcessingState objects</dd>
-</dl></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def read_all_indexfileprocessing(self) -&gt; List[IndexFileProcessingState]:
-    &#34;&#34;&#34;
-    reads all entries of the index_file_processing_state table
-
-    Returns:
-        List[IndexFileProcessingState]: List with IndexFileProcessingState objects
-    &#34;&#34;&#34;
-    sql = f&#39;SELECT * FROM {self.index_processing_table}&#39;
-    return self.execute_fetchall_typed(sql, IndexFileProcessingState)</code></pre>
-</details>
-</dd>
-<dt id="secfsdstools.c_index.indexdataaccess.DBIndexingAccessorBase.read_all_indexfileprocessing_df"><code class="name flex">
-<span>def <span class="ident">read_all_indexfileprocessing_df</span></span>(<span>self) ‑> pandas.core.frame.DataFrame</span>
-</code></dt>
-<dd>
-<div class="desc"><p>reads all entries of the index_file_processing_state table as a pandas DataFrame</p>
-<h2 id="returns">Returns</h2>
-<dl>
-<dt><code>pd.DataFrame</code></dt>
-<dd>pandas DataFrame</dd>
-</dl></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def read_all_indexfileprocessing_df(self) -&gt; pd.DataFrame:
-    &#34;&#34;&#34;
-    reads all entries of the index_file_processing_state table as a pandas DataFrame
-
-    Returns:
-        pd.DataFrame: pandas DataFrame
-    &#34;&#34;&#34;
-    sql = f&#39;SELECT * FROM {self.index_processing_table}&#39;
-    return self.execute_read_as_df(sql)</code></pre>
-</details>
-</dd>
-<dt id="secfsdstools.c_index.indexdataaccess.DBIndexingAccessorBase.read_all_indexreports"><code class="name flex">
-<span>def <span class="ident">read_all_indexreports</span></span>(<span>self) ‑> List[<a title="secfsdstools.c_index.indexdataaccess.IndexReport" href="#secfsdstools.c_index.indexdataaccess.IndexReport">IndexReport</a>]</span>
-</code></dt>
-<dd>
-<div class="desc"><p>reads all entries of the index_reports table</p>
-<h2 id="returns">Returns</h2>
-<dl>
-<dt><code>List[<a title="secfsdstools.c_index.indexdataaccess.IndexReport" href="#secfsdstools.c_index.indexdataaccess.IndexReport">IndexReport</a>]</code></dt>
-<dd>List with IndexReport objects</dd>
-</dl></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def read_all_indexreports(self) -&gt; List[IndexReport]:
-    &#34;&#34;&#34;
-    reads all entries of the index_reports table
-
-    Returns:
-        List[IndexReport]: List with IndexReport objects
-    &#34;&#34;&#34;
-    sql = f&#39;SELECT * FROM {self.index_reports_table}&#39;
-    return self.execute_fetchall_typed(sql, IndexReport)</code></pre>
-</details>
-</dd>
-<dt id="secfsdstools.c_index.indexdataaccess.DBIndexingAccessorBase.read_all_indexreports_df"><code class="name flex">
-<span>def <span class="ident">read_all_indexreports_df</span></span>(<span>self) ‑> pandas.core.frame.DataFrame</span>
-</code></dt>
-<dd>
-<div class="desc"><p>reads all entries of the index_reports table as a pandas DataFrame</p>
-<h2 id="returns">Returns</h2>
-<dl>
-<dt><code>pd.DataFrame</code></dt>
-<dd>pandas DataFrame</dd>
-</dl></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def read_all_indexreports_df(self) -&gt; pd.DataFrame:
-    &#34;&#34;&#34;
-    reads all entries of the index_reports table as a pandas DataFrame
-
-    Returns:
-        pd.DataFrame: pandas DataFrame
-    &#34;&#34;&#34;
-    sql = f&#39;SELECT * FROM {self.index_reports_table}&#39;
-    return self.execute_read_as_df(sql)</code></pre>
-</details>
-</dd>
-<dt id="secfsdstools.c_index.indexdataaccess.DBIndexingAccessorBase.read_index_file_for_filename"><code class="name flex">
-<span>def <span class="ident">read_index_file_for_filename</span></span>(<span>self, filename: str) ‑> <a title="secfsdstools.c_index.indexdataaccess.IndexFileProcessingState" href="#secfsdstools.c_index.indexdataaccess.IndexFileProcessingState">IndexFileProcessingState</a></span>
-</code></dt>
-<dd>
-<div class="desc"><p>returns the IndexFileProcessingState instance for the provided filename</p>
-<h2 id="args">Args</h2>
-<dl>
-<dt><strong><code>filename</code></strong> :&ensp;<code>str</code></dt>
-<dd>the filename of the file</dd>
-</dl>
-<h2 id="returns">Returns</h2>
-<dl>
-<dt><code><a title="secfsdstools.c_index.indexdataaccess.IndexFileProcessingState" href="#secfsdstools.c_index.indexdataaccess.IndexFileProcessingState">IndexFileProcessingState</a></code></dt>
-<dd>the processing state instance</dd>
-</dl></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def read_index_file_for_filename(self, filename: str) -&gt; IndexFileProcessingState:
-    &#34;&#34;&#34;
-    returns the IndexFileProcessingState instance for the provided filename
-    Args:
-        filename (str): the filename of the file
-
-    Returns:
-        IndexFileProcessingState: the processing state instance
-    &#34;&#34;&#34;
-    sql = f&#34;SELECT * FROM {self.index_processing_table} WHERE fileName = &#39;{filename}&#39;&#34;
-    return self.execute_fetchall_typed(sql, IndexFileProcessingState)[0]</code></pre>
-</details>
-</dd>
-<dt id="secfsdstools.c_index.indexdataaccess.DBIndexingAccessorBase.read_index_report_for_adsh"><code class="name flex">
-<span>def <span class="ident">read_index_report_for_adsh</span></span>(<span>self, adsh: str) ‑> <a title="secfsdstools.c_index.indexdataaccess.IndexReport" href="#secfsdstools.c_index.indexdataaccess.IndexReport">IndexReport</a></span>
-</code></dt>
-<dd>
-<div class="desc"><p>returns the IndexReport instance for the provided adsh</p>
-<h2 id="args">Args</h2>
-<dl>
-<dt><strong><code>adsh</code></strong> :&ensp;<code>str</code></dt>
-<dd>adsh</dd>
-</dl>
-<h2 id="returns">Returns</h2>
-<dl>
-<dt><code><a title="secfsdstools.c_index.indexdataaccess.IndexReport" href="#secfsdstools.c_index.indexdataaccess.IndexReport">IndexReport</a></code></dt>
-<dd>the report for the provided adsh</dd>
-</dl></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def read_index_report_for_adsh(self, adsh: str) -&gt; IndexReport:
-    &#34;&#34;&#34;
-    returns the IndexReport instance for the provided adsh
-
-    Args:
-        adsh (str):  adsh
-    Returns:
-        IndexReport: the report for the provided adsh
-    &#34;&#34;&#34;
-    # sorting by originfiletype, so we prefer official data from SEC,
-    # over the daily files, in case both should be present.
-    sql = f&#34;&#34;&#34;SELECT *
-                FROM {self.index_reports_table}
-                WHERE adsh = &#39;{adsh}&#39;
-                ORDER BY originFileType DESC&#34;&#34;&#34;
-    return self.execute_fetchall_typed(sql, IndexReport)[0]</code></pre>
-</details>
-</dd>
-<dt id="secfsdstools.c_index.indexdataaccess.DBIndexingAccessorBase.read_index_reports_for_adshs"><code class="name flex">
-<span>def <span class="ident">read_index_reports_for_adshs</span></span>(<span>self, adshs: List[str]) ‑> List[<a title="secfsdstools.c_index.indexdataaccess.IndexReport" href="#secfsdstools.c_index.indexdataaccess.IndexReport">IndexReport</a>]</span>
-</code></dt>
-<dd>
-<div class="desc"><p>returns the IndexReport instances for the provided adshs</p>
-<h2 id="args">Args</h2>
-<dl>
-<dt><strong><code>adshs</code></strong> :&ensp;<code>List[str]</code></dt>
-<dd>adshs</dd>
-</dl>
-<h2 id="returns">Returns</h2>
-<dl>
-<dt><code>List[<a title="secfsdstools.c_index.indexdataaccess.IndexReport" href="#secfsdstools.c_index.indexdataaccess.IndexReport">IndexReport</a>]</code></dt>
-<dd>the reports for the provided adshs</dd>
-</dl></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def read_index_reports_for_adshs(self, adshs: List[str]) -&gt; List[IndexReport]:
-    &#34;&#34;&#34;
-    returns the IndexReport instances for the provided adshs
-
-    Args:
-        adshs (List[str]):  adshs
-    Returns:
-        List[IndexReport]: the reports for the provided adshs
-    &#34;&#34;&#34;
-
-    adshs_str = &#34;, &#34;.join([&#34;&#39;&#34; + x.upper() + &#34;&#39;&#34; for x in adshs])
-    # sorting by originfiletype, so we prefer official data from SEC,
-    # over the daily files, in case both should be present.
-    sql = f&#34;&#34;&#34;SELECT *
-                FROM {self.index_reports_table}
-                WHERE adsh in ({adshs_str})
-                ORDER BY adsh, originFileType DESC&#34;&#34;&#34;
-
-    reports: List[IndexReport] = self.execute_fetchall_typed(sql, IndexReport)
-
-    last_adsh = None
-    filtered_reports: List[IndexReport] = []
-    for report in reports:
-        if last_adsh == report.adsh:
-            continue
-        last_adsh = report.adsh
-        filtered_reports.append(report)
-
-    return filtered_reports</code></pre>
-</details>
-</dd>
-<dt id="secfsdstools.c_index.indexdataaccess.DBIndexingAccessorBase.read_index_reports_for_cik"><code class="name flex">
-<span>def <span class="ident">read_index_reports_for_cik</span></span>(<span>self, cik: int, forms: Optional[List[str]] = None) ‑> List[<a title="secfsdstools.c_index.indexdataaccess.IndexReport" href="#secfsdstools.c_index.indexdataaccess.IndexReport">IndexReport</a>]</span>
-</code></dt>
-<dd>
-<div class="desc"><p>gets all reports as IndexReport instances for a company identified by its cik.
-if forms is not set, all forms are returned, otherwise forms is a list of the
-forms that should be returned</p>
-<h2 id="args">Args</h2>
-<dl>
-<dt><strong><code>cik</code></strong> :&ensp;<code>int</code></dt>
-<dd>cik of the company</dd>
-<dt><strong><code>forms</code></strong> :&ensp;<code>List[str]</code>, optional<code>, None</code></dt>
-<dd>list of the forms to be returend,</dd>
-</dl>
-<p>like ['10-Q', '10-K']</p>
-<h2 id="returns">Returns</h2>
-<p>List[IndexReport]</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def read_index_reports_for_cik(self, cik: int, forms: Optional[List[str]] = None) \
-        -&gt; List[IndexReport]:
-    &#34;&#34;&#34;
-    gets all reports as IndexReport instances for a company identified by its cik.
-    if forms is not set, all forms are returned, otherwise forms is a list of the
-     forms that should be returned
-
-    Args:
-        cik (int): cik of the company
-        forms (List[str], optional, None): list of the forms to be returend,
-         like [&#39;10-Q&#39;, &#39;10-K&#39;]
-    Returns:
-        List[IndexReport]
-    &#34;&#34;&#34;
-    sql = f&#39;SELECT * FROM {self.index_reports_table} WHERE cik = {cik}&#39;
-    if forms is not None:
-        forms_str = &#34;, &#34;.join([&#34;&#39;&#34; + x.upper() + &#34;&#39;&#34; for x in forms])
-        sql = sql + f&#39; and form in ({forms_str}) &#39;
-    sql = sql + &#39; ORDER BY period DESC&#39;
-
-    return self.execute_fetchall_typed(sql, IndexReport)</code></pre>
-</details>
-</dd>
-<dt id="secfsdstools.c_index.indexdataaccess.DBIndexingAccessorBase.read_index_reports_for_cik_df"><code class="name flex">
-<span>def <span class="ident">read_index_reports_for_cik_df</span></span>(<span>self, cik: int, forms: Optional[List[str]] = None) ‑> pandas.core.frame.DataFrame</span>
-</code></dt>
-<dd>
-<div class="desc"><p>gets all reports as IndexReport instances for a company identified by its cik.
-if forms is not set, all forms are returned, otherwise forms is a list of the
-forms that should be returned</p>
-<h2 id="args">Args</h2>
-<dl>
-<dt><strong><code>cik</code></strong> :&ensp;<code>int</code></dt>
-<dd>cik of the company</dd>
-<dt><strong><code>forms</code></strong> :&ensp;<code>List[str]</code>, optional<code>, None</code></dt>
-<dd>list of the forms to be returend,</dd>
-</dl>
-<p>like ['10-Q', '10-K']</p>
-<h2 id="returns">Returns</h2>
-<p>pd.DataFrame</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def read_index_reports_for_cik_df(self, cik: int, forms: Optional[List[str]] = None) \
-        -&gt; pd.DataFrame:
-    &#34;&#34;&#34;
-    gets all reports as IndexReport instances for a company identified by its cik.
-    if forms is not set, all forms are returned, otherwise forms is a list of the
-     forms that should be returned
-
-    Args:
-        cik (int): cik of the company
-        forms (List[str], optional, None):  list of the forms to be returend,
-         like [&#39;10-Q&#39;, &#39;10-K&#39;]
-    Returns:
-        pd.DataFrame
-    &#34;&#34;&#34;
-    sql = f&#39;SELECT * FROM {self.index_reports_table} WHERE cik = {cik}&#39;
-    if forms is not None:
-        forms_str = &#34;, &#34;.join([&#34;&#39;&#34; + x.upper() + &#34;&#39;&#34; for x in forms])
-        sql = sql + f&#39; and form in ({forms_str}) &#39;
-    sql = sql + &#39; ORDER BY period DESC&#39;
-
-    return self.execute_read_as_df(sql)</code></pre>
-</details>
-</dd>
-</dl>
-<h3>Inherited members</h3>
-<ul class="hlist">
-<li><code><b><a title="secfsdstools.a_utils.dbutils.DB" href="../a_utils/dbutils.html#secfsdstools.a_utils.dbutils.DB">DB</a></b></code>:
-<ul class="hlist">
-<li><code><a title="secfsdstools.a_utils.dbutils.DB.append_df_to_table" href="../a_utils/dbutils.html#secfsdstools.a_utils.dbutils.DB.append_df_to_table">append_df_to_table</a></code></li>
-<li><code><a title="secfsdstools.a_utils.dbutils.DB.create_insert_statement_for_dataclass" href="../a_utils/dbutils.html#secfsdstools.a_utils.dbutils.DB.create_insert_statement_for_dataclass">create_insert_statement_for_dataclass</a></code></li>
-<li><code><a title="secfsdstools.a_utils.dbutils.DB.db_file_exists" href="../a_utils/dbutils.html#secfsdstools.a_utils.dbutils.DB.db_file_exists">db_file_exists</a></code></li>
-<li><code><a title="secfsdstools.a_utils.dbutils.DB.execute_fetchall" href="../a_utils/dbutils.html#secfsdstools.a_utils.dbutils.DB.execute_fetchall">execute_fetchall</a></code></li>
-<li><code><a title="secfsdstools.a_utils.dbutils.DB.execute_fetchall_typed" href="../a_utils/dbutils.html#secfsdstools.a_utils.dbutils.DB.execute_fetchall_typed">execute_fetchall_typed</a></code></li>
-<li><code><a title="secfsdstools.a_utils.dbutils.DB.execute_many" href="../a_utils/dbutils.html#secfsdstools.a_utils.dbutils.DB.execute_many">execute_many</a></code></li>
-<li><code><a title="secfsdstools.a_utils.dbutils.DB.execute_read_as_df" href="../a_utils/dbutils.html#secfsdstools.a_utils.dbutils.DB.execute_read_as_df">execute_read_as_df</a></code></li>
-<li><code><a title="secfsdstools.a_utils.dbutils.DB.execute_single" href="../a_utils/dbutils.html#secfsdstools.a_utils.dbutils.DB.execute_single">execute_single</a></code></li>
-<li><code><a title="secfsdstools.a_utils.dbutils.DB.get_connection" href="../a_utils/dbutils.html#secfsdstools.a_utils.dbutils.DB.get_connection">get_connection</a></code></li>
-<li><code><a title="secfsdstools.a_utils.dbutils.DB.table_exists" href="../a_utils/dbutils.html#secfsdstools.a_utils.dbutils.DB.table_exists">table_exists</a></code></li>
-</ul>
-</li>
-</ul>
-</dd>
 <dt id="secfsdstools.c_index.indexdataaccess.IndexFileProcessingState"><code class="flex name class">
 <span>class <span class="ident">IndexFileProcessingState</span></span>
 <span>(</span><span>fileName: str, fullPath: str, status: str, entries: int, processTime: str)</span>
@@ -1240,60 +433,750 @@ forms that should be returned</p>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class ParquetDBIndexingAccessor(DBIndexingAccessorBase):
+<pre><code class="python">class ParquetDBIndexingAccessor(DB):
     &#34;&#34;&#34; Dataaccess class for index related tables of parquet files&#34;&#34;&#34;
-    INDEX_REPORTS_TABLE = &#39;index_parquet_reports&#39;
-    INDEX_PROCESSING_TABLE = &#39;index_parquet_processing_state&#39;
+    index_reports_table = &#39;index_parquet_reports&#39;
+    index_processing_table = &#39;index_parquet_processing_state&#39;
 
     def __init__(self, db_dir: str):
-        super().__init__(db_dir=db_dir, index_reports_table=self.INDEX_REPORTS_TABLE,
-                         index_processing_table=self.INDEX_PROCESSING_TABLE)</code></pre>
+        super().__init__(db_dir=db_dir)
+
+    def read_all_indexreports(self) -&gt; List[IndexReport]:
+        &#34;&#34;&#34;
+        reads all entries of the index_reports table
+
+        Returns:
+            List[IndexReport]: List with IndexReport objects
+        &#34;&#34;&#34;
+        sql = f&#39;SELECT * FROM {self.index_reports_table}&#39;
+        return self.execute_fetchall_typed(sql, IndexReport)
+
+    def read_all_indexreports_df(self) -&gt; pd.DataFrame:
+        &#34;&#34;&#34;
+        reads all entries of the index_reports table as a pandas DataFrame
+
+        Returns:
+            pd.DataFrame: pandas DataFrame
+        &#34;&#34;&#34;
+        sql = f&#39;SELECT * FROM {self.index_reports_table}&#39;
+        return self.execute_read_as_df(sql)
+
+    def read_all_indexfileprocessing(self) -&gt; List[IndexFileProcessingState]:
+        &#34;&#34;&#34;
+        reads all entries of the index_file_processing_state table
+
+        Returns:
+            List[IndexFileProcessingState]: List with IndexFileProcessingState objects
+        &#34;&#34;&#34;
+        sql = f&#39;SELECT * FROM {self.index_processing_table}&#39;
+        return self.execute_fetchall_typed(sql, IndexFileProcessingState)
+
+    def read_all_indexfileprocessing_df(self) -&gt; pd.DataFrame:
+        &#34;&#34;&#34;
+        reads all entries of the index_file_processing_state table as a pandas DataFrame
+
+        Returns:
+            pd.DataFrame: pandas DataFrame
+        &#34;&#34;&#34;
+        sql = f&#39;SELECT * FROM {self.index_processing_table}&#39;
+        return self.execute_read_as_df(sql)
+
+    def read_index_file_for_filename(self, filename: str) -&gt; IndexFileProcessingState:
+        &#34;&#34;&#34;
+        returns the IndexFileProcessingState instance for the provided filename
+        Args:
+            filename (str): the filename of the file
+
+        Returns:
+            IndexFileProcessingState: the processing state instance
+        &#34;&#34;&#34;
+        sql = f&#34;SELECT * FROM {self.index_processing_table} WHERE fileName = &#39;{filename}&#39;&#34;
+        return self.execute_fetchall_typed(sql, IndexFileProcessingState)[0]
+
+    def insert_indexreport(self, data: IndexReport):
+        &#34;&#34;&#34;
+        inserts an entry into the index_report table
+        Args:
+            data (IndexReport): IndexReport data object
+        &#34;&#34;&#34;
+        sql = self.create_insert_statement_for_dataclass(self.index_reports_table, data)
+        with self.get_connection() as conn:
+            self.execute_single(sql, conn)
+
+    def add_index_report(self, sub_df: pd.DataFrame, processing_state: IndexFileProcessingState):
+        &#34;&#34;&#34;
+        adds the submissions in the sub_df into the index table and stores the processing state
+        in the processing table
+        Args:
+            sub_df: dataframe with submissions
+            processing_state: state entry to write
+
+        Returns:
+
+        &#34;&#34;&#34;
+
+        with self.get_connection() as conn:
+            self._append_indexreport_df(sub_df, conn)
+            self._insert_indexfileprocessing(processing_state, conn)
+
+    def _append_indexreport_df(self, dataframe: pd.DataFrame, conn: sqlite3.Connection):
+        &#34;&#34;&#34;
+        append the content of the df to the index report table
+
+        Args:
+            dataframe (pd.DataFrame): the dataframe to be appended
+        &#34;&#34;&#34;
+        self.append_df_to_table(table_name=self.index_reports_table, dataframe=dataframe, conn=conn)
+
+    def insert_indexfileprocessing(self, data: IndexFileProcessingState):
+        &#34;&#34;&#34;
+        inserts an entry into the index_file_processing_state table
+
+        Args:
+            data (IndexFileProcessingState): IndexFileProcessingState data object to insert
+        &#34;&#34;&#34;
+        with self.get_connection() as conn:
+            self._insert_indexfileprocessing(data, conn)
+
+    def _insert_indexfileprocessing(self, data: IndexFileProcessingState, conn: sqlite3.Connection):
+        &#34;&#34;&#34;
+        inserts an entry into the index_file_processing_state table
+
+        Args:
+            data (IndexFileProcessingState): IndexFileProcessingState data object to insert
+        &#34;&#34;&#34;
+        sql = self.create_insert_statement_for_dataclass(self.index_processing_table, data)
+        self.execute_single(sql, conn)
+
+    def find_latest_company_report(self, cik: int) -&gt; IndexReport:
+        &#34;&#34;&#34;
+        returns the latest report of a company
+
+        Args:
+            cik (int): the cik of the company
+
+        Returns:
+            IndexReport: of the latest report of the company
+        &#34;&#34;&#34;
+
+        sql = f&#34;&#34;&#34;SELECT *
+                    FROM {self.index_reports_table}
+                    WHERE cik = {cik} and originFileType = &#39;quarter&#39;
+                    ORDER BY period DESC&#34;&#34;&#34;
+        return self.execute_fetchall_typed(sql, IndexReport)[0]
+
+    def read_index_report_for_adsh(self, adsh: str) -&gt; IndexReport:
+        &#34;&#34;&#34;
+        returns the IndexReport instance for the provided adsh
+
+        Args:
+            adsh (str):  adsh
+        Returns:
+            IndexReport: the report for the provided adsh
+        &#34;&#34;&#34;
+        # sorting by originfiletype, so we prefer official data from SEC,
+        # over the daily files, in case both should be present.
+        sql = f&#34;&#34;&#34;SELECT *
+                    FROM {self.index_reports_table}
+                    WHERE adsh = &#39;{adsh}&#39;
+                    ORDER BY originFileType DESC&#34;&#34;&#34;
+        return self.execute_fetchall_typed(sql, IndexReport)[0]
+
+    def read_index_reports_for_adshs(self, adshs: List[str]) -&gt; List[IndexReport]:
+        &#34;&#34;&#34;
+        returns the IndexReport instances for the provided adshs
+
+        Args:
+            adshs (List[str]):  adshs
+        Returns:
+            List[IndexReport]: the reports for the provided adshs
+        &#34;&#34;&#34;
+
+        adshs_str = &#34;, &#34;.join([&#34;&#39;&#34; + x.upper() + &#34;&#39;&#34; for x in adshs])
+        # sorting by originfiletype, so we prefer official data from SEC,
+        # over the daily files, in case both should be present.
+        sql = f&#34;&#34;&#34;SELECT *
+                    FROM {self.index_reports_table}
+                    WHERE adsh in ({adshs_str})
+                    ORDER BY adsh, originFileType DESC&#34;&#34;&#34;
+
+        reports: List[IndexReport] = self.execute_fetchall_typed(sql, IndexReport)
+
+        last_adsh = None
+        filtered_reports: List[IndexReport] = []
+        for report in reports:
+            if last_adsh == report.adsh:
+                continue
+            last_adsh = report.adsh
+            filtered_reports.append(report)
+
+        return filtered_reports
+
+    def read_index_reports_for_ciks(self, ciks: List[int], forms: Optional[List[str]] = None) \
+            -&gt; List[IndexReport]:
+        &#34;&#34;&#34;
+        gets all reports as IndexReport instances for the companies identified by their cik numbers.
+        if forms is not set, all forms are returned, otherwise forms is a list of the
+         forms that should be returned
+
+        Args:
+            ciks (List[int]): ciks of the companies
+            forms (List[str], optional, None): list of the forms to be returend,
+             like [&#39;10-Q&#39;, &#39;10-K&#39;]
+        Returns:
+            List[IndexReport]
+        &#34;&#34;&#34;
+        ciks_str = [str(cik) for cik in ciks]
+        sql = f&#39;SELECT * FROM {self.index_reports_table} WHERE cik in ({&#34;,&#34;.join(ciks_str)})&#39;
+        if forms is not None:
+            forms_str = &#34;, &#34;.join([&#34;&#39;&#34; + x.upper() + &#34;&#39;&#34; for x in forms])
+            sql = sql + f&#39; and form in ({forms_str}) &#39;
+        sql = sql + &#39; ORDER BY period DESC&#39;
+
+        return self.execute_fetchall_typed(sql, IndexReport)
+
+    def read_index_reports_for_ciks_df(self, ciks: List[int], forms: Optional[List[str]] = None) \
+            -&gt; pd.DataFrame:
+        &#34;&#34;&#34;
+        gets all reports as IndexReport instances for the companies identified by their cik numbers.
+        if forms is not set, all forms are returned, otherwise forms is a list of the
+         forms that should be returned
+
+        Args:
+            ciks (List[int]): ciks of the companies
+            forms (List[str], optional, None):  list of the forms to be returend,
+             like [&#39;10-Q&#39;, &#39;10-K&#39;]
+        Returns:
+            pd.DataFrame
+        &#34;&#34;&#34;
+        ciks_str = [str(cik) for cik in ciks]
+        sql = f&#39;SELECT * FROM {self.index_reports_table} WHERE cik in ({&#34;,&#34;.join(ciks_str)})&#39;
+        if forms is not None:
+            forms_str = &#34;, &#34;.join([&#34;&#39;&#34; + x.upper() + &#34;&#39;&#34; for x in forms])
+            sql = sql + f&#39; and form in ({forms_str}) &#39;
+        sql = sql + &#39; ORDER BY period DESC&#39;
+
+        return self.execute_read_as_df(sql)
+
+    def find_company_by_name(self, name_part: str) -&gt; pd.DataFrame:
+        &#34;&#34;&#34;
+        Finds companies in the index based on the provided part of the name.
+        Lower and uppercase are ignored.
+
+        Args:
+            name_part: the part of the name
+
+        Returns:
+            pd.DataFrame: with columns name and cik
+        &#34;&#34;&#34;
+        sql = f&#34;&#34;&#34;
+                SELECT DISTINCT name, cik from {self.index_reports_table} 
+                WHERE name like &#39;%{name_part}%&#39; 
+                ORDER BY name&#34;&#34;&#34;
+        return self.execute_read_as_df(sql)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li><a title="secfsdstools.c_index.indexdataaccess.DBIndexingAccessorBase" href="#secfsdstools.c_index.indexdataaccess.DBIndexingAccessorBase">DBIndexingAccessorBase</a></li>
 <li><a title="secfsdstools.a_utils.dbutils.DB" href="../a_utils/dbutils.html#secfsdstools.a_utils.dbutils.DB">DB</a></li>
 <li>abc.ABC</li>
 </ul>
 <h3>Class variables</h3>
 <dl>
-<dt id="secfsdstools.c_index.indexdataaccess.ParquetDBIndexingAccessor.INDEX_PROCESSING_TABLE"><code class="name">var <span class="ident">INDEX_PROCESSING_TABLE</span></code></dt>
+<dt id="secfsdstools.c_index.indexdataaccess.ParquetDBIndexingAccessor.index_processing_table"><code class="name">var <span class="ident">index_processing_table</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="secfsdstools.c_index.indexdataaccess.ParquetDBIndexingAccessor.INDEX_REPORTS_TABLE"><code class="name">var <span class="ident">INDEX_REPORTS_TABLE</span></code></dt>
+<dt id="secfsdstools.c_index.indexdataaccess.ParquetDBIndexingAccessor.index_reports_table"><code class="name">var <span class="ident">index_reports_table</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
 </dl>
+<h3>Methods</h3>
+<dl>
+<dt id="secfsdstools.c_index.indexdataaccess.ParquetDBIndexingAccessor.add_index_report"><code class="name flex">
+<span>def <span class="ident">add_index_report</span></span>(<span>self, sub_df: pandas.core.frame.DataFrame, processing_state: <a title="secfsdstools.c_index.indexdataaccess.IndexFileProcessingState" href="#secfsdstools.c_index.indexdataaccess.IndexFileProcessingState">IndexFileProcessingState</a>)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>adds the submissions in the sub_df into the index table and stores the processing state
+in the processing table</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>sub_df</code></strong></dt>
+<dd>dataframe with submissions</dd>
+<dt><strong><code>processing_state</code></strong></dt>
+<dd>state entry to write</dd>
+</dl>
+<p>Returns:</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def add_index_report(self, sub_df: pd.DataFrame, processing_state: IndexFileProcessingState):
+    &#34;&#34;&#34;
+    adds the submissions in the sub_df into the index table and stores the processing state
+    in the processing table
+    Args:
+        sub_df: dataframe with submissions
+        processing_state: state entry to write
+
+    Returns:
+
+    &#34;&#34;&#34;
+
+    with self.get_connection() as conn:
+        self._append_indexreport_df(sub_df, conn)
+        self._insert_indexfileprocessing(processing_state, conn)</code></pre>
+</details>
+</dd>
+<dt id="secfsdstools.c_index.indexdataaccess.ParquetDBIndexingAccessor.find_company_by_name"><code class="name flex">
+<span>def <span class="ident">find_company_by_name</span></span>(<span>self, name_part: str) ‑> pandas.core.frame.DataFrame</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Finds companies in the index based on the provided part of the name.
+Lower and uppercase are ignored.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>name_part</code></strong></dt>
+<dd>the part of the name</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>pd.DataFrame</code></dt>
+<dd>with columns name and cik</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def find_company_by_name(self, name_part: str) -&gt; pd.DataFrame:
+    &#34;&#34;&#34;
+    Finds companies in the index based on the provided part of the name.
+    Lower and uppercase are ignored.
+
+    Args:
+        name_part: the part of the name
+
+    Returns:
+        pd.DataFrame: with columns name and cik
+    &#34;&#34;&#34;
+    sql = f&#34;&#34;&#34;
+            SELECT DISTINCT name, cik from {self.index_reports_table} 
+            WHERE name like &#39;%{name_part}%&#39; 
+            ORDER BY name&#34;&#34;&#34;
+    return self.execute_read_as_df(sql)</code></pre>
+</details>
+</dd>
+<dt id="secfsdstools.c_index.indexdataaccess.ParquetDBIndexingAccessor.find_latest_company_report"><code class="name flex">
+<span>def <span class="ident">find_latest_company_report</span></span>(<span>self, cik: int) ‑> <a title="secfsdstools.c_index.indexdataaccess.IndexReport" href="#secfsdstools.c_index.indexdataaccess.IndexReport">IndexReport</a></span>
+</code></dt>
+<dd>
+<div class="desc"><p>returns the latest report of a company</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>cik</code></strong> :&ensp;<code>int</code></dt>
+<dd>the cik of the company</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code><a title="secfsdstools.c_index.indexdataaccess.IndexReport" href="#secfsdstools.c_index.indexdataaccess.IndexReport">IndexReport</a></code></dt>
+<dd>of the latest report of the company</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def find_latest_company_report(self, cik: int) -&gt; IndexReport:
+    &#34;&#34;&#34;
+    returns the latest report of a company
+
+    Args:
+        cik (int): the cik of the company
+
+    Returns:
+        IndexReport: of the latest report of the company
+    &#34;&#34;&#34;
+
+    sql = f&#34;&#34;&#34;SELECT *
+                FROM {self.index_reports_table}
+                WHERE cik = {cik} and originFileType = &#39;quarter&#39;
+                ORDER BY period DESC&#34;&#34;&#34;
+    return self.execute_fetchall_typed(sql, IndexReport)[0]</code></pre>
+</details>
+</dd>
+<dt id="secfsdstools.c_index.indexdataaccess.ParquetDBIndexingAccessor.insert_indexfileprocessing"><code class="name flex">
+<span>def <span class="ident">insert_indexfileprocessing</span></span>(<span>self, data: <a title="secfsdstools.c_index.indexdataaccess.IndexFileProcessingState" href="#secfsdstools.c_index.indexdataaccess.IndexFileProcessingState">IndexFileProcessingState</a>)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>inserts an entry into the index_file_processing_state table</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>data</code></strong> :&ensp;<code><a title="secfsdstools.c_index.indexdataaccess.IndexFileProcessingState" href="#secfsdstools.c_index.indexdataaccess.IndexFileProcessingState">IndexFileProcessingState</a></code></dt>
+<dd>IndexFileProcessingState data object to insert</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def insert_indexfileprocessing(self, data: IndexFileProcessingState):
+    &#34;&#34;&#34;
+    inserts an entry into the index_file_processing_state table
+
+    Args:
+        data (IndexFileProcessingState): IndexFileProcessingState data object to insert
+    &#34;&#34;&#34;
+    with self.get_connection() as conn:
+        self._insert_indexfileprocessing(data, conn)</code></pre>
+</details>
+</dd>
+<dt id="secfsdstools.c_index.indexdataaccess.ParquetDBIndexingAccessor.insert_indexreport"><code class="name flex">
+<span>def <span class="ident">insert_indexreport</span></span>(<span>self, data: <a title="secfsdstools.c_index.indexdataaccess.IndexReport" href="#secfsdstools.c_index.indexdataaccess.IndexReport">IndexReport</a>)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>inserts an entry into the index_report table</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>data</code></strong> :&ensp;<code><a title="secfsdstools.c_index.indexdataaccess.IndexReport" href="#secfsdstools.c_index.indexdataaccess.IndexReport">IndexReport</a></code></dt>
+<dd>IndexReport data object</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def insert_indexreport(self, data: IndexReport):
+    &#34;&#34;&#34;
+    inserts an entry into the index_report table
+    Args:
+        data (IndexReport): IndexReport data object
+    &#34;&#34;&#34;
+    sql = self.create_insert_statement_for_dataclass(self.index_reports_table, data)
+    with self.get_connection() as conn:
+        self.execute_single(sql, conn)</code></pre>
+</details>
+</dd>
+<dt id="secfsdstools.c_index.indexdataaccess.ParquetDBIndexingAccessor.read_all_indexfileprocessing"><code class="name flex">
+<span>def <span class="ident">read_all_indexfileprocessing</span></span>(<span>self) ‑> List[<a title="secfsdstools.c_index.indexdataaccess.IndexFileProcessingState" href="#secfsdstools.c_index.indexdataaccess.IndexFileProcessingState">IndexFileProcessingState</a>]</span>
+</code></dt>
+<dd>
+<div class="desc"><p>reads all entries of the index_file_processing_state table</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>List[<a title="secfsdstools.c_index.indexdataaccess.IndexFileProcessingState" href="#secfsdstools.c_index.indexdataaccess.IndexFileProcessingState">IndexFileProcessingState</a>]</code></dt>
+<dd>List with IndexFileProcessingState objects</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def read_all_indexfileprocessing(self) -&gt; List[IndexFileProcessingState]:
+    &#34;&#34;&#34;
+    reads all entries of the index_file_processing_state table
+
+    Returns:
+        List[IndexFileProcessingState]: List with IndexFileProcessingState objects
+    &#34;&#34;&#34;
+    sql = f&#39;SELECT * FROM {self.index_processing_table}&#39;
+    return self.execute_fetchall_typed(sql, IndexFileProcessingState)</code></pre>
+</details>
+</dd>
+<dt id="secfsdstools.c_index.indexdataaccess.ParquetDBIndexingAccessor.read_all_indexfileprocessing_df"><code class="name flex">
+<span>def <span class="ident">read_all_indexfileprocessing_df</span></span>(<span>self) ‑> pandas.core.frame.DataFrame</span>
+</code></dt>
+<dd>
+<div class="desc"><p>reads all entries of the index_file_processing_state table as a pandas DataFrame</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>pd.DataFrame</code></dt>
+<dd>pandas DataFrame</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def read_all_indexfileprocessing_df(self) -&gt; pd.DataFrame:
+    &#34;&#34;&#34;
+    reads all entries of the index_file_processing_state table as a pandas DataFrame
+
+    Returns:
+        pd.DataFrame: pandas DataFrame
+    &#34;&#34;&#34;
+    sql = f&#39;SELECT * FROM {self.index_processing_table}&#39;
+    return self.execute_read_as_df(sql)</code></pre>
+</details>
+</dd>
+<dt id="secfsdstools.c_index.indexdataaccess.ParquetDBIndexingAccessor.read_all_indexreports"><code class="name flex">
+<span>def <span class="ident">read_all_indexreports</span></span>(<span>self) ‑> List[<a title="secfsdstools.c_index.indexdataaccess.IndexReport" href="#secfsdstools.c_index.indexdataaccess.IndexReport">IndexReport</a>]</span>
+</code></dt>
+<dd>
+<div class="desc"><p>reads all entries of the index_reports table</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>List[<a title="secfsdstools.c_index.indexdataaccess.IndexReport" href="#secfsdstools.c_index.indexdataaccess.IndexReport">IndexReport</a>]</code></dt>
+<dd>List with IndexReport objects</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def read_all_indexreports(self) -&gt; List[IndexReport]:
+    &#34;&#34;&#34;
+    reads all entries of the index_reports table
+
+    Returns:
+        List[IndexReport]: List with IndexReport objects
+    &#34;&#34;&#34;
+    sql = f&#39;SELECT * FROM {self.index_reports_table}&#39;
+    return self.execute_fetchall_typed(sql, IndexReport)</code></pre>
+</details>
+</dd>
+<dt id="secfsdstools.c_index.indexdataaccess.ParquetDBIndexingAccessor.read_all_indexreports_df"><code class="name flex">
+<span>def <span class="ident">read_all_indexreports_df</span></span>(<span>self) ‑> pandas.core.frame.DataFrame</span>
+</code></dt>
+<dd>
+<div class="desc"><p>reads all entries of the index_reports table as a pandas DataFrame</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>pd.DataFrame</code></dt>
+<dd>pandas DataFrame</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def read_all_indexreports_df(self) -&gt; pd.DataFrame:
+    &#34;&#34;&#34;
+    reads all entries of the index_reports table as a pandas DataFrame
+
+    Returns:
+        pd.DataFrame: pandas DataFrame
+    &#34;&#34;&#34;
+    sql = f&#39;SELECT * FROM {self.index_reports_table}&#39;
+    return self.execute_read_as_df(sql)</code></pre>
+</details>
+</dd>
+<dt id="secfsdstools.c_index.indexdataaccess.ParquetDBIndexingAccessor.read_index_file_for_filename"><code class="name flex">
+<span>def <span class="ident">read_index_file_for_filename</span></span>(<span>self, filename: str) ‑> <a title="secfsdstools.c_index.indexdataaccess.IndexFileProcessingState" href="#secfsdstools.c_index.indexdataaccess.IndexFileProcessingState">IndexFileProcessingState</a></span>
+</code></dt>
+<dd>
+<div class="desc"><p>returns the IndexFileProcessingState instance for the provided filename</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>filename</code></strong> :&ensp;<code>str</code></dt>
+<dd>the filename of the file</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code><a title="secfsdstools.c_index.indexdataaccess.IndexFileProcessingState" href="#secfsdstools.c_index.indexdataaccess.IndexFileProcessingState">IndexFileProcessingState</a></code></dt>
+<dd>the processing state instance</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def read_index_file_for_filename(self, filename: str) -&gt; IndexFileProcessingState:
+    &#34;&#34;&#34;
+    returns the IndexFileProcessingState instance for the provided filename
+    Args:
+        filename (str): the filename of the file
+
+    Returns:
+        IndexFileProcessingState: the processing state instance
+    &#34;&#34;&#34;
+    sql = f&#34;SELECT * FROM {self.index_processing_table} WHERE fileName = &#39;{filename}&#39;&#34;
+    return self.execute_fetchall_typed(sql, IndexFileProcessingState)[0]</code></pre>
+</details>
+</dd>
+<dt id="secfsdstools.c_index.indexdataaccess.ParquetDBIndexingAccessor.read_index_report_for_adsh"><code class="name flex">
+<span>def <span class="ident">read_index_report_for_adsh</span></span>(<span>self, adsh: str) ‑> <a title="secfsdstools.c_index.indexdataaccess.IndexReport" href="#secfsdstools.c_index.indexdataaccess.IndexReport">IndexReport</a></span>
+</code></dt>
+<dd>
+<div class="desc"><p>returns the IndexReport instance for the provided adsh</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>adsh</code></strong> :&ensp;<code>str</code></dt>
+<dd>adsh</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code><a title="secfsdstools.c_index.indexdataaccess.IndexReport" href="#secfsdstools.c_index.indexdataaccess.IndexReport">IndexReport</a></code></dt>
+<dd>the report for the provided adsh</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def read_index_report_for_adsh(self, adsh: str) -&gt; IndexReport:
+    &#34;&#34;&#34;
+    returns the IndexReport instance for the provided adsh
+
+    Args:
+        adsh (str):  adsh
+    Returns:
+        IndexReport: the report for the provided adsh
+    &#34;&#34;&#34;
+    # sorting by originfiletype, so we prefer official data from SEC,
+    # over the daily files, in case both should be present.
+    sql = f&#34;&#34;&#34;SELECT *
+                FROM {self.index_reports_table}
+                WHERE adsh = &#39;{adsh}&#39;
+                ORDER BY originFileType DESC&#34;&#34;&#34;
+    return self.execute_fetchall_typed(sql, IndexReport)[0]</code></pre>
+</details>
+</dd>
+<dt id="secfsdstools.c_index.indexdataaccess.ParquetDBIndexingAccessor.read_index_reports_for_adshs"><code class="name flex">
+<span>def <span class="ident">read_index_reports_for_adshs</span></span>(<span>self, adshs: List[str]) ‑> List[<a title="secfsdstools.c_index.indexdataaccess.IndexReport" href="#secfsdstools.c_index.indexdataaccess.IndexReport">IndexReport</a>]</span>
+</code></dt>
+<dd>
+<div class="desc"><p>returns the IndexReport instances for the provided adshs</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>adshs</code></strong> :&ensp;<code>List[str]</code></dt>
+<dd>adshs</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>List[<a title="secfsdstools.c_index.indexdataaccess.IndexReport" href="#secfsdstools.c_index.indexdataaccess.IndexReport">IndexReport</a>]</code></dt>
+<dd>the reports for the provided adshs</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def read_index_reports_for_adshs(self, adshs: List[str]) -&gt; List[IndexReport]:
+    &#34;&#34;&#34;
+    returns the IndexReport instances for the provided adshs
+
+    Args:
+        adshs (List[str]):  adshs
+    Returns:
+        List[IndexReport]: the reports for the provided adshs
+    &#34;&#34;&#34;
+
+    adshs_str = &#34;, &#34;.join([&#34;&#39;&#34; + x.upper() + &#34;&#39;&#34; for x in adshs])
+    # sorting by originfiletype, so we prefer official data from SEC,
+    # over the daily files, in case both should be present.
+    sql = f&#34;&#34;&#34;SELECT *
+                FROM {self.index_reports_table}
+                WHERE adsh in ({adshs_str})
+                ORDER BY adsh, originFileType DESC&#34;&#34;&#34;
+
+    reports: List[IndexReport] = self.execute_fetchall_typed(sql, IndexReport)
+
+    last_adsh = None
+    filtered_reports: List[IndexReport] = []
+    for report in reports:
+        if last_adsh == report.adsh:
+            continue
+        last_adsh = report.adsh
+        filtered_reports.append(report)
+
+    return filtered_reports</code></pre>
+</details>
+</dd>
+<dt id="secfsdstools.c_index.indexdataaccess.ParquetDBIndexingAccessor.read_index_reports_for_ciks"><code class="name flex">
+<span>def <span class="ident">read_index_reports_for_ciks</span></span>(<span>self, ciks: List[int], forms: Optional[List[str]] = None) ‑> List[<a title="secfsdstools.c_index.indexdataaccess.IndexReport" href="#secfsdstools.c_index.indexdataaccess.IndexReport">IndexReport</a>]</span>
+</code></dt>
+<dd>
+<div class="desc"><p>gets all reports as IndexReport instances for the companies identified by their cik numbers.
+if forms is not set, all forms are returned, otherwise forms is a list of the
+forms that should be returned</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>ciks</code></strong> :&ensp;<code>List[int]</code></dt>
+<dd>ciks of the companies</dd>
+<dt><strong><code>forms</code></strong> :&ensp;<code>List[str]</code>, optional<code>, None</code></dt>
+<dd>list of the forms to be returend,</dd>
+</dl>
+<p>like ['10-Q', '10-K']</p>
+<h2 id="returns">Returns</h2>
+<p>List[IndexReport]</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def read_index_reports_for_ciks(self, ciks: List[int], forms: Optional[List[str]] = None) \
+        -&gt; List[IndexReport]:
+    &#34;&#34;&#34;
+    gets all reports as IndexReport instances for the companies identified by their cik numbers.
+    if forms is not set, all forms are returned, otherwise forms is a list of the
+     forms that should be returned
+
+    Args:
+        ciks (List[int]): ciks of the companies
+        forms (List[str], optional, None): list of the forms to be returend,
+         like [&#39;10-Q&#39;, &#39;10-K&#39;]
+    Returns:
+        List[IndexReport]
+    &#34;&#34;&#34;
+    ciks_str = [str(cik) for cik in ciks]
+    sql = f&#39;SELECT * FROM {self.index_reports_table} WHERE cik in ({&#34;,&#34;.join(ciks_str)})&#39;
+    if forms is not None:
+        forms_str = &#34;, &#34;.join([&#34;&#39;&#34; + x.upper() + &#34;&#39;&#34; for x in forms])
+        sql = sql + f&#39; and form in ({forms_str}) &#39;
+    sql = sql + &#39; ORDER BY period DESC&#39;
+
+    return self.execute_fetchall_typed(sql, IndexReport)</code></pre>
+</details>
+</dd>
+<dt id="secfsdstools.c_index.indexdataaccess.ParquetDBIndexingAccessor.read_index_reports_for_ciks_df"><code class="name flex">
+<span>def <span class="ident">read_index_reports_for_ciks_df</span></span>(<span>self, ciks: List[int], forms: Optional[List[str]] = None) ‑> pandas.core.frame.DataFrame</span>
+</code></dt>
+<dd>
+<div class="desc"><p>gets all reports as IndexReport instances for the companies identified by their cik numbers.
+if forms is not set, all forms are returned, otherwise forms is a list of the
+forms that should be returned</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>ciks</code></strong> :&ensp;<code>List[int]</code></dt>
+<dd>ciks of the companies</dd>
+<dt><strong><code>forms</code></strong> :&ensp;<code>List[str]</code>, optional<code>, None</code></dt>
+<dd>list of the forms to be returend,</dd>
+</dl>
+<p>like ['10-Q', '10-K']</p>
+<h2 id="returns">Returns</h2>
+<p>pd.DataFrame</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def read_index_reports_for_ciks_df(self, ciks: List[int], forms: Optional[List[str]] = None) \
+        -&gt; pd.DataFrame:
+    &#34;&#34;&#34;
+    gets all reports as IndexReport instances for the companies identified by their cik numbers.
+    if forms is not set, all forms are returned, otherwise forms is a list of the
+     forms that should be returned
+
+    Args:
+        ciks (List[int]): ciks of the companies
+        forms (List[str], optional, None):  list of the forms to be returend,
+         like [&#39;10-Q&#39;, &#39;10-K&#39;]
+    Returns:
+        pd.DataFrame
+    &#34;&#34;&#34;
+    ciks_str = [str(cik) for cik in ciks]
+    sql = f&#39;SELECT * FROM {self.index_reports_table} WHERE cik in ({&#34;,&#34;.join(ciks_str)})&#39;
+    if forms is not None:
+        forms_str = &#34;, &#34;.join([&#34;&#39;&#34; + x.upper() + &#34;&#39;&#34; for x in forms])
+        sql = sql + f&#39; and form in ({forms_str}) &#39;
+    sql = sql + &#39; ORDER BY period DESC&#39;
+
+    return self.execute_read_as_df(sql)</code></pre>
+</details>
+</dd>
+</dl>
 <h3>Inherited members</h3>
 <ul class="hlist">
-<li><code><b><a title="secfsdstools.c_index.indexdataaccess.DBIndexingAccessorBase" href="#secfsdstools.c_index.indexdataaccess.DBIndexingAccessorBase">DBIndexingAccessorBase</a></b></code>:
+<li><code><b><a title="secfsdstools.a_utils.dbutils.DB" href="../a_utils/dbutils.html#secfsdstools.a_utils.dbutils.DB">DB</a></b></code>:
 <ul class="hlist">
-<li><code><a title="secfsdstools.c_index.indexdataaccess.DBIndexingAccessorBase.add_index_report" href="#secfsdstools.c_index.indexdataaccess.DBIndexingAccessorBase.add_index_report">add_index_report</a></code></li>
-<li><code><a title="secfsdstools.c_index.indexdataaccess.DBIndexingAccessorBase.append_df_to_table" href="../a_utils/dbutils.html#secfsdstools.a_utils.dbutils.DB.append_df_to_table">append_df_to_table</a></code></li>
-<li><code><a title="secfsdstools.c_index.indexdataaccess.DBIndexingAccessorBase.create_insert_statement_for_dataclass" href="../a_utils/dbutils.html#secfsdstools.a_utils.dbutils.DB.create_insert_statement_for_dataclass">create_insert_statement_for_dataclass</a></code></li>
-<li><code><a title="secfsdstools.c_index.indexdataaccess.DBIndexingAccessorBase.db_file_exists" href="../a_utils/dbutils.html#secfsdstools.a_utils.dbutils.DB.db_file_exists">db_file_exists</a></code></li>
-<li><code><a title="secfsdstools.c_index.indexdataaccess.DBIndexingAccessorBase.execute_fetchall" href="../a_utils/dbutils.html#secfsdstools.a_utils.dbutils.DB.execute_fetchall">execute_fetchall</a></code></li>
-<li><code><a title="secfsdstools.c_index.indexdataaccess.DBIndexingAccessorBase.execute_fetchall_typed" href="../a_utils/dbutils.html#secfsdstools.a_utils.dbutils.DB.execute_fetchall_typed">execute_fetchall_typed</a></code></li>
-<li><code><a title="secfsdstools.c_index.indexdataaccess.DBIndexingAccessorBase.execute_many" href="../a_utils/dbutils.html#secfsdstools.a_utils.dbutils.DB.execute_many">execute_many</a></code></li>
-<li><code><a title="secfsdstools.c_index.indexdataaccess.DBIndexingAccessorBase.execute_read_as_df" href="../a_utils/dbutils.html#secfsdstools.a_utils.dbutils.DB.execute_read_as_df">execute_read_as_df</a></code></li>
-<li><code><a title="secfsdstools.c_index.indexdataaccess.DBIndexingAccessorBase.execute_single" href="../a_utils/dbutils.html#secfsdstools.a_utils.dbutils.DB.execute_single">execute_single</a></code></li>
-<li><code><a title="secfsdstools.c_index.indexdataaccess.DBIndexingAccessorBase.find_company_by_name" href="#secfsdstools.c_index.indexdataaccess.DBIndexingAccessorBase.find_company_by_name">find_company_by_name</a></code></li>
-<li><code><a title="secfsdstools.c_index.indexdataaccess.DBIndexingAccessorBase.find_latest_company_report" href="#secfsdstools.c_index.indexdataaccess.DBIndexingAccessorBase.find_latest_company_report">find_latest_company_report</a></code></li>
-<li><code><a title="secfsdstools.c_index.indexdataaccess.DBIndexingAccessorBase.get_connection" href="../a_utils/dbutils.html#secfsdstools.a_utils.dbutils.DB.get_connection">get_connection</a></code></li>
-<li><code><a title="secfsdstools.c_index.indexdataaccess.DBIndexingAccessorBase.insert_indexfileprocessing" href="#secfsdstools.c_index.indexdataaccess.DBIndexingAccessorBase.insert_indexfileprocessing">insert_indexfileprocessing</a></code></li>
-<li><code><a title="secfsdstools.c_index.indexdataaccess.DBIndexingAccessorBase.insert_indexreport" href="#secfsdstools.c_index.indexdataaccess.DBIndexingAccessorBase.insert_indexreport">insert_indexreport</a></code></li>
-<li><code><a title="secfsdstools.c_index.indexdataaccess.DBIndexingAccessorBase.read_all_indexfileprocessing" href="#secfsdstools.c_index.indexdataaccess.DBIndexingAccessorBase.read_all_indexfileprocessing">read_all_indexfileprocessing</a></code></li>
-<li><code><a title="secfsdstools.c_index.indexdataaccess.DBIndexingAccessorBase.read_all_indexfileprocessing_df" href="#secfsdstools.c_index.indexdataaccess.DBIndexingAccessorBase.read_all_indexfileprocessing_df">read_all_indexfileprocessing_df</a></code></li>
-<li><code><a title="secfsdstools.c_index.indexdataaccess.DBIndexingAccessorBase.read_all_indexreports" href="#secfsdstools.c_index.indexdataaccess.DBIndexingAccessorBase.read_all_indexreports">read_all_indexreports</a></code></li>
-<li><code><a title="secfsdstools.c_index.indexdataaccess.DBIndexingAccessorBase.read_all_indexreports_df" href="#secfsdstools.c_index.indexdataaccess.DBIndexingAccessorBase.read_all_indexreports_df">read_all_indexreports_df</a></code></li>
-<li><code><a title="secfsdstools.c_index.indexdataaccess.DBIndexingAccessorBase.read_index_file_for_filename" href="#secfsdstools.c_index.indexdataaccess.DBIndexingAccessorBase.read_index_file_for_filename">read_index_file_for_filename</a></code></li>
-<li><code><a title="secfsdstools.c_index.indexdataaccess.DBIndexingAccessorBase.read_index_report_for_adsh" href="#secfsdstools.c_index.indexdataaccess.DBIndexingAccessorBase.read_index_report_for_adsh">read_index_report_for_adsh</a></code></li>
-<li><code><a title="secfsdstools.c_index.indexdataaccess.DBIndexingAccessorBase.read_index_reports_for_adshs" href="#secfsdstools.c_index.indexdataaccess.DBIndexingAccessorBase.read_index_reports_for_adshs">read_index_reports_for_adshs</a></code></li>
-<li><code><a title="secfsdstools.c_index.indexdataaccess.DBIndexingAccessorBase.read_index_reports_for_cik" href="#secfsdstools.c_index.indexdataaccess.DBIndexingAccessorBase.read_index_reports_for_cik">read_index_reports_for_cik</a></code></li>
-<li><code><a title="secfsdstools.c_index.indexdataaccess.DBIndexingAccessorBase.read_index_reports_for_cik_df" href="#secfsdstools.c_index.indexdataaccess.DBIndexingAccessorBase.read_index_reports_for_cik_df">read_index_reports_for_cik_df</a></code></li>
-<li><code><a title="secfsdstools.c_index.indexdataaccess.DBIndexingAccessorBase.table_exists" href="../a_utils/dbutils.html#secfsdstools.a_utils.dbutils.DB.table_exists">table_exists</a></code></li>
+<li><code><a title="secfsdstools.a_utils.dbutils.DB.append_df_to_table" href="../a_utils/dbutils.html#secfsdstools.a_utils.dbutils.DB.append_df_to_table">append_df_to_table</a></code></li>
+<li><code><a title="secfsdstools.a_utils.dbutils.DB.create_insert_statement_for_dataclass" href="../a_utils/dbutils.html#secfsdstools.a_utils.dbutils.DB.create_insert_statement_for_dataclass">create_insert_statement_for_dataclass</a></code></li>
+<li><code><a title="secfsdstools.a_utils.dbutils.DB.db_file_exists" href="../a_utils/dbutils.html#secfsdstools.a_utils.dbutils.DB.db_file_exists">db_file_exists</a></code></li>
+<li><code><a title="secfsdstools.a_utils.dbutils.DB.execute_fetchall" href="../a_utils/dbutils.html#secfsdstools.a_utils.dbutils.DB.execute_fetchall">execute_fetchall</a></code></li>
+<li><code><a title="secfsdstools.a_utils.dbutils.DB.execute_fetchall_typed" href="../a_utils/dbutils.html#secfsdstools.a_utils.dbutils.DB.execute_fetchall_typed">execute_fetchall_typed</a></code></li>
+<li><code><a title="secfsdstools.a_utils.dbutils.DB.execute_many" href="../a_utils/dbutils.html#secfsdstools.a_utils.dbutils.DB.execute_many">execute_many</a></code></li>
+<li><code><a title="secfsdstools.a_utils.dbutils.DB.execute_read_as_df" href="../a_utils/dbutils.html#secfsdstools.a_utils.dbutils.DB.execute_read_as_df">execute_read_as_df</a></code></li>
+<li><code><a title="secfsdstools.a_utils.dbutils.DB.execute_single" href="../a_utils/dbutils.html#secfsdstools.a_utils.dbutils.DB.execute_single">execute_single</a></code></li>
+<li><code><a title="secfsdstools.a_utils.dbutils.DB.get_connection" href="../a_utils/dbutils.html#secfsdstools.a_utils.dbutils.DB.get_connection">get_connection</a></code></li>
+<li><code><a title="secfsdstools.a_utils.dbutils.DB.table_exists" href="../a_utils/dbutils.html#secfsdstools.a_utils.dbutils.DB.table_exists">table_exists</a></code></li>
 </ul>
 </li>
 </ul>
@@ -1312,32 +1195,8 @@ forms that should be returned</p>
 <li><code><a title="secfsdstools.c_index" href="index.html">secfsdstools.c_index</a></code></li>
 </ul>
 </li>
-<li><h3><a href="#header-functions">Functions</a></h3>
-<ul class="">
-<li><code><a title="secfsdstools.c_index.indexdataaccess.create_index_accessor" href="#secfsdstools.c_index.indexdataaccess.create_index_accessor">create_index_accessor</a></code></li>
-</ul>
-</li>
 <li><h3><a href="#header-classes">Classes</a></h3>
 <ul>
-<li>
-<h4><code><a title="secfsdstools.c_index.indexdataaccess.DBIndexingAccessorBase" href="#secfsdstools.c_index.indexdataaccess.DBIndexingAccessorBase">DBIndexingAccessorBase</a></code></h4>
-<ul class="">
-<li><code><a title="secfsdstools.c_index.indexdataaccess.DBIndexingAccessorBase.add_index_report" href="#secfsdstools.c_index.indexdataaccess.DBIndexingAccessorBase.add_index_report">add_index_report</a></code></li>
-<li><code><a title="secfsdstools.c_index.indexdataaccess.DBIndexingAccessorBase.find_company_by_name" href="#secfsdstools.c_index.indexdataaccess.DBIndexingAccessorBase.find_company_by_name">find_company_by_name</a></code></li>
-<li><code><a title="secfsdstools.c_index.indexdataaccess.DBIndexingAccessorBase.find_latest_company_report" href="#secfsdstools.c_index.indexdataaccess.DBIndexingAccessorBase.find_latest_company_report">find_latest_company_report</a></code></li>
-<li><code><a title="secfsdstools.c_index.indexdataaccess.DBIndexingAccessorBase.insert_indexfileprocessing" href="#secfsdstools.c_index.indexdataaccess.DBIndexingAccessorBase.insert_indexfileprocessing">insert_indexfileprocessing</a></code></li>
-<li><code><a title="secfsdstools.c_index.indexdataaccess.DBIndexingAccessorBase.insert_indexreport" href="#secfsdstools.c_index.indexdataaccess.DBIndexingAccessorBase.insert_indexreport">insert_indexreport</a></code></li>
-<li><code><a title="secfsdstools.c_index.indexdataaccess.DBIndexingAccessorBase.read_all_indexfileprocessing" href="#secfsdstools.c_index.indexdataaccess.DBIndexingAccessorBase.read_all_indexfileprocessing">read_all_indexfileprocessing</a></code></li>
-<li><code><a title="secfsdstools.c_index.indexdataaccess.DBIndexingAccessorBase.read_all_indexfileprocessing_df" href="#secfsdstools.c_index.indexdataaccess.DBIndexingAccessorBase.read_all_indexfileprocessing_df">read_all_indexfileprocessing_df</a></code></li>
-<li><code><a title="secfsdstools.c_index.indexdataaccess.DBIndexingAccessorBase.read_all_indexreports" href="#secfsdstools.c_index.indexdataaccess.DBIndexingAccessorBase.read_all_indexreports">read_all_indexreports</a></code></li>
-<li><code><a title="secfsdstools.c_index.indexdataaccess.DBIndexingAccessorBase.read_all_indexreports_df" href="#secfsdstools.c_index.indexdataaccess.DBIndexingAccessorBase.read_all_indexreports_df">read_all_indexreports_df</a></code></li>
-<li><code><a title="secfsdstools.c_index.indexdataaccess.DBIndexingAccessorBase.read_index_file_for_filename" href="#secfsdstools.c_index.indexdataaccess.DBIndexingAccessorBase.read_index_file_for_filename">read_index_file_for_filename</a></code></li>
-<li><code><a title="secfsdstools.c_index.indexdataaccess.DBIndexingAccessorBase.read_index_report_for_adsh" href="#secfsdstools.c_index.indexdataaccess.DBIndexingAccessorBase.read_index_report_for_adsh">read_index_report_for_adsh</a></code></li>
-<li><code><a title="secfsdstools.c_index.indexdataaccess.DBIndexingAccessorBase.read_index_reports_for_adshs" href="#secfsdstools.c_index.indexdataaccess.DBIndexingAccessorBase.read_index_reports_for_adshs">read_index_reports_for_adshs</a></code></li>
-<li><code><a title="secfsdstools.c_index.indexdataaccess.DBIndexingAccessorBase.read_index_reports_for_cik" href="#secfsdstools.c_index.indexdataaccess.DBIndexingAccessorBase.read_index_reports_for_cik">read_index_reports_for_cik</a></code></li>
-<li><code><a title="secfsdstools.c_index.indexdataaccess.DBIndexingAccessorBase.read_index_reports_for_cik_df" href="#secfsdstools.c_index.indexdataaccess.DBIndexingAccessorBase.read_index_reports_for_cik_df">read_index_reports_for_cik_df</a></code></li>
-</ul>
-</li>
 <li>
 <h4><code><a title="secfsdstools.c_index.indexdataaccess.IndexFileProcessingState" href="#secfsdstools.c_index.indexdataaccess.IndexFileProcessingState">IndexFileProcessingState</a></code></h4>
 <ul class="">
@@ -1366,8 +1225,22 @@ forms that should be returned</p>
 <li>
 <h4><code><a title="secfsdstools.c_index.indexdataaccess.ParquetDBIndexingAccessor" href="#secfsdstools.c_index.indexdataaccess.ParquetDBIndexingAccessor">ParquetDBIndexingAccessor</a></code></h4>
 <ul class="">
-<li><code><a title="secfsdstools.c_index.indexdataaccess.ParquetDBIndexingAccessor.INDEX_PROCESSING_TABLE" href="#secfsdstools.c_index.indexdataaccess.ParquetDBIndexingAccessor.INDEX_PROCESSING_TABLE">INDEX_PROCESSING_TABLE</a></code></li>
-<li><code><a title="secfsdstools.c_index.indexdataaccess.ParquetDBIndexingAccessor.INDEX_REPORTS_TABLE" href="#secfsdstools.c_index.indexdataaccess.ParquetDBIndexingAccessor.INDEX_REPORTS_TABLE">INDEX_REPORTS_TABLE</a></code></li>
+<li><code><a title="secfsdstools.c_index.indexdataaccess.ParquetDBIndexingAccessor.add_index_report" href="#secfsdstools.c_index.indexdataaccess.ParquetDBIndexingAccessor.add_index_report">add_index_report</a></code></li>
+<li><code><a title="secfsdstools.c_index.indexdataaccess.ParquetDBIndexingAccessor.find_company_by_name" href="#secfsdstools.c_index.indexdataaccess.ParquetDBIndexingAccessor.find_company_by_name">find_company_by_name</a></code></li>
+<li><code><a title="secfsdstools.c_index.indexdataaccess.ParquetDBIndexingAccessor.find_latest_company_report" href="#secfsdstools.c_index.indexdataaccess.ParquetDBIndexingAccessor.find_latest_company_report">find_latest_company_report</a></code></li>
+<li><code><a title="secfsdstools.c_index.indexdataaccess.ParquetDBIndexingAccessor.index_processing_table" href="#secfsdstools.c_index.indexdataaccess.ParquetDBIndexingAccessor.index_processing_table">index_processing_table</a></code></li>
+<li><code><a title="secfsdstools.c_index.indexdataaccess.ParquetDBIndexingAccessor.index_reports_table" href="#secfsdstools.c_index.indexdataaccess.ParquetDBIndexingAccessor.index_reports_table">index_reports_table</a></code></li>
+<li><code><a title="secfsdstools.c_index.indexdataaccess.ParquetDBIndexingAccessor.insert_indexfileprocessing" href="#secfsdstools.c_index.indexdataaccess.ParquetDBIndexingAccessor.insert_indexfileprocessing">insert_indexfileprocessing</a></code></li>
+<li><code><a title="secfsdstools.c_index.indexdataaccess.ParquetDBIndexingAccessor.insert_indexreport" href="#secfsdstools.c_index.indexdataaccess.ParquetDBIndexingAccessor.insert_indexreport">insert_indexreport</a></code></li>
+<li><code><a title="secfsdstools.c_index.indexdataaccess.ParquetDBIndexingAccessor.read_all_indexfileprocessing" href="#secfsdstools.c_index.indexdataaccess.ParquetDBIndexingAccessor.read_all_indexfileprocessing">read_all_indexfileprocessing</a></code></li>
+<li><code><a title="secfsdstools.c_index.indexdataaccess.ParquetDBIndexingAccessor.read_all_indexfileprocessing_df" href="#secfsdstools.c_index.indexdataaccess.ParquetDBIndexingAccessor.read_all_indexfileprocessing_df">read_all_indexfileprocessing_df</a></code></li>
+<li><code><a title="secfsdstools.c_index.indexdataaccess.ParquetDBIndexingAccessor.read_all_indexreports" href="#secfsdstools.c_index.indexdataaccess.ParquetDBIndexingAccessor.read_all_indexreports">read_all_indexreports</a></code></li>
+<li><code><a title="secfsdstools.c_index.indexdataaccess.ParquetDBIndexingAccessor.read_all_indexreports_df" href="#secfsdstools.c_index.indexdataaccess.ParquetDBIndexingAccessor.read_all_indexreports_df">read_all_indexreports_df</a></code></li>
+<li><code><a title="secfsdstools.c_index.indexdataaccess.ParquetDBIndexingAccessor.read_index_file_for_filename" href="#secfsdstools.c_index.indexdataaccess.ParquetDBIndexingAccessor.read_index_file_for_filename">read_index_file_for_filename</a></code></li>
+<li><code><a title="secfsdstools.c_index.indexdataaccess.ParquetDBIndexingAccessor.read_index_report_for_adsh" href="#secfsdstools.c_index.indexdataaccess.ParquetDBIndexingAccessor.read_index_report_for_adsh">read_index_report_for_adsh</a></code></li>
+<li><code><a title="secfsdstools.c_index.indexdataaccess.ParquetDBIndexingAccessor.read_index_reports_for_adshs" href="#secfsdstools.c_index.indexdataaccess.ParquetDBIndexingAccessor.read_index_reports_for_adshs">read_index_reports_for_adshs</a></code></li>
+<li><code><a title="secfsdstools.c_index.indexdataaccess.ParquetDBIndexingAccessor.read_index_reports_for_ciks" href="#secfsdstools.c_index.indexdataaccess.ParquetDBIndexingAccessor.read_index_reports_for_ciks">read_index_reports_for_ciks</a></code></li>
+<li><code><a title="secfsdstools.c_index.indexdataaccess.ParquetDBIndexingAccessor.read_index_reports_for_ciks_df" href="#secfsdstools.c_index.indexdataaccess.ParquetDBIndexingAccessor.read_index_reports_for_ciks_df">read_index_reports_for_ciks_df</a></code></li>
 </ul>
 </li>
 </ul>

@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.10.0" />
-<title>secfsdstools.e_read.companycollecting API documentation</title>
-<meta name="description" content="Collects all data for a company." />
+<title>secfsdstools.d_container.filter API documentation</title>
+<meta name="description" content="Base class for Filter implementations." />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
 <link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
@@ -19,56 +19,40 @@
 <main>
 <article id="content">
 <header>
-<h1 class="title">Module <code>secfsdstools.e_read.companycollecting</code></h1>
+<h1 class="title">Module <code>secfsdstools.d_container.filter</code></h1>
 </header>
 <section id="section-intro">
-<p>Collects all data for a company.</p>
+<p>Base class for Filter implementations.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">&#34;&#34;&#34;
-Collects all data for a company.
+Base class for Filter implementations.
 &#34;&#34;&#34;
-from typing import Optional, List
+from abc import abstractmethod
 
-from secfsdstools.a_config.configmgt import ConfigurationManager
-from secfsdstools.a_config.configmodel import Configuration
-from secfsdstools.c_index.indexdataaccess import IndexReport, create_index_accessor
-from secfsdstools.e_read.multireportreading import MultiReportReader
+from typing import TypeVar, Generic
+
+T = TypeVar(&#39;T&#39;)
 
 
-class CompanyReportCollector:
+class FilterBase(Generic[T]):
     &#34;&#34;&#34;
-    Collects reports for a single company (cik) from different  zip files.
-    For instance, it is a simple to read all 10-K reports.
+    Basic filter definition.
     &#34;&#34;&#34;
 
-    @classmethod
-    def get_company_collector(cls, cik: int, forms: Optional[List[str]] = None,
-                              configuration: Optional[Configuration] = None):
+    @abstractmethod
+    def filter(self, databag: T) -&gt; T:
         &#34;&#34;&#34;
-        creates a MulitReportReader instance for the provided cik and forms (e.g. 10-K..)
-        If no configuration object is passed,
-        it reads the configuration from the config file.
-
+        implements a simple filter on the RawDataBag and produces a new databag
         Args:
-            cik (int): the central identification key which is assigned by the sec for every company
-            forms: a list of forms which should be collected, like 10-K, or 10 Q
-            configuration (Configuration, optional, None): Optional configuration object
+            databag (T): the bag to apply the filter to
 
         Returns:
-            MultiReportReader: instance of Multi Collector
-        &#34;&#34;&#34;
+            T: the new  bag with the filtered content
 
-        if configuration is None:
-            configuration = ConfigurationManager.read_config_file()
-
-        dbaccessor = create_index_accessor(db_dir=configuration.db_dir)
-
-        index_reports: List[IndexReport] = dbaccessor.read_index_reports_for_cik(cik, forms)
-
-        return MultiReportReader(index_reports=index_reports)</code></pre>
+        &#34;&#34;&#34;</code></pre>
 </details>
 </section>
 <section>
@@ -80,101 +64,79 @@ class CompanyReportCollector:
 <section>
 <h2 class="section-title" id="header-classes">Classes</h2>
 <dl>
-<dt id="secfsdstools.e_read.companycollecting.CompanyReportCollector"><code class="flex name class">
-<span>class <span class="ident">CompanyReportCollector</span></span>
+<dt id="secfsdstools.d_container.filter.FilterBase"><code class="flex name class">
+<span>class <span class="ident">FilterBase</span></span>
+<span>(</span><span>*args, **kwds)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Collects reports for a single company (cik) from different
-zip files.
-For instance, it is a simple to read all 10-K reports.</p></div>
+<div class="desc"><p>Basic filter definition.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class CompanyReportCollector:
+<pre><code class="python">class FilterBase(Generic[T]):
     &#34;&#34;&#34;
-    Collects reports for a single company (cik) from different  zip files.
-    For instance, it is a simple to read all 10-K reports.
+    Basic filter definition.
     &#34;&#34;&#34;
 
-    @classmethod
-    def get_company_collector(cls, cik: int, forms: Optional[List[str]] = None,
-                              configuration: Optional[Configuration] = None):
+    @abstractmethod
+    def filter(self, databag: T) -&gt; T:
         &#34;&#34;&#34;
-        creates a MulitReportReader instance for the provided cik and forms (e.g. 10-K..)
-        If no configuration object is passed,
-        it reads the configuration from the config file.
-
+        implements a simple filter on the RawDataBag and produces a new databag
         Args:
-            cik (int): the central identification key which is assigned by the sec for every company
-            forms: a list of forms which should be collected, like 10-K, or 10 Q
-            configuration (Configuration, optional, None): Optional configuration object
+            databag (T): the bag to apply the filter to
 
         Returns:
-            MultiReportReader: instance of Multi Collector
-        &#34;&#34;&#34;
+            T: the new  bag with the filtered content
 
-        if configuration is None:
-            configuration = ConfigurationManager.read_config_file()
-
-        dbaccessor = create_index_accessor(db_dir=configuration.db_dir)
-
-        index_reports: List[IndexReport] = dbaccessor.read_index_reports_for_cik(cik, forms)
-
-        return MultiReportReader(index_reports=index_reports)</code></pre>
+        &#34;&#34;&#34;</code></pre>
 </details>
-<h3>Static methods</h3>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>typing.Generic</li>
+</ul>
+<h3>Subclasses</h3>
+<ul class="hlist">
+<li><a title="secfsdstools.e_filter.rawfiltering.AdshRawFilter" href="../e_filter/rawfiltering.html#secfsdstools.e_filter.rawfiltering.AdshRawFilter">AdshRawFilter</a></li>
+<li><a title="secfsdstools.e_filter.rawfiltering.MainCoregFilter" href="../e_filter/rawfiltering.html#secfsdstools.e_filter.rawfiltering.MainCoregFilter">MainCoregFilter</a></li>
+<li><a title="secfsdstools.e_filter.rawfiltering.ReportPeriodAndPreviousPeriodRawFilter" href="../e_filter/rawfiltering.html#secfsdstools.e_filter.rawfiltering.ReportPeriodAndPreviousPeriodRawFilter">ReportPeriodAndPreviousPeriodRawFilter</a></li>
+<li><a title="secfsdstools.e_filter.rawfiltering.ReportPeriodRawFilter" href="../e_filter/rawfiltering.html#secfsdstools.e_filter.rawfiltering.ReportPeriodRawFilter">ReportPeriodRawFilter</a></li>
+<li><a title="secfsdstools.e_filter.rawfiltering.StmtsRawFilter" href="../e_filter/rawfiltering.html#secfsdstools.e_filter.rawfiltering.StmtsRawFilter">StmtsRawFilter</a></li>
+<li><a title="secfsdstools.e_filter.rawfiltering.TagRawFilter" href="../e_filter/rawfiltering.html#secfsdstools.e_filter.rawfiltering.TagRawFilter">TagRawFilter</a></li>
+</ul>
+<h3>Methods</h3>
 <dl>
-<dt id="secfsdstools.e_read.companycollecting.CompanyReportCollector.get_company_collector"><code class="name flex">
-<span>def <span class="ident">get_company_collector</span></span>(<span>cik: int, forms: Optional[List[str]] = None, configuration: Optional[<a title="secfsdstools.a_config.configmodel.Configuration" href="../a_config/configmodel.html#secfsdstools.a_config.configmodel.Configuration">Configuration</a>] = None)</span>
+<dt id="secfsdstools.d_container.filter.FilterBase.filter"><code class="name flex">
+<span>def <span class="ident">filter</span></span>(<span>self, databag: ~T) ‑> ~T</span>
 </code></dt>
 <dd>
-<div class="desc"><p>creates a MulitReportReader instance for the provided cik and forms (e.g. 10-K..)
-If no configuration object is passed,
-it reads the configuration from the config file.</p>
+<div class="desc"><p>implements a simple filter on the RawDataBag and produces a new databag</p>
 <h2 id="args">Args</h2>
 <dl>
-<dt><strong><code>cik</code></strong> :&ensp;<code>int</code></dt>
-<dd>the central identification key which is assigned by the sec for every company</dd>
-<dt><strong><code>forms</code></strong></dt>
-<dd>a list of forms which should be collected, like 10-K, or 10 Q</dd>
-<dt><strong><code>configuration</code></strong> :&ensp;<code>Configuration</code>, optional<code>, None</code></dt>
-<dd>Optional configuration object</dd>
+<dt><strong><code>databag</code></strong> :&ensp;<code>T</code></dt>
+<dd>the bag to apply the filter to</dd>
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
-<dt><code>MultiReportReader</code></dt>
-<dd>instance of Multi Collector</dd>
+<dt><code>T</code></dt>
+<dd>the new
+bag with the filtered content</dd>
 </dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">@classmethod
-def get_company_collector(cls, cik: int, forms: Optional[List[str]] = None,
-                          configuration: Optional[Configuration] = None):
+<pre><code class="python">@abstractmethod
+def filter(self, databag: T) -&gt; T:
     &#34;&#34;&#34;
-    creates a MulitReportReader instance for the provided cik and forms (e.g. 10-K..)
-    If no configuration object is passed,
-    it reads the configuration from the config file.
-
+    implements a simple filter on the RawDataBag and produces a new databag
     Args:
-        cik (int): the central identification key which is assigned by the sec for every company
-        forms: a list of forms which should be collected, like 10-K, or 10 Q
-        configuration (Configuration, optional, None): Optional configuration object
+        databag (T): the bag to apply the filter to
 
     Returns:
-        MultiReportReader: instance of Multi Collector
-    &#34;&#34;&#34;
+        T: the new  bag with the filtered content
 
-    if configuration is None:
-        configuration = ConfigurationManager.read_config_file()
-
-    dbaccessor = create_index_accessor(db_dir=configuration.db_dir)
-
-    index_reports: List[IndexReport] = dbaccessor.read_index_reports_for_cik(cik, forms)
-
-    return MultiReportReader(index_reports=index_reports)</code></pre>
+    &#34;&#34;&#34;</code></pre>
 </details>
 </dd>
 </dl>
@@ -190,15 +152,15 @@ def get_company_collector(cls, cik: int, forms: Optional[List[str]] = None,
 <ul id="index">
 <li><h3>Super-module</h3>
 <ul>
-<li><code><a title="secfsdstools.e_read" href="index.html">secfsdstools.e_read</a></code></li>
+<li><code><a title="secfsdstools.d_container" href="index.html">secfsdstools.d_container</a></code></li>
 </ul>
 </li>
 <li><h3><a href="#header-classes">Classes</a></h3>
 <ul>
 <li>
-<h4><code><a title="secfsdstools.e_read.companycollecting.CompanyReportCollector" href="#secfsdstools.e_read.companycollecting.CompanyReportCollector">CompanyReportCollector</a></code></h4>
+<h4><code><a title="secfsdstools.d_container.filter.FilterBase" href="#secfsdstools.d_container.filter.FilterBase">FilterBase</a></code></h4>
 <ul class="">
-<li><code><a title="secfsdstools.e_read.companycollecting.CompanyReportCollector.get_company_collector" href="#secfsdstools.e_read.companycollecting.CompanyReportCollector.get_company_collector">get_company_collector</a></code></li>
+<li><code><a title="secfsdstools.d_container.filter.FilterBase.filter" href="#secfsdstools.d_container.filter.FilterBase.filter">filter</a></code></li>
 </ul>
 </li>
 </ul>

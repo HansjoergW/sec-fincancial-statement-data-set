@@ -38,8 +38,7 @@ import pandas as pd
 
 from secfsdstools.a_utils.constants import SUB_TXT
 from secfsdstools.a_utils.fileutils import get_directories_in_directory
-from secfsdstools.c_index.indexdataaccess import IndexFileProcessingState, \
-    DBIndexingAccessorBase, ParquetDBIndexingAccessor
+from secfsdstools.c_index.indexdataaccess import IndexFileProcessingState, ParquetDBIndexingAccessor
 
 LOGGER = logging.getLogger(__name__)
 
@@ -51,7 +50,7 @@ class BaseReportIndexer(ABC):
     PROCESSED_STR: str = &#39;processed&#39;
     URL_PREFIX: str = &#39;https://www.sec.gov/Archives/edgar/data/&#39;
 
-    def __init__(self, accessor: DBIndexingAccessorBase, file_type: str):
+    def __init__(self, accessor: ParquetDBIndexingAccessor, file_type: str):
         self.dbaccessor = accessor
         self.file_type = file_type
 
@@ -162,7 +161,7 @@ class ReportParquetIndexer(BaseReportIndexer):
 <dl>
 <dt id="secfsdstools.c_index.indexing.BaseReportIndexer"><code class="flex name class">
 <span>class <span class="ident">BaseReportIndexer</span></span>
-<span>(</span><span>accessor: <a title="secfsdstools.c_index.indexdataaccess.DBIndexingAccessorBase" href="indexdataaccess.html#secfsdstools.c_index.indexdataaccess.DBIndexingAccessorBase">DBIndexingAccessorBase</a>, file_type: str)</span>
+<span>(</span><span>accessor: <a title="secfsdstools.c_index.indexdataaccess.ParquetDBIndexingAccessor" href="indexdataaccess.html#secfsdstools.c_index.indexdataaccess.ParquetDBIndexingAccessor">ParquetDBIndexingAccessor</a>, file_type: str)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Base class to index the reports.</p></div>
@@ -177,7 +176,7 @@ class ReportParquetIndexer(BaseReportIndexer):
     PROCESSED_STR: str = &#39;processed&#39;
     URL_PREFIX: str = &#39;https://www.sec.gov/Archives/edgar/data/&#39;
 
-    def __init__(self, accessor: DBIndexingAccessorBase, file_type: str):
+    def __init__(self, accessor: ParquetDBIndexingAccessor, file_type: str):
         self.dbaccessor = accessor
         self.file_type = file_type
 

@@ -170,8 +170,8 @@ class MainCoregFilter(FilterBase[RawDataBag]):
         Returns:
             RawDataBag: the databag with the filtered data
         """
-        num_filtered_for_tags = databag.num_df[databag.num_df.coreg == '']
+        num_filtered_for_main_coreg = databag.num_df[databag.num_df.coreg == '']
 
         return RawDataBag.create(sub_df=databag.sub_df,
                                  pre_df=databag.pre_df,
-                                 num_df=num_filtered_for_tags)
+                                 num_df=num_filtered_for_main_coreg)

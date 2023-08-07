@@ -125,3 +125,6 @@ Jekyll Dokumentation
   -> https://pages-themes.github.io/minimal/
      https://github.com/pages-themes/minimal/blob/master/index.md?plain=1
 
+Images in pypi.org readme
+-------------------------
+https://stackoverflow.com/questions/41983209/how-do-i-add-images-to-a-pypi-readme-that-works-on-github

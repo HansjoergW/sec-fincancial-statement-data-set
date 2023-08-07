@@ -64,7 +64,7 @@ class CompanyIndexReader:
 
         Args:
             forms (List[str], optional, None): list of the forms to be returned,
-             like ['10-Q', '10-K']
+                                               like ['10-Q', '10-K']
 
         Returns:
             List[IndexReport]: the list of matching reports as a list of IndexReport instances
@@ -78,8 +78,8 @@ class CompanyIndexReader:
          forms that should be returned
 
         Args:
-            forms (List[str], optional, None): list of the forms to
-             be returned, like ['10-Q', '10-K']
+            forms (List[str], optional, None): list of the forms to be returned,
+                                               like ['10-Q', '10-K']
 
         Returns:
             pd.DataFrame: the list of matching reports as a panas Dataframe

@@ -67,6 +67,10 @@ class Updater:
 
     def _check_for_update(self) -> bool:
         """checks if a new update check should be conducted."""
+
+        if self.db_state_accesor.table_exists(self.db_state_accesor.STATUS_TABLE_NAME) is False:
+            return True
+
         last_check = self.db_state_accesor.get_key(Updater.LAST_UPDATE_CHECK_KEY)
 
         if last_check is None:

@@ -179,7 +179,106 @@ filtered, concatenated, directly saved and loaded.
 
 The diagramm also shows the main classes with which a user interacts. The use of them  is described in the following chapters.
 
+## General
+Most of the classes you can interact with have a factory method which name starts with "get_". All this factory method
+take at least one **optional** parameter called configuration which is of type "Configuration".
+
+If you do not provide this parameter, the class will read the configuration info from you configuration file in your home
+directory. If, for whatever reason, you do want to provide an alternative configuration, you can overwrite it.
+
+However, normally you do not have to provide the "configuration" parameter.
+
 ## Index: working with the index
+The first class that interacts with the index is the `IndexSearch` class. It provides a single method `find_company_by_name`
+which executes a SQL Like search on the name of the available companies and returns a pandas dataframe with the columns
+'name' and 'cik' (the central index key, or the unique id of a company in the financial statements data sets).
+The main purpose of this class is to find ethe cik for a company (of course, you can also directly search the cik on https://www.sec.gov/edgar/searchedgar/companysearch).
+
+
+```
+from secfsdstools.c_index.searching import IndexSearch
+
+index_search = IndexSearch.get_index_search()
+results = index_search.find_company_by_name("apple")
+print(results)
+```
+
+Output:
+````
+                           name      cik
+      APPLE GREEN HOLDING, INC.  1510976
+   APPLE HOSPITALITY REIT, INC.  1418121
+                      APPLE INC   320193
+         APPLE REIT EIGHT, INC.  1387361
+          APPLE REIT NINE, INC.  1418121
+         APPLE REIT SEVEN, INC.  1329011
+             APPLE REIT SIX INC  1277151
+           APPLE REIT TEN, INC.  1498864
+         APPLETON PAPERS INC/WI  1144326
+  DR PEPPER SNAPPLE GROUP, INC.  1418135
+   MAUI LAND & PINEAPPLE CO INC    63330
+          PINEAPPLE ENERGY INC.    22701
+  PINEAPPLE EXPRESS CANNABIS CO  1710495
+        PINEAPPLE EXPRESS, INC.  1654672
+       PINEAPPLE HOLDINGS, INC.    22701
+                PINEAPPLE, INC.  1654672
+````
+
+
+Once you have the cik of a company, you can use the `CompanyIndexReader` to get information on available reports of a company.
+To get an instance of the class, you use the get `get_company_index_reader` method and provide the cik parameter.
+
+````
+from secfsdstools.c_index.companyindexreading import CompanyIndexReader
+
+apple_cik = 320193
+apple_index_reader = CompanyIndexReader.get_company_index_reader(cik=apple_cik)
+````
+
+First, you could use the method `get_latest_company_filing` which returns a dictioniary with the latest filing of the company:
+
+````
+print(apple_index_reader.get_latest_company_filing())
+````
+Output:
+````
+{'adsh': '0001140361-23-023909', 'cik': 320193, 'name': 'APPLE INC', 'sic': 3571.0, 'countryba': 'US', 'stprba': 'CA', 'cityba': 'CUPERTINO', 
+'zipba': '95014', 'bas1': 'ONE APPLE PARK WAY', 'bas2': None, 'baph': '(408) 996-1010', 'countryma': 'US', 'stprma': 'CA', 
+'cityma': 'CUPERTINO', 'zipma': '95014', 'mas1': 'ONE APPLE PARK WAY', 'mas2': None, 'countryinc': 'US', 'stprinc': 'CA', 
+'ein': 942404110, 'former': 'APPLE INC', 'changed': 20070109.0, 'afs': '1-LAF', 'wksi': 0, 'fye': '0930', 'form': '8-K', 
+'period': 20230430, 'fy': nan, 'fp': None, 'filed': 20230510, 'accepted': '2023-05-10 16:31:00.0', 'prevrpt': 0, 'detail': 0, 
+'instance': 'ny20007635x4_8k_htm.xml', 'nciks': 1, 'aciks': None}
+````
+
+Next there are two methods which return the metadata of the reports that a company has filed. The result is either
+return as a list of `IndexReport` instances, if you use the method `get_all_company_reports` or as pandas dataframe if
+you use the method `get_all_company_reports_df`. Both method can take an optional parameter forms, which defines the
+type of the report that shall be returned. For instance, if you are only interested in the annual and quarterly report,
+set forms to `["10-K", "10-Q"]`.
+
+````
+# only show the annual reports of apple
+print(apple_index_reader.get_all_company_reports_df(forms=["10-K"]))
+````
+
+Output:
+````
+                 adsh     cik       name  form     filed    period                                           fullPath  originFile originFileType                                                url
+ 0000320193-22-000108  320193  APPLE INC  10-K  20221028  20220930  C:\Users\hansj\secfsdstools\data\parquet\quart...  2022q4.zip        quarter  https://www.sec.gov/Archives/edgar/data/320193...
+ 0000320193-21-000105  320193  APPLE INC  10-K  20211029  20210930  C:\Users\hansj\secfsdstools\data\parquet\quart...  2021q4.zip        quarter  https://www.sec.gov/Archives/edgar/data/320193...
+ 0000320193-20-000096  320193  APPLE INC  10-K  20201030  20200930  C:\Users\hansj\secfsdstools\data\parquet\quart...  2020q4.zip        quarter  https://www.sec.gov/Archives/edgar/data/320193...
+ 0000320193-19-000119  320193  APPLE INC  10-K  20191031  20190930  C:\Users\hansj\secfsdstools\data\parquet\quart...  2019q4.zip        quarter  https://www.sec.gov/Archives/edgar/data/320193...
+ 0000320193-18-000145  320193  APPLE INC  10-K  20181105  20180930  C:\Users\hansj\secfsdstools\data\parquet\quart...  2018q4.zip        quarter  https://www.sec.gov/Archives/edgar/data/320193...
+ 0000320193-17-000070  320193  APPLE INC  10-K  20171103  20170930  C:\Users\hansj\secfsdstools\data\parquet\quart...  2017q4.zip        quarter  https://www.sec.gov/Archives/edgar/data/320193...
+ 0001628280-16-020309  320193  APPLE INC  10-K  20161026  20160930  C:\Users\hansj\secfsdstools\data\parquet\quart...  2016q4.zip        quarter  https://www.sec.gov/Archives/edgar/data/320193...
+ 0001193125-15-356351  320193  APPLE INC  10-K  20151028  20150930  C:\Users\hansj\secfsdstools\data\parquet\quart...  2015q4.zip        quarter  https://www.sec.gov/Archives/edgar/data/320193...
+ 0001193125-14-383437  320193  APPLE INC  10-K  20141027  20140930  C:\Users\hansj\secfsdstools\data\parquet\quart...  2014q4.zip        quarter  https://www.sec.gov/Archives/edgar/data/320193...
+ 0001193125-13-416534  320193  APPLE INC  10-K  20131030  20130930  C:\Users\hansj\secfsdstools\data\parquet\quart...  2013q4.zip        quarter  https://www.sec.gov/Archives/edgar/data/320193...
+ 0001193125-12-444068  320193  APPLE INC  10-K  20121031  20120930  C:\Users\hansj\secfsdstools\data\parquet\quart...  2012q4.zip        quarter  https://www.sec.gov/Archives/edgar/data/320193...
+ 0001193125-11-282113  320193  APPLE INC  10-K  20111026  20110930  C:\Users\hansj\secfsdstools\data\parquet\quart...  2011q4.zip        quarter  https://www.sec.gov/Archives/edgar/data/320193...
+ 0001193125-10-238044  320193  APPLE INC  10-K  20101027  20100930  C:\Users\hansj\secfsdstools\data\parquet\quart...  2010q4.zip        quarter  https://www.sec.gov/Archives/edgar/data/320193...
+ 0001193125-09-214859  320193  APPLE INC  10-K  20091027  20090930  C:\Users\hansj\secfsdstools\data\parquet\quart...  2009q4.zip        quarter  https://www.sec.gov/Archives/edgar/data/320193...
+````
 
 ## Collect: collecting the data for reports
 

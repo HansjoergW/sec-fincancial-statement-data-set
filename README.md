@@ -281,6 +281,33 @@ Output:
 ````
 
 ## Collect: collecting the data for reports
+The previously introduced `IndexSearch` and `CompanyIndexReader` let you know what data is available, but they do not 
+return the real data of the financial statements. This is what the `Collector` classes are used for.
+
+All the `Collector` classes have their own factory method(s) which instantiates the class. Most of these factory methods
+also provide parameters to filter the data directly when being loaded from the parquet files. 
+These are 
+* the `forms_filter` <br> lets you select which report type should be loaded (e.g. "10-K" or "10-Q")
+* the `stmt_filter` <br> defines the statements that should be loaded (e.g., "BS" if only "Balance Sheet" data should be loaded)
+* the `tag_filter` <br> defines the tags, that should be loaded (e.g., "Assets" if only the "Assets" tag should be loaded)
+
+It is also possible to apply filter for these attributes after the data is loaded, but since the `Collector` classes
+apply this filters directly during the load process from the parquet files (which means that fewer data is loaded from
+the disk) this is generally more efficient.
+
+All `Collector` classes have a `collect` method which then loads the data from the parquet files and returns an instance
+of `RawDataBag`. The `RawDataBag` instance contains then a pandas dataframe for the `sub` (subscription) data, 
+`pre` (presentation) data, and `num` (the numeric values) data.
+
+The framework provides the following collectors:
+* `SingleReportCollector` <br> As the name suggests, this `Collector` returns the data of a single report. It is 
+  instantiated by providing the `adsh` of the desired report as parameter of the `get_report_by_adsh` factory method, 
+  or by using an instance of the `IndexReport` as parameter of the `get_report_by_indexreport`. (As a reminder: 
+  instances of `IndexReport` are returned by the `CompanyIndexReader` class).
+* `ZipCollector` <br>
+  
+
+
 
 ## Raw Processing: working with the raw data
 
@@ -294,6 +321,7 @@ no copy of the data, always just filters, no copy
 
 not static, you can access the raw or joined data always directly
 
+Overloaded operators
 
 
 

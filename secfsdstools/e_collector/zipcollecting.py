@@ -28,10 +28,13 @@ class ZipCollector(BaseCollector):
         creates a ZipReportReader instance for the given name of the zipfile.
         Args:
             name (str): name of the zipfile (without the path)
+
             forms_filter (List[str], optional, None):
                 List of forms that should be read (10-K, 10-Q, ...)
+
             stmt_filter (List[str], optional, None):
                 List of stmts that should be read (BS, IS, ...)
+
             tag_filter (List[str], optional, None:
                 List of tags that should be read (Assets, Liabilities, ...)
 

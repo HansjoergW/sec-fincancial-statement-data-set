@@ -304,7 +304,70 @@ The framework provides the following collectors:
   instantiated by providing the `adsh` of the desired report as parameter of the `get_report_by_adsh` factory method, 
   or by using an instance of the `IndexReport` as parameter of the `get_report_by_indexreport`. (As a reminder: 
   instances of `IndexReport` are returned by the `CompanyIndexReader` class).
-* `ZipCollector` <br>
+  <br><br>*Example:*
+    ````
+    from secfsdstools.e_collector.reportcollecting import SingleReportCollector
+
+    apple_10k_2022_adsh = "0000320193-22-000108"
+
+    collector: SingleReportCollector = SingleReportCollector.get_report_by_adsh(adsh=apple_10k_2022_adsh)
+    rawdatabag = collector.collect()
+
+    # as expected, there is just one entry in the submission dataframe
+    print(rawdatabag.sub_df)
+    # just print the size of the pre and num dataframes
+    print(rawdatabag.pre_df.shape)
+    print(rawdatabag.num_df.shape)
+    ````
+    <br>*Output*:
+    ````
+                       adsh     cik       name     sic countryba stprba     cityba  ...
+    0  0000320193-22-000108  320193  APPLE INC  3571.0        US     CA  CUPERTINO  ...
+    (185, 10)
+    (503, 9)  
+    ````
+    <br>
+
+* `MultiReportCollector` <br> Contrary to the `SingleReportCollector`, this `Collector` can collect data from several
+  reports. Moreover, the data of the reports are loaded in parallel, this  especially improves the performance if the
+  reports are from different quarters (resp. are in different zip files). The class provides the factory methods 
+  `get_reports_by_adshs` and `get_reports_by_indexreports`. The first takes a list of adsh strings, the second a list
+  of `IndexReport` instances.
+  <br><br>*Example:*
+    ````
+    from secfsdstools.e_collector.multireportcollecting import MultiReportCollector
+    apple_10k_2022_adsh = "0000320193-22-000108"
+    apple_10k_2012_adsh = "0001193125-12-444068"
+
+    # load only the assets tags that are present in the 10-K report of apple in the years
+    # 2022 and 2012
+    collector: MultiReportCollector = \
+        MultiReportCollector.get_reports_by_adshs(adshs=[apple_10k_2022_adsh,
+                                                         apple_10k_2012_adsh],
+                                                  tag_filter=['Assets'])
+    rawdatabag = collector.collect()
+    # as expected, there are just two entries in the submission dataframe
+    print(rawdatabag.sub_df)
+    print(rawdatabag.num_df)  
+    ```` 
+  <br>*Output*:
+    ````
+                       adsh     cik       name     sic countryba stprba     cityba  ...          
+    0  0000320193-22-000108  320193  APPLE INC  3571.0        US     CA  CUPERTINO  ...
+    1  0001193125-12-444068  320193  APPLE INC  3571.0        US     CA  CUPERTINO  ...
+    
+                       adsh     tag       version coreg     ddate  qtrs  uom         value footnote
+    0  0000320193-22-000108  Assets  us-gaap/2022        20210930     0  USD  3.510020e+11     None
+    1  0000320193-22-000108  Assets  us-gaap/2022        20220930     0  USD  3.527550e+11     None
+    2  0001193125-12-444068  Assets  us-gaap/2012        20110930     0  USD  1.163710e+11     None
+    3  0001193125-12-444068  Assets  us-gaap/2012        20120930     0  USD  1.760640e+11     None  
+    ````
+    <br>
+* `ZipCollector` <br> This `Collector` collects the data of one single zip (resp. the folder that contains the parquet
+  files of this zip file). And since the original zip file contains the data for one quarter, the name you provide
+  in the `get_zuip_by_name` factory method reflects the quarter which data you want to load: e.g. `2022q1.zip`.
+* `CompanyReportCollector` <br> This class returns reports for one or more companies. The factory method 
+  `get_company_collector` provides the parameter `ciks` which takes a list of cik numbers.
   
 
 

@@ -10,7 +10,7 @@ import pandas as pd
 
 from secfsdstools.a_utils.constants import SUB_TXT, PRE_TXT, NUM_TXT, PRE_NUM_TXT
 from secfsdstools.d_container.filter import FilterBase
-from secfsdstools.d_container.presentation import PresenterBase
+from secfsdstools.d_container.presentation import Presenter
 
 RAW = TypeVar('RAW', bound='RawDataBag')
 JOINED = TypeVar('JOINED', bound='JoinedDataBag')
@@ -50,7 +50,7 @@ class DataBagBase(Generic[T]):
         """
         return bagfilter.filter(self)
 
-    def present(self, presenter: PresenterBase[T]) -> pd.DataFrame:
+    def present(self, presenter: Presenter[T]) -> pd.DataFrame:
         """
         apply a presenter
         """

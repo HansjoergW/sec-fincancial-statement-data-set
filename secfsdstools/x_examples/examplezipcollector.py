@@ -3,7 +3,7 @@ Examples for ZipReportReader
 """
 from secfsdstools.d_container.databagmodel import RawDataBag, JoinedDataBag
 from secfsdstools.e_collector.zipcollecting import ZipCollector
-from secfsdstools.e_filter.rawfiltering import StmtsRawFilter
+from secfsdstools.e_filter.rawfiltering import StmtRawFilter
 from secfsdstools.e_presenter.presenting import StandardStatementPresenter
 
 
@@ -28,9 +28,9 @@ def run():
 
     # On the bag itself, we can apply filters.
     # Maybe we are just interested in all the information of the Balance Sheets, therefore,
-    # we apply a StmtsRawFilter.
+    # we apply a StmtRawFilter.
 
-    zip_2010q1_BS_bag: RawDataBag = zip_2010q1_bag.filter(StmtsRawFilter(stmts=['BS']))
+    zip_2010q1_BS_bag: RawDataBag = zip_2010q1_bag.filter(StmtRawFilter(stmts=['BS']))
 
     # There are many more filters, like filtering for certain Tags. Moreover, it is simply
     # interface, so you can define your own filters as well.

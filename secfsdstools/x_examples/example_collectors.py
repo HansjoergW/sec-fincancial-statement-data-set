@@ -76,7 +76,7 @@ def companyreportcollector():
 
 
 if __name__ == '__main__':
-    # singlereportcollector()
-    # multireportcollector()
-    # zipcollector()
+    singlereportcollector()
+    multireportcollector()
+    zipcollector()
     companyreportcollector()

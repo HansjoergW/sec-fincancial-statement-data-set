@@ -10,7 +10,7 @@ import pandas as pd
 T = TypeVar('T')
 
 
-class PresenterBase(Generic[T]):
+class Presenter(Generic[T]):
     """
     The base class for presenter implementations.
     """

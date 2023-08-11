@@ -2,7 +2,7 @@ import os
 
 from secfsdstools.d_container.databagmodel import RawDataBag
 from secfsdstools.e_filter.rawfiltering import ReportPeriodRawFilter, AdshRawFilter, \
-    ReportPeriodAndPreviousPeriodRawFilter, TagRawFilter, MainCoregFilter, StmtsRawFilter
+    ReportPeriodAndPreviousPeriodRawFilter, TagRawFilter, MainCoregFilter, StmtRawFilter
 
 CURRENT_DIR, _ = os.path.split(__file__)
 PATH_TO_BAG_1 = f'{CURRENT_DIR}/../_testdata/parquet/quarter/2010q1.zip'
@@ -12,7 +12,7 @@ APPLE_10Q_2010Q1 = '0001193125-10-012085'
 
 def test_filter_StmtsRawFilter():
     bag1: RawDataBag = RawDataBag.load(PATH_TO_BAG_1)
-    filter = StmtsRawFilter(stmts=['BS'])
+    filter = StmtRawFilter(stmts=['BS'])
 
     filtered_bag = filter.filter(bag1)
 

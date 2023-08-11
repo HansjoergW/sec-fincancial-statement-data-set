@@ -3,7 +3,7 @@ Examples for MultiReportreader
 """
 from secfsdstools.d_container.databagmodel import RawDataBag, JoinedDataBag
 from secfsdstools.e_collector.multireportcollecting import MultiReportCollector
-from secfsdstools.e_filter.rawfiltering import ReportPeriodRawFilter, StmtsRawFilter
+from secfsdstools.e_filter.rawfiltering import ReportPeriodRawFilter, StmtRawFilter
 from secfsdstools.e_presenter.presenting import StandardStatementPresenter
 
 
@@ -36,11 +36,11 @@ def run():
     # previous year and years before that. For instance, the 10-K from 2022 contains data
     # from the 10-K from 2021, and so on. Maybe we just want to have the data for the period
     # of the reports, so we apply the ReportPeriodRawFilter. Moreover, maybe we are just interested
-    # in the Balance Sheet and the Cash Flow, so we apply the StmtsRawFilter filter as well
+    # in the Balance Sheet and the Cash Flow, so we apply the StmtRawFilter filter as well
     apple_selected_10ks_filtered_bag: RawDataBag = (
         apple_selected_10ks_bag
         .filter(ReportPeriodRawFilter())
-        .filter(StmtsRawFilter(stmts=['BS', 'CF'])))
+        .filter(StmtRawFilter(stmts=['BS', 'CF'])))
 
     # There are many more filters, like filtering for certain Tags.
     # Moreover, it is simply interface, so you can define your own filters as well.

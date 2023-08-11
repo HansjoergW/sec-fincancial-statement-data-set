@@ -4,10 +4,10 @@ Default Presenter implementations.
 import pandas as pd
 
 from secfsdstools.d_container.databagmodel import JoinedDataBag
-from secfsdstools.d_container.presentation import PresenterBase
+from secfsdstools.d_container.presentation import Presenter
 
 
-class StandardStatementPresenter(PresenterBase[JoinedDataBag]):
+class StandardStatementPresenter(Presenter[JoinedDataBag]):
     """
     Reformats the data so that the presentation and order reflects the way how the basic
     financial statements are presented.
@@ -62,6 +62,9 @@ class StandardStatementPresenter(PresenterBase[JoinedDataBag]):
         # the type of the column to strings
         num_pre_pivot_df.rename(columns={x: str(x) for x in num_pre_pivot_df.columns},
                                 inplace=True)
+        #  ensure column order, so that the latest date is first
+        col_order = sorted(num_pre_pivot_df.columns.values, reverse=True)
+        num_pre_pivot_df = num_pre_pivot_df[col_order]
 
         if self.flatten_index:
             num_pre_pivot_df.reset_index(drop=False, inplace=True)

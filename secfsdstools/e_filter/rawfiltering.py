@@ -38,7 +38,7 @@ class AdshRawFilter(FilterBase[RawDataBag]):
                                  num_df=num_filtered_for_adshs)
 
 
-class StmtsRawFilter(FilterBase[RawDataBag]):
+class StmtRawFilter(FilterBase[RawDataBag]):
     """
     Filters the data by a list of statement type (BS, IS, CF, ...).
     This filter operates on the pre_df.

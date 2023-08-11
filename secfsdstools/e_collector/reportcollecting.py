@@ -25,14 +25,17 @@ class SingleReportCollector(BaseCollector):
 
         Args:
             adsh (str): unique report id
+
             stmt_filter (List[str], optional, None):
                 List of stmts that should be read (BS, IS, ...)
+
             tag_filter (List[str], optional, None:
                 List of tags that should be read (Assets, Liabilities, ...)
+
             configuration (Configuration optional, default=None): Optional configuration object
 
         Returns:
-            ReportReader: instance of ReportReader
+            SingleReportCollector: instance of SingleReportCollector
 
         """
         if configuration is None:
@@ -54,13 +57,15 @@ class SingleReportCollector(BaseCollector):
 
         Args:
             index_report (IndexReport): instance of IndexReport
+
             stmt_filter (List[str], optional, None):
                 List of stmts that should be read (BS, IS, ...)
+
             tag_filter (List[str], optional, None:
                 List of tags that should be read (Assets, Liabilities, ...)
 
         Returns:
-            ReportReader: isntance of ReportReader
+            SingleReportCollector: isntance of SingleReportCollector
         """
         return SingleReportCollector(report=index_report,
                                      tag_filter=tag_filter,

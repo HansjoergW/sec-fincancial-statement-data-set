@@ -158,7 +158,7 @@ and run `update()` again (see previous chapter).
 ## Overview
 The following diagram gives an overview on SECFSDSTools library.
 
-link to diagramm had to be added
+**link to diagramm had to be added**
 
 It mainly exists out of two main processes. The first one ist the "Date Update Process" wich is responsible for the
 download of the Financial Statement Data Sets zip files from the sec.gov website, transforming the content into parquet
@@ -203,7 +203,7 @@ results = index_search.find_company_by_name("apple")
 print(results)
 ```
 
-Output:
+*Output:*
 ````
                            name      cik
       APPLE GREEN HOLDING, INC.  1510976
@@ -240,7 +240,7 @@ First, you could use the method `get_latest_company_filing` which returns a dict
 ````
 print(apple_index_reader.get_latest_company_filing())
 ````
-Output:
+*Output:*
 ````
 {'adsh': '0001140361-23-023909', 'cik': 320193, 'name': 'APPLE INC', 'sic': 3571.0, 'countryba': 'US', 'stprba': 'CA', 'cityba': 'CUPERTINO', 
 'zipba': '95014', 'bas1': 'ONE APPLE PARK WAY', 'bas2': None, 'baph': '(408) 996-1010', 'countryma': 'US', 'stprma': 'CA', 
@@ -261,7 +261,7 @@ set forms to `["10-K", "10-Q"]`.
 print(apple_index_reader.get_all_company_reports_df(forms=["10-K"]))
 ````
 
-Output:
+*Output:*
 ````
                  adsh     cik       name  form     filed    period                                           fullPath  originFile originFileType                                                url
  0000320193-22-000108  320193  APPLE INC  10-K  20221028  20220930  C:\Users\hansj\secfsdstools\data\parquet\quart...  2022q4.zip        quarter  https://www.sec.gov/Archives/edgar/data/320193...
@@ -287,9 +287,12 @@ return the real data of the financial statements. This is what the `Collector` c
 All the `Collector` classes have their own factory method(s) which instantiates the class. Most of these factory methods
 also provide parameters to filter the data directly when being loaded from the parquet files. 
 These are 
-* the `forms_filter` <br> lets you select which report type should be loaded (e.g. "10-K" or "10-Q")
-* the `stmt_filter` <br> defines the statements that should be loaded (e.g., "BS" if only "Balance Sheet" data should be loaded)
-* the `tag_filter` <br> defines the tags, that should be loaded (e.g., "Assets" if only the "Assets" tag should be loaded)
+* the `forms_filter` <br> lets you select which report type should be loaded (e.g. "10-K" or "10-Q").<br>
+    Note: the fomrs filter affects all dataframes (sub, pre, num).
+* the `stmt_filter` <br> defines the statements that should be loaded (e.g., "BS" if only "Balance Sheet" data should be loaded) <br>
+    Note: the stmt filter only affects the pre dataframe.
+* the `tag_filter` <br> defines the tags, that should be loaded (e.g., "Assets" if only the "Assets" tag should be loaded) <br>
+    Note: the tag filter affects the pre and num dataframes.
 
 It is also possible to apply filter for these attributes after the data is loaded, but since the `Collector` classes
 apply this filters directly during the load process from the parquet files (which means that fewer data is loaded from
@@ -366,8 +369,40 @@ The framework provides the following collectors:
 * `ZipCollector` <br> This `Collector` collects the data of one single zip (resp. the folder that contains the parquet
   files of this zip file). And since the original zip file contains the data for one quarter, the name you provide
   in the `get_zuip_by_name` factory method reflects the quarter which data you want to load: e.g. `2022q1.zip`.
+  <br><br>*Example:*
+    ````
+    from secfsdstools.e_collector.zipcollecting import ZipCollector
+
+    # only collect the Balance Sheet of annual reports that
+    # were filed during the first quarter in 2022
+    collector: ZipCollector = ZipCollector.get_zip_by_name(name="2022q1.zip",
+                                                           forms_filter=["10-K"],
+                                                           stmt_filter=["BS"])
+
+    rawdatabag = collector.collect()
+
+    # only show the size of the data frame
+    # .. over 4000 companies filed a 10 K report in q1 2022
+    print(rawdatabag.sub_df.shape)
+    print(rawdatabag.pre_df.shape)
+    print(rawdatabag.num_df.shape)    
+    ```` 
+  <br>*Output*:
+    ````
+    (4875, 36)
+    (232863, 10)
+    (2404949, 9)
+    ````
+
 * `CompanyReportCollector` <br> This class returns reports for one or more companies. The factory method 
   `get_company_collector` provides the parameter `ciks` which takes a list of cik numbers.
+  <br><br>*Example:*
+    ````
+    
+    ```` 
+  <br>*Output*:
+    ````
+    ````
   
 
 

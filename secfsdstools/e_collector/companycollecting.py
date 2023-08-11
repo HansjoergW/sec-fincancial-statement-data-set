@@ -22,7 +22,7 @@ class CompanyReportCollector:
             forms_filter: Optional[List[str]] = None,
             stmt_filter: Optional[List[str]] = None,
             tag_filter: Optional[List[str]] = None,
-            configuration: Optional[Configuration] = None) -> MultiReportCollector:
+            configuration: Optional[Configuration] = None):
         """
         creates a MultiReportCollector instance for the provided ciks and forms (e.g. 10-K..)
         If no configuration object is passed,

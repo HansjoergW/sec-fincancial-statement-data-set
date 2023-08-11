@@ -70,6 +70,7 @@ class JoinedDataBag(DataBagBase[JOINED]):
 
         Args:
             sub_df: sub.txt dataframe
+
             pre_num_df: joined pre.txt and num.txt dataframe
 
         Returns:

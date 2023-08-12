@@ -155,6 +155,30 @@ and run `update()` again (see previous chapter).
 
 
 # Working with the SEFSDSTools library
+## A first simple example
+Goal: present the information in the balance sheet of Apple's 2022 10-K report in the same way as it appears in the
+original report on page 31 ("CONSOLIDATED BALANCE SHEETS"): https://www.sec.gov/ix?doc=/Archives/edgar/data/320193/000032019322000108/aapl-20220924.htm
+
+````
+  # the unique identifier for apple's 10-K report of 2022
+  apple_10k_2022_adsh = "0000320193-22-000108"
+
+  # us a Collector to grab the data of the 10-K report. an filter for balancesheet information
+  collector: SingleReportCollector = SingleReportCollector.get_report_by_adsh(
+        adsh=apple_10k_2022_adsh,
+        stmt_filter=["BS"]
+  )  
+  rawdatabag = collector.collect() # load the data from the disk
+  
+  # ensure only data from the period (2022) of the previous period (2021) is in the data
+  bs_df = (rawdatabag.filter(ReportPeriodAndPreviousPeriodRawFilter())
+                     # join the the content of the pre_txt and num_txt together
+                     .join()  
+                     # format the data in the same way as it appears in the report
+                     .present(StandardStatementPresenter())) 
+  print(bs_df) 
+````
+
 ## Overview
 The following diagram gives an overview on SECFSDSTools library.
 
@@ -235,7 +259,7 @@ apple_cik = 320193
 apple_index_reader = CompanyIndexReader.get_company_index_reader(cik=apple_cik)
 ````
 
-First, you could use the method `get_latest_company_filing` which returns a dictioniary with the latest filing of the company:
+First, you could use the method `get_latest_company_filing` which returns a dictionary with the latest filing of the company:
 
 ````
 print(apple_index_reader.get_latest_company_filing())
@@ -523,7 +547,9 @@ implementations (module `secfsdstools.e_presenter.presenting`):
         stmt_filter=["BS"]
   )
   rawdatabag = collector.collect()
-  bs_df = rawdatabag.filter(ReportPeriodAndPreviousPeriodRawFilter()).join().present(StandardStatementPresenter())
+  bs_df = rawdatabag.filter(ReportPeriodAndPreviousPeriodRawFilter())
+                    .join()
+                    .present(StandardStatementPresenter())
   print(bs_df) 
   ````
   <br>*Output*:
@@ -564,229 +590,11 @@ implementations (module `secfsdstools.e_presenter.presenting`):
   If you compare this with the real report at https://www.sec.gov/ix?doc=/Archives/edgar/data/320193/000032019322000108/aapl-20220924.htm
   you will notice, that order of the tags and the values are the same.
 
-
-
-
-
-
-  
-
-
-
-and being stored in the sub_df, pre_df, and num_df attributes inside an instance of `RawDataBag`.
-
-
-
-
-
-
-## Final remarks
-no copy of the data, always just filters, no copy
-
-not private, you can access the raw or joined data always directly, but you shouldn't
-
-
-
-Overloaded operators
-
-
-
-
-
-Overview - Graphic
-- Index
-- Collectors
-  - type of collectors 
-- RawDataBag
-    - does not produce copies
-    - filter can be cascaded (also with shortcut)
-    - pure dataframes are accessible
-- JoinedDataBag
-  -- does not produce copies
-
-
-## Browsing the index 
-
-Searching companies -> cik -> simple like statement
-finding reports of a company, filter by name
-
-## Analyzing the data
-### Concept
-
-
-
-
-tips
-- generally more performant to apply filters already on collectors
-
-
-
-
-
-
-## Getting the data in your python code
-
-___
-**Note:** The following code works only after the `update()` method was successfully executed and the quarterly zip
-files from the sec.gov were downloaded and indexed
-___
-
-Inside the package `secfsdstools.e_read` are several modules that help to read the detail information from the zip
-files.
-
-### Module `companyreading`
-
-___
-**Note:** the code in this chapter is available in the module `secfsdstools.x_examples.examplecompanyreading`
-___
-
-Inside the module `secfsdstools.e_read.companyreading` the `CompanyReader` class is defined.
-
-You will need the cik-number to get an instance for a certain company. The cik can be found either by searching in the
-index_reports table or on the [sec.gov website](https://www.sec.gov/edgar/searchedgar/companysearch).
-
-The following example shows how to create a `CompanyReader` instance for apple (which cik is 320193):
-
-```
-from typing import Dict, List
-
-from secfsdstools.c_index.indexdataaccess import IndexReport
-from secfsdstools.e_read.companyreading import CompanyReader
-
-
-if __name__ == '__main__':
-    apple_cik: int = 320193
-    apple_reader = CompanyReader.get_company_reader(apple_cik)
-```
-
-Next, you can get the data of the latest filing of the company. This is the content of the entry in the sub.txt file
-inside the zipped data. Besides basic information about the report, it contains also basic information of the company,
-like the address.
-
-For details about the fields, see https://www.sec.gov/files/aqfs.pdf.
-
-```
-    latest_filing: Dict[str, str] = apple_reader.get_latest_company_filing()
-    print(latest_filing) 
-```
-
-Now, lets have a look at all the reports apple has filed. There are two methods, one of them returning a pandas
-dataframe and the other a list of `secfsdstools.c_index.indexdataaccess.IndexReport` instances.
-
-```
-    # get basic infos of all the reports the company has filed.
-    # ... first as a pandas DataFrame
-    apple_all_reports_df = apple_reader.get_all_company_reports_df()
-
-    # ... second as list of IndexReport instances
-    apple_all_reports: List[IndexReport] = apple_reader.get_all_company_reports()
-    print("first entry: ", apple_all_reports[0])
-
-    # both method can also be used with filters for the form, the report type.
-    # for instance, if you are only interested in annual and quarter reports, you can use
-    apple_10k_and_10q_reports_df = apple_reader.get_all_company_reports_df(forms=['10-K','10-Q'])
-    print(apple_10k_and_10q_reports_df)
-    
-```
-
-This is the same information that you see when you browse the "index_reports" table as described above
-under **Using the index db with a db browser**.
-
-Next, we will see how we can read the detailed information for a report. For instance, how you can
-reproduce the content of the primary financial statements of a report (BalanceSheet, IncomeStatement, CashFlow).
-
-### Module `reportreading`
-
-___
-**Note:** the code in this chapter is available in the module `secfsdstools.x_examples.examplecreportreading`.
-___
-
-The ReportReader class enables us to access the real data of a single report. It provides two class methods which
-help to create a ReportReader either by the unique report id "adsh" or by an instance of IndexReport
-(which is returned by one of the methods shown in the last section).
-
-in order to create an instance based on the adsh itself, you can use the following code:
-
-```
-from secfsdstools.e_read.reportreading import ReportReader
-
-if __name__ == '__main__':
-    # id apples 10k report from september 2022
-    adsh_apple_10k_2022 = '0000320193-22-000108'
-    
-    apple_10k_2022_reader = ReportReader.get_report_by_adsh(adsh=adsh_apple_10k_2022)
-```
-
-The data of the report is split up in "pre.txt" and the "num.txt" files inside the zip file.
-In order to get the raw content of them, there are the following methods available which return a pandas dataframes.
-
-```
-    # reading the raw content of the num and pre files
-    raw_pre_df = apple_10k_2022_reader.get_raw_pre_data()
-    raw_num_df = apple_10k_2022_reader.get_raw_num_data()
-```
-
-However, the data is more useful if the data of these two datasets is merged together, so that
-the primary financial statements (BalanceSheet, IncomeStatement, CashFlow) can be reproduced.
-
-There are several methods that can be used. First, let's have a look at the `merge_pre_and_num` method.
-
-```
-    # just merge the data of the num and pre dataframes, without pivoting the data -> the ddate stays as column
-    # setting the use_period parameter to true, we will just keep the data for the current year.
-    # if we also set the use_previous_period parameter to True, we would also keep the data of the previous year.
-    apple_10k_2020_current_year_merged = apple_10k_2022_reader.merge_pre_and_num(use_period=True)
-```
-
-Second, let's hava a look at the methods, which also pivot the data. This means that every ddate value has its own
-column.
-
-There are two methods, which do exactly do that. The first one returns only the data of the current period and the
-second also returns the content for the previous year. (provided that this information is present in the report)
-
-```
-    # merging the data from num and pre together and produce the primary financial statements
-    apple_10k_2022_current_year_df = apple_10k_2022_reader.financial_statements_for_period()
-    apple_10k_2022_current_and_previous_year_df = \
-        apple_10k_2022_reader.financial_statements_for_period_and_previous_period()
-
-```
-
-Now lets filter for the BalanceSheet, IncomeStatement, and CashFlow for the current and previous year:
-
-```
-    # Filter for BalanceSheet
-    apple_10k_2022_bs_df = apple_10k_2022_current_and_previous_year_df[
-        apple_10k_2022_current_and_previous_year_df.stmt == 'BS']
-
-    # Filter for IncomeStatement
-    apple_10k_2022_is_df = apple_10k_2022_current_and_previous_year_df[
-        apple_10k_2022_current_and_previous_year_df.stmt == 'IS']
-
-    # Filter for CashFlow
-    apple_10k_2022_cf_df = apple_10k_2022_current_and_previous_year_df[
-        apple_10k_2022_current_and_previous_year_df.stmt == 'CF']  
-```
-
-If you compare the content of the balance sheet dataframe with
-[apple's 10-K report from 2022](https://www.sec.gov/ix?doc=/Archives/edgar/data/320193/000032019322000108/aapl-20220924.htm#ief5efb7a728d4285b6b4af1e880101bc_85)
-you see that the structure and the content is indeed the same.
-
-The following readers, which share the basic interface of the ReportReader (methods `merge_pre_and_num`
-, `financial_statements_for_period`,
-`financial_statements_for_period_and_previous_period`), are also available. Please have a look at the Quickstart Jupyter
-Notebook to get an idea about how they can be used.
-
-* ZipReportReader <br> Reads all reports of a single zipfile at once
-* MultiReportReader <br> Reads several reports of different zipfiles and concats their data in the same dataframes.
-* CompanyCollector <br> Reads all reports of one company from different zipfile and concats the data into the same dataframes.
-
-
-Also checkout the example Jupyter Notebooks:
+# What to explore further
 
 * [QuickStart Jupyter Notebook](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/01_quickstart.ipynb)
-* [Connect to the daily-sec-financial-statement-dataset Notebook](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/02_connect_rapidapi.ipynb) 
 * [Explore the data with an interactive Notebook](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/03_explore_with_interactive_notebook.ipynb)
+* [Connect to the daily-sec-financial-statement-dataset Notebook](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/02_connect_rapidapi.ipynb) 
 
 
 

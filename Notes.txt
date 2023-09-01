@@ -128,3 +128,15 @@ Jekyll Dokumentation
 Images in pypi.org readme
 -------------------------
 https://stackoverflow.com/questions/41983209/how-do-i-add-images-to-a-pypi-readme-that-works-on-github
+
+
+start with https://github.com/HansjoergW/sec-fincancial-statement-data-set/blob/v1_doc/docs/images/overview.png
+-> copy permalink -> https://github.com/HansjoergW/sec-fincancial-statement-data-set/blob/59d82ec2f7880187f884cf06a154c27d66d85baa/docs/images/overview.png
+-> append ?raw=True
+https://github.com/HansjoergW/sec-fincancial-statement-data-set/blob/59d82ec2f7880187f884cf06a154c27d66d85baa/docs/images/overview.png?raw=True
+(results in: https://raw.githubusercontent.com/HansjoergW/sec-fincancial-statement-data-set/59d82ec2f7880187f884cf06a154c27d66d85baa/docs/images/overview.png
+
+just go to the file on github https://github.com/HansjoergW/sec-fincancial-statement-data-set/blob/v1_doc/docs/images/overview.png
+and replace blob with raw -> branch / tag is part of the path.
+https://github.com/HansjoergW/sec-fincancial-statement-data-set/raw/v1_doc/docs/images/overview.png
+(results in https://raw.githubusercontent.com/HansjoergW/sec-fincancial-statement-data-set/v1_doc/docs/images/overview.png)

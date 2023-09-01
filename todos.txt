@@ -18,15 +18,20 @@ v.1.0.0
 - Presenter
 
 
+Check:
+ update does not seem to work for version 0.5 if Status table not there
 
 Next:
 - update readme for v 1, include overview pic
 - improve docs api
 
-- if daily in index, then reports are read twice for company collector
-  maybe also for report collector?
-
 - redo notebooks, include overview pic
+- new notebook, examples
+  -> just read the data an use it -> only using collector
+  -> reading primary financial statements for a single report, display BS, IS, CF for a report
+  -> analyse changes in one Tag for one company
+  -> compare basic data of two companies
+
 
 - Es wäre gut, wenn der StandardStatementPresenter noch eine Kolonne "year", noch welcher auch sortiert ist
   die sortierung über adsh alleine ermöglicht keine sauber sortierung pro jahr

@@ -142,7 +142,9 @@ class Updater:
         Returns:
 
         """
-
+        # create db if necessary
+        DbCreator(db_dir=self.db_dir).create_db()
+        
         if not self._check_for_update():
             LOGGER.debug(
                 'Skipping update: last check was done less than %d seconds ago',
@@ -150,8 +152,7 @@ class Updater:
             return
 
         LOGGER.info('Check if new report zip files are available...')
-        # create db if necessary
-        DbCreator(db_dir=self.db_dir).create_db()
+        
 
         # execute the update logic
         self._update()

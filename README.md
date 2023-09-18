@@ -155,6 +155,8 @@ and run `update()` again (see previous chapter).
 
 
 # Working with the SEFSDSTools library
+Note: the code within this chapter is also contained in the "01_quickstart.ipynb" notebook.
+
 ## A first simple example
 Goal: present the information in the balance sheet of Apple's 2022 10-K report in the same way as it appears in the
 original report on page 31 ("CONSOLIDATED BALANCE SHEETS"): https://www.sec.gov/ix?doc=/Archives/edgar/data/320193/000032019322000108/aapl-20220924.htm
@@ -216,7 +218,7 @@ However, normally you do not have to provide the "configuration" parameter.
 The first class that interacts with the index is the `IndexSearch` class. It provides a single method `find_company_by_name`
 which executes a SQL Like search on the name of the available companies and returns a pandas dataframe with the columns
 'name' and 'cik' (the central index key, or the unique id of a company in the financial statements data sets).
-The main purpose of this class is to find ethe cik for a company (of course, you can also directly search the cik on https://www.sec.gov/edgar/searchedgar/companysearch).
+The main purpose of this class is to find the cik for a company (of course, you can also directly search the cik on https://www.sec.gov/edgar/searchedgar/companysearch).
 
 
 ```
@@ -275,7 +277,7 @@ print(apple_index_reader.get_latest_company_filing())
 ````
 
 Next there are two methods which return the metadata of the reports that a company has filed. The result is either
-return as a list of `IndexReport` instances, if you use the method `get_all_company_reports` or as pandas dataframe if
+returned as a list of `IndexReport` instances, if you use the method `get_all_company_reports` or as pandas dataframe if
 you use the method `get_all_company_reports_df`. Both method can take an optional parameter forms, which defines the
 type of the report that shall be returned. For instance, if you are only interested in the annual and quarterly report,
 set forms to `["10-K", "10-Q"]`.
@@ -465,7 +467,7 @@ and being stored in the sub_df, pre_df, and num_df attributes inside an instance
 The `RawDataBag` provides the following methods:
 * `save`, `load`<br> The content of a `RawDataBag` can be saved into a directory. Within that directory, 
    parquet files are stored for the content of the sub_df, pre_df, and num_df. In order to load this 
-   data directly, the static method `RawDataBag.save()` can be used.
+   data directly, the static method `RawDataBag.load()` can be used.
 * `concat`<br> Several instances of a `RawDataBag` can be concatenated in one single instance. In order to do 
    that, the static method `RawDataBag.concat()` takes a list of RawDataBag as parameter.
 * `join` <br> This method produces a `JoinedRawDataBag` by joining the content of the pre_df and num_df

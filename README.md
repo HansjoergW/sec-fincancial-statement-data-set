@@ -182,7 +182,7 @@ original report on page 31 ("CONSOLIDATED BALANCE SHEETS"): https://www.sec.gov/
 ## Overview
 The following diagram gives an overview on SECFSDSTools library.
 
-**link to diagramm had to be added**
+![Overview](https://github.com/HansjoergW/sec-fincancial-statement-data-set/raw/main/docs/images/overview.png)
 
 It mainly exists out of two main processes. The first one ist the "Date Update Process" wich is responsible for the
 download of the Financial Statement Data Sets zip files from the sec.gov website, transforming the content into parquet

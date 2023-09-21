@@ -20,10 +20,11 @@ v.1.0.0
 
 
 Next:
-- update readme for v 1, include overview pic
-- improve docs api
-
 - redo notebooks, include overview pic
+
+      if invert_negated:
+          report_data.loc[report_data.negating==1, 'value'] = -report_data.value
+      wohl besser als direktes Flag auf dem Standardpresenter
 
 - new notebook, examples
   -> just read the data and use it -> only using collector
@@ -38,6 +39,9 @@ Next:
 
 - Pipelines: einfaches Konzept um Standard Flows zu kapseln
   z.B. Collector als Input bis zur Presentation
+  -> z.B. für selektierte ciks daten so aufbereiten, dass sie alle vorhandenen Jahre in Spalten angezeigt werden
+
+- transform methode, z.b. um zu homogenisieren
 
 - operatoren überladen, so könnte man z.B
   collector >> [filter1] [filter2] >>

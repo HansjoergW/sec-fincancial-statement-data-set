@@ -10,6 +10,7 @@ New Release
 
 
 v.1.0.0
+- API has been completley revised
 - DataBag
 - collectors producing DataBags
 - searching moved from e_read to c_index
@@ -20,12 +21,6 @@ v.1.0.0
 
 
 Next:
-- redo notebooks, include overview pic
-
-      if invert_negated:
-          report_data.loc[report_data.negating==1, 'value'] = -report_data.value
-      wohl besser als direktes Flag auf dem Standardpresenter
-
 - new notebook, examples
   -> just read the data and use it -> only using collector
   -> reading primary financial statements for a single report, display BS, IS, CF for a report
@@ -42,10 +37,6 @@ Next:
   -> z.B. für selektierte ciks daten so aufbereiten, dass sie alle vorhandenen Jahre in Spalten angezeigt werden
 
 - transform methode, z.b. um zu homogenisieren
-
-- operatoren überladen, so könnte man z.B
-  collector >> [filter1] [filter2] >>
-            collect().filter(filter1).filter(filter2).get_joined()
 
 - update des config files
   fehlende Inhalte müssen gesetzt und auf default gesetzt werden, oder?

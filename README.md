@@ -155,7 +155,8 @@ and run `update()` again (see previous chapter).
 
 
 # Working with the SEFSDSTools library
-Note: the code within this chapter is also contained in the "01_quickstart.ipynb" notebook.
+Note: the code within this chapter is also contained in the "01_quickstart.ipynb" notebook. 
+If you want to follow along, just open the notebook.
 
 ## A first simple example
 Goal: present the information in the balance sheet of Apple's 2022 10-K report in the same way as it appears in the
@@ -172,8 +173,10 @@ original report on page 31 ("CONSOLIDATED BALANCE SHEETS"): https://www.sec.gov/
   )  
   rawdatabag = collector.collect() # load the data from the disk
   
-  # ensure only data from the period (2022) of the previous period (2021) is in the data
-  bs_df = (rawdatabag.filter(ReportPeriodAndPreviousPeriodRawFilter())
+ 
+  bs_df = (rawdatabag
+                     # ensure only data from the period (2022) and the previous period (2021) is in the data
+                     .filter(ReportPeriodAndPreviousPeriodRawFilter())
                      # join the the content of the pre_txt and num_txt together
                      .join()  
                      # format the data in the same way as it appears in the report

@@ -1,3 +1,7 @@
+"""
+Contains some example code on how to use the different collectors.
+"""
+
 import pandas as pd
 
 pd.set_option('display.max_rows', 500)
@@ -6,7 +10,11 @@ pd.set_option('display.width', 1000)
 
 
 def singlereportcollector():
-    from secfsdstools.e_collector.reportcollecting import SingleReportCollector
+    """
+    SingleReportCollector example
+    """
+    from secfsdstools.e_collector.reportcollecting import \
+        SingleReportCollector  # pylint: disable=C0415
 
     apple_10k_2022_adsh = "0000320193-22-000108"
 
@@ -22,7 +30,13 @@ def singlereportcollector():
 
 
 def multireportcollector():
-    from secfsdstools.e_collector.multireportcollecting import MultiReportCollector
+    """
+    MultiReportCollector example
+    """
+
+    from secfsdstools.e_collector.multireportcollecting import \
+        MultiReportCollector  # pylint: disable=C0415
+
     apple_10k_2022_adsh = "0000320193-22-000108"
     apple_10k_2012_adsh = "0001193125-12-444068"
 
@@ -40,7 +54,11 @@ def multireportcollector():
 
 
 def zipcollector():
-    from secfsdstools.e_collector.zipcollecting import ZipCollector
+    """
+    ZipCollector example
+    """
+
+    from secfsdstools.e_collector.zipcollecting import ZipCollector  # pylint: disable=C0415
 
     # only collect the Balance Sheet of annual reports that
     # were filed during the first quarter in 2022
@@ -58,7 +76,12 @@ def zipcollector():
 
 
 def companyreportcollector():
-    from secfsdstools.e_collector.companycollecting import CompanyReportCollector
+    """
+    CompanyReportCollector example
+    """
+
+    from secfsdstools.e_collector.companycollecting import \
+        CompanyReportCollector  # pylint: disable=C0415
 
     apple_cik = 320193
     collector = CompanyReportCollector.get_company_collector(ciks=[apple_cik],
@@ -73,10 +96,14 @@ def companyreportcollector():
     print(rawdatabag.num_df.shape)
 
 
+def run():
+    """launch method"""
 
-
-if __name__ == '__main__':
     singlereportcollector()
     multireportcollector()
     zipcollector()
     companyreportcollector()
+
+
+if __name__ == '__main__':
+    run()

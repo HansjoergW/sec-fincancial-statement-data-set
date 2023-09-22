@@ -1,3 +1,7 @@
+"""
+Simple code example on how to use the StandardStatementPresenter
+"""
+
 import pandas as pd
 
 from secfsdstools.e_collector.reportcollecting import SingleReportCollector
@@ -9,7 +13,9 @@ pd.set_option('display.max_columns', 500)
 pd.set_option('display.width', 1000)
 
 
-def standard_presenter():
+def presenter():
+    """ StandardStatementPresenter example"""
+
     apple_10k_2022_adsh = "0000320193-22-000108"
 
     collector: SingleReportCollector = SingleReportCollector.get_report_by_adsh(
@@ -24,5 +30,11 @@ def standard_presenter():
     print(bs_df)
 
 
+def run():
+    """launch method"""
+
+    presenter()
+
+
 if __name__ == '__main__':
-    standard_presenter()
+    run()

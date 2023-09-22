@@ -1,25 +1,21 @@
-import secfsdstools.x_examples.examplecompanycollector as collect
-import secfsdstools.x_examples.examplecompanyindex as company
-import secfsdstools.x_examples.examplereportcollector as report
-import secfsdstools.x_examples.examplemultireporcollector as multi
-import secfsdstools.x_examples.examplezipcollector as zip
+import secfsdstools.x_examples.example_collectors as collect
+import secfsdstools.x_examples.example_presenter as presenter
+import secfsdstools.x_examples.example_indexsearch as indexsearch
+import secfsdstools.x_examples.example_companyindexreader as companyindex
 
 
-def test_companyreading(tmp_path):
-    company.run()
-
-
-def test_reportreading():
-    report.run()
-
-
-def test_zipreading():
-    zip.run()
-
-
-def test_multipreading():
-    multi.run()
-
-
-def test_companycollectreading():
+def test_collector():
     collect.run()
+
+
+def test_presenter():
+    presenter.run()
+
+
+def test_indexsearch():
+    indexsearch.run()
+
+
+def test_companyindex():
+    companyindex.run()
+

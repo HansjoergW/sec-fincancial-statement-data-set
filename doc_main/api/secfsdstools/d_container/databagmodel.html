@@ -41,7 +41,7 @@ import pandas as pd
 
 from secfsdstools.a_utils.constants import SUB_TXT, PRE_TXT, NUM_TXT, PRE_NUM_TXT
 from secfsdstools.d_container.filter import FilterBase
-from secfsdstools.d_container.presentation import PresenterBase
+from secfsdstools.d_container.presentation import Presenter
 
 RAW = TypeVar(&#39;RAW&#39;, bound=&#39;RawDataBag&#39;)
 JOINED = TypeVar(&#39;JOINED&#39;, bound=&#39;JoinedDataBag&#39;)
@@ -81,7 +81,7 @@ class DataBagBase(Generic[T]):
         &#34;&#34;&#34;
         return bagfilter.filter(self)
 
-    def present(self, presenter: PresenterBase[T]) -&gt; pd.DataFrame:
+    def present(self, presenter: Presenter[T]) -&gt; pd.DataFrame:
         &#34;&#34;&#34;
         apply a presenter
         &#34;&#34;&#34;
@@ -101,6 +101,7 @@ class JoinedDataBag(DataBagBase[JOINED]):
 
         Args:
             sub_df: sub.txt dataframe
+
             pre_num_df: joined pre.txt and num.txt dataframe
 
         Returns:
@@ -413,7 +414,7 @@ class RawDataBag(DataBagBase[RAW]):
         &#34;&#34;&#34;
         return bagfilter.filter(self)
 
-    def present(self, presenter: PresenterBase[T]) -&gt; pd.DataFrame:
+    def present(self, presenter: Presenter[T]) -&gt; pd.DataFrame:
         &#34;&#34;&#34;
         apply a presenter
         &#34;&#34;&#34;
@@ -467,7 +468,7 @@ bag[filter1][filter2] is equal to bag.filter(filter1).filter(filter2)</p>
 </details>
 </dd>
 <dt id="secfsdstools.d_container.databagmodel.DataBagBase.present"><code class="name flex">
-<span>def <span class="ident">present</span></span>(<span>self, presenter: <a title="secfsdstools.d_container.presentation.PresenterBase" href="presentation.html#secfsdstools.d_container.presentation.PresenterBase">PresenterBase</a>[~T]) ‑> pandas.core.frame.DataFrame</span>
+<span>def <span class="ident">present</span></span>(<span>self, presenter: <a title="secfsdstools.d_container.presentation.Presenter" href="presentation.html#secfsdstools.d_container.presentation.Presenter">Presenter</a>[~T]) ‑> pandas.core.frame.DataFrame</span>
 </code></dt>
 <dd>
 <div class="desc"><p>apply a presenter</p></div>
@@ -475,7 +476,7 @@ bag[filter1][filter2] is equal to bag.filter(filter1).filter(filter2)</p>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def present(self, presenter: PresenterBase[T]) -&gt; pd.DataFrame:
+<pre><code class="python">def present(self, presenter: Presenter[T]) -&gt; pd.DataFrame:
     &#34;&#34;&#34;
     apply a presenter
     &#34;&#34;&#34;
@@ -516,6 +517,7 @@ adsh, tag, and version.</p>
 
         Args:
             sub_df: sub.txt dataframe
+
             pre_num_df: joined pre.txt and num.txt dataframe
 
         Returns:
@@ -681,6 +683,7 @@ def create(cls, sub_df: pd.DataFrame, pre_num_df: pd.DataFrame) -&gt; JOINED:
 
     Args:
         sub_df: sub.txt dataframe
+
         pre_num_df: joined pre.txt and num.txt dataframe
 
     Returns:

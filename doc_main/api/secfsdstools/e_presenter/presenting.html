@@ -33,16 +33,17 @@ Default Presenter implementations.
 import pandas as pd
 
 from secfsdstools.d_container.databagmodel import JoinedDataBag
-from secfsdstools.d_container.presentation import PresenterBase
+from secfsdstools.d_container.presentation import Presenter
 
 
-class StandardStatementPresenter(PresenterBase[JoinedDataBag]):
+class StandardStatementPresenter(Presenter[JoinedDataBag]):
     &#34;&#34;&#34;
     Reformats the data so that the presentation and order reflects the way how the basic
     financial statements are presented.
     &#34;&#34;&#34;
 
-    def __init__(self, flatten_index: bool = True, add_form_column: bool = False):
+    def __init__(self, flatten_index: bool = True, add_form_column: bool = False,
+                 invert_negating: bool = False):
         &#34;&#34;&#34;
 
         Args:
@@ -52,10 +53,18 @@ class StandardStatementPresenter(PresenterBase[JoinedDataBag]):
                              appear as columns and not in the index of the dataframe.
             add_form_column: adds a &#34;form&#34; column to the resulting dataframe which contains
                              the type of the report (&#39;10-K&#39;, &#39;10-Q&#39;, ...)
+            invert_negating: In a report, values are sometimes shown as positive even when
+                             from a calculating perspective they are negative, and vice versa.
+                             Such values are marked with a &#34;1&#34; in the negating column.
+                             When this flag is true, the value of such tags where negating is set
+                             to 1 is inverted. A typical case is &#34;paiddividends&#34; where the value
+                             is shown as positive but from a calculating point of view it should
+                             be negative.
         &#34;&#34;&#34;
 
         self.flatten_index = flatten_index
         self.add_form_column = add_form_column
+        self.invert_negating = invert_negating
 
     def present(self, databag: JoinedDataBag) -&gt; pd.DataFrame:
         &#34;&#34;&#34;
@@ -74,7 +83,12 @@ class StandardStatementPresenter(PresenterBase[JoinedDataBag]):
             pd.DataFrame: the dataframe with the final presentation
         &#34;&#34;&#34;
 
-        num_pre_pivot_df = databag.pre_num_df.pivot_table(
+        pre_num_df = databag.pre_num_df
+        if self.invert_negating:
+            pre_num_df = pre_num_df.copy()
+            pre_num_df.loc[pre_num_df.negating == 1, &#39;value&#39;] = -pre_num_df.value
+
+        num_pre_pivot_df = pre_num_df.pivot_table(
             index=[&#39;adsh&#39;, &#39;coreg&#39;, &#39;tag&#39;, &#39;version&#39;, &#39;stmt&#39;,
                    &#39;report&#39;, &#39;line&#39;, &#39;uom&#39;, &#39;negating&#39;, &#39;inpth&#39;],
             columns=&#39;ddate&#39;,
@@ -91,6 +105,9 @@ class StandardStatementPresenter(PresenterBase[JoinedDataBag]):
         # the type of the column to strings
         num_pre_pivot_df.rename(columns={x: str(x) for x in num_pre_pivot_df.columns},
                                 inplace=True)
+        #  ensure column order, so that the latest date is first
+        col_order = sorted(num_pre_pivot_df.columns.values, reverse=True)
+        num_pre_pivot_df = num_pre_pivot_df[col_order]
 
         if self.flatten_index:
             num_pre_pivot_df.reset_index(drop=False, inplace=True)
@@ -115,7 +132,7 @@ class StandardStatementPresenter(PresenterBase[JoinedDataBag]):
 <dl>
 <dt id="secfsdstools.e_presenter.presenting.StandardStatementPresenter"><code class="flex name class">
 <span>class <span class="ident">StandardStatementPresenter</span></span>
-<span>(</span><span>flatten_index: bool = True, add_form_column: bool = False)</span>
+<span>(</span><span>flatten_index: bool = True, add_form_column: bool = False, invert_negating: bool = False)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Reformats the data so that the presentation and order reflects the way how the basic
@@ -130,18 +147,27 @@ appear as columns and not in the index of the dataframe.</dd>
 <dt><strong><code>add_form_column</code></strong></dt>
 <dd>adds a "form" column to the resulting dataframe which contains
 the type of the report ('10-K', '10-Q', &hellip;)</dd>
+<dt><strong><code>invert_negating</code></strong></dt>
+<dd>In a report, values are sometimes shown as positive even when
+from a calculating perspective they are negative, and vice versa.
+Such values are marked with a "1" in the negating column.
+When this flag is true, the value of such tags where negating is set
+to 1 is inverted. A typical case is "paiddividends" where the value
+is shown as positive but from a calculating point of view it should
+be negative.</dd>
 </dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class StandardStatementPresenter(PresenterBase[JoinedDataBag]):
+<pre><code class="python">class StandardStatementPresenter(Presenter[JoinedDataBag]):
     &#34;&#34;&#34;
     Reformats the data so that the presentation and order reflects the way how the basic
     financial statements are presented.
     &#34;&#34;&#34;
 
-    def __init__(self, flatten_index: bool = True, add_form_column: bool = False):
+    def __init__(self, flatten_index: bool = True, add_form_column: bool = False,
+                 invert_negating: bool = False):
         &#34;&#34;&#34;
 
         Args:
@@ -151,10 +177,18 @@ the type of the report ('10-K', '10-Q', &hellip;)</dd>
                              appear as columns and not in the index of the dataframe.
             add_form_column: adds a &#34;form&#34; column to the resulting dataframe which contains
                              the type of the report (&#39;10-K&#39;, &#39;10-Q&#39;, ...)
+            invert_negating: In a report, values are sometimes shown as positive even when
+                             from a calculating perspective they are negative, and vice versa.
+                             Such values are marked with a &#34;1&#34; in the negating column.
+                             When this flag is true, the value of such tags where negating is set
+                             to 1 is inverted. A typical case is &#34;paiddividends&#34; where the value
+                             is shown as positive but from a calculating point of view it should
+                             be negative.
         &#34;&#34;&#34;
 
         self.flatten_index = flatten_index
         self.add_form_column = add_form_column
+        self.invert_negating = invert_negating
 
     def present(self, databag: JoinedDataBag) -&gt; pd.DataFrame:
         &#34;&#34;&#34;
@@ -173,7 +207,12 @@ the type of the report ('10-K', '10-Q', &hellip;)</dd>
             pd.DataFrame: the dataframe with the final presentation
         &#34;&#34;&#34;
 
-        num_pre_pivot_df = databag.pre_num_df.pivot_table(
+        pre_num_df = databag.pre_num_df
+        if self.invert_negating:
+            pre_num_df = pre_num_df.copy()
+            pre_num_df.loc[pre_num_df.negating == 1, &#39;value&#39;] = -pre_num_df.value
+
+        num_pre_pivot_df = pre_num_df.pivot_table(
             index=[&#39;adsh&#39;, &#39;coreg&#39;, &#39;tag&#39;, &#39;version&#39;, &#39;stmt&#39;,
                    &#39;report&#39;, &#39;line&#39;, &#39;uom&#39;, &#39;negating&#39;, &#39;inpth&#39;],
             columns=&#39;ddate&#39;,
@@ -190,6 +229,9 @@ the type of the report ('10-K', '10-Q', &hellip;)</dd>
         # the type of the column to strings
         num_pre_pivot_df.rename(columns={x: str(x) for x in num_pre_pivot_df.columns},
                                 inplace=True)
+        #  ensure column order, so that the latest date is first
+        col_order = sorted(num_pre_pivot_df.columns.values, reverse=True)
+        num_pre_pivot_df = num_pre_pivot_df[col_order]
 
         if self.flatten_index:
             num_pre_pivot_df.reset_index(drop=False, inplace=True)
@@ -204,7 +246,7 @@ the type of the report ('10-K', '10-Q', &hellip;)</dd>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li><a title="secfsdstools.d_container.presentation.PresenterBase" href="../d_container/presentation.html#secfsdstools.d_container.presentation.PresenterBase">PresenterBase</a></li>
+<li><a title="secfsdstools.d_container.presentation.Presenter" href="../d_container/presentation.html#secfsdstools.d_container.presentation.Presenter">Presenter</a></li>
 <li>typing.Generic</li>
 </ul>
 <h3>Methods</h3>
@@ -248,7 +290,12 @@ Cash Flow).
         pd.DataFrame: the dataframe with the final presentation
     &#34;&#34;&#34;
 
-    num_pre_pivot_df = databag.pre_num_df.pivot_table(
+    pre_num_df = databag.pre_num_df
+    if self.invert_negating:
+        pre_num_df = pre_num_df.copy()
+        pre_num_df.loc[pre_num_df.negating == 1, &#39;value&#39;] = -pre_num_df.value
+
+    num_pre_pivot_df = pre_num_df.pivot_table(
         index=[&#39;adsh&#39;, &#39;coreg&#39;, &#39;tag&#39;, &#39;version&#39;, &#39;stmt&#39;,
                &#39;report&#39;, &#39;line&#39;, &#39;uom&#39;, &#39;negating&#39;, &#39;inpth&#39;],
         columns=&#39;ddate&#39;,
@@ -265,6 +312,9 @@ Cash Flow).
     # the type of the column to strings
     num_pre_pivot_df.rename(columns={x: str(x) for x in num_pre_pivot_df.columns},
                             inplace=True)
+    #  ensure column order, so that the latest date is first
+    col_order = sorted(num_pre_pivot_df.columns.values, reverse=True)
+    num_pre_pivot_df = num_pre_pivot_df[col_order]
 
     if self.flatten_index:
         num_pre_pivot_df.reset_index(drop=False, inplace=True)

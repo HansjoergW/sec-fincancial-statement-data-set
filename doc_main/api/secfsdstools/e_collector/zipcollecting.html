@@ -59,10 +59,13 @@ class ZipCollector(BaseCollector):
         creates a ZipReportReader instance for the given name of the zipfile.
         Args:
             name (str): name of the zipfile (without the path)
+
             forms_filter (List[str], optional, None):
                 List of forms that should be read (10-K, 10-Q, ...)
+
             stmt_filter (List[str], optional, None):
                 List of stmts that should be read (BS, IS, ...)
+
             tag_filter (List[str], optional, None:
                 List of tags that should be read (Assets, Liabilities, ...)
 
@@ -138,10 +141,13 @@ parquet format to which the zip file was transformed into.</p></div>
         creates a ZipReportReader instance for the given name of the zipfile.
         Args:
             name (str): name of the zipfile (without the path)
+
             forms_filter (List[str], optional, None):
                 List of forms that should be read (10-K, 10-Q, ...)
+
             stmt_filter (List[str], optional, None):
                 List of stmts that should be read (BS, IS, ...)
+
             tag_filter (List[str], optional, None:
                 List of tags that should be read (Assets, Liabilities, ...)
 
@@ -197,10 +203,10 @@ parquet format to which the zip file was transformed into.</p></div>
 <dd>name of the zipfile (without the path)</dd>
 </dl>
 <p>forms_filter (List[str], optional, None):
-List of forms that should be read (10-K, 10-Q, &hellip;)
-stmt_filter (List[str], optional, None):
-List of stmts that should be read (BS, IS, &hellip;)
-tag_filter (List[str], optional, None:
+List of forms that should be read (10-K, 10-Q, &hellip;)</p>
+<p>stmt_filter (List[str], optional, None):
+List of stmts that should be read (BS, IS, &hellip;)</p>
+<p>tag_filter (List[str], optional, None:
 List of tags that should be read (Assets, Liabilities, &hellip;)</p>
 <dl>
 <dt><strong><code>configuration</code></strong> :&ensp;<code>Configuration</code>, optional<code>, None</code></dt>
@@ -221,10 +227,13 @@ def get_zip_by_name(cls,
     creates a ZipReportReader instance for the given name of the zipfile.
     Args:
         name (str): name of the zipfile (without the path)
+
         forms_filter (List[str], optional, None):
             List of forms that should be read (10-K, 10-Q, ...)
+
         stmt_filter (List[str], optional, None):
             List of stmts that should be read (BS, IS, ...)
+
         tag_filter (List[str], optional, None:
             List of tags that should be read (Assets, Liabilities, ...)
 

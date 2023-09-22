@@ -51,7 +51,7 @@ class CompanyReportCollector:
             forms_filter: Optional[List[str]] = None,
             stmt_filter: Optional[List[str]] = None,
             tag_filter: Optional[List[str]] = None,
-            configuration: Optional[Configuration] = None) -&gt; MultiReportCollector:
+            configuration: Optional[Configuration] = None):
         &#34;&#34;&#34;
         creates a MultiReportCollector instance for the provided ciks and forms (e.g. 10-K..)
         If no configuration object is passed,
@@ -124,7 +124,7 @@ For instance, it is a simple way to read all 10-K reports of serveral companies.
             forms_filter: Optional[List[str]] = None,
             stmt_filter: Optional[List[str]] = None,
             tag_filter: Optional[List[str]] = None,
-            configuration: Optional[Configuration] = None) -&gt; MultiReportCollector:
+            configuration: Optional[Configuration] = None):
         &#34;&#34;&#34;
         creates a MultiReportCollector instance for the provided ciks and forms (e.g. 10-K..)
         If no configuration object is passed,
@@ -165,7 +165,7 @@ For instance, it is a simple way to read all 10-K reports of serveral companies.
 <h3>Static methods</h3>
 <dl>
 <dt id="secfsdstools.e_collector.companycollecting.CompanyReportCollector.get_company_collector"><code class="name flex">
-<span>def <span class="ident">get_company_collector</span></span>(<span>ciks: List[int], forms_filter: Optional[List[str]] = None, stmt_filter: Optional[List[str]] = None, tag_filter: Optional[List[str]] = None, configuration: Optional[<a title="secfsdstools.a_config.configmodel.Configuration" href="../a_config/configmodel.html#secfsdstools.a_config.configmodel.Configuration">Configuration</a>] = None) ‑> <a title="secfsdstools.e_collector.multireportcollecting.MultiReportCollector" href="multireportcollecting.html#secfsdstools.e_collector.multireportcollecting.MultiReportCollector">MultiReportCollector</a></span>
+<span>def <span class="ident">get_company_collector</span></span>(<span>ciks: List[int], forms_filter: Optional[List[str]] = None, stmt_filter: Optional[List[str]] = None, tag_filter: Optional[List[str]] = None, configuration: Optional[<a title="secfsdstools.a_config.configmodel.Configuration" href="../a_config/configmodel.html#secfsdstools.a_config.configmodel.Configuration">Configuration</a>] = None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>creates a MultiReportCollector instance for the provided ciks and forms (e.g. 10-K..)
@@ -200,7 +200,7 @@ def get_company_collector(
         forms_filter: Optional[List[str]] = None,
         stmt_filter: Optional[List[str]] = None,
         tag_filter: Optional[List[str]] = None,
-        configuration: Optional[Configuration] = None) -&gt; MultiReportCollector:
+        configuration: Optional[Configuration] = None):
     &#34;&#34;&#34;
     creates a MultiReportCollector instance for the provided ciks and forms (e.g. 10-K..)
     If no configuration object is passed,

@@ -54,14 +54,17 @@ class SingleReportCollector(BaseCollector):
 
         Args:
             adsh (str): unique report id
+
             stmt_filter (List[str], optional, None):
                 List of stmts that should be read (BS, IS, ...)
+
             tag_filter (List[str], optional, None:
                 List of tags that should be read (Assets, Liabilities, ...)
+
             configuration (Configuration optional, default=None): Optional configuration object
 
         Returns:
-            ReportReader: instance of ReportReader
+            SingleReportCollector: instance of SingleReportCollector
 
         &#34;&#34;&#34;
         if configuration is None:
@@ -83,13 +86,15 @@ class SingleReportCollector(BaseCollector):
 
         Args:
             index_report (IndexReport): instance of IndexReport
+
             stmt_filter (List[str], optional, None):
                 List of stmts that should be read (BS, IS, ...)
+
             tag_filter (List[str], optional, None:
                 List of tags that should be read (Assets, Liabilities, ...)
 
         Returns:
-            ReportReader: isntance of ReportReader
+            SingleReportCollector: isntance of SingleReportCollector
         &#34;&#34;&#34;
         return SingleReportCollector(report=index_report,
                                      tag_filter=tag_filter,
@@ -152,14 +157,17 @@ to prepare and aggregate the raw data</p></div>
 
         Args:
             adsh (str): unique report id
+
             stmt_filter (List[str], optional, None):
                 List of stmts that should be read (BS, IS, ...)
+
             tag_filter (List[str], optional, None:
                 List of tags that should be read (Assets, Liabilities, ...)
+
             configuration (Configuration optional, default=None): Optional configuration object
 
         Returns:
-            ReportReader: instance of ReportReader
+            SingleReportCollector: instance of SingleReportCollector
 
         &#34;&#34;&#34;
         if configuration is None:
@@ -181,13 +189,15 @@ to prepare and aggregate the raw data</p></div>
 
         Args:
             index_report (IndexReport): instance of IndexReport
+
             stmt_filter (List[str], optional, None):
                 List of stmts that should be read (BS, IS, ...)
+
             tag_filter (List[str], optional, None:
                 List of tags that should be read (Assets, Liabilities, ...)
 
         Returns:
-            ReportReader: isntance of ReportReader
+            SingleReportCollector: isntance of SingleReportCollector
         &#34;&#34;&#34;
         return SingleReportCollector(report=index_report,
                                      tag_filter=tag_filter,
@@ -229,17 +239,19 @@ if no configuration is passed, it reads the config from the config file</p>
 <dl>
 <dt><strong><code>adsh</code></strong> :&ensp;<code>str</code></dt>
 <dd>unique report id</dd>
-<dt>stmt_filter (List[str], optional, None):</dt>
-<dt>List of stmts that should be read (BS, IS, &hellip;)</dt>
-<dt>tag_filter (List[str], optional, None:</dt>
-<dt>List of tags that should be read (Assets, Liabilities, &hellip;)</dt>
+</dl>
+<p>stmt_filter (List[str], optional, None):
+List of stmts that should be read (BS, IS, &hellip;)</p>
+<p>tag_filter (List[str], optional, None:
+List of tags that should be read (Assets, Liabilities, &hellip;)</p>
+<dl>
 <dt><strong><code>configuration</code></strong> :&ensp;<code>Configuration optional</code>, default=<code>None</code></dt>
 <dd>Optional configuration object</dd>
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
-<dt><code>ReportReader</code></dt>
-<dd>instance of ReportReader</dd>
+<dt><code><a title="secfsdstools.e_collector.reportcollecting.SingleReportCollector" href="#secfsdstools.e_collector.reportcollecting.SingleReportCollector">SingleReportCollector</a></code></dt>
+<dd>instance of SingleReportCollector</dd>
 </dl></div>
 <details class="source">
 <summary>
@@ -256,14 +268,17 @@ def get_report_by_adsh(cls, adsh: str,
 
     Args:
         adsh (str): unique report id
+
         stmt_filter (List[str], optional, None):
             List of stmts that should be read (BS, IS, ...)
+
         tag_filter (List[str], optional, None:
             List of tags that should be read (Assets, Liabilities, ...)
+
         configuration (Configuration optional, default=None): Optional configuration object
 
     Returns:
-        ReportReader: instance of ReportReader
+        SingleReportCollector: instance of SingleReportCollector
 
     &#34;&#34;&#34;
     if configuration is None:
@@ -287,13 +302,13 @@ def get_report_by_adsh(cls, adsh: str,
 <dd>instance of IndexReport</dd>
 </dl>
 <p>stmt_filter (List[str], optional, None):
-List of stmts that should be read (BS, IS, &hellip;)
-tag_filter (List[str], optional, None:
+List of stmts that should be read (BS, IS, &hellip;)</p>
+<p>tag_filter (List[str], optional, None:
 List of tags that should be read (Assets, Liabilities, &hellip;)</p>
 <h2 id="returns">Returns</h2>
 <dl>
-<dt><code>ReportReader</code></dt>
-<dd>isntance of ReportReader</dd>
+<dt><code><a title="secfsdstools.e_collector.reportcollecting.SingleReportCollector" href="#secfsdstools.e_collector.reportcollecting.SingleReportCollector">SingleReportCollector</a></code></dt>
+<dd>isntance of SingleReportCollector</dd>
 </dl></div>
 <details class="source">
 <summary>
@@ -309,13 +324,15 @@ def get_report_by_indexreport(cls,
 
     Args:
         index_report (IndexReport): instance of IndexReport
+
         stmt_filter (List[str], optional, None):
             List of stmts that should be read (BS, IS, ...)
+
         tag_filter (List[str], optional, None:
             List of tags that should be read (Assets, Liabilities, ...)
 
     Returns:
-        ReportReader: isntance of ReportReader
+        SingleReportCollector: isntance of SingleReportCollector
     &#34;&#34;&#34;
     return SingleReportCollector(report=index_report,
                                  tag_filter=tag_filter,

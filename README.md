@@ -198,7 +198,7 @@ The second main process is the "Data Processing Process", which is working with 
 sub.txt, pre.txt, and num.txt files from the zip files. The "Data Processing Process" mainly exists out of four steps:
 
 * **Collect** <br/> Collect the rawdata from one or more different zip files. For instance, get all the data for a single
-report, or get the data for all 10-K reports of a single report from several zip files.
+report, or get the data for all 10-K reports of a single or multiple companies from several zip files.
 * **Raw Processing** <br/> Once the data is collected, the collected data for sub.txt, pre.txt, and num.txt is available
 as a pandas dataframe. Filters can be applied, the content can directly be saved and loaded.
 * **Joined Processing** <br/> From the "Raw Data", a "joined" representation can be created. This joins the data from
@@ -490,7 +490,7 @@ Framework (module `secfsdstools.e_filter.rawfiltering`:
    ````
 * `StmtRawFilter` <br> Filters the `RawDataBag`instance based on the list of statements ('BS', 'CF', 'IS', ...). <br>
    ````
-   a_filtered_RawDataBag = a_RawDataBag.filter(StmtRawFilter(adshs=['0001193125-09-214859', '0001193125-10-238044']))
+   a_filtered_RawDataBag = a_RawDataBag.filter(StmtRawFilter(stmts=['BS', 'CF']))
    ````
 * `TagRawFilter` <br> Filters the `RawDataBag`instance based on the list of tags that is provided. <br>
    ````

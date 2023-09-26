@@ -6,8 +6,12 @@ permalink: /releasenotes/
 # Release Notes
 
 ## Upcoming
-* more example notebooks
 * 
+
+## 1.0.0 2023-Sep-28
+ApiChanges:
+* The API has completely changed, it should be more structured now. <br> 
+  Please check out the README.md and the 01_quickstart notebook for details
 
 ## 0.5.0 2023-Jun-02
 * use parquet as storing format instead of zipfiles with csv files -> 5-10x faster access to data

@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.10.0" />
-<title>secfsdstools.e_read.searching API documentation</title>
+<title>secfsdstools.c_index.searching API documentation</title>
 <meta name="description" content="company search logic." />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
@@ -19,7 +19,7 @@
 <main>
 <article id="content">
 <header>
-<h1 class="title">Module <code>secfsdstools.e_read.searching</code></h1>
+<h1 class="title">Module <code>secfsdstools.c_index.searching</code></h1>
 </header>
 <section id="section-intro">
 <p>company search logic.</p>
@@ -36,14 +36,13 @@ import pandas as pd
 
 from secfsdstools.a_config.configmgt import ConfigurationManager
 from secfsdstools.a_config.configmodel import Configuration
-from secfsdstools.c_index.indexdataaccess import DBIndexingAccessorBase, \
-    create_index_accessor
+from secfsdstools.c_index.indexdataaccess import ParquetDBIndexingAccessor
 
 
 class IndexSearch:
     &#34;&#34;&#34;Provides search methods on the index_report table.&#34;&#34;&#34;
 
-    def __init__(self, dbaccessor: DBIndexingAccessorBase):
+    def __init__(self, dbaccessor: ParquetDBIndexingAccessor):
         self.dbaccessor = dbaccessor
 
     @classmethod
@@ -61,8 +60,7 @@ class IndexSearch:
         if configuration is None:
             configuration = ConfigurationManager.read_config_file()
 
-        accessor: DBIndexingAccessorBase = create_index_accessor(
-            db_dir=configuration.db_dir)
+        accessor: ParquetDBIndexingAccessor = ParquetDBIndexingAccessor(db_dir=configuration.db_dir)
         return IndexSearch(accessor)
 
     def find_company_by_name(self, name_part: str) -&gt; pd.DataFrame:
@@ -88,9 +86,9 @@ class IndexSearch:
 <section>
 <h2 class="section-title" id="header-classes">Classes</h2>
 <dl>
-<dt id="secfsdstools.e_read.searching.IndexSearch"><code class="flex name class">
+<dt id="secfsdstools.c_index.searching.IndexSearch"><code class="flex name class">
 <span>class <span class="ident">IndexSearch</span></span>
-<span>(</span><span>dbaccessor: <a title="secfsdstools.c_index.indexdataaccess.DBIndexingAccessorBase" href="../c_index/indexdataaccess.html#secfsdstools.c_index.indexdataaccess.DBIndexingAccessorBase">DBIndexingAccessorBase</a>)</span>
+<span>(</span><span>dbaccessor: <a title="secfsdstools.c_index.indexdataaccess.ParquetDBIndexingAccessor" href="indexdataaccess.html#secfsdstools.c_index.indexdataaccess.ParquetDBIndexingAccessor">ParquetDBIndexingAccessor</a>)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Provides search methods on the index_report table.</p></div>
@@ -101,7 +99,7 @@ class IndexSearch:
 <pre><code class="python">class IndexSearch:
     &#34;&#34;&#34;Provides search methods on the index_report table.&#34;&#34;&#34;
 
-    def __init__(self, dbaccessor: DBIndexingAccessorBase):
+    def __init__(self, dbaccessor: ParquetDBIndexingAccessor):
         self.dbaccessor = dbaccessor
 
     @classmethod
@@ -119,8 +117,7 @@ class IndexSearch:
         if configuration is None:
             configuration = ConfigurationManager.read_config_file()
 
-        accessor: DBIndexingAccessorBase = create_index_accessor(
-            db_dir=configuration.db_dir)
+        accessor: ParquetDBIndexingAccessor = ParquetDBIndexingAccessor(db_dir=configuration.db_dir)
         return IndexSearch(accessor)
 
     def find_company_by_name(self, name_part: str) -&gt; pd.DataFrame:
@@ -138,7 +135,7 @@ class IndexSearch:
 </details>
 <h3>Static methods</h3>
 <dl>
-<dt id="secfsdstools.e_read.searching.IndexSearch.get_index_search"><code class="name flex">
+<dt id="secfsdstools.c_index.searching.IndexSearch.get_index_search"><code class="name flex">
 <span>def <span class="ident">get_index_search</span></span>(<span>configuration: Optional[<a title="secfsdstools.a_config.configmodel.Configuration" href="../a_config/configmodel.html#secfsdstools.a_config.configmodel.Configuration">Configuration</a>] = None)</span>
 </code></dt>
 <dd>
@@ -153,7 +150,7 @@ the config file.</p>
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
-<dt><code><a title="secfsdstools.e_read.searching.IndexSearch" href="#secfsdstools.e_read.searching.IndexSearch">IndexSearch</a></code></dt>
+<dt><code><a title="secfsdstools.c_index.searching.IndexSearch" href="#secfsdstools.c_index.searching.IndexSearch">IndexSearch</a></code></dt>
 <dd>instance of IndexSearch</dd>
 </dl></div>
 <details class="source">
@@ -175,15 +172,14 @@ def get_index_search(cls, configuration: Optional[Configuration] = None):
     if configuration is None:
         configuration = ConfigurationManager.read_config_file()
 
-    accessor: DBIndexingAccessorBase = create_index_accessor(
-        db_dir=configuration.db_dir)
+    accessor: ParquetDBIndexingAccessor = ParquetDBIndexingAccessor(db_dir=configuration.db_dir)
     return IndexSearch(accessor)</code></pre>
 </details>
 </dd>
 </dl>
 <h3>Methods</h3>
 <dl>
-<dt id="secfsdstools.e_read.searching.IndexSearch.find_company_by_name"><code class="name flex">
+<dt id="secfsdstools.c_index.searching.IndexSearch.find_company_by_name"><code class="name flex">
 <span>def <span class="ident">find_company_by_name</span></span>(<span>self, name_part: str) ‑> pandas.core.frame.DataFrame</span>
 </code></dt>
 <dd>
@@ -226,16 +222,16 @@ def get_index_search(cls, configuration: Optional[Configuration] = None):
 <ul id="index">
 <li><h3>Super-module</h3>
 <ul>
-<li><code><a title="secfsdstools.e_read" href="index.html">secfsdstools.e_read</a></code></li>
+<li><code><a title="secfsdstools.c_index" href="index.html">secfsdstools.c_index</a></code></li>
 </ul>
 </li>
 <li><h3><a href="#header-classes">Classes</a></h3>
 <ul>
 <li>
-<h4><code><a title="secfsdstools.e_read.searching.IndexSearch" href="#secfsdstools.e_read.searching.IndexSearch">IndexSearch</a></code></h4>
+<h4><code><a title="secfsdstools.c_index.searching.IndexSearch" href="#secfsdstools.c_index.searching.IndexSearch">IndexSearch</a></code></h4>
 <ul class="">
-<li><code><a title="secfsdstools.e_read.searching.IndexSearch.find_company_by_name" href="#secfsdstools.e_read.searching.IndexSearch.find_company_by_name">find_company_by_name</a></code></li>
-<li><code><a title="secfsdstools.e_read.searching.IndexSearch.get_index_search" href="#secfsdstools.e_read.searching.IndexSearch.get_index_search">get_index_search</a></code></li>
+<li><code><a title="secfsdstools.c_index.searching.IndexSearch.find_company_by_name" href="#secfsdstools.c_index.searching.IndexSearch.find_company_by_name">find_company_by_name</a></code></li>
+<li><code><a title="secfsdstools.c_index.searching.IndexSearch.get_index_search" href="#secfsdstools.c_index.searching.IndexSearch.get_index_search">get_index_search</a></code></li>
 </ul>
 </li>
 </ul>

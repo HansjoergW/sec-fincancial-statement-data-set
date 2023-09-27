@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.10.0" />
-<title>secfsdstools.x_examples.examplecompanyreading API documentation</title>
-<meta name="description" content="Examples for CompanyReader" />
+<title>secfsdstools.d_container API documentation</title>
+<meta name="description" content="" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
 <link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
@@ -19,99 +19,31 @@
 <main>
 <article id="content">
 <header>
-<h1 class="title">Module <code>secfsdstools.x_examples.examplecompanyreading</code></h1>
+<h1 class="title">Module <code>secfsdstools.d_container</code></h1>
 </header>
 <section id="section-intro">
-<p>Examples for CompanyReader</p>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">&#34;&#34;&#34;
-Examples for CompanyReader
-&#34;&#34;&#34;
-from typing import Dict, List
-
-from secfsdstools.c_index.indexdataaccess import IndexReport
-from secfsdstools.e_read.companyreading import CompanyReader
-
-def run():
-    # pylint: disable=W0612
-    &#34;&#34;&#34;
-    run the example
-    &#34;&#34;&#34;
-    apple_cik: int = 320193
-
-    # getting the company reader instance for apple
-    apple_reader = CompanyReader.get_company_reader(apple_cik)
-
-    # get the information of the latest filing
-    latest_filing: Dict[str, str] = apple_reader.get_latest_company_filing()
-    print(latest_filing)
-
-    # get basic infos of all the reports the company has filed.
-    # ... first as a pandas DataFrame
-    apple_all_reports_df = apple_reader.get_all_company_reports_df()
-
-    # ... second as list of IndexReport instances
-    apple_all_reports: List[IndexReport] = apple_reader.get_all_company_reports()
-    print(&#34;first entry: &#34;, apple_all_reports[0])
-
-    # both method can also be used with filters for the form, the report type.
-    # for instance, if you are only interested in annual and quarter reports, you can use
-    apple_10k_and_10q_reports_df = apple_reader.get_all_company_reports_df(forms=[&#39;10-K&#39;, &#39;10-Q&#39;])
-    print(apple_10k_and_10q_reports_df)
-
-
-if __name__ == &#39;__main__&#39;:
-    run()</code></pre>
-</details>
 </section>
 <section>
-</section>
-<section>
-</section>
-<section>
-<h2 class="section-title" id="header-functions">Functions</h2>
+<h2 class="section-title" id="header-submodules">Sub-modules</h2>
 <dl>
-<dt id="secfsdstools.x_examples.examplecompanyreading.run"><code class="name flex">
-<span>def <span class="ident">run</span></span>(<span>)</span>
-</code></dt>
+<dt><code class="name"><a title="secfsdstools.d_container.databagmodel" href="databagmodel.html">secfsdstools.d_container.databagmodel</a></code></dt>
 <dd>
-<div class="desc"><p>run the example</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def run():
-    # pylint: disable=W0612
-    &#34;&#34;&#34;
-    run the example
-    &#34;&#34;&#34;
-    apple_cik: int = 320193
-
-    # getting the company reader instance for apple
-    apple_reader = CompanyReader.get_company_reader(apple_cik)
-
-    # get the information of the latest filing
-    latest_filing: Dict[str, str] = apple_reader.get_latest_company_filing()
-    print(latest_filing)
-
-    # get basic infos of all the reports the company has filed.
-    # ... first as a pandas DataFrame
-    apple_all_reports_df = apple_reader.get_all_company_reports_df()
-
-    # ... second as list of IndexReport instances
-    apple_all_reports: List[IndexReport] = apple_reader.get_all_company_reports()
-    print(&#34;first entry: &#34;, apple_all_reports[0])
-
-    # both method can also be used with filters for the form, the report type.
-    # for instance, if you are only interested in annual and quarter reports, you can use
-    apple_10k_and_10q_reports_df = apple_reader.get_all_company_reports_df(forms=[&#39;10-K&#39;, &#39;10-Q&#39;])
-    print(apple_10k_and_10q_reports_df)</code></pre>
-</details>
+<div class="desc"><p>Defines the container that keeps the data of sub.txt, num.txt, and
+pre.txt together.</p></div>
+</dd>
+<dt><code class="name"><a title="secfsdstools.d_container.filter" href="filter.html">secfsdstools.d_container.filter</a></code></dt>
+<dd>
+<div class="desc"><p>Base class for Filter implementations.</p></div>
+</dd>
+<dt><code class="name"><a title="secfsdstools.d_container.presentation" href="presentation.html">secfsdstools.d_container.presentation</a></code></dt>
+<dd>
+<div class="desc"><p>Base class for Presenter implementations.</p></div>
 </dd>
 </dl>
+</section>
+<section>
+</section>
+<section>
 </section>
 <section>
 </section>
@@ -124,12 +56,14 @@ if __name__ == &#39;__main__&#39;:
 <ul id="index">
 <li><h3>Super-module</h3>
 <ul>
-<li><code><a title="secfsdstools.x_examples" href="index.html">secfsdstools.x_examples</a></code></li>
+<li><code><a title="secfsdstools" href="../index.html">secfsdstools</a></code></li>
 </ul>
 </li>
-<li><h3><a href="#header-functions">Functions</a></h3>
-<ul class="">
-<li><code><a title="secfsdstools.x_examples.examplecompanyreading.run" href="#secfsdstools.x_examples.examplecompanyreading.run">run</a></code></li>
+<li><h3><a href="#header-submodules">Sub-modules</a></h3>
+<ul>
+<li><code><a title="secfsdstools.d_container.databagmodel" href="databagmodel.html">secfsdstools.d_container.databagmodel</a></code></li>
+<li><code><a title="secfsdstools.d_container.filter" href="filter.html">secfsdstools.d_container.filter</a></code></li>
+<li><code><a title="secfsdstools.d_container.presentation" href="presentation.html">secfsdstools.d_container.presentation</a></code></li>
 </ul>
 </li>
 </ul>

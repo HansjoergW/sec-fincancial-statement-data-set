@@ -199,7 +199,7 @@ class ParallelExecutorBase(Generic[IT, PT, OT], ABC):
         # we retry as long as we were able to process additional entries with in the while loop.
         while (last_missing is None) or (last_missing &gt; len(missing)):
             last_missing = len(missing)
-            logging.info(&#34;%smissing entries %d&#34;, self.intend, len(missing))
+            logging.info(&#34;%sitems to process: %d&#34;, self.intend, len(missing))
 
             # break up the list of missing entries in chunks and process every chunk in parallel
             chunk_entries = self.chunksize
@@ -511,7 +511,7 @@ get_entries_function, these entries will not be part of</p>
         # we retry as long as we were able to process additional entries with in the while loop.
         while (last_missing is None) or (last_missing &gt; len(missing)):
             last_missing = len(missing)
-            logging.info(&#34;%smissing entries %d&#34;, self.intend, len(missing))
+            logging.info(&#34;%sitems to process: %d&#34;, self.intend, len(missing))
 
             # break up the list of missing entries in chunks and process every chunk in parallel
             chunk_entries = self.chunksize
@@ -587,7 +587,7 @@ the second list are the entries that couldn't be processed</dd>
     # we retry as long as we were able to process additional entries with in the while loop.
     while (last_missing is None) or (last_missing &gt; len(missing)):
         last_missing = len(missing)
-        logging.info(&#34;%smissing entries %d&#34;, self.intend, len(missing))
+        logging.info(&#34;%sitems to process: %d&#34;, self.intend, len(missing))
 
         # break up the list of missing entries in chunks and process every chunk in parallel
         chunk_entries = self.chunksize

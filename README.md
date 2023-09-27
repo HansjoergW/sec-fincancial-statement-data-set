@@ -154,7 +154,7 @@ If you accidentally delete data in the database file, don't worry. Just delete t
 and run `update()` again (see previous chapter).
 
 
-# Working with the SEFSDSTools library
+# Working with the SECFSDSTools library
 Note: the code within this chapter is also contained in the "01_quickstart.ipynb" notebook. 
 If you want to follow along, just open the notebook.
 
@@ -471,7 +471,7 @@ The `RawDataBag` provides the following methods:
 * `save`, `load`<br> The content of a `RawDataBag` can be saved into a directory. Within that directory, 
    parquet files are stored for the content of the sub_df, pre_df, and num_df. In order to load this 
    data directly, the static method `RawDataBag.load()` can be used.
-* `concat`<br> Several instances of a `RawDataBag` can be concatenated in one single instance. In order to do 
+* `concat`<br> Several instances of a `RawDataBag` can be concatenated into one single instance. In order to do 
    that, the static method `RawDataBag.concat()` takes a list of RawDataBag as parameter.
 * `join` <br> This method produces a `JoinedRawDataBag` by joining the content of the pre_df and num_df
    based on the columns adsh, tag, and version. It is an inner join. The joined dataframe appears as pre_num_df in
@@ -506,9 +506,9 @@ Framework (module `secfsdstools.e_filter.rawfiltering`:
    ````
    a_filtered_RawDataBag = a_RawDataBag.filter(ReportPeriodAndPreviousPeriodRawFilter()) 
    ````
-* `ReportPeriodRawFilter` <br> If you are just interested only in the data of a report that is from the current period
+* `ReportPeriodRawFilter` <br> If you are just interested in the data of a report that is from the current period
   of the report then you can use this filter. For instance, if you use a `CompanyReportCollector` to collect all
-  10-K reports of this company, you want to ensure that every report only contains data for its period and not for
+  10-K reports of this company, you want to ensure that every report only contains data for its own period and not for
   previous periods.
    ````
    a_filtered_RawDataBag = a_RawDataBag.filter(ReportPeriodRawFilter()) 
@@ -537,7 +537,7 @@ The `JoinedDataBag` provides the following methods:
   The method has a parameter presenter of type Presenter.
 
 ## Present
-It is simple to writer your own presenter classes. So far, the framework provides the following Presenter 
+It is simple to write your own presenter classes. So far, the framework provides the following Presenter 
 implementations (module `secfsdstools.e_presenter.presenting`):
 
 * `StandardStatementPresenter` <br> This presenter provides the data in the same form, as you are used to see in

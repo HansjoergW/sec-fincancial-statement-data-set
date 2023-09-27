@@ -3,8 +3,10 @@ Todos
 
 New Release
 - adapt readme
-- adapt release notes
 - adapt notebooks
+- in gitpages branch
+    - adapt release notes
+    - adapt index
 - adapt releases in project.toml
 - merge back into main
 

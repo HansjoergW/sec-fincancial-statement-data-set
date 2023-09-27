@@ -33,7 +33,7 @@ and therefore providing a possibility to receive the latest filings on a daily b
 
 # Important: The API was redesigned completely from version 0.5 to version 1.0  
 
-Please read the chapter "Working with the SEFSDSTools library" carefully to understand how the API is working now.
+Please read the chapter "Working with the SECFSDSTools library" carefully to understand how to use the new API.
 
 
 # Principles

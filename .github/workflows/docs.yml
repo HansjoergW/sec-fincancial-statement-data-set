@@ -40,7 +40,14 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: docs
           destination_dir: doc_latest
-
+          enable_jekyll: true
+      - name: Trigger GitHub pages rebuild
+        run: |
+          curl --fail --request POST \
+            --url https://api.github.com/repos/${{ github.repository }}/pages/builds \
+            --header "Authorization: Bearer $USER_TOKEN"
+        env:
+          USER_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
 #  deploy:
 #    runs-on: ubuntu-latest

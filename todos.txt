@@ -22,6 +22,11 @@ v.1.0.0
 
 
 
+Bug:
+- irgendetwas beim "Releasen" erzeugt die nojekyll datei, so das die Doku nicht gebuildet wird.
+
+
+
 Next:
 - new notebook, examples
   -> just read the data and use it -> only using collector

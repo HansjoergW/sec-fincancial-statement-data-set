@@ -22,9 +22,25 @@ def get_filenames_in_directory(filter_string: str) -> List[str]:
     return [os.path.basename(x) for x in zip_list]
 
 
+def get_directories_in_directory(directory: str) -> List[str]:
+    """
+    returns a list with the subdirectory in a directory.
+
+    Returns:
+        List[str]: list subdirectories in the directory
+    """
+    if not os.path.exists(directory):
+        return []
+
+    subdirectories: List[str] = [
+        entry.name for entry in os.scandir(directory) if entry.is_dir()
+    ]
+    return subdirectories
+
+
 def read_df_from_file_in_zip(zip_file: str, file_to_extract: str,
                              dtype: Optional[Dict[str, object]] = None,
-                             usecols: Optional[List[str]] = None) -> pd.DataFrame:
+                             usecols: Optional[List[str]] = None, **kwargs) -> pd.DataFrame:
     """
     reads the content of a file inside a zip file directly into dataframe
 
@@ -40,7 +56,7 @@ def read_df_from_file_in_zip(zip_file: str, file_to_extract: str,
     with zipfile.ZipFile(zip_file, "r") as zip_fp:
         file = Path(file_to_extract).name
         return pd.read_csv(zip_fp.open(file), header=0, delimiter="\t",
-                           dtype=dtype, usecols=usecols)
+                           dtype=dtype, usecols=usecols, **kwargs)
 
 
 def read_content_from_file_in_zip(zip_file: str, file_to_extract: str) -> str:
@@ -70,7 +86,7 @@ def write_content_to_zip(content: str, filename: str) -> str:
     Returns:
         str: path to the zipfile that was ritten
     """
-    zip_filename = filename + ".zip"
+    zip_filename = f"{filename}.zip"
     with zipfile.ZipFile(zip_filename, mode="w", compression=zipfile.ZIP_DEFLATED) as zf_fp:
         file = Path(filename).name
         zf_fp.writestr(file, content)
@@ -86,6 +102,6 @@ def read_content_from_zip(filename: str) -> str:
     Returns:
         str: the content of a zipfile
     """
-    with zipfile.ZipFile(filename + ".zip", mode="r") as zf_fp:
+    with zipfile.ZipFile(f"{filename}.zip", mode="r") as zf_fp:
         file = Path(filename).name
         return zf_fp.read(file).decode("utf-8")

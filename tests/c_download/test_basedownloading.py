@@ -19,9 +19,11 @@ class MyDownloader(BaseDownloader):
 def basedownloader(tmp_path):
     url_downloader = UrlDownloader()
     zip_dir = tmp_path / 'zipfiles'
+    parquet_dir = tmp_path / 'parquet'
     os.makedirs(zip_dir)
 
-    yield MyDownloader(zip_dir=str(zip_dir), urldownloader=url_downloader, execute_serial=True)
+    yield MyDownloader(zip_dir=str(zip_dir), urldownloader=url_downloader, execute_serial=True,
+                       parquet_dir_typed=str(parquet_dir))
 
 
 def test_download_single_zip_file(basedownloader):

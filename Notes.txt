@@ -45,6 +45,60 @@ Automatisierter Ablauf mit GitHubAction
 --------------------------------------
 -> Template benützen (neuer Workflow), bzw. https://github.com/pypa/gh-action-pypi-publish
 
+
+Logging
+-------
+Multiprocessing
+-> jeder Prozess hat seinen eigenen logger, dieser muss konfiguriert werden.
+-> entweder hat man irgendwo ein config, die man setzen kann, oder mann manuell die config kopieren,
+   aber nicht in einem einzigen Schritt
+-> in den parallen prozessen kann aber auch mit dem definierten LOGGER geschrieben werden
+-> Parallel Executor wird einfach das format des ersten handlers kopiert und damit ein StreamHandler konfiguriert,
+   so dass wenigstens eine Ausgabe vorhanden ist.
+
+
+Parquet Format
+--------------
+Wo Schritt einbauen, so dass es in das bestehende reinpasst?
+- Variante -> nach download
+  -> prüfen ob file im Parquet Verzeichnis existiert und falls nein, verarbeiten
+  -> Vorteil, geht nur auf bestehende Verzeichnis und Struktur
+  => bessere Variante
+
+- Variante -> mit Status, passt aber nicht in den Ablauf
+
+Wie Processing machen?
+- Variante, wie bisher über das ZipFile und Parquet Storage nur "berechnen"
+
+- Processing nur aufgrund von Parquet und Inhalte von Zip löschen, bzw. anpassen, sodass nur noch parquet infos in der index_reports
+  Tabelle sind?
+
+=>
+-> Evtl. einen Task machen, der vorgängig läuft und das bestehende konvertiert,
+   bzw. Inhalt der Tabellen löscht und neu aufbaut -> so quasi nach download zip aufsetzt,
+   umwandelt nach parquet und neu indexiert
+   -> neu konvertieren -> überall status zurücksetzen -> quasi auf leer und danach zu konvertieren nach parquet
+      -> und danach neu prozessieren.
+
+
+Wo definieren wir für das laden wie geladen wird (parquet/zip)?
+- es soll generisch sein, so dass es für Parquet und zip funktioniert
+- es ist aber abhänging vom index eintrag (indexreport)
+- es ist auch im basereader entscheidend. und hier wird erst noch je nach report typ unterschiedlich geladen
+- es muss auch sichergestellt werden, dass der richtige IndexAccessor verwendet wird
+- Der IndexAccessor wird in den ClassMethoden getbyadsh verwendet-> hier hat man eigentlich nur die config
+  zur Verfügung
+- in den anderen Methoden könnte man höchsten per IndexReport entscheiden, oder dann im Constructor der Reader
+  einen Hint mitgeben
+- wenn es in den indexreports instanzen als info mitkommt, dann könnte im gleichen set die daten verschieden geladen
+  werden. etwas was nicht gewollt ist, da man so nicht optimieren kann.
+- wenn die Reader mit Flag konfiguriert werden, verändert das die ganze API, was nicht gut
+  ist
+
+=> IndexReport sollte information beinhalten, so dass basierend auf diesen Infos entschieden wird.
+   Das kann auch über zusätzliche Methode, die den Pfad prüft gemacht werden!
+
+
 Download Stats
 -----------------
 
@@ -61,6 +115,60 @@ jupyter lab
 pip install jupyterlab
 jupyter lab --notebook-dir=.
 
+
+Jekyll Dokumentation
+-------------------
+- landing zone content wird direkt in gh-pages branch geführt
+  -> Release Notes aber nicht, oder?
+- versionierter content muss kopiert werden
+- verwendetes theme
+  -> https://pages-themes.github.io/minimal/
+     https://github.com/pages-themes/minimal/blob/master/index.md?plain=1
+
+
+- Das Rebuild wird durch das Curl angestossen:
+      - name: Trigger GitHub pages rebuild
+        run: |
+          curl --fail --request POST \
+            --url https://api.github.com/repos/${{ github.repository }}/pages/builds \
+            --header "Authorization: Bearer $USER_TOKEN"
+        env:
+          USER_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+   das führt die Pipeline "pages build and deployment" aus.
+   dabei wird im "build" step gerendert Schritt "Build with jekyll"
+    -> z.B. https://github.com/HansjoergW/sec-fincancial-statement-data-set/actions/runs/6334775493
+   Wenn nojekyll vorhanden ist, dann gibt es diesen "Build with jekyll" Schritt nicht
+    -> z.B. https://github.com/HansjoergW/sec-fincancial-statement-data-set/actions/runs/6321467174/job/17165519649
+
+
+
+
+
+jekyll manuell
+--------------
+1. jekyll und builder installieren: gem install jekyll builder
+2. theme installieren:  gem install "jekyll-theme-minimal"
+3. Doc Verzeichnis vorbereiten: jekyll build -> erzeugt das Resultat im _site Verzeichnis
+
+
+
+Images in pypi.org readme
+-------------------------
+https://stackoverflow.com/questions/41983209/how-do-i-add-images-to-a-pypi-readme-that-works-on-github
+
+
+start with https://github.com/HansjoergW/sec-fincancial-statement-data-set/blob/v1_doc/docs/images/overview.png
+-> copy permalink -> https://github.com/HansjoergW/sec-fincancial-statement-data-set/blob/59d82ec2f7880187f884cf06a154c27d66d85baa/docs/images/overview.png
+-> append ?raw=True
+https://github.com/HansjoergW/sec-fincancial-statement-data-set/blob/59d82ec2f7880187f884cf06a154c27d66d85baa/docs/images/overview.png?raw=True
+(results in: https://raw.githubusercontent.com/HansjoergW/sec-fincancial-statement-data-set/59d82ec2f7880187f884cf06a154c27d66d85baa/docs/images/overview.png
+
+just go to the file on github https://github.com/HansjoergW/sec-fincancial-statement-data-set/blob/v1_doc/docs/images/overview.png
+and replace blob with raw -> branch / tag is part of the path.
+https://github.com/HansjoergW/sec-fincancial-statement-data-set/raw/v1_doc/docs/images/overview.png
+(results in https://raw.githubusercontent.com/HansjoergW/sec-fincancial-statement-data-set/v1_doc/docs/images/overview.png)
+
 Umgebung für analyzing
 -----------------------
 https://towardsdatascience.com/interactive-controls-for-jupyter-notebooks-f5c94829aee6
@@ -73,4 +181,3 @@ benötigt neuerey python version (probleme mit conda install und python 3.7)
 - jupyter labextension install @jupyter-widgets/jupyterlab-manager
 - pip install secfsdstools
 - pip install ipywidgets
-

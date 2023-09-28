@@ -30,7 +30,6 @@ def test_parallelexcution():
             executor.set_post_process_chunk_function(self.post_process)
 
             self.result = executor.execute()
-            executor.pool.close()
 
     processor = MyTestClass()
     processor.process()

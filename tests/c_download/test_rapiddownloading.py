@@ -14,6 +14,7 @@ def rapidzipdownloader(tmp_path):
     url_downloader = UrlDownloader()
     daily_zip_dir = tmp_path / 'dailyzipfiles'
     qrtr_zip_dir = tmp_path / 'qrtzipfiles'
+    parquet_dir = tmp_path / 'parquet'
     os.makedirs(daily_zip_dir)
     os.makedirs(qrtr_zip_dir)
     rapid_api_key = os.environ.get('RAPID_API_KEY')
@@ -22,6 +23,7 @@ def rapidzipdownloader(tmp_path):
     yield RapidZipDownloader(rapidurlbuilder=rapidurlbuilder,
                              qrtr_zip_dir=str(qrtr_zip_dir),
                              daily_zip_dir=str(daily_zip_dir),
+                             parquet_root_dir=str(parquet_dir),
                              urldownloader=url_downloader,
                              execute_serial=True)
 
@@ -95,23 +97,34 @@ def test__calculate_cut_off_for_qrtr_file(rapidzipdownloader):
 
 
 def test_calculate_missing_zips(rapidzipdownloader):
-    latest_quarter_file_mock = MagicMock()
-    rapidzipdownloader._get_latest_quarter_file_name = latest_quarter_file_mock
+    rapidzipdownloader._get_latest_quarter_file_name = MagicMock(return_value='2022q4.zip')
+    rapidzipdownloader._get_available_zips = MagicMock(
+        return_value=['20221230.zip', '20221231.zip', '20230101.zip', '20230102.zip'])
+    rapidzipdownloader._get_downloaded_zips = MagicMock(return_value=[])
+    rapidzipdownloader._get_transformed_parquet = MagicMock(return_value=[])
 
-    downloaded_zip_mock = MagicMock()
-    rapidzipdownloader._get_downloaded_zips = downloaded_zip_mock
-
-    available_zips_mock = MagicMock()
-    rapidzipdownloader._get_available_zips = available_zips_mock
-
-    latest_quarter_file_mock.return_value = '2022q4.zip'
-    available_zips_mock.return_value = ['20221230.zip', '20221231.zip', '20230101.zip', '20230102.zip']
-
-    downloaded_zip_mock.return_value = []
     result = rapidzipdownloader._calculate_missing_zips()
 
     assert len(result) == 2
     for entry in result:
         assert entry[0] in ['20230101.zip', '20230102.zip']
-        assert entry[1] in ['https://daily-sec-financial-statement-dataset.p.rapidapi.com/basic/day/2023-01-01/',
-                            'https://daily-sec-financial-statement-dataset.p.rapidapi.com/basic/day/2023-01-02/']
+        assert entry[1] in [
+            'https://daily-sec-financial-statement-dataset.p.rapidapi.com/basic/day/2023-01-01/',
+            'https://daily-sec-financial-statement-dataset.p.rapidapi.com/basic/day/2023-01-02/']
+
+
+def test_calculate_missing_zips_transformed_not_downloaded(rapidzipdownloader):
+    rapidzipdownloader._get_latest_quarter_file_name = MagicMock(return_value='2022q4.zip')
+    rapidzipdownloader._get_available_zips = MagicMock(
+        return_value=['20221230.zip', '20221231.zip', '20230101.zip', '20230102.zip'])
+    rapidzipdownloader._get_downloaded_zips = MagicMock(return_value=[])
+    rapidzipdownloader._get_transformed_parquet = MagicMock(return_value=['20230101.zip'])
+
+    result = rapidzipdownloader._calculate_missing_zips()
+
+    # 20230101 has not to be downloaed, since it was already transformed to parquet
+    assert len(result) == 1
+    for entry in result:
+        assert entry[0] in ['20230102.zip']
+        assert entry[1] in [
+            'https://daily-sec-financial-statement-dataset.p.rapidapi.com/basic/day/2023-01-02/']

@@ -8,8 +8,8 @@ from abc import ABC, abstractmethod
 from typing import Tuple, List, Dict
 
 from secfsdstools.a_utils.downloadutils import UrlDownloader
-from secfsdstools.a_utils.fileutils import get_filenames_in_directory
-from secfsdstools.a_utils.parallelexecution import ParallelExecutor
+from secfsdstools.a_utils.fileutils import get_filenames_in_directory, get_directories_in_directory
+from secfsdstools.a_utils.parallelexecution import ThreadExecutor
 
 LOGGER = logging.getLogger(__name__)
 
@@ -20,8 +20,13 @@ class BaseDownloader(ABC):
     from an url and store it.
     """
 
-    def __init__(self, zip_dir: str, urldownloader: UrlDownloader, execute_serial: bool = False):
+    def __init__(self, zip_dir: str,
+                 parquet_dir_typed: str,
+                 urldownloader: UrlDownloader,
+                 execute_serial: bool = False):
         self.urldownloader = urldownloader
+        self.parquet_dir_typed = parquet_dir_typed
+
         self.execute_serial = execute_serial
 
         self.result = None
@@ -50,11 +55,13 @@ class BaseDownloader(ABC):
         url: str = data[1]
 
         LOGGER.info('    start to download %s ', file)
-        result = self._download_zip(url=url, file=file)
-        return result
+        return self._download_zip(url=url, file=file)
 
     def _get_downloaded_zips(self) -> List[str]:
         return get_filenames_in_directory(os.path.join(self.zip_dir, '*.zip'))
+
+    def _get_transformed_parquet(self) -> List[str]:
+        return get_directories_in_directory(self.parquet_dir_typed)
 
     @abstractmethod
     def _calculate_missing_zips(self) -> List[Tuple[str, str]]:
@@ -65,10 +72,11 @@ class BaseDownloader(ABC):
         downloads the missing quarterly zip files from the sec.
         """
 
-        executor = ParallelExecutor[Tuple[str, str], str, type(None)](
+        executor = ThreadExecutor[Tuple[str, str], str, type(None)](
+            processes=3,
             max_calls_per_sec=8,
-            chunksize=20,
-            execute_serial=True
+            chunksize=3,
+            execute_serial=False
             # execute_serial=self.execute_serial
         )
         executor.set_get_entries_function(self._calculate_missing_zips)
@@ -76,4 +84,3 @@ class BaseDownloader(ABC):
         executor.set_post_process_chunk_function(lambda x: x)
 
         self.result = executor.execute()
-        executor.pool.close()

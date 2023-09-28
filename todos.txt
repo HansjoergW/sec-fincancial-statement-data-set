@@ -3,29 +3,68 @@ Todos
 
 New Release
 - adapt readme
+- adapt notebooks
+- in gitpages branch
+    - adapt release notes
+    - adapt index
 - adapt releases in project.toml
 - merge back into main
 
 
-v.0.4.0
-- simple interactive tooling in jupyter notebook
-  - get all entries for cik, filter by formtypes
-  - open certain report, filter by tags, statement
-  - link directly to original report
+v.1.0.0
+- API has been completley revised
+- DataBag
+- collectors producing DataBags
+- searching moved from e_read to c_index
+- companyreading moved from e_read to c_index as companyindexreading / CompanyIndexReader
+- Filter in eigene Fitlerklassen ausgelagert
+- Presenter
 
+
+
+Bug:
+- irgendetwas beim "Releasen" erzeugt die nojekyll datei, so das die Doku nicht gebuildet wird.
+
+
+
+Next:
+- new notebook, examples
+  -> just read the data and use it -> only using collector
+  -> reading primary financial statements for a single report, display BS, IS, CF for a report
+  -> analyse changes in one Tag for one company
+  -> compare basic data of two companies
+
+
+- Es wäre gut, wenn der StandardStatementPresenter noch eine Kolonne "year", noch welcher auch sortiert ist
+  die sortierung über adsh alleine ermöglicht keine sauber sortierung pro jahr
+  man könnte hierfür auch das report year aus sub verwenden
+
+- Pipelines: einfaches Konzept um Standard Flows zu kapseln
+  z.B. Collector als Input bis zur Presentation
+  -> z.B. für selektierte ciks daten so aufbereiten, dass sie alle vorhandenen Jahre in Spalten angezeigt werden
+
+- transform methode, z.b. um zu homogenisieren
+
+- update des config files
+  fehlende Inhalte müssen gesetzt und auf default gesetzt werden, oder?
+  überflüssige Inhalte müssen entfernt werden
+  -> Im Moment noch nicht notwendig -> würde erst notwendig, falls
+     Optionen nicht mehr benützt werden
+
+- in company collector -> eine sicht für sämtlich Jahre zeigen -> mit Jahren als spalten, aber
+   - versuchen die selben Tags zu zeigen, notfalls mit null...
+   - reihenfolge könnte ein problem sein
 
 - - warning, falls daten nicht indexiert sind
     -> Hinweis Message beim Laden der Config
     -> config for autocheck to download / autodownload
 
-
-check notebook link
--> issue
+- using sourcery ai to improve code
+  -> see PR in Fork https://github.com/pikki622/sec-fincancial-statement-data-set/pulls
 
 later
 -build timeline for company
 -correct quarter naming -> was meine ich damit?
--parquet support
 -db-version for updates
 
 features
@@ -36,7 +75,13 @@ features
 
 build, release & docu
 - coverage report padge
-- release to readthedocs
+
+
+
+Checkout für Visualisierung
+- https://gist.github.com/mwouts/a2de16feb90d33fd89334fb09f62742f
+- https://www.linkedin.com/pulse/interactive-dataframes-jupyter-google-colab-vs-code-pycharm-wouts/?trk=articles_directory
+- https://pbpython.com/dataframe-gui-overview.html
 
 
 Ideen
@@ -49,6 +94,4 @@ Ideen
 look at
 -------
 - https://pypi.org/project/edgartools/1.6.0/
-
-
 

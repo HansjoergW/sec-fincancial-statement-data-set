@@ -5,7 +5,9 @@ using pathos.multiprocessing instead of multiprocessing, so that method function
 -> pypi.org "pathos"
 """
 
+import concurrent.futures
 import logging
+from abc import ABC, abstractmethod
 from time import time, sleep
 from typing import Generic, TypeVar, List, Callable, Optional, Tuple
 
@@ -17,7 +19,7 @@ PT = TypeVar("PT")  # processed type of the list to split
 OT = TypeVar("OT")  # PostProcessed Type
 
 
-class ParallelExecutor(Generic[IT, PT, OT]):
+class ParallelExecutorBase(Generic[IT, PT, OT], ABC):
     """
     this helper class supports in parallel processing of entries that are provided
     as a list, for instance to     download and process data.. like downloading and
@@ -77,11 +79,16 @@ class ParallelExecutor(Generic[IT, PT, OT]):
             else:
                 self.min_roundtrip_time = float(processes) / max_calls_per_sec
 
-        self.pool = Pool(self.processes)
-
         self.get_entries_function: Optional[Callable[[], List[IT]]] = None
         self.process_element_function: Optional[Callable[[IT], PT]] = None
         self.post_process_chunk_function: Optional[Callable[[List[PT]], List[OT]]] = None
+
+        if len(logging.root.handlers) > 0:
+            formatter = logging.root.handlers[0].formatter
+            # Get the format string of the formatter
+            self.format_string = formatter._fmt
+        else:
+            self.format_string = "%(asctime)s [%(levelname)s] %(module)s  %(message)s"
 
     def set_get_entries_function(self, get_entries: Callable[[], List[IT]]):
         """
@@ -126,13 +133,21 @@ class ParallelExecutor(Generic[IT, PT, OT]):
 
         return result
 
+    def _process_throttled_parallel(self, data: IT) -> PT:
+        logger = logging.getLogger()
+        if not logger.hasHandlers():
+            logger.setLevel(logging.INFO)
+            handler = logging.StreamHandler()
+            handler.setFormatter(logging.Formatter(self.format_string))
+            logger.addHandler(handler)
+        return self._process_throttled(data)
+
+    @abstractmethod
     def _execute_parallel(self, chunk: List[IT]) -> List[PT]:
-        return self.pool.map(self._process_throttled, chunk)
+        pass
 
     def _execute_serial(self, chunk: List[IT]) -> List[PT]:
-        results: List[PT] = []
-        for entry in chunk:
-            results.append(self._process_throttled(entry))
+        results: List[PT] = [self._process_throttled(entry) for entry in chunk]
         return results
 
     def execute(self) -> Tuple[List[OT], List[IT]]:
@@ -147,11 +162,13 @@ class ParallelExecutor(Generic[IT, PT, OT]):
         last_missing = None
         missing: List[IT] = self.get_entries_function()
         result_list: List[OT] = []
+        if len(missing) == 0:
+            return [], []
 
         # we retry as long as we were able to process additional entries with in the while loop.
         while (last_missing is None) or (last_missing > len(missing)):
             last_missing = len(missing)
-            logging.info("%smissing entries %d", self.intend, len(missing))
+            logging.info("%sitems to process: %d", self.intend, len(missing))
 
             # break up the list of missing entries in chunks and process every chunk in parallel
             chunk_entries = self.chunksize
@@ -177,5 +194,26 @@ class ParallelExecutor(Generic[IT, PT, OT]):
             # call get_entries_function again to check whether there have been
             # entries that couldn't be processed
             missing = self.get_entries_function()
+            if len(missing) == 0:
+                break
 
         return result_list, missing
+
+
+class ParallelExecutor(ParallelExecutorBase[IT, PT, OT]):
+    """
+    Parallel executor that uses multiprocess package to parallelize
+    """
+    def _execute_parallel(self, chunk: List[IT]) -> List[PT]:
+        with Pool(self.processes) as pool:
+            return pool.map(self._process_throttled_parallel, chunk)
+
+
+class ThreadExecutor(ParallelExecutorBase[IT, PT, OT]):
+    """
+    Parallel exector that uses Threads to parallelize
+    """
+    def _execute_parallel(self, chunk: List[IT]) -> List[PT]:
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            # Herunterladen der Dateien parallel
+            return list(executor.map(self._process_throttled_parallel, chunk))

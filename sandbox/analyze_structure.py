@@ -2,7 +2,7 @@ from secfsdstools.e_collector.zipcollecting import ZipCollector
 from secfsdstools.e_filter.rawfiltering import ReportPeriodRawFilter, MainCoregFilter
 from secfsdstools.f_standardize.bs_standardize import BalanceSheetStandardizerOld, BalanceSheetStandardizer
 
-
+import pandas as pd
 
 
 if __name__ == '__main__':
@@ -15,7 +15,7 @@ if __name__ == '__main__':
 
     # standardizer = BalanceSheetStandardizerOld()
     # df = standardizer.standardize(fs_df, only_return_main_coreg=True, filter_for_main_report=True)
-    standardizer = BalanceSheetStandardizer()
+    standardizer = BalanceSheetStandardizer(calculate_pre_stats=True)
     df = standardizer.standardize(fs_df, filter_for_main_report=True)
 
     #  hier wäare so eine art statistik gut, we sieht die sitatuion vor dem bereinigen aus,
@@ -40,6 +40,13 @@ if __name__ == '__main__':
     print(len(missing_assets))
     print(len(fs_df.adsh.unique()))
     print(fs_df.columns)
+
+    # standardizer.pre_stats.name="pre"
+    # pre_stats_df = pd.DataFrame(standardizer.pre_stats)
+    # standardizer.post_stats.name="post"
+    # joined_df = pre_stats_df.join(standardizer.post_stats)
+    # joined_df['reduction'] = 1 - (joined_df.post / joined_df.pre)
+    # print(joined_df)
 
 
 

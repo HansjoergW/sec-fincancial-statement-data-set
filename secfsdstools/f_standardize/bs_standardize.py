@@ -1,6 +1,6 @@
 from abc import ABC
 from abc import abstractmethod
-from typing import Dict, List, Tuple
+from typing import Dict, List, Tuple, Optional
 
 import numpy as np
 import pandas as pd
@@ -21,6 +21,18 @@ class Rule(ABC):
         self.apply(df, self.mask(df))
 
 
+class RuleGroup:
+    """ to add -> automatische vergabe von Rule ID bezüglich Gruppe"""
+
+    def __init__(self, rules: List[Rule], prefix: str):
+        self.rules = rules
+        self.prefix = prefix
+
+    def apply(self, df: pd.DataFrame):
+        for rule in self.rules:
+            rule.process(df)
+
+
 class RenameRule(Rule):
 
     def __init__(self, original: str, target: str):
@@ -35,17 +47,22 @@ class RenameRule(Rule):
 
 
 class BalanceSheetStandardizer:
-    rename_rules: List[RenameRule] = [
-        RenameRule(original='AssetsNet', target='Assets'),
-        RenameRule(
-            original='StockholdersEquityIncludingPortionAttributableToNoncontrollingInterest',
-            target='Equity'),
-        RenameRule(original='PartnersCapital', target='Equity'),
-        RenameRule(original='StockholdersEquity', target='Equity'),
-        RenameRule(original='CashAndCashEquivalentsAtCarryingValue', target='Cash'),
-        RenameRule(original='RetainedEarningsAppropriated', target='RetainedEarnings'),
-        RenameRule(original='RetainedEarningsAccumulatedDeficit', target='RetainedEarnings')
-    ]
+    """wichtig, nur für main optimiert, nicht für coregs"""
+
+    bs_rename_rg = RuleGroup(
+        rules=[
+            RenameRule(original='AssetsNet', target='Assets'),
+            RenameRule(
+                original='StockholdersEquityIncludingPortionAttributableToNoncontrollingInterest',
+                target='Equity'),
+            RenameRule(original='PartnersCapital', target='Equity'),
+            RenameRule(original='StockholdersEquity', target='Equity'),
+            RenameRule(original='CashAndCashEquivalentsAtCarryingValue', target='Cash'),
+            RenameRule(original='RetainedEarningsAppropriated', target='RetainedEarnings'),
+            RenameRule(original='RetainedEarningsAccumulatedDeficit', target='RetainedEarnings')
+        ],
+        prefix="BS_RN"
+    )
 
     # these are the columns that finally are returned after the standardization
     final_tags: List[str] = ['Assets', 'AssetsCurrent', 'AssetsNoncurrent',
@@ -56,29 +73,82 @@ class BalanceSheetStandardizer:
                              'RetainedEarnings'
                              ]
 
+    # these are the relevant tags that we need to calculate missing values
+    calculation_tags: List[str] = ['Assets', 'AssetsCurrent', 'AssetsNoncurrent',
+                                   'Liabilities', 'LiabilitiesCurrent', 'LiabilitiesNoncurrent',
+                                   'Equity',
+                                   'InventoryNet',
+                                   'Cash',
+                                   'CashOther',
+                                   'RetainedEarnings',
+                                   'LiabilitiesAndStockholdersEquity'
+                                   ]
+
+    final_col_order = ['adsh', 'coreg', 'report', 'ddate'] + final_tags
+
+    def __init__(self, calculate_pre_stats: bool = False):
+        self.calculate_pre_stats: bool = calculate_pre_stats
+        self.pre_stats: Optional[pd.Series] = None
+        self.post_stats: Optional[pd.Series] = None
+        self.stats: Optional[pd.DataFrame] = None
+
     def standardize(self, df: pd.DataFrame, filter_for_main_report: bool = False) -> pd.DataFrame:
         cpy_df = df[['adsh', 'coreg', 'tag', 'version', 'ddate', 'uom', 'value', 'report', 'line',
                      'negating']].copy()
 
-        self._apply_rules(cpy_df, self.rename_rules)
+        self.bs_rename_rg.apply(cpy_df)
 
-        # wann muss negating berücksichtigt werden -> nach dem pivot fliegt es raus!
+        # todo: wann muss negating berücksichtigt werden -> nach dem pivot fliegt es raus!
 
-        if calculate_pre_stats:
-            pivot_df = self._pivot(df=cpy_df, mit final list)
+        if self.calculate_pre_stats:
+            pre_pivot_df = self._pivot(df=cpy_df)[self.final_col_order]
+            if filter_for_main_report:
+                pre_pivot_df = self._filter_pivot_for_main_reports(pre_pivot_df)
+            self.pre_stats = self._calculate_stats(pivot_df=pre_pivot_df)
+            self.pre_stats.name = "pre"
+
 
         # pivot the table, so that the tags are now columns
-        pivot_df = self._pivot(df=cpy_df, mit relevant list)
+        pivot_df = self._pivot(df=cpy_df)
 
-        calculate post stats
+        if filter_for_main_report:
+            pivot_df = self._filter_pivot_for_main_reports(pivot_df)
+
+        # create a meaningful order
+        pivot_df = pivot_df[self.final_col_order].copy()
+
+        self.post_stats = self._calculate_stats(pivot_df=pivot_df)
+        self.post_stats.name = "post"
+
+        self.stats = pd.DataFrame(self.post_stats)
+        if self.calculate_pre_stats:
+            self.stats = self.stats.join(self.pre_stats)
+            self.stats['reduction'] = 1 - (self.stats.post / self.stats.pre)
 
         return pivot_df
+
+    def _filter_pivot_for_main_reports(self, pivot_df: pd.DataFrame):
+        pivot_df['nan_count'] = pivot_df[
+            BalanceSheetStandardizerOld.main_columns].isna().sum(
+            axis=1)
+        pivot_df.sort_values(['adsh', 'coreg', 'nan_count'], inplace=True)
+        pivot_df = pivot_df.groupby(['adsh', 'coreg']).last()
+        pivot_df.reset_index(inplace=True)
+        return pivot_df
+
+    def _calculate_stats(self, pivot_df: pd.DataFrame) -> pd.DataFrame:
+        return pivot_df[self.final_tags].isna().sum(axis=0)
 
     def _apply_rules(self, df: pd.DataFrame, rules: List[Rule]):
         for rule in rules:
             rule.process(df)
 
     def _pivot(self, df: pd.DataFrame) -> pd.DataFrame:
+
+        # todo: um pivot zu optimieren, sollten zuerst nur die Tags gefiltert werden,
+        # welche tatsächlich auch benützt werden, alles andere sollte herausgefiltert werden
+        # das müsste über die Regeln geschehen und sollte automatisch berechnet werden sollen.
+
         # it is possible, that the same number appears multiple times in different lines,
         # therefore, duplicates have to be removed, otherwise pivot is not possible
         relevant_df = df[['adsh', 'coreg', 'report', 'tag', 'value', 'ddate']].drop_duplicates()
@@ -95,7 +165,7 @@ class BalanceSheetStandardizer:
                                      columns='tag',
                                      values='value')
         pivot_df.reset_index(inplace=True)
-        missing_cols = set(BalanceSheetStandardizer.final_tags) - set(pivot_df.columns)
+        missing_cols = set(BalanceSheetStandardizer.calculation_tags) - set(pivot_df.columns)
         for missing_col in missing_cols:
             pivot_df[missing_col] = np.nan
 
@@ -107,7 +177,6 @@ class BalanceSheetStandardizer:
 # pivot run without applying any rules, just pivot and return the desired colums,
 # or just the basic renaming ...
 # but without going for changing default names
-
 
 class BalanceSheetStandardizerOld:
     rename_map: Dict[str, str] = {
@@ -167,8 +236,9 @@ class BalanceSheetStandardizerOld:
                     filter_for_main_report: bool = False) -> pd.DataFrame:
 
         # todo: wann muss negating berücksichtigt werden?
-        cpy_df = df[['adsh', 'coreg', 'tag', 'version', 'ddate', 'uom', 'value', 'report', 'line',
-                     'negating']].copy()
+        cpy_df = df[
+            ['adsh', 'coreg', 'tag', 'version', 'ddate', 'uom', 'value', 'report', 'line',
+             'negating']].copy()
 
         cpy_df.loc[cpy_df['coreg'].isna(), 'coreg'] = ''
 
@@ -196,14 +266,15 @@ class BalanceSheetStandardizerOld:
 
         # check if only the main BS report shall be returned
         if filter_for_main_report:
-            pivot_df['nan_count'] = pivot_df[BalanceSheetStandardizerOld.main_columns].isna().sum(
+            pivot_df['nan_count'] = pivot_df[
+                BalanceSheetStandardizerOld.main_columns].isna().sum(
                 axis=1)
             pivot_df.sort_values(['adsh', 'coreg', 'nan_count'], inplace=True)
             pivot_df = pivot_df.groupby(['adsh', 'coreg']).last()
             pivot_df.reset_index(inplace=True)
 
         # create a meaningful order
-        col_order = ['adsh', 'coreg', 'report', 'ddate'] + BalanceSheetStandardizer.final_tags
+        col_order = ['adsh', 'coreg', 'report', 'ddate'] + BalanceSheetStandardizerOld.final_tags
         return pivot_df[col_order].copy()
 
     def rename_tags(self, df: pd.DataFrame):
@@ -250,7 +321,8 @@ class BalanceSheetStandardizerOld:
 
         return pivot_df
 
-    def _basic_sum_completion(self, df: pd.DataFrame, total: str, summand_1: str, summand_2: str):
+    def _basic_sum_completion(self, df: pd.DataFrame, total: str, summand_1: str,
+                              summand_2: str):
         """
             calculates missing summaries total = summand_1 + summand_2, if one of them is missing
         """
@@ -281,7 +353,8 @@ class BalanceSheetStandardizerOld:
             summand_1 = summands[0]
             summand_2 = summands[1]
 
-            self._basic_sum_completion(df, total=total, summand_1=summand_1, summand_2=summand_2)
+            self._basic_sum_completion(df, total=total, summand_1=summand_1,
+                                       summand_2=summand_2)
 
     def fill_still_isna_summands(self, df: pd.DataFrame):
         """ if we are left with unset summands"""
@@ -319,7 +392,8 @@ class BalanceSheetStandardizerOld:
         Special rules which help to complete the information
         """
 
-        self._basic_sum_completion(df, total='Assets', summand_1='Liabilities', summand_2='Equity')
+        self._basic_sum_completion(df, total='Assets', summand_1='Liabilities',
+                                   summand_2='Equity')
 
         # actually, LiabilitiesAndStockholdersEquity should have the same value as Assets
         self._basic_sum_completion(df, total='LiabilitiesAndStockholdersEquity',

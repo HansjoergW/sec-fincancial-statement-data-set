@@ -1,6 +1,6 @@
 from abc import ABC
 from abc import abstractmethod
-from typing import Dict, List, Tuple, Optional
+from typing import Dict, List, Tuple, Optional, Set
 
 import numpy as np
 import pandas as pd
@@ -17,12 +17,25 @@ class Rule(ABC):
     def apply(self, df: pd.DataFrame, mask: pa.typing.Series[bool]):
         pass
 
+    @abstractmethod
+    def get_input_tags(self) -> Set[str]:
+        pass
+
+    @abstractmethod
+    def get_target_tag(self) -> str:
+        pass
+
     def process(self, df: pd.DataFrame):
         self.apply(df, self.mask(df))
 
 
 class RuleGroup:
-    """ to add -> automatische vergabe von Rule ID bezüglich Gruppe"""
+    """
+    to add -> automatische vergabe von Rule ID bezüglich Gruppe
+    Alle Regeln müssten eigentlich vom selben Typ sein
+    Müsste man also auf den konkreten Rule Typ typisieren.
+
+    """
 
     def __init__(self, rules: List[Rule], prefix: str):
         self.rules = rules
@@ -31,6 +44,16 @@ class RuleGroup:
     def apply(self, df: pd.DataFrame):
         for rule in self.rules:
             rule.process(df)
+
+    def get_input_tags(self) -> Set[str]:
+        result: Set[str] = set()
+        for rule in self.rules:
+            result.update(rule.get_input_tags())
+        return result
+
+    # todo: not sure if that one is really needed
+    def get_target_tag(self) -> str:
+        return self.rules[0].get_target_tag()
 
 
 class RenameRule(Rule):
@@ -44,6 +67,107 @@ class RenameRule(Rule):
 
     def apply(self, df: pd.DataFrame, mask: pa.typing.Series[bool]):
         df.loc[mask, 'tag'] = self.target
+
+    def get_input_tags(self) -> Set[str]:
+        return {self.original}
+
+    def get_target_tag(self) -> str:
+        return self.target
+
+
+class SumUpRule(Rule):
+    """ pre pivot rule
+    Summarizes the value of multiple tags into a new tag"""
+
+    def __init__(self, target_tag: str, tags_to_sumup: List[str]):
+        self.target_tag = target_tag
+        self.tags_to_sumup = tags_to_sumup
+
+    def get_input_tags(self) -> Set[str]:
+        result = {self.target_tag}
+        result.update(self.tags_to_sumup)
+        return result
+
+    def get_target_tag(self) -> str:
+        return self.target_tag
+
+    def mask(self, df: pd.DataFrame) -> pa.typing.Series[bool]:
+        return None
+
+    def apply(self, df: pd.DataFrame, mask: pa.typing.Series[bool]):
+        result_df = df[df.tag.isin(self.tags_to_sumup)] \
+            [['adsh', 'coreg', 'report', 'ddate', 'value']] \
+            .groupby(['adsh', 'coreg', 'report', 'ddate']).sum().reset_index()
+        result_df['tag'] = self.target_tag
+        result_df['line'] = 0
+        result_df['negating'] = 0
+        result_df['uom'] = ''
+        result_df['version'] = ''
+
+
+
+maybe sum is rather a group of Sum Rules.. like
+complete Sum, complete summand1, complete summand2
+schlussendlich sind es 3 mal mask und apply..
+schreit fast nach einer Gruppe, die entsprechend erstellt wird,
+das wäre dann eine
+
+missing sum rule (sum_tag; summands_tag: list)
+missing summand rule (sum_tag, missing_summand: str, existing_summands: list)
+
+
+# def _basic_sum_completion(self, df: pd.DataFrame, total: str, summand_1: str,
+#                           summand_2: str):
+#     """
+#         calculates missing summaries total = summand_1 + summand_2, if one of them is missing
+#     """
+#
+#     mask_total_sum1_nosum2 = (~df[total].isna() &
+#                               ~df[summand_1].isna() &
+#                               df[summand_2].isna())
+#     df.loc[mask_total_sum1_nosum2, summand_2] = df[total] - df[summand_1]
+#
+#     mask_total_nosum1_sum2 = (~df[total].isna() &
+#                               df[summand_1].isna() &
+#                               ~df[summand_2].isna())
+#     df.loc[mask_total_nosum1_sum2, summand_1] = df[total] - df[summand_2]
+#
+#     mask_nototal_sum1_sum2 = (df[total].isna() &
+#                               ~df[summand_1].isna() &
+#                               ~df[summand_2].isna())
+#     df.loc[mask_nototal_sum1_sum2, total] = df[summand_1] + df[summand_2]
+#
+# def complete_sums(self, df: pd.DataFrame):
+#     """ completes sum definitions:
+#         eg. Assets = 'AssetsCurrent' + 'AssetsNoncurrent'
+#         if Assets and AssetsCurrent is present -> calculate AssetsNoncurrent
+#         if Assets and AssetsNoncurrent is present -> calculate AssetsCurrent
+#         if AssetsNoncurrent and AssetsCurrent are present, calculate Assets
+#     """
+#     for total, summands in BalanceSheetStandardizerOld.sum_definition.items():
+#         summand_1 = summands[0]
+#         summand_2 = summands[1]
+#
+#         self._basic_sum_completion(df, total=total, summand_1=summand_1,
+#                                    summand_2=summand_2)
+class SumCompletionRule(Rule):
+    """
+    completes the missing value of a simple addition, if one is missing.
+    E.G Assets = AssetsCurrent + AssetsNoneCurrent
+    """
+
+    def __init__(self, sum_tag: str, summand_1_tag: str, summand_2_tag: str):
+        self.sum_tag = sum_tag
+        self.summand_1_tag = summand_1_tag
+        self.summand_2_tag = summand_2_tag
+
+    def get_input_tags(self) -> Set[str]:
+        return {self.sum_tag, self.summand_1_tag, self.summand_2_tag}
+
+    def get_target_tag(self) -> str:
+        # todo: not correct in this case, since also the summands could be target tags..
+        return self.sum_tag
+
 
 
 class BalanceSheetStandardizer:
@@ -64,12 +188,25 @@ class BalanceSheetStandardizer:
         prefix="BS_RN"
     )
 
+    # todo: CashOther wird noch nirgends verwendet
+    bs_sumup_rg = RuleGroup(
+        rules=[SumUpRule(target_tag='CashOther',
+                         tags_to_sumup=[
+                             'CashAndCashEquivalentsAtFairValue',
+                             'CashAndDueFromBanks',
+                             'CashCashEquivalentsAndFederalFundsSold',
+                             'RestrictedCashAndCashEquivalentsAtCarryingValue',
+                             'CashAndCashEquivalentsInForeignCurrencyAtCarryingValue'])],
+        prefix="BS_SU"
+    )
+
     # these are the columns that finally are returned after the standardization
     final_tags: List[str] = ['Assets', 'AssetsCurrent', 'AssetsNoncurrent',
                              'Liabilities', 'LiabilitiesCurrent', 'LiabilitiesNoncurrent',
                              'Equity',
                              'InventoryNet',
                              'Cash',
+                             'CashOther',
                              'RetainedEarnings'
                              ]
 
@@ -86,32 +223,36 @@ class BalanceSheetStandardizer:
 
     final_col_order = ['adsh', 'coreg', 'report', 'ddate'] + final_tags
 
-    def __init__(self, calculate_pre_stats: bool = False):
+    def __init__(self, calculate_pre_stats: bool = False, filter_for_main_report: bool = False):
         self.calculate_pre_stats: bool = calculate_pre_stats
+        self.filter_for_main_report = filter_for_main_report
         self.pre_stats: Optional[pd.Series] = None
         self.post_stats: Optional[pd.Series] = None
         self.stats: Optional[pd.DataFrame] = None
 
-    def standardize(self, df: pd.DataFrame, filter_for_main_report: bool = False) -> pd.DataFrame:
+    def standardize(self, df: pd.DataFrame, ) -> pd.DataFrame:
         cpy_df = df[['adsh', 'coreg', 'tag', 'version', 'ddate', 'uom', 'value', 'report', 'line',
                      'negating']].copy()
 
+        # apply rename_rules
         self.bs_rename_rg.apply(cpy_df)
 
         # todo: wann muss negating berücksichtigt werden -> nach dem pivot fliegt es raus!
-
         if self.calculate_pre_stats:
             pre_pivot_df = self._pivot(df=cpy_df)[self.final_col_order]
-            if filter_for_main_report:
+            if self.filter_for_main_report:
                 pre_pivot_df = self._filter_pivot_for_main_reports(pre_pivot_df)
             self.pre_stats = self._calculate_stats(pivot_df=pre_pivot_df)
             self.pre_stats.name = "pre"
 
 
+        # apply other pre-pivot_rules
+        self.bs_sumup_rg.apply(cpy_df)
+
         # pivot the table, so that the tags are now columns
         pivot_df = self._pivot(df=cpy_df)
 
-        if filter_for_main_report:
+        if self.filter_for_main_report:
             pivot_df = self._filter_pivot_for_main_reports(pivot_df)
 
         # create a meaningful order
@@ -120,9 +261,12 @@ class BalanceSheetStandardizer:
         self.post_stats = self._calculate_stats(pivot_df=pivot_df)
         self.post_stats.name = "post"
 
+        total = len(pivot_df)
         self.stats = pd.DataFrame(self.post_stats)
+        self.stats['post_rel'] = self.stats.post / total
         if self.calculate_pre_stats:
             self.stats = self.stats.join(self.pre_stats)
+            self.stats['pre_rel'] = self.stats.pre / total
             self.stats['reduction'] = 1 - (self.stats.post / self.stats.pre)
 
         return pivot_df
@@ -144,7 +288,6 @@ class BalanceSheetStandardizer:
             rule.process(df)
 
     def _pivot(self, df: pd.DataFrame) -> pd.DataFrame:
-
         # todo: um pivot zu optimieren, sollten zuerst nur die Tags gefiltert werden,
         # welche tatsächlich auch benützt werden, alles andere sollte herausgefiltert werden
         # das müsste über die Regeln geschehen und sollte automatisch berechnet werden sollen.

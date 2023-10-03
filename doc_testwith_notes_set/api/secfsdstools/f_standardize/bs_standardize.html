@@ -28,14 +28,28 @@
 </summary>
 <pre><code class="python">from abc import ABC
 from abc import abstractmethod
-from typing import Dict, List, Tuple, Optional
+from typing import Dict, List, Tuple, Optional, Set
 
 import numpy as np
 import pandas as pd
 import pandera as pa
 
 
-class Rule(ABC):
+class RuleEntity(ABC):
+
+    @abstractmethod
+    def get_input_tags(self) -&gt; Set[str]:
+        pass
+
+    def process(self, df: pd.DataFrame):
+        pass
+
+
+class Rule(RuleEntity):
+
+    @abstractmethod
+    def get_target_tag(self) -&gt; str:
+        pass
 
     @abstractmethod
     def mask(self, df: pd.DataFrame) -&gt; pa.typing.Series[bool]:
@@ -49,16 +63,26 @@ class Rule(ABC):
         self.apply(df, self.mask(df))
 
 
-class RuleGroup:
-    &#34;&#34;&#34; to add -&gt; automatische vergabe von Rule ID bezüglich Gruppe&#34;&#34;&#34;
+class RuleGroup(RuleEntity):
+    &#34;&#34;&#34;
+    todo: to add -&gt; automatische vergabe von Rule ID bezüglich Gruppe
+    Alle Regeln müssten eigentlich vom selben Typ sein
+    Müsste man also auf den konkreten Rule Typ typisieren.
+    &#34;&#34;&#34;
 
-    def __init__(self, rules: List[Rule], prefix: str):
+    def __init__(self, rules: List[RuleEntity], prefix: str):
         self.rules = rules
         self.prefix = prefix
 
-    def apply(self, df: pd.DataFrame):
+    def process(self, df: pd.DataFrame):
         for rule in self.rules:
             rule.process(df)
+
+    def get_input_tags(self) -&gt; Set[str]:
+        result: Set[str] = set()
+        for rule in self.rules:
+            result.update(rule.get_input_tags())
+        return result
 
 
 class RenameRule(Rule):
@@ -68,10 +92,90 @@ class RenameRule(Rule):
         self.target = target
 
     def mask(self, df: pd.DataFrame) -&gt; pa.typing.Series[bool]:
-        return (df.tag == self.original)
+        return (df[self.target].isna() &amp;
+                ~df[self.original].isna())
 
     def apply(self, df: pd.DataFrame, mask: pa.typing.Series[bool]):
-        df.loc[mask, &#39;tag&#39;] = self.target
+        df.loc[mask, self.target] = df[self.original]
+
+    def get_input_tags(self) -&gt; Set[str]:
+        return {self.target, self.original}
+
+    def get_target_tag(self) -&gt; str:
+        return self.target
+
+
+class MissingSumRule(Rule):
+
+    def __init__(self, sum_name: str, summand_names: List[str]):
+        self.sum_name = sum_name
+        self.summand_names = summand_names
+
+    def get_target_tag(self) -&gt; str:
+        return self.sum_name
+
+    def get_input_tags(self) -&gt; Set[str]:
+        result = {self.sum_name}
+        result.update(self.summand_names)
+        return result
+
+    def mask(self, df: pd.DataFrame) -&gt; pa.typing.Series[bool]:
+        # sum_name has to be not set and all summand_names have to be set
+        mask = df[self.sum_name].isna()
+        for summand_name in self.summand_names:
+            mask = mask &amp; ~df[summand_name].isna()
+
+        return mask
+
+    def apply(self, df: pd.DataFrame, mask: pa.typing.Series[bool]):
+        df.loc[mask, self.sum_name] = df[self.summand_names].sum(axis=1)
+
+
+class MissingSummandRule(Rule):
+
+    def __init__(self, sum_name: str, missing_summand: str, existing_summands: List[str]):
+        self.sum_name = sum_name
+        self.missing_summand = missing_summand
+        self.existing_summands = existing_summands
+
+    def get_target_tag(self) -&gt; str:
+        return self.missing_summand
+
+    def get_input_tags(self) -&gt; Set[str]:
+        result = {self.sum_name, self.missing_summand}
+        result.update(self.existing_summands)
+        return result
+
+    def mask(self, df: pd.DataFrame) -&gt; pa.typing.Series[bool]:
+        # sum and other_summands must be set, missing_summand must not be set
+        mask = ~df[self.sum_name].isna()
+        for summand_name in self.existing_summands:
+            mask = mask &amp; ~df[summand_name].isna()
+        mask = mask &amp; df[self.missing_summand].isna()
+        return mask
+
+    def apply(self, df: pd.DataFrame, mask: pa.typing.Series[bool]):
+        df.loc[mask, self.missing_summand] = \
+            df[self.sum_name] - df[self.existing_summands].sum(axis=1)
+
+
+class SumCompletionRule(Rule):
+    &#34;&#34;&#34;
+    completes the missing value of a simple addition, if one is missing.
+    E.G Assets = AssetsCurrent + AssetsNoneCurrent
+    &#34;&#34;&#34;
+
+    def __init__(self, sum_tag: str, summand_1_tag: str, summand_2_tag: str):
+        self.sum_tag = sum_tag
+        self.summand_1_tag = summand_1_tag
+        self.summand_2_tag = summand_2_tag
+
+    def get_input_tags(self) -&gt; Set[str]:
+        return {self.sum_tag, self.summand_1_tag, self.summand_2_tag}
+
+    def get_target_tag(self) -&gt; str:
+        # todo: not correct in this case, since also the summands could be target tags..
+        return self.sum_tag
 
 
 class BalanceSheetStandardizer:
@@ -89,7 +193,20 @@ class BalanceSheetStandardizer:
             RenameRule(original=&#39;RetainedEarningsAppropriated&#39;, target=&#39;RetainedEarnings&#39;),
             RenameRule(original=&#39;RetainedEarningsAccumulatedDeficit&#39;, target=&#39;RetainedEarnings&#39;)
         ],
-        prefix=&#34;BS_RN&#34;
+        prefix=&#34;BR&#34;
+    )
+
+    # todo: CashOther wird noch nirgends verwendet
+    bs_sumup_rg = RuleGroup(
+        rules=[MissingSumRule(
+            sum_name=&#39;CashOther&#39;,
+            summand_names=[
+                &#39;CashAndCashEquivalentsAtFairValue&#39;,
+                &#39;CashAndDueFromBanks&#39;,
+                &#39;CashCashEquivalentsAndFederalFundsSold&#39;,
+                &#39;RestrictedCashAndCashEquivalentsAtCarryingValue&#39;,
+                &#39;CashAndCashEquivalentsInForeignCurrencyAtCarryingValue&#39;])],
+        prefix=&#34;SU&#34;
     )
 
     # these are the columns that finally are returned after the standardization
@@ -98,6 +215,7 @@ class BalanceSheetStandardizer:
                              &#39;Equity&#39;,
                              &#39;InventoryNet&#39;,
                              &#39;Cash&#39;,
+                             &#39;CashOther&#39;,
                              &#39;RetainedEarnings&#39;
                              ]
 
@@ -114,32 +232,43 @@ class BalanceSheetStandardizer:
 
     final_col_order = [&#39;adsh&#39;, &#39;coreg&#39;, &#39;report&#39;, &#39;ddate&#39;] + final_tags
 
-    def __init__(self, calculate_pre_stats: bool = False):
+    def __init__(self, calculate_pre_stats: bool = False, filter_for_main_report: bool = False):
         self.calculate_pre_stats: bool = calculate_pre_stats
+        self.filter_for_main_report = filter_for_main_report
         self.pre_stats: Optional[pd.Series] = None
         self.post_stats: Optional[pd.Series] = None
         self.stats: Optional[pd.DataFrame] = None
 
-    def standardize(self, df: pd.DataFrame, filter_for_main_report: bool = False) -&gt; pd.DataFrame:
-        cpy_df = df[[&#39;adsh&#39;, &#39;coreg&#39;, &#39;tag&#39;, &#39;version&#39;, &#39;ddate&#39;, &#39;uom&#39;, &#39;value&#39;, &#39;report&#39;, &#39;line&#39;,
-                     &#39;negating&#39;]].copy()
+        self.rule_tree = RuleGroup(prefix=&#34;BS_&#34;,
+                                   rules=[
+                                       self.bs_rename_rg,
+                                       self.bs_sumup_rg
+                                   ])
 
-        self.bs_rename_rg.apply(cpy_df)
+    def standardize(self, df: pd.DataFrame, ) -&gt; pd.DataFrame:
+        all_input_tags = self.rule_tree.get_input_tags()
+
+        cpy_df = df[[&#39;adsh&#39;, &#39;coreg&#39;, &#39;tag&#39;, &#39;version&#39;, &#39;ddate&#39;, &#39;uom&#39;, &#39;value&#39;, &#39;report&#39;, &#39;line&#39;,
+                     &#39;negating&#39;]][df.tag.isin(all_input_tags)].copy()
 
         # todo: wann muss negating berücksichtigt werden -&gt; nach dem pivot fliegt es raus!
-
-        if self.calculate_pre_stats:
-            pre_pivot_df = self._pivot(df=cpy_df)[self.final_col_order]
-            if filter_for_main_report:
-                pre_pivot_df = self._filter_pivot_for_main_reports(pre_pivot_df)
-            self.pre_stats = self._calculate_stats(pivot_df=pre_pivot_df)
-            self.pre_stats.name = &#34;pre&#34;
-
 
         # pivot the table, so that the tags are now columns
         pivot_df = self._pivot(df=cpy_df)
 
-        if filter_for_main_report:
+        if self.calculate_pre_stats:
+            pre_pivot_df = pivot_df[self.final_col_order]
+            if self.filter_for_main_report:
+                pre_pivot_df = self._filter_pivot_for_main_reports(pre_pivot_df)
+            self.pre_stats = self._calculate_stats(pivot_df=pre_pivot_df)
+            self.pre_stats.name = &#34;pre&#34;
+
+        # apply the rule_tree
+        self.rule_tree.process(pivot_df)
+
+        # todo: kann das auch ganz am anfang nach pivot gemacht werden? oder sollte man warten,
+        # bis alles berechnet ist, damit auch die berechneten werte zählen?
+        if self.filter_for_main_report:
             pivot_df = self._filter_pivot_for_main_reports(pivot_df)
 
         # create a meaningful order
@@ -148,9 +277,12 @@ class BalanceSheetStandardizer:
         self.post_stats = self._calculate_stats(pivot_df=pivot_df)
         self.post_stats.name = &#34;post&#34;
 
+        total = len(pivot_df)
         self.stats = pd.DataFrame(self.post_stats)
+        self.stats[&#39;post_rel&#39;] = self.stats.post / total
         if self.calculate_pre_stats:
             self.stats = self.stats.join(self.pre_stats)
+            self.stats[&#39;pre_rel&#39;] = self.stats.pre / total
             self.stats[&#39;reduction&#39;] = 1 - (self.stats.post / self.stats.pre)
 
         return pivot_df
@@ -172,7 +304,6 @@ class BalanceSheetStandardizer:
             rule.process(df)
 
     def _pivot(self, df: pd.DataFrame) -&gt; pd.DataFrame:
-
         # todo: um pivot zu optimieren, sollten zuerst nur die Tags gefiltert werden,
         # welche tatsächlich auch benützt werden, alles andere sollte herausgefiltert werden
         # das müsste über die Regeln geschehen und sollte automatisch berechnet werden sollen.
@@ -459,7 +590,7 @@ class BalanceSheetStandardizerOld:
 <dl>
 <dt id="secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizer"><code class="flex name class">
 <span>class <span class="ident">BalanceSheetStandardizer</span></span>
-<span>(</span><span>calculate_pre_stats: bool = False)</span>
+<span>(</span><span>calculate_pre_stats: bool = False, filter_for_main_report: bool = False)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>wichtig, nur für main optimiert, nicht für coregs</p></div>
@@ -482,7 +613,20 @@ class BalanceSheetStandardizerOld:
             RenameRule(original=&#39;RetainedEarningsAppropriated&#39;, target=&#39;RetainedEarnings&#39;),
             RenameRule(original=&#39;RetainedEarningsAccumulatedDeficit&#39;, target=&#39;RetainedEarnings&#39;)
         ],
-        prefix=&#34;BS_RN&#34;
+        prefix=&#34;BR&#34;
+    )
+
+    # todo: CashOther wird noch nirgends verwendet
+    bs_sumup_rg = RuleGroup(
+        rules=[MissingSumRule(
+            sum_name=&#39;CashOther&#39;,
+            summand_names=[
+                &#39;CashAndCashEquivalentsAtFairValue&#39;,
+                &#39;CashAndDueFromBanks&#39;,
+                &#39;CashCashEquivalentsAndFederalFundsSold&#39;,
+                &#39;RestrictedCashAndCashEquivalentsAtCarryingValue&#39;,
+                &#39;CashAndCashEquivalentsInForeignCurrencyAtCarryingValue&#39;])],
+        prefix=&#34;SU&#34;
     )
 
     # these are the columns that finally are returned after the standardization
@@ -491,6 +635,7 @@ class BalanceSheetStandardizerOld:
                              &#39;Equity&#39;,
                              &#39;InventoryNet&#39;,
                              &#39;Cash&#39;,
+                             &#39;CashOther&#39;,
                              &#39;RetainedEarnings&#39;
                              ]
 
@@ -507,32 +652,43 @@ class BalanceSheetStandardizerOld:
 
     final_col_order = [&#39;adsh&#39;, &#39;coreg&#39;, &#39;report&#39;, &#39;ddate&#39;] + final_tags
 
-    def __init__(self, calculate_pre_stats: bool = False):
+    def __init__(self, calculate_pre_stats: bool = False, filter_for_main_report: bool = False):
         self.calculate_pre_stats: bool = calculate_pre_stats
+        self.filter_for_main_report = filter_for_main_report
         self.pre_stats: Optional[pd.Series] = None
         self.post_stats: Optional[pd.Series] = None
         self.stats: Optional[pd.DataFrame] = None
 
-    def standardize(self, df: pd.DataFrame, filter_for_main_report: bool = False) -&gt; pd.DataFrame:
-        cpy_df = df[[&#39;adsh&#39;, &#39;coreg&#39;, &#39;tag&#39;, &#39;version&#39;, &#39;ddate&#39;, &#39;uom&#39;, &#39;value&#39;, &#39;report&#39;, &#39;line&#39;,
-                     &#39;negating&#39;]].copy()
+        self.rule_tree = RuleGroup(prefix=&#34;BS_&#34;,
+                                   rules=[
+                                       self.bs_rename_rg,
+                                       self.bs_sumup_rg
+                                   ])
 
-        self.bs_rename_rg.apply(cpy_df)
+    def standardize(self, df: pd.DataFrame, ) -&gt; pd.DataFrame:
+        all_input_tags = self.rule_tree.get_input_tags()
+
+        cpy_df = df[[&#39;adsh&#39;, &#39;coreg&#39;, &#39;tag&#39;, &#39;version&#39;, &#39;ddate&#39;, &#39;uom&#39;, &#39;value&#39;, &#39;report&#39;, &#39;line&#39;,
+                     &#39;negating&#39;]][df.tag.isin(all_input_tags)].copy()
 
         # todo: wann muss negating berücksichtigt werden -&gt; nach dem pivot fliegt es raus!
-
-        if self.calculate_pre_stats:
-            pre_pivot_df = self._pivot(df=cpy_df)[self.final_col_order]
-            if filter_for_main_report:
-                pre_pivot_df = self._filter_pivot_for_main_reports(pre_pivot_df)
-            self.pre_stats = self._calculate_stats(pivot_df=pre_pivot_df)
-            self.pre_stats.name = &#34;pre&#34;
-
 
         # pivot the table, so that the tags are now columns
         pivot_df = self._pivot(df=cpy_df)
 
-        if filter_for_main_report:
+        if self.calculate_pre_stats:
+            pre_pivot_df = pivot_df[self.final_col_order]
+            if self.filter_for_main_report:
+                pre_pivot_df = self._filter_pivot_for_main_reports(pre_pivot_df)
+            self.pre_stats = self._calculate_stats(pivot_df=pre_pivot_df)
+            self.pre_stats.name = &#34;pre&#34;
+
+        # apply the rule_tree
+        self.rule_tree.process(pivot_df)
+
+        # todo: kann das auch ganz am anfang nach pivot gemacht werden? oder sollte man warten,
+        # bis alles berechnet ist, damit auch die berechneten werte zählen?
+        if self.filter_for_main_report:
             pivot_df = self._filter_pivot_for_main_reports(pivot_df)
 
         # create a meaningful order
@@ -541,9 +697,12 @@ class BalanceSheetStandardizerOld:
         self.post_stats = self._calculate_stats(pivot_df=pivot_df)
         self.post_stats.name = &#34;post&#34;
 
+        total = len(pivot_df)
         self.stats = pd.DataFrame(self.post_stats)
+        self.stats[&#39;post_rel&#39;] = self.stats.post / total
         if self.calculate_pre_stats:
             self.stats = self.stats.join(self.pre_stats)
+            self.stats[&#39;pre_rel&#39;] = self.stats.pre / total
             self.stats[&#39;reduction&#39;] = 1 - (self.stats.post / self.stats.pre)
 
         return pivot_df
@@ -565,7 +724,6 @@ class BalanceSheetStandardizerOld:
             rule.process(df)
 
     def _pivot(self, df: pd.DataFrame) -&gt; pd.DataFrame:
-
         # todo: um pivot zu optimieren, sollten zuerst nur die Tags gefiltert werden,
         # welche tatsächlich auch benützt werden, alles andere sollte herausgefiltert werden
         # das müsste über die Regeln geschehen und sollte automatisch berechnet werden sollen.
@@ -598,6 +756,10 @@ class BalanceSheetStandardizerOld:
 <dd>
 <div class="desc"></div>
 </dd>
+<dt id="secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizer.bs_sumup_rg"><code class="name">var <span class="ident">bs_sumup_rg</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
 <dt id="secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizer.calculation_tags"><code class="name">var <span class="ident">calculation_tags</span> : List[str]</code></dt>
 <dd>
 <div class="desc"></div>
@@ -614,7 +776,7 @@ class BalanceSheetStandardizerOld:
 <h3>Methods</h3>
 <dl>
 <dt id="secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizer.standardize"><code class="name flex">
-<span>def <span class="ident">standardize</span></span>(<span>self, df: pandas.core.frame.DataFrame, filter_for_main_report: bool = False) ‑> pandas.core.frame.DataFrame</span>
+<span>def <span class="ident">standardize</span></span>(<span>self, df: pandas.core.frame.DataFrame) ‑> pandas.core.frame.DataFrame</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -622,26 +784,30 @@ class BalanceSheetStandardizerOld:
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def standardize(self, df: pd.DataFrame, filter_for_main_report: bool = False) -&gt; pd.DataFrame:
-    cpy_df = df[[&#39;adsh&#39;, &#39;coreg&#39;, &#39;tag&#39;, &#39;version&#39;, &#39;ddate&#39;, &#39;uom&#39;, &#39;value&#39;, &#39;report&#39;, &#39;line&#39;,
-                 &#39;negating&#39;]].copy()
+<pre><code class="python">def standardize(self, df: pd.DataFrame, ) -&gt; pd.DataFrame:
+    all_input_tags = self.rule_tree.get_input_tags()
 
-    self.bs_rename_rg.apply(cpy_df)
+    cpy_df = df[[&#39;adsh&#39;, &#39;coreg&#39;, &#39;tag&#39;, &#39;version&#39;, &#39;ddate&#39;, &#39;uom&#39;, &#39;value&#39;, &#39;report&#39;, &#39;line&#39;,
+                 &#39;negating&#39;]][df.tag.isin(all_input_tags)].copy()
 
     # todo: wann muss negating berücksichtigt werden -&gt; nach dem pivot fliegt es raus!
-
-    if self.calculate_pre_stats:
-        pre_pivot_df = self._pivot(df=cpy_df)[self.final_col_order]
-        if filter_for_main_report:
-            pre_pivot_df = self._filter_pivot_for_main_reports(pre_pivot_df)
-        self.pre_stats = self._calculate_stats(pivot_df=pre_pivot_df)
-        self.pre_stats.name = &#34;pre&#34;
-
 
     # pivot the table, so that the tags are now columns
     pivot_df = self._pivot(df=cpy_df)
 
-    if filter_for_main_report:
+    if self.calculate_pre_stats:
+        pre_pivot_df = pivot_df[self.final_col_order]
+        if self.filter_for_main_report:
+            pre_pivot_df = self._filter_pivot_for_main_reports(pre_pivot_df)
+        self.pre_stats = self._calculate_stats(pivot_df=pre_pivot_df)
+        self.pre_stats.name = &#34;pre&#34;
+
+    # apply the rule_tree
+    self.rule_tree.process(pivot_df)
+
+    # todo: kann das auch ganz am anfang nach pivot gemacht werden? oder sollte man warten,
+    # bis alles berechnet ist, damit auch die berechneten werte zählen?
+    if self.filter_for_main_report:
         pivot_df = self._filter_pivot_for_main_reports(pivot_df)
 
     # create a meaningful order
@@ -650,9 +816,12 @@ class BalanceSheetStandardizerOld:
     self.post_stats = self._calculate_stats(pivot_df=pivot_df)
     self.post_stats.name = &#34;post&#34;
 
+    total = len(pivot_df)
     self.stats = pd.DataFrame(self.post_stats)
+    self.stats[&#39;post_rel&#39;] = self.stats.post / total
     if self.calculate_pre_stats:
         self.stats = self.stats.join(self.pre_stats)
+        self.stats[&#39;pre_rel&#39;] = self.stats.pre / total
         self.stats[&#39;reduction&#39;] = 1 - (self.stats.post / self.stats.pre)
 
     return pivot_df</code></pre>
@@ -1181,6 +1350,219 @@ if AssetsNoncurrent and AssetsCurrent are present, calculate Assets</p></div>
 </dd>
 </dl>
 </dd>
+<dt id="secfsdstools.f_standardize.bs_standardize.MissingSumRule"><code class="flex name class">
+<span>class <span class="ident">MissingSumRule</span></span>
+<span>(</span><span>sum_name: str, summand_names: List[str])</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Helper class that provides a standard way to create an ABC using
+inheritance.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class MissingSumRule(Rule):
+
+    def __init__(self, sum_name: str, summand_names: List[str]):
+        self.sum_name = sum_name
+        self.summand_names = summand_names
+
+    def get_target_tag(self) -&gt; str:
+        return self.sum_name
+
+    def get_input_tags(self) -&gt; Set[str]:
+        result = {self.sum_name}
+        result.update(self.summand_names)
+        return result
+
+    def mask(self, df: pd.DataFrame) -&gt; pa.typing.Series[bool]:
+        # sum_name has to be not set and all summand_names have to be set
+        mask = df[self.sum_name].isna()
+        for summand_name in self.summand_names:
+            mask = mask &amp; ~df[summand_name].isna()
+
+        return mask
+
+    def apply(self, df: pd.DataFrame, mask: pa.typing.Series[bool]):
+        df.loc[mask, self.sum_name] = df[self.summand_names].sum(axis=1)</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="secfsdstools.f_standardize.bs_standardize.Rule" href="#secfsdstools.f_standardize.bs_standardize.Rule">Rule</a></li>
+<li><a title="secfsdstools.f_standardize.bs_standardize.RuleEntity" href="#secfsdstools.f_standardize.bs_standardize.RuleEntity">RuleEntity</a></li>
+<li>abc.ABC</li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="secfsdstools.f_standardize.bs_standardize.MissingSumRule.apply"><code class="name flex">
+<span>def <span class="ident">apply</span></span>(<span>self, df: pandas.core.frame.DataFrame, mask: pandera.typing.pandas.Series[bool])</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def apply(self, df: pd.DataFrame, mask: pa.typing.Series[bool]):
+    df.loc[mask, self.sum_name] = df[self.summand_names].sum(axis=1)</code></pre>
+</details>
+</dd>
+<dt id="secfsdstools.f_standardize.bs_standardize.MissingSumRule.get_input_tags"><code class="name flex">
+<span>def <span class="ident">get_input_tags</span></span>(<span>self) ‑> Set[str]</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_input_tags(self) -&gt; Set[str]:
+    result = {self.sum_name}
+    result.update(self.summand_names)
+    return result</code></pre>
+</details>
+</dd>
+<dt id="secfsdstools.f_standardize.bs_standardize.MissingSumRule.get_target_tag"><code class="name flex">
+<span>def <span class="ident">get_target_tag</span></span>(<span>self) ‑> str</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_target_tag(self) -&gt; str:
+    return self.sum_name</code></pre>
+</details>
+</dd>
+<dt id="secfsdstools.f_standardize.bs_standardize.MissingSumRule.mask"><code class="name flex">
+<span>def <span class="ident">mask</span></span>(<span>self, df: pandas.core.frame.DataFrame) ‑> pandera.typing.pandas.Series[bool]</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def mask(self, df: pd.DataFrame) -&gt; pa.typing.Series[bool]:
+    # sum_name has to be not set and all summand_names have to be set
+    mask = df[self.sum_name].isna()
+    for summand_name in self.summand_names:
+        mask = mask &amp; ~df[summand_name].isna()
+
+    return mask</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+<dt id="secfsdstools.f_standardize.bs_standardize.MissingSummandRule"><code class="flex name class">
+<span>class <span class="ident">MissingSummandRule</span></span>
+<span>(</span><span>sum_name: str, missing_summand: str, existing_summands: List[str])</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Helper class that provides a standard way to create an ABC using
+inheritance.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class MissingSummandRule(Rule):
+
+    def __init__(self, sum_name: str, missing_summand: str, existing_summands: List[str]):
+        self.sum_name = sum_name
+        self.missing_summand = missing_summand
+        self.existing_summands = existing_summands
+
+    def get_target_tag(self) -&gt; str:
+        return self.missing_summand
+
+    def get_input_tags(self) -&gt; Set[str]:
+        result = {self.sum_name, self.missing_summand}
+        result.update(self.existing_summands)
+        return result
+
+    def mask(self, df: pd.DataFrame) -&gt; pa.typing.Series[bool]:
+        # sum and other_summands must be set, missing_summand must not be set
+        mask = ~df[self.sum_name].isna()
+        for summand_name in self.existing_summands:
+            mask = mask &amp; ~df[summand_name].isna()
+        mask = mask &amp; df[self.missing_summand].isna()
+        return mask
+
+    def apply(self, df: pd.DataFrame, mask: pa.typing.Series[bool]):
+        df.loc[mask, self.missing_summand] = \
+            df[self.sum_name] - df[self.existing_summands].sum(axis=1)</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="secfsdstools.f_standardize.bs_standardize.Rule" href="#secfsdstools.f_standardize.bs_standardize.Rule">Rule</a></li>
+<li><a title="secfsdstools.f_standardize.bs_standardize.RuleEntity" href="#secfsdstools.f_standardize.bs_standardize.RuleEntity">RuleEntity</a></li>
+<li>abc.ABC</li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="secfsdstools.f_standardize.bs_standardize.MissingSummandRule.apply"><code class="name flex">
+<span>def <span class="ident">apply</span></span>(<span>self, df: pandas.core.frame.DataFrame, mask: pandera.typing.pandas.Series[bool])</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def apply(self, df: pd.DataFrame, mask: pa.typing.Series[bool]):
+    df.loc[mask, self.missing_summand] = \
+        df[self.sum_name] - df[self.existing_summands].sum(axis=1)</code></pre>
+</details>
+</dd>
+<dt id="secfsdstools.f_standardize.bs_standardize.MissingSummandRule.get_input_tags"><code class="name flex">
+<span>def <span class="ident">get_input_tags</span></span>(<span>self) ‑> Set[str]</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_input_tags(self) -&gt; Set[str]:
+    result = {self.sum_name, self.missing_summand}
+    result.update(self.existing_summands)
+    return result</code></pre>
+</details>
+</dd>
+<dt id="secfsdstools.f_standardize.bs_standardize.MissingSummandRule.get_target_tag"><code class="name flex">
+<span>def <span class="ident">get_target_tag</span></span>(<span>self) ‑> str</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_target_tag(self) -&gt; str:
+    return self.missing_summand</code></pre>
+</details>
+</dd>
+<dt id="secfsdstools.f_standardize.bs_standardize.MissingSummandRule.mask"><code class="name flex">
+<span>def <span class="ident">mask</span></span>(<span>self, df: pandas.core.frame.DataFrame) ‑> pandera.typing.pandas.Series[bool]</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def mask(self, df: pd.DataFrame) -&gt; pa.typing.Series[bool]:
+    # sum and other_summands must be set, missing_summand must not be set
+    mask = ~df[self.sum_name].isna()
+    for summand_name in self.existing_summands:
+        mask = mask &amp; ~df[summand_name].isna()
+    mask = mask &amp; df[self.missing_summand].isna()
+    return mask</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
 <dt id="secfsdstools.f_standardize.bs_standardize.RenameRule"><code class="flex name class">
 <span>class <span class="ident">RenameRule</span></span>
 <span>(</span><span>original: str, target: str)</span>
@@ -1199,14 +1581,22 @@ inheritance.</p></div>
         self.target = target
 
     def mask(self, df: pd.DataFrame) -&gt; pa.typing.Series[bool]:
-        return (df.tag == self.original)
+        return (df[self.target].isna() &amp;
+                ~df[self.original].isna())
 
     def apply(self, df: pd.DataFrame, mask: pa.typing.Series[bool]):
-        df.loc[mask, &#39;tag&#39;] = self.target</code></pre>
+        df.loc[mask, self.target] = df[self.original]
+
+    def get_input_tags(self) -&gt; Set[str]:
+        return {self.target, self.original}
+
+    def get_target_tag(self) -&gt; str:
+        return self.target</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li><a title="secfsdstools.f_standardize.bs_standardize.Rule" href="#secfsdstools.f_standardize.bs_standardize.Rule">Rule</a></li>
+<li><a title="secfsdstools.f_standardize.bs_standardize.RuleEntity" href="#secfsdstools.f_standardize.bs_standardize.RuleEntity">RuleEntity</a></li>
 <li>abc.ABC</li>
 </ul>
 <h3>Methods</h3>
@@ -1221,7 +1611,33 @@ inheritance.</p></div>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def apply(self, df: pd.DataFrame, mask: pa.typing.Series[bool]):
-    df.loc[mask, &#39;tag&#39;] = self.target</code></pre>
+    df.loc[mask, self.target] = df[self.original]</code></pre>
+</details>
+</dd>
+<dt id="secfsdstools.f_standardize.bs_standardize.RenameRule.get_input_tags"><code class="name flex">
+<span>def <span class="ident">get_input_tags</span></span>(<span>self) ‑> Set[str]</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_input_tags(self) -&gt; Set[str]:
+    return {self.target, self.original}</code></pre>
+</details>
+</dd>
+<dt id="secfsdstools.f_standardize.bs_standardize.RenameRule.get_target_tag"><code class="name flex">
+<span>def <span class="ident">get_target_tag</span></span>(<span>self) ‑> str</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_target_tag(self) -&gt; str:
+    return self.target</code></pre>
 </details>
 </dd>
 <dt id="secfsdstools.f_standardize.bs_standardize.RenameRule.mask"><code class="name flex">
@@ -1234,7 +1650,8 @@ inheritance.</p></div>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def mask(self, df: pd.DataFrame) -&gt; pa.typing.Series[bool]:
-    return (df.tag == self.original)</code></pre>
+    return (df[self.target].isna() &amp;
+            ~df[self.original].isna())</code></pre>
 </details>
 </dd>
 </dl>
@@ -1249,7 +1666,11 @@ inheritance.</p></div>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class Rule(ABC):
+<pre><code class="python">class Rule(RuleEntity):
+
+    @abstractmethod
+    def get_target_tag(self) -&gt; str:
+        pass
 
     @abstractmethod
     def mask(self, df: pd.DataFrame) -&gt; pa.typing.Series[bool]:
@@ -1264,11 +1685,15 @@ inheritance.</p></div>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
+<li><a title="secfsdstools.f_standardize.bs_standardize.RuleEntity" href="#secfsdstools.f_standardize.bs_standardize.RuleEntity">RuleEntity</a></li>
 <li>abc.ABC</li>
 </ul>
 <h3>Subclasses</h3>
 <ul class="hlist">
+<li><a title="secfsdstools.f_standardize.bs_standardize.MissingSumRule" href="#secfsdstools.f_standardize.bs_standardize.MissingSumRule">MissingSumRule</a></li>
+<li><a title="secfsdstools.f_standardize.bs_standardize.MissingSummandRule" href="#secfsdstools.f_standardize.bs_standardize.MissingSummandRule">MissingSummandRule</a></li>
 <li><a title="secfsdstools.f_standardize.bs_standardize.RenameRule" href="#secfsdstools.f_standardize.bs_standardize.RenameRule">RenameRule</a></li>
+<li><a title="secfsdstools.f_standardize.bs_standardize.SumCompletionRule" href="#secfsdstools.f_standardize.bs_standardize.SumCompletionRule">SumCompletionRule</a></li>
 </ul>
 <h3>Methods</h3>
 <dl>
@@ -1283,6 +1708,20 @@ inheritance.</p></div>
 </summary>
 <pre><code class="python">@abstractmethod
 def apply(self, df: pd.DataFrame, mask: pa.typing.Series[bool]):
+    pass</code></pre>
+</details>
+</dd>
+<dt id="secfsdstools.f_standardize.bs_standardize.Rule.get_target_tag"><code class="name flex">
+<span>def <span class="ident">get_target_tag</span></span>(<span>self) ‑> str</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@abstractmethod
+def get_target_tag(self) -&gt; str:
     pass</code></pre>
 </details>
 </dd>
@@ -1315,31 +1754,38 @@ def mask(self, df: pd.DataFrame) -&gt; pa.typing.Series[bool]:
 </dd>
 </dl>
 </dd>
-<dt id="secfsdstools.f_standardize.bs_standardize.RuleGroup"><code class="flex name class">
-<span>class <span class="ident">RuleGroup</span></span>
-<span>(</span><span>rules: List[<a title="secfsdstools.f_standardize.bs_standardize.Rule" href="#secfsdstools.f_standardize.bs_standardize.Rule">Rule</a>], prefix: str)</span>
+<dt id="secfsdstools.f_standardize.bs_standardize.RuleEntity"><code class="flex name class">
+<span>class <span class="ident">RuleEntity</span></span>
 </code></dt>
 <dd>
-<div class="desc"><p>to add -&gt; automatische vergabe von Rule ID bezüglich Gruppe</p></div>
+<div class="desc"><p>Helper class that provides a standard way to create an ABC using
+inheritance.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class RuleGroup:
-    &#34;&#34;&#34; to add -&gt; automatische vergabe von Rule ID bezüglich Gruppe&#34;&#34;&#34;
+<pre><code class="python">class RuleEntity(ABC):
 
-    def __init__(self, rules: List[Rule], prefix: str):
-        self.rules = rules
-        self.prefix = prefix
+    @abstractmethod
+    def get_input_tags(self) -&gt; Set[str]:
+        pass
 
-    def apply(self, df: pd.DataFrame):
-        for rule in self.rules:
-            rule.process(df)</code></pre>
+    def process(self, df: pd.DataFrame):
+        pass</code></pre>
 </details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>abc.ABC</li>
+</ul>
+<h3>Subclasses</h3>
+<ul class="hlist">
+<li><a title="secfsdstools.f_standardize.bs_standardize.Rule" href="#secfsdstools.f_standardize.bs_standardize.Rule">Rule</a></li>
+<li><a title="secfsdstools.f_standardize.bs_standardize.RuleGroup" href="#secfsdstools.f_standardize.bs_standardize.RuleGroup">RuleGroup</a></li>
+</ul>
 <h3>Methods</h3>
 <dl>
-<dt id="secfsdstools.f_standardize.bs_standardize.RuleGroup.apply"><code class="name flex">
-<span>def <span class="ident">apply</span></span>(<span>self, df: pandas.core.frame.DataFrame)</span>
+<dt id="secfsdstools.f_standardize.bs_standardize.RuleEntity.get_input_tags"><code class="name flex">
+<span>def <span class="ident">get_input_tags</span></span>(<span>self) ‑> Set[str]</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -1347,9 +1793,160 @@ def mask(self, df: pd.DataFrame) -&gt; pa.typing.Series[bool]:
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def apply(self, df: pd.DataFrame):
+<pre><code class="python">@abstractmethod
+def get_input_tags(self) -&gt; Set[str]:
+    pass</code></pre>
+</details>
+</dd>
+<dt id="secfsdstools.f_standardize.bs_standardize.RuleEntity.process"><code class="name flex">
+<span>def <span class="ident">process</span></span>(<span>self, df: pandas.core.frame.DataFrame)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def process(self, df: pd.DataFrame):
+    pass</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+<dt id="secfsdstools.f_standardize.bs_standardize.RuleGroup"><code class="flex name class">
+<span>class <span class="ident">RuleGroup</span></span>
+<span>(</span><span>rules: List[<a title="secfsdstools.f_standardize.bs_standardize.RuleEntity" href="#secfsdstools.f_standardize.bs_standardize.RuleEntity">RuleEntity</a>], prefix: str)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>todo: to add -&gt; automatische vergabe von Rule ID bezüglich Gruppe
+Alle Regeln müssten eigentlich vom selben Typ sein
+Müsste man also auf den konkreten Rule Typ typisieren.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class RuleGroup(RuleEntity):
+    &#34;&#34;&#34;
+    todo: to add -&gt; automatische vergabe von Rule ID bezüglich Gruppe
+    Alle Regeln müssten eigentlich vom selben Typ sein
+    Müsste man also auf den konkreten Rule Typ typisieren.
+    &#34;&#34;&#34;
+
+    def __init__(self, rules: List[RuleEntity], prefix: str):
+        self.rules = rules
+        self.prefix = prefix
+
+    def process(self, df: pd.DataFrame):
+        for rule in self.rules:
+            rule.process(df)
+
+    def get_input_tags(self) -&gt; Set[str]:
+        result: Set[str] = set()
+        for rule in self.rules:
+            result.update(rule.get_input_tags())
+        return result</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="secfsdstools.f_standardize.bs_standardize.RuleEntity" href="#secfsdstools.f_standardize.bs_standardize.RuleEntity">RuleEntity</a></li>
+<li>abc.ABC</li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="secfsdstools.f_standardize.bs_standardize.RuleGroup.get_input_tags"><code class="name flex">
+<span>def <span class="ident">get_input_tags</span></span>(<span>self) ‑> Set[str]</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_input_tags(self) -&gt; Set[str]:
+    result: Set[str] = set()
+    for rule in self.rules:
+        result.update(rule.get_input_tags())
+    return result</code></pre>
+</details>
+</dd>
+<dt id="secfsdstools.f_standardize.bs_standardize.RuleGroup.process"><code class="name flex">
+<span>def <span class="ident">process</span></span>(<span>self, df: pandas.core.frame.DataFrame)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def process(self, df: pd.DataFrame):
     for rule in self.rules:
         rule.process(df)</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+<dt id="secfsdstools.f_standardize.bs_standardize.SumCompletionRule"><code class="flex name class">
+<span>class <span class="ident">SumCompletionRule</span></span>
+<span>(</span><span>sum_tag: str, summand_1_tag: str, summand_2_tag: str)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>completes the missing value of a simple addition, if one is missing.
+E.G Assets = AssetsCurrent + AssetsNoneCurrent</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class SumCompletionRule(Rule):
+    &#34;&#34;&#34;
+    completes the missing value of a simple addition, if one is missing.
+    E.G Assets = AssetsCurrent + AssetsNoneCurrent
+    &#34;&#34;&#34;
+
+    def __init__(self, sum_tag: str, summand_1_tag: str, summand_2_tag: str):
+        self.sum_tag = sum_tag
+        self.summand_1_tag = summand_1_tag
+        self.summand_2_tag = summand_2_tag
+
+    def get_input_tags(self) -&gt; Set[str]:
+        return {self.sum_tag, self.summand_1_tag, self.summand_2_tag}
+
+    def get_target_tag(self) -&gt; str:
+        # todo: not correct in this case, since also the summands could be target tags..
+        return self.sum_tag</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="secfsdstools.f_standardize.bs_standardize.Rule" href="#secfsdstools.f_standardize.bs_standardize.Rule">Rule</a></li>
+<li><a title="secfsdstools.f_standardize.bs_standardize.RuleEntity" href="#secfsdstools.f_standardize.bs_standardize.RuleEntity">RuleEntity</a></li>
+<li>abc.ABC</li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="secfsdstools.f_standardize.bs_standardize.SumCompletionRule.get_input_tags"><code class="name flex">
+<span>def <span class="ident">get_input_tags</span></span>(<span>self) ‑> Set[str]</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_input_tags(self) -&gt; Set[str]:
+    return {self.sum_tag, self.summand_1_tag, self.summand_2_tag}</code></pre>
+</details>
+</dd>
+<dt id="secfsdstools.f_standardize.bs_standardize.SumCompletionRule.get_target_tag"><code class="name flex">
+<span>def <span class="ident">get_target_tag</span></span>(<span>self) ‑> str</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_target_tag(self) -&gt; str:
+    # todo: not correct in this case, since also the summands could be target tags..
+    return self.sum_tag</code></pre>
 </details>
 </dd>
 </dl>
@@ -1372,8 +1969,9 @@ def mask(self, df: pd.DataFrame) -&gt; pa.typing.Series[bool]:
 <ul>
 <li>
 <h4><code><a title="secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizer" href="#secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizer">BalanceSheetStandardizer</a></code></h4>
-<ul class="">
+<ul class="two-column">
 <li><code><a title="secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizer.bs_rename_rg" href="#secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizer.bs_rename_rg">bs_rename_rg</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizer.bs_sumup_rg" href="#secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizer.bs_sumup_rg">bs_sumup_rg</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizer.calculation_tags" href="#secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizer.calculation_tags">calculation_tags</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizer.final_col_order" href="#secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizer.final_col_order">final_col_order</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizer.final_tags" href="#secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizer.final_tags">final_tags</a></code></li>
@@ -1399,9 +1997,29 @@ def mask(self, df: pd.DataFrame) -&gt; pa.typing.Series[bool]:
 </ul>
 </li>
 <li>
+<h4><code><a title="secfsdstools.f_standardize.bs_standardize.MissingSumRule" href="#secfsdstools.f_standardize.bs_standardize.MissingSumRule">MissingSumRule</a></code></h4>
+<ul class="">
+<li><code><a title="secfsdstools.f_standardize.bs_standardize.MissingSumRule.apply" href="#secfsdstools.f_standardize.bs_standardize.MissingSumRule.apply">apply</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.bs_standardize.MissingSumRule.get_input_tags" href="#secfsdstools.f_standardize.bs_standardize.MissingSumRule.get_input_tags">get_input_tags</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.bs_standardize.MissingSumRule.get_target_tag" href="#secfsdstools.f_standardize.bs_standardize.MissingSumRule.get_target_tag">get_target_tag</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.bs_standardize.MissingSumRule.mask" href="#secfsdstools.f_standardize.bs_standardize.MissingSumRule.mask">mask</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="secfsdstools.f_standardize.bs_standardize.MissingSummandRule" href="#secfsdstools.f_standardize.bs_standardize.MissingSummandRule">MissingSummandRule</a></code></h4>
+<ul class="">
+<li><code><a title="secfsdstools.f_standardize.bs_standardize.MissingSummandRule.apply" href="#secfsdstools.f_standardize.bs_standardize.MissingSummandRule.apply">apply</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.bs_standardize.MissingSummandRule.get_input_tags" href="#secfsdstools.f_standardize.bs_standardize.MissingSummandRule.get_input_tags">get_input_tags</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.bs_standardize.MissingSummandRule.get_target_tag" href="#secfsdstools.f_standardize.bs_standardize.MissingSummandRule.get_target_tag">get_target_tag</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.bs_standardize.MissingSummandRule.mask" href="#secfsdstools.f_standardize.bs_standardize.MissingSummandRule.mask">mask</a></code></li>
+</ul>
+</li>
+<li>
 <h4><code><a title="secfsdstools.f_standardize.bs_standardize.RenameRule" href="#secfsdstools.f_standardize.bs_standardize.RenameRule">RenameRule</a></code></h4>
 <ul class="">
 <li><code><a title="secfsdstools.f_standardize.bs_standardize.RenameRule.apply" href="#secfsdstools.f_standardize.bs_standardize.RenameRule.apply">apply</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.bs_standardize.RenameRule.get_input_tags" href="#secfsdstools.f_standardize.bs_standardize.RenameRule.get_input_tags">get_input_tags</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.bs_standardize.RenameRule.get_target_tag" href="#secfsdstools.f_standardize.bs_standardize.RenameRule.get_target_tag">get_target_tag</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.bs_standardize.RenameRule.mask" href="#secfsdstools.f_standardize.bs_standardize.RenameRule.mask">mask</a></code></li>
 </ul>
 </li>
@@ -1409,14 +2027,30 @@ def mask(self, df: pd.DataFrame) -&gt; pa.typing.Series[bool]:
 <h4><code><a title="secfsdstools.f_standardize.bs_standardize.Rule" href="#secfsdstools.f_standardize.bs_standardize.Rule">Rule</a></code></h4>
 <ul class="">
 <li><code><a title="secfsdstools.f_standardize.bs_standardize.Rule.apply" href="#secfsdstools.f_standardize.bs_standardize.Rule.apply">apply</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.bs_standardize.Rule.get_target_tag" href="#secfsdstools.f_standardize.bs_standardize.Rule.get_target_tag">get_target_tag</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.bs_standardize.Rule.mask" href="#secfsdstools.f_standardize.bs_standardize.Rule.mask">mask</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.bs_standardize.Rule.process" href="#secfsdstools.f_standardize.bs_standardize.Rule.process">process</a></code></li>
 </ul>
 </li>
 <li>
+<h4><code><a title="secfsdstools.f_standardize.bs_standardize.RuleEntity" href="#secfsdstools.f_standardize.bs_standardize.RuleEntity">RuleEntity</a></code></h4>
+<ul class="">
+<li><code><a title="secfsdstools.f_standardize.bs_standardize.RuleEntity.get_input_tags" href="#secfsdstools.f_standardize.bs_standardize.RuleEntity.get_input_tags">get_input_tags</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.bs_standardize.RuleEntity.process" href="#secfsdstools.f_standardize.bs_standardize.RuleEntity.process">process</a></code></li>
+</ul>
+</li>
+<li>
 <h4><code><a title="secfsdstools.f_standardize.bs_standardize.RuleGroup" href="#secfsdstools.f_standardize.bs_standardize.RuleGroup">RuleGroup</a></code></h4>
 <ul class="">
-<li><code><a title="secfsdstools.f_standardize.bs_standardize.RuleGroup.apply" href="#secfsdstools.f_standardize.bs_standardize.RuleGroup.apply">apply</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.bs_standardize.RuleGroup.get_input_tags" href="#secfsdstools.f_standardize.bs_standardize.RuleGroup.get_input_tags">get_input_tags</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.bs_standardize.RuleGroup.process" href="#secfsdstools.f_standardize.bs_standardize.RuleGroup.process">process</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="secfsdstools.f_standardize.bs_standardize.SumCompletionRule" href="#secfsdstools.f_standardize.bs_standardize.SumCompletionRule">SumCompletionRule</a></code></h4>
+<ul class="">
+<li><code><a title="secfsdstools.f_standardize.bs_standardize.SumCompletionRule.get_input_tags" href="#secfsdstools.f_standardize.bs_standardize.SumCompletionRule.get_input_tags">get_input_tags</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.bs_standardize.SumCompletionRule.get_target_tag" href="#secfsdstools.f_standardize.bs_standardize.SumCompletionRule.get_target_tag">get_target_tag</a></code></li>
 </ul>
 </li>
 </ul>

@@ -131,23 +131,23 @@ class MissingSummandRule(Rule):
             df[self.sum_name] - df[self.existing_summands].sum(axis=1)
 
 
-class SumCompletionRule(Rule):
+class SumCompletionRuleGroupCreator:
     """
     completes the missing value of a simple addition, if one is missing.
     E.G Assets = AssetsCurrent + AssetsNoneCurrent
     """
 
-    def __init__(self, sum_tag: str, summand_1_tag: str, summand_2_tag: str):
-        self.sum_tag = sum_tag
-        self.summand_1_tag = summand_1_tag
-        self.summand_2_tag = summand_2_tag
-
-    def get_input_tags(self) -> Set[str]:
-        return {self.sum_tag, self.summand_1_tag, self.summand_2_tag}
-
-    def get_target_tag(self) -> str:
-        # todo: not correct in this case, since also the summands could be target tags..
-        return self.sum_tag
+    @staticmethod
+    def create_group(sum_tag: str, summand_tags: List[str], prefix: str) -> RuleGroup:
+        rules: List[RuleEntity] = []
+        rules.append(MissingSumRule(sum_name=sum_tag,
+                                    summand_names=summand_tags))
+        for summand in summand_tags:
+            others = summand_tags.copy()
+            others.remove(summand)
+            rules.append(MissingSummandRule(sum_name=sum_tag, missing_summand=summand,
+                                            existing_summands=others))
+        return RuleGroup(rules=rules, prefix=prefix)
 
 
 class BalanceSheetStandardizer:
@@ -169,6 +169,9 @@ class BalanceSheetStandardizer:
     )
 
     # todo: CashOther wird noch nirgends verwendet
+    # todo: das funktioniert so nicht, da nur summiert wird, falls alle summandspalten
+    # nicht null sind -> es müsste noch eine spezielle Regel haben,
+    # sum with existing summands oder so..
     bs_sumup_rg = RuleGroup(
         rules=[MissingSumRule(
             sum_name='CashOther',
@@ -180,6 +183,21 @@ class BalanceSheetStandardizer:
                 'CashAndCashEquivalentsInForeignCurrencyAtCarryingValue'])],
         prefix="SU"
     )
+
+    bs_sum_completion = RuleGroup(
+        prefix="SC",
+        rules=[
+            SumCompletionRuleGroupCreator.create_group(
+                sum_tag='Assets',
+                summand_tags=['AssetsCurrent', 'AssetsNoncurrent'],
+                prefix="Ass"
+            ),
+            SumCompletionRuleGroupCreator.create_group(
+                sum_tag='Liabilities',
+                summand_tags=['LiabilitiesCurrent', 'LiabilitiesNoncurrent'],
+                prefix="Lia"
+            )
+        ])
 
     # these are the columns that finally are returned after the standardization
     final_tags: List[str] = ['Assets', 'AssetsCurrent', 'AssetsNoncurrent',
@@ -214,7 +232,8 @@ class BalanceSheetStandardizer:
         self.rule_tree = RuleGroup(prefix="BS_",
                                    rules=[
                                        self.bs_rename_rg,
-                                       self.bs_sumup_rg
+                                       self.bs_sumup_rg,
+                                       self.bs_sum_completion,
                                    ])
 
     def standardize(self, df: pd.DataFrame, ) -> pd.DataFrame:
@@ -226,7 +245,9 @@ class BalanceSheetStandardizer:
         # todo: wann muss negating berücksichtigt werden -> nach dem pivot fliegt es raus!
 
         # pivot the table, so that the tags are now columns
-        pivot_df = self._pivot(df=cpy_df)
+        # todo: folgende Zeile sollte nicht mehr notwendig sein, sobald alle Regeln implementiert sind
+        expected_tags = all_input_tags.union(self.final_tags)
+        pivot_df = self._pivot(df=cpy_df, expected_tags=expected_tags)
 
         if self.calculate_pre_stats:
             pre_pivot_df = pivot_df[self.final_col_order]
@@ -259,14 +280,16 @@ class BalanceSheetStandardizer:
 
         return pivot_df
 
-    def _filter_pivot_for_main_reports(self, pivot_df: pd.DataFrame):
-        pivot_df['nan_count'] = pivot_df[
+    def _filter_pivot_for_main_reports(self, pivot_df: pd.DataFrame) -> pd.DataFrame:
+        cpy_pivot_df = pivot_df.copy()
+
+        cpy_pivot_df['nan_count'] = cpy_pivot_df[
             BalanceSheetStandardizerOld.main_columns].isna().sum(
             axis=1)
-        pivot_df.sort_values(['adsh', 'coreg', 'nan_count'], inplace=True)
-        pivot_df = pivot_df.groupby(['adsh', 'coreg']).last()
-        pivot_df.reset_index(inplace=True)
-        return pivot_df
+        cpy_pivot_df.sort_values(['adsh', 'coreg', 'nan_count'], inplace=True)
+        cpy_pivot_df = cpy_pivot_df.groupby(['adsh', 'coreg']).last()
+        cpy_pivot_df.reset_index(inplace=True)
+        return cpy_pivot_df
 
     def _calculate_stats(self, pivot_df: pd.DataFrame) -> pd.DataFrame:
         return pivot_df[self.final_tags].isna().sum(axis=0)
@@ -275,7 +298,7 @@ class BalanceSheetStandardizer:
         for rule in rules:
             rule.process(df)
 
-    def _pivot(self, df: pd.DataFrame) -> pd.DataFrame:
+    def _pivot(self, df: pd.DataFrame, expected_tags: Set[str]) -> pd.DataFrame:
         # todo: um pivot zu optimieren, sollten zuerst nur die Tags gefiltert werden,
         # welche tatsächlich auch benützt werden, alles andere sollte herausgefiltert werden
         # das müsste über die Regeln geschehen und sollte automatisch berechnet werden sollen.
@@ -296,10 +319,10 @@ class BalanceSheetStandardizer:
                                      columns='tag',
                                      values='value')
         pivot_df.reset_index(inplace=True)
-        missing_cols = set(BalanceSheetStandardizer.calculation_tags) - set(pivot_df.columns)
+        missing_cols = set(expected_tags) - set(pivot_df.columns)
         for missing_col in missing_cols:
             pivot_df[missing_col] = np.nan
-
+        pivot_df['nan_count'] = np.nan
         return pivot_df
 
 

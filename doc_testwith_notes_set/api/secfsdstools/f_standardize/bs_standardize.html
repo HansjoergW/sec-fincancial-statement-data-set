@@ -159,23 +159,23 @@ class MissingSummandRule(Rule):
             df[self.sum_name] - df[self.existing_summands].sum(axis=1)
 
 
-class SumCompletionRule(Rule):
+class SumCompletionRuleGroupCreator:
     &#34;&#34;&#34;
     completes the missing value of a simple addition, if one is missing.
     E.G Assets = AssetsCurrent + AssetsNoneCurrent
     &#34;&#34;&#34;
 
-    def __init__(self, sum_tag: str, summand_1_tag: str, summand_2_tag: str):
-        self.sum_tag = sum_tag
-        self.summand_1_tag = summand_1_tag
-        self.summand_2_tag = summand_2_tag
-
-    def get_input_tags(self) -&gt; Set[str]:
-        return {self.sum_tag, self.summand_1_tag, self.summand_2_tag}
-
-    def get_target_tag(self) -&gt; str:
-        # todo: not correct in this case, since also the summands could be target tags..
-        return self.sum_tag
+    @staticmethod
+    def create_group(sum_tag: str, summand_tags: List[str], prefix: str) -&gt; RuleGroup:
+        rules: List[RuleEntity] = []
+        rules.append(MissingSumRule(sum_name=sum_tag,
+                                    summand_names=summand_tags))
+        for summand in summand_tags:
+            others = summand_tags.copy()
+            others.remove(summand)
+            rules.append(MissingSummandRule(sum_name=sum_tag, missing_summand=summand,
+                                            existing_summands=others))
+        return RuleGroup(rules=rules, prefix=prefix)
 
 
 class BalanceSheetStandardizer:
@@ -197,6 +197,9 @@ class BalanceSheetStandardizer:
     )
 
     # todo: CashOther wird noch nirgends verwendet
+    # todo: das funktioniert so nicht, da nur summiert wird, falls alle summandspalten
+    # nicht null sind -&gt; es müsste noch eine spezielle Regel haben,
+    # sum with existing summands oder so..
     bs_sumup_rg = RuleGroup(
         rules=[MissingSumRule(
             sum_name=&#39;CashOther&#39;,
@@ -208,6 +211,21 @@ class BalanceSheetStandardizer:
                 &#39;CashAndCashEquivalentsInForeignCurrencyAtCarryingValue&#39;])],
         prefix=&#34;SU&#34;
     )
+
+    bs_sum_completion = RuleGroup(
+        prefix=&#34;SC&#34;,
+        rules=[
+            SumCompletionRuleGroupCreator.create_group(
+                sum_tag=&#39;Assets&#39;,
+                summand_tags=[&#39;AssetsCurrent&#39;, &#39;AssetsNoncurrent&#39;],
+                prefix=&#34;Ass&#34;
+            ),
+            SumCompletionRuleGroupCreator.create_group(
+                sum_tag=&#39;Liabilities&#39;,
+                summand_tags=[&#39;LiabilitiesCurrent&#39;, &#39;LiabilitiesNoncurrent&#39;],
+                prefix=&#34;Lia&#34;
+            )
+        ])
 
     # these are the columns that finally are returned after the standardization
     final_tags: List[str] = [&#39;Assets&#39;, &#39;AssetsCurrent&#39;, &#39;AssetsNoncurrent&#39;,
@@ -242,7 +260,8 @@ class BalanceSheetStandardizer:
         self.rule_tree = RuleGroup(prefix=&#34;BS_&#34;,
                                    rules=[
                                        self.bs_rename_rg,
-                                       self.bs_sumup_rg
+                                       self.bs_sumup_rg,
+                                       self.bs_sum_completion,
                                    ])
 
     def standardize(self, df: pd.DataFrame, ) -&gt; pd.DataFrame:
@@ -254,7 +273,9 @@ class BalanceSheetStandardizer:
         # todo: wann muss negating berücksichtigt werden -&gt; nach dem pivot fliegt es raus!
 
         # pivot the table, so that the tags are now columns
-        pivot_df = self._pivot(df=cpy_df)
+        # todo: folgende Zeile sollte nicht mehr notwendig sein, sobald alle Regeln implementiert sind
+        expected_tags = all_input_tags.union(self.final_tags)
+        pivot_df = self._pivot(df=cpy_df, expected_tags=expected_tags)
 
         if self.calculate_pre_stats:
             pre_pivot_df = pivot_df[self.final_col_order]
@@ -287,14 +308,16 @@ class BalanceSheetStandardizer:
 
         return pivot_df
 
-    def _filter_pivot_for_main_reports(self, pivot_df: pd.DataFrame):
-        pivot_df[&#39;nan_count&#39;] = pivot_df[
+    def _filter_pivot_for_main_reports(self, pivot_df: pd.DataFrame) -&gt; pd.DataFrame:
+        cpy_pivot_df = pivot_df.copy()
+
+        cpy_pivot_df[&#39;nan_count&#39;] = cpy_pivot_df[
             BalanceSheetStandardizerOld.main_columns].isna().sum(
             axis=1)
-        pivot_df.sort_values([&#39;adsh&#39;, &#39;coreg&#39;, &#39;nan_count&#39;], inplace=True)
-        pivot_df = pivot_df.groupby([&#39;adsh&#39;, &#39;coreg&#39;]).last()
-        pivot_df.reset_index(inplace=True)
-        return pivot_df
+        cpy_pivot_df.sort_values([&#39;adsh&#39;, &#39;coreg&#39;, &#39;nan_count&#39;], inplace=True)
+        cpy_pivot_df = cpy_pivot_df.groupby([&#39;adsh&#39;, &#39;coreg&#39;]).last()
+        cpy_pivot_df.reset_index(inplace=True)
+        return cpy_pivot_df
 
     def _calculate_stats(self, pivot_df: pd.DataFrame) -&gt; pd.DataFrame:
         return pivot_df[self.final_tags].isna().sum(axis=0)
@@ -303,7 +326,7 @@ class BalanceSheetStandardizer:
         for rule in rules:
             rule.process(df)
 
-    def _pivot(self, df: pd.DataFrame) -&gt; pd.DataFrame:
+    def _pivot(self, df: pd.DataFrame, expected_tags: Set[str]) -&gt; pd.DataFrame:
         # todo: um pivot zu optimieren, sollten zuerst nur die Tags gefiltert werden,
         # welche tatsächlich auch benützt werden, alles andere sollte herausgefiltert werden
         # das müsste über die Regeln geschehen und sollte automatisch berechnet werden sollen.
@@ -324,10 +347,10 @@ class BalanceSheetStandardizer:
                                      columns=&#39;tag&#39;,
                                      values=&#39;value&#39;)
         pivot_df.reset_index(inplace=True)
-        missing_cols = set(BalanceSheetStandardizer.calculation_tags) - set(pivot_df.columns)
+        missing_cols = set(expected_tags) - set(pivot_df.columns)
         for missing_col in missing_cols:
             pivot_df[missing_col] = np.nan
-
+        pivot_df[&#39;nan_count&#39;] = np.nan
         return pivot_df
 
 
@@ -617,6 +640,9 @@ class BalanceSheetStandardizerOld:
     )
 
     # todo: CashOther wird noch nirgends verwendet
+    # todo: das funktioniert so nicht, da nur summiert wird, falls alle summandspalten
+    # nicht null sind -&gt; es müsste noch eine spezielle Regel haben,
+    # sum with existing summands oder so..
     bs_sumup_rg = RuleGroup(
         rules=[MissingSumRule(
             sum_name=&#39;CashOther&#39;,
@@ -628,6 +654,21 @@ class BalanceSheetStandardizerOld:
                 &#39;CashAndCashEquivalentsInForeignCurrencyAtCarryingValue&#39;])],
         prefix=&#34;SU&#34;
     )
+
+    bs_sum_completion = RuleGroup(
+        prefix=&#34;SC&#34;,
+        rules=[
+            SumCompletionRuleGroupCreator.create_group(
+                sum_tag=&#39;Assets&#39;,
+                summand_tags=[&#39;AssetsCurrent&#39;, &#39;AssetsNoncurrent&#39;],
+                prefix=&#34;Ass&#34;
+            ),
+            SumCompletionRuleGroupCreator.create_group(
+                sum_tag=&#39;Liabilities&#39;,
+                summand_tags=[&#39;LiabilitiesCurrent&#39;, &#39;LiabilitiesNoncurrent&#39;],
+                prefix=&#34;Lia&#34;
+            )
+        ])
 
     # these are the columns that finally are returned after the standardization
     final_tags: List[str] = [&#39;Assets&#39;, &#39;AssetsCurrent&#39;, &#39;AssetsNoncurrent&#39;,
@@ -662,7 +703,8 @@ class BalanceSheetStandardizerOld:
         self.rule_tree = RuleGroup(prefix=&#34;BS_&#34;,
                                    rules=[
                                        self.bs_rename_rg,
-                                       self.bs_sumup_rg
+                                       self.bs_sumup_rg,
+                                       self.bs_sum_completion,
                                    ])
 
     def standardize(self, df: pd.DataFrame, ) -&gt; pd.DataFrame:
@@ -674,7 +716,9 @@ class BalanceSheetStandardizerOld:
         # todo: wann muss negating berücksichtigt werden -&gt; nach dem pivot fliegt es raus!
 
         # pivot the table, so that the tags are now columns
-        pivot_df = self._pivot(df=cpy_df)
+        # todo: folgende Zeile sollte nicht mehr notwendig sein, sobald alle Regeln implementiert sind
+        expected_tags = all_input_tags.union(self.final_tags)
+        pivot_df = self._pivot(df=cpy_df, expected_tags=expected_tags)
 
         if self.calculate_pre_stats:
             pre_pivot_df = pivot_df[self.final_col_order]
@@ -707,14 +751,16 @@ class BalanceSheetStandardizerOld:
 
         return pivot_df
 
-    def _filter_pivot_for_main_reports(self, pivot_df: pd.DataFrame):
-        pivot_df[&#39;nan_count&#39;] = pivot_df[
+    def _filter_pivot_for_main_reports(self, pivot_df: pd.DataFrame) -&gt; pd.DataFrame:
+        cpy_pivot_df = pivot_df.copy()
+
+        cpy_pivot_df[&#39;nan_count&#39;] = cpy_pivot_df[
             BalanceSheetStandardizerOld.main_columns].isna().sum(
             axis=1)
-        pivot_df.sort_values([&#39;adsh&#39;, &#39;coreg&#39;, &#39;nan_count&#39;], inplace=True)
-        pivot_df = pivot_df.groupby([&#39;adsh&#39;, &#39;coreg&#39;]).last()
-        pivot_df.reset_index(inplace=True)
-        return pivot_df
+        cpy_pivot_df.sort_values([&#39;adsh&#39;, &#39;coreg&#39;, &#39;nan_count&#39;], inplace=True)
+        cpy_pivot_df = cpy_pivot_df.groupby([&#39;adsh&#39;, &#39;coreg&#39;]).last()
+        cpy_pivot_df.reset_index(inplace=True)
+        return cpy_pivot_df
 
     def _calculate_stats(self, pivot_df: pd.DataFrame) -&gt; pd.DataFrame:
         return pivot_df[self.final_tags].isna().sum(axis=0)
@@ -723,7 +769,7 @@ class BalanceSheetStandardizerOld:
         for rule in rules:
             rule.process(df)
 
-    def _pivot(self, df: pd.DataFrame) -&gt; pd.DataFrame:
+    def _pivot(self, df: pd.DataFrame, expected_tags: Set[str]) -&gt; pd.DataFrame:
         # todo: um pivot zu optimieren, sollten zuerst nur die Tags gefiltert werden,
         # welche tatsächlich auch benützt werden, alles andere sollte herausgefiltert werden
         # das müsste über die Regeln geschehen und sollte automatisch berechnet werden sollen.
@@ -744,15 +790,19 @@ class BalanceSheetStandardizerOld:
                                      columns=&#39;tag&#39;,
                                      values=&#39;value&#39;)
         pivot_df.reset_index(inplace=True)
-        missing_cols = set(BalanceSheetStandardizer.calculation_tags) - set(pivot_df.columns)
+        missing_cols = set(expected_tags) - set(pivot_df.columns)
         for missing_col in missing_cols:
             pivot_df[missing_col] = np.nan
-
+        pivot_df[&#39;nan_count&#39;] = np.nan
         return pivot_df</code></pre>
 </details>
 <h3>Class variables</h3>
 <dl>
 <dt id="secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizer.bs_rename_rg"><code class="name">var <span class="ident">bs_rename_rg</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizer.bs_sum_completion"><code class="name">var <span class="ident">bs_sum_completion</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -793,7 +843,9 @@ class BalanceSheetStandardizerOld:
     # todo: wann muss negating berücksichtigt werden -&gt; nach dem pivot fliegt es raus!
 
     # pivot the table, so that the tags are now columns
-    pivot_df = self._pivot(df=cpy_df)
+    # todo: folgende Zeile sollte nicht mehr notwendig sein, sobald alle Regeln implementiert sind
+    expected_tags = all_input_tags.union(self.final_tags)
+    pivot_df = self._pivot(df=cpy_df, expected_tags=expected_tags)
 
     if self.calculate_pre_stats:
         pre_pivot_df = pivot_df[self.final_col_order]
@@ -1693,7 +1745,6 @@ inheritance.</p></div>
 <li><a title="secfsdstools.f_standardize.bs_standardize.MissingSumRule" href="#secfsdstools.f_standardize.bs_standardize.MissingSumRule">MissingSumRule</a></li>
 <li><a title="secfsdstools.f_standardize.bs_standardize.MissingSummandRule" href="#secfsdstools.f_standardize.bs_standardize.MissingSummandRule">MissingSummandRule</a></li>
 <li><a title="secfsdstools.f_standardize.bs_standardize.RenameRule" href="#secfsdstools.f_standardize.bs_standardize.RenameRule">RenameRule</a></li>
-<li><a title="secfsdstools.f_standardize.bs_standardize.SumCompletionRule" href="#secfsdstools.f_standardize.bs_standardize.SumCompletionRule">SumCompletionRule</a></li>
 </ul>
 <h3>Methods</h3>
 <dl>
@@ -1885,9 +1936,8 @@ Müsste man also auf den konkreten Rule Typ typisieren.</p></div>
 </dd>
 </dl>
 </dd>
-<dt id="secfsdstools.f_standardize.bs_standardize.SumCompletionRule"><code class="flex name class">
-<span>class <span class="ident">SumCompletionRule</span></span>
-<span>(</span><span>sum_tag: str, summand_1_tag: str, summand_2_tag: str)</span>
+<dt id="secfsdstools.f_standardize.bs_standardize.SumCompletionRuleGroupCreator"><code class="flex name class">
+<span>class <span class="ident">SumCompletionRuleGroupCreator</span></span>
 </code></dt>
 <dd>
 <div class="desc"><p>completes the missing value of a simple addition, if one is missing.
@@ -1896,34 +1946,28 @@ E.G Assets = AssetsCurrent + AssetsNoneCurrent</p></div>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class SumCompletionRule(Rule):
+<pre><code class="python">class SumCompletionRuleGroupCreator:
     &#34;&#34;&#34;
     completes the missing value of a simple addition, if one is missing.
     E.G Assets = AssetsCurrent + AssetsNoneCurrent
     &#34;&#34;&#34;
 
-    def __init__(self, sum_tag: str, summand_1_tag: str, summand_2_tag: str):
-        self.sum_tag = sum_tag
-        self.summand_1_tag = summand_1_tag
-        self.summand_2_tag = summand_2_tag
-
-    def get_input_tags(self) -&gt; Set[str]:
-        return {self.sum_tag, self.summand_1_tag, self.summand_2_tag}
-
-    def get_target_tag(self) -&gt; str:
-        # todo: not correct in this case, since also the summands could be target tags..
-        return self.sum_tag</code></pre>
+    @staticmethod
+    def create_group(sum_tag: str, summand_tags: List[str], prefix: str) -&gt; RuleGroup:
+        rules: List[RuleEntity] = []
+        rules.append(MissingSumRule(sum_name=sum_tag,
+                                    summand_names=summand_tags))
+        for summand in summand_tags:
+            others = summand_tags.copy()
+            others.remove(summand)
+            rules.append(MissingSummandRule(sum_name=sum_tag, missing_summand=summand,
+                                            existing_summands=others))
+        return RuleGroup(rules=rules, prefix=prefix)</code></pre>
 </details>
-<h3>Ancestors</h3>
-<ul class="hlist">
-<li><a title="secfsdstools.f_standardize.bs_standardize.Rule" href="#secfsdstools.f_standardize.bs_standardize.Rule">Rule</a></li>
-<li><a title="secfsdstools.f_standardize.bs_standardize.RuleEntity" href="#secfsdstools.f_standardize.bs_standardize.RuleEntity">RuleEntity</a></li>
-<li>abc.ABC</li>
-</ul>
-<h3>Methods</h3>
+<h3>Static methods</h3>
 <dl>
-<dt id="secfsdstools.f_standardize.bs_standardize.SumCompletionRule.get_input_tags"><code class="name flex">
-<span>def <span class="ident">get_input_tags</span></span>(<span>self) ‑> Set[str]</span>
+<dt id="secfsdstools.f_standardize.bs_standardize.SumCompletionRuleGroupCreator.create_group"><code class="name flex">
+<span>def <span class="ident">create_group</span></span>(<span>sum_tag: str, summand_tags: List[str], prefix: str) ‑> <a title="secfsdstools.f_standardize.bs_standardize.RuleGroup" href="#secfsdstools.f_standardize.bs_standardize.RuleGroup">RuleGroup</a></span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -1931,22 +1975,17 @@ E.G Assets = AssetsCurrent + AssetsNoneCurrent</p></div>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def get_input_tags(self) -&gt; Set[str]:
-    return {self.sum_tag, self.summand_1_tag, self.summand_2_tag}</code></pre>
-</details>
-</dd>
-<dt id="secfsdstools.f_standardize.bs_standardize.SumCompletionRule.get_target_tag"><code class="name flex">
-<span>def <span class="ident">get_target_tag</span></span>(<span>self) ‑> str</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def get_target_tag(self) -&gt; str:
-    # todo: not correct in this case, since also the summands could be target tags..
-    return self.sum_tag</code></pre>
+<pre><code class="python">@staticmethod
+def create_group(sum_tag: str, summand_tags: List[str], prefix: str) -&gt; RuleGroup:
+    rules: List[RuleEntity] = []
+    rules.append(MissingSumRule(sum_name=sum_tag,
+                                summand_names=summand_tags))
+    for summand in summand_tags:
+        others = summand_tags.copy()
+        others.remove(summand)
+        rules.append(MissingSummandRule(sum_name=sum_tag, missing_summand=summand,
+                                        existing_summands=others))
+    return RuleGroup(rules=rules, prefix=prefix)</code></pre>
 </details>
 </dd>
 </dl>
@@ -1971,6 +2010,7 @@ E.G Assets = AssetsCurrent + AssetsNoneCurrent</p></div>
 <h4><code><a title="secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizer" href="#secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizer">BalanceSheetStandardizer</a></code></h4>
 <ul class="two-column">
 <li><code><a title="secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizer.bs_rename_rg" href="#secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizer.bs_rename_rg">bs_rename_rg</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizer.bs_sum_completion" href="#secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizer.bs_sum_completion">bs_sum_completion</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizer.bs_sumup_rg" href="#secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizer.bs_sumup_rg">bs_sumup_rg</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizer.calculation_tags" href="#secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizer.calculation_tags">calculation_tags</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizer.final_col_order" href="#secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizer.final_col_order">final_col_order</a></code></li>
@@ -2047,10 +2087,9 @@ E.G Assets = AssetsCurrent + AssetsNoneCurrent</p></div>
 </ul>
 </li>
 <li>
-<h4><code><a title="secfsdstools.f_standardize.bs_standardize.SumCompletionRule" href="#secfsdstools.f_standardize.bs_standardize.SumCompletionRule">SumCompletionRule</a></code></h4>
+<h4><code><a title="secfsdstools.f_standardize.bs_standardize.SumCompletionRuleGroupCreator" href="#secfsdstools.f_standardize.bs_standardize.SumCompletionRuleGroupCreator">SumCompletionRuleGroupCreator</a></code></h4>
 <ul class="">
-<li><code><a title="secfsdstools.f_standardize.bs_standardize.SumCompletionRule.get_input_tags" href="#secfsdstools.f_standardize.bs_standardize.SumCompletionRule.get_input_tags">get_input_tags</a></code></li>
-<li><code><a title="secfsdstools.f_standardize.bs_standardize.SumCompletionRule.get_target_tag" href="#secfsdstools.f_standardize.bs_standardize.SumCompletionRule.get_target_tag">get_target_tag</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.bs_standardize.SumCompletionRuleGroupCreator.create_group" href="#secfsdstools.f_standardize.bs_standardize.SumCompletionRuleGroupCreator.create_group">create_group</a></code></li>
 </ul>
 </li>
 </ul>

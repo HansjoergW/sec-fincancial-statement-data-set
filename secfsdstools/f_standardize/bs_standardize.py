@@ -263,12 +263,12 @@ class BalanceSheetStandardizer:
     main_columns = ['Assets', 'AssetsCurrent', 'AssetsNoncurrent',
                     'Liabilities', 'LiabilitiesCurrent', 'LiabilitiesNoncurrent']
 
-    def __init__(self, calculate_pre_stats: bool = False, filter_for_main_report: bool = False):
-        self.calculate_pre_stats: bool = calculate_pre_stats
+    def __init__(self, filter_for_main_report: bool = False, iterations:int = 2):
         self.filter_for_main_report = filter_for_main_report
         self.pre_stats: Optional[pd.Series] = None
         self.post_stats: Optional[pd.Series] = None
         self.stats: Optional[pd.DataFrame] = None
+        self.iterations = iterations
 
         self.rule_tree = RuleGroup(prefix="BS_",
                                    rules=[
@@ -299,12 +299,13 @@ class BalanceSheetStandardizer:
         pre_pivot_df = pivot_df[self.final_col_order]
         self.pre_stats = self._calculate_stats(pivot_df=pre_pivot_df)
         self.pre_stats.name = "pre"
+
         self.stats = pd.DataFrame(self.pre_stats)
         self.stats['pre_rel'] = self.stats.pre / total_length
 
         self.stats = pd.DataFrame(self.pre_stats)
 
-        for i in range(3):
+        for i in range(self.iterations):
             # apply the rule_tree
             self.rule_tree.process(pivot_df)
 

@@ -337,9 +337,6 @@ class BalanceSheetStandardizer:
     def _calculate_stats(self, pivot_df: pd.DataFrame) -> pd.DataFrame:
         return pivot_df[self.final_tags].isna().sum(axis=0)
 
-    def _apply_rules(self, df: pd.DataFrame, rules: List[Rule]):
-        for rule in rules:
-            rule.process(df)
 
     def _pivot(self, df: pd.DataFrame, expected_tags: Set[str]) -> pd.DataFrame:
         # todo: um pivot zu optimieren, sollten zuerst nur die Tags gefiltert werden,

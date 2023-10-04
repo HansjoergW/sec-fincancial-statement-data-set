@@ -28,7 +28,7 @@
 </summary>
 <pre><code class="python">from abc import ABC
 from abc import abstractmethod
-from typing import Dict, List, Tuple, Optional, Set
+from typing import List, Optional, Set
 
 import numpy as np
 import pandas as pd
@@ -106,6 +106,7 @@ class RenameRule(Rule):
 
 
 class MissingSumRule(Rule):
+    &#34;&#34;&#34; creates the sum in the sum_name column if all summand_names columnes have a value&#34;&#34;&#34;
 
     def __init__(self, sum_name: str, summand_names: List[str]):
         self.sum_name = sum_name
@@ -167,15 +168,40 @@ class SumCompletionRuleGroupCreator:
 
     @staticmethod
     def create_group(sum_tag: str, summand_tags: List[str], prefix: str) -&gt; RuleGroup:
-        rules: List[RuleEntity] = []
-        rules.append(MissingSumRule(sum_name=sum_tag,
-                                    summand_names=summand_tags))
+        rules: List[RuleEntity] = [MissingSumRule(sum_name=sum_tag,
+                                                  summand_names=summand_tags)]
         for summand in summand_tags:
             others = summand_tags.copy()
             others.remove(summand)
             rules.append(MissingSummandRule(sum_name=sum_tag, missing_summand=summand,
                                             existing_summands=others))
         return RuleGroup(rules=rules, prefix=prefix)
+
+
+class SumUp(Rule):
+    &#34;&#34;&#34;Sums app the available Summands to a new target column&#34;&#34;&#34;
+
+    def __init__(self, target: str, potential_summands: List[str]):
+        self.target = target
+        self.potential_summands = potential_summands
+
+    def get_target_tag(self) -&gt; str:
+        return self.target
+
+    def get_input_tags(self) -&gt; Set[str]:
+        result = {self.target}
+        result.update(self.potential_summands)
+        return result
+
+    def mask(self, df: pd.DataFrame) -&gt; pa.typing.Series[bool]:
+        # if the target was not set..
+        return df[self.target].isna()
+
+    def apply(self, df: pd.DataFrame, mask: pa.typing.Series[bool]):
+        df.loc[mask, self.target] = 0.0  # initialize
+        for potential_summand in self.potential_summands:
+            summand_mask = mask &amp; ~df[potential_summand].isna()
+            df.loc[summand_mask, self.target] = df[self.target] + df[potential_summand]
 
 
 class BalanceSheetStandardizer:
@@ -197,13 +223,10 @@ class BalanceSheetStandardizer:
     )
 
     # todo: CashOther wird noch nirgends verwendet
-    # todo: das funktioniert so nicht, da nur summiert wird, falls alle summandspalten
-    # nicht null sind -&gt; es müsste noch eine spezielle Regel haben,
-    # sum with existing summands oder so..
     bs_sumup_rg = RuleGroup(
-        rules=[MissingSumRule(
-            sum_name=&#39;CashOther&#39;,
-            summand_names=[
+        rules=[SumUp(
+            target=&#39;CashOther&#39;,
+            potential_summands=[
                 &#39;CashAndCashEquivalentsAtFairValue&#39;,
                 &#39;CashAndDueFromBanks&#39;,
                 &#39;CashCashEquivalentsAndFederalFundsSold&#39;,
@@ -224,6 +247,16 @@ class BalanceSheetStandardizer:
                 sum_tag=&#39;Liabilities&#39;,
                 summand_tags=[&#39;LiabilitiesCurrent&#39;, &#39;LiabilitiesNoncurrent&#39;],
                 prefix=&#34;Lia&#34;
+            ),
+            SumCompletionRuleGroupCreator.create_group(
+                sum_tag=&#39;Assets&#39;,
+                summand_tags=[&#39;Liabilities&#39;, &#39;Equity&#39;],
+                prefix=&#34;Ass2&#34;
+            ),
+            SumCompletionRuleGroupCreator.create_group(
+                sum_tag=&#39;LiabilitiesAndStockholdersEquity&#39;,
+                summand_tags=[&#39;Liabilities&#39;, &#39;Equity&#39;],
+                prefix=&#34;LiaEq&#34;
             )
         ])
 
@@ -249,6 +282,14 @@ class BalanceSheetStandardizer:
                                    ]
 
     final_col_order = [&#39;adsh&#39;, &#39;coreg&#39;, &#39;report&#39;, &#39;ddate&#39;] + final_tags
+
+    # used to evaluate if a report is a the main balancesheet report
+    # inside a report, there can be several different tables (different report nr)
+    # which stmt value is BS.
+    # however, we might be only interested in the &#34;major&#34; BS report. Usually this is the
+    # one which has the least nan in the following columns
+    main_columns = [&#39;Assets&#39;, &#39;AssetsCurrent&#39;, &#39;AssetsNoncurrent&#39;,
+                    &#39;Liabilities&#39;, &#39;LiabilitiesCurrent&#39;, &#39;LiabilitiesNoncurrent&#39;]
 
     def __init__(self, calculate_pre_stats: bool = False, filter_for_main_report: bool = False):
         self.calculate_pre_stats: bool = calculate_pre_stats
@@ -277,34 +318,35 @@ class BalanceSheetStandardizer:
         expected_tags = all_input_tags.union(self.final_tags)
         pivot_df = self._pivot(df=cpy_df, expected_tags=expected_tags)
 
-        if self.calculate_pre_stats:
-            pre_pivot_df = pivot_df[self.final_col_order]
-            if self.filter_for_main_report:
-                pre_pivot_df = self._filter_pivot_for_main_reports(pre_pivot_df)
-            self.pre_stats = self._calculate_stats(pivot_df=pre_pivot_df)
-            self.pre_stats.name = &#34;pre&#34;
-
-        # apply the rule_tree
-        self.rule_tree.process(pivot_df)
-
-        # todo: kann das auch ganz am anfang nach pivot gemacht werden? oder sollte man warten,
-        # bis alles berechnet ist, damit auch die berechneten werte zählen?
         if self.filter_for_main_report:
             pivot_df = self._filter_pivot_for_main_reports(pivot_df)
 
+        total_length = len(pivot_df)
+
+        # calculate_pre_stats:
+        pre_pivot_df = pivot_df[self.final_col_order]
+        self.pre_stats = self._calculate_stats(pivot_df=pre_pivot_df)
+        self.pre_stats.name = &#34;pre&#34;
+        self.stats = pd.DataFrame(self.pre_stats)
+        self.stats[&#39;pre_rel&#39;] = self.stats.pre / total_length
+
+        self.stats = pd.DataFrame(self.pre_stats)
+
+        for i in range(3):
+            # apply the rule_tree
+            self.rule_tree.process(pivot_df)
+
+            self.post_stats = self._calculate_stats(pivot_df=pivot_df)
+            self.post_stats.name = f&#34;post_{i}&#34;
+
+            self.stats = self.stats.join(self.post_stats)
+            self.stats[self.post_stats.name + &#39;_rel&#39;] = \
+                self.stats[self.post_stats.name] / total_length
+            self.stats[self.post_stats.name + &#39;_red&#39;] = \
+                1 - (self.stats[self.post_stats.name] / self.stats.pre)
+
         # create a meaningful order
         pivot_df = pivot_df[self.final_col_order].copy()
-
-        self.post_stats = self._calculate_stats(pivot_df=pivot_df)
-        self.post_stats.name = &#34;post&#34;
-
-        total = len(pivot_df)
-        self.stats = pd.DataFrame(self.post_stats)
-        self.stats[&#39;post_rel&#39;] = self.stats.post / total
-        if self.calculate_pre_stats:
-            self.stats = self.stats.join(self.pre_stats)
-            self.stats[&#39;pre_rel&#39;] = self.stats.pre / total
-            self.stats[&#39;reduction&#39;] = 1 - (self.stats.post / self.stats.pre)
 
         return pivot_df
 
@@ -312,7 +354,7 @@ class BalanceSheetStandardizer:
         cpy_pivot_df = pivot_df.copy()
 
         cpy_pivot_df[&#39;nan_count&#39;] = cpy_pivot_df[
-            BalanceSheetStandardizerOld.main_columns].isna().sum(
+            self.main_columns].isna().sum(
             axis=1)
         cpy_pivot_df.sort_values([&#39;adsh&#39;, &#39;coreg&#39;, &#39;nan_count&#39;], inplace=True)
         cpy_pivot_df = cpy_pivot_df.groupby([&#39;adsh&#39;, &#39;coreg&#39;]).last()
@@ -360,187 +402,18 @@ class BalanceSheetStandardizer:
 # or just the basic renaming ...
 # but without going for changing default names
 
+# man könnte noch checks einbauen, ob z.B. die Summen definition gültig sind,
+# d.h., dass der Wert der Summe in etwa der Summe der Werte der Summanden entsprciht
+
+
 class BalanceSheetStandardizerOld:
-    rename_map: Dict[str, str] = {
-        &#39;AssetsNet&#39;: &#39;Assets&#39;,
-        &#39;StockholdersEquityIncludingPortionAttributableToNoncontrollingInterest&#39;: &#39;Equity&#39;,
-        &#39;PartnersCapital&#39;: &#39;Equity&#39;,
-        &#39;StockholdersEquity&#39;: &#39;Equity&#39;,
-        &#39;CashAndCashEquivalentsAtCarryingValue&#39;: &#39;Cash&#39;,
-        &#39;RetainedEarningsAppropriated&#39;: &#39;RetainedEarnings&#39;,
-        &#39;RetainedEarningsAccumulatedDeficit&#39;: &#39;RetainedEarnings&#39;
-    }
-
-    # several tag values are sumed upd into a new tag
-    sum_list_map: Dict[str, List[str]] = {&#39;CashOther&#39;: [
-        &#39;CashAndCashEquivalentsAtFairValue&#39;,
-        &#39;CashAndDueFromBanks&#39;,
-        &#39;CashCashEquivalentsAndFederalFundsSold&#39;,
-        &#39;RestrictedCashAndCashEquivalentsAtCarryingValue&#39;,
-        &#39;CashAndCashEquivalentsInForeignCurrencyAtCarryingValue&#39;]}
-
-    # these are the relevant tags that we need to calculate missing values
-    relevant_tags: List[str] = [&#39;Assets&#39;, &#39;AssetsCurrent&#39;, &#39;AssetsNoncurrent&#39;,
-                                &#39;Liabilities&#39;, &#39;LiabilitiesCurrent&#39;, &#39;LiabilitiesNoncurrent&#39;,
-                                &#39;Equity&#39;,
-                                &#39;InventoryNet&#39;,
-                                &#39;Cash&#39;,
-                                &#39;CashOther&#39;,
-                                &#39;RetainedEarnings&#39;,
-                                &#39;LiabilitiesAndStockholdersEquity&#39;
-                                ]
-
-    # these are the columns that finally are returned after the standardization
-    final_tags: List[str] = [&#39;Assets&#39;, &#39;AssetsCurrent&#39;, &#39;AssetsNoncurrent&#39;,
-                             &#39;Liabilities&#39;, &#39;LiabilitiesCurrent&#39;, &#39;LiabilitiesNoncurrent&#39;,
-                             &#39;Equity&#39;,
-                             &#39;InventoryNet&#39;,
-                             &#39;Cash&#39;,
-                             &#39;RetainedEarnings&#39;
-                             ]
-
-    # used to evaluate if a report is a the main balancesheet report
-    # inside a report, there can be several different tables (different report nr)
-    # which stmt value is BS.
-    # however, we might be only interested in the &#34;major&#34; BS report. Usually this is the
-    # one which has the least nan in the following columns
-    main_columns = [&#39;Assets&#39;, &#39;AssetsCurrent&#39;, &#39;AssetsNoncurrent&#39;,
-                    &#39;Liabilities&#39;, &#39;LiabilitiesCurrent&#39;, &#39;LiabilitiesNoncurrent&#39;]
-
-    # sum definition, which is used to calculate missing values, if eithter the total
-    # or one of the summand is missing
-    sum_definition: Dict[str, Tuple[str, str]] = {
-        &#39;Assets&#39;: (&#39;AssetsCurrent&#39;, &#39;AssetsNoncurrent&#39;),
-        &#39;Liabilities&#39;: (&#39;LiabilitiesCurrent&#39;, &#39;LiabilitiesNoncurrent&#39;)
-    }
-
-    def standardize(self, df: pd.DataFrame, only_return_main_coreg: bool = False,
-                    filter_for_main_report: bool = False) -&gt; pd.DataFrame:
-
-        # todo: wann muss negating berücksichtigt werden?
-        cpy_df = df[
-            [&#39;adsh&#39;, &#39;coreg&#39;, &#39;tag&#39;, &#39;version&#39;, &#39;ddate&#39;, &#39;uom&#39;, &#39;value&#39;, &#39;report&#39;, &#39;line&#39;,
-             &#39;negating&#39;]].copy()
-
-        cpy_df.loc[cpy_df[&#39;coreg&#39;].isna(), &#39;coreg&#39;] = &#39;&#39;
-
-        # rename tags
-        self.rename_tags(cpy_df)
-
-        # sum tags up into a new sum-tag
-        cpy_df = self.handle_sum_map(cpy_df)
-
-        # filter the columns, only us the columns we need for the next steps
-        cpy_df = cpy_df[cpy_df.tag.isin(BalanceSheetStandardizerOld.relevant_tags)]
-
-        # pivot the table, so that the tags are now columns
-        pivot_df = self.pivot(cpy_df)
-
-        # complete the total = sum1 + sum2 tripples based on the sum_definition
-        self.complete_sums(pivot_df)
-
-        # apply the final rules
-        self.complete_special_rules(pivot_df)
-
-        # check if only the main coreg shall be returned
-        if only_return_main_coreg:
-            pivot_df = pivot_df[pivot_df.coreg == &#39;&#39;]
-
-        # check if only the main BS report shall be returned
-        if filter_for_main_report:
-            pivot_df[&#39;nan_count&#39;] = pivot_df[
-                BalanceSheetStandardizerOld.main_columns].isna().sum(
-                axis=1)
-            pivot_df.sort_values([&#39;adsh&#39;, &#39;coreg&#39;, &#39;nan_count&#39;], inplace=True)
-            pivot_df = pivot_df.groupby([&#39;adsh&#39;, &#39;coreg&#39;]).last()
-            pivot_df.reset_index(inplace=True)
-
-        # create a meaningful order
-        col_order = [&#39;adsh&#39;, &#39;coreg&#39;, &#39;report&#39;, &#39;ddate&#39;] + BalanceSheetStandardizerOld.final_tags
-        return pivot_df[col_order].copy()
-
-    def rename_tags(self, df: pd.DataFrame):
-        &#34;&#34;&#34; renames AssetsNet to Assets&#34;&#34;&#34;
-        for old_tag, new_tag in BalanceSheetStandardizerOld.rename_map.items():
-            mask = (df.tag == old_tag)
-            df.loc[mask, &#39;tag&#39;] = new_tag
-
-    def handle_sum_map(self, df: pd.DataFrame) -&gt; pd.DataFrame:
-        append_list: List[pd.DataFrame] = []
-        append_list.append(df)
-        for tag, sum_list in BalanceSheetStandardizerOld.sum_list_map.items():
-            result_df = df[df.tag.isin(sum_list)][[&#39;adsh&#39;, &#39;coreg&#39;, &#39;report&#39;, &#39;ddate&#39;, &#39;value&#39;]] \
-                .groupby([&#39;adsh&#39;, &#39;coreg&#39;, &#39;report&#39;, &#39;ddate&#39;]).sum().reset_index()
-            result_df[&#39;tag&#39;] = tag
-            result_df[&#39;line&#39;] = 0
-            result_df[&#39;negating&#39;] = 0
-            result_df[&#39;uom&#39;] = &#39;&#39;
-            result_df[&#39;version&#39;] = &#39;&#39;
-            append_list.append(result_df)
-
-        return pd.concat(append_list).reset_index()
-
-    def pivot(self, df: pd.DataFrame) -&gt; pd.DataFrame:
-        # it is possible, that the same number appears multiple times in different lines,
-        # therefore, duplicates have to be removed, otherwise pivot is not possible
-        relevant_df = df[[&#39;adsh&#39;, &#39;coreg&#39;, &#39;report&#39;, &#39;tag&#39;, &#39;value&#39;, &#39;ddate&#39;]].drop_duplicates()
-
-        duplicates_df = relevant_df[
-            [&#39;adsh&#39;, &#39;coreg&#39;, &#39;report&#39;, &#39;tag&#39;, &#39;ddate&#39;]].value_counts().reset_index()
-        duplicates_df.rename(columns={0: &#39;count&#39;}, inplace=True)
-        duplicated_adsh = duplicates_df[duplicates_df[&#39;count&#39;] &gt; 1].adsh.unique().tolist()
-
-        # todo: logging duplicated entries ...&gt;
-        relevant_df = relevant_df[~relevant_df.adsh.isin(duplicated_adsh)]
-
-        pivot_df = relevant_df.pivot(index=[&#39;adsh&#39;, &#39;coreg&#39;, &#39;report&#39;, &#39;ddate&#39;],
-                                     columns=&#39;tag&#39;,
-                                     values=&#39;value&#39;)
-        pivot_df.reset_index(inplace=True)
-        missing_cols = set(BalanceSheetStandardizerOld.relevant_tags) - set(pivot_df.columns)
-        for missing_col in missing_cols:
-            pivot_df[missing_col] = np.nan
-
-        return pivot_df
-
-    def _basic_sum_completion(self, df: pd.DataFrame, total: str, summand_1: str,
-                              summand_2: str):
-        &#34;&#34;&#34;
-            calculates missing summaries total = summand_1 + summand_2, if one of them is missing
-        &#34;&#34;&#34;
-
-        mask_total_sum1_nosum2 = (~df[total].isna() &amp;
-                                  ~df[summand_1].isna() &amp;
-                                  df[summand_2].isna())
-        df.loc[mask_total_sum1_nosum2, summand_2] = df[total] - df[summand_1]
-
-        mask_total_nosum1_sum2 = (~df[total].isna() &amp;
-                                  df[summand_1].isna() &amp;
-                                  ~df[summand_2].isna())
-        df.loc[mask_total_nosum1_sum2, summand_1] = df[total] - df[summand_2]
-
-        mask_nototal_sum1_sum2 = (df[total].isna() &amp;
-                                  ~df[summand_1].isna() &amp;
-                                  ~df[summand_2].isna())
-        df.loc[mask_nototal_sum1_sum2, total] = df[summand_1] + df[summand_2]
-
-    def complete_sums(self, df: pd.DataFrame):
-        &#34;&#34;&#34; completes sum definitions:
-            eg. Assets = &#39;AssetsCurrent&#39; + &#39;AssetsNoncurrent&#39;
-            if Assets and AssetsCurrent is present -&gt; calculate AssetsNoncurrent
-            if Assets and AssetsNoncurrent is present -&gt; calculate AssetsCurrent
-            if AssetsNoncurrent and AssetsCurrent are present, calculate Assets
-        &#34;&#34;&#34;
-        for total, summands in BalanceSheetStandardizerOld.sum_definition.items():
-            summand_1 = summands[0]
-            summand_2 = summands[1]
-
-            self._basic_sum_completion(df, total=total, summand_1=summand_1,
-                                       summand_2=summand_2)
 
     def fill_still_isna_summands(self, df: pd.DataFrame):
         &#34;&#34;&#34; if we are left with unset summands&#34;&#34;&#34;
 
+        # for:
+        # &#39;Assets&#39;: (&#39;AssetsCurrent&#39;, &#39;AssetsNoncurrent&#39;),
+        # &#39;Liabilities&#39;: (&#39;LiabilitiesCurrent&#39;, &#39;LiabilitiesNoncurrent&#39;)
         for total, summands in BalanceSheetStandardizerOld.sum_definition.items():
             summand_1 = summands[0]
             summand_2 = summands[1]
@@ -574,16 +447,20 @@ class BalanceSheetStandardizerOld:
         Special rules which help to complete the information
         &#34;&#34;&#34;
 
-        self._basic_sum_completion(df, total=&#39;Assets&#39;, summand_1=&#39;Liabilities&#39;,
-                                   summand_2=&#39;Equity&#39;)
-
-        # actually, LiabilitiesAndStockholdersEquity should have the same value as Assets
-        self._basic_sum_completion(df, total=&#39;LiabilitiesAndStockholdersEquity&#39;,
-                                   summand_1=&#39;Liabilities&#39;,
-                                   summand_2=&#39;Equity&#39;)
+        # self._basic_sum_completion(df, total=&#39;Assets&#39;, summand_1=&#39;Liabilities&#39;,
+        #                            summand_2=&#39;Equity&#39;)
+        #
+        # # actually, LiabilitiesAndStockholdersEquity should have the same value as Assets
+        # self._basic_sum_completion(df, total=&#39;LiabilitiesAndStockholdersEquity&#39;,
+        #                            summand_1=&#39;Liabilities&#39;,
+        #                            summand_2=&#39;Equity&#39;)
 
         # run complete sum again, since total fields could be present now
+        # for:
+        # &#39;Assets&#39;: (&#39;AssetsCurrent&#39;, &#39;AssetsNoncurrent&#39;),
+        # &#39;Liabilities&#39;: (&#39;LiabilitiesCurrent&#39;, &#39;LiabilitiesNoncurrent&#39;)
         self.complete_sums(df)
+
         self.fill_still_isna_summands(df)
 
         # if Equity == -Liabilities and Assets is nan, then
@@ -640,13 +517,10 @@ class BalanceSheetStandardizerOld:
     )
 
     # todo: CashOther wird noch nirgends verwendet
-    # todo: das funktioniert so nicht, da nur summiert wird, falls alle summandspalten
-    # nicht null sind -&gt; es müsste noch eine spezielle Regel haben,
-    # sum with existing summands oder so..
     bs_sumup_rg = RuleGroup(
-        rules=[MissingSumRule(
-            sum_name=&#39;CashOther&#39;,
-            summand_names=[
+        rules=[SumUp(
+            target=&#39;CashOther&#39;,
+            potential_summands=[
                 &#39;CashAndCashEquivalentsAtFairValue&#39;,
                 &#39;CashAndDueFromBanks&#39;,
                 &#39;CashCashEquivalentsAndFederalFundsSold&#39;,
@@ -667,6 +541,16 @@ class BalanceSheetStandardizerOld:
                 sum_tag=&#39;Liabilities&#39;,
                 summand_tags=[&#39;LiabilitiesCurrent&#39;, &#39;LiabilitiesNoncurrent&#39;],
                 prefix=&#34;Lia&#34;
+            ),
+            SumCompletionRuleGroupCreator.create_group(
+                sum_tag=&#39;Assets&#39;,
+                summand_tags=[&#39;Liabilities&#39;, &#39;Equity&#39;],
+                prefix=&#34;Ass2&#34;
+            ),
+            SumCompletionRuleGroupCreator.create_group(
+                sum_tag=&#39;LiabilitiesAndStockholdersEquity&#39;,
+                summand_tags=[&#39;Liabilities&#39;, &#39;Equity&#39;],
+                prefix=&#34;LiaEq&#34;
             )
         ])
 
@@ -692,6 +576,14 @@ class BalanceSheetStandardizerOld:
                                    ]
 
     final_col_order = [&#39;adsh&#39;, &#39;coreg&#39;, &#39;report&#39;, &#39;ddate&#39;] + final_tags
+
+    # used to evaluate if a report is a the main balancesheet report
+    # inside a report, there can be several different tables (different report nr)
+    # which stmt value is BS.
+    # however, we might be only interested in the &#34;major&#34; BS report. Usually this is the
+    # one which has the least nan in the following columns
+    main_columns = [&#39;Assets&#39;, &#39;AssetsCurrent&#39;, &#39;AssetsNoncurrent&#39;,
+                    &#39;Liabilities&#39;, &#39;LiabilitiesCurrent&#39;, &#39;LiabilitiesNoncurrent&#39;]
 
     def __init__(self, calculate_pre_stats: bool = False, filter_for_main_report: bool = False):
         self.calculate_pre_stats: bool = calculate_pre_stats
@@ -720,34 +612,35 @@ class BalanceSheetStandardizerOld:
         expected_tags = all_input_tags.union(self.final_tags)
         pivot_df = self._pivot(df=cpy_df, expected_tags=expected_tags)
 
-        if self.calculate_pre_stats:
-            pre_pivot_df = pivot_df[self.final_col_order]
-            if self.filter_for_main_report:
-                pre_pivot_df = self._filter_pivot_for_main_reports(pre_pivot_df)
-            self.pre_stats = self._calculate_stats(pivot_df=pre_pivot_df)
-            self.pre_stats.name = &#34;pre&#34;
-
-        # apply the rule_tree
-        self.rule_tree.process(pivot_df)
-
-        # todo: kann das auch ganz am anfang nach pivot gemacht werden? oder sollte man warten,
-        # bis alles berechnet ist, damit auch die berechneten werte zählen?
         if self.filter_for_main_report:
             pivot_df = self._filter_pivot_for_main_reports(pivot_df)
 
+        total_length = len(pivot_df)
+
+        # calculate_pre_stats:
+        pre_pivot_df = pivot_df[self.final_col_order]
+        self.pre_stats = self._calculate_stats(pivot_df=pre_pivot_df)
+        self.pre_stats.name = &#34;pre&#34;
+        self.stats = pd.DataFrame(self.pre_stats)
+        self.stats[&#39;pre_rel&#39;] = self.stats.pre / total_length
+
+        self.stats = pd.DataFrame(self.pre_stats)
+
+        for i in range(3):
+            # apply the rule_tree
+            self.rule_tree.process(pivot_df)
+
+            self.post_stats = self._calculate_stats(pivot_df=pivot_df)
+            self.post_stats.name = f&#34;post_{i}&#34;
+
+            self.stats = self.stats.join(self.post_stats)
+            self.stats[self.post_stats.name + &#39;_rel&#39;] = \
+                self.stats[self.post_stats.name] / total_length
+            self.stats[self.post_stats.name + &#39;_red&#39;] = \
+                1 - (self.stats[self.post_stats.name] / self.stats.pre)
+
         # create a meaningful order
         pivot_df = pivot_df[self.final_col_order].copy()
-
-        self.post_stats = self._calculate_stats(pivot_df=pivot_df)
-        self.post_stats.name = &#34;post&#34;
-
-        total = len(pivot_df)
-        self.stats = pd.DataFrame(self.post_stats)
-        self.stats[&#39;post_rel&#39;] = self.stats.post / total
-        if self.calculate_pre_stats:
-            self.stats = self.stats.join(self.pre_stats)
-            self.stats[&#39;pre_rel&#39;] = self.stats.pre / total
-            self.stats[&#39;reduction&#39;] = 1 - (self.stats.post / self.stats.pre)
 
         return pivot_df
 
@@ -755,7 +648,7 @@ class BalanceSheetStandardizerOld:
         cpy_pivot_df = pivot_df.copy()
 
         cpy_pivot_df[&#39;nan_count&#39;] = cpy_pivot_df[
-            BalanceSheetStandardizerOld.main_columns].isna().sum(
+            self.main_columns].isna().sum(
             axis=1)
         cpy_pivot_df.sort_values([&#39;adsh&#39;, &#39;coreg&#39;, &#39;nan_count&#39;], inplace=True)
         cpy_pivot_df = cpy_pivot_df.groupby([&#39;adsh&#39;, &#39;coreg&#39;]).last()
@@ -822,6 +715,10 @@ class BalanceSheetStandardizerOld:
 <dd>
 <div class="desc"></div>
 </dd>
+<dt id="secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizer.main_columns"><code class="name">var <span class="ident">main_columns</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
 </dl>
 <h3>Methods</h3>
 <dl>
@@ -847,34 +744,35 @@ class BalanceSheetStandardizerOld:
     expected_tags = all_input_tags.union(self.final_tags)
     pivot_df = self._pivot(df=cpy_df, expected_tags=expected_tags)
 
-    if self.calculate_pre_stats:
-        pre_pivot_df = pivot_df[self.final_col_order]
-        if self.filter_for_main_report:
-            pre_pivot_df = self._filter_pivot_for_main_reports(pre_pivot_df)
-        self.pre_stats = self._calculate_stats(pivot_df=pre_pivot_df)
-        self.pre_stats.name = &#34;pre&#34;
-
-    # apply the rule_tree
-    self.rule_tree.process(pivot_df)
-
-    # todo: kann das auch ganz am anfang nach pivot gemacht werden? oder sollte man warten,
-    # bis alles berechnet ist, damit auch die berechneten werte zählen?
     if self.filter_for_main_report:
         pivot_df = self._filter_pivot_for_main_reports(pivot_df)
 
+    total_length = len(pivot_df)
+
+    # calculate_pre_stats:
+    pre_pivot_df = pivot_df[self.final_col_order]
+    self.pre_stats = self._calculate_stats(pivot_df=pre_pivot_df)
+    self.pre_stats.name = &#34;pre&#34;
+    self.stats = pd.DataFrame(self.pre_stats)
+    self.stats[&#39;pre_rel&#39;] = self.stats.pre / total_length
+
+    self.stats = pd.DataFrame(self.pre_stats)
+
+    for i in range(3):
+        # apply the rule_tree
+        self.rule_tree.process(pivot_df)
+
+        self.post_stats = self._calculate_stats(pivot_df=pivot_df)
+        self.post_stats.name = f&#34;post_{i}&#34;
+
+        self.stats = self.stats.join(self.post_stats)
+        self.stats[self.post_stats.name + &#39;_rel&#39;] = \
+            self.stats[self.post_stats.name] / total_length
+        self.stats[self.post_stats.name + &#39;_red&#39;] = \
+            1 - (self.stats[self.post_stats.name] / self.stats.pre)
+
     # create a meaningful order
     pivot_df = pivot_df[self.final_col_order].copy()
-
-    self.post_stats = self._calculate_stats(pivot_df=pivot_df)
-    self.post_stats.name = &#34;post&#34;
-
-    total = len(pivot_df)
-    self.stats = pd.DataFrame(self.post_stats)
-    self.stats[&#39;post_rel&#39;] = self.stats.post / total
-    if self.calculate_pre_stats:
-        self.stats = self.stats.join(self.pre_stats)
-        self.stats[&#39;pre_rel&#39;] = self.stats.pre / total
-        self.stats[&#39;reduction&#39;] = 1 - (self.stats.post / self.stats.pre)
 
     return pivot_df</code></pre>
 </details>
@@ -891,186 +789,13 @@ class BalanceSheetStandardizerOld:
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class BalanceSheetStandardizerOld:
-    rename_map: Dict[str, str] = {
-        &#39;AssetsNet&#39;: &#39;Assets&#39;,
-        &#39;StockholdersEquityIncludingPortionAttributableToNoncontrollingInterest&#39;: &#39;Equity&#39;,
-        &#39;PartnersCapital&#39;: &#39;Equity&#39;,
-        &#39;StockholdersEquity&#39;: &#39;Equity&#39;,
-        &#39;CashAndCashEquivalentsAtCarryingValue&#39;: &#39;Cash&#39;,
-        &#39;RetainedEarningsAppropriated&#39;: &#39;RetainedEarnings&#39;,
-        &#39;RetainedEarningsAccumulatedDeficit&#39;: &#39;RetainedEarnings&#39;
-    }
-
-    # several tag values are sumed upd into a new tag
-    sum_list_map: Dict[str, List[str]] = {&#39;CashOther&#39;: [
-        &#39;CashAndCashEquivalentsAtFairValue&#39;,
-        &#39;CashAndDueFromBanks&#39;,
-        &#39;CashCashEquivalentsAndFederalFundsSold&#39;,
-        &#39;RestrictedCashAndCashEquivalentsAtCarryingValue&#39;,
-        &#39;CashAndCashEquivalentsInForeignCurrencyAtCarryingValue&#39;]}
-
-    # these are the relevant tags that we need to calculate missing values
-    relevant_tags: List[str] = [&#39;Assets&#39;, &#39;AssetsCurrent&#39;, &#39;AssetsNoncurrent&#39;,
-                                &#39;Liabilities&#39;, &#39;LiabilitiesCurrent&#39;, &#39;LiabilitiesNoncurrent&#39;,
-                                &#39;Equity&#39;,
-                                &#39;InventoryNet&#39;,
-                                &#39;Cash&#39;,
-                                &#39;CashOther&#39;,
-                                &#39;RetainedEarnings&#39;,
-                                &#39;LiabilitiesAndStockholdersEquity&#39;
-                                ]
-
-    # these are the columns that finally are returned after the standardization
-    final_tags: List[str] = [&#39;Assets&#39;, &#39;AssetsCurrent&#39;, &#39;AssetsNoncurrent&#39;,
-                             &#39;Liabilities&#39;, &#39;LiabilitiesCurrent&#39;, &#39;LiabilitiesNoncurrent&#39;,
-                             &#39;Equity&#39;,
-                             &#39;InventoryNet&#39;,
-                             &#39;Cash&#39;,
-                             &#39;RetainedEarnings&#39;
-                             ]
-
-    # used to evaluate if a report is a the main balancesheet report
-    # inside a report, there can be several different tables (different report nr)
-    # which stmt value is BS.
-    # however, we might be only interested in the &#34;major&#34; BS report. Usually this is the
-    # one which has the least nan in the following columns
-    main_columns = [&#39;Assets&#39;, &#39;AssetsCurrent&#39;, &#39;AssetsNoncurrent&#39;,
-                    &#39;Liabilities&#39;, &#39;LiabilitiesCurrent&#39;, &#39;LiabilitiesNoncurrent&#39;]
-
-    # sum definition, which is used to calculate missing values, if eithter the total
-    # or one of the summand is missing
-    sum_definition: Dict[str, Tuple[str, str]] = {
-        &#39;Assets&#39;: (&#39;AssetsCurrent&#39;, &#39;AssetsNoncurrent&#39;),
-        &#39;Liabilities&#39;: (&#39;LiabilitiesCurrent&#39;, &#39;LiabilitiesNoncurrent&#39;)
-    }
-
-    def standardize(self, df: pd.DataFrame, only_return_main_coreg: bool = False,
-                    filter_for_main_report: bool = False) -&gt; pd.DataFrame:
-
-        # todo: wann muss negating berücksichtigt werden?
-        cpy_df = df[
-            [&#39;adsh&#39;, &#39;coreg&#39;, &#39;tag&#39;, &#39;version&#39;, &#39;ddate&#39;, &#39;uom&#39;, &#39;value&#39;, &#39;report&#39;, &#39;line&#39;,
-             &#39;negating&#39;]].copy()
-
-        cpy_df.loc[cpy_df[&#39;coreg&#39;].isna(), &#39;coreg&#39;] = &#39;&#39;
-
-        # rename tags
-        self.rename_tags(cpy_df)
-
-        # sum tags up into a new sum-tag
-        cpy_df = self.handle_sum_map(cpy_df)
-
-        # filter the columns, only us the columns we need for the next steps
-        cpy_df = cpy_df[cpy_df.tag.isin(BalanceSheetStandardizerOld.relevant_tags)]
-
-        # pivot the table, so that the tags are now columns
-        pivot_df = self.pivot(cpy_df)
-
-        # complete the total = sum1 + sum2 tripples based on the sum_definition
-        self.complete_sums(pivot_df)
-
-        # apply the final rules
-        self.complete_special_rules(pivot_df)
-
-        # check if only the main coreg shall be returned
-        if only_return_main_coreg:
-            pivot_df = pivot_df[pivot_df.coreg == &#39;&#39;]
-
-        # check if only the main BS report shall be returned
-        if filter_for_main_report:
-            pivot_df[&#39;nan_count&#39;] = pivot_df[
-                BalanceSheetStandardizerOld.main_columns].isna().sum(
-                axis=1)
-            pivot_df.sort_values([&#39;adsh&#39;, &#39;coreg&#39;, &#39;nan_count&#39;], inplace=True)
-            pivot_df = pivot_df.groupby([&#39;adsh&#39;, &#39;coreg&#39;]).last()
-            pivot_df.reset_index(inplace=True)
-
-        # create a meaningful order
-        col_order = [&#39;adsh&#39;, &#39;coreg&#39;, &#39;report&#39;, &#39;ddate&#39;] + BalanceSheetStandardizerOld.final_tags
-        return pivot_df[col_order].copy()
-
-    def rename_tags(self, df: pd.DataFrame):
-        &#34;&#34;&#34; renames AssetsNet to Assets&#34;&#34;&#34;
-        for old_tag, new_tag in BalanceSheetStandardizerOld.rename_map.items():
-            mask = (df.tag == old_tag)
-            df.loc[mask, &#39;tag&#39;] = new_tag
-
-    def handle_sum_map(self, df: pd.DataFrame) -&gt; pd.DataFrame:
-        append_list: List[pd.DataFrame] = []
-        append_list.append(df)
-        for tag, sum_list in BalanceSheetStandardizerOld.sum_list_map.items():
-            result_df = df[df.tag.isin(sum_list)][[&#39;adsh&#39;, &#39;coreg&#39;, &#39;report&#39;, &#39;ddate&#39;, &#39;value&#39;]] \
-                .groupby([&#39;adsh&#39;, &#39;coreg&#39;, &#39;report&#39;, &#39;ddate&#39;]).sum().reset_index()
-            result_df[&#39;tag&#39;] = tag
-            result_df[&#39;line&#39;] = 0
-            result_df[&#39;negating&#39;] = 0
-            result_df[&#39;uom&#39;] = &#39;&#39;
-            result_df[&#39;version&#39;] = &#39;&#39;
-            append_list.append(result_df)
-
-        return pd.concat(append_list).reset_index()
-
-    def pivot(self, df: pd.DataFrame) -&gt; pd.DataFrame:
-        # it is possible, that the same number appears multiple times in different lines,
-        # therefore, duplicates have to be removed, otherwise pivot is not possible
-        relevant_df = df[[&#39;adsh&#39;, &#39;coreg&#39;, &#39;report&#39;, &#39;tag&#39;, &#39;value&#39;, &#39;ddate&#39;]].drop_duplicates()
-
-        duplicates_df = relevant_df[
-            [&#39;adsh&#39;, &#39;coreg&#39;, &#39;report&#39;, &#39;tag&#39;, &#39;ddate&#39;]].value_counts().reset_index()
-        duplicates_df.rename(columns={0: &#39;count&#39;}, inplace=True)
-        duplicated_adsh = duplicates_df[duplicates_df[&#39;count&#39;] &gt; 1].adsh.unique().tolist()
-
-        # todo: logging duplicated entries ...&gt;
-        relevant_df = relevant_df[~relevant_df.adsh.isin(duplicated_adsh)]
-
-        pivot_df = relevant_df.pivot(index=[&#39;adsh&#39;, &#39;coreg&#39;, &#39;report&#39;, &#39;ddate&#39;],
-                                     columns=&#39;tag&#39;,
-                                     values=&#39;value&#39;)
-        pivot_df.reset_index(inplace=True)
-        missing_cols = set(BalanceSheetStandardizerOld.relevant_tags) - set(pivot_df.columns)
-        for missing_col in missing_cols:
-            pivot_df[missing_col] = np.nan
-
-        return pivot_df
-
-    def _basic_sum_completion(self, df: pd.DataFrame, total: str, summand_1: str,
-                              summand_2: str):
-        &#34;&#34;&#34;
-            calculates missing summaries total = summand_1 + summand_2, if one of them is missing
-        &#34;&#34;&#34;
-
-        mask_total_sum1_nosum2 = (~df[total].isna() &amp;
-                                  ~df[summand_1].isna() &amp;
-                                  df[summand_2].isna())
-        df.loc[mask_total_sum1_nosum2, summand_2] = df[total] - df[summand_1]
-
-        mask_total_nosum1_sum2 = (~df[total].isna() &amp;
-                                  df[summand_1].isna() &amp;
-                                  ~df[summand_2].isna())
-        df.loc[mask_total_nosum1_sum2, summand_1] = df[total] - df[summand_2]
-
-        mask_nototal_sum1_sum2 = (df[total].isna() &amp;
-                                  ~df[summand_1].isna() &amp;
-                                  ~df[summand_2].isna())
-        df.loc[mask_nototal_sum1_sum2, total] = df[summand_1] + df[summand_2]
-
-    def complete_sums(self, df: pd.DataFrame):
-        &#34;&#34;&#34; completes sum definitions:
-            eg. Assets = &#39;AssetsCurrent&#39; + &#39;AssetsNoncurrent&#39;
-            if Assets and AssetsCurrent is present -&gt; calculate AssetsNoncurrent
-            if Assets and AssetsNoncurrent is present -&gt; calculate AssetsCurrent
-            if AssetsNoncurrent and AssetsCurrent are present, calculate Assets
-        &#34;&#34;&#34;
-        for total, summands in BalanceSheetStandardizerOld.sum_definition.items():
-            summand_1 = summands[0]
-            summand_2 = summands[1]
-
-            self._basic_sum_completion(df, total=total, summand_1=summand_1,
-                                       summand_2=summand_2)
 
     def fill_still_isna_summands(self, df: pd.DataFrame):
         &#34;&#34;&#34; if we are left with unset summands&#34;&#34;&#34;
 
+        # for:
+        # &#39;Assets&#39;: (&#39;AssetsCurrent&#39;, &#39;AssetsNoncurrent&#39;),
+        # &#39;Liabilities&#39;: (&#39;LiabilitiesCurrent&#39;, &#39;LiabilitiesNoncurrent&#39;)
         for total, summands in BalanceSheetStandardizerOld.sum_definition.items():
             summand_1 = summands[0]
             summand_2 = summands[1]
@@ -1104,16 +829,20 @@ class BalanceSheetStandardizerOld:
         Special rules which help to complete the information
         &#34;&#34;&#34;
 
-        self._basic_sum_completion(df, total=&#39;Assets&#39;, summand_1=&#39;Liabilities&#39;,
-                                   summand_2=&#39;Equity&#39;)
-
-        # actually, LiabilitiesAndStockholdersEquity should have the same value as Assets
-        self._basic_sum_completion(df, total=&#39;LiabilitiesAndStockholdersEquity&#39;,
-                                   summand_1=&#39;Liabilities&#39;,
-                                   summand_2=&#39;Equity&#39;)
+        # self._basic_sum_completion(df, total=&#39;Assets&#39;, summand_1=&#39;Liabilities&#39;,
+        #                            summand_2=&#39;Equity&#39;)
+        #
+        # # actually, LiabilitiesAndStockholdersEquity should have the same value as Assets
+        # self._basic_sum_completion(df, total=&#39;LiabilitiesAndStockholdersEquity&#39;,
+        #                            summand_1=&#39;Liabilities&#39;,
+        #                            summand_2=&#39;Equity&#39;)
 
         # run complete sum again, since total fields could be present now
+        # for:
+        # &#39;Assets&#39;: (&#39;AssetsCurrent&#39;, &#39;AssetsNoncurrent&#39;),
+        # &#39;Liabilities&#39;: (&#39;LiabilitiesCurrent&#39;, &#39;LiabilitiesNoncurrent&#39;)
         self.complete_sums(df)
+
         self.fill_still_isna_summands(df)
 
         # if Equity == -Liabilities and Assets is nan, then
@@ -1131,33 +860,6 @@ class BalanceSheetStandardizerOld:
         mask = df.InventoryNet.isna()
         df.loc[mask, &#39;InventoryNet&#39;] = 0.0</code></pre>
 </details>
-<h3>Class variables</h3>
-<dl>
-<dt id="secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizerOld.final_tags"><code class="name">var <span class="ident">final_tags</span> : List[str]</code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt id="secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizerOld.main_columns"><code class="name">var <span class="ident">main_columns</span></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt id="secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizerOld.relevant_tags"><code class="name">var <span class="ident">relevant_tags</span> : List[str]</code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt id="secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizerOld.rename_map"><code class="name">var <span class="ident">rename_map</span> : Dict[str, str]</code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt id="secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizerOld.sum_definition"><code class="name">var <span class="ident">sum_definition</span> : Dict[str, Tuple[str, str]]</code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt id="secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizerOld.sum_list_map"><code class="name">var <span class="ident">sum_list_map</span> : Dict[str, List[str]]</code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-</dl>
 <h3>Methods</h3>
 <dl>
 <dt id="secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizerOld.complete_special_rules"><code class="name flex">
@@ -1174,16 +876,20 @@ class BalanceSheetStandardizerOld:
     Special rules which help to complete the information
     &#34;&#34;&#34;
 
-    self._basic_sum_completion(df, total=&#39;Assets&#39;, summand_1=&#39;Liabilities&#39;,
-                               summand_2=&#39;Equity&#39;)
-
-    # actually, LiabilitiesAndStockholdersEquity should have the same value as Assets
-    self._basic_sum_completion(df, total=&#39;LiabilitiesAndStockholdersEquity&#39;,
-                               summand_1=&#39;Liabilities&#39;,
-                               summand_2=&#39;Equity&#39;)
+    # self._basic_sum_completion(df, total=&#39;Assets&#39;, summand_1=&#39;Liabilities&#39;,
+    #                            summand_2=&#39;Equity&#39;)
+    #
+    # # actually, LiabilitiesAndStockholdersEquity should have the same value as Assets
+    # self._basic_sum_completion(df, total=&#39;LiabilitiesAndStockholdersEquity&#39;,
+    #                            summand_1=&#39;Liabilities&#39;,
+    #                            summand_2=&#39;Equity&#39;)
 
     # run complete sum again, since total fields could be present now
+    # for:
+    # &#39;Assets&#39;: (&#39;AssetsCurrent&#39;, &#39;AssetsNoncurrent&#39;),
+    # &#39;Liabilities&#39;: (&#39;LiabilitiesCurrent&#39;, &#39;LiabilitiesNoncurrent&#39;)
     self.complete_sums(df)
+
     self.fill_still_isna_summands(df)
 
     # if Equity == -Liabilities and Assets is nan, then
@@ -1202,34 +908,6 @@ class BalanceSheetStandardizerOld:
     df.loc[mask, &#39;InventoryNet&#39;] = 0.0</code></pre>
 </details>
 </dd>
-<dt id="secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizerOld.complete_sums"><code class="name flex">
-<span>def <span class="ident">complete_sums</span></span>(<span>self, df: pandas.core.frame.DataFrame)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>completes sum definitions:
-eg. Assets = 'AssetsCurrent' + 'AssetsNoncurrent'
-if Assets and AssetsCurrent is present -&gt; calculate AssetsNoncurrent
-if Assets and AssetsNoncurrent is present -&gt; calculate AssetsCurrent
-if AssetsNoncurrent and AssetsCurrent are present, calculate Assets</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def complete_sums(self, df: pd.DataFrame):
-    &#34;&#34;&#34; completes sum definitions:
-        eg. Assets = &#39;AssetsCurrent&#39; + &#39;AssetsNoncurrent&#39;
-        if Assets and AssetsCurrent is present -&gt; calculate AssetsNoncurrent
-        if Assets and AssetsNoncurrent is present -&gt; calculate AssetsCurrent
-        if AssetsNoncurrent and AssetsCurrent are present, calculate Assets
-    &#34;&#34;&#34;
-    for total, summands in BalanceSheetStandardizerOld.sum_definition.items():
-        summand_1 = summands[0]
-        summand_2 = summands[1]
-
-        self._basic_sum_completion(df, total=total, summand_1=summand_1,
-                                   summand_2=summand_2)</code></pre>
-</details>
-</dd>
 <dt id="secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizerOld.fill_still_isna_summands"><code class="name flex">
 <span>def <span class="ident">fill_still_isna_summands</span></span>(<span>self, df: pandas.core.frame.DataFrame)</span>
 </code></dt>
@@ -1242,6 +920,9 @@ if AssetsNoncurrent and AssetsCurrent are present, calculate Assets</p></div>
 <pre><code class="python">def fill_still_isna_summands(self, df: pd.DataFrame):
     &#34;&#34;&#34; if we are left with unset summands&#34;&#34;&#34;
 
+    # for:
+    # &#39;Assets&#39;: (&#39;AssetsCurrent&#39;, &#39;AssetsNoncurrent&#39;),
+    # &#39;Liabilities&#39;: (&#39;LiabilitiesCurrent&#39;, &#39;LiabilitiesNoncurrent&#39;)
     for total, summands in BalanceSheetStandardizerOld.sum_definition.items():
         summand_1 = summands[0]
         summand_2 = summands[1]
@@ -1271,135 +952,6 @@ if AssetsNoncurrent and AssetsCurrent are present, calculate Assets</p></div>
         df.loc[mask_nototal_nosum1_sum2, summand_1] = 0.0</code></pre>
 </details>
 </dd>
-<dt id="secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizerOld.handle_sum_map"><code class="name flex">
-<span>def <span class="ident">handle_sum_map</span></span>(<span>self, df: pandas.core.frame.DataFrame) ‑> pandas.core.frame.DataFrame</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def handle_sum_map(self, df: pd.DataFrame) -&gt; pd.DataFrame:
-    append_list: List[pd.DataFrame] = []
-    append_list.append(df)
-    for tag, sum_list in BalanceSheetStandardizerOld.sum_list_map.items():
-        result_df = df[df.tag.isin(sum_list)][[&#39;adsh&#39;, &#39;coreg&#39;, &#39;report&#39;, &#39;ddate&#39;, &#39;value&#39;]] \
-            .groupby([&#39;adsh&#39;, &#39;coreg&#39;, &#39;report&#39;, &#39;ddate&#39;]).sum().reset_index()
-        result_df[&#39;tag&#39;] = tag
-        result_df[&#39;line&#39;] = 0
-        result_df[&#39;negating&#39;] = 0
-        result_df[&#39;uom&#39;] = &#39;&#39;
-        result_df[&#39;version&#39;] = &#39;&#39;
-        append_list.append(result_df)
-
-    return pd.concat(append_list).reset_index()</code></pre>
-</details>
-</dd>
-<dt id="secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizerOld.pivot"><code class="name flex">
-<span>def <span class="ident">pivot</span></span>(<span>self, df: pandas.core.frame.DataFrame) ‑> pandas.core.frame.DataFrame</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def pivot(self, df: pd.DataFrame) -&gt; pd.DataFrame:
-    # it is possible, that the same number appears multiple times in different lines,
-    # therefore, duplicates have to be removed, otherwise pivot is not possible
-    relevant_df = df[[&#39;adsh&#39;, &#39;coreg&#39;, &#39;report&#39;, &#39;tag&#39;, &#39;value&#39;, &#39;ddate&#39;]].drop_duplicates()
-
-    duplicates_df = relevant_df[
-        [&#39;adsh&#39;, &#39;coreg&#39;, &#39;report&#39;, &#39;tag&#39;, &#39;ddate&#39;]].value_counts().reset_index()
-    duplicates_df.rename(columns={0: &#39;count&#39;}, inplace=True)
-    duplicated_adsh = duplicates_df[duplicates_df[&#39;count&#39;] &gt; 1].adsh.unique().tolist()
-
-    # todo: logging duplicated entries ...&gt;
-    relevant_df = relevant_df[~relevant_df.adsh.isin(duplicated_adsh)]
-
-    pivot_df = relevant_df.pivot(index=[&#39;adsh&#39;, &#39;coreg&#39;, &#39;report&#39;, &#39;ddate&#39;],
-                                 columns=&#39;tag&#39;,
-                                 values=&#39;value&#39;)
-    pivot_df.reset_index(inplace=True)
-    missing_cols = set(BalanceSheetStandardizerOld.relevant_tags) - set(pivot_df.columns)
-    for missing_col in missing_cols:
-        pivot_df[missing_col] = np.nan
-
-    return pivot_df</code></pre>
-</details>
-</dd>
-<dt id="secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizerOld.rename_tags"><code class="name flex">
-<span>def <span class="ident">rename_tags</span></span>(<span>self, df: pandas.core.frame.DataFrame)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>renames AssetsNet to Assets</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def rename_tags(self, df: pd.DataFrame):
-    &#34;&#34;&#34; renames AssetsNet to Assets&#34;&#34;&#34;
-    for old_tag, new_tag in BalanceSheetStandardizerOld.rename_map.items():
-        mask = (df.tag == old_tag)
-        df.loc[mask, &#39;tag&#39;] = new_tag</code></pre>
-</details>
-</dd>
-<dt id="secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizerOld.standardize"><code class="name flex">
-<span>def <span class="ident">standardize</span></span>(<span>self, df: pandas.core.frame.DataFrame, only_return_main_coreg: bool = False, filter_for_main_report: bool = False) ‑> pandas.core.frame.DataFrame</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def standardize(self, df: pd.DataFrame, only_return_main_coreg: bool = False,
-                filter_for_main_report: bool = False) -&gt; pd.DataFrame:
-
-    # todo: wann muss negating berücksichtigt werden?
-    cpy_df = df[
-        [&#39;adsh&#39;, &#39;coreg&#39;, &#39;tag&#39;, &#39;version&#39;, &#39;ddate&#39;, &#39;uom&#39;, &#39;value&#39;, &#39;report&#39;, &#39;line&#39;,
-         &#39;negating&#39;]].copy()
-
-    cpy_df.loc[cpy_df[&#39;coreg&#39;].isna(), &#39;coreg&#39;] = &#39;&#39;
-
-    # rename tags
-    self.rename_tags(cpy_df)
-
-    # sum tags up into a new sum-tag
-    cpy_df = self.handle_sum_map(cpy_df)
-
-    # filter the columns, only us the columns we need for the next steps
-    cpy_df = cpy_df[cpy_df.tag.isin(BalanceSheetStandardizerOld.relevant_tags)]
-
-    # pivot the table, so that the tags are now columns
-    pivot_df = self.pivot(cpy_df)
-
-    # complete the total = sum1 + sum2 tripples based on the sum_definition
-    self.complete_sums(pivot_df)
-
-    # apply the final rules
-    self.complete_special_rules(pivot_df)
-
-    # check if only the main coreg shall be returned
-    if only_return_main_coreg:
-        pivot_df = pivot_df[pivot_df.coreg == &#39;&#39;]
-
-    # check if only the main BS report shall be returned
-    if filter_for_main_report:
-        pivot_df[&#39;nan_count&#39;] = pivot_df[
-            BalanceSheetStandardizerOld.main_columns].isna().sum(
-            axis=1)
-        pivot_df.sort_values([&#39;adsh&#39;, &#39;coreg&#39;, &#39;nan_count&#39;], inplace=True)
-        pivot_df = pivot_df.groupby([&#39;adsh&#39;, &#39;coreg&#39;]).last()
-        pivot_df.reset_index(inplace=True)
-
-    # create a meaningful order
-    col_order = [&#39;adsh&#39;, &#39;coreg&#39;, &#39;report&#39;, &#39;ddate&#39;] + BalanceSheetStandardizerOld.final_tags
-    return pivot_df[col_order].copy()</code></pre>
-</details>
-</dd>
 </dl>
 </dd>
 <dt id="secfsdstools.f_standardize.bs_standardize.MissingSumRule"><code class="flex name class">
@@ -1407,13 +959,13 @@ if AssetsNoncurrent and AssetsCurrent are present, calculate Assets</p></div>
 <span>(</span><span>sum_name: str, summand_names: List[str])</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Helper class that provides a standard way to create an ABC using
-inheritance.</p></div>
+<div class="desc"><p>creates the sum in the sum_name column if all summand_names columnes have a value</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class MissingSumRule(Rule):
+    &#34;&#34;&#34; creates the sum in the sum_name column if all summand_names columnes have a value&#34;&#34;&#34;
 
     def __init__(self, sum_name: str, summand_names: List[str]):
         self.sum_name = sum_name
@@ -1745,6 +1297,7 @@ inheritance.</p></div>
 <li><a title="secfsdstools.f_standardize.bs_standardize.MissingSumRule" href="#secfsdstools.f_standardize.bs_standardize.MissingSumRule">MissingSumRule</a></li>
 <li><a title="secfsdstools.f_standardize.bs_standardize.MissingSummandRule" href="#secfsdstools.f_standardize.bs_standardize.MissingSummandRule">MissingSummandRule</a></li>
 <li><a title="secfsdstools.f_standardize.bs_standardize.RenameRule" href="#secfsdstools.f_standardize.bs_standardize.RenameRule">RenameRule</a></li>
+<li><a title="secfsdstools.f_standardize.bs_standardize.SumUp" href="#secfsdstools.f_standardize.bs_standardize.SumUp">SumUp</a></li>
 </ul>
 <h3>Methods</h3>
 <dl>
@@ -1954,9 +1507,8 @@ E.G Assets = AssetsCurrent + AssetsNoneCurrent</p></div>
 
     @staticmethod
     def create_group(sum_tag: str, summand_tags: List[str], prefix: str) -&gt; RuleGroup:
-        rules: List[RuleEntity] = []
-        rules.append(MissingSumRule(sum_name=sum_tag,
-                                    summand_names=summand_tags))
+        rules: List[RuleEntity] = [MissingSumRule(sum_name=sum_tag,
+                                                  summand_names=summand_tags)]
         for summand in summand_tags:
             others = summand_tags.copy()
             others.remove(summand)
@@ -1977,15 +1529,117 @@ E.G Assets = AssetsCurrent + AssetsNoneCurrent</p></div>
 </summary>
 <pre><code class="python">@staticmethod
 def create_group(sum_tag: str, summand_tags: List[str], prefix: str) -&gt; RuleGroup:
-    rules: List[RuleEntity] = []
-    rules.append(MissingSumRule(sum_name=sum_tag,
-                                summand_names=summand_tags))
+    rules: List[RuleEntity] = [MissingSumRule(sum_name=sum_tag,
+                                              summand_names=summand_tags)]
     for summand in summand_tags:
         others = summand_tags.copy()
         others.remove(summand)
         rules.append(MissingSummandRule(sum_name=sum_tag, missing_summand=summand,
                                         existing_summands=others))
     return RuleGroup(rules=rules, prefix=prefix)</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+<dt id="secfsdstools.f_standardize.bs_standardize.SumUp"><code class="flex name class">
+<span>class <span class="ident">SumUp</span></span>
+<span>(</span><span>target: str, potential_summands: List[str])</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Sums app the available Summands to a new target column</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class SumUp(Rule):
+    &#34;&#34;&#34;Sums app the available Summands to a new target column&#34;&#34;&#34;
+
+    def __init__(self, target: str, potential_summands: List[str]):
+        self.target = target
+        self.potential_summands = potential_summands
+
+    def get_target_tag(self) -&gt; str:
+        return self.target
+
+    def get_input_tags(self) -&gt; Set[str]:
+        result = {self.target}
+        result.update(self.potential_summands)
+        return result
+
+    def mask(self, df: pd.DataFrame) -&gt; pa.typing.Series[bool]:
+        # if the target was not set..
+        return df[self.target].isna()
+
+    def apply(self, df: pd.DataFrame, mask: pa.typing.Series[bool]):
+        df.loc[mask, self.target] = 0.0  # initialize
+        for potential_summand in self.potential_summands:
+            summand_mask = mask &amp; ~df[potential_summand].isna()
+            df.loc[summand_mask, self.target] = df[self.target] + df[potential_summand]</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="secfsdstools.f_standardize.bs_standardize.Rule" href="#secfsdstools.f_standardize.bs_standardize.Rule">Rule</a></li>
+<li><a title="secfsdstools.f_standardize.bs_standardize.RuleEntity" href="#secfsdstools.f_standardize.bs_standardize.RuleEntity">RuleEntity</a></li>
+<li>abc.ABC</li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="secfsdstools.f_standardize.bs_standardize.SumUp.apply"><code class="name flex">
+<span>def <span class="ident">apply</span></span>(<span>self, df: pandas.core.frame.DataFrame, mask: pandera.typing.pandas.Series[bool])</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def apply(self, df: pd.DataFrame, mask: pa.typing.Series[bool]):
+    df.loc[mask, self.target] = 0.0  # initialize
+    for potential_summand in self.potential_summands:
+        summand_mask = mask &amp; ~df[potential_summand].isna()
+        df.loc[summand_mask, self.target] = df[self.target] + df[potential_summand]</code></pre>
+</details>
+</dd>
+<dt id="secfsdstools.f_standardize.bs_standardize.SumUp.get_input_tags"><code class="name flex">
+<span>def <span class="ident">get_input_tags</span></span>(<span>self) ‑> Set[str]</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_input_tags(self) -&gt; Set[str]:
+    result = {self.target}
+    result.update(self.potential_summands)
+    return result</code></pre>
+</details>
+</dd>
+<dt id="secfsdstools.f_standardize.bs_standardize.SumUp.get_target_tag"><code class="name flex">
+<span>def <span class="ident">get_target_tag</span></span>(<span>self) ‑> str</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_target_tag(self) -&gt; str:
+    return self.target</code></pre>
+</details>
+</dd>
+<dt id="secfsdstools.f_standardize.bs_standardize.SumUp.mask"><code class="name flex">
+<span>def <span class="ident">mask</span></span>(<span>self, df: pandas.core.frame.DataFrame) ‑> pandera.typing.pandas.Series[bool]</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def mask(self, df: pd.DataFrame) -&gt; pa.typing.Series[bool]:
+    # if the target was not set..
+    return df[self.target].isna()</code></pre>
 </details>
 </dd>
 </dl>
@@ -2015,6 +1669,7 @@ def create_group(sum_tag: str, summand_tags: List[str], prefix: str) -&gt; RuleG
 <li><code><a title="secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizer.calculation_tags" href="#secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizer.calculation_tags">calculation_tags</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizer.final_col_order" href="#secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizer.final_col_order">final_col_order</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizer.final_tags" href="#secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizer.final_tags">final_tags</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizer.main_columns" href="#secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizer.main_columns">main_columns</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizer.standardize" href="#secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizer.standardize">standardize</a></code></li>
 </ul>
 </li>
@@ -2022,18 +1677,7 @@ def create_group(sum_tag: str, summand_tags: List[str], prefix: str) -&gt; RuleG
 <h4><code><a title="secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizerOld" href="#secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizerOld">BalanceSheetStandardizerOld</a></code></h4>
 <ul class="">
 <li><code><a title="secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizerOld.complete_special_rules" href="#secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizerOld.complete_special_rules">complete_special_rules</a></code></li>
-<li><code><a title="secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizerOld.complete_sums" href="#secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizerOld.complete_sums">complete_sums</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizerOld.fill_still_isna_summands" href="#secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizerOld.fill_still_isna_summands">fill_still_isna_summands</a></code></li>
-<li><code><a title="secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizerOld.final_tags" href="#secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizerOld.final_tags">final_tags</a></code></li>
-<li><code><a title="secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizerOld.handle_sum_map" href="#secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizerOld.handle_sum_map">handle_sum_map</a></code></li>
-<li><code><a title="secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizerOld.main_columns" href="#secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizerOld.main_columns">main_columns</a></code></li>
-<li><code><a title="secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizerOld.pivot" href="#secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizerOld.pivot">pivot</a></code></li>
-<li><code><a title="secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizerOld.relevant_tags" href="#secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizerOld.relevant_tags">relevant_tags</a></code></li>
-<li><code><a title="secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizerOld.rename_map" href="#secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizerOld.rename_map">rename_map</a></code></li>
-<li><code><a title="secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizerOld.rename_tags" href="#secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizerOld.rename_tags">rename_tags</a></code></li>
-<li><code><a title="secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizerOld.standardize" href="#secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizerOld.standardize">standardize</a></code></li>
-<li><code><a title="secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizerOld.sum_definition" href="#secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizerOld.sum_definition">sum_definition</a></code></li>
-<li><code><a title="secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizerOld.sum_list_map" href="#secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizerOld.sum_list_map">sum_list_map</a></code></li>
 </ul>
 </li>
 <li>
@@ -2090,6 +1734,15 @@ def create_group(sum_tag: str, summand_tags: List[str], prefix: str) -&gt; RuleG
 <h4><code><a title="secfsdstools.f_standardize.bs_standardize.SumCompletionRuleGroupCreator" href="#secfsdstools.f_standardize.bs_standardize.SumCompletionRuleGroupCreator">SumCompletionRuleGroupCreator</a></code></h4>
 <ul class="">
 <li><code><a title="secfsdstools.f_standardize.bs_standardize.SumCompletionRuleGroupCreator.create_group" href="#secfsdstools.f_standardize.bs_standardize.SumCompletionRuleGroupCreator.create_group">create_group</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="secfsdstools.f_standardize.bs_standardize.SumUp" href="#secfsdstools.f_standardize.bs_standardize.SumUp">SumUp</a></code></h4>
+<ul class="">
+<li><code><a title="secfsdstools.f_standardize.bs_standardize.SumUp.apply" href="#secfsdstools.f_standardize.bs_standardize.SumUp.apply">apply</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.bs_standardize.SumUp.get_input_tags" href="#secfsdstools.f_standardize.bs_standardize.SumUp.get_input_tags">get_input_tags</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.bs_standardize.SumUp.get_target_tag" href="#secfsdstools.f_standardize.bs_standardize.SumUp.get_target_tag">get_target_tag</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.bs_standardize.SumUp.mask" href="#secfsdstools.f_standardize.bs_standardize.SumUp.mask">mask</a></code></li>
 </ul>
 </li>
 </ul>

@@ -24,7 +24,14 @@ v.1.0.0
 
 Bug:
 - irgendetwas beim "Releasen" erzeugt die nojekyll datei, so das die Doku nicht gebuildet wird.
+  -> könnte bereits gefixt sein
+- CP Einträge erscheinen nicht -> ist das wegen dem Join?
+  -> Problem ist, dass keine "nicht numerischen Values" weitergegeben werden...
+     irgendwo wird das gefiltert, und zwar schon früh, d.h., das num_df enthält nie solche Werte, was schlecht sit
+  -> Nein: anscheinend enthalten die num.txt neu nur noch numerische Werte,
+           Textwerte sind nur in der TXT.tsv Datei enthalten, welche aber nur im "sec fs ds with notes" vorhanden ist.
 
+- coreg: "parent company" -> kann es sein, dass dies auch die mein company ist?
 
 
 Next:

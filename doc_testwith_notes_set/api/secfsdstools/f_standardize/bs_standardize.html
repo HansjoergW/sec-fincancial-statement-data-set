@@ -41,7 +41,7 @@ class RuleEntity(ABC):
     def get_input_tags(self) -&gt; Set[str]:
         pass
 
-    def process(self, df: pd.DataFrame):
+    def process(self, df: pd.DataFrame, log_df: Optional[pd.DataFrame] = None, id: str = &#34;&#34;):
         pass
 
 
@@ -59,8 +59,13 @@ class Rule(RuleEntity):
     def apply(self, df: pd.DataFrame, mask: pa.typing.Series[bool]):
         pass
 
-    def process(self, df: pd.DataFrame):
-        self.apply(df, self.mask(df))
+    def process(self, df: pd.DataFrame, log_df: Optional[pd.DataFrame] = None, id: str = &#34;&#34;):
+        mask = self.mask(df)
+        self.apply(df, mask)
+        if (log_df is not None) and (len(log_df) == len(mask)):
+            log_df[f&#34;{id}_{self.get_target_tag()}&#34;] = False
+            log_df.loc[mask, f&#34;{id}_{self.get_target_tag()}&#34;] = True
+
 
 
 class RuleGroup(RuleEntity):
@@ -74,9 +79,9 @@ class RuleGroup(RuleEntity):
         self.rules = rules
         self.prefix = prefix
 
-    def process(self, df: pd.DataFrame):
+    def process(self, df: pd.DataFrame, log_df: Optional[pd.DataFrame] = None, id: str = &#34;&#34;):
         for rule in self.rules:
-            rule.process(df)
+            rule.process(df=df, log_df=log_df, id=id + self.prefix)
 
     def get_input_tags(self) -&gt; Set[str]:
         result: Set[str] = set()
@@ -291,7 +296,7 @@ class BalanceSheetStandardizer:
     main_columns = [&#39;Assets&#39;, &#39;AssetsCurrent&#39;, &#39;AssetsNoncurrent&#39;,
                     &#39;Liabilities&#39;, &#39;LiabilitiesCurrent&#39;, &#39;LiabilitiesNoncurrent&#39;]
 
-    def __init__(self, filter_for_main_report: bool = False, iterations:int = 2):
+    def __init__(self, filter_for_main_report: bool = False, iterations: int = 2):
         self.filter_for_main_report = filter_for_main_report
         self.pre_stats: Optional[pd.Series] = None
         self.post_stats: Optional[pd.Series] = None
@@ -321,11 +326,13 @@ class BalanceSheetStandardizer:
         if self.filter_for_main_report:
             pivot_df = self._filter_pivot_for_main_reports(pivot_df)
 
+        log_df = pivot_df[[&#39;adsh&#39;, &#39;coreg&#39;, &#39;report&#39;, &#39;ddate&#39;]].copy()
+
         total_length = len(pivot_df)
 
         # calculate_pre_stats:
-        pre_pivot_df = pivot_df[self.final_col_order]
-        self.pre_stats = self._calculate_stats(pivot_df=pre_pivot_df)
+        pre_apply_df = pivot_df[self.final_col_order]
+        self.pre_stats = self._calculate_stats(pivot_df=pre_apply_df)
         self.pre_stats.name = &#34;pre&#34;
 
         self.stats = pd.DataFrame(self.pre_stats)
@@ -335,7 +342,7 @@ class BalanceSheetStandardizer:
 
         for i in range(self.iterations):
             # apply the rule_tree
-            self.rule_tree.process(pivot_df)
+            self.rule_tree.process(df=pivot_df, log_df=log_df, id=f&#34;{i}_&#34;)
 
             self.post_stats = self._calculate_stats(pivot_df=pivot_df)
             self.post_stats.name = f&#34;post_{i}&#34;
@@ -364,7 +371,6 @@ class BalanceSheetStandardizer:
 
     def _calculate_stats(self, pivot_df: pd.DataFrame) -&gt; pd.DataFrame:
         return pivot_df[self.final_tags].isna().sum(axis=0)
-
 
     def _pivot(self, df: pd.DataFrame, expected_tags: Set[str]) -&gt; pd.DataFrame:
         # todo: um pivot zu optimieren, sollten zuerst nur die Tags gefiltert werden,
@@ -583,7 +589,7 @@ class BalanceSheetStandardizerOld:
     main_columns = [&#39;Assets&#39;, &#39;AssetsCurrent&#39;, &#39;AssetsNoncurrent&#39;,
                     &#39;Liabilities&#39;, &#39;LiabilitiesCurrent&#39;, &#39;LiabilitiesNoncurrent&#39;]
 
-    def __init__(self, filter_for_main_report: bool = False, iterations:int = 2):
+    def __init__(self, filter_for_main_report: bool = False, iterations: int = 2):
         self.filter_for_main_report = filter_for_main_report
         self.pre_stats: Optional[pd.Series] = None
         self.post_stats: Optional[pd.Series] = None
@@ -613,11 +619,13 @@ class BalanceSheetStandardizerOld:
         if self.filter_for_main_report:
             pivot_df = self._filter_pivot_for_main_reports(pivot_df)
 
+        log_df = pivot_df[[&#39;adsh&#39;, &#39;coreg&#39;, &#39;report&#39;, &#39;ddate&#39;]].copy()
+
         total_length = len(pivot_df)
 
         # calculate_pre_stats:
-        pre_pivot_df = pivot_df[self.final_col_order]
-        self.pre_stats = self._calculate_stats(pivot_df=pre_pivot_df)
+        pre_apply_df = pivot_df[self.final_col_order]
+        self.pre_stats = self._calculate_stats(pivot_df=pre_apply_df)
         self.pre_stats.name = &#34;pre&#34;
 
         self.stats = pd.DataFrame(self.pre_stats)
@@ -627,7 +635,7 @@ class BalanceSheetStandardizerOld:
 
         for i in range(self.iterations):
             # apply the rule_tree
-            self.rule_tree.process(pivot_df)
+            self.rule_tree.process(df=pivot_df, log_df=log_df, id=f&#34;{i}_&#34;)
 
             self.post_stats = self._calculate_stats(pivot_df=pivot_df)
             self.post_stats.name = f&#34;post_{i}&#34;
@@ -656,7 +664,6 @@ class BalanceSheetStandardizerOld:
 
     def _calculate_stats(self, pivot_df: pd.DataFrame) -&gt; pd.DataFrame:
         return pivot_df[self.final_tags].isna().sum(axis=0)
-
 
     def _pivot(self, df: pd.DataFrame, expected_tags: Set[str]) -&gt; pd.DataFrame:
         # todo: um pivot zu optimieren, sollten zuerst nur die Tags gefiltert werden,
@@ -743,11 +750,13 @@ class BalanceSheetStandardizerOld:
     if self.filter_for_main_report:
         pivot_df = self._filter_pivot_for_main_reports(pivot_df)
 
+    log_df = pivot_df[[&#39;adsh&#39;, &#39;coreg&#39;, &#39;report&#39;, &#39;ddate&#39;]].copy()
+
     total_length = len(pivot_df)
 
     # calculate_pre_stats:
-    pre_pivot_df = pivot_df[self.final_col_order]
-    self.pre_stats = self._calculate_stats(pivot_df=pre_pivot_df)
+    pre_apply_df = pivot_df[self.final_col_order]
+    self.pre_stats = self._calculate_stats(pivot_df=pre_apply_df)
     self.pre_stats.name = &#34;pre&#34;
 
     self.stats = pd.DataFrame(self.pre_stats)
@@ -757,7 +766,7 @@ class BalanceSheetStandardizerOld:
 
     for i in range(self.iterations):
         # apply the rule_tree
-        self.rule_tree.process(pivot_df)
+        self.rule_tree.process(df=pivot_df, log_df=log_df, id=f&#34;{i}_&#34;)
 
         self.post_stats = self._calculate_stats(pivot_df=pivot_df)
         self.post_stats.name = f&#34;post_{i}&#34;
@@ -1281,8 +1290,12 @@ inheritance.</p></div>
     def apply(self, df: pd.DataFrame, mask: pa.typing.Series[bool]):
         pass
 
-    def process(self, df: pd.DataFrame):
-        self.apply(df, self.mask(df))</code></pre>
+    def process(self, df: pd.DataFrame, log_df: Optional[pd.DataFrame] = None, id: str = &#34;&#34;):
+        mask = self.mask(df)
+        self.apply(df, mask)
+        if (log_df is not None) and (len(log_df) == len(mask)):
+            log_df[f&#34;{id}_{self.get_target_tag()}&#34;] = False
+            log_df.loc[mask, f&#34;{id}_{self.get_target_tag()}&#34;] = True</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -1341,7 +1354,7 @@ def mask(self, df: pd.DataFrame) -&gt; pa.typing.Series[bool]:
 </details>
 </dd>
 <dt id="secfsdstools.f_standardize.bs_standardize.Rule.process"><code class="name flex">
-<span>def <span class="ident">process</span></span>(<span>self, df: pandas.core.frame.DataFrame)</span>
+<span>def <span class="ident">process</span></span>(<span>self, df: pandas.core.frame.DataFrame, log_df: Optional[pandas.core.frame.DataFrame] = None, id: str = '')</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -1349,8 +1362,12 @@ def mask(self, df: pd.DataFrame) -&gt; pa.typing.Series[bool]:
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def process(self, df: pd.DataFrame):
-    self.apply(df, self.mask(df))</code></pre>
+<pre><code class="python">def process(self, df: pd.DataFrame, log_df: Optional[pd.DataFrame] = None, id: str = &#34;&#34;):
+    mask = self.mask(df)
+    self.apply(df, mask)
+    if (log_df is not None) and (len(log_df) == len(mask)):
+        log_df[f&#34;{id}_{self.get_target_tag()}&#34;] = False
+        log_df.loc[mask, f&#34;{id}_{self.get_target_tag()}&#34;] = True</code></pre>
 </details>
 </dd>
 </dl>
@@ -1371,7 +1388,7 @@ inheritance.</p></div>
     def get_input_tags(self) -&gt; Set[str]:
         pass
 
-    def process(self, df: pd.DataFrame):
+    def process(self, df: pd.DataFrame, log_df: Optional[pd.DataFrame] = None, id: str = &#34;&#34;):
         pass</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -1400,7 +1417,7 @@ def get_input_tags(self) -&gt; Set[str]:
 </details>
 </dd>
 <dt id="secfsdstools.f_standardize.bs_standardize.RuleEntity.process"><code class="name flex">
-<span>def <span class="ident">process</span></span>(<span>self, df: pandas.core.frame.DataFrame)</span>
+<span>def <span class="ident">process</span></span>(<span>self, df: pandas.core.frame.DataFrame, log_df: Optional[pandas.core.frame.DataFrame] = None, id: str = '')</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -1408,7 +1425,7 @@ def get_input_tags(self) -&gt; Set[str]:
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def process(self, df: pd.DataFrame):
+<pre><code class="python">def process(self, df: pd.DataFrame, log_df: Optional[pd.DataFrame] = None, id: str = &#34;&#34;):
     pass</code></pre>
 </details>
 </dd>
@@ -1437,9 +1454,9 @@ Müsste man also auf den konkreten Rule Typ typisieren.</p></div>
         self.rules = rules
         self.prefix = prefix
 
-    def process(self, df: pd.DataFrame):
+    def process(self, df: pd.DataFrame, log_df: Optional[pd.DataFrame] = None, id: str = &#34;&#34;):
         for rule in self.rules:
-            rule.process(df)
+            rule.process(df=df, log_df=log_df, id=id + self.prefix)
 
     def get_input_tags(self) -&gt; Set[str]:
         result: Set[str] = set()
@@ -1471,7 +1488,7 @@ Müsste man also auf den konkreten Rule Typ typisieren.</p></div>
 </details>
 </dd>
 <dt id="secfsdstools.f_standardize.bs_standardize.RuleGroup.process"><code class="name flex">
-<span>def <span class="ident">process</span></span>(<span>self, df: pandas.core.frame.DataFrame)</span>
+<span>def <span class="ident">process</span></span>(<span>self, df: pandas.core.frame.DataFrame, log_df: Optional[pandas.core.frame.DataFrame] = None, id: str = '')</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -1479,9 +1496,9 @@ Müsste man also auf den konkreten Rule Typ typisieren.</p></div>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def process(self, df: pd.DataFrame):
+<pre><code class="python">def process(self, df: pd.DataFrame, log_df: Optional[pd.DataFrame] = None, id: str = &#34;&#34;):
     for rule in self.rules:
-        rule.process(df)</code></pre>
+        rule.process(df=df, log_df=log_df, id=id + self.prefix)</code></pre>
 </details>
 </dd>
 </dl>

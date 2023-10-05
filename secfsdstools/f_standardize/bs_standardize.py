@@ -13,7 +13,7 @@ class RuleEntity(ABC):
     def get_input_tags(self) -> Set[str]:
         pass
 
-    def process(self, df: pd.DataFrame):
+    def process(self, df: pd.DataFrame, log_df: Optional[pd.DataFrame] = None, id: str = ""):
         pass
 
 
@@ -31,8 +31,13 @@ class Rule(RuleEntity):
     def apply(self, df: pd.DataFrame, mask: pa.typing.Series[bool]):
         pass
 
-    def process(self, df: pd.DataFrame):
-        self.apply(df, self.mask(df))
+    def process(self, df: pd.DataFrame, log_df: Optional[pd.DataFrame] = None, id: str = ""):
+        mask = self.mask(df)
+        self.apply(df, mask)
+        if (log_df is not None) and (len(log_df) == len(mask)):
+            log_df[f"{id}_{self.get_target_tag()}"] = False
+            log_df.loc[mask, f"{id}_{self.get_target_tag()}"] = True
+
 
 
 class RuleGroup(RuleEntity):
@@ -46,9 +51,9 @@ class RuleGroup(RuleEntity):
         self.rules = rules
         self.prefix = prefix
 
-    def process(self, df: pd.DataFrame):
+    def process(self, df: pd.DataFrame, log_df: Optional[pd.DataFrame] = None, id: str = ""):
         for rule in self.rules:
-            rule.process(df)
+            rule.process(df=df, log_df=log_df, id=id + self.prefix)
 
     def get_input_tags(self) -> Set[str]:
         result: Set[str] = set()
@@ -263,7 +268,7 @@ class BalanceSheetStandardizer:
     main_columns = ['Assets', 'AssetsCurrent', 'AssetsNoncurrent',
                     'Liabilities', 'LiabilitiesCurrent', 'LiabilitiesNoncurrent']
 
-    def __init__(self, filter_for_main_report: bool = False, iterations:int = 2):
+    def __init__(self, filter_for_main_report: bool = False, iterations: int = 2):
         self.filter_for_main_report = filter_for_main_report
         self.pre_stats: Optional[pd.Series] = None
         self.post_stats: Optional[pd.Series] = None
@@ -293,11 +298,13 @@ class BalanceSheetStandardizer:
         if self.filter_for_main_report:
             pivot_df = self._filter_pivot_for_main_reports(pivot_df)
 
+        log_df = pivot_df[['adsh', 'coreg', 'report', 'ddate']].copy()
+
         total_length = len(pivot_df)
 
         # calculate_pre_stats:
-        pre_pivot_df = pivot_df[self.final_col_order]
-        self.pre_stats = self._calculate_stats(pivot_df=pre_pivot_df)
+        pre_apply_df = pivot_df[self.final_col_order]
+        self.pre_stats = self._calculate_stats(pivot_df=pre_apply_df)
         self.pre_stats.name = "pre"
 
         self.stats = pd.DataFrame(self.pre_stats)
@@ -307,7 +314,7 @@ class BalanceSheetStandardizer:
 
         for i in range(self.iterations):
             # apply the rule_tree
-            self.rule_tree.process(pivot_df)
+            self.rule_tree.process(df=pivot_df, log_df=log_df, id=f"{i}_")
 
             self.post_stats = self._calculate_stats(pivot_df=pivot_df)
             self.post_stats.name = f"post_{i}"
@@ -336,7 +343,6 @@ class BalanceSheetStandardizer:
 
     def _calculate_stats(self, pivot_df: pd.DataFrame) -> pd.DataFrame:
         return pivot_df[self.final_tags].isna().sum(axis=0)
-
 
     def _pivot(self, df: pd.DataFrame, expected_tags: Set[str]) -> pd.DataFrame:
         # todo: um pivot zu optimieren, sollten zuerst nur die Tags gefiltert werden,

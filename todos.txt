@@ -26,6 +26,13 @@ Bug:
 - irgendetwas beim "Releasen" erzeugt die nojekyll datei, so das die Doku nicht gebuildet wird.
 
 
+todo
+- log
+  - after pivot, we need the same key columns as the pivot table
+  - every rule has to receive its own column, together with its iteration
+  - it should be as easy as just adding the column by column
+
+
 
 Next:
 - new notebook, examples

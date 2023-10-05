@@ -15,7 +15,7 @@ if __name__ == '__main__':
 
     # standardizer = BalanceSheetStandardizerOld()
     # df = standardizer.standardize(fs_df, only_return_main_coreg=True, filter_for_main_report=True)
-    standardizer = BalanceSheetStandardizer(filter_for_main_report=True, calculate_pre_stats=True)
+    standardizer = BalanceSheetStandardizer(filter_for_main_report=True)
     df = standardizer.standardize(fs_df)
 
     #  hier wäare so eine art statistik gut, we sieht die sitatuion vor dem bereinigen aus,

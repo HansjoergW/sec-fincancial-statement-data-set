@@ -163,6 +163,10 @@ Goal: present the information in the balance sheet of Apple's 2022 10-K report i
 original report on page 31 ("CONSOLIDATED BALANCE SHEETS"): https://www.sec.gov/ix?doc=/Archives/edgar/data/320193/000032019322000108/aapl-20220924.htm
 
 ````
+  from secfsdstools.e_collector.reportcollecting import SingleReportCollector
+  from secfsdstools.e_filter.rawfiltering import ReportPeriodAndPreviousPeriodRawFilter
+  from secfsdstools.e_presenter.presenting import StandardStatementPresenter
+
   # the unique identifier for apple's 10-K report of 2022
   apple_10k_2022_adsh = "0000320193-22-000108"
 

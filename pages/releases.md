@@ -8,6 +8,13 @@ permalink: /releasenotes/
 ## Upcoming
 * 
 
+## 1.0.1 2023-Oct-16
+* README.md adpated <br>
+  Added information about using the library on windows because the multiprocessing package is used<br>
+  https://docs.python.org/3.10/library/multiprocessing.html#the-process-class
+
+
+
 ## 1.0.0 2023-Sep-28
 ApiChanges:
 * The API has completely changed, it should be more structured now. <br> 

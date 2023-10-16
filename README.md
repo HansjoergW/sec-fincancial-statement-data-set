@@ -675,7 +675,7 @@ Traceback (most recent call last):
 ````
 
 **Solution:** 
-This library uses the multiprocessing package. However, on Windows this works only corrected if the "entry point" of the
+This library uses the multiprocessing package. However, on Windows this works only correctly if the "entry point" of the
 script is within a `if __name__ == '__main__':` block.
 
 Therefore, change your scripts from
@@ -693,6 +693,9 @@ if __name__ == '__main__':
     your code goes here
 ````
 
+For details have a look at the python documentation:
+- https://docs.python.org/3.10/library/multiprocessing.html#the-process-class
+- https://docs.python.org/3.10/library/multiprocessing.html#multiprocessing-programming
 
 
 

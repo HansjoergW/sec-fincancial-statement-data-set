@@ -23,6 +23,17 @@ v.1.0.0
 
 
 Bug:
+- https://stackoverflow.com/questions/38958640/using-python-multiprocess-outside-the-main-script
+  Adapt Readme mit warning wegen spawning problemen..
+
+
+  For an explanation of why (on Windows) the if __name__ == '__main__' part is necessary, see Programming guidelines.
+  (https://docs.python.org/3.10/library/multiprocessing.html#the-process-class)
+
+  https://docs.python.org/3.10/library/multiprocessing.html#multiprocessing-programming
+
+
+
 - irgendetwas beim "Releasen" erzeugt die nojekyll datei, so das die Doku nicht gebuildet wird.
   -> könnte bereits gefixt sein
 - CP Einträge erscheinen nicht -> ist das wegen dem Join?
@@ -35,12 +46,15 @@ Bug:
 
 
 Next:
+- vlt switch um parallele verarbeitung komplett auszuschalten?
+
 - new notebook, examples
   -> just read the data and use it -> only using collector
   -> reading primary financial statements for a single report, display BS, IS, CF for a report
   -> analyse changes in one Tag for one company
   -> compare basic data of two companies
 
+- Supporting Dataset with notes
 
 - Es wäre gut, wenn der StandardStatementPresenter noch eine Kolonne "year", noch welcher auch sortiert ist
   die sortierung über adsh alleine ermöglicht keine sauber sortierung pro jahr

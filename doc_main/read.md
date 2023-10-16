@@ -100,7 +100,7 @@ The useragentemail is used in the requests made to the sec.gov website. Since we
 you can leave the example "your.email@goeshere.com". 
 
 # Attention when using on Windows
-In order to support parallel processing, this library uses the processing package. For instance when transforming the
+In order to support parallel processing, this library uses the multiprocessing package. For instance when transforming the
 zip files to the parquet format or when reading data from different files.
 
 However, in order for it to work on Windows when calling `python yourscript.py`, it is necessary that the logic
@@ -675,7 +675,7 @@ Traceback (most recent call last):
 ````
 
 **Solution:** 
-This library uses the processing package. However, on Windows this works only corrected if the "entry point" of the
+This library uses the multiprocessing package. However, on Windows this works only corrected if the "entry point" of the
 script is within a `if __name__ == '__main__':` block.
 
 Therefore, change your scripts from

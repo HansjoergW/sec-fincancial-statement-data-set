@@ -99,6 +99,49 @@ The db directory is the directory in which the sqllite db is created.
 The useragentemail is used in the requests made to the sec.gov website. Since we only make limited calls to the sec.gov,
 you can leave the example "your.email@goeshere.com". 
 
+# Attention when using on Windows
+In order to support parallel processing, this library uses the multiprocessing package. For instance when transforming the
+zip files to the parquet format or when reading data from different files.
+
+However, in order for it to work on Windows when calling `python yourscript.py`, it is necessary that the logic
+is started within the "main block" (`if __name__ == '__main__':`).
+
+Of course, your main logic can be in another package that you import, but the "entry point" needs to be a "main block":
+
+yourscript.py:
+```
+import yourpackage as yp
+
+if __name__ == '__main__':
+  yp.run()
+```
+
+Otherwise, you will observe the following kind of error messages:
+```
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+  File "C:\ieu\Anaconda3\envs\sectestclean\lib\site-packages\multiprocess\spawn.py", line 116, in spawn_main
+    exitcode = _main(fd, parent_sentinel)
+  File "C:\ieu\Anaconda3\envs\sectestclean\lib\site-packages\multiprocess\spawn.py", line 125, in _main
+    prepare(preparation_data)
+  File "C:\ieu\Anaconda3\envs\sectestclean\lib\site-packages\multiprocess\spawn.py", line 236, in prepare
+    _fixup_main_from_path(data['init_main_from_path'])
+  File "C:\ieu\Anaconda3\envs\sectestclean\lib\site-packages\multiprocess\spawn.py", line 287, in _fixup_main_from_path
+    main_content = runpy.run_path(main_path,
+  File "C:\ieu\Anaconda3\envs\sectestclean\lib\runpy.py", line 269, in run_path
+    return _run_module_code(code, init_globals, run_name,
+  File "C:\ieu\Anaconda3\envs\sectestclean\lib\runpy.py", line 96, in _run_module_code
+    _run_code(code, mod_globals, init_globals,
+  ...
+```
+
+For details have a look at the python documentation:
+- https://docs.python.org/3.10/library/multiprocessing.html#the-process-class
+- https://docs.python.org/3.10/library/multiprocessing.html#multiprocessing-programming
+
+It is not a problem if you run it inside Jupyter.
+
+
 # Downloading the data files from sec and index the content
 
 In order to download the data files and create the index, just call the `update()` method:
@@ -106,7 +149,8 @@ In order to download the data files and create the index, just call the `update(
 ```
 from secfsdstools.update import update
 
-update()
+if __name__ == '__main__':
+    update()
 ```
 
 The following tasks will be executed:
@@ -163,29 +207,30 @@ Goal: present the information in the balance sheet of Apple's 2022 10-K report i
 original report on page 31 ("CONSOLIDATED BALANCE SHEETS"): https://www.sec.gov/ix?doc=/Archives/edgar/data/320193/000032019322000108/aapl-20220924.htm
 
 ````
-  from secfsdstools.e_collector.reportcollecting import SingleReportCollector
-  from secfsdstools.e_filter.rawfiltering import ReportPeriodAndPreviousPeriodRawFilter
-  from secfsdstools.e_presenter.presenting import StandardStatementPresenter
+from secfsdstools.e_collector.reportcollecting import SingleReportCollector
+from secfsdstools.e_filter.rawfiltering import ReportPeriodAndPreviousPeriodRawFilter
+from secfsdstools.e_presenter.presenting import StandardStatementPresenter
 
-  # the unique identifier for apple's 10-K report of 2022
-  apple_10k_2022_adsh = "0000320193-22-000108"
-
-  # us a Collector to grab the data of the 10-K report. an filter for balancesheet information
-  collector: SingleReportCollector = SingleReportCollector.get_report_by_adsh(
-        adsh=apple_10k_2022_adsh,
-        stmt_filter=["BS"]
-  )  
-  rawdatabag = collector.collect() # load the data from the disk
+if __name__ == '__main__':
+    # the unique identifier for apple's 10-K report of 2022
+    apple_10k_2022_adsh = "0000320193-22-000108"
   
- 
-  bs_df = (rawdatabag
-                     # ensure only data from the period (2022) and the previous period (2021) is in the data
-                     .filter(ReportPeriodAndPreviousPeriodRawFilter())
-                     # join the the content of the pre_txt and num_txt together
-                     .join()  
-                     # format the data in the same way as it appears in the report
-                     .present(StandardStatementPresenter())) 
-  print(bs_df) 
+    # us a Collector to grab the data of the 10-K report. an filter for balancesheet information
+    collector: SingleReportCollector = SingleReportCollector.get_report_by_adsh(
+          adsh=apple_10k_2022_adsh,
+          stmt_filter=["BS"]
+    )  
+    rawdatabag = collector.collect() # load the data from the disk
+    
+   
+    bs_df = (rawdatabag
+                       # ensure only data from the period (2022) and the previous period (2021) is in the data
+                       .filter(ReportPeriodAndPreviousPeriodRawFilter())
+                       # join the the content of the pre_txt and num_txt together
+                       .join()  
+                       # format the data in the same way as it appears in the report
+                       .present(StandardStatementPresenter())) 
+    print(bs_df) 
 ````
 
 ## Overview
@@ -375,16 +420,17 @@ The framework provides the following collectors:
     apple_10k_2022_adsh = "0000320193-22-000108"
     apple_10k_2012_adsh = "0001193125-12-444068"
 
-    # load only the assets tags that are present in the 10-K report of apple in the years
-    # 2022 and 2012
-    collector: MultiReportCollector = \
-        MultiReportCollector.get_reports_by_adshs(adshs=[apple_10k_2022_adsh,
-                                                         apple_10k_2012_adsh],
-                                                  tag_filter=['Assets'])
-    rawdatabag = collector.collect()
-    # as expected, there are just two entries in the submission dataframe
-    print(rawdatabag.sub_df)
-    print(rawdatabag.num_df)  
+    if __name__ == '__main__':
+        # load only the assets tags that are present in the 10-K report of apple in the years
+        # 2022 and 2012
+        collector: MultiReportCollector = \
+            MultiReportCollector.get_reports_by_adshs(adshs=[apple_10k_2022_adsh,
+                                                             apple_10k_2012_adsh],
+                                                      tag_filter=['Assets'])
+        rawdatabag = collector.collect()
+        # as expected, there are just two entries in the submission dataframe
+        print(rawdatabag.sub_df)
+        print(rawdatabag.num_df)  
     ```` 
   <br>*Output*:
     ````
@@ -432,18 +478,19 @@ The framework provides the following collectors:
   <br><br>*Example:*
     ````
     from secfsdstools.e_collector.companycollecting import CompanyReportCollector
-
-    apple_cik = 320193
-    collector = CompanyReportCollector.get_company_collector(ciks=[apple_cik],
-                                                             forms_filter=["10-K"])
-
-    rawdatabag = collector.collect()
-
-    # all filed 10-K reports for apple since 2010 are in the databag
-    print(rawdatabag.sub_df)
-
-    print(rawdatabag.pre_df.shape)
-    print(rawdatabag.num_df.shape)    
+    
+    if __name__ == '__main__':
+        apple_cik = 320193
+        collector = CompanyReportCollector.get_company_collector(ciks=[apple_cik],
+                                                                 forms_filter=["10-K"])
+    
+        rawdatabag = collector.collect()
+    
+        # all filed 10-K reports for apple since 2010 are in the databag
+        print(rawdatabag.sub_df)
+    
+        print(rawdatabag.pre_df.shape)
+        print(rawdatabag.num_df.shape)    
     ```` 
   <br>*Output*:
     ````
@@ -605,9 +652,50 @@ implementations (module `secfsdstools.e_presenter.presenting`):
 * [Explore the data with an interactive Notebook](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/03_explore_with_interactive_notebook.ipynb)
 * [Connect to the daily-sec-financial-statement-dataset Notebook](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/02_connect_rapidapi.ipynb) 
 
+# Troubleshooting
 
+----
+**Problem:** I receive error messages like the following when I try to start a script on windows:
+````
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+  File "C:\ieu\Anaconda3\envs\sectestclean\lib\site-packages\multiprocess\spawn.py", line 116, in spawn_main
+    exitcode = _main(fd, parent_sentinel)
+  File "C:\ieu\Anaconda3\envs\sectestclean\lib\site-packages\multiprocess\spawn.py", line 125, in _main
+    prepare(preparation_data)
+  File "C:\ieu\Anaconda3\envs\sectestclean\lib\site-packages\multiprocess\spawn.py", line 236, in prepare
+    _fixup_main_from_path(data['init_main_from_path'])
+  File "C:\ieu\Anaconda3\envs\sectestclean\lib\site-packages\multiprocess\spawn.py", line 287, in _fixup_main_from_path
+    main_content = runpy.run_path(main_path,
+  File "C:\ieu\Anaconda3\envs\sectestclean\lib\runpy.py", line 269, in run_path
+    return _run_module_code(code, init_globals, run_name,
+  File "C:\ieu\Anaconda3\envs\sectestclean\lib\runpy.py", line 96, in _run_module_code
+    _run_code(code, mod_globals, init_globals,
+ ...
+````
 
+**Solution:** 
+This library uses the multiprocessing package. However, on Windows this works only correctly if the "entry point" of the
+script is within a `if __name__ == '__main__':` block.
 
+Therefore, change your scripts from
+````python
+import xy
+
+your code goes here
+````
+
+to 
+````python
+import xy
+
+if __name__ == '__main__':
+    your code goes here
+````
+
+For details have a look at the python documentation:
+- https://docs.python.org/3.10/library/multiprocessing.html#the-process-class
+- https://docs.python.org/3.10/library/multiprocessing.html#multiprocessing-programming
 
 
 

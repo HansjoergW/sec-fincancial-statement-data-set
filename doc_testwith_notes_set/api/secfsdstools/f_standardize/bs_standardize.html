@@ -67,12 +67,13 @@ class Rule(RuleEntity):
             log_df.loc[mask, f&#34;{id}_{self.get_target_tag()}&#34;] = True
 
 
-
 class RuleGroup(RuleEntity):
     &#34;&#34;&#34;
     todo: to add -&gt; automatische vergabe von Rule ID bezüglich Gruppe
+    ist das noch notwendig?
     Alle Regeln müssten eigentlich vom selben Typ sein
     Müsste man also auf den konkreten Rule Typ typisieren.
+    ist das so?
     &#34;&#34;&#34;
 
     def __init__(self, rules: List[RuleEntity], prefix: str):
@@ -209,7 +210,124 @@ class SumUp(Rule):
             df.loc[summand_mask, self.target] = df[self.target] + df[potential_summand]
 
 
-class BalanceSheetStandardizer:
+class RuleProcessor:
+    identifier_tags = [&#39;adsh&#39;, &#39;coreg&#39;, &#39;report&#39;, &#39;ddate&#39;]
+
+    def __init__(self, rule_tree: RuleGroup, post_rules: List[RuleEntity],
+                 iterations: int, main_tags: List[str], final_tags: List[str],
+                 filter_for_main_report: bool):
+        self.rule_tree = rule_tree
+        self.post_rules = post_rules
+        self.iterations = iterations
+        self.main_tags = main_tags
+        self.final_tags = final_tags
+        self.filter_for_main_report = filter_for_main_report
+
+        self.final_col_order = self.identifier_tags + self.final_tags
+
+        self.log_df: Optional[pd.DataFrame] = None
+        self.stats: Optional[pd.DataFrame] = None
+
+
+    def get_ruletree_descriptions(self):
+        # todo
+        pass
+
+    def process(self, df: pd.DataFrame) -&gt; pd.DataFrame:
+        all_input_tags = self.rule_tree.get_input_tags()
+
+        cpy_df = df[[&#39;adsh&#39;, &#39;coreg&#39;, &#39;tag&#39;, &#39;version&#39;, &#39;ddate&#39;, &#39;uom&#39;, &#39;value&#39;, &#39;report&#39;, &#39;line&#39;,
+                     &#39;negating&#39;]][df.tag.isin(all_input_tags)].copy()
+
+        # todo: wann muss negating berücksichtigt werden -&gt; nach dem pivot fliegt es raus!
+
+        # pivot the table, so that the tags are now columns
+        # todo: folgende Zeile sollte nicht mehr notwendig sein, sobald alle Regeln implementiert sind
+        expected_tags = all_input_tags.union(self.final_tags)
+        pivot_df = self._pivot(df=cpy_df, expected_tags=expected_tags)
+
+        if self.filter_for_main_report:
+            pivot_df = self._filter_pivot_for_main_reports(pivot_df)
+
+        self.log_df = pivot_df[[&#39;adsh&#39;, &#39;coreg&#39;, &#39;report&#39;, &#39;ddate&#39;]].copy()
+
+        total_length = len(pivot_df)
+
+        # calculate_pre_stats:
+        pre_apply_df = pivot_df[self.final_col_order]
+        self.pre_stats = self._calculate_stats(pivot_df=pre_apply_df)
+        self.pre_stats.name = &#34;pre&#34;
+
+        self.stats = pd.DataFrame(self.pre_stats)
+        self.stats[&#39;pre_rel&#39;] = self.stats.pre / total_length
+
+        self.stats = pd.DataFrame(self.pre_stats)
+
+        for i in range(self.iterations):
+            # apply the rule_tree
+            self.rule_tree.process(df=pivot_df, log_df=self.log_df, id=f&#34;{i}_&#34;)
+
+            self.post_stats = self._calculate_stats(pivot_df=pivot_df)
+            self.post_stats.name = f&#34;post_{i}&#34;
+
+            self.stats = self.stats.join(self.post_stats)
+            self.stats[self.post_stats.name + &#39;_rel&#39;] = \
+                self.stats[self.post_stats.name] / total_length
+            self.stats[self.post_stats.name + &#39;_red&#39;] = \
+                1 - (self.stats[self.post_stats.name] / self.stats.pre)
+
+        # create a meaningful order
+        pivot_df = pivot_df[self.final_col_order].copy()
+
+        return pivot_df
+
+    def _filter_pivot_for_main_reports(self, pivot_df: pd.DataFrame) -&gt; pd.DataFrame:
+        &#34;&#34;&#34; Some reports have more than one &#39;report number&#39; (column report) for a
+            certain statement. Generally, the one with the most tags is the one to take.
+            This method operates on the pivoted data and counts the none-values of the
+            &#34;main columns&#34;. The main columns are the fields, that generally should be there.
+             &#34;&#34;&#34;
+
+        cpy_pivot_df = pivot_df.copy()
+
+        cpy_pivot_df[&#39;nan_count&#39;] = cpy_pivot_df[self.main_tags].isna().sum(axis=1)
+        cpy_pivot_df.sort_values([&#39;adsh&#39;, &#39;coreg&#39;, &#39;nan_count&#39;], inplace=True)
+        cpy_pivot_df = cpy_pivot_df.groupby([&#39;adsh&#39;, &#39;coreg&#39;]).last()
+        cpy_pivot_df.reset_index(inplace=True)
+        return cpy_pivot_df
+
+    def _calculate_stats(self, pivot_df: pd.DataFrame) -&gt; pd.DataFrame:
+        return pivot_df[self.final_tags].isna().sum(axis=0)
+
+    def _pivot(self, df: pd.DataFrame, expected_tags: Set[str]) -&gt; pd.DataFrame:
+        # todo: um pivot zu optimieren, sollten zuerst nur die Tags gefiltert werden,
+        # welche tatsächlich auch benützt werden, alles andere sollte herausgefiltert werden
+        # das müsste über die Regeln geschehen und sollte automatisch berechnet werden sollen.
+
+        # it is possible, that the same number appears multiple times in different lines,
+        # therefore, duplicates have to be removed, otherwise pivot is not possible
+        relevant_df = df[[&#39;adsh&#39;, &#39;coreg&#39;, &#39;report&#39;, &#39;tag&#39;, &#39;value&#39;, &#39;ddate&#39;]].drop_duplicates()
+
+        duplicates_df = relevant_df[
+            [&#39;adsh&#39;, &#39;coreg&#39;, &#39;report&#39;, &#39;tag&#39;, &#39;ddate&#39;]].value_counts().reset_index()
+        duplicates_df.rename(columns={0: &#39;count&#39;}, inplace=True)
+        duplicated_adsh = duplicates_df[duplicates_df[&#39;count&#39;] &gt; 1].adsh.unique().tolist()
+
+        # todo: logging duplicated entries ...&gt;
+        relevant_df = relevant_df[~relevant_df.adsh.isin(duplicated_adsh)]
+
+        pivot_df = relevant_df.pivot(index=[&#39;adsh&#39;, &#39;coreg&#39;, &#39;report&#39;, &#39;ddate&#39;],
+                                     columns=&#39;tag&#39;,
+                                     values=&#39;value&#39;)
+        pivot_df.reset_index(inplace=True)
+        missing_cols = set(expected_tags) - set(pivot_df.columns)
+        for missing_col in missing_cols:
+            pivot_df[missing_col] = np.nan
+        pivot_df[&#39;nan_count&#39;] = np.nan
+        return pivot_df
+
+
+class BalanceSheetStandardizer(RuleProcessor):
     &#34;&#34;&#34;wichtig, nur für main optimiert, nicht für coregs&#34;&#34;&#34;
 
     bs_rename_rg = RuleGroup(
@@ -265,6 +383,13 @@ class BalanceSheetStandardizer:
             )
         ])
 
+    rule_tree = RuleGroup(prefix=&#34;BS_&#34;,
+                               rules=[
+                                   bs_rename_rg,
+                                   bs_sumup_rg,
+                                   bs_sum_completion,
+                               ])
+
     # these are the columns that finally are returned after the standardization
     final_tags: List[str] = [&#39;Assets&#39;, &#39;AssetsCurrent&#39;, &#39;AssetsNoncurrent&#39;,
                              &#39;Liabilities&#39;, &#39;LiabilitiesCurrent&#39;, &#39;LiabilitiesNoncurrent&#39;,
@@ -275,129 +400,20 @@ class BalanceSheetStandardizer:
                              &#39;RetainedEarnings&#39;
                              ]
 
-    # these are the relevant tags that we need to calculate missing values
-    calculation_tags: List[str] = [&#39;Assets&#39;, &#39;AssetsCurrent&#39;, &#39;AssetsNoncurrent&#39;,
-                                   &#39;Liabilities&#39;, &#39;LiabilitiesCurrent&#39;, &#39;LiabilitiesNoncurrent&#39;,
-                                   &#39;Equity&#39;,
-                                   &#39;InventoryNet&#39;,
-                                   &#39;Cash&#39;,
-                                   &#39;CashOther&#39;,
-                                   &#39;RetainedEarnings&#39;,
-                                   &#39;LiabilitiesAndStockholdersEquity&#39;
-                                   ]
-
-    final_col_order = [&#39;adsh&#39;, &#39;coreg&#39;, &#39;report&#39;, &#39;ddate&#39;] + final_tags
-
     # used to evaluate if a report is a the main balancesheet report
     # inside a report, there can be several different tables (different report nr)
     # which stmt value is BS.
     # however, we might be only interested in the &#34;major&#34; BS report. Usually this is the
     # one which has the least nan in the following columns
-    main_columns = [&#39;Assets&#39;, &#39;AssetsCurrent&#39;, &#39;AssetsNoncurrent&#39;,
+    main_tags = [&#39;Assets&#39;, &#39;AssetsCurrent&#39;, &#39;AssetsNoncurrent&#39;,
                     &#39;Liabilities&#39;, &#39;LiabilitiesCurrent&#39;, &#39;LiabilitiesNoncurrent&#39;]
 
     def __init__(self, filter_for_main_report: bool = False, iterations: int = 2):
-        self.filter_for_main_report = filter_for_main_report
-        self.pre_stats: Optional[pd.Series] = None
-        self.post_stats: Optional[pd.Series] = None
-        self.stats: Optional[pd.DataFrame] = None
-        self.iterations = iterations
+        super().__init__(rule_tree=self.rule_tree, post_rules=[], iterations=iterations,
+                         main_tags=self.main_tags, final_tags=self.final_tags,
+                         filter_for_main_report=filter_for_main_report)
 
-        self.rule_tree = RuleGroup(prefix=&#34;BS_&#34;,
-                                   rules=[
-                                       self.bs_rename_rg,
-                                       self.bs_sumup_rg,
-                                       self.bs_sum_completion,
-                                   ])
 
-    def standardize(self, df: pd.DataFrame, ) -&gt; pd.DataFrame:
-        all_input_tags = self.rule_tree.get_input_tags()
-
-        cpy_df = df[[&#39;adsh&#39;, &#39;coreg&#39;, &#39;tag&#39;, &#39;version&#39;, &#39;ddate&#39;, &#39;uom&#39;, &#39;value&#39;, &#39;report&#39;, &#39;line&#39;,
-                     &#39;negating&#39;]][df.tag.isin(all_input_tags)].copy()
-
-        # todo: wann muss negating berücksichtigt werden -&gt; nach dem pivot fliegt es raus!
-
-        # pivot the table, so that the tags are now columns
-        # todo: folgende Zeile sollte nicht mehr notwendig sein, sobald alle Regeln implementiert sind
-        expected_tags = all_input_tags.union(self.final_tags)
-        pivot_df = self._pivot(df=cpy_df, expected_tags=expected_tags)
-
-        if self.filter_for_main_report:
-            pivot_df = self._filter_pivot_for_main_reports(pivot_df)
-
-        log_df = pivot_df[[&#39;adsh&#39;, &#39;coreg&#39;, &#39;report&#39;, &#39;ddate&#39;]].copy()
-
-        total_length = len(pivot_df)
-
-        # calculate_pre_stats:
-        pre_apply_df = pivot_df[self.final_col_order]
-        self.pre_stats = self._calculate_stats(pivot_df=pre_apply_df)
-        self.pre_stats.name = &#34;pre&#34;
-
-        self.stats = pd.DataFrame(self.pre_stats)
-        self.stats[&#39;pre_rel&#39;] = self.stats.pre / total_length
-
-        self.stats = pd.DataFrame(self.pre_stats)
-
-        for i in range(self.iterations):
-            # apply the rule_tree
-            self.rule_tree.process(df=pivot_df, log_df=log_df, id=f&#34;{i}_&#34;)
-
-            self.post_stats = self._calculate_stats(pivot_df=pivot_df)
-            self.post_stats.name = f&#34;post_{i}&#34;
-
-            self.stats = self.stats.join(self.post_stats)
-            self.stats[self.post_stats.name + &#39;_rel&#39;] = \
-                self.stats[self.post_stats.name] / total_length
-            self.stats[self.post_stats.name + &#39;_red&#39;] = \
-                1 - (self.stats[self.post_stats.name] / self.stats.pre)
-
-        # create a meaningful order
-        pivot_df = pivot_df[self.final_col_order].copy()
-
-        return pivot_df
-
-    def _filter_pivot_for_main_reports(self, pivot_df: pd.DataFrame) -&gt; pd.DataFrame:
-        cpy_pivot_df = pivot_df.copy()
-
-        cpy_pivot_df[&#39;nan_count&#39;] = cpy_pivot_df[
-            self.main_columns].isna().sum(
-            axis=1)
-        cpy_pivot_df.sort_values([&#39;adsh&#39;, &#39;coreg&#39;, &#39;nan_count&#39;], inplace=True)
-        cpy_pivot_df = cpy_pivot_df.groupby([&#39;adsh&#39;, &#39;coreg&#39;]).last()
-        cpy_pivot_df.reset_index(inplace=True)
-        return cpy_pivot_df
-
-    def _calculate_stats(self, pivot_df: pd.DataFrame) -&gt; pd.DataFrame:
-        return pivot_df[self.final_tags].isna().sum(axis=0)
-
-    def _pivot(self, df: pd.DataFrame, expected_tags: Set[str]) -&gt; pd.DataFrame:
-        # todo: um pivot zu optimieren, sollten zuerst nur die Tags gefiltert werden,
-        # welche tatsächlich auch benützt werden, alles andere sollte herausgefiltert werden
-        # das müsste über die Regeln geschehen und sollte automatisch berechnet werden sollen.
-
-        # it is possible, that the same number appears multiple times in different lines,
-        # therefore, duplicates have to be removed, otherwise pivot is not possible
-        relevant_df = df[[&#39;adsh&#39;, &#39;coreg&#39;, &#39;report&#39;, &#39;tag&#39;, &#39;value&#39;, &#39;ddate&#39;]].drop_duplicates()
-
-        duplicates_df = relevant_df[
-            [&#39;adsh&#39;, &#39;coreg&#39;, &#39;report&#39;, &#39;tag&#39;, &#39;ddate&#39;]].value_counts().reset_index()
-        duplicates_df.rename(columns={0: &#39;count&#39;}, inplace=True)
-        duplicated_adsh = duplicates_df[duplicates_df[&#39;count&#39;] &gt; 1].adsh.unique().tolist()
-
-        # todo: logging duplicated entries ...&gt;
-        relevant_df = relevant_df[~relevant_df.adsh.isin(duplicated_adsh)]
-
-        pivot_df = relevant_df.pivot(index=[&#39;adsh&#39;, &#39;coreg&#39;, &#39;report&#39;, &#39;ddate&#39;],
-                                     columns=&#39;tag&#39;,
-                                     values=&#39;value&#39;)
-        pivot_df.reset_index(inplace=True)
-        missing_cols = set(expected_tags) - set(pivot_df.columns)
-        for missing_col in missing_cols:
-            pivot_df[missing_col] = np.nan
-        pivot_df[&#39;nan_count&#39;] = np.nan
-        return pivot_df
 
 
 # there are pre-pivot and post-pivot rules ..
@@ -502,7 +518,7 @@ class BalanceSheetStandardizerOld:
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class BalanceSheetStandardizer:
+<pre><code class="python">class BalanceSheetStandardizer(RuleProcessor):
     &#34;&#34;&#34;wichtig, nur für main optimiert, nicht für coregs&#34;&#34;&#34;
 
     bs_rename_rg = RuleGroup(
@@ -558,6 +574,13 @@ class BalanceSheetStandardizerOld:
             )
         ])
 
+    rule_tree = RuleGroup(prefix=&#34;BS_&#34;,
+                               rules=[
+                                   bs_rename_rg,
+                                   bs_sumup_rg,
+                                   bs_sum_completion,
+                               ])
+
     # these are the columns that finally are returned after the standardization
     final_tags: List[str] = [&#39;Assets&#39;, &#39;AssetsCurrent&#39;, &#39;AssetsNoncurrent&#39;,
                              &#39;Liabilities&#39;, &#39;LiabilitiesCurrent&#39;, &#39;LiabilitiesNoncurrent&#39;,
@@ -568,130 +591,23 @@ class BalanceSheetStandardizerOld:
                              &#39;RetainedEarnings&#39;
                              ]
 
-    # these are the relevant tags that we need to calculate missing values
-    calculation_tags: List[str] = [&#39;Assets&#39;, &#39;AssetsCurrent&#39;, &#39;AssetsNoncurrent&#39;,
-                                   &#39;Liabilities&#39;, &#39;LiabilitiesCurrent&#39;, &#39;LiabilitiesNoncurrent&#39;,
-                                   &#39;Equity&#39;,
-                                   &#39;InventoryNet&#39;,
-                                   &#39;Cash&#39;,
-                                   &#39;CashOther&#39;,
-                                   &#39;RetainedEarnings&#39;,
-                                   &#39;LiabilitiesAndStockholdersEquity&#39;
-                                   ]
-
-    final_col_order = [&#39;adsh&#39;, &#39;coreg&#39;, &#39;report&#39;, &#39;ddate&#39;] + final_tags
-
     # used to evaluate if a report is a the main balancesheet report
     # inside a report, there can be several different tables (different report nr)
     # which stmt value is BS.
     # however, we might be only interested in the &#34;major&#34; BS report. Usually this is the
     # one which has the least nan in the following columns
-    main_columns = [&#39;Assets&#39;, &#39;AssetsCurrent&#39;, &#39;AssetsNoncurrent&#39;,
+    main_tags = [&#39;Assets&#39;, &#39;AssetsCurrent&#39;, &#39;AssetsNoncurrent&#39;,
                     &#39;Liabilities&#39;, &#39;LiabilitiesCurrent&#39;, &#39;LiabilitiesNoncurrent&#39;]
 
     def __init__(self, filter_for_main_report: bool = False, iterations: int = 2):
-        self.filter_for_main_report = filter_for_main_report
-        self.pre_stats: Optional[pd.Series] = None
-        self.post_stats: Optional[pd.Series] = None
-        self.stats: Optional[pd.DataFrame] = None
-        self.iterations = iterations
-
-        self.rule_tree = RuleGroup(prefix=&#34;BS_&#34;,
-                                   rules=[
-                                       self.bs_rename_rg,
-                                       self.bs_sumup_rg,
-                                       self.bs_sum_completion,
-                                   ])
-
-    def standardize(self, df: pd.DataFrame, ) -&gt; pd.DataFrame:
-        all_input_tags = self.rule_tree.get_input_tags()
-
-        cpy_df = df[[&#39;adsh&#39;, &#39;coreg&#39;, &#39;tag&#39;, &#39;version&#39;, &#39;ddate&#39;, &#39;uom&#39;, &#39;value&#39;, &#39;report&#39;, &#39;line&#39;,
-                     &#39;negating&#39;]][df.tag.isin(all_input_tags)].copy()
-
-        # todo: wann muss negating berücksichtigt werden -&gt; nach dem pivot fliegt es raus!
-
-        # pivot the table, so that the tags are now columns
-        # todo: folgende Zeile sollte nicht mehr notwendig sein, sobald alle Regeln implementiert sind
-        expected_tags = all_input_tags.union(self.final_tags)
-        pivot_df = self._pivot(df=cpy_df, expected_tags=expected_tags)
-
-        if self.filter_for_main_report:
-            pivot_df = self._filter_pivot_for_main_reports(pivot_df)
-
-        log_df = pivot_df[[&#39;adsh&#39;, &#39;coreg&#39;, &#39;report&#39;, &#39;ddate&#39;]].copy()
-
-        total_length = len(pivot_df)
-
-        # calculate_pre_stats:
-        pre_apply_df = pivot_df[self.final_col_order]
-        self.pre_stats = self._calculate_stats(pivot_df=pre_apply_df)
-        self.pre_stats.name = &#34;pre&#34;
-
-        self.stats = pd.DataFrame(self.pre_stats)
-        self.stats[&#39;pre_rel&#39;] = self.stats.pre / total_length
-
-        self.stats = pd.DataFrame(self.pre_stats)
-
-        for i in range(self.iterations):
-            # apply the rule_tree
-            self.rule_tree.process(df=pivot_df, log_df=log_df, id=f&#34;{i}_&#34;)
-
-            self.post_stats = self._calculate_stats(pivot_df=pivot_df)
-            self.post_stats.name = f&#34;post_{i}&#34;
-
-            self.stats = self.stats.join(self.post_stats)
-            self.stats[self.post_stats.name + &#39;_rel&#39;] = \
-                self.stats[self.post_stats.name] / total_length
-            self.stats[self.post_stats.name + &#39;_red&#39;] = \
-                1 - (self.stats[self.post_stats.name] / self.stats.pre)
-
-        # create a meaningful order
-        pivot_df = pivot_df[self.final_col_order].copy()
-
-        return pivot_df
-
-    def _filter_pivot_for_main_reports(self, pivot_df: pd.DataFrame) -&gt; pd.DataFrame:
-        cpy_pivot_df = pivot_df.copy()
-
-        cpy_pivot_df[&#39;nan_count&#39;] = cpy_pivot_df[
-            self.main_columns].isna().sum(
-            axis=1)
-        cpy_pivot_df.sort_values([&#39;adsh&#39;, &#39;coreg&#39;, &#39;nan_count&#39;], inplace=True)
-        cpy_pivot_df = cpy_pivot_df.groupby([&#39;adsh&#39;, &#39;coreg&#39;]).last()
-        cpy_pivot_df.reset_index(inplace=True)
-        return cpy_pivot_df
-
-    def _calculate_stats(self, pivot_df: pd.DataFrame) -&gt; pd.DataFrame:
-        return pivot_df[self.final_tags].isna().sum(axis=0)
-
-    def _pivot(self, df: pd.DataFrame, expected_tags: Set[str]) -&gt; pd.DataFrame:
-        # todo: um pivot zu optimieren, sollten zuerst nur die Tags gefiltert werden,
-        # welche tatsächlich auch benützt werden, alles andere sollte herausgefiltert werden
-        # das müsste über die Regeln geschehen und sollte automatisch berechnet werden sollen.
-
-        # it is possible, that the same number appears multiple times in different lines,
-        # therefore, duplicates have to be removed, otherwise pivot is not possible
-        relevant_df = df[[&#39;adsh&#39;, &#39;coreg&#39;, &#39;report&#39;, &#39;tag&#39;, &#39;value&#39;, &#39;ddate&#39;]].drop_duplicates()
-
-        duplicates_df = relevant_df[
-            [&#39;adsh&#39;, &#39;coreg&#39;, &#39;report&#39;, &#39;tag&#39;, &#39;ddate&#39;]].value_counts().reset_index()
-        duplicates_df.rename(columns={0: &#39;count&#39;}, inplace=True)
-        duplicated_adsh = duplicates_df[duplicates_df[&#39;count&#39;] &gt; 1].adsh.unique().tolist()
-
-        # todo: logging duplicated entries ...&gt;
-        relevant_df = relevant_df[~relevant_df.adsh.isin(duplicated_adsh)]
-
-        pivot_df = relevant_df.pivot(index=[&#39;adsh&#39;, &#39;coreg&#39;, &#39;report&#39;, &#39;ddate&#39;],
-                                     columns=&#39;tag&#39;,
-                                     values=&#39;value&#39;)
-        pivot_df.reset_index(inplace=True)
-        missing_cols = set(expected_tags) - set(pivot_df.columns)
-        for missing_col in missing_cols:
-            pivot_df[missing_col] = np.nan
-        pivot_df[&#39;nan_count&#39;] = np.nan
-        return pivot_df</code></pre>
+        super().__init__(rule_tree=self.rule_tree, post_rules=[], iterations=iterations,
+                         main_tags=self.main_tags, final_tags=self.final_tags,
+                         filter_for_main_report=filter_for_main_report)</code></pre>
 </details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="secfsdstools.f_standardize.bs_standardize.RuleProcessor" href="#secfsdstools.f_standardize.bs_standardize.RuleProcessor">RuleProcessor</a></li>
+</ul>
 <h3>Class variables</h3>
 <dl>
 <dt id="secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizer.bs_rename_rg"><code class="name">var <span class="ident">bs_rename_rg</span></code></dt>
@@ -706,82 +622,17 @@ class BalanceSheetStandardizerOld:
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizer.calculation_tags"><code class="name">var <span class="ident">calculation_tags</span> : List[str]</code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt id="secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizer.final_col_order"><code class="name">var <span class="ident">final_col_order</span></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
 <dt id="secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizer.final_tags"><code class="name">var <span class="ident">final_tags</span> : List[str]</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizer.main_columns"><code class="name">var <span class="ident">main_columns</span></code></dt>
+<dt id="secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizer.main_tags"><code class="name">var <span class="ident">main_tags</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
-</dl>
-<h3>Methods</h3>
-<dl>
-<dt id="secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizer.standardize"><code class="name flex">
-<span>def <span class="ident">standardize</span></span>(<span>self, df: pandas.core.frame.DataFrame) ‑> pandas.core.frame.DataFrame</span>
-</code></dt>
+<dt id="secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizer.rule_tree"><code class="name">var <span class="ident">rule_tree</span></code></dt>
 <dd>
 <div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def standardize(self, df: pd.DataFrame, ) -&gt; pd.DataFrame:
-    all_input_tags = self.rule_tree.get_input_tags()
-
-    cpy_df = df[[&#39;adsh&#39;, &#39;coreg&#39;, &#39;tag&#39;, &#39;version&#39;, &#39;ddate&#39;, &#39;uom&#39;, &#39;value&#39;, &#39;report&#39;, &#39;line&#39;,
-                 &#39;negating&#39;]][df.tag.isin(all_input_tags)].copy()
-
-    # todo: wann muss negating berücksichtigt werden -&gt; nach dem pivot fliegt es raus!
-
-    # pivot the table, so that the tags are now columns
-    # todo: folgende Zeile sollte nicht mehr notwendig sein, sobald alle Regeln implementiert sind
-    expected_tags = all_input_tags.union(self.final_tags)
-    pivot_df = self._pivot(df=cpy_df, expected_tags=expected_tags)
-
-    if self.filter_for_main_report:
-        pivot_df = self._filter_pivot_for_main_reports(pivot_df)
-
-    log_df = pivot_df[[&#39;adsh&#39;, &#39;coreg&#39;, &#39;report&#39;, &#39;ddate&#39;]].copy()
-
-    total_length = len(pivot_df)
-
-    # calculate_pre_stats:
-    pre_apply_df = pivot_df[self.final_col_order]
-    self.pre_stats = self._calculate_stats(pivot_df=pre_apply_df)
-    self.pre_stats.name = &#34;pre&#34;
-
-    self.stats = pd.DataFrame(self.pre_stats)
-    self.stats[&#39;pre_rel&#39;] = self.stats.pre / total_length
-
-    self.stats = pd.DataFrame(self.pre_stats)
-
-    for i in range(self.iterations):
-        # apply the rule_tree
-        self.rule_tree.process(df=pivot_df, log_df=log_df, id=f&#34;{i}_&#34;)
-
-        self.post_stats = self._calculate_stats(pivot_df=pivot_df)
-        self.post_stats.name = f&#34;post_{i}&#34;
-
-        self.stats = self.stats.join(self.post_stats)
-        self.stats[self.post_stats.name + &#39;_rel&#39;] = \
-            self.stats[self.post_stats.name] / total_length
-        self.stats[self.post_stats.name + &#39;_red&#39;] = \
-            1 - (self.stats[self.post_stats.name] / self.stats.pre)
-
-    # create a meaningful order
-    pivot_df = pivot_df[self.final_col_order].copy()
-
-    return pivot_df</code></pre>
-</details>
 </dd>
 </dl>
 </dd>
@@ -1437,8 +1288,10 @@ def get_input_tags(self) -&gt; Set[str]:
 </code></dt>
 <dd>
 <div class="desc"><p>todo: to add -&gt; automatische vergabe von Rule ID bezüglich Gruppe
+ist das noch notwendig?
 Alle Regeln müssten eigentlich vom selben Typ sein
-Müsste man also auf den konkreten Rule Typ typisieren.</p></div>
+Müsste man also auf den konkreten Rule Typ typisieren.
+ist das so?</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -1446,8 +1299,10 @@ Müsste man also auf den konkreten Rule Typ typisieren.</p></div>
 <pre><code class="python">class RuleGroup(RuleEntity):
     &#34;&#34;&#34;
     todo: to add -&gt; automatische vergabe von Rule ID bezüglich Gruppe
+    ist das noch notwendig?
     Alle Regeln müssten eigentlich vom selben Typ sein
     Müsste man also auf den konkreten Rule Typ typisieren.
+    ist das so?
     &#34;&#34;&#34;
 
     def __init__(self, rules: List[RuleEntity], prefix: str):
@@ -1499,6 +1354,219 @@ Müsste man also auf den konkreten Rule Typ typisieren.</p></div>
 <pre><code class="python">def process(self, df: pd.DataFrame, log_df: Optional[pd.DataFrame] = None, id: str = &#34;&#34;):
     for rule in self.rules:
         rule.process(df=df, log_df=log_df, id=id + self.prefix)</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+<dt id="secfsdstools.f_standardize.bs_standardize.RuleProcessor"><code class="flex name class">
+<span>class <span class="ident">RuleProcessor</span></span>
+<span>(</span><span>rule_tree: <a title="secfsdstools.f_standardize.bs_standardize.RuleGroup" href="#secfsdstools.f_standardize.bs_standardize.RuleGroup">RuleGroup</a>, post_rules: List[<a title="secfsdstools.f_standardize.bs_standardize.RuleEntity" href="#secfsdstools.f_standardize.bs_standardize.RuleEntity">RuleEntity</a>], iterations: int, main_tags: List[str], final_tags: List[str], filter_for_main_report: bool)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class RuleProcessor:
+    identifier_tags = [&#39;adsh&#39;, &#39;coreg&#39;, &#39;report&#39;, &#39;ddate&#39;]
+
+    def __init__(self, rule_tree: RuleGroup, post_rules: List[RuleEntity],
+                 iterations: int, main_tags: List[str], final_tags: List[str],
+                 filter_for_main_report: bool):
+        self.rule_tree = rule_tree
+        self.post_rules = post_rules
+        self.iterations = iterations
+        self.main_tags = main_tags
+        self.final_tags = final_tags
+        self.filter_for_main_report = filter_for_main_report
+
+        self.final_col_order = self.identifier_tags + self.final_tags
+
+        self.log_df: Optional[pd.DataFrame] = None
+        self.stats: Optional[pd.DataFrame] = None
+
+
+    def get_ruletree_descriptions(self):
+        # todo
+        pass
+
+    def process(self, df: pd.DataFrame) -&gt; pd.DataFrame:
+        all_input_tags = self.rule_tree.get_input_tags()
+
+        cpy_df = df[[&#39;adsh&#39;, &#39;coreg&#39;, &#39;tag&#39;, &#39;version&#39;, &#39;ddate&#39;, &#39;uom&#39;, &#39;value&#39;, &#39;report&#39;, &#39;line&#39;,
+                     &#39;negating&#39;]][df.tag.isin(all_input_tags)].copy()
+
+        # todo: wann muss negating berücksichtigt werden -&gt; nach dem pivot fliegt es raus!
+
+        # pivot the table, so that the tags are now columns
+        # todo: folgende Zeile sollte nicht mehr notwendig sein, sobald alle Regeln implementiert sind
+        expected_tags = all_input_tags.union(self.final_tags)
+        pivot_df = self._pivot(df=cpy_df, expected_tags=expected_tags)
+
+        if self.filter_for_main_report:
+            pivot_df = self._filter_pivot_for_main_reports(pivot_df)
+
+        self.log_df = pivot_df[[&#39;adsh&#39;, &#39;coreg&#39;, &#39;report&#39;, &#39;ddate&#39;]].copy()
+
+        total_length = len(pivot_df)
+
+        # calculate_pre_stats:
+        pre_apply_df = pivot_df[self.final_col_order]
+        self.pre_stats = self._calculate_stats(pivot_df=pre_apply_df)
+        self.pre_stats.name = &#34;pre&#34;
+
+        self.stats = pd.DataFrame(self.pre_stats)
+        self.stats[&#39;pre_rel&#39;] = self.stats.pre / total_length
+
+        self.stats = pd.DataFrame(self.pre_stats)
+
+        for i in range(self.iterations):
+            # apply the rule_tree
+            self.rule_tree.process(df=pivot_df, log_df=self.log_df, id=f&#34;{i}_&#34;)
+
+            self.post_stats = self._calculate_stats(pivot_df=pivot_df)
+            self.post_stats.name = f&#34;post_{i}&#34;
+
+            self.stats = self.stats.join(self.post_stats)
+            self.stats[self.post_stats.name + &#39;_rel&#39;] = \
+                self.stats[self.post_stats.name] / total_length
+            self.stats[self.post_stats.name + &#39;_red&#39;] = \
+                1 - (self.stats[self.post_stats.name] / self.stats.pre)
+
+        # create a meaningful order
+        pivot_df = pivot_df[self.final_col_order].copy()
+
+        return pivot_df
+
+    def _filter_pivot_for_main_reports(self, pivot_df: pd.DataFrame) -&gt; pd.DataFrame:
+        &#34;&#34;&#34; Some reports have more than one &#39;report number&#39; (column report) for a
+            certain statement. Generally, the one with the most tags is the one to take.
+            This method operates on the pivoted data and counts the none-values of the
+            &#34;main columns&#34;. The main columns are the fields, that generally should be there.
+             &#34;&#34;&#34;
+
+        cpy_pivot_df = pivot_df.copy()
+
+        cpy_pivot_df[&#39;nan_count&#39;] = cpy_pivot_df[self.main_tags].isna().sum(axis=1)
+        cpy_pivot_df.sort_values([&#39;adsh&#39;, &#39;coreg&#39;, &#39;nan_count&#39;], inplace=True)
+        cpy_pivot_df = cpy_pivot_df.groupby([&#39;adsh&#39;, &#39;coreg&#39;]).last()
+        cpy_pivot_df.reset_index(inplace=True)
+        return cpy_pivot_df
+
+    def _calculate_stats(self, pivot_df: pd.DataFrame) -&gt; pd.DataFrame:
+        return pivot_df[self.final_tags].isna().sum(axis=0)
+
+    def _pivot(self, df: pd.DataFrame, expected_tags: Set[str]) -&gt; pd.DataFrame:
+        # todo: um pivot zu optimieren, sollten zuerst nur die Tags gefiltert werden,
+        # welche tatsächlich auch benützt werden, alles andere sollte herausgefiltert werden
+        # das müsste über die Regeln geschehen und sollte automatisch berechnet werden sollen.
+
+        # it is possible, that the same number appears multiple times in different lines,
+        # therefore, duplicates have to be removed, otherwise pivot is not possible
+        relevant_df = df[[&#39;adsh&#39;, &#39;coreg&#39;, &#39;report&#39;, &#39;tag&#39;, &#39;value&#39;, &#39;ddate&#39;]].drop_duplicates()
+
+        duplicates_df = relevant_df[
+            [&#39;adsh&#39;, &#39;coreg&#39;, &#39;report&#39;, &#39;tag&#39;, &#39;ddate&#39;]].value_counts().reset_index()
+        duplicates_df.rename(columns={0: &#39;count&#39;}, inplace=True)
+        duplicated_adsh = duplicates_df[duplicates_df[&#39;count&#39;] &gt; 1].adsh.unique().tolist()
+
+        # todo: logging duplicated entries ...&gt;
+        relevant_df = relevant_df[~relevant_df.adsh.isin(duplicated_adsh)]
+
+        pivot_df = relevant_df.pivot(index=[&#39;adsh&#39;, &#39;coreg&#39;, &#39;report&#39;, &#39;ddate&#39;],
+                                     columns=&#39;tag&#39;,
+                                     values=&#39;value&#39;)
+        pivot_df.reset_index(inplace=True)
+        missing_cols = set(expected_tags) - set(pivot_df.columns)
+        for missing_col in missing_cols:
+            pivot_df[missing_col] = np.nan
+        pivot_df[&#39;nan_count&#39;] = np.nan
+        return pivot_df</code></pre>
+</details>
+<h3>Subclasses</h3>
+<ul class="hlist">
+<li><a title="secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizer" href="#secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizer">BalanceSheetStandardizer</a></li>
+</ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="secfsdstools.f_standardize.bs_standardize.RuleProcessor.identifier_tags"><code class="name">var <span class="ident">identifier_tags</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="secfsdstools.f_standardize.bs_standardize.RuleProcessor.get_ruletree_descriptions"><code class="name flex">
+<span>def <span class="ident">get_ruletree_descriptions</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_ruletree_descriptions(self):
+    # todo
+    pass</code></pre>
+</details>
+</dd>
+<dt id="secfsdstools.f_standardize.bs_standardize.RuleProcessor.process"><code class="name flex">
+<span>def <span class="ident">process</span></span>(<span>self, df: pandas.core.frame.DataFrame) ‑> pandas.core.frame.DataFrame</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def process(self, df: pd.DataFrame) -&gt; pd.DataFrame:
+    all_input_tags = self.rule_tree.get_input_tags()
+
+    cpy_df = df[[&#39;adsh&#39;, &#39;coreg&#39;, &#39;tag&#39;, &#39;version&#39;, &#39;ddate&#39;, &#39;uom&#39;, &#39;value&#39;, &#39;report&#39;, &#39;line&#39;,
+                 &#39;negating&#39;]][df.tag.isin(all_input_tags)].copy()
+
+    # todo: wann muss negating berücksichtigt werden -&gt; nach dem pivot fliegt es raus!
+
+    # pivot the table, so that the tags are now columns
+    # todo: folgende Zeile sollte nicht mehr notwendig sein, sobald alle Regeln implementiert sind
+    expected_tags = all_input_tags.union(self.final_tags)
+    pivot_df = self._pivot(df=cpy_df, expected_tags=expected_tags)
+
+    if self.filter_for_main_report:
+        pivot_df = self._filter_pivot_for_main_reports(pivot_df)
+
+    self.log_df = pivot_df[[&#39;adsh&#39;, &#39;coreg&#39;, &#39;report&#39;, &#39;ddate&#39;]].copy()
+
+    total_length = len(pivot_df)
+
+    # calculate_pre_stats:
+    pre_apply_df = pivot_df[self.final_col_order]
+    self.pre_stats = self._calculate_stats(pivot_df=pre_apply_df)
+    self.pre_stats.name = &#34;pre&#34;
+
+    self.stats = pd.DataFrame(self.pre_stats)
+    self.stats[&#39;pre_rel&#39;] = self.stats.pre / total_length
+
+    self.stats = pd.DataFrame(self.pre_stats)
+
+    for i in range(self.iterations):
+        # apply the rule_tree
+        self.rule_tree.process(df=pivot_df, log_df=self.log_df, id=f&#34;{i}_&#34;)
+
+        self.post_stats = self._calculate_stats(pivot_df=pivot_df)
+        self.post_stats.name = f&#34;post_{i}&#34;
+
+        self.stats = self.stats.join(self.post_stats)
+        self.stats[self.post_stats.name + &#39;_rel&#39;] = \
+            self.stats[self.post_stats.name] / total_length
+        self.stats[self.post_stats.name + &#39;_red&#39;] = \
+            1 - (self.stats[self.post_stats.name] / self.stats.pre)
+
+    # create a meaningful order
+    pivot_df = pivot_df[self.final_col_order].copy()
+
+    return pivot_df</code></pre>
 </details>
 </dd>
 </dl>
@@ -1680,11 +1748,9 @@ def create_group(sum_tag: str, summand_tags: List[str], prefix: str) -&gt; RuleG
 <li><code><a title="secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizer.bs_rename_rg" href="#secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizer.bs_rename_rg">bs_rename_rg</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizer.bs_sum_completion" href="#secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizer.bs_sum_completion">bs_sum_completion</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizer.bs_sumup_rg" href="#secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizer.bs_sumup_rg">bs_sumup_rg</a></code></li>
-<li><code><a title="secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizer.calculation_tags" href="#secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizer.calculation_tags">calculation_tags</a></code></li>
-<li><code><a title="secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizer.final_col_order" href="#secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizer.final_col_order">final_col_order</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizer.final_tags" href="#secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizer.final_tags">final_tags</a></code></li>
-<li><code><a title="secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizer.main_columns" href="#secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizer.main_columns">main_columns</a></code></li>
-<li><code><a title="secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizer.standardize" href="#secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizer.standardize">standardize</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizer.main_tags" href="#secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizer.main_tags">main_tags</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizer.rule_tree" href="#secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizer.rule_tree">rule_tree</a></code></li>
 </ul>
 </li>
 <li>
@@ -1742,6 +1808,14 @@ def create_group(sum_tag: str, summand_tags: List[str], prefix: str) -&gt; RuleG
 <ul class="">
 <li><code><a title="secfsdstools.f_standardize.bs_standardize.RuleGroup.get_input_tags" href="#secfsdstools.f_standardize.bs_standardize.RuleGroup.get_input_tags">get_input_tags</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.bs_standardize.RuleGroup.process" href="#secfsdstools.f_standardize.bs_standardize.RuleGroup.process">process</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="secfsdstools.f_standardize.bs_standardize.RuleProcessor" href="#secfsdstools.f_standardize.bs_standardize.RuleProcessor">RuleProcessor</a></code></h4>
+<ul class="">
+<li><code><a title="secfsdstools.f_standardize.bs_standardize.RuleProcessor.get_ruletree_descriptions" href="#secfsdstools.f_standardize.bs_standardize.RuleProcessor.get_ruletree_descriptions">get_ruletree_descriptions</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.bs_standardize.RuleProcessor.identifier_tags" href="#secfsdstools.f_standardize.bs_standardize.RuleProcessor.identifier_tags">identifier_tags</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.bs_standardize.RuleProcessor.process" href="#secfsdstools.f_standardize.bs_standardize.RuleProcessor.process">process</a></code></li>
 </ul>
 </li>
 <li>

@@ -44,6 +44,8 @@ Bug:
 
 - coreg: "parent company" -> kann es sein, dass dies auch die mein company ist?
 
+- für die Analyse wäre es gut, eine Art "All Collector zu haben"
+
 
 Next:
 - vlt switch um parallele verarbeitung komplett auszuschalten?

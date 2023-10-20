@@ -23,24 +23,38 @@ v.1.0.0
 
 
 Bug:
+- https://stackoverflow.com/questions/38958640/using-python-multiprocess-outside-the-main-script
+  Adapt Readme mit warning wegen spawning problemen..
+
+
+  For an explanation of why (on Windows) the if __name__ == '__main__' part is necessary, see Programming guidelines.
+  (https://docs.python.org/3.10/library/multiprocessing.html#the-process-class)
+
+  https://docs.python.org/3.10/library/multiprocessing.html#multiprocessing-programming
+
+
+
 - irgendetwas beim "Releasen" erzeugt die nojekyll datei, so das die Doku nicht gebuildet wird.
+  -> könnte bereits gefixt sein
+- CP Einträge erscheinen nicht -> ist das wegen dem Join?
+  -> Problem ist, dass keine "nicht numerischen Values" weitergegeben werden...
+     irgendwo wird das gefiltert, und zwar schon früh, d.h., das num_df enthält nie solche Werte, was schlecht sit
+  -> Nein: anscheinend enthalten die num.txt neu nur noch numerische Werte,
+           Textwerte sind nur in der TXT.tsv Datei enthalten, welche aber nur im "sec fs ds with notes" vorhanden ist.
 
-
-todo
-- log
-  - after pivot, we need the same key columns as the pivot table
-  - every rule has to receive its own column, together with its iteration
-  - it should be as easy as just adding the column by column
-
+- coreg: "parent company" -> kann es sein, dass dies auch die mein company ist?
 
 
 Next:
+- vlt switch um parallele verarbeitung komplett auszuschalten?
+
 - new notebook, examples
   -> just read the data and use it -> only using collector
   -> reading primary financial statements for a single report, display BS, IS, CF for a report
   -> analyse changes in one Tag for one company
   -> compare basic data of two companies
 
+- Supporting Dataset with notes
 
 - Es wäre gut, wenn der StandardStatementPresenter noch eine Kolonne "year", noch welcher auch sortiert ist
   die sortierung über adsh alleine ermöglicht keine sauber sortierung pro jahr

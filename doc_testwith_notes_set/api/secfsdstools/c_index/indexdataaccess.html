@@ -122,6 +122,20 @@ class ParquetDBIndexingAccessor(DB):
         sql = f&#34;SELECT * FROM {self.index_processing_table} WHERE fileName = &#39;{filename}&#39;&#34;
         return self.execute_fetchall_typed(sql, IndexFileProcessingState)[0]
 
+    def read_index_files_for_filenames(self, filenames: List[str]) -&gt; List[IndexFileProcessingState]:
+        &#34;&#34;&#34;
+        returns the IndexFileProcessingState instances for the provided filenames
+        Args:
+            filenames (List[str]): the filenames of the files
+
+        Returns:
+            List[IndexFileProcessingState]: the processing state instance
+        &#34;&#34;&#34;
+        filenames_str = &#34;, &#34;.join([&#34;&#39;&#34; + x + &#34;&#39;&#34; for x in filenames])
+
+        sql = f&#34;SELECT * FROM {self.index_processing_table} WHERE fileName in ({filenames_str})&#34;
+        return self.execute_fetchall_typed(sql, IndexFileProcessingState)
+
     def insert_indexreport(self, data: IndexReport):
         &#34;&#34;&#34;
         inserts an entry into the index_report table
@@ -492,6 +506,20 @@ class ParquetDBIndexingAccessor(DB):
         &#34;&#34;&#34;
         sql = f&#34;SELECT * FROM {self.index_processing_table} WHERE fileName = &#39;{filename}&#39;&#34;
         return self.execute_fetchall_typed(sql, IndexFileProcessingState)[0]
+
+    def read_index_files_for_filenames(self, filenames: List[str]) -&gt; List[IndexFileProcessingState]:
+        &#34;&#34;&#34;
+        returns the IndexFileProcessingState instances for the provided filenames
+        Args:
+            filenames (List[str]): the filenames of the files
+
+        Returns:
+            List[IndexFileProcessingState]: the processing state instance
+        &#34;&#34;&#34;
+        filenames_str = &#34;, &#34;.join([&#34;&#39;&#34; + x + &#34;&#39;&#34; for x in filenames])
+
+        sql = f&#34;SELECT * FROM {self.index_processing_table} WHERE fileName in ({filenames_str})&#34;
+        return self.execute_fetchall_typed(sql, IndexFileProcessingState)
 
     def insert_indexreport(self, data: IndexReport):
         &#34;&#34;&#34;
@@ -985,6 +1013,40 @@ Lower and uppercase are ignored.</p>
     return self.execute_fetchall_typed(sql, IndexFileProcessingState)[0]</code></pre>
 </details>
 </dd>
+<dt id="secfsdstools.c_index.indexdataaccess.ParquetDBIndexingAccessor.read_index_files_for_filenames"><code class="name flex">
+<span>def <span class="ident">read_index_files_for_filenames</span></span>(<span>self, filenames: List[str]) ‑> List[<a title="secfsdstools.c_index.indexdataaccess.IndexFileProcessingState" href="#secfsdstools.c_index.indexdataaccess.IndexFileProcessingState">IndexFileProcessingState</a>]</span>
+</code></dt>
+<dd>
+<div class="desc"><p>returns the IndexFileProcessingState instances for the provided filenames</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>filenames</code></strong> :&ensp;<code>List[str]</code></dt>
+<dd>the filenames of the files</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>List[<a title="secfsdstools.c_index.indexdataaccess.IndexFileProcessingState" href="#secfsdstools.c_index.indexdataaccess.IndexFileProcessingState">IndexFileProcessingState</a>]</code></dt>
+<dd>the processing state instance</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def read_index_files_for_filenames(self, filenames: List[str]) -&gt; List[IndexFileProcessingState]:
+    &#34;&#34;&#34;
+    returns the IndexFileProcessingState instances for the provided filenames
+    Args:
+        filenames (List[str]): the filenames of the files
+
+    Returns:
+        List[IndexFileProcessingState]: the processing state instance
+    &#34;&#34;&#34;
+    filenames_str = &#34;, &#34;.join([&#34;&#39;&#34; + x + &#34;&#39;&#34; for x in filenames])
+
+    sql = f&#34;SELECT * FROM {self.index_processing_table} WHERE fileName in ({filenames_str})&#34;
+    return self.execute_fetchall_typed(sql, IndexFileProcessingState)</code></pre>
+</details>
+</dd>
 <dt id="secfsdstools.c_index.indexdataaccess.ParquetDBIndexingAccessor.read_index_report_for_adsh"><code class="name flex">
 <span>def <span class="ident">read_index_report_for_adsh</span></span>(<span>self, adsh: str) ‑> <a title="secfsdstools.c_index.indexdataaccess.IndexReport" href="#secfsdstools.c_index.indexdataaccess.IndexReport">IndexReport</a></span>
 </code></dt>
@@ -1237,6 +1299,7 @@ forms that should be returned</p>
 <li><code><a title="secfsdstools.c_index.indexdataaccess.ParquetDBIndexingAccessor.read_all_indexreports" href="#secfsdstools.c_index.indexdataaccess.ParquetDBIndexingAccessor.read_all_indexreports">read_all_indexreports</a></code></li>
 <li><code><a title="secfsdstools.c_index.indexdataaccess.ParquetDBIndexingAccessor.read_all_indexreports_df" href="#secfsdstools.c_index.indexdataaccess.ParquetDBIndexingAccessor.read_all_indexreports_df">read_all_indexreports_df</a></code></li>
 <li><code><a title="secfsdstools.c_index.indexdataaccess.ParquetDBIndexingAccessor.read_index_file_for_filename" href="#secfsdstools.c_index.indexdataaccess.ParquetDBIndexingAccessor.read_index_file_for_filename">read_index_file_for_filename</a></code></li>
+<li><code><a title="secfsdstools.c_index.indexdataaccess.ParquetDBIndexingAccessor.read_index_files_for_filenames" href="#secfsdstools.c_index.indexdataaccess.ParquetDBIndexingAccessor.read_index_files_for_filenames">read_index_files_for_filenames</a></code></li>
 <li><code><a title="secfsdstools.c_index.indexdataaccess.ParquetDBIndexingAccessor.read_index_report_for_adsh" href="#secfsdstools.c_index.indexdataaccess.ParquetDBIndexingAccessor.read_index_report_for_adsh">read_index_report_for_adsh</a></code></li>
 <li><code><a title="secfsdstools.c_index.indexdataaccess.ParquetDBIndexingAccessor.read_index_reports_for_adshs" href="#secfsdstools.c_index.indexdataaccess.ParquetDBIndexingAccessor.read_index_reports_for_adshs">read_index_reports_for_adshs</a></code></li>
 <li><code><a title="secfsdstools.c_index.indexdataaccess.ParquetDBIndexingAccessor.read_index_reports_for_ciks" href="#secfsdstools.c_index.indexdataaccess.ParquetDBIndexingAccessor.read_index_reports_for_ciks">read_index_reports_for_ciks</a></code></li>

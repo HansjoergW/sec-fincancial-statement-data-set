@@ -31,7 +31,7 @@
 Collector Base Class
 &#34;&#34;&#34;
 import os
-from abc import ABC, abstractmethod
+from abc import ABC
 from typing import List, Optional, Tuple, Union
 
 import pandas as pd
@@ -102,7 +102,6 @@ class BaseCollector(ABC):
 
         return RawDataBag.create(sub_df=sub_df, pre_df=pre_df, num_df=num_df)
 
-    @abstractmethod
     def collect(self) -&gt; RawDataBag:
         &#34;&#34;&#34;
         collects the data and returns a Databag
@@ -110,7 +109,8 @@ class BaseCollector(ABC):
         Returns:
             RawDataBag: the collected Data
 
-        &#34;&#34;&#34;</code></pre>
+        &#34;&#34;&#34;
+        pass</code></pre>
 </details>
 </section>
 <section>
@@ -194,7 +194,6 @@ class BaseCollector(ABC):
 
         return RawDataBag.create(sub_df=sub_df, pre_df=pre_df, num_df=num_df)
 
-    @abstractmethod
     def collect(self) -&gt; RawDataBag:
         &#34;&#34;&#34;
         collects the data and returns a Databag
@@ -202,7 +201,8 @@ class BaseCollector(ABC):
         Returns:
             RawDataBag: the collected Data
 
-        &#34;&#34;&#34;</code></pre>
+        &#34;&#34;&#34;
+        pass</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -211,7 +211,6 @@ class BaseCollector(ABC):
 <h3>Subclasses</h3>
 <ul class="hlist">
 <li><a title="secfsdstools.e_collector.reportcollecting.SingleReportCollector" href="reportcollecting.html#secfsdstools.e_collector.reportcollecting.SingleReportCollector">SingleReportCollector</a></li>
-<li><a title="secfsdstools.e_collector.zipcollecting.ZipCollector" href="zipcollecting.html#secfsdstools.e_collector.zipcollecting.ZipCollector">ZipCollector</a></li>
 </ul>
 <h3>Methods</h3>
 <dl>
@@ -229,15 +228,15 @@ class BaseCollector(ABC):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">@abstractmethod
-def collect(self) -&gt; RawDataBag:
+<pre><code class="python">def collect(self) -&gt; RawDataBag:
     &#34;&#34;&#34;
     collects the data and returns a Databag
 
     Returns:
         RawDataBag: the collected Data
 
-    &#34;&#34;&#34;</code></pre>
+    &#34;&#34;&#34;
+    pass</code></pre>
 </details>
 </dd>
 </dl>

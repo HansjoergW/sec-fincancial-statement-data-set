@@ -93,6 +93,20 @@ class ParquetDBIndexingAccessor(DB):
         sql = f"SELECT * FROM {self.index_processing_table} WHERE fileName = '{filename}'"
         return self.execute_fetchall_typed(sql, IndexFileProcessingState)[0]
 
+    def read_index_files_for_filenames(self, filenames: List[str]) -> List[IndexFileProcessingState]:
+        """
+        returns the IndexFileProcessingState instances for the provided filenames
+        Args:
+            filenames (List[str]): the filenames of the files
+
+        Returns:
+            List[IndexFileProcessingState]: the processing state instance
+        """
+        filenames_str = ", ".join(["'" + x + "'" for x in filenames])
+
+        sql = f"SELECT * FROM {self.index_processing_table} WHERE fileName in ({filenames_str})"
+        return self.execute_fetchall_typed(sql, IndexFileProcessingState)
+
     def insert_indexreport(self, data: IndexReport):
         """
         inserts an entry into the index_report table

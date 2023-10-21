@@ -14,18 +14,18 @@ PATH_TO_ZIP = f'{CURRENT_DIR}/../_testdata/parquet/quarter/2010q1.zip'
 
 @pytest.fixture
 def zipcollector():
-    zipcollector = ZipCollector(datapath=PATH_TO_ZIP)
+    zipcollector = ZipCollector(datapaths=[PATH_TO_ZIP])
     zipcollector.collect()
     return zipcollector
 
 
 def test_cm_get_zip_by_name():
-    instance = IndexFileProcessingState(fileName="", status="", entries=0, processTime="",
-                                        fullPath=PATH_TO_ZIP)
+    instances = [IndexFileProcessingState(fileName="", status="", entries=0, processTime="",
+                                        fullPath=PATH_TO_ZIP)]
 
     with patch(
-            "secfsdstools.c_index.indexdataaccess.ParquetDBIndexingAccessor.read_index_file_for_filename",
-            return_value=instance):
+            "secfsdstools.c_index.indexdataaccess.ParquetDBIndexingAccessor.read_index_files_for_filenames",
+            return_value=instances):
         zipcollector = ZipCollector.get_zip_by_name(name="2010q1.zip",
                                                     configuration=Configuration(db_dir="",
                                                                                 download_dir="",
@@ -41,7 +41,7 @@ def test_read_raw_data(zipcollector):
 
 
 def test_forms_filter():
-    zipcollector = ZipCollector(datapath=PATH_TO_ZIP, forms_filter=['10-K'])
+    zipcollector = ZipCollector(datapaths=[PATH_TO_ZIP], forms_filter=['10-K'])
     bag = zipcollector.collect()
 
     merged_pre_df = pd.merge(bag.sub_df[['adsh', 'form']], bag.pre_df, on=['adsh'])
@@ -52,13 +52,13 @@ def test_forms_filter():
 
 
 def test_stmt_filter():
-    zipcollector = ZipCollector(datapath=PATH_TO_ZIP, stmt_filter=['BS'])
+    zipcollector = ZipCollector(datapaths=[PATH_TO_ZIP], stmt_filter=['BS'])
     bag = zipcollector.collect()
 
     assert bag.pre_df.stmt.unique().tolist() == ['BS']
 
 def test_tag_filter():
-    zipcollector = ZipCollector(datapath=PATH_TO_ZIP, tag_filter=['Assets'])
+    zipcollector = ZipCollector(datapaths=[PATH_TO_ZIP], tag_filter=['Assets'])
     bag = zipcollector.collect()
 
     assert bag.pre_df.tag.unique().tolist() == ['Assets']

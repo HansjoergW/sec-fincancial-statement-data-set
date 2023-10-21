@@ -2,7 +2,7 @@
 Collector Base Class
 """
 import os
-from abc import ABC, abstractmethod
+from abc import ABC
 from typing import List, Optional, Tuple, Union
 
 import pandas as pd
@@ -73,7 +73,6 @@ class BaseCollector(ABC):
 
         return RawDataBag.create(sub_df=sub_df, pre_df=pre_df, num_df=num_df)
 
-    @abstractmethod
     def collect(self) -> RawDataBag:
         """
         collects the data and returns a Databag
@@ -82,3 +81,4 @@ class BaseCollector(ABC):
             RawDataBag: the collected Data
 
         """
+        pass

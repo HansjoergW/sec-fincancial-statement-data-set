@@ -445,26 +445,29 @@ The framework provides the following collectors:
     3  0001193125-12-444068  Assets  us-gaap/2012        20120930     0  USD  1.760640e+11     None  
     ````
     <br>
-* `ZipCollector` <br> This `Collector` collects the data of one single zip (resp. the folder that contains the parquet
-  files of this zip file). And since the original zip file contains the data for one quarter, the name you provide
-  in the `get_zuip_by_name` factory method reflects the quarter which data you want to load: e.g. `2022q1.zip`.
+* `ZipCollector` <br> This `Collector` collects the data of one or more zip (resp. the folders that contain the parquet
+  files of this zip files). And since every of the original zip files contains the data for one quarter, the names you provide
+  in the `get_zip_by_name` or `get_zip_by_names` factory methods reflect the quarter which data you want to load: 
+  e.g. `2022q1.zip`.
+ 
   <br><br>*Example:*
     ````
     from secfsdstools.e_collector.zipcollecting import ZipCollector
 
     # only collect the Balance Sheet of annual reports that
     # were filed during the first quarter in 2022
-    collector: ZipCollector = ZipCollector.get_zip_by_name(name="2022q1.zip",
-                                                           forms_filter=["10-K"],
-                                                           stmt_filter=["BS"])
-
-    rawdatabag = collector.collect()
-
-    # only show the size of the data frame
-    # .. over 4000 companies filed a 10 K report in q1 2022
-    print(rawdatabag.sub_df.shape)
-    print(rawdatabag.pre_df.shape)
-    print(rawdatabag.num_df.shape)    
+    if __name__ == '__main__':
+        collector: ZipCollector = ZipCollector.get_zip_by_name(name="2022q1.zip",
+                                                               forms_filter=["10-K"],
+                                                               stmt_filter=["BS"])
+    
+        rawdatabag = collector.collect()
+    
+        # only show the size of the data frame
+        # .. over 4000 companies filed a 10 K report in q1 2022
+        print(rawdatabag.sub_df.shape)
+        print(rawdatabag.pre_df.shape)
+        print(rawdatabag.num_df.shape)    
     ```` 
   <br>*Output*:
     ````

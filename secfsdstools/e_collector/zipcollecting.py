@@ -83,11 +83,39 @@ class ZipCollector:
 
     @classmethod
     def get_all_zips(cls,
-                        forms_filter: Optional[List[str]] = None,
-                        stmt_filter: Optional[List[str]] = None,
-                        tag_filter: Optional[List[str]] = None,
-                        configuration: Optional[Configuration] = None):
-        pass
+                     forms_filter: Optional[List[str]] = None,
+                     stmt_filter: Optional[List[str]] = None,
+                     tag_filter: Optional[List[str]] = None,
+                     configuration: Optional[Configuration] = None):
+        """
+        ATTENTION: this will take some time since data from all zip files are read at once.
+        Moreover, if you don't apply directly filters, it will load a load of data.
+
+        Creates a ZipReportReader that gets data from all available zipfiles.
+        Args:
+            names (List[str]): names of the zipfiles (without the path)
+
+            forms_filter (List[str], optional, None):
+                List of forms that should be read (10-K, 10-Q, ...)
+
+            stmt_filter (List[str], optional, None):
+                List of stmts that should be read (BS, IS, ...)
+
+            tag_filter (List[str], optional, None:
+                List of tags that should be read (Assets, Liabilities, ...)
+
+            configuration (Configuration, optional, None): configuration object
+        """
+        if configuration is None:
+            configuration = ConfigurationManager.read_config_file()
+
+        dbaccessor = ParquetDBIndexingAccessor(db_dir=configuration.db_dir)
+
+        datapaths = [x.fullPath for x in dbaccessor.read_all_indexfileprocessing()]
+        return ZipCollector(datapaths=datapaths,
+                            forms_filter=forms_filter,
+                            stmt_filter=stmt_filter,
+                            tag_filter=tag_filter)
 
     def __init__(self,
                  datapaths: List[str],
@@ -115,7 +143,7 @@ class ZipCollector:
 
             sub_filter = ('form', 'in', self.forms_filter) if self.forms_filter else None
 
-            return collector._collect(sub_df_filter=sub_filter)
+            return collector.basecollect(sub_df_filter=sub_filter)
 
         def post_process(parts: List[RawDataBag]) -> List[RawDataBag]:
             # do nothing

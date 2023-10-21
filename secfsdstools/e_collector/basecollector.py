@@ -51,7 +51,17 @@ class BaseCollector(ABC):
 
         return pre_filter, num_filter
 
-    def _collect(self, sub_df_filter: Tuple[str, str, Union[str, List[str]]]) -> RawDataBag:
+    def basecollect(self, sub_df_filter: Tuple[str, str, Union[str, List[str]]]) -> RawDataBag:
+        """
+        basic implementation of the collect method
+
+        Args:
+            sub_df_filter: filter that applies directly on the sub.txt dataframe.
+
+        Returns:
+            RawDataBag: the loaded instance of RawDataBag
+
+        """
 
         sub_df = self._read_df_from_raw_parquet(file=SUB_TXT,
                                                 filters=[sub_df_filter] if sub_df_filter else None)
@@ -75,10 +85,9 @@ class BaseCollector(ABC):
 
     def collect(self) -> RawDataBag:
         """
-        collects the data and returns a Databag
+        collects the data and returns a Databag. Overwritten by subclasses
 
         Returns:
             RawDataBag: the collected Data
 
         """
-        pass

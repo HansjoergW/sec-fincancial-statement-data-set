@@ -33,6 +33,7 @@ which the zip file was transformed to.</p>
 loads all the data from one single zip file, resp. the folder with the three parquet files to
 which the zip file was transformed to.
 &#34;&#34;&#34;
+import logging
 from typing import Optional, List
 
 from secfsdstools.a_config.configmgt import ConfigurationManager
@@ -41,6 +42,8 @@ from secfsdstools.a_utils.parallelexecution import ParallelExecutor
 from secfsdstools.c_index.indexdataaccess import ParquetDBIndexingAccessor
 from secfsdstools.d_container.databagmodel import RawDataBag
 from secfsdstools.e_collector.basecollector import BaseCollector
+
+LOGGER = logging.getLogger(__name__)
 
 
 class ZipCollector:
@@ -142,7 +145,11 @@ class ZipCollector:
 
         dbaccessor = ParquetDBIndexingAccessor(db_dir=configuration.db_dir)
 
-        datapaths = [x.fullPath for x in dbaccessor.read_all_indexfileprocessing()]
+        # exclude 2009q1.zip, since this is empty and causes and error when it is read
+        # with a filter
+        datapaths = [x.fullPath for x in dbaccessor.read_all_indexfileprocessing()
+                     if not x.fullPath.endswith(&#34;2009q1.zip&#34;)]
+
         return ZipCollector(datapaths=datapaths,
                             forms_filter=forms_filter,
                             stmt_filter=stmt_filter,
@@ -167,7 +174,7 @@ class ZipCollector:
             return datapaths
 
         def process_element(datapath: str) -&gt; RawDataBag:
-            print(str)
+            LOGGER.info(&#34;processing %s&#34;, datapath)
             collector = BaseCollector(datapath=datapath,
                                       stmt_filter=self.stmt_filter,
                                       tag_filter=self.tag_filter)
@@ -325,7 +332,11 @@ parquet format to which the zip file was transformed into.</p></div>
 
         dbaccessor = ParquetDBIndexingAccessor(db_dir=configuration.db_dir)
 
-        datapaths = [x.fullPath for x in dbaccessor.read_all_indexfileprocessing()]
+        # exclude 2009q1.zip, since this is empty and causes and error when it is read
+        # with a filter
+        datapaths = [x.fullPath for x in dbaccessor.read_all_indexfileprocessing()
+                     if not x.fullPath.endswith(&#34;2009q1.zip&#34;)]
+
         return ZipCollector(datapaths=datapaths,
                             forms_filter=forms_filter,
                             stmt_filter=stmt_filter,
@@ -350,7 +361,7 @@ parquet format to which the zip file was transformed into.</p></div>
             return datapaths
 
         def process_element(datapath: str) -&gt; RawDataBag:
-            print(str)
+            LOGGER.info(&#34;processing %s&#34;, datapath)
             collector = BaseCollector(datapath=datapath,
                                       stmt_filter=self.stmt_filter,
                                       tag_filter=self.tag_filter)
@@ -446,7 +457,11 @@ def get_all_zips(cls,
 
     dbaccessor = ParquetDBIndexingAccessor(db_dir=configuration.db_dir)
 
-    datapaths = [x.fullPath for x in dbaccessor.read_all_indexfileprocessing()]
+    # exclude 2009q1.zip, since this is empty and causes and error when it is read
+    # with a filter
+    datapaths = [x.fullPath for x in dbaccessor.read_all_indexfileprocessing()
+                 if not x.fullPath.endswith(&#34;2009q1.zip&#34;)]
+
     return ZipCollector(datapaths=datapaths,
                         forms_filter=forms_filter,
                         stmt_filter=stmt_filter,

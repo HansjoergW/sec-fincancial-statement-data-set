@@ -2,6 +2,7 @@
 loads all the data from one single zip file, resp. the folder with the three parquet files to
 which the zip file was transformed to.
 """
+import logging
 from typing import Optional, List
 
 from secfsdstools.a_config.configmgt import ConfigurationManager
@@ -10,6 +11,8 @@ from secfsdstools.a_utils.parallelexecution import ParallelExecutor
 from secfsdstools.c_index.indexdataaccess import ParquetDBIndexingAccessor
 from secfsdstools.d_container.databagmodel import RawDataBag
 from secfsdstools.e_collector.basecollector import BaseCollector
+
+LOGGER = logging.getLogger(__name__)
 
 
 class ZipCollector:
@@ -111,7 +114,11 @@ class ZipCollector:
 
         dbaccessor = ParquetDBIndexingAccessor(db_dir=configuration.db_dir)
 
-        datapaths = [x.fullPath for x in dbaccessor.read_all_indexfileprocessing()]
+        # exclude 2009q1.zip, since this is empty and causes and error when it is read
+        # with a filter
+        datapaths = [x.fullPath for x in dbaccessor.read_all_indexfileprocessing()
+                     if not x.fullPath.endswith("2009q1.zip")]
+
         return ZipCollector(datapaths=datapaths,
                             forms_filter=forms_filter,
                             stmt_filter=stmt_filter,
@@ -136,7 +143,7 @@ class ZipCollector:
             return datapaths
 
         def process_element(datapath: str) -> RawDataBag:
-            print(str)
+            LOGGER.info("processing %s", datapath)
             collector = BaseCollector(datapath=datapath,
                                       stmt_filter=self.stmt_filter,
                                       tag_filter=self.tag_filter)

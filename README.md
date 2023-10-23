@@ -31,8 +31,16 @@ It also provides an integration with
 the https://rapidapi.com/hansjoerg.wingeier/api/daily-sec-financial-statement-dataset API
 and therefore providing a possibility to receive the latest filings on a daily basis and not just every three months.
 
-# Important: The API was redesigned completely from version 0.5 to version 1.0  
 
+# Latest news / most important changes from previous versions
+
+## 1.0 -> 1.1
+* `secfsdstools.e_collector.zipcollecting.ZipCollector` supports now loading of multiple zip files:
+  * `ZipCollector.get_zip_by_names()` is new and takes a list of zipfilenames
+  * `ZipCollector.get_all_zips()` is new and loads data from all zip files
+
+## 0.5 -> 1.0
+* The API was redesigned completely from version 0.5 to version 1.0 <br>  
 Please read the chapter "Working with the SECFSDSTools library" carefully to understand how to use the new API.
 
 

@@ -26,8 +26,13 @@ class BaseCollector(ABC):
     def _read_df_from_raw_parquet(self,
                                   file: str,
                                   filters=None) -> pd.DataFrame:
-        return pd.read_parquet(os.path.join(self.datapath, f'{file}.parquet'),
-                               filters=filters)
+        try:
+            return pd.read_parquet(os.path.join(self.datapath, f'{file}.parquet'),
+                                   filters=filters)
+        except Exception as ex:
+            print("Error reading file:", self.datapath, file, ex)
+            raise ex
+
 
     def _get_pre_num_filters(self,
                              adshs: Optional[List[str]],

@@ -14,21 +14,19 @@ v.1.1.0
 - API Changes
   - zipcollecting has now a factory method that can load multiple zip files as one
   - zipcollecting has now a factory method that can load all zip files at one
-
-Features
-- Filter for official tags only -> company specific tags
-- check if coreg "parent company"is also main company
-
+  - RawDataBag / JoinedDataBag have now copy_bag method
+- New
+ - Filter for official tags only -> company specific tags
 
 
-Bug:
+doku nachtragen
 
-
-- coreg: "parent company" -> kann es sein, dass dies auch die mein company ist?
+How to define a Filter as a Lambda
 
 
 Next:
 - vlt switch um parallele verarbeitung komplett auszuschalten?
+- vlt switch maximale parallelität?
 
 - new notebook, examples
   -> just read the data and use it -> only using collector

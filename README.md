@@ -35,9 +35,10 @@ and therefore providing a possibility to receive the latest filings on a daily b
 # Latest news / most important changes from previous versions
 
 ## 1.0 -> 1.1
-* `secfsdstools.e_collector.zipcollecting.ZipCollector` supports now loading of multiple zip files:
+* `secfsdstools.e_collector.zipcollecting.ZipCollector` supports loading multiple zip files:
   * `ZipCollector.get_zip_by_names()` is new and takes a list of zipfilenames
   * `ZipCollector.get_all_zips()` is new and loads data from all zip files
+* `secfsdstools.e_filter.rawfiltering.OfficialTagsOnlyFilter` is new and removes none us-gaap tags
 
 ## 0.5 -> 1.0
 * The API was redesigned completely from version 0.5 to version 1.0 <br>  
@@ -575,6 +576,13 @@ Framework (module `secfsdstools.e_filter.rawfiltering`:
    ````
    a_filtered_RawDataBag = a_RawDataBag.filter(ReportPeriodRawFilter()) 
    ````
+* `OfficialTagsOnlyFilter` <br> Sometimes company provide their own tags, which are not defined by the us-gaap XBRL
+  definition. In such cases, the version columns contains the value of the adsh instead of something like us-gab/2022.
+  This filter removes unofficial tags.
+   ````
+   a_filtered_RawDataBag = a_RawDataBag.filter(OfficialTagsOnlyFilter()) 
+   ````  
+
 
 ## Joined Processing: working with joined data
 When the `join` method of a `RawDataBag` instance is called an instance of `JoinedDataBag` is returned. The returned

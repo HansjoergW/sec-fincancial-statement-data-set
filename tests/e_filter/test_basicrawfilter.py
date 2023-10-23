@@ -2,7 +2,8 @@ import os
 
 from secfsdstools.d_container.databagmodel import RawDataBag
 from secfsdstools.e_filter.rawfiltering import ReportPeriodRawFilter, AdshRawFilter, \
-    ReportPeriodAndPreviousPeriodRawFilter, TagRawFilter, MainCoregFilter, StmtRawFilter
+    ReportPeriodAndPreviousPeriodRawFilter, TagRawFilter, MainCoregFilter, StmtRawFilter, \
+    OfficialTagsOnlyFilter
 
 CURRENT_DIR, _ = os.path.split(__file__)
 PATH_TO_BAG_1 = f'{CURRENT_DIR}/../_testdata/parquet/quarter/2010q1.zip'
@@ -99,6 +100,21 @@ def test_filter_TagRawFilter():
     assert filtered_bag.sub_df.shape == bag1.sub_df.shape
     assert filtered_bag.pre_df.shape == (795, 10)
     assert filtered_bag.num_df.shape == (1652, 9)
+
+    assert len(filtered_bag.pre_df.tag.unique()) == 2
+    assert len(filtered_bag.num_df.tag.unique()) == 2
+
+
+def test_filter_OfficialTagsOnlyFilter():
+    bag1: RawDataBag = RawDataBag.load(PATH_TO_BAG_1)
+
+    filter = OfficialTagsOnlyFilter()
+
+    filtered_bag = filter.filter(bag1)
+
+    assert filtered_bag.sub_df.shape == bag1.sub_df.shape
+    assert filtered_bag.pre_df.shape == (79220, 10)
+    assert filtered_bag.num_df.shape == (133775, 9)
 
     assert len(filtered_bag.pre_df.tag.unique()) == 2
     assert len(filtered_bag.num_df.tag.unique()) == 2

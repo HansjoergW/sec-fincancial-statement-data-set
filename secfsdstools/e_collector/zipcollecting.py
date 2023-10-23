@@ -5,6 +5,8 @@ which the zip file was transformed to.
 import logging
 from typing import Optional, List
 
+from secfsdstools.d_container.filter import FilterBase
+
 from secfsdstools.a_config.configmgt import ConfigurationManager
 from secfsdstools.a_config.configmodel import Configuration
 from secfsdstools.a_utils.parallelexecution import ParallelExecutor
@@ -27,6 +29,7 @@ class ZipCollector:
                         forms_filter: Optional[List[str]] = None,
                         stmt_filter: Optional[List[str]] = None,
                         tag_filter: Optional[List[str]] = None,
+                        post_load_filter: Optional[FilterBase[RawDataBag]] = None,
                         configuration: Optional[Configuration] = None):
         """
         creates a ZipReportReader instance for the given name of the zipfile.
@@ -42,12 +45,16 @@ class ZipCollector:
             tag_filter (List[str], optional, None:
                 List of tags that should be read (Assets, Liabilities, ...)
 
+            post_load_filter (FilterBase[RawDataBag]], optional, None): a filter that is directly
+                applied after a single zip has been loaded.
+
             configuration (Configuration, optional, None): configuration object
         """
         return cls.get_zip_by_names(names=[name],
                                     forms_filter=forms_filter,
                                     stmt_filter=stmt_filter,
                                     tag_filter=tag_filter,
+                                    post_load_filter=post_load_filter,
                                     configuration=configuration)
 
     @classmethod
@@ -56,6 +63,7 @@ class ZipCollector:
                          forms_filter: Optional[List[str]] = None,
                          stmt_filter: Optional[List[str]] = None,
                          tag_filter: Optional[List[str]] = None,
+                         post_load_filter: Optional[FilterBase[RawDataBag]] = None,
                          configuration: Optional[Configuration] = None):
         """
         creates a ZipReportReader instance for the given names of the zipfiles.
@@ -71,6 +79,9 @@ class ZipCollector:
             tag_filter (List[str], optional, None:
                 List of tags that should be read (Assets, Liabilities, ...)
 
+            post_load_filter (FilterBase[RawDataBag]], optional, None): a filter that is directly
+                applied after a single zip has been loaded.
+
             configuration (Configuration, optional, None): configuration object
         """
         if configuration is None:
@@ -82,13 +93,15 @@ class ZipCollector:
         return ZipCollector(datapaths=datapaths,
                             forms_filter=forms_filter,
                             stmt_filter=stmt_filter,
-                            tag_filter=tag_filter)
+                            tag_filter=tag_filter,
+                            post_load_filter=post_load_filter)
 
     @classmethod
     def get_all_zips(cls,
                      forms_filter: Optional[List[str]] = None,
                      stmt_filter: Optional[List[str]] = None,
                      tag_filter: Optional[List[str]] = None,
+                     post_load_filter: Optional[FilterBase[RawDataBag]] = None,
                      configuration: Optional[Configuration] = None):
         """
         ATTENTION: this will take some time since data from all zip files are read at once.
@@ -107,6 +120,9 @@ class ZipCollector:
             tag_filter (List[str], optional, None:
                 List of tags that should be read (Assets, Liabilities, ...)
 
+            post_load_filter (FilterBase[RawDataBag]], optional, None): a filter that is directly
+                applied after a single zip has been loaded.
+
             configuration (Configuration, optional, None): configuration object
         """
         if configuration is None:
@@ -122,18 +138,21 @@ class ZipCollector:
         return ZipCollector(datapaths=datapaths,
                             forms_filter=forms_filter,
                             stmt_filter=stmt_filter,
-                            tag_filter=tag_filter)
+                            tag_filter=tag_filter,
+                            post_load_filter=post_load_filter)
 
     def __init__(self,
                  datapaths: List[str],
                  forms_filter: Optional[List[str]] = None,
                  stmt_filter: Optional[List[str]] = None,
-                 tag_filter: Optional[List[str]] = None):
+                 tag_filter: Optional[List[str]] = None,
+                 post_load_filter: Optional[FilterBase[RawDataBag]] = None):
 
         self.datapaths = datapaths
         self.forms_filter = forms_filter
         self.stmt_filter = stmt_filter
         self.tag_filter = tag_filter
+        self.post_load_filter = post_load_filter
 
     def _multi_zipcollect(self) -> RawDataBag:
 
@@ -150,7 +169,10 @@ class ZipCollector:
 
             sub_filter = ('form', 'in', self.forms_filter) if self.forms_filter else None
 
-            return collector.basecollect(sub_df_filter=sub_filter)
+            rawdatabag = collector.basecollect(sub_df_filter=sub_filter)
+            if self.post_load_filter is not None:
+                rawdatabag = self.post_load_filter.filter(rawdatabag)
+            return rawdatabag
 
         def post_process(parts: List[RawDataBag]) -> List[RawDataBag]:
             # do nothing

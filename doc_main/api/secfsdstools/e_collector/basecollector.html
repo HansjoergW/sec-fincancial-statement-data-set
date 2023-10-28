@@ -31,7 +31,7 @@
 Collector Base Class
 &#34;&#34;&#34;
 import os
-from abc import ABC, abstractmethod
+from abc import ABC
 from typing import List, Optional, Tuple, Union
 
 import pandas as pd
@@ -55,8 +55,13 @@ class BaseCollector(ABC):
     def _read_df_from_raw_parquet(self,
                                   file: str,
                                   filters=None) -&gt; pd.DataFrame:
-        return pd.read_parquet(os.path.join(self.datapath, f&#39;{file}.parquet&#39;),
-                               filters=filters)
+        try:
+            return pd.read_parquet(os.path.join(self.datapath, f&#39;{file}.parquet&#39;),
+                                   filters=filters)
+        except Exception as ex:
+            print(&#34;Error reading file:&#34;, self.datapath, file, ex)
+            raise ex
+
 
     def _get_pre_num_filters(self,
                              adshs: Optional[List[str]],
@@ -80,7 +85,17 @@ class BaseCollector(ABC):
 
         return pre_filter, num_filter
 
-    def _collect(self, sub_df_filter: Tuple[str, str, Union[str, List[str]]]) -&gt; RawDataBag:
+    def basecollect(self, sub_df_filter: Tuple[str, str, Union[str, List[str]]]) -&gt; RawDataBag:
+        &#34;&#34;&#34;
+        basic implementation of the collect method
+
+        Args:
+            sub_df_filter: filter that applies directly on the sub.txt dataframe.
+
+        Returns:
+            RawDataBag: the loaded instance of RawDataBag
+
+        &#34;&#34;&#34;
 
         sub_df = self._read_df_from_raw_parquet(file=SUB_TXT,
                                                 filters=[sub_df_filter] if sub_df_filter else None)
@@ -102,10 +117,9 @@ class BaseCollector(ABC):
 
         return RawDataBag.create(sub_df=sub_df, pre_df=pre_df, num_df=num_df)
 
-    @abstractmethod
     def collect(self) -&gt; RawDataBag:
         &#34;&#34;&#34;
-        collects the data and returns a Databag
+        collects the data and returns a Databag. Overwritten by subclasses
 
         Returns:
             RawDataBag: the collected Data
@@ -147,8 +161,13 @@ class BaseCollector(ABC):
     def _read_df_from_raw_parquet(self,
                                   file: str,
                                   filters=None) -&gt; pd.DataFrame:
-        return pd.read_parquet(os.path.join(self.datapath, f&#39;{file}.parquet&#39;),
-                               filters=filters)
+        try:
+            return pd.read_parquet(os.path.join(self.datapath, f&#39;{file}.parquet&#39;),
+                                   filters=filters)
+        except Exception as ex:
+            print(&#34;Error reading file:&#34;, self.datapath, file, ex)
+            raise ex
+
 
     def _get_pre_num_filters(self,
                              adshs: Optional[List[str]],
@@ -172,7 +191,17 @@ class BaseCollector(ABC):
 
         return pre_filter, num_filter
 
-    def _collect(self, sub_df_filter: Tuple[str, str, Union[str, List[str]]]) -&gt; RawDataBag:
+    def basecollect(self, sub_df_filter: Tuple[str, str, Union[str, List[str]]]) -&gt; RawDataBag:
+        &#34;&#34;&#34;
+        basic implementation of the collect method
+
+        Args:
+            sub_df_filter: filter that applies directly on the sub.txt dataframe.
+
+        Returns:
+            RawDataBag: the loaded instance of RawDataBag
+
+        &#34;&#34;&#34;
 
         sub_df = self._read_df_from_raw_parquet(file=SUB_TXT,
                                                 filters=[sub_df_filter] if sub_df_filter else None)
@@ -194,10 +223,9 @@ class BaseCollector(ABC):
 
         return RawDataBag.create(sub_df=sub_df, pre_df=pre_df, num_df=num_df)
 
-    @abstractmethod
     def collect(self) -&gt; RawDataBag:
         &#34;&#34;&#34;
-        collects the data and returns a Databag
+        collects the data and returns a Databag. Overwritten by subclasses
 
         Returns:
             RawDataBag: the collected Data
@@ -211,15 +239,66 @@ class BaseCollector(ABC):
 <h3>Subclasses</h3>
 <ul class="hlist">
 <li><a title="secfsdstools.e_collector.reportcollecting.SingleReportCollector" href="reportcollecting.html#secfsdstools.e_collector.reportcollecting.SingleReportCollector">SingleReportCollector</a></li>
-<li><a title="secfsdstools.e_collector.zipcollecting.ZipCollector" href="zipcollecting.html#secfsdstools.e_collector.zipcollecting.ZipCollector">ZipCollector</a></li>
 </ul>
 <h3>Methods</h3>
 <dl>
+<dt id="secfsdstools.e_collector.basecollector.BaseCollector.basecollect"><code class="name flex">
+<span>def <span class="ident">basecollect</span></span>(<span>self, sub_df_filter: Tuple[str, str, Union[str, List[str]]]) ‑> <a title="secfsdstools.d_container.databagmodel.RawDataBag" href="../d_container/databagmodel.html#secfsdstools.d_container.databagmodel.RawDataBag">RawDataBag</a></span>
+</code></dt>
+<dd>
+<div class="desc"><p>basic implementation of the collect method</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>sub_df_filter</code></strong></dt>
+<dd>filter that applies directly on the sub.txt dataframe.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>RawDataBag</code></dt>
+<dd>the loaded instance of RawDataBag</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def basecollect(self, sub_df_filter: Tuple[str, str, Union[str, List[str]]]) -&gt; RawDataBag:
+    &#34;&#34;&#34;
+    basic implementation of the collect method
+
+    Args:
+        sub_df_filter: filter that applies directly on the sub.txt dataframe.
+
+    Returns:
+        RawDataBag: the loaded instance of RawDataBag
+
+    &#34;&#34;&#34;
+
+    sub_df = self._read_df_from_raw_parquet(file=SUB_TXT,
+                                            filters=[sub_df_filter] if sub_df_filter else None)
+    adshs = sub_df.adsh.to_list()
+    pre_filter, num_filter = self._get_pre_num_filters(adshs=adshs,
+                                                       stmts=self.stmt_filter,
+                                                       tags=self.tag_filter)
+
+    pre_df = self._read_df_from_raw_parquet(
+        file=PRE_TXT, filters=pre_filter if pre_filter else None
+    )
+
+    num_df = self._read_df_from_raw_parquet(
+        file=NUM_TXT, filters=num_filter if num_filter else None
+    )
+
+    # pandas pivot works better if coreg is not nan, so we set it here to a simple dash
+    num_df.loc[num_df.coreg.isna(), &#39;coreg&#39;] = &#39;&#39;
+
+    return RawDataBag.create(sub_df=sub_df, pre_df=pre_df, num_df=num_df)</code></pre>
+</details>
+</dd>
 <dt id="secfsdstools.e_collector.basecollector.BaseCollector.collect"><code class="name flex">
 <span>def <span class="ident">collect</span></span>(<span>self) ‑> <a title="secfsdstools.d_container.databagmodel.RawDataBag" href="../d_container/databagmodel.html#secfsdstools.d_container.databagmodel.RawDataBag">RawDataBag</a></span>
 </code></dt>
 <dd>
-<div class="desc"><p>collects the data and returns a Databag</p>
+<div class="desc"><p>collects the data and returns a Databag. Overwritten by subclasses</p>
 <h2 id="returns">Returns</h2>
 <dl>
 <dt><code>RawDataBag</code></dt>
@@ -229,10 +308,9 @@ class BaseCollector(ABC):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">@abstractmethod
-def collect(self) -&gt; RawDataBag:
+<pre><code class="python">def collect(self) -&gt; RawDataBag:
     &#34;&#34;&#34;
-    collects the data and returns a Databag
+    collects the data and returns a Databag. Overwritten by subclasses
 
     Returns:
         RawDataBag: the collected Data
@@ -261,6 +339,7 @@ def collect(self) -&gt; RawDataBag:
 <li>
 <h4><code><a title="secfsdstools.e_collector.basecollector.BaseCollector" href="#secfsdstools.e_collector.basecollector.BaseCollector">BaseCollector</a></code></h4>
 <ul class="">
+<li><code><a title="secfsdstools.e_collector.basecollector.BaseCollector.basecollect" href="#secfsdstools.e_collector.basecollector.BaseCollector.basecollect">basecollect</a></code></li>
 <li><code><a title="secfsdstools.e_collector.basecollector.BaseCollector.collect" href="#secfsdstools.e_collector.basecollector.BaseCollector.collect">collect</a></code></li>
 </ul>
 </li>

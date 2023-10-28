@@ -137,6 +137,16 @@ class JoinedDataBag(DataBagBase[JOINED]):
         &#34;&#34;&#34;
         return self.pre_num_df.copy()
 
+    def copy_bag(self) -&gt; JOINED:
+        &#34;&#34;&#34;
+        creates a bag with new copies of the internal dataframes.
+
+        Returns:
+            JoinedDataBag: new instance of JoinedDataBag
+        &#34;&#34;&#34;
+        return JoinedDataBag.create(sub_df=self.sub_df.copy(),
+                                    pre_num_df=self.pre_num_df.copy())
+
     def save(self, target_path: str):
         &#34;&#34;&#34;
         Stores the bag under the given directory.
@@ -228,6 +238,18 @@ class RawDataBag(DataBagBase[RAW]):
         self.sub_df = sub_df
         self.pre_df = pre_df
         self.num_df = num_df
+
+    def copy_bag(self):
+        &#34;&#34;&#34;
+        creates a bag with new copies of the internal dataframes.
+
+        Returns:
+            RawDataBag: new instance of JoinedDataBag
+        &#34;&#34;&#34;
+
+        return RawDataBag.create(sub_df=self.sub_df.copy(),
+                                 pre_df=self.pre_df.copy(),
+                                 num_df=self.num_df.copy())
 
     def get_sub_copy(self) -&gt; pd.DataFrame:
         &#34;&#34;&#34;
@@ -553,6 +575,16 @@ adsh, tag, and version.</p>
         &#34;&#34;&#34;
         return self.pre_num_df.copy()
 
+    def copy_bag(self) -&gt; JOINED:
+        &#34;&#34;&#34;
+        creates a bag with new copies of the internal dataframes.
+
+        Returns:
+            JoinedDataBag: new instance of JoinedDataBag
+        &#34;&#34;&#34;
+        return JoinedDataBag.create(sub_df=self.sub_df.copy(),
+                                    pre_num_df=self.pre_num_df.copy())
+
     def save(self, target_path: str):
         &#34;&#34;&#34;
         Stores the bag under the given directory.
@@ -731,6 +763,31 @@ def load(target_path: str) -&gt; JOINED:
 </dl>
 <h3>Methods</h3>
 <dl>
+<dt id="secfsdstools.d_container.databagmodel.JoinedDataBag.copy_bag"><code class="name flex">
+<span>def <span class="ident">copy_bag</span></span>(<span>self) ‑> ~JOINED</span>
+</code></dt>
+<dd>
+<div class="desc"><p>creates a bag with new copies of the internal dataframes.</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code><a title="secfsdstools.d_container.databagmodel.JoinedDataBag" href="#secfsdstools.d_container.databagmodel.JoinedDataBag">JoinedDataBag</a></code></dt>
+<dd>new instance of JoinedDataBag</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def copy_bag(self) -&gt; JOINED:
+    &#34;&#34;&#34;
+    creates a bag with new copies of the internal dataframes.
+
+    Returns:
+        JoinedDataBag: new instance of JoinedDataBag
+    &#34;&#34;&#34;
+    return JoinedDataBag.create(sub_df=self.sub_df.copy(),
+                                pre_num_df=self.pre_num_df.copy())</code></pre>
+</details>
+</dd>
 <dt id="secfsdstools.d_container.databagmodel.JoinedDataBag.get_pre_num_copy"><code class="name flex">
 <span>def <span class="ident">get_pre_num_copy</span></span>(<span>self) ‑> pandas.core.frame.DataFrame</span>
 </code></dt>
@@ -862,6 +919,18 @@ will be created</dd>
         self.sub_df = sub_df
         self.pre_df = pre_df
         self.num_df = num_df
+
+    def copy_bag(self):
+        &#34;&#34;&#34;
+        creates a bag with new copies of the internal dataframes.
+
+        Returns:
+            RawDataBag: new instance of JoinedDataBag
+        &#34;&#34;&#34;
+
+        return RawDataBag.create(sub_df=self.sub_df.copy(),
+                                 pre_df=self.pre_df.copy(),
+                                 num_df=self.num_df.copy())
 
     def get_sub_copy(self) -&gt; pd.DataFrame:
         &#34;&#34;&#34;
@@ -1118,6 +1187,33 @@ def load(target_path: str) -&gt; RAW:
 </dl>
 <h3>Methods</h3>
 <dl>
+<dt id="secfsdstools.d_container.databagmodel.RawDataBag.copy_bag"><code class="name flex">
+<span>def <span class="ident">copy_bag</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>creates a bag with new copies of the internal dataframes.</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code><a title="secfsdstools.d_container.databagmodel.RawDataBag" href="#secfsdstools.d_container.databagmodel.RawDataBag">RawDataBag</a></code></dt>
+<dd>new instance of JoinedDataBag</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def copy_bag(self):
+    &#34;&#34;&#34;
+    creates a bag with new copies of the internal dataframes.
+
+    Returns:
+        RawDataBag: new instance of JoinedDataBag
+    &#34;&#34;&#34;
+
+    return RawDataBag.create(sub_df=self.sub_df.copy(),
+                             pre_df=self.pre_df.copy(),
+                             num_df=self.num_df.copy())</code></pre>
+</details>
+</dd>
 <dt id="secfsdstools.d_container.databagmodel.RawDataBag.get_num_copy"><code class="name flex">
 <span>def <span class="ident">get_num_copy</span></span>(<span>self) ‑> pandas.core.frame.DataFrame</span>
 </code></dt>
@@ -1390,6 +1486,7 @@ and num_txt will be created</dd>
 <h4><code><a title="secfsdstools.d_container.databagmodel.JoinedDataBag" href="#secfsdstools.d_container.databagmodel.JoinedDataBag">JoinedDataBag</a></code></h4>
 <ul class="two-column">
 <li><code><a title="secfsdstools.d_container.databagmodel.JoinedDataBag.concat" href="#secfsdstools.d_container.databagmodel.JoinedDataBag.concat">concat</a></code></li>
+<li><code><a title="secfsdstools.d_container.databagmodel.JoinedDataBag.copy_bag" href="#secfsdstools.d_container.databagmodel.JoinedDataBag.copy_bag">copy_bag</a></code></li>
 <li><code><a title="secfsdstools.d_container.databagmodel.JoinedDataBag.create" href="#secfsdstools.d_container.databagmodel.JoinedDataBag.create">create</a></code></li>
 <li><code><a title="secfsdstools.d_container.databagmodel.JoinedDataBag.get_pre_num_copy" href="#secfsdstools.d_container.databagmodel.JoinedDataBag.get_pre_num_copy">get_pre_num_copy</a></code></li>
 <li><code><a title="secfsdstools.d_container.databagmodel.JoinedDataBag.get_sub_copy" href="#secfsdstools.d_container.databagmodel.JoinedDataBag.get_sub_copy">get_sub_copy</a></code></li>
@@ -1401,6 +1498,7 @@ and num_txt will be created</dd>
 <h4><code><a title="secfsdstools.d_container.databagmodel.RawDataBag" href="#secfsdstools.d_container.databagmodel.RawDataBag">RawDataBag</a></code></h4>
 <ul class="two-column">
 <li><code><a title="secfsdstools.d_container.databagmodel.RawDataBag.concat" href="#secfsdstools.d_container.databagmodel.RawDataBag.concat">concat</a></code></li>
+<li><code><a title="secfsdstools.d_container.databagmodel.RawDataBag.copy_bag" href="#secfsdstools.d_container.databagmodel.RawDataBag.copy_bag">copy_bag</a></code></li>
 <li><code><a title="secfsdstools.d_container.databagmodel.RawDataBag.create" href="#secfsdstools.d_container.databagmodel.RawDataBag.create">create</a></code></li>
 <li><code><a title="secfsdstools.d_container.databagmodel.RawDataBag.get_num_copy" href="#secfsdstools.d_container.databagmodel.RawDataBag.get_num_copy">get_num_copy</a></code></li>
 <li><code><a title="secfsdstools.d_container.databagmodel.RawDataBag.get_pre_copy" href="#secfsdstools.d_container.databagmodel.RawDataBag.get_pre_copy">get_pre_copy</a></code></li>

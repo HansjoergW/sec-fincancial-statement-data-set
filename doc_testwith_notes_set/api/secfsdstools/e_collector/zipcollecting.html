@@ -37,12 +37,13 @@ from typing import Optional, List
 
 from secfsdstools.a_config.configmgt import ConfigurationManager
 from secfsdstools.a_config.configmodel import Configuration
+from secfsdstools.a_utils.parallelexecution import ParallelExecutor
 from secfsdstools.c_index.indexdataaccess import ParquetDBIndexingAccessor
 from secfsdstools.d_container.databagmodel import RawDataBag
 from secfsdstools.e_collector.basecollector import BaseCollector
 
 
-class ZipCollector(BaseCollector):
+class ZipCollector:
     &#34;&#34;&#34;
     Reads all the data from a single zip file, resp. the folder containing the data in the
     parquet format to which the zip file was transformed into.
@@ -71,26 +72,101 @@ class ZipCollector(BaseCollector):
 
             configuration (Configuration, optional, None): configuration object
         &#34;&#34;&#34;
+        return cls.get_zip_by_names(names=[name],
+                                    forms_filter=forms_filter,
+                                    stmt_filter=stmt_filter,
+                                    tag_filter=tag_filter,
+                                    configuration=configuration)
+
+    @classmethod
+    def get_zip_by_names(cls,
+                         names: List[str],
+                         forms_filter: Optional[List[str]] = None,
+                         stmt_filter: Optional[List[str]] = None,
+                         tag_filter: Optional[List[str]] = None,
+                         configuration: Optional[Configuration] = None):
+        &#34;&#34;&#34;
+        creates a ZipReportReader instance for the given names of the zipfiles.
+        Args:
+            names (List[str]): names of the zipfiles (without the path)
+
+            forms_filter (List[str], optional, None):
+                List of forms that should be read (10-K, 10-Q, ...)
+
+            stmt_filter (List[str], optional, None):
+                List of stmts that should be read (BS, IS, ...)
+
+            tag_filter (List[str], optional, None:
+                List of tags that should be read (Assets, Liabilities, ...)
+
+            configuration (Configuration, optional, None): configuration object
+        &#34;&#34;&#34;
         if configuration is None:
             configuration = ConfigurationManager.read_config_file()
 
         dbaccessor = ParquetDBIndexingAccessor(db_dir=configuration.db_dir)
 
-        datapath = dbaccessor.read_index_file_for_filename(filename=name).fullPath
-        return ZipCollector(datapath=datapath,
+        datapaths = [x.fullPath for x in dbaccessor.read_index_files_for_filenames(filenames=names)]
+        return ZipCollector(datapaths=datapaths,
                             forms_filter=forms_filter,
                             stmt_filter=stmt_filter,
                             tag_filter=tag_filter)
 
+    @classmethod
+    def get_all_zips(cls,
+                        forms_filter: Optional[List[str]] = None,
+                        stmt_filter: Optional[List[str]] = None,
+                        tag_filter: Optional[List[str]] = None,
+                        configuration: Optional[Configuration] = None):
+        pass
+
     def __init__(self,
-                 datapath: str,
+                 datapaths: List[str],
                  forms_filter: Optional[List[str]] = None,
                  stmt_filter: Optional[List[str]] = None,
                  tag_filter: Optional[List[str]] = None):
-        super().__init__(datapath=datapath, stmt_filter=stmt_filter, tag_filter=tag_filter)
-        self.datapath = datapath
-        self.databag: Optional[RawDataBag] = None
+
+        self.datapaths = datapaths
         self.forms_filter = forms_filter
+        self.stmt_filter = stmt_filter
+        self.tag_filter = tag_filter
+
+    def _multi_zipcollect(self) -&gt; RawDataBag:
+
+        datapaths: List[str] = self.datapaths
+
+        def get_entries() -&gt; List[str]:
+            return datapaths
+
+        def process_element(datapath: str) -&gt; RawDataBag:
+            print(str)
+            collector = BaseCollector(datapath=datapath,
+                                      stmt_filter=self.stmt_filter,
+                                      tag_filter=self.tag_filter)
+
+            sub_filter = (&#39;form&#39;, &#39;in&#39;, self.forms_filter) if self.forms_filter else None
+
+            return collector._collect(sub_df_filter=sub_filter)
+
+        def post_process(parts: List[RawDataBag]) -&gt; List[RawDataBag]:
+            # do nothing
+            return parts
+
+        execute_serial = False
+        # no need for parallel execution if there is just one zipfile to load
+        if len(self.datapaths) == 1:
+            execute_serial = True
+        executor = ParallelExecutor(chunksize=0, execute_serial=execute_serial)
+
+        executor.set_get_entries_function(get_entries)
+        executor.set_process_element_function(process_element)
+        executor.set_post_process_chunk_function(post_process)
+
+        # we ignore the missing, since get_entries always returns the whole list
+        collected_reports: List[RawDataBag]
+        collected_reports, _ = executor.execute()
+
+        return RawDataBag.concat(collected_reports)
 
     def collect(self) -&gt; RawDataBag:
         &#34;&#34;&#34;
@@ -99,9 +175,7 @@ class ZipCollector(BaseCollector):
         Returns:
             RawDataBag: the collected Data
         &#34;&#34;&#34;
-
-        sub_filter = (&#39;form&#39;, &#39;in&#39;, self.forms_filter) if self.forms_filter else None
-        return self._collect(sub_df_filter=sub_filter)</code></pre>
+        return self._multi_zipcollect()</code></pre>
 </details>
 </section>
 <section>
@@ -115,7 +189,7 @@ class ZipCollector(BaseCollector):
 <dl>
 <dt id="secfsdstools.e_collector.zipcollecting.ZipCollector"><code class="flex name class">
 <span>class <span class="ident">ZipCollector</span></span>
-<span>(</span><span>datapath: str, forms_filter: Optional[List[str]] = None, stmt_filter: Optional[List[str]] = None, tag_filter: Optional[List[str]] = None)</span>
+<span>(</span><span>datapaths: List[str], forms_filter: Optional[List[str]] = None, stmt_filter: Optional[List[str]] = None, tag_filter: Optional[List[str]] = None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Reads all the data from a single zip file, resp. the folder containing the data in the
@@ -124,7 +198,7 @@ parquet format to which the zip file was transformed into.</p></div>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class ZipCollector(BaseCollector):
+<pre><code class="python">class ZipCollector:
     &#34;&#34;&#34;
     Reads all the data from a single zip file, resp. the folder containing the data in the
     parquet format to which the zip file was transformed into.
@@ -153,26 +227,101 @@ parquet format to which the zip file was transformed into.</p></div>
 
             configuration (Configuration, optional, None): configuration object
         &#34;&#34;&#34;
+        return cls.get_zip_by_names(names=[name],
+                                    forms_filter=forms_filter,
+                                    stmt_filter=stmt_filter,
+                                    tag_filter=tag_filter,
+                                    configuration=configuration)
+
+    @classmethod
+    def get_zip_by_names(cls,
+                         names: List[str],
+                         forms_filter: Optional[List[str]] = None,
+                         stmt_filter: Optional[List[str]] = None,
+                         tag_filter: Optional[List[str]] = None,
+                         configuration: Optional[Configuration] = None):
+        &#34;&#34;&#34;
+        creates a ZipReportReader instance for the given names of the zipfiles.
+        Args:
+            names (List[str]): names of the zipfiles (without the path)
+
+            forms_filter (List[str], optional, None):
+                List of forms that should be read (10-K, 10-Q, ...)
+
+            stmt_filter (List[str], optional, None):
+                List of stmts that should be read (BS, IS, ...)
+
+            tag_filter (List[str], optional, None:
+                List of tags that should be read (Assets, Liabilities, ...)
+
+            configuration (Configuration, optional, None): configuration object
+        &#34;&#34;&#34;
         if configuration is None:
             configuration = ConfigurationManager.read_config_file()
 
         dbaccessor = ParquetDBIndexingAccessor(db_dir=configuration.db_dir)
 
-        datapath = dbaccessor.read_index_file_for_filename(filename=name).fullPath
-        return ZipCollector(datapath=datapath,
+        datapaths = [x.fullPath for x in dbaccessor.read_index_files_for_filenames(filenames=names)]
+        return ZipCollector(datapaths=datapaths,
                             forms_filter=forms_filter,
                             stmt_filter=stmt_filter,
                             tag_filter=tag_filter)
 
+    @classmethod
+    def get_all_zips(cls,
+                        forms_filter: Optional[List[str]] = None,
+                        stmt_filter: Optional[List[str]] = None,
+                        tag_filter: Optional[List[str]] = None,
+                        configuration: Optional[Configuration] = None):
+        pass
+
     def __init__(self,
-                 datapath: str,
+                 datapaths: List[str],
                  forms_filter: Optional[List[str]] = None,
                  stmt_filter: Optional[List[str]] = None,
                  tag_filter: Optional[List[str]] = None):
-        super().__init__(datapath=datapath, stmt_filter=stmt_filter, tag_filter=tag_filter)
-        self.datapath = datapath
-        self.databag: Optional[RawDataBag] = None
+
+        self.datapaths = datapaths
         self.forms_filter = forms_filter
+        self.stmt_filter = stmt_filter
+        self.tag_filter = tag_filter
+
+    def _multi_zipcollect(self) -&gt; RawDataBag:
+
+        datapaths: List[str] = self.datapaths
+
+        def get_entries() -&gt; List[str]:
+            return datapaths
+
+        def process_element(datapath: str) -&gt; RawDataBag:
+            print(str)
+            collector = BaseCollector(datapath=datapath,
+                                      stmt_filter=self.stmt_filter,
+                                      tag_filter=self.tag_filter)
+
+            sub_filter = (&#39;form&#39;, &#39;in&#39;, self.forms_filter) if self.forms_filter else None
+
+            return collector._collect(sub_df_filter=sub_filter)
+
+        def post_process(parts: List[RawDataBag]) -&gt; List[RawDataBag]:
+            # do nothing
+            return parts
+
+        execute_serial = False
+        # no need for parallel execution if there is just one zipfile to load
+        if len(self.datapaths) == 1:
+            execute_serial = True
+        executor = ParallelExecutor(chunksize=0, execute_serial=execute_serial)
+
+        executor.set_get_entries_function(get_entries)
+        executor.set_process_element_function(process_element)
+        executor.set_post_process_chunk_function(post_process)
+
+        # we ignore the missing, since get_entries always returns the whole list
+        collected_reports: List[RawDataBag]
+        collected_reports, _ = executor.execute()
+
+        return RawDataBag.concat(collected_reports)
 
     def collect(self) -&gt; RawDataBag:
         &#34;&#34;&#34;
@@ -181,17 +330,28 @@ parquet format to which the zip file was transformed into.</p></div>
         Returns:
             RawDataBag: the collected Data
         &#34;&#34;&#34;
-
-        sub_filter = (&#39;form&#39;, &#39;in&#39;, self.forms_filter) if self.forms_filter else None
-        return self._collect(sub_df_filter=sub_filter)</code></pre>
+        return self._multi_zipcollect()</code></pre>
 </details>
-<h3>Ancestors</h3>
-<ul class="hlist">
-<li><a title="secfsdstools.e_collector.basecollector.BaseCollector" href="basecollector.html#secfsdstools.e_collector.basecollector.BaseCollector">BaseCollector</a></li>
-<li>abc.ABC</li>
-</ul>
 <h3>Static methods</h3>
 <dl>
+<dt id="secfsdstools.e_collector.zipcollecting.ZipCollector.get_all_zips"><code class="name flex">
+<span>def <span class="ident">get_all_zips</span></span>(<span>forms_filter: Optional[List[str]] = None, stmt_filter: Optional[List[str]] = None, tag_filter: Optional[List[str]] = None, configuration: Optional[<a title="secfsdstools.a_config.configmodel.Configuration" href="../a_config/configmodel.html#secfsdstools.a_config.configmodel.Configuration">Configuration</a>] = None)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@classmethod
+def get_all_zips(cls,
+                    forms_filter: Optional[List[str]] = None,
+                    stmt_filter: Optional[List[str]] = None,
+                    tag_filter: Optional[List[str]] = None,
+                    configuration: Optional[Configuration] = None):
+    pass</code></pre>
+</details>
+</dd>
 <dt id="secfsdstools.e_collector.zipcollecting.ZipCollector.get_zip_by_name"><code class="name flex">
 <span>def <span class="ident">get_zip_by_name</span></span>(<span>name: str, forms_filter: Optional[List[str]] = None, stmt_filter: Optional[List[str]] = None, tag_filter: Optional[List[str]] = None, configuration: Optional[<a title="secfsdstools.a_config.configmodel.Configuration" href="../a_config/configmodel.html#secfsdstools.a_config.configmodel.Configuration">Configuration</a>] = None)</span>
 </code></dt>
@@ -239,27 +399,100 @@ def get_zip_by_name(cls,
 
         configuration (Configuration, optional, None): configuration object
     &#34;&#34;&#34;
+    return cls.get_zip_by_names(names=[name],
+                                forms_filter=forms_filter,
+                                stmt_filter=stmt_filter,
+                                tag_filter=tag_filter,
+                                configuration=configuration)</code></pre>
+</details>
+</dd>
+<dt id="secfsdstools.e_collector.zipcollecting.ZipCollector.get_zip_by_names"><code class="name flex">
+<span>def <span class="ident">get_zip_by_names</span></span>(<span>names: List[str], forms_filter: Optional[List[str]] = None, stmt_filter: Optional[List[str]] = None, tag_filter: Optional[List[str]] = None, configuration: Optional[<a title="secfsdstools.a_config.configmodel.Configuration" href="../a_config/configmodel.html#secfsdstools.a_config.configmodel.Configuration">Configuration</a>] = None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>creates a ZipReportReader instance for the given names of the zipfiles.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>names</code></strong> :&ensp;<code>List[str]</code></dt>
+<dd>names of the zipfiles (without the path)</dd>
+</dl>
+<p>forms_filter (List[str], optional, None):
+List of forms that should be read (10-K, 10-Q, &hellip;)</p>
+<p>stmt_filter (List[str], optional, None):
+List of stmts that should be read (BS, IS, &hellip;)</p>
+<p>tag_filter (List[str], optional, None:
+List of tags that should be read (Assets, Liabilities, &hellip;)</p>
+<dl>
+<dt><strong><code>configuration</code></strong> :&ensp;<code>Configuration</code>, optional<code>, None</code></dt>
+<dd>configuration object</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@classmethod
+def get_zip_by_names(cls,
+                     names: List[str],
+                     forms_filter: Optional[List[str]] = None,
+                     stmt_filter: Optional[List[str]] = None,
+                     tag_filter: Optional[List[str]] = None,
+                     configuration: Optional[Configuration] = None):
+    &#34;&#34;&#34;
+    creates a ZipReportReader instance for the given names of the zipfiles.
+    Args:
+        names (List[str]): names of the zipfiles (without the path)
+
+        forms_filter (List[str], optional, None):
+            List of forms that should be read (10-K, 10-Q, ...)
+
+        stmt_filter (List[str], optional, None):
+            List of stmts that should be read (BS, IS, ...)
+
+        tag_filter (List[str], optional, None:
+            List of tags that should be read (Assets, Liabilities, ...)
+
+        configuration (Configuration, optional, None): configuration object
+    &#34;&#34;&#34;
     if configuration is None:
         configuration = ConfigurationManager.read_config_file()
 
     dbaccessor = ParquetDBIndexingAccessor(db_dir=configuration.db_dir)
 
-    datapath = dbaccessor.read_index_file_for_filename(filename=name).fullPath
-    return ZipCollector(datapath=datapath,
+    datapaths = [x.fullPath for x in dbaccessor.read_index_files_for_filenames(filenames=names)]
+    return ZipCollector(datapaths=datapaths,
                         forms_filter=forms_filter,
                         stmt_filter=stmt_filter,
                         tag_filter=tag_filter)</code></pre>
 </details>
 </dd>
 </dl>
-<h3>Inherited members</h3>
-<ul class="hlist">
-<li><code><b><a title="secfsdstools.e_collector.basecollector.BaseCollector" href="basecollector.html#secfsdstools.e_collector.basecollector.BaseCollector">BaseCollector</a></b></code>:
-<ul class="hlist">
-<li><code><a title="secfsdstools.e_collector.basecollector.BaseCollector.collect" href="basecollector.html#secfsdstools.e_collector.basecollector.BaseCollector.collect">collect</a></code></li>
-</ul>
-</li>
-</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="secfsdstools.e_collector.zipcollecting.ZipCollector.collect"><code class="name flex">
+<span>def <span class="ident">collect</span></span>(<span>self) ‑> <a title="secfsdstools.d_container.databagmodel.RawDataBag" href="../d_container/databagmodel.html#secfsdstools.d_container.databagmodel.RawDataBag">RawDataBag</a></span>
+</code></dt>
+<dd>
+<div class="desc"><p>collects the data and returns a Databag</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>RawDataBag</code></dt>
+<dd>the collected Data</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def collect(self) -&gt; RawDataBag:
+    &#34;&#34;&#34;
+    collects the data and returns a Databag
+
+    Returns:
+        RawDataBag: the collected Data
+    &#34;&#34;&#34;
+    return self._multi_zipcollect()</code></pre>
+</details>
+</dd>
+</dl>
 </dd>
 </dl>
 </section>
@@ -280,7 +513,10 @@ def get_zip_by_name(cls,
 <li>
 <h4><code><a title="secfsdstools.e_collector.zipcollecting.ZipCollector" href="#secfsdstools.e_collector.zipcollecting.ZipCollector">ZipCollector</a></code></h4>
 <ul class="">
+<li><code><a title="secfsdstools.e_collector.zipcollecting.ZipCollector.collect" href="#secfsdstools.e_collector.zipcollecting.ZipCollector.collect">collect</a></code></li>
+<li><code><a title="secfsdstools.e_collector.zipcollecting.ZipCollector.get_all_zips" href="#secfsdstools.e_collector.zipcollecting.ZipCollector.get_all_zips">get_all_zips</a></code></li>
 <li><code><a title="secfsdstools.e_collector.zipcollecting.ZipCollector.get_zip_by_name" href="#secfsdstools.e_collector.zipcollecting.ZipCollector.get_zip_by_name">get_zip_by_name</a></code></li>
+<li><code><a title="secfsdstools.e_collector.zipcollecting.ZipCollector.get_zip_by_names" href="#secfsdstools.e_collector.zipcollecting.ZipCollector.get_zip_by_names">get_zip_by_names</a></code></li>
 </ul>
 </li>
 </ul>

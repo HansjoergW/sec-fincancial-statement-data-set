@@ -137,7 +137,13 @@ class JoinedDataBag(DataBagBase[JOINED]):
         &#34;&#34;&#34;
         return self.pre_num_df.copy()
 
-    def copy_bag(self):
+    def copy_bag(self) -&gt; JOINED:
+        &#34;&#34;&#34;
+        creates a bag with new copies of the internal dataframes.
+
+        Returns:
+            JoinedDataBag: new instance of JoinedDataBag
+        &#34;&#34;&#34;
         return JoinedDataBag.create(sub_df=self.sub_df.copy(),
                                     pre_num_df=self.pre_num_df.copy())
 
@@ -234,6 +240,13 @@ class RawDataBag(DataBagBase[RAW]):
         self.num_df = num_df
 
     def copy_bag(self):
+        &#34;&#34;&#34;
+        creates a bag with new copies of the internal dataframes.
+
+        Returns:
+            RawDataBag: new instance of JoinedDataBag
+        &#34;&#34;&#34;
+
         return RawDataBag.create(sub_df=self.sub_df.copy(),
                                  pre_df=self.pre_df.copy(),
                                  num_df=self.num_df.copy())
@@ -562,7 +575,13 @@ adsh, tag, and version.</p>
         &#34;&#34;&#34;
         return self.pre_num_df.copy()
 
-    def copy_bag(self):
+    def copy_bag(self) -&gt; JOINED:
+        &#34;&#34;&#34;
+        creates a bag with new copies of the internal dataframes.
+
+        Returns:
+            JoinedDataBag: new instance of JoinedDataBag
+        &#34;&#34;&#34;
         return JoinedDataBag.create(sub_df=self.sub_df.copy(),
                                     pre_num_df=self.pre_num_df.copy())
 
@@ -745,15 +764,26 @@ def load(target_path: str) -&gt; JOINED:
 <h3>Methods</h3>
 <dl>
 <dt id="secfsdstools.d_container.databagmodel.JoinedDataBag.copy_bag"><code class="name flex">
-<span>def <span class="ident">copy_bag</span></span>(<span>self)</span>
+<span>def <span class="ident">copy_bag</span></span>(<span>self) ‑> ~JOINED</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>creates a bag with new copies of the internal dataframes.</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code><a title="secfsdstools.d_container.databagmodel.JoinedDataBag" href="#secfsdstools.d_container.databagmodel.JoinedDataBag">JoinedDataBag</a></code></dt>
+<dd>new instance of JoinedDataBag</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def copy_bag(self):
+<pre><code class="python">def copy_bag(self) -&gt; JOINED:
+    &#34;&#34;&#34;
+    creates a bag with new copies of the internal dataframes.
+
+    Returns:
+        JoinedDataBag: new instance of JoinedDataBag
+    &#34;&#34;&#34;
     return JoinedDataBag.create(sub_df=self.sub_df.copy(),
                                 pre_num_df=self.pre_num_df.copy())</code></pre>
 </details>
@@ -891,6 +921,13 @@ will be created</dd>
         self.num_df = num_df
 
     def copy_bag(self):
+        &#34;&#34;&#34;
+        creates a bag with new copies of the internal dataframes.
+
+        Returns:
+            RawDataBag: new instance of JoinedDataBag
+        &#34;&#34;&#34;
+
         return RawDataBag.create(sub_df=self.sub_df.copy(),
                                  pre_df=self.pre_df.copy(),
                                  num_df=self.num_df.copy())
@@ -1154,12 +1191,24 @@ def load(target_path: str) -&gt; RAW:
 <span>def <span class="ident">copy_bag</span></span>(<span>self)</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>creates a bag with new copies of the internal dataframes.</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code><a title="secfsdstools.d_container.databagmodel.RawDataBag" href="#secfsdstools.d_container.databagmodel.RawDataBag">RawDataBag</a></code></dt>
+<dd>new instance of JoinedDataBag</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def copy_bag(self):
+    &#34;&#34;&#34;
+    creates a bag with new copies of the internal dataframes.
+
+    Returns:
+        RawDataBag: new instance of JoinedDataBag
+    &#34;&#34;&#34;
+
     return RawDataBag.create(sub_df=self.sub_df.copy(),
                              pre_df=self.pre_df.copy(),
                              num_df=self.num_df.copy())</code></pre>

@@ -34,9 +34,7 @@ loads all the data from one single zip file, resp. the folder with the three par
 which the zip file was transformed to.
 &#34;&#34;&#34;
 import logging
-from typing import Optional, List
-
-from secfsdstools.d_container.filter import FilterBase
+from typing import Optional, List, Callable
 
 from secfsdstools.a_config.configmgt import ConfigurationManager
 from secfsdstools.a_config.configmodel import Configuration
@@ -60,7 +58,7 @@ class ZipCollector:
                         forms_filter: Optional[List[str]] = None,
                         stmt_filter: Optional[List[str]] = None,
                         tag_filter: Optional[List[str]] = None,
-                        post_load_filter: Optional[FilterBase[RawDataBag]] = None,
+                        post_load_filter: Optional[Callable[[RawDataBag], RawDataBag]] = None,
                         configuration: Optional[Configuration] = None):
         &#34;&#34;&#34;
         creates a ZipReportReader instance for the given name of the zipfile.
@@ -76,8 +74,8 @@ class ZipCollector:
             tag_filter (List[str], optional, None:
                 List of tags that should be read (Assets, Liabilities, ...)
 
-            post_load_filter (FilterBase[RawDataBag]], optional, None): a filter that is directly
-                applied after a single zip has been loaded.
+            post_load_filter (Callable[[RawDataBag], RawDataBag], optional, None): a filter
+                that is directly applied after a single zip has been loaded.
 
             configuration (Configuration, optional, None): configuration object
         &#34;&#34;&#34;
@@ -94,7 +92,7 @@ class ZipCollector:
                          forms_filter: Optional[List[str]] = None,
                          stmt_filter: Optional[List[str]] = None,
                          tag_filter: Optional[List[str]] = None,
-                         post_load_filter: Optional[FilterBase[RawDataBag]] = None,
+                         post_load_filter: Optional[Callable[[RawDataBag], RawDataBag]] = None,
                          configuration: Optional[Configuration] = None):
         &#34;&#34;&#34;
         creates a ZipReportReader instance for the given names of the zipfiles.
@@ -110,8 +108,8 @@ class ZipCollector:
             tag_filter (List[str], optional, None:
                 List of tags that should be read (Assets, Liabilities, ...)
 
-            post_load_filter (FilterBase[RawDataBag]], optional, None): a filter that is directly
-                applied after a single zip has been loaded.
+            post_load_filter (Callable[[RawDataBag], RawDataBag], optional, None): a filter
+                that is directly applied after a single zip has been loaded.
 
             configuration (Configuration, optional, None): configuration object
         &#34;&#34;&#34;
@@ -132,7 +130,7 @@ class ZipCollector:
                      forms_filter: Optional[List[str]] = None,
                      stmt_filter: Optional[List[str]] = None,
                      tag_filter: Optional[List[str]] = None,
-                     post_load_filter: Optional[FilterBase[RawDataBag]] = None,
+                     post_load_filter: Optional[Callable[[RawDataBag], RawDataBag]] = None,
                      configuration: Optional[Configuration] = None):
         &#34;&#34;&#34;
         ATTENTION: this will take some time since data from all zip files are read at once.
@@ -151,8 +149,8 @@ class ZipCollector:
             tag_filter (List[str], optional, None:
                 List of tags that should be read (Assets, Liabilities, ...)
 
-            post_load_filter (FilterBase[RawDataBag]], optional, None): a filter that is directly
-                applied after a single zip has been loaded.
+            post_load_filter (Callable[[RawDataBag], RawDataBag], optional, None): a filter
+                that is directly applied after a single zip has been loaded.
 
             configuration (Configuration, optional, None): configuration object
         &#34;&#34;&#34;
@@ -177,7 +175,7 @@ class ZipCollector:
                  forms_filter: Optional[List[str]] = None,
                  stmt_filter: Optional[List[str]] = None,
                  tag_filter: Optional[List[str]] = None,
-                 post_load_filter: Optional[FilterBase[RawDataBag]] = None):
+                 post_load_filter: Optional[Callable[[RawDataBag], RawDataBag]] = None):
 
         self.datapaths = datapaths
         self.forms_filter = forms_filter
@@ -201,8 +199,9 @@ class ZipCollector:
             sub_filter = (&#39;form&#39;, &#39;in&#39;, self.forms_filter) if self.forms_filter else None
 
             rawdatabag = collector.basecollect(sub_df_filter=sub_filter)
+
             if self.post_load_filter is not None:
-                rawdatabag = self.post_load_filter.filter(rawdatabag)
+                rawdatabag = self.post_load_filter(rawdatabag)
             return rawdatabag
 
         def post_process(parts: List[RawDataBag]) -&gt; List[RawDataBag]:
@@ -246,7 +245,7 @@ class ZipCollector:
 <dl>
 <dt id="secfsdstools.e_collector.zipcollecting.ZipCollector"><code class="flex name class">
 <span>class <span class="ident">ZipCollector</span></span>
-<span>(</span><span>datapaths: List[str], forms_filter: Optional[List[str]] = None, stmt_filter: Optional[List[str]] = None, tag_filter: Optional[List[str]] = None, post_load_filter: Optional[<a title="secfsdstools.d_container.filter.FilterBase" href="../d_container/filter.html#secfsdstools.d_container.filter.FilterBase">FilterBase</a>[<a title="secfsdstools.d_container.databagmodel.RawDataBag" href="../d_container/databagmodel.html#secfsdstools.d_container.databagmodel.RawDataBag">RawDataBag</a>]] = None)</span>
+<span>(</span><span>datapaths: List[str], forms_filter: Optional[List[str]] = None, stmt_filter: Optional[List[str]] = None, tag_filter: Optional[List[str]] = None, post_load_filter: Optional[Callable[[<a title="secfsdstools.d_container.databagmodel.RawDataBag" href="../d_container/databagmodel.html#secfsdstools.d_container.databagmodel.RawDataBag">RawDataBag</a>], <a title="secfsdstools.d_container.databagmodel.RawDataBag" href="../d_container/databagmodel.html#secfsdstools.d_container.databagmodel.RawDataBag">RawDataBag</a>]] = None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Reads all the data from a single zip file, resp. the folder containing the data in the
@@ -267,7 +266,7 @@ parquet format to which the zip file was transformed into.</p></div>
                         forms_filter: Optional[List[str]] = None,
                         stmt_filter: Optional[List[str]] = None,
                         tag_filter: Optional[List[str]] = None,
-                        post_load_filter: Optional[FilterBase[RawDataBag]] = None,
+                        post_load_filter: Optional[Callable[[RawDataBag], RawDataBag]] = None,
                         configuration: Optional[Configuration] = None):
         &#34;&#34;&#34;
         creates a ZipReportReader instance for the given name of the zipfile.
@@ -283,8 +282,8 @@ parquet format to which the zip file was transformed into.</p></div>
             tag_filter (List[str], optional, None:
                 List of tags that should be read (Assets, Liabilities, ...)
 
-            post_load_filter (FilterBase[RawDataBag]], optional, None): a filter that is directly
-                applied after a single zip has been loaded.
+            post_load_filter (Callable[[RawDataBag], RawDataBag], optional, None): a filter
+                that is directly applied after a single zip has been loaded.
 
             configuration (Configuration, optional, None): configuration object
         &#34;&#34;&#34;
@@ -301,7 +300,7 @@ parquet format to which the zip file was transformed into.</p></div>
                          forms_filter: Optional[List[str]] = None,
                          stmt_filter: Optional[List[str]] = None,
                          tag_filter: Optional[List[str]] = None,
-                         post_load_filter: Optional[FilterBase[RawDataBag]] = None,
+                         post_load_filter: Optional[Callable[[RawDataBag], RawDataBag]] = None,
                          configuration: Optional[Configuration] = None):
         &#34;&#34;&#34;
         creates a ZipReportReader instance for the given names of the zipfiles.
@@ -317,8 +316,8 @@ parquet format to which the zip file was transformed into.</p></div>
             tag_filter (List[str], optional, None:
                 List of tags that should be read (Assets, Liabilities, ...)
 
-            post_load_filter (FilterBase[RawDataBag]], optional, None): a filter that is directly
-                applied after a single zip has been loaded.
+            post_load_filter (Callable[[RawDataBag], RawDataBag], optional, None): a filter
+                that is directly applied after a single zip has been loaded.
 
             configuration (Configuration, optional, None): configuration object
         &#34;&#34;&#34;
@@ -339,7 +338,7 @@ parquet format to which the zip file was transformed into.</p></div>
                      forms_filter: Optional[List[str]] = None,
                      stmt_filter: Optional[List[str]] = None,
                      tag_filter: Optional[List[str]] = None,
-                     post_load_filter: Optional[FilterBase[RawDataBag]] = None,
+                     post_load_filter: Optional[Callable[[RawDataBag], RawDataBag]] = None,
                      configuration: Optional[Configuration] = None):
         &#34;&#34;&#34;
         ATTENTION: this will take some time since data from all zip files are read at once.
@@ -358,8 +357,8 @@ parquet format to which the zip file was transformed into.</p></div>
             tag_filter (List[str], optional, None:
                 List of tags that should be read (Assets, Liabilities, ...)
 
-            post_load_filter (FilterBase[RawDataBag]], optional, None): a filter that is directly
-                applied after a single zip has been loaded.
+            post_load_filter (Callable[[RawDataBag], RawDataBag], optional, None): a filter
+                that is directly applied after a single zip has been loaded.
 
             configuration (Configuration, optional, None): configuration object
         &#34;&#34;&#34;
@@ -384,7 +383,7 @@ parquet format to which the zip file was transformed into.</p></div>
                  forms_filter: Optional[List[str]] = None,
                  stmt_filter: Optional[List[str]] = None,
                  tag_filter: Optional[List[str]] = None,
-                 post_load_filter: Optional[FilterBase[RawDataBag]] = None):
+                 post_load_filter: Optional[Callable[[RawDataBag], RawDataBag]] = None):
 
         self.datapaths = datapaths
         self.forms_filter = forms_filter
@@ -408,8 +407,9 @@ parquet format to which the zip file was transformed into.</p></div>
             sub_filter = (&#39;form&#39;, &#39;in&#39;, self.forms_filter) if self.forms_filter else None
 
             rawdatabag = collector.basecollect(sub_df_filter=sub_filter)
+
             if self.post_load_filter is not None:
-                rawdatabag = self.post_load_filter.filter(rawdatabag)
+                rawdatabag = self.post_load_filter(rawdatabag)
             return rawdatabag
 
         def post_process(parts: List[RawDataBag]) -&gt; List[RawDataBag]:
@@ -444,7 +444,7 @@ parquet format to which the zip file was transformed into.</p></div>
 <h3>Static methods</h3>
 <dl>
 <dt id="secfsdstools.e_collector.zipcollecting.ZipCollector.get_all_zips"><code class="name flex">
-<span>def <span class="ident">get_all_zips</span></span>(<span>forms_filter: Optional[List[str]] = None, stmt_filter: Optional[List[str]] = None, tag_filter: Optional[List[str]] = None, post_load_filter: Optional[<a title="secfsdstools.d_container.filter.FilterBase" href="../d_container/filter.html#secfsdstools.d_container.filter.FilterBase">FilterBase</a>[<a title="secfsdstools.d_container.databagmodel.RawDataBag" href="../d_container/databagmodel.html#secfsdstools.d_container.databagmodel.RawDataBag">RawDataBag</a>]] = None, configuration: Optional[<a title="secfsdstools.a_config.configmodel.Configuration" href="../a_config/configmodel.html#secfsdstools.a_config.configmodel.Configuration">Configuration</a>] = None)</span>
+<span>def <span class="ident">get_all_zips</span></span>(<span>forms_filter: Optional[List[str]] = None, stmt_filter: Optional[List[str]] = None, tag_filter: Optional[List[str]] = None, post_load_filter: Optional[Callable[[<a title="secfsdstools.d_container.databagmodel.RawDataBag" href="../d_container/databagmodel.html#secfsdstools.d_container.databagmodel.RawDataBag">RawDataBag</a>], <a title="secfsdstools.d_container.databagmodel.RawDataBag" href="../d_container/databagmodel.html#secfsdstools.d_container.databagmodel.RawDataBag">RawDataBag</a>]] = None, configuration: Optional[<a title="secfsdstools.a_config.configmodel.Configuration" href="../a_config/configmodel.html#secfsdstools.a_config.configmodel.Configuration">Configuration</a>] = None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>ATTENTION: this will take some time since data from all zip files are read at once.
@@ -462,9 +462,9 @@ List of stmts that should be read (BS, IS, &hellip;)</p>
 <p>tag_filter (List[str], optional, None:
 List of tags that should be read (Assets, Liabilities, &hellip;)</p>
 <dl>
-<dt><strong><code>post_load_filter</code></strong> :&ensp;<code>FilterBase[RawDataBag]]</code>, optional<code>, None</code></dt>
-<dd>a filter that is directly
-applied after a single zip has been loaded.</dd>
+<dt><strong><code>post_load_filter</code></strong> :&ensp;<code>Callable[[RawDataBag], RawDataBag]</code>, optional<code>, None</code></dt>
+<dd>a filter
+that is directly applied after a single zip has been loaded.</dd>
 <dt><strong><code>configuration</code></strong> :&ensp;<code>Configuration</code>, optional<code>, None</code></dt>
 <dd>configuration object</dd>
 </dl></div>
@@ -477,7 +477,7 @@ def get_all_zips(cls,
                  forms_filter: Optional[List[str]] = None,
                  stmt_filter: Optional[List[str]] = None,
                  tag_filter: Optional[List[str]] = None,
-                 post_load_filter: Optional[FilterBase[RawDataBag]] = None,
+                 post_load_filter: Optional[Callable[[RawDataBag], RawDataBag]] = None,
                  configuration: Optional[Configuration] = None):
     &#34;&#34;&#34;
     ATTENTION: this will take some time since data from all zip files are read at once.
@@ -496,8 +496,8 @@ def get_all_zips(cls,
         tag_filter (List[str], optional, None:
             List of tags that should be read (Assets, Liabilities, ...)
 
-        post_load_filter (FilterBase[RawDataBag]], optional, None): a filter that is directly
-            applied after a single zip has been loaded.
+        post_load_filter (Callable[[RawDataBag], RawDataBag], optional, None): a filter
+            that is directly applied after a single zip has been loaded.
 
         configuration (Configuration, optional, None): configuration object
     &#34;&#34;&#34;
@@ -519,7 +519,7 @@ def get_all_zips(cls,
 </details>
 </dd>
 <dt id="secfsdstools.e_collector.zipcollecting.ZipCollector.get_zip_by_name"><code class="name flex">
-<span>def <span class="ident">get_zip_by_name</span></span>(<span>name: str, forms_filter: Optional[List[str]] = None, stmt_filter: Optional[List[str]] = None, tag_filter: Optional[List[str]] = None, post_load_filter: Optional[<a title="secfsdstools.d_container.filter.FilterBase" href="../d_container/filter.html#secfsdstools.d_container.filter.FilterBase">FilterBase</a>[<a title="secfsdstools.d_container.databagmodel.RawDataBag" href="../d_container/databagmodel.html#secfsdstools.d_container.databagmodel.RawDataBag">RawDataBag</a>]] = None, configuration: Optional[<a title="secfsdstools.a_config.configmodel.Configuration" href="../a_config/configmodel.html#secfsdstools.a_config.configmodel.Configuration">Configuration</a>] = None)</span>
+<span>def <span class="ident">get_zip_by_name</span></span>(<span>name: str, forms_filter: Optional[List[str]] = None, stmt_filter: Optional[List[str]] = None, tag_filter: Optional[List[str]] = None, post_load_filter: Optional[Callable[[<a title="secfsdstools.d_container.databagmodel.RawDataBag" href="../d_container/databagmodel.html#secfsdstools.d_container.databagmodel.RawDataBag">RawDataBag</a>], <a title="secfsdstools.d_container.databagmodel.RawDataBag" href="../d_container/databagmodel.html#secfsdstools.d_container.databagmodel.RawDataBag">RawDataBag</a>]] = None, configuration: Optional[<a title="secfsdstools.a_config.configmodel.Configuration" href="../a_config/configmodel.html#secfsdstools.a_config.configmodel.Configuration">Configuration</a>] = None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>creates a ZipReportReader instance for the given name of the zipfile.</p>
@@ -535,9 +535,9 @@ List of stmts that should be read (BS, IS, &hellip;)</p>
 <p>tag_filter (List[str], optional, None:
 List of tags that should be read (Assets, Liabilities, &hellip;)</p>
 <dl>
-<dt><strong><code>post_load_filter</code></strong> :&ensp;<code>FilterBase[RawDataBag]]</code>, optional<code>, None</code></dt>
-<dd>a filter that is directly
-applied after a single zip has been loaded.</dd>
+<dt><strong><code>post_load_filter</code></strong> :&ensp;<code>Callable[[RawDataBag], RawDataBag]</code>, optional<code>, None</code></dt>
+<dd>a filter
+that is directly applied after a single zip has been loaded.</dd>
 <dt><strong><code>configuration</code></strong> :&ensp;<code>Configuration</code>, optional<code>, None</code></dt>
 <dd>configuration object</dd>
 </dl></div>
@@ -551,7 +551,7 @@ def get_zip_by_name(cls,
                     forms_filter: Optional[List[str]] = None,
                     stmt_filter: Optional[List[str]] = None,
                     tag_filter: Optional[List[str]] = None,
-                    post_load_filter: Optional[FilterBase[RawDataBag]] = None,
+                    post_load_filter: Optional[Callable[[RawDataBag], RawDataBag]] = None,
                     configuration: Optional[Configuration] = None):
     &#34;&#34;&#34;
     creates a ZipReportReader instance for the given name of the zipfile.
@@ -567,8 +567,8 @@ def get_zip_by_name(cls,
         tag_filter (List[str], optional, None:
             List of tags that should be read (Assets, Liabilities, ...)
 
-        post_load_filter (FilterBase[RawDataBag]], optional, None): a filter that is directly
-            applied after a single zip has been loaded.
+        post_load_filter (Callable[[RawDataBag], RawDataBag], optional, None): a filter
+            that is directly applied after a single zip has been loaded.
 
         configuration (Configuration, optional, None): configuration object
     &#34;&#34;&#34;
@@ -581,7 +581,7 @@ def get_zip_by_name(cls,
 </details>
 </dd>
 <dt id="secfsdstools.e_collector.zipcollecting.ZipCollector.get_zip_by_names"><code class="name flex">
-<span>def <span class="ident">get_zip_by_names</span></span>(<span>names: List[str], forms_filter: Optional[List[str]] = None, stmt_filter: Optional[List[str]] = None, tag_filter: Optional[List[str]] = None, post_load_filter: Optional[<a title="secfsdstools.d_container.filter.FilterBase" href="../d_container/filter.html#secfsdstools.d_container.filter.FilterBase">FilterBase</a>[<a title="secfsdstools.d_container.databagmodel.RawDataBag" href="../d_container/databagmodel.html#secfsdstools.d_container.databagmodel.RawDataBag">RawDataBag</a>]] = None, configuration: Optional[<a title="secfsdstools.a_config.configmodel.Configuration" href="../a_config/configmodel.html#secfsdstools.a_config.configmodel.Configuration">Configuration</a>] = None)</span>
+<span>def <span class="ident">get_zip_by_names</span></span>(<span>names: List[str], forms_filter: Optional[List[str]] = None, stmt_filter: Optional[List[str]] = None, tag_filter: Optional[List[str]] = None, post_load_filter: Optional[Callable[[<a title="secfsdstools.d_container.databagmodel.RawDataBag" href="../d_container/databagmodel.html#secfsdstools.d_container.databagmodel.RawDataBag">RawDataBag</a>], <a title="secfsdstools.d_container.databagmodel.RawDataBag" href="../d_container/databagmodel.html#secfsdstools.d_container.databagmodel.RawDataBag">RawDataBag</a>]] = None, configuration: Optional[<a title="secfsdstools.a_config.configmodel.Configuration" href="../a_config/configmodel.html#secfsdstools.a_config.configmodel.Configuration">Configuration</a>] = None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>creates a ZipReportReader instance for the given names of the zipfiles.</p>
@@ -597,9 +597,9 @@ List of stmts that should be read (BS, IS, &hellip;)</p>
 <p>tag_filter (List[str], optional, None:
 List of tags that should be read (Assets, Liabilities, &hellip;)</p>
 <dl>
-<dt><strong><code>post_load_filter</code></strong> :&ensp;<code>FilterBase[RawDataBag]]</code>, optional<code>, None</code></dt>
-<dd>a filter that is directly
-applied after a single zip has been loaded.</dd>
+<dt><strong><code>post_load_filter</code></strong> :&ensp;<code>Callable[[RawDataBag], RawDataBag]</code>, optional<code>, None</code></dt>
+<dd>a filter
+that is directly applied after a single zip has been loaded.</dd>
 <dt><strong><code>configuration</code></strong> :&ensp;<code>Configuration</code>, optional<code>, None</code></dt>
 <dd>configuration object</dd>
 </dl></div>
@@ -613,7 +613,7 @@ def get_zip_by_names(cls,
                      forms_filter: Optional[List[str]] = None,
                      stmt_filter: Optional[List[str]] = None,
                      tag_filter: Optional[List[str]] = None,
-                     post_load_filter: Optional[FilterBase[RawDataBag]] = None,
+                     post_load_filter: Optional[Callable[[RawDataBag], RawDataBag]] = None,
                      configuration: Optional[Configuration] = None):
     &#34;&#34;&#34;
     creates a ZipReportReader instance for the given names of the zipfiles.
@@ -629,8 +629,8 @@ def get_zip_by_names(cls,
         tag_filter (List[str], optional, None:
             List of tags that should be read (Assets, Liabilities, ...)
 
-        post_load_filter (FilterBase[RawDataBag]], optional, None): a filter that is directly
-            applied after a single zip has been loaded.
+        post_load_filter (Callable[[RawDataBag], RawDataBag], optional, None): a filter
+            that is directly applied after a single zip has been loaded.
 
         configuration (Configuration, optional, None): configuration object
     &#34;&#34;&#34;

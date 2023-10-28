@@ -33,11 +33,11 @@ and therefore providing a possibility to receive the latest filings on a daily b
 
 
 # Latest news / most important changes from previous versions
-
+See the [Release Notes](https://hansjoergw.github.io/sec-fincancial-statement-data-set/releasenotes/) for details.
 ## 1.0 -> 1.1
-* `secfsdstools.e_collector.zipcollecting.ZipCollector` supports loading multiple zip files:
-  * `ZipCollector.get_zip_by_names()` is new and takes a list of zipfilenames
-  * `ZipCollector.get_all_zips()` is new and loads data from all zip files
+* `secfsdstools.e_collector.zipcollecting.ZipCollector` supports now loading of multiple zip files:<br>
+  Examples: Notebook [04_collector_deep_dive](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/04_collector_deep_dive.ipynb)
+
 * `secfsdstools.e_filter.rawfiltering.OfficialTagsOnlyFilter` is new and removes none us-gaap tags
 
 ## 0.5 -> 1.0
@@ -70,6 +70,7 @@ report into pandas dataframe tables.
 * [QuickStart Jupyter Notebook](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/01_quickstart.ipynb)
 * [Connect to the daily-sec-financial-statement-dataset Notebook](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/02_connect_rapidapi.ipynb)
 * [Explore the data with an interactive Notebook](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/03_explore_with_interactive_notebook.ipynb)
+* [collector_deep_dive](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/04_collector_deep_dive.ipynb)
 
 # Installation
 
@@ -525,6 +526,10 @@ The framework provides the following collectors:
     (7925, 9)
     Process finished with exit code 0  
     ````
+
+Have a look at the [collector_deep_dive notebook](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/04_collector_deep_dive.ipynb).
+
+
 
 ## Raw Processing: working with the raw data
 When the `collect` method of a `Collector` class is called, the data for the sub, pre, and num dataframes are loaded

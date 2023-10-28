@@ -31,8 +31,17 @@ It also provides an integration with
 the https://rapidapi.com/hansjoerg.wingeier/api/daily-sec-financial-statement-dataset API
 and therefore providing a possibility to receive the latest filings on a daily basis and not just every three months.
 
-# Important: The API was redesigned completely from version 0.5 to version 1.0  
 
+# Latest news / most important changes from previous versions
+See the [Release Notes](https://hansjoergw.github.io/sec-fincancial-statement-data-set/releasenotes/) for details.
+## 1.0 -> 1.1
+* `secfsdstools.e_collector.zipcollecting.ZipCollector` supports now loading of multiple zip files:<br>
+  Examples: Notebook [04_collector_deep_dive](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/04_collector_deep_dive.ipynb)
+
+* `secfsdstools.e_filter.rawfiltering.OfficialTagsOnlyFilter` is new and removes none us-gaap tags
+
+## 0.5 -> 1.0
+* The API was redesigned completely from version 0.5 to version 1.0 <br>  
 Please read the chapter "Working with the SECFSDSTools library" carefully to understand how to use the new API.
 
 
@@ -61,6 +70,7 @@ report into pandas dataframe tables.
 * [QuickStart Jupyter Notebook](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/01_quickstart.ipynb)
 * [Connect to the daily-sec-financial-statement-dataset Notebook](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/02_connect_rapidapi.ipynb)
 * [Explore the data with an interactive Notebook](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/03_explore_with_interactive_notebook.ipynb)
+* [collector_deep_dive](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/04_collector_deep_dive.ipynb)
 
 # Installation
 
@@ -445,26 +455,29 @@ The framework provides the following collectors:
     3  0001193125-12-444068  Assets  us-gaap/2012        20120930     0  USD  1.760640e+11     None  
     ````
     <br>
-* `ZipCollector` <br> This `Collector` collects the data of one single zip (resp. the folder that contains the parquet
-  files of this zip file). And since the original zip file contains the data for one quarter, the name you provide
-  in the `get_zuip_by_name` factory method reflects the quarter which data you want to load: e.g. `2022q1.zip`.
+* `ZipCollector` <br> This `Collector` collects the data of one or more zip (resp. the folders that contain the parquet
+  files of this zip files). And since every of the original zip files contains the data for one quarter, the names you provide
+  in the `get_zip_by_name` or `get_zip_by_names` factory methods reflect the quarter which data you want to load: 
+  e.g. `2022q1.zip`.
+ 
   <br><br>*Example:*
     ````
     from secfsdstools.e_collector.zipcollecting import ZipCollector
 
     # only collect the Balance Sheet of annual reports that
     # were filed during the first quarter in 2022
-    collector: ZipCollector = ZipCollector.get_zip_by_name(name="2022q1.zip",
-                                                           forms_filter=["10-K"],
-                                                           stmt_filter=["BS"])
-
-    rawdatabag = collector.collect()
-
-    # only show the size of the data frame
-    # .. over 4000 companies filed a 10 K report in q1 2022
-    print(rawdatabag.sub_df.shape)
-    print(rawdatabag.pre_df.shape)
-    print(rawdatabag.num_df.shape)    
+    if __name__ == '__main__':
+        collector: ZipCollector = ZipCollector.get_zip_by_name(name="2022q1.zip",
+                                                               forms_filter=["10-K"],
+                                                               stmt_filter=["BS"])
+    
+        rawdatabag = collector.collect()
+    
+        # only show the size of the data frame
+        # .. over 4000 companies filed a 10 K report in q1 2022
+        print(rawdatabag.sub_df.shape)
+        print(rawdatabag.pre_df.shape)
+        print(rawdatabag.num_df.shape)    
     ```` 
   <br>*Output*:
     ````
@@ -513,6 +526,10 @@ The framework provides the following collectors:
     (7925, 9)
     Process finished with exit code 0  
     ````
+
+Have a look at the [collector_deep_dive notebook](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/04_collector_deep_dive.ipynb).
+
+
 
 ## Raw Processing: working with the raw data
 When the `collect` method of a `Collector` class is called, the data for the sub, pre, and num dataframes are loaded
@@ -564,6 +581,13 @@ Framework (module `secfsdstools.e_filter.rawfiltering`:
    ````
    a_filtered_RawDataBag = a_RawDataBag.filter(ReportPeriodRawFilter()) 
    ````
+* `OfficialTagsOnlyFilter` <br> Sometimes company provide their own tags, which are not defined by the us-gaap XBRL
+  definition. In such cases, the version columns contains the value of the adsh instead of something like us-gab/2022.
+  This filter removes unofficial tags.
+   ````
+   a_filtered_RawDataBag = a_RawDataBag.filter(OfficialTagsOnlyFilter()) 
+   ````  
+
 
 ## Joined Processing: working with joined data
 When the `join` method of a `RawDataBag` instance is called an instance of `JoinedDataBag` is returned. The returned
@@ -675,7 +699,7 @@ Traceback (most recent call last):
 ````
 
 **Solution:** 
-This library uses the multiprocessing package. However, on Windows this works only corrected if the "entry point" of the
+This library uses the multiprocessing package. However, on Windows this works only correctly if the "entry point" of the
 script is within a `if __name__ == '__main__':` block.
 
 Therefore, change your scripts from
@@ -693,6 +717,9 @@ if __name__ == '__main__':
     your code goes here
 ````
 
+For details have a look at the python documentation:
+- https://docs.python.org/3.10/library/multiprocessing.html#the-process-class
+- https://docs.python.org/3.10/library/multiprocessing.html#multiprocessing-programming
 
 
 

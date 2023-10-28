@@ -14,14 +14,11 @@ v.1.1.0
 - API Changes
   - zipcollecting has now a factory method that can load multiple zip files as one
   - zipcollecting has now a factory method that can load all zip files at one
-  - RawDataBag / JoinedDataBag have now copy_bag method
 - New
- - Filter for official tags only -> company specific tags
+  - Filter for official tags only -> company specific tags
+  - RawDataBag / JoinedDataBag have now copy_bag method
+  - Zipcollector factory method new filter "post_load_filter"
 
-
-doku nachtragen
-
-How to define a Filter as a Lambda
 
 
 Next:
@@ -34,7 +31,7 @@ Next:
   -> analyse changes in one Tag for one company
   -> compare basic data of two companies
 
-- Supporting Dataset with notes
+- Supporting Dataset with notes -> V.2
 
 - Es wäre gut, wenn der StandardStatementPresenter noch eine Kolonne "year", noch welcher auch sortiert ist
   die sortierung über adsh alleine ermöglicht keine sauber sortierung pro jahr

@@ -3,9 +3,7 @@ loads all the data from one single zip file, resp. the folder with the three par
 which the zip file was transformed to.
 """
 import logging
-from typing import Optional, List
-
-from secfsdstools.d_container.filter import FilterBase
+from typing import Optional, List, Callable
 
 from secfsdstools.a_config.configmgt import ConfigurationManager
 from secfsdstools.a_config.configmodel import Configuration
@@ -29,7 +27,7 @@ class ZipCollector:
                         forms_filter: Optional[List[str]] = None,
                         stmt_filter: Optional[List[str]] = None,
                         tag_filter: Optional[List[str]] = None,
-                        post_load_filter: Optional[FilterBase[RawDataBag]] = None,
+                        post_load_filter: Optional[Callable[[RawDataBag], RawDataBag]] = None,
                         configuration: Optional[Configuration] = None):
         """
         creates a ZipReportReader instance for the given name of the zipfile.
@@ -45,8 +43,8 @@ class ZipCollector:
             tag_filter (List[str], optional, None:
                 List of tags that should be read (Assets, Liabilities, ...)
 
-            post_load_filter (FilterBase[RawDataBag]], optional, None): a filter that is directly
-                applied after a single zip has been loaded.
+            post_load_filter (Callable[[RawDataBag], RawDataBag], optional, None): a filter
+                that is directly applied after a single zip has been loaded.
 
             configuration (Configuration, optional, None): configuration object
         """
@@ -63,7 +61,7 @@ class ZipCollector:
                          forms_filter: Optional[List[str]] = None,
                          stmt_filter: Optional[List[str]] = None,
                          tag_filter: Optional[List[str]] = None,
-                         post_load_filter: Optional[FilterBase[RawDataBag]] = None,
+                         post_load_filter: Optional[Callable[[RawDataBag], RawDataBag]] = None,
                          configuration: Optional[Configuration] = None):
         """
         creates a ZipReportReader instance for the given names of the zipfiles.
@@ -79,8 +77,8 @@ class ZipCollector:
             tag_filter (List[str], optional, None:
                 List of tags that should be read (Assets, Liabilities, ...)
 
-            post_load_filter (FilterBase[RawDataBag]], optional, None): a filter that is directly
-                applied after a single zip has been loaded.
+            post_load_filter (Callable[[RawDataBag], RawDataBag], optional, None): a filter
+                that is directly applied after a single zip has been loaded.
 
             configuration (Configuration, optional, None): configuration object
         """
@@ -101,7 +99,7 @@ class ZipCollector:
                      forms_filter: Optional[List[str]] = None,
                      stmt_filter: Optional[List[str]] = None,
                      tag_filter: Optional[List[str]] = None,
-                     post_load_filter: Optional[FilterBase[RawDataBag]] = None,
+                     post_load_filter: Optional[Callable[[RawDataBag], RawDataBag]] = None,
                      configuration: Optional[Configuration] = None):
         """
         ATTENTION: this will take some time since data from all zip files are read at once.
@@ -120,8 +118,8 @@ class ZipCollector:
             tag_filter (List[str], optional, None:
                 List of tags that should be read (Assets, Liabilities, ...)
 
-            post_load_filter (FilterBase[RawDataBag]], optional, None): a filter that is directly
-                applied after a single zip has been loaded.
+            post_load_filter (Callable[[RawDataBag], RawDataBag], optional, None): a filter
+                that is directly applied after a single zip has been loaded.
 
             configuration (Configuration, optional, None): configuration object
         """
@@ -146,7 +144,7 @@ class ZipCollector:
                  forms_filter: Optional[List[str]] = None,
                  stmt_filter: Optional[List[str]] = None,
                  tag_filter: Optional[List[str]] = None,
-                 post_load_filter: Optional[FilterBase[RawDataBag]] = None):
+                 post_load_filter: Optional[Callable[[RawDataBag], RawDataBag]] = None):
 
         self.datapaths = datapaths
         self.forms_filter = forms_filter
@@ -170,8 +168,9 @@ class ZipCollector:
             sub_filter = ('form', 'in', self.forms_filter) if self.forms_filter else None
 
             rawdatabag = collector.basecollect(sub_df_filter=sub_filter)
+
             if self.post_load_filter is not None:
-                rawdatabag = self.post_load_filter.filter(rawdatabag)
+                rawdatabag = self.post_load_filter(rawdatabag)
             return rawdatabag
 
         def post_process(parts: List[RawDataBag]) -> List[RawDataBag]:

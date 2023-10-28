@@ -106,7 +106,13 @@ class JoinedDataBag(DataBagBase[JOINED]):
         """
         return self.pre_num_df.copy()
 
-    def copy_bag(self):
+    def copy_bag(self) -> JOINED:
+        """
+        creates a bag with new copies of the internal dataframes.
+
+        Returns:
+            JoinedDataBag: new instance of JoinedDataBag
+        """
         return JoinedDataBag.create(sub_df=self.sub_df.copy(),
                                     pre_num_df=self.pre_num_df.copy())
 
@@ -203,6 +209,13 @@ class RawDataBag(DataBagBase[RAW]):
         self.num_df = num_df
 
     def copy_bag(self):
+        """
+        creates a bag with new copies of the internal dataframes.
+
+        Returns:
+            RawDataBag: new instance of JoinedDataBag
+        """
+
         return RawDataBag.create(sub_df=self.sub_df.copy(),
                                  pre_df=self.pre_df.copy(),
                                  num_df=self.num_df.copy())

@@ -1,23 +1,25 @@
 from secfsdstools.d_container.databagmodel import RawDataBag
-from secfsdstools.d_container.filter import FilterBase
 from secfsdstools.e_collector.zipcollecting import ZipCollector
 from secfsdstools.e_filter.rawfiltering import ReportPeriodRawFilter, MainCoregFilter
 
 
-class MyFilter(FilterBase[RawDataBag]):
+if __name__ == '__main__':
 
-    def filter(self, databag: RawDataBag) -> RawDataBag:
+    def postloadfilter(databag: RawDataBag) -> RawDataBag:
+        from secfsdstools.e_filter.rawfiltering import ReportPeriodRawFilter, MainCoregFilter
         return databag[ReportPeriodRawFilter()][MainCoregFilter()].copy_bag()
 
+    post_filter = lambda x: x[ReportPeriodRawFilter()][MainCoregFilter()].copy_bag()
+    post_filter_no_copy = lambda x: x[ReportPeriodRawFilter()][MainCoregFilter()]
 
-if __name__ == '__main__':
     collector: ZipCollector = ZipCollector.get_all_zips(forms_filter=["10-K", "10-Q"],
                                                         stmt_filter=["BS"],
-                                                        post_load_filter=MyFilter())
+                                                        post_load_filter=post_filter_no_copy)
 
-    # collector: ZipCollector = ZipCollector.get_zip_by_name(name="2022q1.zip",
+    # collector: ZipCollector = ZipCollector.get_zip_by_name(name="2009q4.zip",
     #                                                      forms_filter=["10-K", "10-Q"],
-    #                                                      post_load_filter=MyFilter())
+    #                                                      stmt_filter=["BS"],
+    #                                                      post_load_filter=post_filter)
     rawdatabag = collector.collect()
 
     print("sub", rawdatabag.sub_df.shape)

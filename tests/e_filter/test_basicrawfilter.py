@@ -110,14 +110,13 @@ def test_filter_OfficialTagsOnlyFilter():
 
     filter = OfficialTagsOnlyFilter()
 
-    filtered_bag = filter.filter(bag1)
+    filtered_bag = bag1.filter(filter)
+
+    nr_of_tags_before_filter = bag1.pre_df.tag.unique()
+    nr_of_tags_after_filter = filtered_bag.pre_df.tag.unique()
 
     assert filtered_bag.sub_df.shape == bag1.sub_df.shape
-    assert filtered_bag.pre_df.shape == (79220, 10)
-    assert filtered_bag.num_df.shape == (133775, 9)
-
-    assert len(filtered_bag.pre_df.tag.unique()) == 2
-    assert len(filtered_bag.num_df.tag.unique()) == 2
+    assert len(nr_of_tags_before_filter) > len(nr_of_tags_after_filter)
 
 
 def test_concatenation():

@@ -14,18 +14,16 @@ v.1.1.0
 - API Changes
   - zipcollecting has now a factory method that can load multiple zip files as one
   - zipcollecting has now a factory method that can load all zip files at one
+- New
+  - Filter for official tags only -> company specific tags
+  - RawDataBag / JoinedDataBag have now copy_bag method
+  - Zipcollector factory method new filter "post_load_filter"
 
 
 
 Next:
-- Zipcollector -> load all zipfiles
-  Zipcollector -> add tests
-  unittest read_index_files_for_filenames
-
-- coreg: "parent company" -> kann es sein, dass dies auch die mein company ist?
-
-
 - vlt switch um parallele verarbeitung komplett auszuschalten?
+- vlt switch maximale parallelität?
 
 - new notebook, examples
   -> just read the data and use it -> only using collector
@@ -33,7 +31,7 @@ Next:
   -> analyse changes in one Tag for one company
   -> compare basic data of two companies
 
-- Supporting Dataset with notes
+- Supporting Dataset with notes -> V.2
 
 - Es wäre gut, wenn der StandardStatementPresenter noch eine Kolonne "year", noch welcher auch sortiert ist
   die sortierung über adsh alleine ermöglicht keine sauber sortierung pro jahr
@@ -42,6 +40,8 @@ Next:
 - Pipelines: einfaches Konzept um Standard Flows zu kapseln
   z.B. Collector als Input bis zur Presentation
   -> z.B. für selektierte ciks daten so aufbereiten, dass sie alle vorhandenen Jahre in Spalten angezeigt werden
+
+- transform methode, z.b. um zu homogenisieren
 
 - update des config files
   fehlende Inhalte müssen gesetzt und auf default gesetzt werden, oder?

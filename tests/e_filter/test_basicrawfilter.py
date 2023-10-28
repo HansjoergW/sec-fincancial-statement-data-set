@@ -2,7 +2,8 @@ import os
 
 from secfsdstools.d_container.databagmodel import RawDataBag
 from secfsdstools.e_filter.rawfiltering import ReportPeriodRawFilter, AdshRawFilter, \
-    ReportPeriodAndPreviousPeriodRawFilter, TagRawFilter, MainCoregFilter, StmtRawFilter
+    ReportPeriodAndPreviousPeriodRawFilter, TagRawFilter, MainCoregFilter, StmtRawFilter, \
+    OfficialTagsOnlyFilter
 
 CURRENT_DIR, _ = os.path.split(__file__)
 PATH_TO_BAG_1 = f'{CURRENT_DIR}/../_testdata/parquet/quarter/2010q1.zip'
@@ -102,6 +103,20 @@ def test_filter_TagRawFilter():
 
     assert len(filtered_bag.pre_df.tag.unique()) == 2
     assert len(filtered_bag.num_df.tag.unique()) == 2
+
+
+def test_filter_OfficialTagsOnlyFilter():
+    bag1: RawDataBag = RawDataBag.load(PATH_TO_BAG_1)
+
+    filter = OfficialTagsOnlyFilter()
+
+    filtered_bag = bag1.filter(filter)
+
+    nr_of_tags_before_filter = bag1.pre_df.tag.unique()
+    nr_of_tags_after_filter = filtered_bag.pre_df.tag.unique()
+
+    assert filtered_bag.sub_df.shape == bag1.sub_df.shape
+    assert len(nr_of_tags_before_filter) > len(nr_of_tags_after_filter)
 
 
 def test_concatenation():

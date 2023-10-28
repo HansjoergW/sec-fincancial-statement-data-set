@@ -175,3 +175,28 @@ class MainCoregFilter(FilterBase[RawDataBag]):
         return RawDataBag.create(sub_df=databag.sub_df,
                                  pre_df=databag.pre_df,
                                  num_df=num_filtered_for_main_coreg)
+
+
+class OfficialTagsOnlyFilter(FilterBase[RawDataBag]):
+    """
+    Filters only the official tags. These are the tags that contain an official XBRL version
+    within the version column. "inofficial" (resp. company specific) tags are identified with
+    the version column containing the value of the adsh.
+    """
+
+    def filter(self, databag: RawDataBag) -> RawDataBag:
+        """
+        filters the databag so that official tags are contained.
+
+        Args:
+            databag(RawDataBag) : rawdatabag to apply the filter to
+
+        Returns:
+            RawDataBag: the databag with the filtered data
+        """
+        pre_filtered_for_tags = databag.pre_df[databag.pre_df.version != databag.pre_df.adsh]
+        num_filtered_for_tags = databag.num_df[databag.num_df.version != databag.num_df.adsh]
+
+        return RawDataBag.create(sub_df=databag.sub_df,
+                                 pre_df=pre_filtered_for_tags,
+                                 num_df=num_filtered_for_tags)

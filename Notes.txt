@@ -138,9 +138,11 @@ Jekyll Dokumentation
    das führt die Pipeline "pages build and deployment" aus.
    dabei wird im "build" step gerendert Schritt "Build with jekyll"
     -> z.B. https://github.com/HansjoergW/sec-fincancial-statement-data-set/actions/runs/6334775493
+
    Wenn nojekyll vorhanden ist, dann gibt es diesen "Build with jekyll" Schritt nicht
     -> z.B. https://github.com/HansjoergW/sec-fincancial-statement-data-set/actions/runs/6321467174/job/17165519649
-
+    -> die nojekyll datei wird geschrieben, wenn "enable_jekyll: true" Nicht gesetzt ist
+       ist die nojekyll Datei eingecheckt, dann muss sie manuell wieder entfernt werden
 
 
 

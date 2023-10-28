@@ -88,4 +88,4 @@ class SingleReportCollector(BaseCollector):
 
         """
         adsh_filter = ('adsh', '==', self.report.adsh)
-        return self._collect(sub_df_filter=adsh_filter)
+        return self.basecollect(sub_df_filter=adsh_filter)

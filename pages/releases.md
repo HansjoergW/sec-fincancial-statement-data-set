@@ -8,12 +8,20 @@ permalink: /releasenotes/
 ## Upcoming
 * 
 
+## 1.1.0 2023-Oct-28
+* API Changes
+  - Zipcollector has now a factory method that can load multiple zip files as one
+  - Zipcollector has now a factory method that can load all zip files at one
+  - Zipcollector factory methods have a new filter parameter "post_load_filter"
+* New
+  - Filter for official tags only -> company specific tags are removed
+  - RawDataBag and JoinedDataBag have now copy_bag method
+  - Notebook [04_collector_deep_dive](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/04_collector_deep_dive.ipynb)
+
 ## 1.0.1 2023-Oct-16
 * README.md adpated <br>
   Added information about using the library on windows because the multiprocessing package is used<br>
   https://docs.python.org/3.10/library/multiprocessing.html#the-process-class
-
-
 
 ## 1.0.0 2023-Sep-28
 ApiChanges:

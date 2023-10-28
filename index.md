@@ -61,6 +61,7 @@ report into pandas dataframe tables.
 ## Versions
 * [in development (main branch in Github repository)](doc_main/index.html)
 * [latest stable version](doc_latest/index.html)
+* [1.1.0](doc_v1.1.0/index.html)
 * [1.0.1](doc_v1.0.1/index.html)
 * [1.0.0](doc_v1.0.0/index.html)
 * [0.5.0](doc_v0.5.1/index.html)

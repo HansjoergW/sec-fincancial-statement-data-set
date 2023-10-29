@@ -31,8 +31,17 @@ It also provides an integration with
 the https://rapidapi.com/hansjoerg.wingeier/api/daily-sec-financial-statement-dataset API
 and therefore providing a possibility to receive the latest filings on a daily basis and not just every three months.
 
-# Important: The API was redesigned completely from version 0.5 to version 1.0  
 
+# Latest news / most important changes from previous versions
+See the [Release Notes](https://hansjoergw.github.io/sec-fincancial-statement-data-set/releasenotes/) for details.
+## 1.0 -> 1.1
+* `secfsdstools.e_collector.zipcollecting.ZipCollector` supports now loading of multiple zip files:<br>
+  Examples: Notebook [04_collector_deep_dive](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/04_collector_deep_dive.ipynb)
+
+* `secfsdstools.e_filter.rawfiltering.OfficialTagsOnlyFilter` is new and removes none us-gaap tags
+
+## 0.5 -> 1.0
+* The API was redesigned completely from version 0.5 to version 1.0 <br>  
 Please read the chapter "Working with the SECFSDSTools library" carefully to understand how to use the new API.
 
 
@@ -61,6 +70,7 @@ report into pandas dataframe tables.
 * [QuickStart Jupyter Notebook](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/01_quickstart.ipynb)
 * [Connect to the daily-sec-financial-statement-dataset Notebook](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/02_connect_rapidapi.ipynb)
 * [Explore the data with an interactive Notebook](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/03_explore_with_interactive_notebook.ipynb)
+* [collector_deep_dive](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/04_collector_deep_dive.ipynb)
 
 # Installation
 
@@ -517,6 +527,10 @@ The framework provides the following collectors:
     Process finished with exit code 0  
     ````
 
+Have a look at the [collector_deep_dive notebook](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/04_collector_deep_dive.ipynb).
+
+
+
 ## Raw Processing: working with the raw data
 When the `collect` method of a `Collector` class is called, the data for the sub, pre, and num dataframes are loaded
 and being stored in the sub_df, pre_df, and num_df attributes inside an instance of `RawDataBag`.
@@ -567,6 +581,13 @@ Framework (module `secfsdstools.e_filter.rawfiltering`:
    ````
    a_filtered_RawDataBag = a_RawDataBag.filter(ReportPeriodRawFilter()) 
    ````
+* `OfficialTagsOnlyFilter` <br> Sometimes company provide their own tags, which are not defined by the us-gaap XBRL
+  definition. In such cases, the version columns contains the value of the adsh instead of something like us-gab/2022.
+  This filter removes unofficial tags.
+   ````
+   a_filtered_RawDataBag = a_RawDataBag.filter(OfficialTagsOnlyFilter()) 
+   ````  
+
 
 ## Joined Processing: working with joined data
 When the `join` method of a `RawDataBag` instance is called an instance of `JoinedDataBag` is returned. The returned

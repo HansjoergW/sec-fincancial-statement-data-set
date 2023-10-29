@@ -122,7 +122,8 @@ class ParquetDBIndexingAccessor(DB):
         sql = f&#34;SELECT * FROM {self.index_processing_table} WHERE fileName = &#39;{filename}&#39;&#34;
         return self.execute_fetchall_typed(sql, IndexFileProcessingState)[0]
 
-    def read_index_files_for_filenames(self, filenames: List[str]) -&gt; List[IndexFileProcessingState]:
+    def read_index_files_for_filenames(self, filenames: List[str]) \
+            -&gt; List[IndexFileProcessingState]:
         &#34;&#34;&#34;
         returns the IndexFileProcessingState instances for the provided filenames
         Args:
@@ -507,7 +508,8 @@ class ParquetDBIndexingAccessor(DB):
         sql = f&#34;SELECT * FROM {self.index_processing_table} WHERE fileName = &#39;{filename}&#39;&#34;
         return self.execute_fetchall_typed(sql, IndexFileProcessingState)[0]
 
-    def read_index_files_for_filenames(self, filenames: List[str]) -&gt; List[IndexFileProcessingState]:
+    def read_index_files_for_filenames(self, filenames: List[str]) \
+            -&gt; List[IndexFileProcessingState]:
         &#34;&#34;&#34;
         returns the IndexFileProcessingState instances for the provided filenames
         Args:
@@ -1032,7 +1034,8 @@ Lower and uppercase are ignored.</p>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def read_index_files_for_filenames(self, filenames: List[str]) -&gt; List[IndexFileProcessingState]:
+<pre><code class="python">def read_index_files_for_filenames(self, filenames: List[str]) \
+        -&gt; List[IndexFileProcessingState]:
     &#34;&#34;&#34;
     returns the IndexFileProcessingState instances for the provided filenames
     Args:

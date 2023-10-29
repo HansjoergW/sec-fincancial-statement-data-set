@@ -1,3 +1,5 @@
+import os
+
 from secfsdstools.d_container.databagmodel import RawDataBag
 from secfsdstools.e_collector.zipcollecting import ZipCollector
 from secfsdstools.e_filter.rawfiltering import ReportPeriodRawFilter, MainCoregFilter
@@ -28,6 +30,15 @@ if __name__ == '__main__':
     print("pre", rawdatabag.pre_df.shape)
     print("num", rawdatabag.num_df.shape)
 
-    # joining the pre and num dataframes
-    joineddatabag = rawdatabag.join()
-    print("pre_num", joineddatabag.pre_num_df.shape)
+    save_path_raw = "./saved_data/raw_bs_10k_10q_all"
+    os.makedirs(save_path_raw, exist_ok=True)
+    rawdatabag.save(save_path_raw)
+
+    # filtering and joining
+    filtered_joined = rawdatabag[MainCoregFilter()][ReportPeriodRawFilter()].join()
+
+    print("pre_num", filtered_joined.pre_num_df.shape)
+
+    save_path_joined = "./saved_data/bs_10k_10q_all_joined"
+    os.makedirs(save_path_joined, exist_ok=True)
+    filtered_joined.save(save_path_joined)

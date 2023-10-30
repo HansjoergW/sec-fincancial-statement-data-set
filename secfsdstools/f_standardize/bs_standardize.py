@@ -311,8 +311,8 @@ class BalanceSheetStandardizer(RuleProcessor):
             RenameRule(original='PartnersCapital', target='Equity'),
             RenameRule(original='StockholdersEquity', target='Equity'),
             RenameRule(original='CashAndCashEquivalentsAtCarryingValue', target='Cash'),
-            RenameRule(original='RetainedEarningsAppropriated', target='RetainedEarnings'),
-            RenameRule(original='RetainedEarningsAccumulatedDeficit', target='RetainedEarnings')
+            # RenameRule(original='RetainedEarningsAppropriated', target='RetainedEarnings'),
+            # RenameRule(original='RetainedEarningsAccumulatedDeficit', target='RetainedEarnings')
         ],
         prefix="BR"
     )

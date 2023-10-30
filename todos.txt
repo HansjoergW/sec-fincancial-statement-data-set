@@ -11,6 +11,8 @@ New Release
 - merge back into main
 
 v.1.2.0
+New
+- USDonlyFilter
 - BS Standardizer
 - bulk processing examples
 
@@ -20,7 +22,6 @@ Next:
 - vlt switch maximale parallelität?
 
 - new notebook, examples
-  -> just read the data and use it -> only using collector
   -> reading primary financial statements for a single report, display BS, IS, CF for a report
   -> analyse changes in one Tag for one company
   -> compare basic data of two companies

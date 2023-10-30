@@ -1,9 +1,12 @@
+from typing import List
+
 import pandas as pd
 
 from secfsdstools.d_container.databagmodel import JoinedDataBag
 from secfsdstools.e_collector.reportcollecting import SingleReportCollector
 from secfsdstools.e_collector.zipcollecting import ZipCollector
-from secfsdstools.e_filter.rawfiltering import ReportPeriodRawFilter, MainCoregFilter
+from secfsdstools.e_filter.joinedfiltering import USDonlyFilter as USDonlyJoined
+from secfsdstools.e_filter.rawfiltering import ReportPeriodRawFilter, MainCoregFilter, USDonlyFilter
 from secfsdstools.f_standardize.bs_standardize import BalanceSheetStandardizer
 
 apple_10k_2017 = "0000320193-17-000070"
@@ -17,19 +20,55 @@ def get_fs_from_zip() -> pd.DataFrame:
 
 def get_fs_from_all_bs() -> pd.DataFrame:
     save_path_BS_all = "./saved_data/bs_10k_10q_all_joined"
-    return JoinedDataBag.load(save_path_BS_all).get_pre_num_copy()
+    return JoinedDataBag.load(save_path_BS_all)[USDonlyJoined()].get_pre_num_copy()
 
 
 def get_fs_from_single_report(adsh: str) -> pd.DataFrame:
     reader = SingleReportCollector.get_report_by_adsh(adsh=adsh, stmt_filter=['BS'])
-    return reader.collect()[MainCoregFilter()][ReportPeriodRawFilter()].join().get_pre_num_copy()
+    return reader.collect()[MainCoregFilter()][ReportPeriodRawFilter()][
+        USDonlyFilter()].join().get_pre_num_copy()
+
+
+def get_uniques_col(df: pd.DataFrame, col: str) -> List[str]:
+    return df[col].unique().tolist()
+
+
+def get_count_tags_per_adsh(df: pd.DataFrame, tags: List[str]) -> pd.DataFrame:
+
+    return df[['adsh', 'report', 'tag']][df.tag.isin(tags)].groupby(['adsh', 'report']).count().reset_index()
+
+
+def check_uom_list(df: pd.DataFrame):
+    uom_list = get_uniques_col(fs_df, "uom")
+    print(uom_list)
+
+
+def check_for_equity_tags(df: pd.DataFrame):
+    counts_df = get_count_tags_per_adsh(df, ['StockholdersEquity', 'PartnerCapital'])
+    result = counts_df[counts_df.tag > 1]
+    print(result.shape)
+    # filter where more than 1 tag with stockholdersquity and partnercapital are present
+    filterd = df[df.adsh.isin(result.adsh.tolist()) & df.tag.isin(['StockholdersEquity', 'PartnerCapital'])]
+    # first checks shows, that only stockholderequity appears in reports where
+    # appears more than once
+    # -> hence StockholdersEquity and PartnerCapital never appear together
+    # however, we have reports which have the entries doubled -> all bs lines appear twice.
+    # with the same value
+    print(filterd.tag.unique().tolist())
 
 
 if __name__ == '__main__':
-    fs_df = get_fs_from_single_report('0001828937-22-000020') # Non Current and NonCurrent missing
+    # fs_df = get_fs_from_single_report('0001828937-22-000020') # Non Current and NonCurrent missing
 
-    # fs_df = get_fs_from_all_bs()
+    fs_df = get_fs_from_all_bs()
+
+    check_for_equity_tags(fs_df)
+
     # fs_df = fs_df[fs_df.adsh.isin(['0001096906-17-000798'])]
+
+    # fs_df_retained_count = fs_df[['tag', 'adsh']][
+    #     fs_df.tag.str.startswith('RetainedEarnings')].groupby('adsh').count()
+    # fs_df_retained_count_gt_1 = fs_df_retained_count[fs_df_retained_count.tag > 1].reset_index()
 
     print("fs_df.shape", fs_df.shape)
 

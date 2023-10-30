@@ -200,3 +200,31 @@ class OfficialTagsOnlyFilter(FilterBase[RawDataBag]):
         return RawDataBag.create(sub_df=databag.sub_df,
                                  pre_df=pre_filtered_for_tags,
                                  num_df=num_filtered_for_tags)
+
+
+class USDonlyFilter(FilterBase[RawDataBag]):
+    """
+    Removes all entries which have a currency in the column uom that is not USD.
+    """
+
+    def filter(self, databag: RawDataBag) -> RawDataBag:
+        """
+        Removes all currency entries in the uom colum of the num_df that are not USD.
+
+        Args:
+            databag(RawDataBag) : rawdatabag to apply the filter to
+
+        Returns:
+            RawDataBag: the databag with the filtered data
+
+        """
+        mask_non_currency = databag.num_df.uom.str.len() > 3
+        mask_usd_only = databag.num_df.uom == "USD"
+
+        num_filtered_for_USD = databag.num_df[mask_non_currency or mask_usd_only]
+
+        return RawDataBag.create(sub_df=databag.sub_df,
+                                 pre_df=databag.pre_df,
+                                 num_df=num_filtered_for_USD)
+
+

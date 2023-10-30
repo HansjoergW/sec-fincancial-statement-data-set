@@ -1,24 +1,38 @@
 BS Assets
 ---------
-example 2017q4
--> Assets not present in 113
--> some have AssetsNet: 3 (0000355019-17-000032, 0000814676-17-000042, 0001551163-17-000187)
--> some don't have BS entries (maybe tagged the wrong way)
--> some don't show that position, for instance if they only have CurrentAssets: eg 0001213900-17-011833
+Retained Earnings
+- plabel scheint auch noch interessante informationen zu bieten.
+  z.b. Bei Filter auf RetainedEarningsAccumulatedDeficit sieht man plabels mit "Accumulated deficit" oder Reatained deficit oder Retained earnings or Accumulated earnings
+- Suche nach tags die mit RetainedEarnings starten
+  > summieren pro adsh und dann schauen, welche Reports mehr als 1 Eintrag hat
+  Das wären dann die Ausnahme
 
--> often sub coregs don't have Assets
--> often if more than one report is tagged with BS, then the second contains only partial information of BS
-
-=> in order to check completeness, only the main coreg should be considered (is nan, resp. i set it to '-')
-   and only the first BS report should be considered.
+- Es gibt auch RetainedEarningsAppropriated und RetainedEarningUnapproriated... aber ohne RetainedEarnings
+  -> unsere Regel ist hier also sicher falsch, bloss die beiden bekannten nach retained earnings umzubenennen
 
 
-Next Step -> Cash
-- Oftmals sind 2 Einträge vorhanden (10% der Fälle)
-- z.B. 0000713671-17-000074
-  (df[df.tag.isin(sum_list)].groupby(['adsh', 'coreg', 'report','ddate']).count().reset_index()
-- interessant, in 0000713671-17-000074 ist für CasEqui der gleiche Wert wie für DueBank vorhanden
-- 0001379895-17-000016 hat z.B. 2 verschiedene .. Werte
+Errors in Reports
+- All Entries of BS report doubled in the same report
+  some reports have all entries doubled within the same report-nr, but with different lines.
+  they will fail to be pivoted correctly. so the question is wheter we should filter such entries
+  For instance: check_for_equity_tags() -> 0000215466-21-000071, 0000215466-21-000096
+
+  we could either filter out such report, somehow -> as a first step analog to the
+   check_for_equity_tags() use this method to build a special filter
+   -> also needs a report
+   -> drop rules
+
+  or when discovered check at which position the last tag appears before, and if it is in the middle,
+  cut off the rest, or we can try to de-duplicate somehow
+
+
+
+Regeln -> important to analyze properly
+- wenn 2 verschiedene Rename Regeln das selbe target tag haben,
+  erscheint nur eine im log -> die ID fehlt
+-
+
+- there are entries with assets, currentassets, but noncurrentassets was still nan after processing
 
 - man müsste sicher CashAndCashEqui bevorzugen.. und dann vielleicht noch other Cash summieren
 und nur other cash verwenden, wenn cash and cashEqui nicht vorhanden..

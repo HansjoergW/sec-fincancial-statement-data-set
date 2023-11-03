@@ -81,8 +81,10 @@ class RuleGroup(RuleEntity):
         self.prefix = prefix
 
     def process(self, df: pd.DataFrame, log_df: Optional[pd.DataFrame] = None, id: str = &#34;&#34;):
+        idx = 1
         for rule in self.rules:
-            rule.process(df=df, log_df=log_df, id=id + self.prefix)
+            rule.process(df=df, log_df=log_df, id=f&#34;{id}{self.prefix}_{idx}#&#34;)
+            idx = idx + 1
 
     def get_input_tags(self) -&gt; Set[str]:
         result: Set[str] = set()
@@ -210,24 +212,91 @@ class SumUp(Rule):
             df.loc[summand_mask, self.target] = df[self.target] + df[potential_summand]
 
 
+class SetSumIfOneOnlySummand(Rule):
+    &#34;&#34;&#34;
+    If the sumt_tag is nan and only one summand has a value, then the
+    target gets the copy of the Value and the other summands are set to zero.
+    &#34;&#34;&#34;
+
+    def __init__(self, sum_tag: str, summand_set: str, summands_nan: List[str]):
+        self.sum_tag = sum_tag
+        self.summand_set = summand_set
+        self.summands_nan = summands_nan
+
+    def get_target_tag(self) -&gt; str:
+        return self.sum_tag
+
+    def get_input_tags(self) -&gt; Set[str]:
+        result = {self.sum_tag, self.summand_set}
+        result.update(self.summands_nan)
+        return result
+
+    def mask(self, df: pd.DataFrame) -&gt; pa.typing.Series[bool]:
+        # if the target was not set..
+
+        mask = df[self.sum_tag].isna() &amp; ~df[self.summand_set].isna()
+        for summand_nan in self.summands_nan:
+            mask = mask &amp; df[summand_nan].isna()
+
+        return mask
+
+    def apply(self, df: pd.DataFrame, mask: pa.typing.Series[bool]):
+        df.loc[mask, self.sum_tag] = df[self.summand_set]  # initialize
+        for summand_nan in self.summands_nan:
+            df.loc[mask, summand_nan] = 0.0
+
+
+class CleanUpCopyToFirstSummand(Rule):
+    &#34;&#34;&#34; if the target is set and the first summand and the other summands are nan,
+    then copy the target value to the first summand and set the other summands to &#39;0.0&#39; &#34;&#34;&#34;
+
+    def __init__(self, sum_tag: str, first_summand: str, other_summands: List[str]):
+        self.sum_tag = sum_tag
+        self.first_summand = first_summand
+        self.other_summands = other_summands
+
+    def get_target_tag(self) -&gt; str:
+        return self.first_summand
+
+    def get_input_tags(self) -&gt; Set[str]:
+        result = {self.sum_tag, self.first_summand}
+        result.update(self.other_summands)
+        return result
+
+    def mask(self, df: pd.DataFrame) -&gt; pa.typing.Series[bool]:
+        # if the target was not set..
+
+        mask = ~df[self.sum_tag].isna() &amp; df[self.first_summand].isna()
+        for other_summand in self.other_summands:
+            mask = mask &amp; df[other_summand].isna()
+
+        return mask
+
+    def apply(self, df: pd.DataFrame, mask: pa.typing.Series[bool]):
+        df.loc[mask, self.first_summand] = df[self.sum_tag]  # initialize
+        for other_summand in self.other_summands:
+            df.loc[mask, other_summand] = 0.0
+
+
 class RuleProcessor:
     identifier_tags = [&#39;adsh&#39;, &#39;coreg&#39;, &#39;report&#39;, &#39;ddate&#39;]
 
-    def __init__(self, rule_tree: RuleGroup, post_rules: List[RuleEntity],
+    def __init__(self, rule_tree: RuleGroup, clean_up_rule_tree: RuleGroup,
                  iterations: int, main_tags: List[str], final_tags: List[str],
-                 filter_for_main_report: bool):
+                 filter_for_main_report: bool = True, invert_negated: bool = True):
         self.rule_tree = rule_tree
-        self.post_rules = post_rules
+        self.clean_up_rule_tree = clean_up_rule_tree
         self.iterations = iterations
         self.main_tags = main_tags
         self.final_tags = final_tags
         self.filter_for_main_report = filter_for_main_report
+        self.invert_negated = invert_negated
 
         self.final_col_order = self.identifier_tags + self.final_tags
 
+        self.preprocess_dupliate_log_df: Optional[pd.DataFrame] = None
         self.log_df: Optional[pd.DataFrame] = None
         self.stats: Optional[pd.DataFrame] = None
-
 
     def get_ruletree_descriptions(self):
         # todo
@@ -236,12 +305,19 @@ class RuleProcessor:
     def process(self, df: pd.DataFrame) -&gt; pd.DataFrame:
         all_input_tags = self.rule_tree.get_input_tags()
 
-        cpy_df = df[[&#39;adsh&#39;, &#39;coreg&#39;, &#39;tag&#39;, &#39;version&#39;, &#39;ddate&#39;, &#39;uom&#39;, &#39;value&#39;, &#39;report&#39;, &#39;line&#39;,
-                     &#39;negating&#39;]][df.tag.isin(all_input_tags)].copy()
+        relevant_df = \
+            df[[&#39;adsh&#39;, &#39;coreg&#39;, &#39;tag&#39;, &#39;version&#39;, &#39;ddate&#39;, &#39;uom&#39;, &#39;value&#39;, &#39;report&#39;, &#39;line&#39;,
+                &#39;negating&#39;]][df.tag.isin(all_input_tags)]
 
-        # todo: wann muss negating berücksichtigt werden -&gt; nach dem pivot fliegt es raus!
+        # preprocessing ..
+        #  - deduplicate
+        cpy_df = self._deduplicate(relevant_df).copy()
 
-        # pivot the table, so that the tags are now columns
+        #  - invert_negated
+        if self.invert_negated:
+            cpy_df.loc[cpy_df.negating == 1, &#39;value&#39;] = -cpy_df.value
+
+        # pivot the table, so that the tags become columns
         # todo: folgende Zeile sollte nicht mehr notwendig sein, sobald alle Regeln implementiert sind
         expected_tags = all_input_tags.union(self.final_tags)
         pivot_df = self._pivot(df=cpy_df, expected_tags=expected_tags)
@@ -249,7 +325,7 @@ class RuleProcessor:
         if self.filter_for_main_report:
             pivot_df = self._filter_pivot_for_main_reports(pivot_df)
 
-        self.log_df = pivot_df[[&#39;adsh&#39;, &#39;coreg&#39;, &#39;report&#39;, &#39;ddate&#39;]].copy()
+        self.log_df = pivot_df[[&#39;adsh&#39;, &#39;coreg&#39;, &#39;report&#39;, &#39;ddate&#39;, &#39;uom&#39;]].copy()
 
         total_length = len(pivot_df)
 
@@ -276,10 +352,34 @@ class RuleProcessor:
             self.stats[self.post_stats.name + &#39;_red&#39;] = \
                 1 - (self.stats[self.post_stats.name] / self.stats.pre)
 
+        # clean up rules
+        self.clean_up_rule_tree.process(df=pivot_df, log_df=self.log_df)
+
+        # calculate cleanup stats
+        self.post_cleanup = self._calculate_stats(pivot_df=pivot_df)
+        self.post_cleanup.name = &#34;cleanup&#34;
+        self.stats = self.stats.join(self.post_cleanup)
+        self.stats[self.post_cleanup.name + &#39;_rel&#39;] = \
+            self.stats[self.post_cleanup.name] / total_length
+        self.stats[self.post_cleanup.name + &#39;_red&#39;] = \
+            1 - (self.stats[self.post_cleanup.name] / self.stats.pre)
+
         # create a meaningful order
         pivot_df = pivot_df[self.final_col_order].copy()
 
         return pivot_df
+
+    def _deduplicate(self, df: pd.DataFrame) -&gt; pd.DataFrame:
+        # find duplicated entries
+        # sometimes, only single tags are duplicated, however, there are also reports
+        # where all tags of a report are duplicated, maybe due to a problem with processing
+        duplicates_s = \
+            df.duplicated([&#39;adsh&#39;, &#39;coreg&#39;, &#39;report&#39;, &#39;uom&#39;, &#39;tag&#39;, &#39;version&#39;, &#39;ddate&#39;, &#39;value&#39;])
+
+        self.preprocess_dupliate_log_df = df[duplicates_s] \
+            [[&#39;adsh&#39;, &#39;coreg&#39;, &#39;report&#39;, &#39;tag&#39;, &#39;uom&#39;, &#39;version&#39;, &#39;ddate&#39;]].copy()
+
+        return df[~duplicates_s]
 
     def _filter_pivot_for_main_reports(self, pivot_df: pd.DataFrame) -&gt; pd.DataFrame:
         &#34;&#34;&#34; Some reports have more than one &#39;report number&#39; (column report) for a
@@ -300,23 +400,12 @@ class RuleProcessor:
         return pivot_df[self.final_tags].isna().sum(axis=0)
 
     def _pivot(self, df: pd.DataFrame, expected_tags: Set[str]) -&gt; pd.DataFrame:
-        # todo: um pivot zu optimieren, sollten zuerst nur die Tags gefiltert werden,
-        # welche tatsächlich auch benützt werden, alles andere sollte herausgefiltert werden
-        # das müsste über die Regeln geschehen und sollte automatisch berechnet werden sollen.
-
         # it is possible, that the same number appears multiple times in different lines,
         # therefore, duplicates have to be removed, otherwise pivot is not possible
-        relevant_df = df[[&#39;adsh&#39;, &#39;coreg&#39;, &#39;report&#39;, &#39;tag&#39;, &#39;value&#39;, &#39;ddate&#39;]].drop_duplicates()
+        relevant_df = df[
+            [&#39;adsh&#39;, &#39;coreg&#39;, &#39;report&#39;, &#39;tag&#39;, &#39;value&#39;, &#39;uom&#39;, &#39;ddate&#39;]].drop_duplicates()
 
-        duplicates_df = relevant_df[
-            [&#39;adsh&#39;, &#39;coreg&#39;, &#39;report&#39;, &#39;tag&#39;, &#39;ddate&#39;]].value_counts().reset_index()
-        duplicates_df.rename(columns={0: &#39;count&#39;}, inplace=True)
-        duplicated_adsh = duplicates_df[duplicates_df[&#39;count&#39;] &gt; 1].adsh.unique().tolist()
-
-        # todo: logging duplicated entries ...&gt;
-        relevant_df = relevant_df[~relevant_df.adsh.isin(duplicated_adsh)]
-
-        pivot_df = relevant_df.pivot(index=[&#39;adsh&#39;, &#39;coreg&#39;, &#39;report&#39;, &#39;ddate&#39;],
+        pivot_df = relevant_df.pivot(index=[&#39;adsh&#39;, &#39;coreg&#39;, &#39;report&#39;, &#39;uom&#39;, &#39;ddate&#39;],
                                      columns=&#39;tag&#39;,
                                      values=&#39;value&#39;)
         pivot_df.reset_index(inplace=True)
@@ -366,10 +455,30 @@ class BalanceSheetStandardizer(RuleProcessor):
                 summand_tags=[&#39;AssetsCurrent&#39;, &#39;AssetsNoncurrent&#39;],
                 prefix=&#34;Ass&#34;
             ),
+            SetSumIfOneOnlySummand(
+                sum_tag=&#39;Assets&#39;,
+                summand_set=&#39;AssetsCurrent&#39;,
+                summands_nan=[&#39;AssetsNoncurrent&#39;]
+            ),
+            SetSumIfOneOnlySummand(
+                sum_tag=&#39;Assets&#39;,
+                summand_set=&#39;AssetsNoncurrent&#39;,
+                summands_nan=[&#39;AssetsCurrent&#39;]
+            ),
             SumCompletionRuleGroupCreator.create_group(
                 sum_tag=&#39;Liabilities&#39;,
                 summand_tags=[&#39;LiabilitiesCurrent&#39;, &#39;LiabilitiesNoncurrent&#39;],
                 prefix=&#34;Lia&#34;
+            ),
+            SetSumIfOneOnlySummand(
+                sum_tag=&#39;Liabilities&#39;,
+                summand_set=&#39;LiabilitiesCurrent&#39;,
+                summands_nan=[&#39;LiabilitiesNoncurrent&#39;]
+            ),
+            SetSumIfOneOnlySummand(
+                sum_tag=&#39;Liabilities&#39;,
+                summand_set=&#39;LiabilitiesNoncurrent&#39;,
+                summands_nan=[&#39;LiabilitiesCurrent&#39;]
             ),
             SumCompletionRuleGroupCreator.create_group(
                 sum_tag=&#39;Assets&#39;,
@@ -384,11 +493,23 @@ class BalanceSheetStandardizer(RuleProcessor):
         ])
 
     rule_tree = RuleGroup(prefix=&#34;BS_&#34;,
-                               rules=[
-                                   bs_rename_rg,
-                                   bs_sumup_rg,
-                                   bs_sum_completion,
-                               ])
+                          rules=[
+                              bs_rename_rg,
+                              bs_sumup_rg,
+                              bs_sum_completion,
+                          ])
+
+    cleanup_rule_tree = RuleGroup(prefix=&#34;BS_CL_&#34;,
+                                  rules=[
+                                      CleanUpCopyToFirstSummand(sum_tag=&#39;Assets&#39;,
+                                                                first_summand=&#39;AssetsCurrent&#39;,
+                                                                other_summands=[
+                                                                    &#39;AssetsNoncurrent&#39;]),
+                                      CleanUpCopyToFirstSummand(sum_tag=&#39;Liabilities&#39;,
+                                                                first_summand=&#39;LiabilitiesCurrent&#39;,
+                                                                other_summands=[
+                                                                    &#39;LiabilitiesNoncurrent&#39;]),
+                                  ])
 
     # these are the columns that finally are returned after the standardization
     final_tags: List[str] = [&#39;Assets&#39;, &#39;AssetsCurrent&#39;, &#39;AssetsNoncurrent&#39;,
@@ -406,14 +527,13 @@ class BalanceSheetStandardizer(RuleProcessor):
     # however, we might be only interested in the &#34;major&#34; BS report. Usually this is the
     # one which has the least nan in the following columns
     main_tags = [&#39;Assets&#39;, &#39;AssetsCurrent&#39;, &#39;AssetsNoncurrent&#39;,
-                    &#39;Liabilities&#39;, &#39;LiabilitiesCurrent&#39;, &#39;LiabilitiesNoncurrent&#39;]
+                 &#39;Liabilities&#39;, &#39;LiabilitiesCurrent&#39;, &#39;LiabilitiesNoncurrent&#39;]
 
-    def __init__(self, filter_for_main_report: bool = False, iterations: int = 2):
-        super().__init__(rule_tree=self.rule_tree, post_rules=[], iterations=iterations,
+    def __init__(self, filter_for_main_report: bool = False, iterations: int = 3):
+        super().__init__(rule_tree=self.rule_tree, clean_up_rule_tree=self.cleanup_rule_tree,
+                         iterations=iterations,
                          main_tags=self.main_tags, final_tags=self.final_tags,
                          filter_for_main_report=filter_for_main_report)
-
-
 
 
 # there are pre-pivot and post-pivot rules ..
@@ -510,7 +630,7 @@ class BalanceSheetStandardizerOld:
 <dl>
 <dt id="secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizer"><code class="flex name class">
 <span>class <span class="ident">BalanceSheetStandardizer</span></span>
-<span>(</span><span>filter_for_main_report: bool = False, iterations: int = 2)</span>
+<span>(</span><span>filter_for_main_report: bool = False, iterations: int = 3)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>wichtig, nur für main optimiert, nicht für coregs</p></div>
@@ -557,10 +677,30 @@ class BalanceSheetStandardizerOld:
                 summand_tags=[&#39;AssetsCurrent&#39;, &#39;AssetsNoncurrent&#39;],
                 prefix=&#34;Ass&#34;
             ),
+            SetSumIfOneOnlySummand(
+                sum_tag=&#39;Assets&#39;,
+                summand_set=&#39;AssetsCurrent&#39;,
+                summands_nan=[&#39;AssetsNoncurrent&#39;]
+            ),
+            SetSumIfOneOnlySummand(
+                sum_tag=&#39;Assets&#39;,
+                summand_set=&#39;AssetsNoncurrent&#39;,
+                summands_nan=[&#39;AssetsCurrent&#39;]
+            ),
             SumCompletionRuleGroupCreator.create_group(
                 sum_tag=&#39;Liabilities&#39;,
                 summand_tags=[&#39;LiabilitiesCurrent&#39;, &#39;LiabilitiesNoncurrent&#39;],
                 prefix=&#34;Lia&#34;
+            ),
+            SetSumIfOneOnlySummand(
+                sum_tag=&#39;Liabilities&#39;,
+                summand_set=&#39;LiabilitiesCurrent&#39;,
+                summands_nan=[&#39;LiabilitiesNoncurrent&#39;]
+            ),
+            SetSumIfOneOnlySummand(
+                sum_tag=&#39;Liabilities&#39;,
+                summand_set=&#39;LiabilitiesNoncurrent&#39;,
+                summands_nan=[&#39;LiabilitiesCurrent&#39;]
             ),
             SumCompletionRuleGroupCreator.create_group(
                 sum_tag=&#39;Assets&#39;,
@@ -575,11 +715,23 @@ class BalanceSheetStandardizerOld:
         ])
 
     rule_tree = RuleGroup(prefix=&#34;BS_&#34;,
-                               rules=[
-                                   bs_rename_rg,
-                                   bs_sumup_rg,
-                                   bs_sum_completion,
-                               ])
+                          rules=[
+                              bs_rename_rg,
+                              bs_sumup_rg,
+                              bs_sum_completion,
+                          ])
+
+    cleanup_rule_tree = RuleGroup(prefix=&#34;BS_CL_&#34;,
+                                  rules=[
+                                      CleanUpCopyToFirstSummand(sum_tag=&#39;Assets&#39;,
+                                                                first_summand=&#39;AssetsCurrent&#39;,
+                                                                other_summands=[
+                                                                    &#39;AssetsNoncurrent&#39;]),
+                                      CleanUpCopyToFirstSummand(sum_tag=&#39;Liabilities&#39;,
+                                                                first_summand=&#39;LiabilitiesCurrent&#39;,
+                                                                other_summands=[
+                                                                    &#39;LiabilitiesNoncurrent&#39;]),
+                                  ])
 
     # these are the columns that finally are returned after the standardization
     final_tags: List[str] = [&#39;Assets&#39;, &#39;AssetsCurrent&#39;, &#39;AssetsNoncurrent&#39;,
@@ -597,10 +749,11 @@ class BalanceSheetStandardizerOld:
     # however, we might be only interested in the &#34;major&#34; BS report. Usually this is the
     # one which has the least nan in the following columns
     main_tags = [&#39;Assets&#39;, &#39;AssetsCurrent&#39;, &#39;AssetsNoncurrent&#39;,
-                    &#39;Liabilities&#39;, &#39;LiabilitiesCurrent&#39;, &#39;LiabilitiesNoncurrent&#39;]
+                 &#39;Liabilities&#39;, &#39;LiabilitiesCurrent&#39;, &#39;LiabilitiesNoncurrent&#39;]
 
-    def __init__(self, filter_for_main_report: bool = False, iterations: int = 2):
-        super().__init__(rule_tree=self.rule_tree, post_rules=[], iterations=iterations,
+    def __init__(self, filter_for_main_report: bool = False, iterations: int = 3):
+        super().__init__(rule_tree=self.rule_tree, clean_up_rule_tree=self.cleanup_rule_tree,
+                         iterations=iterations,
                          main_tags=self.main_tags, final_tags=self.final_tags,
                          filter_for_main_report=filter_for_main_report)</code></pre>
 </details>
@@ -619,6 +772,10 @@ class BalanceSheetStandardizerOld:
 <div class="desc"></div>
 </dd>
 <dt id="secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizer.bs_sumup_rg"><code class="name">var <span class="ident">bs_sumup_rg</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizer.cleanup_rule_tree"><code class="name">var <span class="ident">cleanup_rule_tree</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -807,6 +964,120 @@ class BalanceSheetStandardizerOld:
                                     ~df[summand_2].isna())
         df.loc[mask_nototal_nosum1_sum2, total] = df[summand_2]
         df.loc[mask_nototal_nosum1_sum2, summand_1] = 0.0</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+<dt id="secfsdstools.f_standardize.bs_standardize.CleanUpCopyToFirstSummand"><code class="flex name class">
+<span>class <span class="ident">CleanUpCopyToFirstSummand</span></span>
+<span>(</span><span>sum_tag: str, first_summand: str, other_summands: List[str])</span>
+</code></dt>
+<dd>
+<div class="desc"><p>if the target is set and the first summand and the other summands are nan,
+then copy the target value to the first summand and set the other summands to '0.0'</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class CleanUpCopyToFirstSummand(Rule):
+    &#34;&#34;&#34; if the target is set and the first summand and the other summands are nan,
+    then copy the target value to the first summand and set the other summands to &#39;0.0&#39; &#34;&#34;&#34;
+
+    def __init__(self, sum_tag: str, first_summand: str, other_summands: List[str]):
+        self.sum_tag = sum_tag
+        self.first_summand = first_summand
+        self.other_summands = other_summands
+
+    def get_target_tag(self) -&gt; str:
+        return self.first_summand
+
+    def get_input_tags(self) -&gt; Set[str]:
+        result = {self.sum_tag, self.first_summand}
+        result.update(self.other_summands)
+        return result
+
+    def mask(self, df: pd.DataFrame) -&gt; pa.typing.Series[bool]:
+        # if the target was not set..
+
+        mask = ~df[self.sum_tag].isna() &amp; df[self.first_summand].isna()
+        for other_summand in self.other_summands:
+            mask = mask &amp; df[other_summand].isna()
+
+        return mask
+
+    def apply(self, df: pd.DataFrame, mask: pa.typing.Series[bool]):
+        df.loc[mask, self.first_summand] = df[self.sum_tag]  # initialize
+        for other_summand in self.other_summands:
+            df.loc[mask, other_summand] = 0.0</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="secfsdstools.f_standardize.bs_standardize.Rule" href="#secfsdstools.f_standardize.bs_standardize.Rule">Rule</a></li>
+<li><a title="secfsdstools.f_standardize.bs_standardize.RuleEntity" href="#secfsdstools.f_standardize.bs_standardize.RuleEntity">RuleEntity</a></li>
+<li>abc.ABC</li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="secfsdstools.f_standardize.bs_standardize.CleanUpCopyToFirstSummand.apply"><code class="name flex">
+<span>def <span class="ident">apply</span></span>(<span>self, df: pandas.core.frame.DataFrame, mask: pandera.typing.pandas.Series[bool])</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def apply(self, df: pd.DataFrame, mask: pa.typing.Series[bool]):
+    df.loc[mask, self.first_summand] = df[self.sum_tag]  # initialize
+    for other_summand in self.other_summands:
+        df.loc[mask, other_summand] = 0.0</code></pre>
+</details>
+</dd>
+<dt id="secfsdstools.f_standardize.bs_standardize.CleanUpCopyToFirstSummand.get_input_tags"><code class="name flex">
+<span>def <span class="ident">get_input_tags</span></span>(<span>self) ‑> Set[str]</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_input_tags(self) -&gt; Set[str]:
+    result = {self.sum_tag, self.first_summand}
+    result.update(self.other_summands)
+    return result</code></pre>
+</details>
+</dd>
+<dt id="secfsdstools.f_standardize.bs_standardize.CleanUpCopyToFirstSummand.get_target_tag"><code class="name flex">
+<span>def <span class="ident">get_target_tag</span></span>(<span>self) ‑> str</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_target_tag(self) -&gt; str:
+    return self.first_summand</code></pre>
+</details>
+</dd>
+<dt id="secfsdstools.f_standardize.bs_standardize.CleanUpCopyToFirstSummand.mask"><code class="name flex">
+<span>def <span class="ident">mask</span></span>(<span>self, df: pandas.core.frame.DataFrame) ‑> pandera.typing.pandas.Series[bool]</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def mask(self, df: pd.DataFrame) -&gt; pa.typing.Series[bool]:
+    # if the target was not set..
+
+    mask = ~df[self.sum_tag].isna() &amp; df[self.first_summand].isna()
+    for other_summand in self.other_summands:
+        mask = mask &amp; df[other_summand].isna()
+
+    return mask</code></pre>
 </details>
 </dd>
 </dl>
@@ -1155,9 +1426,11 @@ inheritance.</p></div>
 </ul>
 <h3>Subclasses</h3>
 <ul class="hlist">
+<li><a title="secfsdstools.f_standardize.bs_standardize.CleanUpCopyToFirstSummand" href="#secfsdstools.f_standardize.bs_standardize.CleanUpCopyToFirstSummand">CleanUpCopyToFirstSummand</a></li>
 <li><a title="secfsdstools.f_standardize.bs_standardize.MissingSumRule" href="#secfsdstools.f_standardize.bs_standardize.MissingSumRule">MissingSumRule</a></li>
 <li><a title="secfsdstools.f_standardize.bs_standardize.MissingSummandRule" href="#secfsdstools.f_standardize.bs_standardize.MissingSummandRule">MissingSummandRule</a></li>
 <li><a title="secfsdstools.f_standardize.bs_standardize.RenameRule" href="#secfsdstools.f_standardize.bs_standardize.RenameRule">RenameRule</a></li>
+<li><a title="secfsdstools.f_standardize.bs_standardize.SetSumIfOneOnlySummand" href="#secfsdstools.f_standardize.bs_standardize.SetSumIfOneOnlySummand">SetSumIfOneOnlySummand</a></li>
 <li><a title="secfsdstools.f_standardize.bs_standardize.SumUp" href="#secfsdstools.f_standardize.bs_standardize.SumUp">SumUp</a></li>
 </ul>
 <h3>Methods</h3>
@@ -1310,8 +1583,10 @@ ist das so?</p></div>
         self.prefix = prefix
 
     def process(self, df: pd.DataFrame, log_df: Optional[pd.DataFrame] = None, id: str = &#34;&#34;):
+        idx = 1
         for rule in self.rules:
-            rule.process(df=df, log_df=log_df, id=id + self.prefix)
+            rule.process(df=df, log_df=log_df, id=f&#34;{id}{self.prefix}_{idx}#&#34;)
+            idx = idx + 1
 
     def get_input_tags(self) -&gt; Set[str]:
         result: Set[str] = set()
@@ -1352,15 +1627,17 @@ ist das so?</p></div>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def process(self, df: pd.DataFrame, log_df: Optional[pd.DataFrame] = None, id: str = &#34;&#34;):
+    idx = 1
     for rule in self.rules:
-        rule.process(df=df, log_df=log_df, id=id + self.prefix)</code></pre>
+        rule.process(df=df, log_df=log_df, id=f&#34;{id}{self.prefix}_{idx}#&#34;)
+        idx = idx + 1</code></pre>
 </details>
 </dd>
 </dl>
 </dd>
 <dt id="secfsdstools.f_standardize.bs_standardize.RuleProcessor"><code class="flex name class">
 <span>class <span class="ident">RuleProcessor</span></span>
-<span>(</span><span>rule_tree: <a title="secfsdstools.f_standardize.bs_standardize.RuleGroup" href="#secfsdstools.f_standardize.bs_standardize.RuleGroup">RuleGroup</a>, post_rules: List[<a title="secfsdstools.f_standardize.bs_standardize.RuleEntity" href="#secfsdstools.f_standardize.bs_standardize.RuleEntity">RuleEntity</a>], iterations: int, main_tags: List[str], final_tags: List[str], filter_for_main_report: bool)</span>
+<span>(</span><span>rule_tree: <a title="secfsdstools.f_standardize.bs_standardize.RuleGroup" href="#secfsdstools.f_standardize.bs_standardize.RuleGroup">RuleGroup</a>, clean_up_rule_tree: <a title="secfsdstools.f_standardize.bs_standardize.RuleGroup" href="#secfsdstools.f_standardize.bs_standardize.RuleGroup">RuleGroup</a>, iterations: int, main_tags: List[str], final_tags: List[str], filter_for_main_report: bool = True, invert_negated: bool = True)</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -1371,21 +1648,22 @@ ist das so?</p></div>
 <pre><code class="python">class RuleProcessor:
     identifier_tags = [&#39;adsh&#39;, &#39;coreg&#39;, &#39;report&#39;, &#39;ddate&#39;]
 
-    def __init__(self, rule_tree: RuleGroup, post_rules: List[RuleEntity],
+    def __init__(self, rule_tree: RuleGroup, clean_up_rule_tree: RuleGroup,
                  iterations: int, main_tags: List[str], final_tags: List[str],
-                 filter_for_main_report: bool):
+                 filter_for_main_report: bool = True, invert_negated: bool = True):
         self.rule_tree = rule_tree
-        self.post_rules = post_rules
+        self.clean_up_rule_tree = clean_up_rule_tree
         self.iterations = iterations
         self.main_tags = main_tags
         self.final_tags = final_tags
         self.filter_for_main_report = filter_for_main_report
+        self.invert_negated = invert_negated
 
         self.final_col_order = self.identifier_tags + self.final_tags
 
+        self.preprocess_dupliate_log_df: Optional[pd.DataFrame] = None
         self.log_df: Optional[pd.DataFrame] = None
         self.stats: Optional[pd.DataFrame] = None
-
 
     def get_ruletree_descriptions(self):
         # todo
@@ -1394,12 +1672,19 @@ ist das so?</p></div>
     def process(self, df: pd.DataFrame) -&gt; pd.DataFrame:
         all_input_tags = self.rule_tree.get_input_tags()
 
-        cpy_df = df[[&#39;adsh&#39;, &#39;coreg&#39;, &#39;tag&#39;, &#39;version&#39;, &#39;ddate&#39;, &#39;uom&#39;, &#39;value&#39;, &#39;report&#39;, &#39;line&#39;,
-                     &#39;negating&#39;]][df.tag.isin(all_input_tags)].copy()
+        relevant_df = \
+            df[[&#39;adsh&#39;, &#39;coreg&#39;, &#39;tag&#39;, &#39;version&#39;, &#39;ddate&#39;, &#39;uom&#39;, &#39;value&#39;, &#39;report&#39;, &#39;line&#39;,
+                &#39;negating&#39;]][df.tag.isin(all_input_tags)]
 
-        # todo: wann muss negating berücksichtigt werden -&gt; nach dem pivot fliegt es raus!
+        # preprocessing ..
+        #  - deduplicate
+        cpy_df = self._deduplicate(relevant_df).copy()
 
-        # pivot the table, so that the tags are now columns
+        #  - invert_negated
+        if self.invert_negated:
+            cpy_df.loc[cpy_df.negating == 1, &#39;value&#39;] = -cpy_df.value
+
+        # pivot the table, so that the tags become columns
         # todo: folgende Zeile sollte nicht mehr notwendig sein, sobald alle Regeln implementiert sind
         expected_tags = all_input_tags.union(self.final_tags)
         pivot_df = self._pivot(df=cpy_df, expected_tags=expected_tags)
@@ -1407,7 +1692,7 @@ ist das so?</p></div>
         if self.filter_for_main_report:
             pivot_df = self._filter_pivot_for_main_reports(pivot_df)
 
-        self.log_df = pivot_df[[&#39;adsh&#39;, &#39;coreg&#39;, &#39;report&#39;, &#39;ddate&#39;]].copy()
+        self.log_df = pivot_df[[&#39;adsh&#39;, &#39;coreg&#39;, &#39;report&#39;, &#39;ddate&#39;, &#39;uom&#39;]].copy()
 
         total_length = len(pivot_df)
 
@@ -1434,10 +1719,34 @@ ist das so?</p></div>
             self.stats[self.post_stats.name + &#39;_red&#39;] = \
                 1 - (self.stats[self.post_stats.name] / self.stats.pre)
 
+        # clean up rules
+        self.clean_up_rule_tree.process(df=pivot_df, log_df=self.log_df)
+
+        # calculate cleanup stats
+        self.post_cleanup = self._calculate_stats(pivot_df=pivot_df)
+        self.post_cleanup.name = &#34;cleanup&#34;
+        self.stats = self.stats.join(self.post_cleanup)
+        self.stats[self.post_cleanup.name + &#39;_rel&#39;] = \
+            self.stats[self.post_cleanup.name] / total_length
+        self.stats[self.post_cleanup.name + &#39;_red&#39;] = \
+            1 - (self.stats[self.post_cleanup.name] / self.stats.pre)
+
         # create a meaningful order
         pivot_df = pivot_df[self.final_col_order].copy()
 
         return pivot_df
+
+    def _deduplicate(self, df: pd.DataFrame) -&gt; pd.DataFrame:
+        # find duplicated entries
+        # sometimes, only single tags are duplicated, however, there are also reports
+        # where all tags of a report are duplicated, maybe due to a problem with processing
+        duplicates_s = \
+            df.duplicated([&#39;adsh&#39;, &#39;coreg&#39;, &#39;report&#39;, &#39;uom&#39;, &#39;tag&#39;, &#39;version&#39;, &#39;ddate&#39;, &#39;value&#39;])
+
+        self.preprocess_dupliate_log_df = df[duplicates_s] \
+            [[&#39;adsh&#39;, &#39;coreg&#39;, &#39;report&#39;, &#39;tag&#39;, &#39;uom&#39;, &#39;version&#39;, &#39;ddate&#39;]].copy()
+
+        return df[~duplicates_s]
 
     def _filter_pivot_for_main_reports(self, pivot_df: pd.DataFrame) -&gt; pd.DataFrame:
         &#34;&#34;&#34; Some reports have more than one &#39;report number&#39; (column report) for a
@@ -1458,23 +1767,12 @@ ist das so?</p></div>
         return pivot_df[self.final_tags].isna().sum(axis=0)
 
     def _pivot(self, df: pd.DataFrame, expected_tags: Set[str]) -&gt; pd.DataFrame:
-        # todo: um pivot zu optimieren, sollten zuerst nur die Tags gefiltert werden,
-        # welche tatsächlich auch benützt werden, alles andere sollte herausgefiltert werden
-        # das müsste über die Regeln geschehen und sollte automatisch berechnet werden sollen.
-
         # it is possible, that the same number appears multiple times in different lines,
         # therefore, duplicates have to be removed, otherwise pivot is not possible
-        relevant_df = df[[&#39;adsh&#39;, &#39;coreg&#39;, &#39;report&#39;, &#39;tag&#39;, &#39;value&#39;, &#39;ddate&#39;]].drop_duplicates()
+        relevant_df = df[
+            [&#39;adsh&#39;, &#39;coreg&#39;, &#39;report&#39;, &#39;tag&#39;, &#39;value&#39;, &#39;uom&#39;, &#39;ddate&#39;]].drop_duplicates()
 
-        duplicates_df = relevant_df[
-            [&#39;adsh&#39;, &#39;coreg&#39;, &#39;report&#39;, &#39;tag&#39;, &#39;ddate&#39;]].value_counts().reset_index()
-        duplicates_df.rename(columns={0: &#39;count&#39;}, inplace=True)
-        duplicated_adsh = duplicates_df[duplicates_df[&#39;count&#39;] &gt; 1].adsh.unique().tolist()
-
-        # todo: logging duplicated entries ...&gt;
-        relevant_df = relevant_df[~relevant_df.adsh.isin(duplicated_adsh)]
-
-        pivot_df = relevant_df.pivot(index=[&#39;adsh&#39;, &#39;coreg&#39;, &#39;report&#39;, &#39;ddate&#39;],
+        pivot_df = relevant_df.pivot(index=[&#39;adsh&#39;, &#39;coreg&#39;, &#39;report&#39;, &#39;uom&#39;, &#39;ddate&#39;],
                                      columns=&#39;tag&#39;,
                                      values=&#39;value&#39;)
         pivot_df.reset_index(inplace=True)
@@ -1523,12 +1821,19 @@ ist das so?</p></div>
 <pre><code class="python">def process(self, df: pd.DataFrame) -&gt; pd.DataFrame:
     all_input_tags = self.rule_tree.get_input_tags()
 
-    cpy_df = df[[&#39;adsh&#39;, &#39;coreg&#39;, &#39;tag&#39;, &#39;version&#39;, &#39;ddate&#39;, &#39;uom&#39;, &#39;value&#39;, &#39;report&#39;, &#39;line&#39;,
-                 &#39;negating&#39;]][df.tag.isin(all_input_tags)].copy()
+    relevant_df = \
+        df[[&#39;adsh&#39;, &#39;coreg&#39;, &#39;tag&#39;, &#39;version&#39;, &#39;ddate&#39;, &#39;uom&#39;, &#39;value&#39;, &#39;report&#39;, &#39;line&#39;,
+            &#39;negating&#39;]][df.tag.isin(all_input_tags)]
 
-    # todo: wann muss negating berücksichtigt werden -&gt; nach dem pivot fliegt es raus!
+    # preprocessing ..
+    #  - deduplicate
+    cpy_df = self._deduplicate(relevant_df).copy()
 
-    # pivot the table, so that the tags are now columns
+    #  - invert_negated
+    if self.invert_negated:
+        cpy_df.loc[cpy_df.negating == 1, &#39;value&#39;] = -cpy_df.value
+
+    # pivot the table, so that the tags become columns
     # todo: folgende Zeile sollte nicht mehr notwendig sein, sobald alle Regeln implementiert sind
     expected_tags = all_input_tags.union(self.final_tags)
     pivot_df = self._pivot(df=cpy_df, expected_tags=expected_tags)
@@ -1536,7 +1841,7 @@ ist das so?</p></div>
     if self.filter_for_main_report:
         pivot_df = self._filter_pivot_for_main_reports(pivot_df)
 
-    self.log_df = pivot_df[[&#39;adsh&#39;, &#39;coreg&#39;, &#39;report&#39;, &#39;ddate&#39;]].copy()
+    self.log_df = pivot_df[[&#39;adsh&#39;, &#39;coreg&#39;, &#39;report&#39;, &#39;ddate&#39;, &#39;uom&#39;]].copy()
 
     total_length = len(pivot_df)
 
@@ -1563,10 +1868,138 @@ ist das so?</p></div>
         self.stats[self.post_stats.name + &#39;_red&#39;] = \
             1 - (self.stats[self.post_stats.name] / self.stats.pre)
 
+    # clean up rules
+    self.clean_up_rule_tree.process(df=pivot_df, log_df=self.log_df)
+
+    # calculate cleanup stats
+    self.post_cleanup = self._calculate_stats(pivot_df=pivot_df)
+    self.post_cleanup.name = &#34;cleanup&#34;
+    self.stats = self.stats.join(self.post_cleanup)
+    self.stats[self.post_cleanup.name + &#39;_rel&#39;] = \
+        self.stats[self.post_cleanup.name] / total_length
+    self.stats[self.post_cleanup.name + &#39;_red&#39;] = \
+        1 - (self.stats[self.post_cleanup.name] / self.stats.pre)
+
     # create a meaningful order
     pivot_df = pivot_df[self.final_col_order].copy()
 
     return pivot_df</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+<dt id="secfsdstools.f_standardize.bs_standardize.SetSumIfOneOnlySummand"><code class="flex name class">
+<span>class <span class="ident">SetSumIfOneOnlySummand</span></span>
+<span>(</span><span>sum_tag: str, summand_set: str, summands_nan: List[str])</span>
+</code></dt>
+<dd>
+<div class="desc"><p>If the sumt_tag is nan and only one summand has a value, then the
+target gets the copy of the Value and the other summands are set to zero.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class SetSumIfOneOnlySummand(Rule):
+    &#34;&#34;&#34;
+    If the sumt_tag is nan and only one summand has a value, then the
+    target gets the copy of the Value and the other summands are set to zero.
+    &#34;&#34;&#34;
+
+    def __init__(self, sum_tag: str, summand_set: str, summands_nan: List[str]):
+        self.sum_tag = sum_tag
+        self.summand_set = summand_set
+        self.summands_nan = summands_nan
+
+    def get_target_tag(self) -&gt; str:
+        return self.sum_tag
+
+    def get_input_tags(self) -&gt; Set[str]:
+        result = {self.sum_tag, self.summand_set}
+        result.update(self.summands_nan)
+        return result
+
+    def mask(self, df: pd.DataFrame) -&gt; pa.typing.Series[bool]:
+        # if the target was not set..
+
+        mask = df[self.sum_tag].isna() &amp; ~df[self.summand_set].isna()
+        for summand_nan in self.summands_nan:
+            mask = mask &amp; df[summand_nan].isna()
+
+        return mask
+
+    def apply(self, df: pd.DataFrame, mask: pa.typing.Series[bool]):
+        df.loc[mask, self.sum_tag] = df[self.summand_set]  # initialize
+        for summand_nan in self.summands_nan:
+            df.loc[mask, summand_nan] = 0.0</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="secfsdstools.f_standardize.bs_standardize.Rule" href="#secfsdstools.f_standardize.bs_standardize.Rule">Rule</a></li>
+<li><a title="secfsdstools.f_standardize.bs_standardize.RuleEntity" href="#secfsdstools.f_standardize.bs_standardize.RuleEntity">RuleEntity</a></li>
+<li>abc.ABC</li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="secfsdstools.f_standardize.bs_standardize.SetSumIfOneOnlySummand.apply"><code class="name flex">
+<span>def <span class="ident">apply</span></span>(<span>self, df: pandas.core.frame.DataFrame, mask: pandera.typing.pandas.Series[bool])</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def apply(self, df: pd.DataFrame, mask: pa.typing.Series[bool]):
+    df.loc[mask, self.sum_tag] = df[self.summand_set]  # initialize
+    for summand_nan in self.summands_nan:
+        df.loc[mask, summand_nan] = 0.0</code></pre>
+</details>
+</dd>
+<dt id="secfsdstools.f_standardize.bs_standardize.SetSumIfOneOnlySummand.get_input_tags"><code class="name flex">
+<span>def <span class="ident">get_input_tags</span></span>(<span>self) ‑> Set[str]</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_input_tags(self) -&gt; Set[str]:
+    result = {self.sum_tag, self.summand_set}
+    result.update(self.summands_nan)
+    return result</code></pre>
+</details>
+</dd>
+<dt id="secfsdstools.f_standardize.bs_standardize.SetSumIfOneOnlySummand.get_target_tag"><code class="name flex">
+<span>def <span class="ident">get_target_tag</span></span>(<span>self) ‑> str</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_target_tag(self) -&gt; str:
+    return self.sum_tag</code></pre>
+</details>
+</dd>
+<dt id="secfsdstools.f_standardize.bs_standardize.SetSumIfOneOnlySummand.mask"><code class="name flex">
+<span>def <span class="ident">mask</span></span>(<span>self, df: pandas.core.frame.DataFrame) ‑> pandera.typing.pandas.Series[bool]</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def mask(self, df: pd.DataFrame) -&gt; pa.typing.Series[bool]:
+    # if the target was not set..
+
+    mask = df[self.sum_tag].isna() &amp; ~df[self.summand_set].isna()
+    for summand_nan in self.summands_nan:
+        mask = mask &amp; df[summand_nan].isna()
+
+    return mask</code></pre>
 </details>
 </dd>
 </dl>
@@ -1748,6 +2181,7 @@ def create_group(sum_tag: str, summand_tags: List[str], prefix: str) -&gt; RuleG
 <li><code><a title="secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizer.bs_rename_rg" href="#secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizer.bs_rename_rg">bs_rename_rg</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizer.bs_sum_completion" href="#secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizer.bs_sum_completion">bs_sum_completion</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizer.bs_sumup_rg" href="#secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizer.bs_sumup_rg">bs_sumup_rg</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizer.cleanup_rule_tree" href="#secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizer.cleanup_rule_tree">cleanup_rule_tree</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizer.final_tags" href="#secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizer.final_tags">final_tags</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizer.main_tags" href="#secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizer.main_tags">main_tags</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizer.rule_tree" href="#secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizer.rule_tree">rule_tree</a></code></li>
@@ -1758,6 +2192,15 @@ def create_group(sum_tag: str, summand_tags: List[str], prefix: str) -&gt; RuleG
 <ul class="">
 <li><code><a title="secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizerOld.complete_special_rules" href="#secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizerOld.complete_special_rules">complete_special_rules</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizerOld.fill_still_isna_summands" href="#secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizerOld.fill_still_isna_summands">fill_still_isna_summands</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="secfsdstools.f_standardize.bs_standardize.CleanUpCopyToFirstSummand" href="#secfsdstools.f_standardize.bs_standardize.CleanUpCopyToFirstSummand">CleanUpCopyToFirstSummand</a></code></h4>
+<ul class="">
+<li><code><a title="secfsdstools.f_standardize.bs_standardize.CleanUpCopyToFirstSummand.apply" href="#secfsdstools.f_standardize.bs_standardize.CleanUpCopyToFirstSummand.apply">apply</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.bs_standardize.CleanUpCopyToFirstSummand.get_input_tags" href="#secfsdstools.f_standardize.bs_standardize.CleanUpCopyToFirstSummand.get_input_tags">get_input_tags</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.bs_standardize.CleanUpCopyToFirstSummand.get_target_tag" href="#secfsdstools.f_standardize.bs_standardize.CleanUpCopyToFirstSummand.get_target_tag">get_target_tag</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.bs_standardize.CleanUpCopyToFirstSummand.mask" href="#secfsdstools.f_standardize.bs_standardize.CleanUpCopyToFirstSummand.mask">mask</a></code></li>
 </ul>
 </li>
 <li>
@@ -1816,6 +2259,15 @@ def create_group(sum_tag: str, summand_tags: List[str], prefix: str) -&gt; RuleG
 <li><code><a title="secfsdstools.f_standardize.bs_standardize.RuleProcessor.get_ruletree_descriptions" href="#secfsdstools.f_standardize.bs_standardize.RuleProcessor.get_ruletree_descriptions">get_ruletree_descriptions</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.bs_standardize.RuleProcessor.identifier_tags" href="#secfsdstools.f_standardize.bs_standardize.RuleProcessor.identifier_tags">identifier_tags</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.bs_standardize.RuleProcessor.process" href="#secfsdstools.f_standardize.bs_standardize.RuleProcessor.process">process</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="secfsdstools.f_standardize.bs_standardize.SetSumIfOneOnlySummand" href="#secfsdstools.f_standardize.bs_standardize.SetSumIfOneOnlySummand">SetSumIfOneOnlySummand</a></code></h4>
+<ul class="">
+<li><code><a title="secfsdstools.f_standardize.bs_standardize.SetSumIfOneOnlySummand.apply" href="#secfsdstools.f_standardize.bs_standardize.SetSumIfOneOnlySummand.apply">apply</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.bs_standardize.SetSumIfOneOnlySummand.get_input_tags" href="#secfsdstools.f_standardize.bs_standardize.SetSumIfOneOnlySummand.get_input_tags">get_input_tags</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.bs_standardize.SetSumIfOneOnlySummand.get_target_tag" href="#secfsdstools.f_standardize.bs_standardize.SetSumIfOneOnlySummand.get_target_tag">get_target_tag</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.bs_standardize.SetSumIfOneOnlySummand.mask" href="#secfsdstools.f_standardize.bs_standardize.SetSumIfOneOnlySummand.mask">mask</a></code></li>
 </ul>
 </li>
 <li>

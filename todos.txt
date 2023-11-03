@@ -16,8 +16,15 @@ New
 - BS Standardizer
 - bulk processing examples
 
+todo:
+- validation am Ende: prüfen, ob die wichtigsten dinge stimmen
+  -> z.B. Assets = current + noncurrent
+          Assets = equity + liabilities , usw.
+
 
 Next:
+
+
 - vlt switch um parallele verarbeitung komplett auszuschalten?
 - vlt switch maximale parallelität?
 

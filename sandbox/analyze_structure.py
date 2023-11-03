@@ -57,13 +57,32 @@ def check_for_equity_tags(df: pd.DataFrame):
     print(filterd.tag.unique().tolist())
 
 
+
+def check_drop_out_mask(df: pd.DataFrame):
+    """
+    groups by adsh and report and counts the instances of Assets and StockholdersEquity
+    per group, which is a Series.
+    Transform that Series into a Dataframe with columns for adsh and tag
+    """
+
+    duplicates = df.duplicated(['adsh', 'coreg', 'report', 'uom', 'tag', 'version', 'ddate', 'value'])
+
+    counts_s = df[['adsh', 'report', 'tag']][df.tag.isin(['Assets', 'StockholdersEquity'])].groupby(['adsh', 'report'])['tag'].value_counts()
+
+    new_df = pd.DataFrame(counts_s.to_numpy(), columns=['tag_count'])
+
+    for level in counts_s.index.levels:
+        new_df[level.name] = counts_s.index.get_level_values(level.name)
+
+    return new_df
+
+
 if __name__ == '__main__':
-    # fs_df = get_fs_from_single_report('0001828937-22-000020') # Non Current and NonCurrent missing
+    #fs_df = get_fs_from_single_report('0001171520-13-000365')
 
     fs_df = get_fs_from_all_bs()
-
-    check_for_equity_tags(fs_df)
-
+    # check_drop_out_mask(fs_df)
+    # check_for_equity_tags(fs_df)
     # fs_df = fs_df[fs_df.adsh.isin(['0001096906-17-000798'])]
 
     # fs_df_retained_count = fs_df[['tag', 'adsh']][
@@ -81,6 +100,8 @@ if __name__ == '__main__':
     # den dritten Wert auszurechnen, wenn zwei Werte vorhanden sind ist ein tiefes risiko
     # oder wenn es einfach andere bezeichnungen für dasselbe gibt, ebenfalls.
     # aber wenn es dann ein wenig komplizierter ist,
+
+    df_missing_assets = df[df.Assets.isna() | df.AssetsCurrent.isna() | df.AssetsNoncurrent.isna()]
 
     adshs_set = set(df.adsh.unique().tolist())
     adshs_with_assets = set(df[~df.Assets.isnull()].adsh.unique().tolist())

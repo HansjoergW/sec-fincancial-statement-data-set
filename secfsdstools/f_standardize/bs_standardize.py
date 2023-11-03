@@ -53,8 +53,10 @@ class RuleGroup(RuleEntity):
         self.prefix = prefix
 
     def process(self, df: pd.DataFrame, log_df: Optional[pd.DataFrame] = None, id: str = ""):
+        idx = 1
         for rule in self.rules:
-            rule.process(df=df, log_df=log_df, id=id + self.prefix)
+            rule.process(df=df, log_df=log_df, id=f"{id}{self.prefix}_{idx}#")
+            idx = idx + 1
 
     def get_input_tags(self) -> Set[str]:
         result: Set[str] = set()
@@ -182,24 +184,91 @@ class SumUp(Rule):
             df.loc[summand_mask, self.target] = df[self.target] + df[potential_summand]
 
 
+class SetSumIfOneOnlySummand(Rule):
+    """
+    If the sumt_tag is nan and only one summand has a value, then the
+    target gets the copy of the Value and the other summands are set to zero.
+    """
+
+    def __init__(self, sum_tag: str, summand_set: str, summands_nan: List[str]):
+        self.sum_tag = sum_tag
+        self.summand_set = summand_set
+        self.summands_nan = summands_nan
+
+    def get_target_tag(self) -> str:
+        return self.sum_tag
+
+    def get_input_tags(self) -> Set[str]:
+        result = {self.sum_tag, self.summand_set}
+        result.update(self.summands_nan)
+        return result
+
+    def mask(self, df: pd.DataFrame) -> pa.typing.Series[bool]:
+        # if the target was not set..
+
+        mask = df[self.sum_tag].isna() & ~df[self.summand_set].isna()
+        for summand_nan in self.summands_nan:
+            mask = mask & df[summand_nan].isna()
+
+        return mask
+
+    def apply(self, df: pd.DataFrame, mask: pa.typing.Series[bool]):
+        df.loc[mask, self.sum_tag] = df[self.summand_set]  # initialize
+        for summand_nan in self.summands_nan:
+            df.loc[mask, summand_nan] = 0.0
+
+
+class CleanUpCopyToFirstSummand(Rule):
+    """ if the target is set and the first summand and the other summands are nan,
+    then copy the target value to the first summand and set the other summands to '0.0' """
+
+    def __init__(self, sum_tag: str, first_summand: str, other_summands: List[str]):
+        self.sum_tag = sum_tag
+        self.first_summand = first_summand
+        self.other_summands = other_summands
+
+    def get_target_tag(self) -> str:
+        return self.first_summand
+
+    def get_input_tags(self) -> Set[str]:
+        result = {self.sum_tag, self.first_summand}
+        result.update(self.other_summands)
+        return result
+
+    def mask(self, df: pd.DataFrame) -> pa.typing.Series[bool]:
+        # if the target was not set..
+
+        mask = ~df[self.sum_tag].isna() & df[self.first_summand].isna()
+        for other_summand in self.other_summands:
+            mask = mask & df[other_summand].isna()
+
+        return mask
+
+    def apply(self, df: pd.DataFrame, mask: pa.typing.Series[bool]):
+        df.loc[mask, self.first_summand] = df[self.sum_tag]  # initialize
+        for other_summand in self.other_summands:
+            df.loc[mask, other_summand] = 0.0
+
+
 class RuleProcessor:
     identifier_tags = ['adsh', 'coreg', 'report', 'ddate']
 
-    def __init__(self, rule_tree: RuleGroup, post_rules: List[RuleEntity],
+    def __init__(self, rule_tree: RuleGroup, clean_up_rule_tree: RuleGroup,
                  iterations: int, main_tags: List[str], final_tags: List[str],
-                 filter_for_main_report: bool):
+                 filter_for_main_report: bool = True, invert_negated: bool = True):
         self.rule_tree = rule_tree
-        self.post_rules = post_rules
+        self.clean_up_rule_tree = clean_up_rule_tree
         self.iterations = iterations
         self.main_tags = main_tags
         self.final_tags = final_tags
         self.filter_for_main_report = filter_for_main_report
+        self.invert_negated = invert_negated
 
         self.final_col_order = self.identifier_tags + self.final_tags
 
+        self.preprocess_dupliate_log_df: Optional[pd.DataFrame] = None
         self.log_df: Optional[pd.DataFrame] = None
         self.stats: Optional[pd.DataFrame] = None
-
 
     def get_ruletree_descriptions(self):
         # todo
@@ -208,12 +277,19 @@ class RuleProcessor:
     def process(self, df: pd.DataFrame) -> pd.DataFrame:
         all_input_tags = self.rule_tree.get_input_tags()
 
-        cpy_df = df[['adsh', 'coreg', 'tag', 'version', 'ddate', 'uom', 'value', 'report', 'line',
-                     'negating']][df.tag.isin(all_input_tags)].copy()
+        relevant_df = \
+            df[['adsh', 'coreg', 'tag', 'version', 'ddate', 'uom', 'value', 'report', 'line',
+                'negating']][df.tag.isin(all_input_tags)]
 
-        # todo: wann muss negating berücksichtigt werden -> nach dem pivot fliegt es raus!
+        # preprocessing ..
+        #  - deduplicate
+        cpy_df = self._deduplicate(relevant_df).copy()
 
-        # pivot the table, so that the tags are now columns
+        #  - invert_negated
+        if self.invert_negated:
+            cpy_df.loc[cpy_df.negating == 1, 'value'] = -cpy_df.value
+
+        # pivot the table, so that the tags become columns
         # todo: folgende Zeile sollte nicht mehr notwendig sein, sobald alle Regeln implementiert sind
         expected_tags = all_input_tags.union(self.final_tags)
         pivot_df = self._pivot(df=cpy_df, expected_tags=expected_tags)
@@ -221,7 +297,7 @@ class RuleProcessor:
         if self.filter_for_main_report:
             pivot_df = self._filter_pivot_for_main_reports(pivot_df)
 
-        self.log_df = pivot_df[['adsh', 'coreg', 'report', 'ddate']].copy()
+        self.log_df = pivot_df[['adsh', 'coreg', 'report', 'ddate', 'uom']].copy()
 
         total_length = len(pivot_df)
 
@@ -248,10 +324,34 @@ class RuleProcessor:
             self.stats[self.post_stats.name + '_red'] = \
                 1 - (self.stats[self.post_stats.name] / self.stats.pre)
 
+        # clean up rules
+        self.clean_up_rule_tree.process(df=pivot_df, log_df=self.log_df)
+
+        # calculate cleanup stats
+        self.post_cleanup = self._calculate_stats(pivot_df=pivot_df)
+        self.post_cleanup.name = "cleanup"
+        self.stats = self.stats.join(self.post_cleanup)
+        self.stats[self.post_cleanup.name + '_rel'] = \
+            self.stats[self.post_cleanup.name] / total_length
+        self.stats[self.post_cleanup.name + '_red'] = \
+            1 - (self.stats[self.post_cleanup.name] / self.stats.pre)
+
         # create a meaningful order
         pivot_df = pivot_df[self.final_col_order].copy()
 
         return pivot_df
+
+    def _deduplicate(self, df: pd.DataFrame) -> pd.DataFrame:
+        # find duplicated entries
+        # sometimes, only single tags are duplicated, however, there are also reports
+        # where all tags of a report are duplicated, maybe due to a problem with processing
+        duplicates_s = \
+            df.duplicated(['adsh', 'coreg', 'report', 'uom', 'tag', 'version', 'ddate', 'value'])
+
+        self.preprocess_dupliate_log_df = df[duplicates_s] \
+            [['adsh', 'coreg', 'report', 'tag', 'uom', 'version', 'ddate']].copy()
+
+        return df[~duplicates_s]
 
     def _filter_pivot_for_main_reports(self, pivot_df: pd.DataFrame) -> pd.DataFrame:
         """ Some reports have more than one 'report number' (column report) for a
@@ -272,23 +372,12 @@ class RuleProcessor:
         return pivot_df[self.final_tags].isna().sum(axis=0)
 
     def _pivot(self, df: pd.DataFrame, expected_tags: Set[str]) -> pd.DataFrame:
-        # todo: um pivot zu optimieren, sollten zuerst nur die Tags gefiltert werden,
-        # welche tatsächlich auch benützt werden, alles andere sollte herausgefiltert werden
-        # das müsste über die Regeln geschehen und sollte automatisch berechnet werden sollen.
-
         # it is possible, that the same number appears multiple times in different lines,
         # therefore, duplicates have to be removed, otherwise pivot is not possible
-        relevant_df = df[['adsh', 'coreg', 'report', 'tag', 'value', 'ddate']].drop_duplicates()
+        relevant_df = df[
+            ['adsh', 'coreg', 'report', 'tag', 'value', 'uom', 'ddate']].drop_duplicates()
 
-        duplicates_df = relevant_df[
-            ['adsh', 'coreg', 'report', 'tag', 'ddate']].value_counts().reset_index()
-        duplicates_df.rename(columns={0: 'count'}, inplace=True)
-        duplicated_adsh = duplicates_df[duplicates_df['count'] > 1].adsh.unique().tolist()
-
-        # todo: logging duplicated entries ...>
-        relevant_df = relevant_df[~relevant_df.adsh.isin(duplicated_adsh)]
-
-        pivot_df = relevant_df.pivot(index=['adsh', 'coreg', 'report', 'ddate'],
+        pivot_df = relevant_df.pivot(index=['adsh', 'coreg', 'report', 'uom', 'ddate'],
                                      columns='tag',
                                      values='value')
         pivot_df.reset_index(inplace=True)
@@ -338,10 +427,30 @@ class BalanceSheetStandardizer(RuleProcessor):
                 summand_tags=['AssetsCurrent', 'AssetsNoncurrent'],
                 prefix="Ass"
             ),
+            SetSumIfOneOnlySummand(
+                sum_tag='Assets',
+                summand_set='AssetsCurrent',
+                summands_nan=['AssetsNoncurrent']
+            ),
+            SetSumIfOneOnlySummand(
+                sum_tag='Assets',
+                summand_set='AssetsNoncurrent',
+                summands_nan=['AssetsCurrent']
+            ),
             SumCompletionRuleGroupCreator.create_group(
                 sum_tag='Liabilities',
                 summand_tags=['LiabilitiesCurrent', 'LiabilitiesNoncurrent'],
                 prefix="Lia"
+            ),
+            SetSumIfOneOnlySummand(
+                sum_tag='Liabilities',
+                summand_set='LiabilitiesCurrent',
+                summands_nan=['LiabilitiesNoncurrent']
+            ),
+            SetSumIfOneOnlySummand(
+                sum_tag='Liabilities',
+                summand_set='LiabilitiesNoncurrent',
+                summands_nan=['LiabilitiesCurrent']
             ),
             SumCompletionRuleGroupCreator.create_group(
                 sum_tag='Assets',
@@ -356,11 +465,23 @@ class BalanceSheetStandardizer(RuleProcessor):
         ])
 
     rule_tree = RuleGroup(prefix="BS_",
-                               rules=[
-                                   bs_rename_rg,
-                                   bs_sumup_rg,
-                                   bs_sum_completion,
-                               ])
+                          rules=[
+                              bs_rename_rg,
+                              bs_sumup_rg,
+                              bs_sum_completion,
+                          ])
+
+    cleanup_rule_tree = RuleGroup(prefix="BS_CL_",
+                                  rules=[
+                                      CleanUpCopyToFirstSummand(sum_tag='Assets',
+                                                                first_summand='AssetsCurrent',
+                                                                other_summands=[
+                                                                    'AssetsNoncurrent']),
+                                      CleanUpCopyToFirstSummand(sum_tag='Liabilities',
+                                                                first_summand='LiabilitiesCurrent',
+                                                                other_summands=[
+                                                                    'LiabilitiesNoncurrent']),
+                                  ])
 
     # these are the columns that finally are returned after the standardization
     final_tags: List[str] = ['Assets', 'AssetsCurrent', 'AssetsNoncurrent',
@@ -378,14 +499,13 @@ class BalanceSheetStandardizer(RuleProcessor):
     # however, we might be only interested in the "major" BS report. Usually this is the
     # one which has the least nan in the following columns
     main_tags = ['Assets', 'AssetsCurrent', 'AssetsNoncurrent',
-                    'Liabilities', 'LiabilitiesCurrent', 'LiabilitiesNoncurrent']
+                 'Liabilities', 'LiabilitiesCurrent', 'LiabilitiesNoncurrent']
 
-    def __init__(self, filter_for_main_report: bool = False, iterations: int = 2):
-        super().__init__(rule_tree=self.rule_tree, post_rules=[], iterations=iterations,
+    def __init__(self, filter_for_main_report: bool = False, iterations: int = 3):
+        super().__init__(rule_tree=self.rule_tree, clean_up_rule_tree=self.cleanup_rule_tree,
+                         iterations=iterations,
                          main_tags=self.main_tags, final_tags=self.final_tags,
                          filter_for_main_report=filter_for_main_report)
-
-
 
 
 # there are pre-pivot and post-pivot rules ..

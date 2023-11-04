@@ -264,7 +264,7 @@ class CleanUpCopyToFirstSummand(Rule):
         return result
 
     def mask(self, df: pd.DataFrame) -&gt; pa.typing.Series[bool]:
-        # if the target was not set..
+        # if the sum_tag was not set..
 
         mask = ~df[self.sum_tag].isna() &amp; df[self.first_summand].isna()
         for other_summand in self.other_summands:
@@ -276,6 +276,38 @@ class CleanUpCopyToFirstSummand(Rule):
         df.loc[mask, self.first_summand] = df[self.sum_tag]  # initialize
         for other_summand in self.other_summands:
             df.loc[mask, other_summand] = 0.0
+
+
+class CleanUpSumUpCorrections(Rule):
+    &#34;&#34;&#34; it happens, that the values for Assets and AssetsNoncurrent
+    where mixed  up. example: 0001692981-19-000022
+    So instead of Assets = AssetsCurrent + AssetsNoncurrent
+    it matches AssetsNoncurrent = Assets + AssetsCurrent.
+
+    so the first parameter is the sum_tag, e.g. Assets
+    the mixed_up_summand is the name of the summand that was mixed with the sum_tag
+    the other_summand is the summand with the correct value, e.g. AssetsCurrent
+    &#34;&#34;&#34;
+
+    def __init__(self, sum_tag: str, mixed_up_summand: str, other_summand:str):
+        self.sum_tag = sum_tag
+        self.mixed_up_summand = mixed_up_summand
+        self.other_summand = other_summand
+
+    def get_target_tag(self) -&gt; str:
+        return self.sum_tag
+
+    def get_input_tags(self) -&gt; Set[str]:
+        return {self.sum_tag, self.mixed_up_summand, self.other_summand}
+
+    def mask(self, df: pd.DataFrame) -&gt; pa.typing.Series[bool]:
+        return (df[self.mixed_up_summand] == df[self.sum_tag] + df[self.other_summand]) \
+                    &amp; (df[self.other_summand] &gt; 0)
+
+    def apply(self, df: pd.DataFrame, mask: pa.typing.Series[bool]):
+        mixed_up_values = df[self.mixed_up_summand].copy()
+        df.loc[mask, self.mixed_up_summand] = df[self.sum_tag]
+        df.loc[mask, self.sum_tag] = mixed_up_values
 
 
 class RuleProcessor:
@@ -509,6 +541,13 @@ class BalanceSheetStandardizer(RuleProcessor):
                                                                 first_summand=&#39;LiabilitiesCurrent&#39;,
                                                                 other_summands=[
                                                                     &#39;LiabilitiesNoncurrent&#39;]),
+                                      CleanUpSumUpCorrections(sum_tag=&#39;Assets&#39;,
+                                                               mixed_up_summand=&#39;AssetsNoncurrent&#39;,
+                                                               other_summand=&#39;AssetsCurrent&#39;),
+                                      CleanUpSumUpCorrections(sum_tag=&#39;Assets&#39;,
+                                                              mixed_up_summand=&#39;AssetsCurrent&#39;,
+                                                              other_summand=&#39;AssetsNoncurrent&#39;),
+
                                   ])
 
     # these are the columns that finally are returned after the standardization
@@ -731,6 +770,13 @@ class BalanceSheetStandardizerOld:
                                                                 first_summand=&#39;LiabilitiesCurrent&#39;,
                                                                 other_summands=[
                                                                     &#39;LiabilitiesNoncurrent&#39;]),
+                                      CleanUpSumUpCorrections(sum_tag=&#39;Assets&#39;,
+                                                               mixed_up_summand=&#39;AssetsNoncurrent&#39;,
+                                                               other_summand=&#39;AssetsCurrent&#39;),
+                                      CleanUpSumUpCorrections(sum_tag=&#39;Assets&#39;,
+                                                              mixed_up_summand=&#39;AssetsCurrent&#39;,
+                                                              other_summand=&#39;AssetsNoncurrent&#39;),
+
                                   ])
 
     # these are the columns that finally are returned after the standardization
@@ -997,7 +1043,7 @@ then copy the target value to the first summand and set the other summands to '0
         return result
 
     def mask(self, df: pd.DataFrame) -&gt; pa.typing.Series[bool]:
-        # if the target was not set..
+        # if the sum_tag was not set..
 
         mask = ~df[self.sum_tag].isna() &amp; df[self.first_summand].isna()
         for other_summand in self.other_summands:
@@ -1071,13 +1117,126 @@ then copy the target value to the first summand and set the other summands to '0
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def mask(self, df: pd.DataFrame) -&gt; pa.typing.Series[bool]:
-    # if the target was not set..
+    # if the sum_tag was not set..
 
     mask = ~df[self.sum_tag].isna() &amp; df[self.first_summand].isna()
     for other_summand in self.other_summands:
         mask = mask &amp; df[other_summand].isna()
 
     return mask</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+<dt id="secfsdstools.f_standardize.bs_standardize.CleanUpSumUpCorrections"><code class="flex name class">
+<span>class <span class="ident">CleanUpSumUpCorrections</span></span>
+<span>(</span><span>sum_tag: str, mixed_up_summand: str, other_summand: str)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>it happens, that the values for Assets and AssetsNoncurrent
+where mixed
+up. example: 0001692981-19-000022
+So instead of Assets = AssetsCurrent + AssetsNoncurrent
+it matches AssetsNoncurrent = Assets + AssetsCurrent.</p>
+<p>so the first parameter is the sum_tag, e.g. Assets
+the mixed_up_summand is the name of the summand that was mixed with the sum_tag
+the other_summand is the summand with the correct value, e.g. AssetsCurrent</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class CleanUpSumUpCorrections(Rule):
+    &#34;&#34;&#34; it happens, that the values for Assets and AssetsNoncurrent
+    where mixed  up. example: 0001692981-19-000022
+    So instead of Assets = AssetsCurrent + AssetsNoncurrent
+    it matches AssetsNoncurrent = Assets + AssetsCurrent.
+
+    so the first parameter is the sum_tag, e.g. Assets
+    the mixed_up_summand is the name of the summand that was mixed with the sum_tag
+    the other_summand is the summand with the correct value, e.g. AssetsCurrent
+    &#34;&#34;&#34;
+
+    def __init__(self, sum_tag: str, mixed_up_summand: str, other_summand:str):
+        self.sum_tag = sum_tag
+        self.mixed_up_summand = mixed_up_summand
+        self.other_summand = other_summand
+
+    def get_target_tag(self) -&gt; str:
+        return self.sum_tag
+
+    def get_input_tags(self) -&gt; Set[str]:
+        return {self.sum_tag, self.mixed_up_summand, self.other_summand}
+
+    def mask(self, df: pd.DataFrame) -&gt; pa.typing.Series[bool]:
+        return (df[self.mixed_up_summand] == df[self.sum_tag] + df[self.other_summand]) \
+                    &amp; (df[self.other_summand] &gt; 0)
+
+    def apply(self, df: pd.DataFrame, mask: pa.typing.Series[bool]):
+        mixed_up_values = df[self.mixed_up_summand].copy()
+        df.loc[mask, self.mixed_up_summand] = df[self.sum_tag]
+        df.loc[mask, self.sum_tag] = mixed_up_values</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="secfsdstools.f_standardize.bs_standardize.Rule" href="#secfsdstools.f_standardize.bs_standardize.Rule">Rule</a></li>
+<li><a title="secfsdstools.f_standardize.bs_standardize.RuleEntity" href="#secfsdstools.f_standardize.bs_standardize.RuleEntity">RuleEntity</a></li>
+<li>abc.ABC</li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="secfsdstools.f_standardize.bs_standardize.CleanUpSumUpCorrections.apply"><code class="name flex">
+<span>def <span class="ident">apply</span></span>(<span>self, df: pandas.core.frame.DataFrame, mask: pandera.typing.pandas.Series[bool])</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def apply(self, df: pd.DataFrame, mask: pa.typing.Series[bool]):
+    mixed_up_values = df[self.mixed_up_summand].copy()
+    df.loc[mask, self.mixed_up_summand] = df[self.sum_tag]
+    df.loc[mask, self.sum_tag] = mixed_up_values</code></pre>
+</details>
+</dd>
+<dt id="secfsdstools.f_standardize.bs_standardize.CleanUpSumUpCorrections.get_input_tags"><code class="name flex">
+<span>def <span class="ident">get_input_tags</span></span>(<span>self) ‑> Set[str]</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_input_tags(self) -&gt; Set[str]:
+    return {self.sum_tag, self.mixed_up_summand, self.other_summand}</code></pre>
+</details>
+</dd>
+<dt id="secfsdstools.f_standardize.bs_standardize.CleanUpSumUpCorrections.get_target_tag"><code class="name flex">
+<span>def <span class="ident">get_target_tag</span></span>(<span>self) ‑> str</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_target_tag(self) -&gt; str:
+    return self.sum_tag</code></pre>
+</details>
+</dd>
+<dt id="secfsdstools.f_standardize.bs_standardize.CleanUpSumUpCorrections.mask"><code class="name flex">
+<span>def <span class="ident">mask</span></span>(<span>self, df: pandas.core.frame.DataFrame) ‑> pandera.typing.pandas.Series[bool]</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def mask(self, df: pd.DataFrame) -&gt; pa.typing.Series[bool]:
+    return (df[self.mixed_up_summand] == df[self.sum_tag] + df[self.other_summand]) \
+                &amp; (df[self.other_summand] &gt; 0)</code></pre>
 </details>
 </dd>
 </dl>
@@ -1427,6 +1586,7 @@ inheritance.</p></div>
 <h3>Subclasses</h3>
 <ul class="hlist">
 <li><a title="secfsdstools.f_standardize.bs_standardize.CleanUpCopyToFirstSummand" href="#secfsdstools.f_standardize.bs_standardize.CleanUpCopyToFirstSummand">CleanUpCopyToFirstSummand</a></li>
+<li><a title="secfsdstools.f_standardize.bs_standardize.CleanUpSumUpCorrections" href="#secfsdstools.f_standardize.bs_standardize.CleanUpSumUpCorrections">CleanUpSumUpCorrections</a></li>
 <li><a title="secfsdstools.f_standardize.bs_standardize.MissingSumRule" href="#secfsdstools.f_standardize.bs_standardize.MissingSumRule">MissingSumRule</a></li>
 <li><a title="secfsdstools.f_standardize.bs_standardize.MissingSummandRule" href="#secfsdstools.f_standardize.bs_standardize.MissingSummandRule">MissingSummandRule</a></li>
 <li><a title="secfsdstools.f_standardize.bs_standardize.RenameRule" href="#secfsdstools.f_standardize.bs_standardize.RenameRule">RenameRule</a></li>
@@ -2201,6 +2361,15 @@ def create_group(sum_tag: str, summand_tags: List[str], prefix: str) -&gt; RuleG
 <li><code><a title="secfsdstools.f_standardize.bs_standardize.CleanUpCopyToFirstSummand.get_input_tags" href="#secfsdstools.f_standardize.bs_standardize.CleanUpCopyToFirstSummand.get_input_tags">get_input_tags</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.bs_standardize.CleanUpCopyToFirstSummand.get_target_tag" href="#secfsdstools.f_standardize.bs_standardize.CleanUpCopyToFirstSummand.get_target_tag">get_target_tag</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.bs_standardize.CleanUpCopyToFirstSummand.mask" href="#secfsdstools.f_standardize.bs_standardize.CleanUpCopyToFirstSummand.mask">mask</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="secfsdstools.f_standardize.bs_standardize.CleanUpSumUpCorrections" href="#secfsdstools.f_standardize.bs_standardize.CleanUpSumUpCorrections">CleanUpSumUpCorrections</a></code></h4>
+<ul class="">
+<li><code><a title="secfsdstools.f_standardize.bs_standardize.CleanUpSumUpCorrections.apply" href="#secfsdstools.f_standardize.bs_standardize.CleanUpSumUpCorrections.apply">apply</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.bs_standardize.CleanUpSumUpCorrections.get_input_tags" href="#secfsdstools.f_standardize.bs_standardize.CleanUpSumUpCorrections.get_input_tags">get_input_tags</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.bs_standardize.CleanUpSumUpCorrections.get_target_tag" href="#secfsdstools.f_standardize.bs_standardize.CleanUpSumUpCorrections.get_target_tag">get_target_tag</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.bs_standardize.CleanUpSumUpCorrections.mask" href="#secfsdstools.f_standardize.bs_standardize.CleanUpSumUpCorrections.mask">mask</a></code></li>
 </ul>
 </li>
 <li>

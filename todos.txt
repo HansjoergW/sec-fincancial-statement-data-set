@@ -21,6 +21,11 @@ todo:
   -> z.B. Assets = current + noncurrent
           Assets = equity + liabilities , usw.
 
+- generische checks implementieren
+
+- vermutlich ist equity falsch definiert > vielleicht sollte das wirklich nur das einbezahlte Kapital sein
+  und Equity + und Liabilities&Stockholder Equit
+
 
 Next:
 

@@ -236,7 +236,7 @@ class CleanUpCopyToFirstSummand(Rule):
         return result
 
     def mask(self, df: pd.DataFrame) -> pa.typing.Series[bool]:
-        # if the target was not set..
+        # if the sum_tag was not set..
 
         mask = ~df[self.sum_tag].isna() & df[self.first_summand].isna()
         for other_summand in self.other_summands:
@@ -248,6 +248,38 @@ class CleanUpCopyToFirstSummand(Rule):
         df.loc[mask, self.first_summand] = df[self.sum_tag]  # initialize
         for other_summand in self.other_summands:
             df.loc[mask, other_summand] = 0.0
+
+
+class CleanUpSumUpCorrections(Rule):
+    """ it happens, that the values for Assets and AssetsNoncurrent
+    where mixed  up. example: 0001692981-19-000022
+    So instead of Assets = AssetsCurrent + AssetsNoncurrent
+    it matches AssetsNoncurrent = Assets + AssetsCurrent.
+
+    so the first parameter is the sum_tag, e.g. Assets
+    the mixed_up_summand is the name of the summand that was mixed with the sum_tag
+    the other_summand is the summand with the correct value, e.g. AssetsCurrent
+    """
+
+    def __init__(self, sum_tag: str, mixed_up_summand: str, other_summand:str):
+        self.sum_tag = sum_tag
+        self.mixed_up_summand = mixed_up_summand
+        self.other_summand = other_summand
+
+    def get_target_tag(self) -> str:
+        return self.sum_tag
+
+    def get_input_tags(self) -> Set[str]:
+        return {self.sum_tag, self.mixed_up_summand, self.other_summand}
+
+    def mask(self, df: pd.DataFrame) -> pa.typing.Series[bool]:
+        return (df[self.mixed_up_summand] == df[self.sum_tag] + df[self.other_summand]) \
+                    & (df[self.other_summand] > 0)
+
+    def apply(self, df: pd.DataFrame, mask: pa.typing.Series[bool]):
+        mixed_up_values = df[self.mixed_up_summand].copy()
+        df.loc[mask, self.mixed_up_summand] = df[self.sum_tag]
+        df.loc[mask, self.sum_tag] = mixed_up_values
 
 
 class RuleProcessor:
@@ -481,6 +513,13 @@ class BalanceSheetStandardizer(RuleProcessor):
                                                                 first_summand='LiabilitiesCurrent',
                                                                 other_summands=[
                                                                     'LiabilitiesNoncurrent']),
+                                      CleanUpSumUpCorrections(sum_tag='Assets',
+                                                               mixed_up_summand='AssetsNoncurrent',
+                                                               other_summand='AssetsCurrent'),
+                                      CleanUpSumUpCorrections(sum_tag='Assets',
+                                                              mixed_up_summand='AssetsCurrent',
+                                                              other_summand='AssetsNoncurrent'),
+
                                   ])
 
     # these are the columns that finally are returned after the standardization

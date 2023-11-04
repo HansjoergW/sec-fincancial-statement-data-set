@@ -34,8 +34,8 @@ def get_uniques_col(df: pd.DataFrame, col: str) -> List[str]:
 
 
 def get_count_tags_per_adsh(df: pd.DataFrame, tags: List[str]) -> pd.DataFrame:
-
-    return df[['adsh', 'report', 'tag']][df.tag.isin(tags)].groupby(['adsh', 'report']).count().reset_index()
+    return df[['adsh', 'report', 'tag']][df.tag.isin(tags)].groupby(
+        ['adsh', 'report']).count().reset_index()
 
 
 def check_uom_list(df: pd.DataFrame):
@@ -48,14 +48,14 @@ def check_for_equity_tags(df: pd.DataFrame):
     result = counts_df[counts_df.tag > 1]
     print(result.shape)
     # filter where more than 1 tag with stockholdersquity and partnercapital are present
-    filterd = df[df.adsh.isin(result.adsh.tolist()) & df.tag.isin(['StockholdersEquity', 'PartnerCapital'])]
+    filterd = df[
+        df.adsh.isin(result.adsh.tolist()) & df.tag.isin(['StockholdersEquity', 'PartnerCapital'])]
     # first checks shows, that only stockholderequity appears in reports where
     # appears more than once
     # -> hence StockholdersEquity and PartnerCapital never appear together
     # however, we have reports which have the entries doubled -> all bs lines appear twice.
     # with the same value
     print(filterd.tag.unique().tolist())
-
 
 
 def check_drop_out_mask(df: pd.DataFrame):
@@ -65,9 +65,11 @@ def check_drop_out_mask(df: pd.DataFrame):
     Transform that Series into a Dataframe with columns for adsh and tag
     """
 
-    duplicates = df.duplicated(['adsh', 'coreg', 'report', 'uom', 'tag', 'version', 'ddate', 'value'])
+    duplicates = df.duplicated(
+        ['adsh', 'coreg', 'report', 'uom', 'tag', 'version', 'ddate', 'value'])
 
-    counts_s = df[['adsh', 'report', 'tag']][df.tag.isin(['Assets', 'StockholdersEquity'])].groupby(['adsh', 'report'])['tag'].value_counts()
+    counts_s = df[['adsh', 'report', 'tag']][df.tag.isin(['Assets', 'StockholdersEquity'])].groupby(
+        ['adsh', 'report'])['tag'].value_counts()
 
     new_df = pd.DataFrame(counts_s.to_numpy(), columns=['tag_count'])
 
@@ -77,8 +79,20 @@ def check_drop_out_mask(df: pd.DataFrame):
     return new_df
 
 
+def assets_check(df: pd.DataFrame):
+    mask = ~df.Assets.isna() & ~df.AssetsCurrent.isna() & ~df.AssetsNoncurrent.isna()
+    df['AssetsCheck_r'] = None
+    df['AssetsCheck_cat'] = -1
+
+    df.loc[mask, 'AssetsCheck_r'] = ((df.Assets - df.AssetsCurrent - df.AssetsNoncurrent) / df.Assets).abs()
+    df.loc[mask, 'AssetsCheck_cat'] = 3  # gt > 0.1 / 10%
+    df.loc[df.AssetsCheck_r < 0.1, 'AssetsCheck_cat'] = 2  # 5-10 %
+    df.loc[df.AssetsCheck_r < 0.05, 'AssetsCheck_cat'] = 1  # 1-5 %
+    df.loc[df.AssetsCheck_r < 0.01, 'AssetsCheck_cat'] = 0  # < 1%
+
+
 if __name__ == '__main__':
-    #fs_df = get_fs_from_single_report('0001171520-13-000365')
+    #fs_df = get_fs_from_single_report('0001741257-19-000014')
 
     fs_df = get_fs_from_all_bs()
     # check_drop_out_mask(fs_df)
@@ -94,12 +108,8 @@ if __name__ == '__main__':
     standardizer = BalanceSheetStandardizer(filter_for_main_report=True)
     df = standardizer.process(fs_df)
 
-    #  hier wäare so eine art statistik gut, we sieht die sitatuion vor dem bereinigen aus,
-    # also wieviele enträge fehlen, und wie sieht es danach aus..
-    # die operationen sollten auch noch Risiko profil haben, also z.B.
-    # den dritten Wert auszurechnen, wenn zwei Werte vorhanden sind ist ein tiefes risiko
-    # oder wenn es einfach andere bezeichnungen für dasselbe gibt, ebenfalls.
-    # aber wenn es dann ein wenig komplizierter ist,
+    assets_check(df) # adding the AssetsCheck columns
+    print(df.AssetsCheck_cat.value_counts())
 
     df_missing_assets = df[df.Assets.isna() | df.AssetsCurrent.isna() | df.AssetsNoncurrent.isna()]
 

@@ -4,6 +4,8 @@ secrets.txt
 /data/
 /docs/api
 /tests/secfsdstools.db
+/sandbox/saved_data/
+/notebooks/bs_10k_10q_all_joined
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
@@ -137,4 +139,5 @@ dmypy.json
 
 
 /_site
-/sandbox/saved_data/
+
+

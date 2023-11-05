@@ -97,21 +97,16 @@ if __name__ == '__main__':
     fs_df = get_fs_from_all_bs()
     # check_drop_out_mask(fs_df)
     # check_for_equity_tags(fs_df)
-    # fs_df = fs_df[fs_df.adsh.isin(['0001096906-17-000798'])]
-
-    # fs_df_retained_count = fs_df[['tag', 'adsh']][
-    #     fs_df.tag.str.startswith('RetainedEarnings')].groupby('adsh').count()
-    # fs_df_retained_count_gt_1 = fs_df_retained_count[fs_df_retained_count.tag > 1].reset_index()
 
     print("fs_df.shape", fs_df.shape)
 
     standardizer = BalanceSheetStandardizer(filter_for_main_report=True)
     df = standardizer.process(fs_df)
 
-    assets_check(df) # adding the AssetsCheck columns
-    print(df.AssetsCheck_cat.value_counts())
+    # assets_check(df) # adding the AssetsCheck columns
+    # print(df.AssetsCheck_cat.value_counts())
 
-    df_missing_assets = df[df.Assets.isna() | df.AssetsCurrent.isna() | df.AssetsNoncurrent.isna()]
+    # df_missing_assets = df[df.Assets.isna() | df.AssetsCurrent.isna() | df.AssetsNoncurrent.isna()]
 
     adshs_set = set(df.adsh.unique().tolist())
     adshs_with_assets = set(df[~df.Assets.isnull()].adsh.unique().tolist())
@@ -126,9 +121,3 @@ if __name__ == '__main__':
     print(len(fs_df.adsh.unique()))
     print(fs_df.columns)
 
-    # standardizer.pre_stats.name="pre"
-    # pre_stats_df = pd.DataFrame(standardizer.pre_stats)
-    # standardizer.post_stats.name="post"
-    # joined_df = pre_stats_df.join(standardizer.post_stats)
-    # joined_df['reduction'] = 1 - (joined_df.post / joined_df.pre)
-    # print(joined_df)

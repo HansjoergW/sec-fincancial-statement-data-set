@@ -17,14 +17,17 @@ New
 - bulk processing examples
 
 todo:
-- validation am Ende: prüfen, ob die wichtigsten dinge stimmen
-  -> z.B. Assets = current + noncurrent
-          Assets = equity + liabilities , usw.
+- stats in prozent and change pro iteration, so dass man direkt sieht, wo sich nichts verandert hat
 
-- generische checks implementieren
+- TotalEquity = PartnerCapital oder StockholdersEquity
+  - Besteht aus PaidIn capital und retained earnings
+   -> Paid für PartnerCapital -> PartnersCapitalAccount (General.., Limited..)
+   -> bei StockholdersEquity -> CommonStocksIncludingAdditionalPaidInCapital.. PaidInCapital
 
-- vermutlich ist equity falsch definiert > vielleicht sollte das wirklich nur das einbezahlte Kapital sein
-  und Equity + und Liabilities&Stockholder Equit
+  -> TotalEquity = PaidInCapital + Accumulated -> mehrere Positionen
+  => Paid in bestimmen / RetainedEarnings bestimmen..
+
+
 
 
 Next:

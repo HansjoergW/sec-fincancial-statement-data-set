@@ -261,7 +261,7 @@ class CleanUpSumUpCorrections(Rule):
     the other_summand is the summand with the correct value, e.g. AssetsCurrent
     """
 
-    def __init__(self, sum_tag: str, mixed_up_summand: str, other_summand:str):
+    def __init__(self, sum_tag: str, mixed_up_summand: str, other_summand: str):
         self.sum_tag = sum_tag
         self.mixed_up_summand = mixed_up_summand
         self.other_summand = other_summand
@@ -274,7 +274,7 @@ class CleanUpSumUpCorrections(Rule):
 
     def mask(self, df: pd.DataFrame) -> pa.typing.Series[bool]:
         return (df[self.mixed_up_summand] == df[self.sum_tag] + df[self.other_summand]) \
-                    & (df[self.other_summand] > 0)
+               & (df[self.other_summand] > 0)
 
     def apply(self, df: pd.DataFrame, mask: pa.typing.Series[bool]):
         mixed_up_values = df[self.mixed_up_summand].copy()
@@ -282,14 +282,66 @@ class CleanUpSumUpCorrections(Rule):
         df.loc[mask, self.sum_tag] = mixed_up_values
 
 
+class ValidationRule(ABC):
+
+    def __init__(self, id: str):
+        self.id = id
+
+    @abstractmethod
+    def mask(self, df: pd.DataFrame) -> pa.typing.Series[bool]:
+        pass
+
+    @abstractmethod
+    def calculate_error(self, df: pd.DataFrame, mask: pa.typing.Series[bool]) -> \
+            pa.typing.Series[np.float64]:
+        pass
+
+    def validate(self, df: pd.DataFrame):
+        mask = self.mask(df)
+        error = self.calculate_error(df, mask)
+
+        error_column_name = f'{self.id}_error'
+        cat_column_name = f'{self.id}_cat'
+
+        df[error_column_name] = None
+        df.loc[mask, error_column_name] = error
+
+        df.loc[mask, cat_column_name] = 100  # gt > 0.1 / 10%
+        df.loc[df[error_column_name] <= 0.1, cat_column_name] = 10  # 5-10 %
+        df.loc[df[error_column_name] <= 0.05, cat_column_name] = 5  # 1-5 %
+        df.loc[df[error_column_name] <= 0.01, cat_column_name] = 1  # < 1%
+        df.loc[df[error_column_name] == 0.0, cat_column_name] = 0  # exact match
+
+
+class SumValidationRule(ValidationRule):
+
+    def __init__(self, id: str, sum_tag: str, summands: List[str]):
+        super().__init__(id)
+        self.sum_tag = sum_tag
+        self.summands = summands
+
+    def mask(self, df: pd.DataFrame) -> pa.typing.Series[bool]:
+        mask = ~df[self.sum_tag].isna()
+        for summand in self.summands:
+            mask = mask & ~df[summand].isna()
+
+        return mask
+
+    def calculate_error(self, df: pd.DataFrame, mask: pa.typing.Series[bool]) -> \
+            pa.typing.Series[np.float64]:
+        return ((df[self.sum_tag] - df[self.summands].sum(axis='columns')) / df[self.sum_tag]).abs()
+
+
 class RuleProcessor:
     identifier_tags = ['adsh', 'coreg', 'report', 'ddate']
 
     def __init__(self, rule_tree: RuleGroup, clean_up_rule_tree: RuleGroup,
+                 validation_rules: List[ValidationRule],
                  iterations: int, main_tags: List[str], final_tags: List[str],
                  filter_for_main_report: bool = True, invert_negated: bool = True):
         self.rule_tree = rule_tree
         self.clean_up_rule_tree = clean_up_rule_tree
+        self.validation_rules = validation_rules
         self.iterations = iterations
         self.main_tags = main_tags
         self.final_tags = final_tags
@@ -300,6 +352,7 @@ class RuleProcessor:
 
         self.preprocess_dupliate_log_df: Optional[pd.DataFrame] = None
         self.log_df: Optional[pd.DataFrame] = None
+        self.applied_rules_sum_df: Optional[pd.DataFrame] = None
         self.stats: Optional[pd.DataFrame] = None
 
     def get_ruletree_descriptions(self):
@@ -329,7 +382,8 @@ class RuleProcessor:
         if self.filter_for_main_report:
             pivot_df = self._filter_pivot_for_main_reports(pivot_df)
 
-        self.log_df = pivot_df[['adsh', 'coreg', 'report', 'ddate', 'uom']].copy()
+        pivot_df_index_cols = ['adsh', 'coreg', 'report', 'ddate', 'uom']
+        self.log_df = pivot_df[pivot_df_index_cols].copy()
 
         total_length = len(pivot_df)
 
@@ -370,6 +424,17 @@ class RuleProcessor:
 
         # create a meaningful order
         pivot_df = pivot_df[self.final_col_order].copy()
+
+        # apply validation rules
+        for  validation_rule in self.validation_rules:
+            validation_rule.validate(pivot_df)
+
+        # caculate log_df summaries
+        if self.log_df is not None:
+            # filter for rule columns but making sure the order stays the same
+            rule_columns = [x for x in self.log_df.columns if x not in pivot_df_index_cols]
+            self.applied_rules_sum_df = self.log_df[rule_columns].sum()
+
 
         return pivot_df
 
@@ -421,17 +486,39 @@ class RuleProcessor:
 
 
 class BalanceSheetStandardizer(RuleProcessor):
-    """wichtig, nur für main optimiert, nicht für coregs"""
+    """
+    The goal of this Standardizer is to create BalanceSheets that are compareable,
+    meaning that they have the same tags.
+
+    At the end, the standardized BS contains the following columns
+    Assets
+       AssetsCurrent
+           Cash
+       AssetsNoncurrent
+    Liabilities
+       LiabilitiesCurrent
+       LiabilitiesNoncurrent
+    OwnerEquity
+        PaidInCapital
+        RetainedEarnings
+    LiabilitiesAndOwnerEquity
+
+    """
 
     bs_rename_rg = RuleGroup(
         rules=[
+            # sometimes, the total Assets is contained in the AssetsNet tag
             RenameRule(original='AssetsNet', target='Assets'),
-            RenameRule(
-                original='StockholdersEquityIncludingPortionAttributableToNoncontrollingInterest',
-                target='Equity'),
-            RenameRule(original='PartnersCapital', target='Equity'),
-            RenameRule(original='StockholdersEquity', target='Equity'),
+            # either there is a StockholderEquity tag or a PartnersCapital tag,
+            # but both to never appear together
+            RenameRule(original='PartnersCapital', target='OwnerEquity'),
+            RenameRule(original='StockholdersEquity', target='OwnerEquity'),
             RenameRule(original='CashAndCashEquivalentsAtCarryingValue', target='Cash'),
+            RenameRule(original='LiabilitiesAndStockholdersEquity', target='LiabilitiesAndOwnerEquity')
+
+            # RenameRule(
+            #     original='StockholdersEquityIncludingPortionAttributableToNoncontrollingInterest',
+            #     target='Equity'),
             # RenameRule(original='RetainedEarningsAppropriated', target='RetainedEarnings'),
             # RenameRule(original='RetainedEarningsAccumulatedDeficit', target='RetainedEarnings')
         ],
@@ -485,14 +572,14 @@ class BalanceSheetStandardizer(RuleProcessor):
                 summands_nan=['LiabilitiesCurrent']
             ),
             SumCompletionRuleGroupCreator.create_group(
-                sum_tag='Assets',
-                summand_tags=['Liabilities', 'Equity'],
+                sum_tag='AssLiaOwe',
+                summand_tags=['Liabilities', 'OwnerEquity'],
                 prefix="Ass2"
             ),
             SumCompletionRuleGroupCreator.create_group(
-                sum_tag='LiabilitiesAndStockholdersEquity',
-                summand_tags=['Liabilities', 'Equity'],
-                prefix="LiaEq"
+                sum_tag='LiabilitiesAndOwnerEquity',
+                summand_tags=['Liabilities', 'OwnerEquity'],
+                prefix="LiaOwnEq"
             )
         ])
 
@@ -514,25 +601,33 @@ class BalanceSheetStandardizer(RuleProcessor):
                                                                 other_summands=[
                                                                     'LiabilitiesNoncurrent']),
                                       CleanUpSumUpCorrections(sum_tag='Assets',
-                                                               mixed_up_summand='AssetsNoncurrent',
-                                                               other_summand='AssetsCurrent'),
+                                                              mixed_up_summand='AssetsNoncurrent',
+                                                              other_summand='AssetsCurrent'),
                                       CleanUpSumUpCorrections(sum_tag='Assets',
                                                               mixed_up_summand='AssetsCurrent',
                                                               other_summand='AssetsNoncurrent'),
-
                                   ])
+
+    validation_rules: List[ValidationRule] = [
+        SumValidationRule(id='AssetsCheck',
+                          sum_tag='Assets',
+                          summands=['AssetsCurrent', 'AssetsNoncurrent']),
+        SumValidationRule(id='LiabilitiesCheck',
+                          sum_tag='Liabilities',
+                          summands=['LiabilitiesCurrent', 'LiabilitiesNoncurrent'])
+    ]
 
     # these are the columns that finally are returned after the standardization
     final_tags: List[str] = ['Assets', 'AssetsCurrent', 'AssetsNoncurrent',
                              'Liabilities', 'LiabilitiesCurrent', 'LiabilitiesNoncurrent',
-                             'Equity',
+                             'OwnerEquity', 'LiabilitiesAndOwnerEquity',
                              'InventoryNet',
                              'Cash',
                              'CashOther',
                              'RetainedEarnings'
                              ]
 
-    # used to evaluate if a report is a the main balancesheet report
+    # used to evaluate if a report is the main balancesheet report
     # inside a report, there can be several different tables (different report nr)
     # which stmt value is BS.
     # however, we might be only interested in the "major" BS report. Usually this is the
@@ -541,7 +636,9 @@ class BalanceSheetStandardizer(RuleProcessor):
                  'Liabilities', 'LiabilitiesCurrent', 'LiabilitiesNoncurrent']
 
     def __init__(self, filter_for_main_report: bool = False, iterations: int = 3):
-        super().__init__(rule_tree=self.rule_tree, clean_up_rule_tree=self.cleanup_rule_tree,
+        super().__init__(rule_tree=self.rule_tree,
+                         clean_up_rule_tree=self.cleanup_rule_tree,
+                         validation_rules=self.validation_rules,
                          iterations=iterations,
                          main_tags=self.main_tags, final_tags=self.final_tags,
                          filter_for_main_report=filter_for_main_report)

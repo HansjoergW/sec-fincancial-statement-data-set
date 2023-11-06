@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 
-from secfsdstools.f_standardize.base_rules import CopyTagRule
+from secfsdstools.f_standardize.base_rules import CopyTagRule, MissingSumRule
 
 
 def test_rename_rule():
@@ -33,5 +33,11 @@ def test_rename_rule():
 
     # check the log column, first row and last row should be False
     assert log_df.R_target.tolist() == [False, True, True, True, True, False]
+
+def test_missingsum_rule():
+    rule = MissingSumRule(sum_tag='sum',
+                          summand_tags=['summand1', 'summand2'])
+
+    print(rule.get_description())
 
 

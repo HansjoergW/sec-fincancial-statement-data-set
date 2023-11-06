@@ -10,34 +10,7 @@ from secfsdstools.f_standardize.base_rules import CopyTagRule
 from secfsdstools.f_standardize.rule_framework import Rule, RuleGroup, RuleEntity
 
 
-class MissingSumRule(Rule):
-    """ creates the sum in the sum_name column if all summand_names columnes have a value"""
 
-    def __init__(self, sum_name: str, summand_names: List[str]):
-        self.sum_name = sum_name
-        self.summand_names = summand_names
-
-    def get_target_tags(self) -> List[str]:
-        return [self.sum_name]
-
-    def get_input_tags(self) -> Set[str]:
-        result = {self.sum_name}
-        result.update(self.summand_names)
-        return result
-
-    def mask(self, df: pd.DataFrame) -> pa.typing.Series[bool]:
-        # sum_name has to be not set and all summand_names have to be set
-        mask = df[self.sum_name].isna()
-        for summand_name in self.summand_names:
-            mask = mask & ~df[summand_name].isna()
-
-        return mask
-
-    def apply(self, df: pd.DataFrame, mask: pa.typing.Series[bool]):
-        df.loc[mask, self.sum_name] = df[self.summand_names].sum(axis=1)
-
-    def get_description(self) -> str:
-        return ""
 
 
 class MissingSummandRule(Rule):

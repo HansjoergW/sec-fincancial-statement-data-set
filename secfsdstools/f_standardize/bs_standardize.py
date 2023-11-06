@@ -6,83 +6,9 @@ import numpy as np
 import pandas as pd
 import pandera as pa
 
+from secfsdstools.f_standardize.rule_framework import Rule, RuleGroup, RuleEntity
+from secfsdstools.f_standardize.base_rules import CopyTagRule
 
-class RuleEntity(ABC):
-
-    @abstractmethod
-    def get_input_tags(self) -> Set[str]:
-        pass
-
-    def process(self, df: pd.DataFrame, log_df: Optional[pd.DataFrame] = None, id: str = ""):
-        pass
-
-
-class Rule(RuleEntity):
-
-    @abstractmethod
-    def get_target_tag(self) -> str:
-        pass
-
-    @abstractmethod
-    def mask(self, df: pd.DataFrame) -> pa.typing.Series[bool]:
-        pass
-
-    @abstractmethod
-    def apply(self, df: pd.DataFrame, mask: pa.typing.Series[bool]):
-        pass
-
-    def process(self, df: pd.DataFrame, log_df: Optional[pd.DataFrame] = None, id: str = ""):
-        mask = self.mask(df)
-        self.apply(df, mask)
-        if (log_df is not None) and (len(log_df) == len(mask)):
-            log_df[f"{id}_{self.get_target_tag()}"] = False
-            log_df.loc[mask, f"{id}_{self.get_target_tag()}"] = True
-
-
-class RuleGroup(RuleEntity):
-    """
-    todo: to add -> automatische vergabe von Rule ID bezüglich Gruppe
-    ist das noch notwendig?
-    Alle Regeln müssten eigentlich vom selben Typ sein
-    Müsste man also auf den konkreten Rule Typ typisieren.
-    ist das so?
-    """
-
-    def __init__(self, rules: List[RuleEntity], prefix: str):
-        self.rules = rules
-        self.prefix = prefix
-
-    def process(self, df: pd.DataFrame, log_df: Optional[pd.DataFrame] = None, id: str = ""):
-        idx = 1
-        for rule in self.rules:
-            rule.process(df=df, log_df=log_df, id=f"{id}{self.prefix}_{idx}#")
-            idx = idx + 1
-
-    def get_input_tags(self) -> Set[str]:
-        result: Set[str] = set()
-        for rule in self.rules:
-            result.update(rule.get_input_tags())
-        return result
-
-
-class RenameRule(Rule):
-
-    def __init__(self, original: str, target: str):
-        self.original = original
-        self.target = target
-
-    def mask(self, df: pd.DataFrame) -> pa.typing.Series[bool]:
-        return (df[self.target].isna() &
-                ~df[self.original].isna())
-
-    def apply(self, df: pd.DataFrame, mask: pa.typing.Series[bool]):
-        df.loc[mask, self.target] = df[self.original]
-
-    def get_input_tags(self) -> Set[str]:
-        return {self.target, self.original}
-
-    def get_target_tag(self) -> str:
-        return self.target
 
 
 class MissingSumRule(Rule):
@@ -92,8 +18,8 @@ class MissingSumRule(Rule):
         self.sum_name = sum_name
         self.summand_names = summand_names
 
-    def get_target_tag(self) -> str:
-        return self.sum_name
+    def get_target_tags(self) -> List[str]:
+        return [self.sum_name]
 
     def get_input_tags(self) -> Set[str]:
         result = {self.sum_name}
@@ -111,6 +37,8 @@ class MissingSumRule(Rule):
     def apply(self, df: pd.DataFrame, mask: pa.typing.Series[bool]):
         df.loc[mask, self.sum_name] = df[self.summand_names].sum(axis=1)
 
+    def get_description(self) -> str:
+        return ""
 
 class MissingSummandRule(Rule):
 
@@ -119,8 +47,8 @@ class MissingSummandRule(Rule):
         self.missing_summand = missing_summand
         self.existing_summands = existing_summands
 
-    def get_target_tag(self) -> str:
-        return self.missing_summand
+    def get_target_tags(self) -> List[str]:
+        return [self.missing_summand]
 
     def get_input_tags(self) -> Set[str]:
         result = {self.sum_name, self.missing_summand}
@@ -138,6 +66,9 @@ class MissingSummandRule(Rule):
     def apply(self, df: pd.DataFrame, mask: pa.typing.Series[bool]):
         df.loc[mask, self.missing_summand] = \
             df[self.sum_name] - df[self.existing_summands].sum(axis=1)
+
+    def get_description(self) -> str:
+        return ""
 
 
 class SumCompletionRuleGroupCreator:
@@ -165,8 +96,8 @@ class SumUp(Rule):
         self.target = target
         self.potential_summands = potential_summands
 
-    def get_target_tag(self) -> str:
-        return self.target
+    def get_target_tags(self) -> List[str]:
+        return [self.target]
 
     def get_input_tags(self) -> Set[str]:
         result = {self.target}
@@ -183,6 +114,9 @@ class SumUp(Rule):
             summand_mask = mask & ~df[potential_summand].isna()
             df.loc[summand_mask, self.target] = df[self.target] + df[potential_summand]
 
+    def get_description(self) -> str:
+        return ""
+
 
 class SetSumIfOneOnlySummand(Rule):
     """
@@ -195,8 +129,8 @@ class SetSumIfOneOnlySummand(Rule):
         self.summand_set = summand_set
         self.summands_nan = summands_nan
 
-    def get_target_tag(self) -> str:
-        return self.sum_tag
+    def get_target_tags(self) -> List[str]:
+        return [self.sum_tag, *self.summands_nan]
 
     def get_input_tags(self) -> Set[str]:
         result = {self.sum_tag, self.summand_set}
@@ -217,9 +151,11 @@ class SetSumIfOneOnlySummand(Rule):
         for summand_nan in self.summands_nan:
             df.loc[mask, summand_nan] = 0.0
 
+    def get_description(self) -> str:
+        return ""
 
 class CleanUpCopyToFirstSummand(Rule):
-    """ if the target is set and the first summand and the other summands are nan,
+    """ if the sum_tag is set and the first summand and the other summands are nan,
     then copy the target value to the first summand and set the other summands to '0.0' """
 
     def __init__(self, sum_tag: str, first_summand: str, other_summands: List[str]):
@@ -227,8 +163,8 @@ class CleanUpCopyToFirstSummand(Rule):
         self.first_summand = first_summand
         self.other_summands = other_summands
 
-    def get_target_tag(self) -> str:
-        return self.first_summand
+    def get_target_tags(self) -> List[str]:
+        return [self.first_summand, *self.other_summands]
 
     def get_input_tags(self) -> Set[str]:
         result = {self.sum_tag, self.first_summand}
@@ -249,6 +185,8 @@ class CleanUpCopyToFirstSummand(Rule):
         for other_summand in self.other_summands:
             df.loc[mask, other_summand] = 0.0
 
+    def get_description(self) -> str:
+        return ""
 
 class CleanUpSumUpCorrections(Rule):
     """ it happens, that the values for Assets and AssetsNoncurrent
@@ -266,8 +204,8 @@ class CleanUpSumUpCorrections(Rule):
         self.mixed_up_summand = mixed_up_summand
         self.other_summand = other_summand
 
-    def get_target_tag(self) -> str:
-        return self.sum_tag
+    def get_target_tags(self) -> List[str]:
+        return [self.sum_tag, self.mixed_up_summand]
 
     def get_input_tags(self) -> Set[str]:
         return {self.sum_tag, self.mixed_up_summand, self.other_summand}
@@ -281,6 +219,9 @@ class CleanUpSumUpCorrections(Rule):
         df.loc[mask, self.mixed_up_summand] = df[self.sum_tag]
         df.loc[mask, self.sum_tag] = mixed_up_values
 
+
+    def get_description(self) -> str:
+        return ""
 
 class ValidationRule(ABC):
 
@@ -398,8 +339,11 @@ class RuleProcessor:
         self.stats = pd.DataFrame(self.pre_stats)
 
         for i in range(self.iterations):
+            # set ids of the rules in the tree, use the iteration number as prefix
+            self.rule_tree.set_id(parent_prefix=f"{i}_")
+
             # apply the rule_tree
-            self.rule_tree.process(df=pivot_df, log_df=self.log_df, id=f"{i}_")
+            self.rule_tree.process(df=pivot_df, log_df=self.log_df)
 
             self.post_stats = self._calculate_stats(pivot_df=pivot_df)
             self.post_stats.name = f"post_{i}"
@@ -508,13 +452,13 @@ class BalanceSheetStandardizer(RuleProcessor):
     bs_rename_rg = RuleGroup(
         rules=[
             # sometimes, the total Assets is contained in the AssetsNet tag
-            RenameRule(original='AssetsNet', target='Assets'),
+            CopyTagRule(original='AssetsNet', target='Assets'),
             # either there is a StockholderEquity tag or a PartnersCapital tag,
             # but both to never appear together
-            RenameRule(original='PartnersCapital', target='OwnerEquity'),
-            RenameRule(original='StockholdersEquity', target='OwnerEquity'),
-            RenameRule(original='CashAndCashEquivalentsAtCarryingValue', target='Cash'),
-            RenameRule(original='LiabilitiesAndStockholdersEquity', target='LiabilitiesAndOwnerEquity')
+            CopyTagRule(original='PartnersCapital', target='OwnerEquity'),
+            CopyTagRule(original='StockholdersEquity', target='OwnerEquity'),
+            CopyTagRule(original='CashAndCashEquivalentsAtCarryingValue', target='Cash'),
+            CopyTagRule(original='LiabilitiesAndStockholdersEquity', target='LiabilitiesAndOwnerEquity')
 
             # RenameRule(
             #     original='StockholdersEquityIncludingPortionAttributableToNoncontrollingInterest',

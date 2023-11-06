@@ -92,9 +92,9 @@ def assets_check(df: pd.DataFrame):
 
 
 if __name__ == '__main__':
-    #fs_df = get_fs_from_single_report('0001741257-19-000014')
+    fs_df = get_fs_from_single_report('0001741257-19-000014')
 
-    fs_df = get_fs_from_all_bs()
+    #fs_df = get_fs_from_all_bs()
     # check_drop_out_mask(fs_df)
     # check_for_equity_tags(fs_df)
 

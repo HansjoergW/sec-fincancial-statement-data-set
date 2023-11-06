@@ -6,9 +6,8 @@ import numpy as np
 import pandas as pd
 import pandera as pa
 
-from secfsdstools.f_standardize.rule_framework import Rule, RuleGroup, RuleEntity
 from secfsdstools.f_standardize.base_rules import CopyTagRule
-
+from secfsdstools.f_standardize.rule_framework import Rule, RuleGroup, RuleEntity
 
 
 class MissingSumRule(Rule):
@@ -39,6 +38,7 @@ class MissingSumRule(Rule):
 
     def get_description(self) -> str:
         return ""
+
 
 class MissingSummandRule(Rule):
 
@@ -154,6 +154,7 @@ class SetSumIfOneOnlySummand(Rule):
     def get_description(self) -> str:
         return ""
 
+
 class CleanUpCopyToFirstSummand(Rule):
     """ if the sum_tag is set and the first summand and the other summands are nan,
     then copy the target value to the first summand and set the other summands to '0.0' """
@@ -188,6 +189,7 @@ class CleanUpCopyToFirstSummand(Rule):
     def get_description(self) -> str:
         return ""
 
+
 class CleanUpSumUpCorrections(Rule):
     """ it happens, that the values for Assets and AssetsNoncurrent
     where mixed  up. example: 0001692981-19-000022
@@ -219,9 +221,9 @@ class CleanUpSumUpCorrections(Rule):
         df.loc[mask, self.mixed_up_summand] = df[self.sum_tag]
         df.loc[mask, self.sum_tag] = mixed_up_values
 
-
     def get_description(self) -> str:
         return ""
+
 
 class ValidationRule(ABC):
 
@@ -370,7 +372,7 @@ class RuleProcessor:
         pivot_df = pivot_df[self.final_col_order].copy()
 
         # apply validation rules
-        for  validation_rule in self.validation_rules:
+        for validation_rule in self.validation_rules:
             validation_rule.validate(pivot_df)
 
         # caculate log_df summaries
@@ -378,7 +380,6 @@ class RuleProcessor:
             # filter for rule columns but making sure the order stays the same
             rule_columns = [x for x in self.log_df.columns if x not in pivot_df_index_cols]
             self.applied_rules_sum_df = self.log_df[rule_columns].sum()
-
 
         return pivot_df
 
@@ -458,7 +459,8 @@ class BalanceSheetStandardizer(RuleProcessor):
             CopyTagRule(original='PartnersCapital', target='OwnerEquity'),
             CopyTagRule(original='StockholdersEquity', target='OwnerEquity'),
             CopyTagRule(original='CashAndCashEquivalentsAtCarryingValue', target='Cash'),
-            CopyTagRule(original='LiabilitiesAndStockholdersEquity', target='LiabilitiesAndOwnerEquity')
+            CopyTagRule(original='LiabilitiesAndStockholdersEquity',
+                        target='LiabilitiesAndOwnerEquity')
 
             # RenameRule(
             #     original='StockholdersEquityIncludingPortionAttributableToNoncontrollingInterest',

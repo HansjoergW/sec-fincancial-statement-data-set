@@ -6,42 +6,9 @@ import numpy as np
 import pandas as pd
 import pandera as pa
 
-from secfsdstools.f_standardize.base_rules import CopyTagRule
+from secfsdstools.f_standardize.base_rules import CopyTagRule, MissingSumRule, MissingSummandRule
 from secfsdstools.f_standardize.rule_framework import Rule, RuleGroup, RuleEntity
 
-
-
-
-
-class MissingSummandRule(Rule):
-
-    def __init__(self, sum_name: str, missing_summand: str, existing_summands: List[str]):
-        self.sum_name = sum_name
-        self.missing_summand = missing_summand
-        self.existing_summands = existing_summands
-
-    def get_target_tags(self) -> List[str]:
-        return [self.missing_summand]
-
-    def get_input_tags(self) -> Set[str]:
-        result = {self.sum_name, self.missing_summand}
-        result.update(self.existing_summands)
-        return result
-
-    def mask(self, df: pd.DataFrame) -> pa.typing.Series[bool]:
-        # sum and other_summands must be set, missing_summand must not be set
-        mask = ~df[self.sum_name].isna()
-        for summand_name in self.existing_summands:
-            mask = mask & ~df[summand_name].isna()
-        mask = mask & df[self.missing_summand].isna()
-        return mask
-
-    def apply(self, df: pd.DataFrame, mask: pa.typing.Series[bool]):
-        df.loc[mask, self.missing_summand] = \
-            df[self.sum_name] - df[self.existing_summands].sum(axis=1)
-
-    def get_description(self) -> str:
-        return ""
 
 
 class SumCompletionRuleGroupCreator:

@@ -6,9 +6,9 @@ import numpy as np
 import pandas as pd
 import pandera as pa
 
-from secfsdstools.f_standardize.base_rules import CopyTagRule, MissingSumRule, MissingSummandRule
+from secfsdstools.f_standardize.base_rules import CopyTagRule, MissingSumRule, MissingSummandRule, \
+    SumUpRule, SetSumIfOnlyOneSummand
 from secfsdstools.f_standardize.rule_framework import Rule, RuleGroup, RuleEntity
-
 
 
 class SumCompletionRuleGroupCreator:
@@ -19,80 +19,18 @@ class SumCompletionRuleGroupCreator:
 
     @staticmethod
     def create_group(sum_tag: str, summand_tags: List[str], prefix: str) -> RuleGroup:
-        rules: List[RuleEntity] = [MissingSumRule(sum_name=sum_tag,
-                                                  summand_names=summand_tags)]
+        rules: List[RuleEntity] = [MissingSumRule(sum_tag=sum_tag,
+                                                  summand_tags=summand_tags)]
         for summand in summand_tags:
             others = summand_tags.copy()
             others.remove(summand)
-            rules.append(MissingSummandRule(sum_name=sum_tag, missing_summand=summand,
-                                            existing_summands=others))
+            rules.append(MissingSummandRule(sum_tag=sum_tag,
+                                            missing_summand_tag=summand,
+                                            existing_summands_tags=others))
         return RuleGroup(rules=rules, prefix=prefix)
 
 
-class SumUp(Rule):
-    """Sums app the available Summands to a new target column"""
-
-    def __init__(self, target: str, potential_summands: List[str]):
-        self.target = target
-        self.potential_summands = potential_summands
-
-    def get_target_tags(self) -> List[str]:
-        return [self.target]
-
-    def get_input_tags(self) -> Set[str]:
-        result = {self.target}
-        result.update(self.potential_summands)
-        return result
-
-    def mask(self, df: pd.DataFrame) -> pa.typing.Series[bool]:
-        # if the target was not set..
-        return df[self.target].isna()
-
-    def apply(self, df: pd.DataFrame, mask: pa.typing.Series[bool]):
-        df.loc[mask, self.target] = 0.0  # initialize
-        for potential_summand in self.potential_summands:
-            summand_mask = mask & ~df[potential_summand].isna()
-            df.loc[summand_mask, self.target] = df[self.target] + df[potential_summand]
-
-    def get_description(self) -> str:
-        return ""
-
-
-class SetSumIfOneOnlySummand(Rule):
-    """
-    If the sumt_tag is nan and only one summand has a value, then the
-    target gets the copy of the Value and the other summands are set to zero.
-    """
-
-    def __init__(self, sum_tag: str, summand_set: str, summands_nan: List[str]):
-        self.sum_tag = sum_tag
-        self.summand_set = summand_set
-        self.summands_nan = summands_nan
-
-    def get_target_tags(self) -> List[str]:
-        return [self.sum_tag, *self.summands_nan]
-
-    def get_input_tags(self) -> Set[str]:
-        result = {self.sum_tag, self.summand_set}
-        result.update(self.summands_nan)
-        return result
-
-    def mask(self, df: pd.DataFrame) -> pa.typing.Series[bool]:
-        # if the target was not set..
-
-        mask = df[self.sum_tag].isna() & ~df[self.summand_set].isna()
-        for summand_nan in self.summands_nan:
-            mask = mask & df[summand_nan].isna()
-
-        return mask
-
-    def apply(self, df: pd.DataFrame, mask: pa.typing.Series[bool]):
-        df.loc[mask, self.sum_tag] = df[self.summand_set]  # initialize
-        for summand_nan in self.summands_nan:
-            df.loc[mask, summand_nan] = 0.0
-
-    def get_description(self) -> str:
-        return ""
+# SetSumIfOnlyOneSummandGroupCreator todo
 
 
 class CleanUpCopyToFirstSummand(Rule):
@@ -413,7 +351,7 @@ class BalanceSheetStandardizer(RuleProcessor):
 
     # todo: CashOther wird noch nirgends verwendet
     bs_sumup_rg = RuleGroup(
-        rules=[SumUp(
+        rules=[SumUpRule(
             target='CashOther',
             potential_summands=[
                 'CashAndCashEquivalentsAtFairValue',
@@ -432,12 +370,12 @@ class BalanceSheetStandardizer(RuleProcessor):
                 summand_tags=['AssetsCurrent', 'AssetsNoncurrent'],
                 prefix="Ass"
             ),
-            SetSumIfOneOnlySummand(
+            SetSumIfOnlyOneSummand(
                 sum_tag='Assets',
                 summand_set='AssetsCurrent',
                 summands_nan=['AssetsNoncurrent']
             ),
-            SetSumIfOneOnlySummand(
+            SetSumIfOnlyOneSummand(
                 sum_tag='Assets',
                 summand_set='AssetsNoncurrent',
                 summands_nan=['AssetsCurrent']
@@ -447,12 +385,12 @@ class BalanceSheetStandardizer(RuleProcessor):
                 summand_tags=['LiabilitiesCurrent', 'LiabilitiesNoncurrent'],
                 prefix="Lia"
             ),
-            SetSumIfOneOnlySummand(
+            SetSumIfOnlyOneSummand(
                 sum_tag='Liabilities',
                 summand_set='LiabilitiesCurrent',
                 summands_nan=['LiabilitiesNoncurrent']
             ),
-            SetSumIfOneOnlySummand(
+            SetSumIfOnlyOneSummand(
                 sum_tag='Liabilities',
                 summand_set='LiabilitiesNoncurrent',
                 summands_nan=['LiabilitiesCurrent']

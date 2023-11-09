@@ -1,7 +1,8 @@
 import numpy as np
 import pandas as pd
 
-from secfsdstools.f_standardize.base_rules import CopyTagRule, MissingSumRule, MissingSummandRule
+from secfsdstools.f_standardize.base_rules import CopyTagRule, MissingSumRule, MissingSummandRule, \
+    SumUpRule, SetSumIfOnlyOneSummand
 
 
 def test_rename_rule():
@@ -31,7 +32,7 @@ def test_rename_rule():
     assert df.target.tolist()[4] == 5.0
     assert np.isnan(df.target.tolist()[5])
 
-    # check the log column, in order to test if the rule was applied to the right columns
+    # check the log column, in order to test if the rule was applied to the right rows
     assert log_df.R_target.tolist() == [False, True, True, True, True, False]
 
 
@@ -66,7 +67,7 @@ def test_missingsum_rule():
     assert np.isnan(df.sumtag.tolist()[4])
     assert np.isnan(df.sumtag.tolist()[5])
 
-    # check the log column, in order to test if the rule was applied to the right columns
+    # check the log column, in order to test if the rule was applied to the right rows
     assert log_df.R_sumtag.tolist() == [False, True, True, False, False, False]
 
 
@@ -107,6 +108,55 @@ def test_missingsummand_rule():
     assert np.isnan(df.missingsummand.tolist()[6])
     assert np.isnan(df.missingsummand.tolist()[7])
 
-    # check the log column, in order to test if the rule was applied to the right columns
+    # check the log column, in order to test if the rule was applied to the right rows
     assert log_df.R_missingsummand.tolist() == \
            [False, True, True, True, True, False, False, False]
+
+
+def test_sumup_rule():
+    rule = SumUpRule(sum_tag='sumtag',
+                     potential_summands=['summand1', 'summand2'])
+
+    rule.set_id("R")
+
+    assert rule.get_input_tags() == {'sumtag', 'summand1', 'summand2'}
+    assert rule.get_target_tags() == ['sumtag']
+    assert rule.id == 'R_sumtag'
+
+    # col1: sumtag, cal2: summand1, col3: summand2
+    data = [[11, 1, 10],
+            [np.nan, 2, np.nan],
+            [np.nan, np.nan, 30],
+            [np.nan, np.nan, np.nan],
+            [99, np.nan, np.nan]]
+
+    df = pd.DataFrame(data, columns=['sumtag', 'summand1', 'summand2'])
+
+    log_df = df.copy()
+    rule.process(df=df, log_df=log_df)
+
+    # check the values of the target column
+    assert df.sumtag.tolist()[0] == 11.0
+    assert df.sumtag.tolist()[1] == 2.0
+    assert df.sumtag.tolist()[2] == 30.0
+    assert df.sumtag.tolist()[3] == 0.0
+    assert df.sumtag.tolist()[4] == 99.0
+
+    # check the log column, in order to test if the rule was applied to the right rows
+    assert log_df.R_sumtag.tolist() == [False, True, True, True, False]
+
+
+def test_setsumifonlyonesummand():
+    rule = SetSumIfOnlyOneSummand(sum_tag='sumtag',
+                                  summand_set='summandset',
+                                  summands_nan=['summandnan1', 'summandnan2'])
+
+    rule.set_id("R")
+
+    assert rule.get_input_tags() == {'sumtag', 'summandset', 'summandnan1', 'summandnan2'}
+    assert rule.get_target_tags() == ['sumtag', 'summandnan1', 'summandnan2']
+    assert rule.id == 'R_sumtag/summandnan1/summandnan2'
+
+    print(rule.get_description())
+
+    ... continue

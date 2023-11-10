@@ -6,101 +6,10 @@ import numpy as np
 import pandas as pd
 import pandera as pa
 
-from secfsdstools.f_standardize.base_rules import CopyTagRule, MissingSumRule, MissingSummandRule, \
-    SumUpRule, SetSumIfOnlyOneSummand
-from secfsdstools.f_standardize.rule_framework import Rule, RuleGroup, RuleEntity
+from secfsdstools.f_standardize.base_rules import CopyTagRule, SumUpRule, SetSumIfOnlyOneSummand, \
+    PostCopyToFirstSummand, PreSumUpCorrection, missingsumparts_rules_creator
 
-
-class SumCompletionRuleGroupCreator:
-    """
-    completes the missing value of a simple addition, if one is missing.
-    E.G Assets = AssetsCurrent + AssetsNoneCurrent
-    """
-
-    @staticmethod
-    def create_group(sum_tag: str, summand_tags: List[str], prefix: str) -> RuleGroup:
-        rules: List[RuleEntity] = [MissingSumRule(sum_tag=sum_tag,
-                                                  summand_tags=summand_tags)]
-        for summand in summand_tags:
-            others = summand_tags.copy()
-            others.remove(summand)
-            rules.append(MissingSummandRule(sum_tag=sum_tag,
-                                            missing_summand_tag=summand,
-                                            existing_summands_tags=others))
-        return RuleGroup(rules=rules, prefix=prefix)
-
-
-# SetSumIfOnlyOneSummandGroupCreator todo
-
-
-class CleanUpCopyToFirstSummand(Rule):
-    """ if the sum_tag is set and the first summand and the other summands are nan,
-    then copy the target value to the first summand and set the other summands to '0.0' """
-
-    def __init__(self, sum_tag: str, first_summand: str, other_summands: List[str]):
-        self.sum_tag = sum_tag
-        self.first_summand = first_summand
-        self.other_summands = other_summands
-
-    def get_target_tags(self) -> List[str]:
-        return [self.first_summand, *self.other_summands]
-
-    def get_input_tags(self) -> Set[str]:
-        result = {self.sum_tag, self.first_summand}
-        result.update(self.other_summands)
-        return result
-
-    def mask(self, df: pd.DataFrame) -> pa.typing.Series[bool]:
-        # if the sum_tag was not set..
-
-        mask = ~df[self.sum_tag].isna() & df[self.first_summand].isna()
-        for other_summand in self.other_summands:
-            mask = mask & df[other_summand].isna()
-
-        return mask
-
-    def apply(self, df: pd.DataFrame, mask: pa.typing.Series[bool]):
-        df.loc[mask, self.first_summand] = df[self.sum_tag]  # initialize
-        for other_summand in self.other_summands:
-            df.loc[mask, other_summand] = 0.0
-
-    def get_description(self) -> str:
-        return ""
-
-
-class CleanUpSumUpCorrections(Rule):
-    """ it happens, that the values for Assets and AssetsNoncurrent
-    where mixed  up. example: 0001692981-19-000022
-    So instead of Assets = AssetsCurrent + AssetsNoncurrent
-    it matches AssetsNoncurrent = Assets + AssetsCurrent.
-
-    so the first parameter is the sum_tag, e.g. Assets
-    the mixed_up_summand is the name of the summand that was mixed with the sum_tag
-    the other_summand is the summand with the correct value, e.g. AssetsCurrent
-    """
-
-    def __init__(self, sum_tag: str, mixed_up_summand: str, other_summand: str):
-        self.sum_tag = sum_tag
-        self.mixed_up_summand = mixed_up_summand
-        self.other_summand = other_summand
-
-    def get_target_tags(self) -> List[str]:
-        return [self.sum_tag, self.mixed_up_summand]
-
-    def get_input_tags(self) -> Set[str]:
-        return {self.sum_tag, self.mixed_up_summand, self.other_summand}
-
-    def mask(self, df: pd.DataFrame) -> pa.typing.Series[bool]:
-        return (df[self.mixed_up_summand] == df[self.sum_tag] + df[self.other_summand]) \
-               & (df[self.other_summand] > 0)
-
-    def apply(self, df: pd.DataFrame, mask: pa.typing.Series[bool]):
-        mixed_up_values = df[self.mixed_up_summand].copy()
-        df.loc[mask, self.mixed_up_summand] = df[self.sum_tag]
-        df.loc[mask, self.sum_tag] = mixed_up_values
-
-    def get_description(self) -> str:
-        return ""
+from secfsdstools.f_standardize.rule_framework import RuleGroup
 
 
 class ValidationRule(ABC):
@@ -352,7 +261,7 @@ class BalanceSheetStandardizer(RuleProcessor):
     # todo: CashOther wird noch nirgends verwendet
     bs_sumup_rg = RuleGroup(
         rules=[SumUpRule(
-            target='CashOther',
+            sum_tag='CashOther',
             potential_summands=[
                 'CashAndCashEquivalentsAtFairValue',
                 'CashAndDueFromBanks',
@@ -365,10 +274,9 @@ class BalanceSheetStandardizer(RuleProcessor):
     bs_sum_completion = RuleGroup(
         prefix="SC",
         rules=[
-            SumCompletionRuleGroupCreator.create_group(
+            *missingsumparts_rules_creator(
                 sum_tag='Assets',
-                summand_tags=['AssetsCurrent', 'AssetsNoncurrent'],
-                prefix="Ass"
+                summand_tags=['AssetsCurrent', 'AssetsNoncurrent']
             ),
             SetSumIfOnlyOneSummand(
                 sum_tag='Assets',
@@ -380,10 +288,9 @@ class BalanceSheetStandardizer(RuleProcessor):
                 summand_set='AssetsNoncurrent',
                 summands_nan=['AssetsCurrent']
             ),
-            SumCompletionRuleGroupCreator.create_group(
+            *missingsumparts_rules_creator(
                 sum_tag='Liabilities',
-                summand_tags=['LiabilitiesCurrent', 'LiabilitiesNoncurrent'],
-                prefix="Lia"
+                summand_tags=['LiabilitiesCurrent', 'LiabilitiesNoncurrent']
             ),
             SetSumIfOnlyOneSummand(
                 sum_tag='Liabilities',
@@ -395,15 +302,13 @@ class BalanceSheetStandardizer(RuleProcessor):
                 summand_set='LiabilitiesNoncurrent',
                 summands_nan=['LiabilitiesCurrent']
             ),
-            SumCompletionRuleGroupCreator.create_group(
+            *missingsumparts_rules_creator(
                 sum_tag='AssLiaOwe',
-                summand_tags=['Liabilities', 'OwnerEquity'],
-                prefix="Ass2"
+                summand_tags=['Liabilities', 'OwnerEquity']
             ),
-            SumCompletionRuleGroupCreator.create_group(
+            *missingsumparts_rules_creator(
                 sum_tag='LiabilitiesAndOwnerEquity',
-                summand_tags=['Liabilities', 'OwnerEquity'],
-                prefix="LiaOwnEq"
+                summand_tags=['Liabilities', 'OwnerEquity']
             )
         ])
 
@@ -414,23 +319,25 @@ class BalanceSheetStandardizer(RuleProcessor):
                               bs_sum_completion,
                           ])
 
-    cleanup_rule_tree = RuleGroup(prefix="BS_CL_",
+    cleanup_rule_tree = RuleGroup(prefix="BS_POST",
                                   rules=[
-                                      CleanUpCopyToFirstSummand(sum_tag='Assets',
-                                                                first_summand='AssetsCurrent',
-                                                                other_summands=[
-                                                                    'AssetsNoncurrent']),
-                                      CleanUpCopyToFirstSummand(sum_tag='Liabilities',
-                                                                first_summand='LiabilitiesCurrent',
-                                                                other_summands=[
-                                                                    'LiabilitiesNoncurrent']),
-                                      CleanUpSumUpCorrections(sum_tag='Assets',
-                                                              mixed_up_summand='AssetsNoncurrent',
-                                                              other_summand='AssetsCurrent'),
-                                      CleanUpSumUpCorrections(sum_tag='Assets',
-                                                              mixed_up_summand='AssetsCurrent',
-                                                              other_summand='AssetsNoncurrent'),
-                                  ])
+                                      PostCopyToFirstSummand(sum_tag='Assets',
+                                                             first_summand='AssetsCurrent',
+                                                             other_summands=[
+                                                                 'AssetsNoncurrent']),
+                                      PostCopyToFirstSummand(sum_tag='Liabilities',
+                                                             first_summand='LiabilitiesCurrent',
+                                                             other_summands=[
+                                                                 'LiabilitiesNoncurrent'])])
+    proprocess_rule_tree = RuleGroup(prefix="BS_PRE",
+                                     rules=[
+                                         PreSumUpCorrection(sum_tag='Assets',
+                                                            mixed_up_summand='AssetsNoncurrent',
+                                                            other_summand='AssetsCurrent'),
+                                         PreSumUpCorrection(sum_tag='Assets',
+                                                            mixed_up_summand='AssetsCurrent',
+                                                            other_summand='AssetsNoncurrent'),
+                                     ])
 
     validation_rules: List[ValidationRule] = [
         SumValidationRule(id='AssetsCheck',

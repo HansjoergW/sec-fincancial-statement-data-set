@@ -2,7 +2,57 @@ import numpy as np
 import pandas as pd
 
 from secfsdstools.f_standardize.base_rules import CopyTagRule, MissingSumRule, MissingSummandRule, \
-    SumUpRule, SetSumIfOnlyOneSummand
+    SumUpRule, SetSumIfOnlyOneSummand, PostCopyToFirstSummand, PreSumUpCorrection, \
+    missingsumparts_rules_creator, setsumifonlyonesummand_rules_creator
+
+
+def test_missingsumparts_rules_creator():
+    rules = missingsumparts_rules_creator(sum_tag='sumtag', summand_tags=['summand1', 'summand2'])
+
+    assert len(rules) == 3
+    assert isinstance(rules[0], MissingSumRule)
+    assert isinstance(rules[1], MissingSummandRule)
+    assert isinstance(rules[2], MissingSummandRule)
+
+
+def test_setsumifonlyonesummand_rules_creator():
+    rules = setsumifonlyonesummand_rules_creator(sum_tag='sum_tag',
+                                                 summand_tags=['summand1', 'summand2'])
+
+    assert len(rules) == 2
+    assert isinstance(rules[0], SetSumIfOnlyOneSummand)
+    assert isinstance(rules[1], SetSumIfOnlyOneSummand)
+
+
+
+
+def test_presumupcolrrection_rule():
+    rule = PreSumUpCorrection(sum_tag='sumtag', mixed_up_summand='mixedup',
+                              other_summand='other')
+
+    rule.set_id("R")
+
+    assert rule.get_input_tags() == {'sumtag', 'mixedup', 'other'}
+    assert rule.get_target_tags() == ['sumtag', 'mixedup']
+    assert rule.id == 'R_sumtag/mixedup'
+
+    # col1: sumtag, cal2: mixedup, col3: other
+    data = [[1, 11, 10],
+            [22, 2, 20],
+            [33, 33, 0.0],
+            [44, 44, np.nan],
+            [np.nan, np.nan, np.nan]]
+
+    df = pd.DataFrame(data, columns=['sumtag', 'mixedup', 'other'])
+
+    log_df = df.copy()
+    rule.process(df=df, log_df=log_df)
+
+    # check the log column, in order to test if the rule was applied to the right rows
+    assert log_df[rule.id].tolist() == [True, False, False, False, False]
+    assert df.sumtag.tolist()[0] == 11
+    assert df.mixedup.tolist()[0] == 1
+    assert df.other.tolist()[0] == 10
 
 
 def test_rename_rule():
@@ -157,6 +207,72 @@ def test_setsumifonlyonesummand():
     assert rule.get_target_tags() == ['sumtag', 'summandnan1', 'summandnan2']
     assert rule.id == 'R_sumtag/summandnan1/summandnan2'
 
-    print(rule.get_description())
+    # cal1: sumtag, col2: summandset, col3: summandnan1, col4: summandnan2
+    data = [[12, 1, np.nan, np.nan],
+            [np.nan, 1, np.nan, np.nan],
+            [np.nan, 1, 3, np.nan],
+            [np.nan, 1, np.nan, 4],
+            [np.nan, np.nan, np.nan, np.nan],
+            [13, np.nan, np.nan],
+            ]
 
-    ... continue
+    df = pd.DataFrame(data, columns=['sumtag', 'summandset', 'summandnan1', 'summandnan2'])
+
+    log_df = df.copy()
+    rule.process(df=df, log_df=log_df)
+
+    assert df.sumtag.tolist()[0] == 12.0
+    assert df.sumtag.tolist()[1] == 1.0
+    assert np.isnan(df.sumtag.tolist()[2])
+    assert np.isnan(df.sumtag.tolist()[3])
+    assert np.isnan(df.sumtag.tolist()[4])
+    assert df.sumtag.tolist()[5] == 13.0
+
+    assert df.summandnan1.tolist()[1] == 0.0
+    assert df.summandnan2.tolist()[1] == 0.0
+
+    assert log_df['R_sumtag/summandnan1/summandnan2'].tolist() == [False, True, False, False, False,
+                                                                   False]
+
+
+def test_postupcopytofirstsummandrule():
+    rule = PostCopyToFirstSummand(sum_tag="sumtag", first_summand="firstsummand",
+                                  other_summands=['othersummand1', 'othersummand2'])
+
+    rule.set_id("R")
+
+    assert rule.get_input_tags() == {'sumtag', 'firstsummand', 'othersummand1', 'othersummand2'}
+    assert rule.get_target_tags() == ['firstsummand', 'othersummand1', 'othersummand2']
+    assert rule.id == 'R_firstsummand/othersummand1/othersummand2'
+
+    # cal1: sumtag, col2: firstsummand, col3: othersummand1, col4: othersummand2
+    data = [
+        [np.nan, np.nan, np.nan, np.nan],
+        [12, np.nan, np.nan, np.nan],
+        [12, 1, np.nan, np.nan],
+        [12, np.nan, 2, np.nan],
+        [12, np.nan, np.nan, 3],
+        [np.nan, 1, np.nan, 4]
+    ]
+
+    df = pd.DataFrame(data, columns=['sumtag', 'firstsummand', 'othersummand1', 'othersummand2'])
+
+    log_df = df.copy()
+    rule.process(df=df, log_df=log_df)
+
+    assert df.firstsummand.isna().tolist() == [True, False, False, True, True, False]
+    assert df.firstsummand.tolist()[1] == 12
+    assert df.firstsummand.tolist()[2] == 1
+    assert df.firstsummand.tolist()[5] == 1
+
+    assert df.othersummand1.isna().tolist() == [True, False, True, False, True, True]
+    assert df.othersummand1.tolist()[1] == 0.0
+    assert df.othersummand1.tolist()[3] == 2.0
+
+    assert df.othersummand2.isna().tolist() == [True, False, True, True, False, False]
+    assert df.othersummand2.tolist()[1] == 0.0
+    assert df.othersummand2.tolist()[4] == 3.0
+    assert df.othersummand2.tolist()[5] == 4.0
+
+    assert log_df['R_firstsummand/othersummand1/othersummand2'].tolist() == \
+           [False, True, False, False, False, False]

@@ -34,223 +34,10 @@ import numpy as np
 import pandas as pd
 import pandera as pa
 
-from secfsdstools.f_standardize.base_rules import CopyTagRule
-from secfsdstools.f_standardize.rule_framework import Rule, RuleGroup, RuleEntity
+from secfsdstools.f_standardize.base_rules import CopyTagRule, SumUpRule, SetSumIfOnlyOneSummand, \
+    PostCopyToFirstSummand, PreSumUpCorrection, missingsumparts_rules_creator
 
-
-class MissingSumRule(Rule):
-    &#34;&#34;&#34; creates the sum in the sum_name column if all summand_names columnes have a value&#34;&#34;&#34;
-
-    def __init__(self, sum_name: str, summand_names: List[str]):
-        self.sum_name = sum_name
-        self.summand_names = summand_names
-
-    def get_target_tags(self) -&gt; List[str]:
-        return [self.sum_name]
-
-    def get_input_tags(self) -&gt; Set[str]:
-        result = {self.sum_name}
-        result.update(self.summand_names)
-        return result
-
-    def mask(self, df: pd.DataFrame) -&gt; pa.typing.Series[bool]:
-        # sum_name has to be not set and all summand_names have to be set
-        mask = df[self.sum_name].isna()
-        for summand_name in self.summand_names:
-            mask = mask &amp; ~df[summand_name].isna()
-
-        return mask
-
-    def apply(self, df: pd.DataFrame, mask: pa.typing.Series[bool]):
-        df.loc[mask, self.sum_name] = df[self.summand_names].sum(axis=1)
-
-    def get_description(self) -&gt; str:
-        return &#34;&#34;
-
-
-class MissingSummandRule(Rule):
-
-    def __init__(self, sum_name: str, missing_summand: str, existing_summands: List[str]):
-        self.sum_name = sum_name
-        self.missing_summand = missing_summand
-        self.existing_summands = existing_summands
-
-    def get_target_tags(self) -&gt; List[str]:
-        return [self.missing_summand]
-
-    def get_input_tags(self) -&gt; Set[str]:
-        result = {self.sum_name, self.missing_summand}
-        result.update(self.existing_summands)
-        return result
-
-    def mask(self, df: pd.DataFrame) -&gt; pa.typing.Series[bool]:
-        # sum and other_summands must be set, missing_summand must not be set
-        mask = ~df[self.sum_name].isna()
-        for summand_name in self.existing_summands:
-            mask = mask &amp; ~df[summand_name].isna()
-        mask = mask &amp; df[self.missing_summand].isna()
-        return mask
-
-    def apply(self, df: pd.DataFrame, mask: pa.typing.Series[bool]):
-        df.loc[mask, self.missing_summand] = \
-            df[self.sum_name] - df[self.existing_summands].sum(axis=1)
-
-    def get_description(self) -&gt; str:
-        return &#34;&#34;
-
-
-class SumCompletionRuleGroupCreator:
-    &#34;&#34;&#34;
-    completes the missing value of a simple addition, if one is missing.
-    E.G Assets = AssetsCurrent + AssetsNoneCurrent
-    &#34;&#34;&#34;
-
-    @staticmethod
-    def create_group(sum_tag: str, summand_tags: List[str], prefix: str) -&gt; RuleGroup:
-        rules: List[RuleEntity] = [MissingSumRule(sum_name=sum_tag,
-                                                  summand_names=summand_tags)]
-        for summand in summand_tags:
-            others = summand_tags.copy()
-            others.remove(summand)
-            rules.append(MissingSummandRule(sum_name=sum_tag, missing_summand=summand,
-                                            existing_summands=others))
-        return RuleGroup(rules=rules, prefix=prefix)
-
-
-class SumUp(Rule):
-    &#34;&#34;&#34;Sums app the available Summands to a new target column&#34;&#34;&#34;
-
-    def __init__(self, target: str, potential_summands: List[str]):
-        self.target = target
-        self.potential_summands = potential_summands
-
-    def get_target_tags(self) -&gt; List[str]:
-        return [self.target]
-
-    def get_input_tags(self) -&gt; Set[str]:
-        result = {self.target}
-        result.update(self.potential_summands)
-        return result
-
-    def mask(self, df: pd.DataFrame) -&gt; pa.typing.Series[bool]:
-        # if the target was not set..
-        return df[self.target].isna()
-
-    def apply(self, df: pd.DataFrame, mask: pa.typing.Series[bool]):
-        df.loc[mask, self.target] = 0.0  # initialize
-        for potential_summand in self.potential_summands:
-            summand_mask = mask &amp; ~df[potential_summand].isna()
-            df.loc[summand_mask, self.target] = df[self.target] + df[potential_summand]
-
-    def get_description(self) -&gt; str:
-        return &#34;&#34;
-
-
-class SetSumIfOneOnlySummand(Rule):
-    &#34;&#34;&#34;
-    If the sumt_tag is nan and only one summand has a value, then the
-    target gets the copy of the Value and the other summands are set to zero.
-    &#34;&#34;&#34;
-
-    def __init__(self, sum_tag: str, summand_set: str, summands_nan: List[str]):
-        self.sum_tag = sum_tag
-        self.summand_set = summand_set
-        self.summands_nan = summands_nan
-
-    def get_target_tags(self) -&gt; List[str]:
-        return [self.sum_tag, *self.summands_nan]
-
-    def get_input_tags(self) -&gt; Set[str]:
-        result = {self.sum_tag, self.summand_set}
-        result.update(self.summands_nan)
-        return result
-
-    def mask(self, df: pd.DataFrame) -&gt; pa.typing.Series[bool]:
-        # if the target was not set..
-
-        mask = df[self.sum_tag].isna() &amp; ~df[self.summand_set].isna()
-        for summand_nan in self.summands_nan:
-            mask = mask &amp; df[summand_nan].isna()
-
-        return mask
-
-    def apply(self, df: pd.DataFrame, mask: pa.typing.Series[bool]):
-        df.loc[mask, self.sum_tag] = df[self.summand_set]  # initialize
-        for summand_nan in self.summands_nan:
-            df.loc[mask, summand_nan] = 0.0
-
-    def get_description(self) -&gt; str:
-        return &#34;&#34;
-
-
-class CleanUpCopyToFirstSummand(Rule):
-    &#34;&#34;&#34; if the sum_tag is set and the first summand and the other summands are nan,
-    then copy the target value to the first summand and set the other summands to &#39;0.0&#39; &#34;&#34;&#34;
-
-    def __init__(self, sum_tag: str, first_summand: str, other_summands: List[str]):
-        self.sum_tag = sum_tag
-        self.first_summand = first_summand
-        self.other_summands = other_summands
-
-    def get_target_tags(self) -&gt; List[str]:
-        return [self.first_summand, *self.other_summands]
-
-    def get_input_tags(self) -&gt; Set[str]:
-        result = {self.sum_tag, self.first_summand}
-        result.update(self.other_summands)
-        return result
-
-    def mask(self, df: pd.DataFrame) -&gt; pa.typing.Series[bool]:
-        # if the sum_tag was not set..
-
-        mask = ~df[self.sum_tag].isna() &amp; df[self.first_summand].isna()
-        for other_summand in self.other_summands:
-            mask = mask &amp; df[other_summand].isna()
-
-        return mask
-
-    def apply(self, df: pd.DataFrame, mask: pa.typing.Series[bool]):
-        df.loc[mask, self.first_summand] = df[self.sum_tag]  # initialize
-        for other_summand in self.other_summands:
-            df.loc[mask, other_summand] = 0.0
-
-    def get_description(self) -&gt; str:
-        return &#34;&#34;
-
-
-class CleanUpSumUpCorrections(Rule):
-    &#34;&#34;&#34; it happens, that the values for Assets and AssetsNoncurrent
-    where mixed  up. example: 0001692981-19-000022
-    So instead of Assets = AssetsCurrent + AssetsNoncurrent
-    it matches AssetsNoncurrent = Assets + AssetsCurrent.
-
-    so the first parameter is the sum_tag, e.g. Assets
-    the mixed_up_summand is the name of the summand that was mixed with the sum_tag
-    the other_summand is the summand with the correct value, e.g. AssetsCurrent
-    &#34;&#34;&#34;
-
-    def __init__(self, sum_tag: str, mixed_up_summand: str, other_summand: str):
-        self.sum_tag = sum_tag
-        self.mixed_up_summand = mixed_up_summand
-        self.other_summand = other_summand
-
-    def get_target_tags(self) -&gt; List[str]:
-        return [self.sum_tag, self.mixed_up_summand]
-
-    def get_input_tags(self) -&gt; Set[str]:
-        return {self.sum_tag, self.mixed_up_summand, self.other_summand}
-
-    def mask(self, df: pd.DataFrame) -&gt; pa.typing.Series[bool]:
-        return (df[self.mixed_up_summand] == df[self.sum_tag] + df[self.other_summand]) \
-               &amp; (df[self.other_summand] &gt; 0)
-
-    def apply(self, df: pd.DataFrame, mask: pa.typing.Series[bool]):
-        mixed_up_values = df[self.mixed_up_summand].copy()
-        df.loc[mask, self.mixed_up_summand] = df[self.sum_tag]
-        df.loc[mask, self.sum_tag] = mixed_up_values
-
-    def get_description(self) -&gt; str:
-        return &#34;&#34;
+from secfsdstools.f_standardize.rule_framework import RuleGroup
 
 
 class ValidationRule(ABC):
@@ -501,8 +288,8 @@ class BalanceSheetStandardizer(RuleProcessor):
 
     # todo: CashOther wird noch nirgends verwendet
     bs_sumup_rg = RuleGroup(
-        rules=[SumUp(
-            target=&#39;CashOther&#39;,
+        rules=[SumUpRule(
+            sum_tag=&#39;CashOther&#39;,
             potential_summands=[
                 &#39;CashAndCashEquivalentsAtFairValue&#39;,
                 &#39;CashAndDueFromBanks&#39;,
@@ -515,45 +302,41 @@ class BalanceSheetStandardizer(RuleProcessor):
     bs_sum_completion = RuleGroup(
         prefix=&#34;SC&#34;,
         rules=[
-            SumCompletionRuleGroupCreator.create_group(
+            *missingsumparts_rules_creator(
                 sum_tag=&#39;Assets&#39;,
-                summand_tags=[&#39;AssetsCurrent&#39;, &#39;AssetsNoncurrent&#39;],
-                prefix=&#34;Ass&#34;
+                summand_tags=[&#39;AssetsCurrent&#39;, &#39;AssetsNoncurrent&#39;]
             ),
-            SetSumIfOneOnlySummand(
+            SetSumIfOnlyOneSummand(
                 sum_tag=&#39;Assets&#39;,
                 summand_set=&#39;AssetsCurrent&#39;,
                 summands_nan=[&#39;AssetsNoncurrent&#39;]
             ),
-            SetSumIfOneOnlySummand(
+            SetSumIfOnlyOneSummand(
                 sum_tag=&#39;Assets&#39;,
                 summand_set=&#39;AssetsNoncurrent&#39;,
                 summands_nan=[&#39;AssetsCurrent&#39;]
             ),
-            SumCompletionRuleGroupCreator.create_group(
+            *missingsumparts_rules_creator(
                 sum_tag=&#39;Liabilities&#39;,
-                summand_tags=[&#39;LiabilitiesCurrent&#39;, &#39;LiabilitiesNoncurrent&#39;],
-                prefix=&#34;Lia&#34;
+                summand_tags=[&#39;LiabilitiesCurrent&#39;, &#39;LiabilitiesNoncurrent&#39;]
             ),
-            SetSumIfOneOnlySummand(
+            SetSumIfOnlyOneSummand(
                 sum_tag=&#39;Liabilities&#39;,
                 summand_set=&#39;LiabilitiesCurrent&#39;,
                 summands_nan=[&#39;LiabilitiesNoncurrent&#39;]
             ),
-            SetSumIfOneOnlySummand(
+            SetSumIfOnlyOneSummand(
                 sum_tag=&#39;Liabilities&#39;,
                 summand_set=&#39;LiabilitiesNoncurrent&#39;,
                 summands_nan=[&#39;LiabilitiesCurrent&#39;]
             ),
-            SumCompletionRuleGroupCreator.create_group(
+            *missingsumparts_rules_creator(
                 sum_tag=&#39;AssLiaOwe&#39;,
-                summand_tags=[&#39;Liabilities&#39;, &#39;OwnerEquity&#39;],
-                prefix=&#34;Ass2&#34;
+                summand_tags=[&#39;Liabilities&#39;, &#39;OwnerEquity&#39;]
             ),
-            SumCompletionRuleGroupCreator.create_group(
+            *missingsumparts_rules_creator(
                 sum_tag=&#39;LiabilitiesAndOwnerEquity&#39;,
-                summand_tags=[&#39;Liabilities&#39;, &#39;OwnerEquity&#39;],
-                prefix=&#34;LiaOwnEq&#34;
+                summand_tags=[&#39;Liabilities&#39;, &#39;OwnerEquity&#39;]
             )
         ])
 
@@ -564,23 +347,25 @@ class BalanceSheetStandardizer(RuleProcessor):
                               bs_sum_completion,
                           ])
 
-    cleanup_rule_tree = RuleGroup(prefix=&#34;BS_CL_&#34;,
+    cleanup_rule_tree = RuleGroup(prefix=&#34;BS_POST&#34;,
                                   rules=[
-                                      CleanUpCopyToFirstSummand(sum_tag=&#39;Assets&#39;,
-                                                                first_summand=&#39;AssetsCurrent&#39;,
-                                                                other_summands=[
-                                                                    &#39;AssetsNoncurrent&#39;]),
-                                      CleanUpCopyToFirstSummand(sum_tag=&#39;Liabilities&#39;,
-                                                                first_summand=&#39;LiabilitiesCurrent&#39;,
-                                                                other_summands=[
-                                                                    &#39;LiabilitiesNoncurrent&#39;]),
-                                      CleanUpSumUpCorrections(sum_tag=&#39;Assets&#39;,
-                                                              mixed_up_summand=&#39;AssetsNoncurrent&#39;,
-                                                              other_summand=&#39;AssetsCurrent&#39;),
-                                      CleanUpSumUpCorrections(sum_tag=&#39;Assets&#39;,
-                                                              mixed_up_summand=&#39;AssetsCurrent&#39;,
-                                                              other_summand=&#39;AssetsNoncurrent&#39;),
-                                  ])
+                                      PostCopyToFirstSummand(sum_tag=&#39;Assets&#39;,
+                                                             first_summand=&#39;AssetsCurrent&#39;,
+                                                             other_summands=[
+                                                                 &#39;AssetsNoncurrent&#39;]),
+                                      PostCopyToFirstSummand(sum_tag=&#39;Liabilities&#39;,
+                                                             first_summand=&#39;LiabilitiesCurrent&#39;,
+                                                             other_summands=[
+                                                                 &#39;LiabilitiesNoncurrent&#39;])])
+    proprocess_rule_tree = RuleGroup(prefix=&#34;BS_PRE&#34;,
+                                     rules=[
+                                         PreSumUpCorrection(sum_tag=&#39;Assets&#39;,
+                                                            mixed_up_summand=&#39;AssetsNoncurrent&#39;,
+                                                            other_summand=&#39;AssetsCurrent&#39;),
+                                         PreSumUpCorrection(sum_tag=&#39;Assets&#39;,
+                                                            mixed_up_summand=&#39;AssetsCurrent&#39;,
+                                                            other_summand=&#39;AssetsNoncurrent&#39;),
+                                     ])
 
     validation_rules: List[ValidationRule] = [
         SumValidationRule(id=&#39;AssetsCheck&#39;,
@@ -776,8 +561,8 @@ LiabilitiesAndOwnerEquity</p></div>
 
     # todo: CashOther wird noch nirgends verwendet
     bs_sumup_rg = RuleGroup(
-        rules=[SumUp(
-            target=&#39;CashOther&#39;,
+        rules=[SumUpRule(
+            sum_tag=&#39;CashOther&#39;,
             potential_summands=[
                 &#39;CashAndCashEquivalentsAtFairValue&#39;,
                 &#39;CashAndDueFromBanks&#39;,
@@ -790,45 +575,41 @@ LiabilitiesAndOwnerEquity</p></div>
     bs_sum_completion = RuleGroup(
         prefix=&#34;SC&#34;,
         rules=[
-            SumCompletionRuleGroupCreator.create_group(
+            *missingsumparts_rules_creator(
                 sum_tag=&#39;Assets&#39;,
-                summand_tags=[&#39;AssetsCurrent&#39;, &#39;AssetsNoncurrent&#39;],
-                prefix=&#34;Ass&#34;
+                summand_tags=[&#39;AssetsCurrent&#39;, &#39;AssetsNoncurrent&#39;]
             ),
-            SetSumIfOneOnlySummand(
+            SetSumIfOnlyOneSummand(
                 sum_tag=&#39;Assets&#39;,
                 summand_set=&#39;AssetsCurrent&#39;,
                 summands_nan=[&#39;AssetsNoncurrent&#39;]
             ),
-            SetSumIfOneOnlySummand(
+            SetSumIfOnlyOneSummand(
                 sum_tag=&#39;Assets&#39;,
                 summand_set=&#39;AssetsNoncurrent&#39;,
                 summands_nan=[&#39;AssetsCurrent&#39;]
             ),
-            SumCompletionRuleGroupCreator.create_group(
+            *missingsumparts_rules_creator(
                 sum_tag=&#39;Liabilities&#39;,
-                summand_tags=[&#39;LiabilitiesCurrent&#39;, &#39;LiabilitiesNoncurrent&#39;],
-                prefix=&#34;Lia&#34;
+                summand_tags=[&#39;LiabilitiesCurrent&#39;, &#39;LiabilitiesNoncurrent&#39;]
             ),
-            SetSumIfOneOnlySummand(
+            SetSumIfOnlyOneSummand(
                 sum_tag=&#39;Liabilities&#39;,
                 summand_set=&#39;LiabilitiesCurrent&#39;,
                 summands_nan=[&#39;LiabilitiesNoncurrent&#39;]
             ),
-            SetSumIfOneOnlySummand(
+            SetSumIfOnlyOneSummand(
                 sum_tag=&#39;Liabilities&#39;,
                 summand_set=&#39;LiabilitiesNoncurrent&#39;,
                 summands_nan=[&#39;LiabilitiesCurrent&#39;]
             ),
-            SumCompletionRuleGroupCreator.create_group(
+            *missingsumparts_rules_creator(
                 sum_tag=&#39;AssLiaOwe&#39;,
-                summand_tags=[&#39;Liabilities&#39;, &#39;OwnerEquity&#39;],
-                prefix=&#34;Ass2&#34;
+                summand_tags=[&#39;Liabilities&#39;, &#39;OwnerEquity&#39;]
             ),
-            SumCompletionRuleGroupCreator.create_group(
+            *missingsumparts_rules_creator(
                 sum_tag=&#39;LiabilitiesAndOwnerEquity&#39;,
-                summand_tags=[&#39;Liabilities&#39;, &#39;OwnerEquity&#39;],
-                prefix=&#34;LiaOwnEq&#34;
+                summand_tags=[&#39;Liabilities&#39;, &#39;OwnerEquity&#39;]
             )
         ])
 
@@ -839,23 +620,25 @@ LiabilitiesAndOwnerEquity</p></div>
                               bs_sum_completion,
                           ])
 
-    cleanup_rule_tree = RuleGroup(prefix=&#34;BS_CL_&#34;,
+    cleanup_rule_tree = RuleGroup(prefix=&#34;BS_POST&#34;,
                                   rules=[
-                                      CleanUpCopyToFirstSummand(sum_tag=&#39;Assets&#39;,
-                                                                first_summand=&#39;AssetsCurrent&#39;,
-                                                                other_summands=[
-                                                                    &#39;AssetsNoncurrent&#39;]),
-                                      CleanUpCopyToFirstSummand(sum_tag=&#39;Liabilities&#39;,
-                                                                first_summand=&#39;LiabilitiesCurrent&#39;,
-                                                                other_summands=[
-                                                                    &#39;LiabilitiesNoncurrent&#39;]),
-                                      CleanUpSumUpCorrections(sum_tag=&#39;Assets&#39;,
-                                                              mixed_up_summand=&#39;AssetsNoncurrent&#39;,
-                                                              other_summand=&#39;AssetsCurrent&#39;),
-                                      CleanUpSumUpCorrections(sum_tag=&#39;Assets&#39;,
-                                                              mixed_up_summand=&#39;AssetsCurrent&#39;,
-                                                              other_summand=&#39;AssetsNoncurrent&#39;),
-                                  ])
+                                      PostCopyToFirstSummand(sum_tag=&#39;Assets&#39;,
+                                                             first_summand=&#39;AssetsCurrent&#39;,
+                                                             other_summands=[
+                                                                 &#39;AssetsNoncurrent&#39;]),
+                                      PostCopyToFirstSummand(sum_tag=&#39;Liabilities&#39;,
+                                                             first_summand=&#39;LiabilitiesCurrent&#39;,
+                                                             other_summands=[
+                                                                 &#39;LiabilitiesNoncurrent&#39;])])
+    proprocess_rule_tree = RuleGroup(prefix=&#34;BS_PRE&#34;,
+                                     rules=[
+                                         PreSumUpCorrection(sum_tag=&#39;Assets&#39;,
+                                                            mixed_up_summand=&#39;AssetsNoncurrent&#39;,
+                                                            other_summand=&#39;AssetsCurrent&#39;),
+                                         PreSumUpCorrection(sum_tag=&#39;Assets&#39;,
+                                                            mixed_up_summand=&#39;AssetsCurrent&#39;,
+                                                            other_summand=&#39;AssetsNoncurrent&#39;),
+                                     ])
 
     validation_rules: List[ValidationRule] = [
         SumValidationRule(id=&#39;AssetsCheck&#39;,
@@ -919,6 +702,10 @@ LiabilitiesAndOwnerEquity</p></div>
 <div class="desc"></div>
 </dd>
 <dt id="secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizer.main_tags"><code class="name">var <span class="ident">main_tags</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizer.proprocess_rule_tree"><code class="name">var <span class="ident">proprocess_rule_tree</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -1106,297 +893,6 @@ LiabilitiesAndOwnerEquity</p></div>
 </details>
 </dd>
 </dl>
-</dd>
-<dt id="secfsdstools.f_standardize.bs_standardize.CleanUpCopyToFirstSummand"><code class="flex name class">
-<span>class <span class="ident">CleanUpCopyToFirstSummand</span></span>
-<span>(</span><span>sum_tag: str, first_summand: str, other_summands: List[str])</span>
-</code></dt>
-<dd>
-<div class="desc"><p>if the sum_tag is set and the first summand and the other summands are nan,
-then copy the target value to the first summand and set the other summands to '0.0'</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">class CleanUpCopyToFirstSummand(Rule):
-    &#34;&#34;&#34; if the sum_tag is set and the first summand and the other summands are nan,
-    then copy the target value to the first summand and set the other summands to &#39;0.0&#39; &#34;&#34;&#34;
-
-    def __init__(self, sum_tag: str, first_summand: str, other_summands: List[str]):
-        self.sum_tag = sum_tag
-        self.first_summand = first_summand
-        self.other_summands = other_summands
-
-    def get_target_tags(self) -&gt; List[str]:
-        return [self.first_summand, *self.other_summands]
-
-    def get_input_tags(self) -&gt; Set[str]:
-        result = {self.sum_tag, self.first_summand}
-        result.update(self.other_summands)
-        return result
-
-    def mask(self, df: pd.DataFrame) -&gt; pa.typing.Series[bool]:
-        # if the sum_tag was not set..
-
-        mask = ~df[self.sum_tag].isna() &amp; df[self.first_summand].isna()
-        for other_summand in self.other_summands:
-            mask = mask &amp; df[other_summand].isna()
-
-        return mask
-
-    def apply(self, df: pd.DataFrame, mask: pa.typing.Series[bool]):
-        df.loc[mask, self.first_summand] = df[self.sum_tag]  # initialize
-        for other_summand in self.other_summands:
-            df.loc[mask, other_summand] = 0.0
-
-    def get_description(self) -&gt; str:
-        return &#34;&#34;</code></pre>
-</details>
-<h3>Ancestors</h3>
-<ul class="hlist">
-<li><a title="secfsdstools.f_standardize.rule_framework.Rule" href="rule_framework.html#secfsdstools.f_standardize.rule_framework.Rule">Rule</a></li>
-<li><a title="secfsdstools.f_standardize.rule_framework.RuleEntity" href="rule_framework.html#secfsdstools.f_standardize.rule_framework.RuleEntity">RuleEntity</a></li>
-<li>abc.ABC</li>
-</ul>
-<h3>Class variables</h3>
-<dl>
-<dt id="secfsdstools.f_standardize.bs_standardize.CleanUpCopyToFirstSummand.id"><code class="name">var <span class="ident">id</span> : str</code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-</dl>
-<h3>Inherited members</h3>
-<ul class="hlist">
-<li><code><b><a title="secfsdstools.f_standardize.rule_framework.Rule" href="rule_framework.html#secfsdstools.f_standardize.rule_framework.Rule">Rule</a></b></code>:
-<ul class="hlist">
-<li><code><a title="secfsdstools.f_standardize.rule_framework.Rule.apply" href="rule_framework.html#secfsdstools.f_standardize.rule_framework.Rule.apply">apply</a></code></li>
-<li><code><a title="secfsdstools.f_standardize.rule_framework.Rule.get_description" href="rule_framework.html#secfsdstools.f_standardize.rule_framework.RuleEntity.get_description">get_description</a></code></li>
-<li><code><a title="secfsdstools.f_standardize.rule_framework.Rule.get_input_tags" href="rule_framework.html#secfsdstools.f_standardize.rule_framework.RuleEntity.get_input_tags">get_input_tags</a></code></li>
-<li><code><a title="secfsdstools.f_standardize.rule_framework.Rule.get_target_tags" href="rule_framework.html#secfsdstools.f_standardize.rule_framework.Rule.get_target_tags">get_target_tags</a></code></li>
-<li><code><a title="secfsdstools.f_standardize.rule_framework.Rule.get_target_tags_str" href="rule_framework.html#secfsdstools.f_standardize.rule_framework.Rule.get_target_tags_str">get_target_tags_str</a></code></li>
-<li><code><a title="secfsdstools.f_standardize.rule_framework.Rule.mask" href="rule_framework.html#secfsdstools.f_standardize.rule_framework.Rule.mask">mask</a></code></li>
-<li><code><a title="secfsdstools.f_standardize.rule_framework.Rule.process" href="rule_framework.html#secfsdstools.f_standardize.rule_framework.Rule.process">process</a></code></li>
-<li><code><a title="secfsdstools.f_standardize.rule_framework.Rule.set_id" href="rule_framework.html#secfsdstools.f_standardize.rule_framework.RuleEntity.set_id">set_id</a></code></li>
-</ul>
-</li>
-</ul>
-</dd>
-<dt id="secfsdstools.f_standardize.bs_standardize.CleanUpSumUpCorrections"><code class="flex name class">
-<span>class <span class="ident">CleanUpSumUpCorrections</span></span>
-<span>(</span><span>sum_tag: str, mixed_up_summand: str, other_summand: str)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>it happens, that the values for Assets and AssetsNoncurrent
-where mixed
-up. example: 0001692981-19-000022
-So instead of Assets = AssetsCurrent + AssetsNoncurrent
-it matches AssetsNoncurrent = Assets + AssetsCurrent.</p>
-<p>so the first parameter is the sum_tag, e.g. Assets
-the mixed_up_summand is the name of the summand that was mixed with the sum_tag
-the other_summand is the summand with the correct value, e.g. AssetsCurrent</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">class CleanUpSumUpCorrections(Rule):
-    &#34;&#34;&#34; it happens, that the values for Assets and AssetsNoncurrent
-    where mixed  up. example: 0001692981-19-000022
-    So instead of Assets = AssetsCurrent + AssetsNoncurrent
-    it matches AssetsNoncurrent = Assets + AssetsCurrent.
-
-    so the first parameter is the sum_tag, e.g. Assets
-    the mixed_up_summand is the name of the summand that was mixed with the sum_tag
-    the other_summand is the summand with the correct value, e.g. AssetsCurrent
-    &#34;&#34;&#34;
-
-    def __init__(self, sum_tag: str, mixed_up_summand: str, other_summand: str):
-        self.sum_tag = sum_tag
-        self.mixed_up_summand = mixed_up_summand
-        self.other_summand = other_summand
-
-    def get_target_tags(self) -&gt; List[str]:
-        return [self.sum_tag, self.mixed_up_summand]
-
-    def get_input_tags(self) -&gt; Set[str]:
-        return {self.sum_tag, self.mixed_up_summand, self.other_summand}
-
-    def mask(self, df: pd.DataFrame) -&gt; pa.typing.Series[bool]:
-        return (df[self.mixed_up_summand] == df[self.sum_tag] + df[self.other_summand]) \
-               &amp; (df[self.other_summand] &gt; 0)
-
-    def apply(self, df: pd.DataFrame, mask: pa.typing.Series[bool]):
-        mixed_up_values = df[self.mixed_up_summand].copy()
-        df.loc[mask, self.mixed_up_summand] = df[self.sum_tag]
-        df.loc[mask, self.sum_tag] = mixed_up_values
-
-    def get_description(self) -&gt; str:
-        return &#34;&#34;</code></pre>
-</details>
-<h3>Ancestors</h3>
-<ul class="hlist">
-<li><a title="secfsdstools.f_standardize.rule_framework.Rule" href="rule_framework.html#secfsdstools.f_standardize.rule_framework.Rule">Rule</a></li>
-<li><a title="secfsdstools.f_standardize.rule_framework.RuleEntity" href="rule_framework.html#secfsdstools.f_standardize.rule_framework.RuleEntity">RuleEntity</a></li>
-<li>abc.ABC</li>
-</ul>
-<h3>Class variables</h3>
-<dl>
-<dt id="secfsdstools.f_standardize.bs_standardize.CleanUpSumUpCorrections.id"><code class="name">var <span class="ident">id</span> : str</code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-</dl>
-<h3>Inherited members</h3>
-<ul class="hlist">
-<li><code><b><a title="secfsdstools.f_standardize.rule_framework.Rule" href="rule_framework.html#secfsdstools.f_standardize.rule_framework.Rule">Rule</a></b></code>:
-<ul class="hlist">
-<li><code><a title="secfsdstools.f_standardize.rule_framework.Rule.apply" href="rule_framework.html#secfsdstools.f_standardize.rule_framework.Rule.apply">apply</a></code></li>
-<li><code><a title="secfsdstools.f_standardize.rule_framework.Rule.get_description" href="rule_framework.html#secfsdstools.f_standardize.rule_framework.RuleEntity.get_description">get_description</a></code></li>
-<li><code><a title="secfsdstools.f_standardize.rule_framework.Rule.get_input_tags" href="rule_framework.html#secfsdstools.f_standardize.rule_framework.RuleEntity.get_input_tags">get_input_tags</a></code></li>
-<li><code><a title="secfsdstools.f_standardize.rule_framework.Rule.get_target_tags" href="rule_framework.html#secfsdstools.f_standardize.rule_framework.Rule.get_target_tags">get_target_tags</a></code></li>
-<li><code><a title="secfsdstools.f_standardize.rule_framework.Rule.get_target_tags_str" href="rule_framework.html#secfsdstools.f_standardize.rule_framework.Rule.get_target_tags_str">get_target_tags_str</a></code></li>
-<li><code><a title="secfsdstools.f_standardize.rule_framework.Rule.mask" href="rule_framework.html#secfsdstools.f_standardize.rule_framework.Rule.mask">mask</a></code></li>
-<li><code><a title="secfsdstools.f_standardize.rule_framework.Rule.process" href="rule_framework.html#secfsdstools.f_standardize.rule_framework.Rule.process">process</a></code></li>
-<li><code><a title="secfsdstools.f_standardize.rule_framework.Rule.set_id" href="rule_framework.html#secfsdstools.f_standardize.rule_framework.RuleEntity.set_id">set_id</a></code></li>
-</ul>
-</li>
-</ul>
-</dd>
-<dt id="secfsdstools.f_standardize.bs_standardize.MissingSumRule"><code class="flex name class">
-<span>class <span class="ident">MissingSumRule</span></span>
-<span>(</span><span>sum_name: str, summand_names: List[str])</span>
-</code></dt>
-<dd>
-<div class="desc"><p>creates the sum in the sum_name column if all summand_names columnes have a value</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">class MissingSumRule(Rule):
-    &#34;&#34;&#34; creates the sum in the sum_name column if all summand_names columnes have a value&#34;&#34;&#34;
-
-    def __init__(self, sum_name: str, summand_names: List[str]):
-        self.sum_name = sum_name
-        self.summand_names = summand_names
-
-    def get_target_tags(self) -&gt; List[str]:
-        return [self.sum_name]
-
-    def get_input_tags(self) -&gt; Set[str]:
-        result = {self.sum_name}
-        result.update(self.summand_names)
-        return result
-
-    def mask(self, df: pd.DataFrame) -&gt; pa.typing.Series[bool]:
-        # sum_name has to be not set and all summand_names have to be set
-        mask = df[self.sum_name].isna()
-        for summand_name in self.summand_names:
-            mask = mask &amp; ~df[summand_name].isna()
-
-        return mask
-
-    def apply(self, df: pd.DataFrame, mask: pa.typing.Series[bool]):
-        df.loc[mask, self.sum_name] = df[self.summand_names].sum(axis=1)
-
-    def get_description(self) -&gt; str:
-        return &#34;&#34;</code></pre>
-</details>
-<h3>Ancestors</h3>
-<ul class="hlist">
-<li><a title="secfsdstools.f_standardize.rule_framework.Rule" href="rule_framework.html#secfsdstools.f_standardize.rule_framework.Rule">Rule</a></li>
-<li><a title="secfsdstools.f_standardize.rule_framework.RuleEntity" href="rule_framework.html#secfsdstools.f_standardize.rule_framework.RuleEntity">RuleEntity</a></li>
-<li>abc.ABC</li>
-</ul>
-<h3>Class variables</h3>
-<dl>
-<dt id="secfsdstools.f_standardize.bs_standardize.MissingSumRule.id"><code class="name">var <span class="ident">id</span> : str</code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-</dl>
-<h3>Inherited members</h3>
-<ul class="hlist">
-<li><code><b><a title="secfsdstools.f_standardize.rule_framework.Rule" href="rule_framework.html#secfsdstools.f_standardize.rule_framework.Rule">Rule</a></b></code>:
-<ul class="hlist">
-<li><code><a title="secfsdstools.f_standardize.rule_framework.Rule.apply" href="rule_framework.html#secfsdstools.f_standardize.rule_framework.Rule.apply">apply</a></code></li>
-<li><code><a title="secfsdstools.f_standardize.rule_framework.Rule.get_description" href="rule_framework.html#secfsdstools.f_standardize.rule_framework.RuleEntity.get_description">get_description</a></code></li>
-<li><code><a title="secfsdstools.f_standardize.rule_framework.Rule.get_input_tags" href="rule_framework.html#secfsdstools.f_standardize.rule_framework.RuleEntity.get_input_tags">get_input_tags</a></code></li>
-<li><code><a title="secfsdstools.f_standardize.rule_framework.Rule.get_target_tags" href="rule_framework.html#secfsdstools.f_standardize.rule_framework.Rule.get_target_tags">get_target_tags</a></code></li>
-<li><code><a title="secfsdstools.f_standardize.rule_framework.Rule.get_target_tags_str" href="rule_framework.html#secfsdstools.f_standardize.rule_framework.Rule.get_target_tags_str">get_target_tags_str</a></code></li>
-<li><code><a title="secfsdstools.f_standardize.rule_framework.Rule.mask" href="rule_framework.html#secfsdstools.f_standardize.rule_framework.Rule.mask">mask</a></code></li>
-<li><code><a title="secfsdstools.f_standardize.rule_framework.Rule.process" href="rule_framework.html#secfsdstools.f_standardize.rule_framework.Rule.process">process</a></code></li>
-<li><code><a title="secfsdstools.f_standardize.rule_framework.Rule.set_id" href="rule_framework.html#secfsdstools.f_standardize.rule_framework.RuleEntity.set_id">set_id</a></code></li>
-</ul>
-</li>
-</ul>
-</dd>
-<dt id="secfsdstools.f_standardize.bs_standardize.MissingSummandRule"><code class="flex name class">
-<span>class <span class="ident">MissingSummandRule</span></span>
-<span>(</span><span>sum_name: str, missing_summand: str, existing_summands: List[str])</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Base class to define a single rule</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">class MissingSummandRule(Rule):
-
-    def __init__(self, sum_name: str, missing_summand: str, existing_summands: List[str]):
-        self.sum_name = sum_name
-        self.missing_summand = missing_summand
-        self.existing_summands = existing_summands
-
-    def get_target_tags(self) -&gt; List[str]:
-        return [self.missing_summand]
-
-    def get_input_tags(self) -&gt; Set[str]:
-        result = {self.sum_name, self.missing_summand}
-        result.update(self.existing_summands)
-        return result
-
-    def mask(self, df: pd.DataFrame) -&gt; pa.typing.Series[bool]:
-        # sum and other_summands must be set, missing_summand must not be set
-        mask = ~df[self.sum_name].isna()
-        for summand_name in self.existing_summands:
-            mask = mask &amp; ~df[summand_name].isna()
-        mask = mask &amp; df[self.missing_summand].isna()
-        return mask
-
-    def apply(self, df: pd.DataFrame, mask: pa.typing.Series[bool]):
-        df.loc[mask, self.missing_summand] = \
-            df[self.sum_name] - df[self.existing_summands].sum(axis=1)
-
-    def get_description(self) -&gt; str:
-        return &#34;&#34;</code></pre>
-</details>
-<h3>Ancestors</h3>
-<ul class="hlist">
-<li><a title="secfsdstools.f_standardize.rule_framework.Rule" href="rule_framework.html#secfsdstools.f_standardize.rule_framework.Rule">Rule</a></li>
-<li><a title="secfsdstools.f_standardize.rule_framework.RuleEntity" href="rule_framework.html#secfsdstools.f_standardize.rule_framework.RuleEntity">RuleEntity</a></li>
-<li>abc.ABC</li>
-</ul>
-<h3>Class variables</h3>
-<dl>
-<dt id="secfsdstools.f_standardize.bs_standardize.MissingSummandRule.id"><code class="name">var <span class="ident">id</span> : str</code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-</dl>
-<h3>Inherited members</h3>
-<ul class="hlist">
-<li><code><b><a title="secfsdstools.f_standardize.rule_framework.Rule" href="rule_framework.html#secfsdstools.f_standardize.rule_framework.Rule">Rule</a></b></code>:
-<ul class="hlist">
-<li><code><a title="secfsdstools.f_standardize.rule_framework.Rule.apply" href="rule_framework.html#secfsdstools.f_standardize.rule_framework.Rule.apply">apply</a></code></li>
-<li><code><a title="secfsdstools.f_standardize.rule_framework.Rule.get_description" href="rule_framework.html#secfsdstools.f_standardize.rule_framework.RuleEntity.get_description">get_description</a></code></li>
-<li><code><a title="secfsdstools.f_standardize.rule_framework.Rule.get_input_tags" href="rule_framework.html#secfsdstools.f_standardize.rule_framework.RuleEntity.get_input_tags">get_input_tags</a></code></li>
-<li><code><a title="secfsdstools.f_standardize.rule_framework.Rule.get_target_tags" href="rule_framework.html#secfsdstools.f_standardize.rule_framework.Rule.get_target_tags">get_target_tags</a></code></li>
-<li><code><a title="secfsdstools.f_standardize.rule_framework.Rule.get_target_tags_str" href="rule_framework.html#secfsdstools.f_standardize.rule_framework.Rule.get_target_tags_str">get_target_tags_str</a></code></li>
-<li><code><a title="secfsdstools.f_standardize.rule_framework.Rule.mask" href="rule_framework.html#secfsdstools.f_standardize.rule_framework.Rule.mask">mask</a></code></li>
-<li><code><a title="secfsdstools.f_standardize.rule_framework.Rule.process" href="rule_framework.html#secfsdstools.f_standardize.rule_framework.Rule.process">process</a></code></li>
-<li><code><a title="secfsdstools.f_standardize.rule_framework.Rule.set_id" href="rule_framework.html#secfsdstools.f_standardize.rule_framework.RuleEntity.set_id">set_id</a></code></li>
-</ul>
-</li>
-</ul>
 </dd>
 <dt id="secfsdstools.f_standardize.bs_standardize.RuleProcessor"><code class="flex name class">
 <span>class <span class="ident">RuleProcessor</span></span>
@@ -1682,201 +1178,6 @@ the other_summand is the summand with the correct value, e.g. AssetsCurrent</p><
 </dd>
 </dl>
 </dd>
-<dt id="secfsdstools.f_standardize.bs_standardize.SetSumIfOneOnlySummand"><code class="flex name class">
-<span>class <span class="ident">SetSumIfOneOnlySummand</span></span>
-<span>(</span><span>sum_tag: str, summand_set: str, summands_nan: List[str])</span>
-</code></dt>
-<dd>
-<div class="desc"><p>If the sumt_tag is nan and only one summand has a value, then the
-target gets the copy of the Value and the other summands are set to zero.</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">class SetSumIfOneOnlySummand(Rule):
-    &#34;&#34;&#34;
-    If the sumt_tag is nan and only one summand has a value, then the
-    target gets the copy of the Value and the other summands are set to zero.
-    &#34;&#34;&#34;
-
-    def __init__(self, sum_tag: str, summand_set: str, summands_nan: List[str]):
-        self.sum_tag = sum_tag
-        self.summand_set = summand_set
-        self.summands_nan = summands_nan
-
-    def get_target_tags(self) -&gt; List[str]:
-        return [self.sum_tag, *self.summands_nan]
-
-    def get_input_tags(self) -&gt; Set[str]:
-        result = {self.sum_tag, self.summand_set}
-        result.update(self.summands_nan)
-        return result
-
-    def mask(self, df: pd.DataFrame) -&gt; pa.typing.Series[bool]:
-        # if the target was not set..
-
-        mask = df[self.sum_tag].isna() &amp; ~df[self.summand_set].isna()
-        for summand_nan in self.summands_nan:
-            mask = mask &amp; df[summand_nan].isna()
-
-        return mask
-
-    def apply(self, df: pd.DataFrame, mask: pa.typing.Series[bool]):
-        df.loc[mask, self.sum_tag] = df[self.summand_set]  # initialize
-        for summand_nan in self.summands_nan:
-            df.loc[mask, summand_nan] = 0.0
-
-    def get_description(self) -&gt; str:
-        return &#34;&#34;</code></pre>
-</details>
-<h3>Ancestors</h3>
-<ul class="hlist">
-<li><a title="secfsdstools.f_standardize.rule_framework.Rule" href="rule_framework.html#secfsdstools.f_standardize.rule_framework.Rule">Rule</a></li>
-<li><a title="secfsdstools.f_standardize.rule_framework.RuleEntity" href="rule_framework.html#secfsdstools.f_standardize.rule_framework.RuleEntity">RuleEntity</a></li>
-<li>abc.ABC</li>
-</ul>
-<h3>Class variables</h3>
-<dl>
-<dt id="secfsdstools.f_standardize.bs_standardize.SetSumIfOneOnlySummand.id"><code class="name">var <span class="ident">id</span> : str</code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-</dl>
-<h3>Inherited members</h3>
-<ul class="hlist">
-<li><code><b><a title="secfsdstools.f_standardize.rule_framework.Rule" href="rule_framework.html#secfsdstools.f_standardize.rule_framework.Rule">Rule</a></b></code>:
-<ul class="hlist">
-<li><code><a title="secfsdstools.f_standardize.rule_framework.Rule.apply" href="rule_framework.html#secfsdstools.f_standardize.rule_framework.Rule.apply">apply</a></code></li>
-<li><code><a title="secfsdstools.f_standardize.rule_framework.Rule.get_description" href="rule_framework.html#secfsdstools.f_standardize.rule_framework.RuleEntity.get_description">get_description</a></code></li>
-<li><code><a title="secfsdstools.f_standardize.rule_framework.Rule.get_input_tags" href="rule_framework.html#secfsdstools.f_standardize.rule_framework.RuleEntity.get_input_tags">get_input_tags</a></code></li>
-<li><code><a title="secfsdstools.f_standardize.rule_framework.Rule.get_target_tags" href="rule_framework.html#secfsdstools.f_standardize.rule_framework.Rule.get_target_tags">get_target_tags</a></code></li>
-<li><code><a title="secfsdstools.f_standardize.rule_framework.Rule.get_target_tags_str" href="rule_framework.html#secfsdstools.f_standardize.rule_framework.Rule.get_target_tags_str">get_target_tags_str</a></code></li>
-<li><code><a title="secfsdstools.f_standardize.rule_framework.Rule.mask" href="rule_framework.html#secfsdstools.f_standardize.rule_framework.Rule.mask">mask</a></code></li>
-<li><code><a title="secfsdstools.f_standardize.rule_framework.Rule.process" href="rule_framework.html#secfsdstools.f_standardize.rule_framework.Rule.process">process</a></code></li>
-<li><code><a title="secfsdstools.f_standardize.rule_framework.Rule.set_id" href="rule_framework.html#secfsdstools.f_standardize.rule_framework.RuleEntity.set_id">set_id</a></code></li>
-</ul>
-</li>
-</ul>
-</dd>
-<dt id="secfsdstools.f_standardize.bs_standardize.SumCompletionRuleGroupCreator"><code class="flex name class">
-<span>class <span class="ident">SumCompletionRuleGroupCreator</span></span>
-</code></dt>
-<dd>
-<div class="desc"><p>completes the missing value of a simple addition, if one is missing.
-E.G Assets = AssetsCurrent + AssetsNoneCurrent</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">class SumCompletionRuleGroupCreator:
-    &#34;&#34;&#34;
-    completes the missing value of a simple addition, if one is missing.
-    E.G Assets = AssetsCurrent + AssetsNoneCurrent
-    &#34;&#34;&#34;
-
-    @staticmethod
-    def create_group(sum_tag: str, summand_tags: List[str], prefix: str) -&gt; RuleGroup:
-        rules: List[RuleEntity] = [MissingSumRule(sum_name=sum_tag,
-                                                  summand_names=summand_tags)]
-        for summand in summand_tags:
-            others = summand_tags.copy()
-            others.remove(summand)
-            rules.append(MissingSummandRule(sum_name=sum_tag, missing_summand=summand,
-                                            existing_summands=others))
-        return RuleGroup(rules=rules, prefix=prefix)</code></pre>
-</details>
-<h3>Static methods</h3>
-<dl>
-<dt id="secfsdstools.f_standardize.bs_standardize.SumCompletionRuleGroupCreator.create_group"><code class="name flex">
-<span>def <span class="ident">create_group</span></span>(<span>sum_tag: str, summand_tags: List[str], prefix: str) ‑> <a title="secfsdstools.f_standardize.rule_framework.RuleGroup" href="rule_framework.html#secfsdstools.f_standardize.rule_framework.RuleGroup">RuleGroup</a></span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">@staticmethod
-def create_group(sum_tag: str, summand_tags: List[str], prefix: str) -&gt; RuleGroup:
-    rules: List[RuleEntity] = [MissingSumRule(sum_name=sum_tag,
-                                              summand_names=summand_tags)]
-    for summand in summand_tags:
-        others = summand_tags.copy()
-        others.remove(summand)
-        rules.append(MissingSummandRule(sum_name=sum_tag, missing_summand=summand,
-                                        existing_summands=others))
-    return RuleGroup(rules=rules, prefix=prefix)</code></pre>
-</details>
-</dd>
-</dl>
-</dd>
-<dt id="secfsdstools.f_standardize.bs_standardize.SumUp"><code class="flex name class">
-<span>class <span class="ident">SumUp</span></span>
-<span>(</span><span>target: str, potential_summands: List[str])</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Sums app the available Summands to a new target column</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">class SumUp(Rule):
-    &#34;&#34;&#34;Sums app the available Summands to a new target column&#34;&#34;&#34;
-
-    def __init__(self, target: str, potential_summands: List[str]):
-        self.target = target
-        self.potential_summands = potential_summands
-
-    def get_target_tags(self) -&gt; List[str]:
-        return [self.target]
-
-    def get_input_tags(self) -&gt; Set[str]:
-        result = {self.target}
-        result.update(self.potential_summands)
-        return result
-
-    def mask(self, df: pd.DataFrame) -&gt; pa.typing.Series[bool]:
-        # if the target was not set..
-        return df[self.target].isna()
-
-    def apply(self, df: pd.DataFrame, mask: pa.typing.Series[bool]):
-        df.loc[mask, self.target] = 0.0  # initialize
-        for potential_summand in self.potential_summands:
-            summand_mask = mask &amp; ~df[potential_summand].isna()
-            df.loc[summand_mask, self.target] = df[self.target] + df[potential_summand]
-
-    def get_description(self) -&gt; str:
-        return &#34;&#34;</code></pre>
-</details>
-<h3>Ancestors</h3>
-<ul class="hlist">
-<li><a title="secfsdstools.f_standardize.rule_framework.Rule" href="rule_framework.html#secfsdstools.f_standardize.rule_framework.Rule">Rule</a></li>
-<li><a title="secfsdstools.f_standardize.rule_framework.RuleEntity" href="rule_framework.html#secfsdstools.f_standardize.rule_framework.RuleEntity">RuleEntity</a></li>
-<li>abc.ABC</li>
-</ul>
-<h3>Class variables</h3>
-<dl>
-<dt id="secfsdstools.f_standardize.bs_standardize.SumUp.id"><code class="name">var <span class="ident">id</span> : str</code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-</dl>
-<h3>Inherited members</h3>
-<ul class="hlist">
-<li><code><b><a title="secfsdstools.f_standardize.rule_framework.Rule" href="rule_framework.html#secfsdstools.f_standardize.rule_framework.Rule">Rule</a></b></code>:
-<ul class="hlist">
-<li><code><a title="secfsdstools.f_standardize.rule_framework.Rule.apply" href="rule_framework.html#secfsdstools.f_standardize.rule_framework.Rule.apply">apply</a></code></li>
-<li><code><a title="secfsdstools.f_standardize.rule_framework.Rule.get_description" href="rule_framework.html#secfsdstools.f_standardize.rule_framework.RuleEntity.get_description">get_description</a></code></li>
-<li><code><a title="secfsdstools.f_standardize.rule_framework.Rule.get_input_tags" href="rule_framework.html#secfsdstools.f_standardize.rule_framework.RuleEntity.get_input_tags">get_input_tags</a></code></li>
-<li><code><a title="secfsdstools.f_standardize.rule_framework.Rule.get_target_tags" href="rule_framework.html#secfsdstools.f_standardize.rule_framework.Rule.get_target_tags">get_target_tags</a></code></li>
-<li><code><a title="secfsdstools.f_standardize.rule_framework.Rule.get_target_tags_str" href="rule_framework.html#secfsdstools.f_standardize.rule_framework.Rule.get_target_tags_str">get_target_tags_str</a></code></li>
-<li><code><a title="secfsdstools.f_standardize.rule_framework.Rule.mask" href="rule_framework.html#secfsdstools.f_standardize.rule_framework.Rule.mask">mask</a></code></li>
-<li><code><a title="secfsdstools.f_standardize.rule_framework.Rule.process" href="rule_framework.html#secfsdstools.f_standardize.rule_framework.Rule.process">process</a></code></li>
-<li><code><a title="secfsdstools.f_standardize.rule_framework.Rule.set_id" href="rule_framework.html#secfsdstools.f_standardize.rule_framework.RuleEntity.set_id">set_id</a></code></li>
-</ul>
-</li>
-</ul>
-</dd>
 <dt id="secfsdstools.f_standardize.bs_standardize.SumValidationRule"><code class="flex name class">
 <span>class <span class="ident">SumValidationRule</span></span>
 <span>(</span><span>id: str, sum_tag: str, summands: List[str])</span>
@@ -2072,13 +1373,14 @@ def mask(self, df: pd.DataFrame) -&gt; pa.typing.Series[bool]:
 <ul>
 <li>
 <h4><code><a title="secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizer" href="#secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizer">BalanceSheetStandardizer</a></code></h4>
-<ul class="two-column">
+<ul class="">
 <li><code><a title="secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizer.bs_rename_rg" href="#secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizer.bs_rename_rg">bs_rename_rg</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizer.bs_sum_completion" href="#secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizer.bs_sum_completion">bs_sum_completion</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizer.bs_sumup_rg" href="#secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizer.bs_sumup_rg">bs_sumup_rg</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizer.cleanup_rule_tree" href="#secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizer.cleanup_rule_tree">cleanup_rule_tree</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizer.final_tags" href="#secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizer.final_tags">final_tags</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizer.main_tags" href="#secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizer.main_tags">main_tags</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizer.proprocess_rule_tree" href="#secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizer.proprocess_rule_tree">proprocess_rule_tree</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizer.rule_tree" href="#secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizer.rule_tree">rule_tree</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizer.validation_rules" href="#secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizer.validation_rules">validation_rules</a></code></li>
 </ul>
@@ -2091,53 +1393,11 @@ def mask(self, df: pd.DataFrame) -&gt; pa.typing.Series[bool]:
 </ul>
 </li>
 <li>
-<h4><code><a title="secfsdstools.f_standardize.bs_standardize.CleanUpCopyToFirstSummand" href="#secfsdstools.f_standardize.bs_standardize.CleanUpCopyToFirstSummand">CleanUpCopyToFirstSummand</a></code></h4>
-<ul class="">
-<li><code><a title="secfsdstools.f_standardize.bs_standardize.CleanUpCopyToFirstSummand.id" href="#secfsdstools.f_standardize.bs_standardize.CleanUpCopyToFirstSummand.id">id</a></code></li>
-</ul>
-</li>
-<li>
-<h4><code><a title="secfsdstools.f_standardize.bs_standardize.CleanUpSumUpCorrections" href="#secfsdstools.f_standardize.bs_standardize.CleanUpSumUpCorrections">CleanUpSumUpCorrections</a></code></h4>
-<ul class="">
-<li><code><a title="secfsdstools.f_standardize.bs_standardize.CleanUpSumUpCorrections.id" href="#secfsdstools.f_standardize.bs_standardize.CleanUpSumUpCorrections.id">id</a></code></li>
-</ul>
-</li>
-<li>
-<h4><code><a title="secfsdstools.f_standardize.bs_standardize.MissingSumRule" href="#secfsdstools.f_standardize.bs_standardize.MissingSumRule">MissingSumRule</a></code></h4>
-<ul class="">
-<li><code><a title="secfsdstools.f_standardize.bs_standardize.MissingSumRule.id" href="#secfsdstools.f_standardize.bs_standardize.MissingSumRule.id">id</a></code></li>
-</ul>
-</li>
-<li>
-<h4><code><a title="secfsdstools.f_standardize.bs_standardize.MissingSummandRule" href="#secfsdstools.f_standardize.bs_standardize.MissingSummandRule">MissingSummandRule</a></code></h4>
-<ul class="">
-<li><code><a title="secfsdstools.f_standardize.bs_standardize.MissingSummandRule.id" href="#secfsdstools.f_standardize.bs_standardize.MissingSummandRule.id">id</a></code></li>
-</ul>
-</li>
-<li>
 <h4><code><a title="secfsdstools.f_standardize.bs_standardize.RuleProcessor" href="#secfsdstools.f_standardize.bs_standardize.RuleProcessor">RuleProcessor</a></code></h4>
 <ul class="">
 <li><code><a title="secfsdstools.f_standardize.bs_standardize.RuleProcessor.get_ruletree_descriptions" href="#secfsdstools.f_standardize.bs_standardize.RuleProcessor.get_ruletree_descriptions">get_ruletree_descriptions</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.bs_standardize.RuleProcessor.identifier_tags" href="#secfsdstools.f_standardize.bs_standardize.RuleProcessor.identifier_tags">identifier_tags</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.bs_standardize.RuleProcessor.process" href="#secfsdstools.f_standardize.bs_standardize.RuleProcessor.process">process</a></code></li>
-</ul>
-</li>
-<li>
-<h4><code><a title="secfsdstools.f_standardize.bs_standardize.SetSumIfOneOnlySummand" href="#secfsdstools.f_standardize.bs_standardize.SetSumIfOneOnlySummand">SetSumIfOneOnlySummand</a></code></h4>
-<ul class="">
-<li><code><a title="secfsdstools.f_standardize.bs_standardize.SetSumIfOneOnlySummand.id" href="#secfsdstools.f_standardize.bs_standardize.SetSumIfOneOnlySummand.id">id</a></code></li>
-</ul>
-</li>
-<li>
-<h4><code><a title="secfsdstools.f_standardize.bs_standardize.SumCompletionRuleGroupCreator" href="#secfsdstools.f_standardize.bs_standardize.SumCompletionRuleGroupCreator">SumCompletionRuleGroupCreator</a></code></h4>
-<ul class="">
-<li><code><a title="secfsdstools.f_standardize.bs_standardize.SumCompletionRuleGroupCreator.create_group" href="#secfsdstools.f_standardize.bs_standardize.SumCompletionRuleGroupCreator.create_group">create_group</a></code></li>
-</ul>
-</li>
-<li>
-<h4><code><a title="secfsdstools.f_standardize.bs_standardize.SumUp" href="#secfsdstools.f_standardize.bs_standardize.SumUp">SumUp</a></code></h4>
-<ul class="">
-<li><code><a title="secfsdstools.f_standardize.bs_standardize.SumUp.id" href="#secfsdstools.f_standardize.bs_standardize.SumUp.id">id</a></code></li>
 </ul>
 </li>
 <li>

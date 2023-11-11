@@ -4,7 +4,7 @@ from typing import Set, List
 import pandas as pd
 import pandera as pa
 
-from secfsdstools.f_standardize.rule_framework import Rule, RuleEntity
+from secfsdstools.f_standardize.base_rule_framework import Rule, RuleEntity
 
 
 class PreSumUpCorrection(Rule):

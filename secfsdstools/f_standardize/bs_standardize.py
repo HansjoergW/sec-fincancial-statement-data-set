@@ -1,71 +1,27 @@
-from abc import ABC
-from abc import abstractmethod
 from typing import List, Optional, Set
 
 import numpy as np
 import pandas as pd
-import pandera as pa
 
 from secfsdstools.f_standardize.base_rules import CopyTagRule, SumUpRule, SetSumIfOnlyOneSummand, \
     PostCopyToFirstSummand, PreSumUpCorrection, missingsumparts_rules_creator
-
-from secfsdstools.f_standardize.rule_framework import RuleGroup
-
-
-class ValidationRule(ABC):
-
-    def __init__(self, id: str):
-        self.id = id
-
-    @abstractmethod
-    def mask(self, df: pd.DataFrame) -> pa.typing.Series[bool]:
-        pass
-
-    @abstractmethod
-    def calculate_error(self, df: pd.DataFrame, mask: pa.typing.Series[bool]) -> \
-            pa.typing.Series[np.float64]:
-        pass
-
-    def validate(self, df: pd.DataFrame):
-        mask = self.mask(df)
-        error = self.calculate_error(df, mask)
-
-        error_column_name = f'{self.id}_error'
-        cat_column_name = f'{self.id}_cat'
-
-        df[error_column_name] = None
-        df.loc[mask, error_column_name] = error
-
-        df.loc[mask, cat_column_name] = 100  # gt > 0.1 / 10%
-        df.loc[df[error_column_name] <= 0.1, cat_column_name] = 10  # 5-10 %
-        df.loc[df[error_column_name] <= 0.05, cat_column_name] = 5  # 1-5 %
-        df.loc[df[error_column_name] <= 0.01, cat_column_name] = 1  # < 1%
-        df.loc[df[error_column_name] == 0.0, cat_column_name] = 0  # exact match
-
-
-class SumValidationRule(ValidationRule):
-
-    def __init__(self, id: str, sum_tag: str, summands: List[str]):
-        super().__init__(id)
-        self.sum_tag = sum_tag
-        self.summands = summands
-
-    def mask(self, df: pd.DataFrame) -> pa.typing.Series[bool]:
-        mask = ~df[self.sum_tag].isna()
-        for summand in self.summands:
-            mask = mask & ~df[summand].isna()
-
-        return mask
-
-    def calculate_error(self, df: pd.DataFrame, mask: pa.typing.Series[bool]) -> \
-            pa.typing.Series[np.float64]:
-        return ((df[self.sum_tag] - df[self.summands].sum(axis='columns')) / df[self.sum_tag]).abs()
+from secfsdstools.f_standardize.base_rule_framework import RuleGroup
+from secfsdstools.f_standardize.base_validation_rules import SumValidationRule
 
 
 class RuleProcessor:
     identifier_tags = ['adsh', 'coreg', 'report', 'ddate']
 
-    def __init__(self, rule_tree: RuleGroup, clean_up_rule_tree: RuleGroup,
+    # todo
+    # missing
+    # preprocess
+    # rules
+    # group / list
+
+    def __init__(self,
+                 pre_rule_tree: RuleGroup,
+                 rule_tree: RuleGroup,
+                 post_rule_tree: RuleGroup,
                  validation_rules: List[ValidationRule],
                  iterations: int, main_tags: List[str], final_tags: List[str],
                  filter_for_main_report: bool = True, invert_negated: bool = True):

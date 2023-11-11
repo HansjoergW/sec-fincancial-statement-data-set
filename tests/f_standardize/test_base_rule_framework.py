@@ -3,7 +3,7 @@ from typing import List, Set
 import pandas as pd
 import pandera as pa
 
-from secfsdstools.f_standardize.rule_framework import Rule, RuleGroup
+from secfsdstools.f_standardize.base_rule_framework import Rule, RuleGroup
 
 
 class Rule1(Rule):

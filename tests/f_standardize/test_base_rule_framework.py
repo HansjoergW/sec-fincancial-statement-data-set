@@ -58,21 +58,21 @@ def test_simple_rule():
     assert rule.get_input_tags() == {'Tag1'}
     assert rule.get_target_tags() == ['Tag1']
     assert rule.get_target_tags_str() == 'Tag1'
-    assert rule.id == "R_Tag1"
+    assert rule.identifier == "R_Tag1"
 
     data = [10, 20, 30, 40, 50, 60]
     df = pd.DataFrame(data, columns=['Numbers'])
 
     # call process without a log -> simply expect no problems
-    rule.process(df=df)
+    rule.process(data_df=df)
 
     log_df = df.copy()
     # call rule with log.df
-    rule.process(df=df, log_df=log_df)
+    rule.process(data_df=df, log_df=log_df)
 
     # we expect a colum with the rule.id as columname
     # the sum of that column has to be the length of the dataframe
-    assert log_df[rule.id].sum() == len(df)
+    assert log_df[rule.identifier].sum() == len(df)
 
 
 def test_multitag_rule():
@@ -82,7 +82,7 @@ def test_multitag_rule():
     assert rule.get_input_tags() == {'Tag1', 'Tag2'}
     assert set(rule.get_target_tags()) == {'Tag1', 'Tag2'}
     assert rule.get_target_tags_str() == 'Tag1/Tag2'
-    assert rule.id == "R_Tag1/Tag2"
+    assert rule.identifier == "R_Tag1/Tag2"
 
 
 def test_simple_group_rule():
@@ -90,23 +90,23 @@ def test_simple_group_rule():
     rule2 = Rule1(tag_name='Tag2')
 
     rulegroup = RuleGroup(prefix="RG", rules=[rule1, rule2])
-    rulegroup.set_id(parent_prefix="R")
+    rulegroup.set_id(prefix="R")
 
-    assert rule1.id == "R_RG_#1_Tag1"
-    assert rule2.id == "R_RG_#2_Tag2"
+    assert rule1.identifier == "R_RG_#1_Tag1"
+    assert rule2.identifier == "R_RG_#2_Tag2"
     assert rulegroup.get_input_tags() == {'Tag1', 'Tag2'}
 
     data = [10, 20, 30, 40, 50, 60]
     df = pd.DataFrame(data, columns=['Numbers'])
 
     # call process without a log -> simply expect no problems
-    rulegroup.process(df=df)
+    rulegroup.process(data_df=df)
 
     log_df = df.copy()
     # call rule with log.df
-    rulegroup.process(df=df, log_df=log_df)
+    rulegroup.process(data_df=df, log_df=log_df)
 
     # we expect colums named with the id of both rules.
     # the sum of these column has to be the length of the dataframe
-    assert log_df[rule1.id].sum() == len(df)
-    assert log_df[rule2.id].sum() == len(df)
+    assert log_df[rule1.identifier].sum() == len(df)
+    assert log_df[rule2.identifier].sum() == len(df)

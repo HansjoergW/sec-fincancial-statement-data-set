@@ -29,7 +29,7 @@ def sample_dataframe():
 
 
 def test_simple_validation_rule_categories(sample_dataframe):
-    rule = SimpleValidationRule(id='test_rule')
+    rule = SimpleValidationRule(identifier='test_rule')
     rule.validate(sample_dataframe)
 
     assert sample_dataframe['test_rule_error'].round(decimals=2).tolist() == [0.0, 0.01, 0.05, 1.0]
@@ -53,7 +53,7 @@ def sample_dataframe_sum():
 
 @pytest.fixture
 def sum_validation_rule():
-    return SumValidationRule(id='test_sum_rule',
+    return SumValidationRule(identifier='test_sum_rule',
                              sum_tag='Assets',
                              summands=['AssetsCurrent', 'AssetsNoncurrent'])
 

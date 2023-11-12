@@ -62,7 +62,7 @@ class PreSumUpCorrection(Rule):
         """
         return (data_df[self.mixed_up_summand] ==
                        data_df[self.sum_tag] + data_df[self.other_summand]) \
-                and (data_df[self.other_summand] > 0)
+                & (data_df[self.other_summand] > 0)
 
     def apply(self, data_df: pd.DataFrame, mask: pa.typing.Series[bool]):
         """

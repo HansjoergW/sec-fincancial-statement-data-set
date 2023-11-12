@@ -77,7 +77,7 @@ class ValidationRule(ABC):
         error_column_name = f'{self.id}_error'
         cat_column_name = f'{self.id}_cat'
 
-        df[error_column_name] = None
+        df[error_column_name] = np.nan
         df.loc[mask, error_column_name] = error
 
         df.loc[mask, cat_column_name] = 100  # gt > 0.1 / 10%

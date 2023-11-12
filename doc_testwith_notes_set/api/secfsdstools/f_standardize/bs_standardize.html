@@ -133,7 +133,7 @@ class BalanceSheetStandardizer(Standardizer):
             )
         ])
 
-    main_rule_tree = RuleGroup(prefix=&#34;BS_&#34;,
+    main_rule_tree = RuleGroup(prefix=&#34;BS&#34;,
                                rules=[
                                    bs_rename_rg,
                                    bs_sumup_rg,
@@ -188,7 +188,7 @@ class BalanceSheetStandardizer(Standardizer):
     main_statement_tags = [&#39;Assets&#39;, &#39;AssetsCurrent&#39;, &#39;AssetsNoncurrent&#39;,
                            &#39;Liabilities&#39;, &#39;LiabilitiesCurrent&#39;, &#39;LiabilitiesNoncurrent&#39;]
 
-    def __init__(self, filter_for_main_statement: bool = False, iterations: int = 3):
+    def __init__(self, filter_for_main_statement: bool = True, iterations: int = 3):
         super().__init__(
             pre_rule_tree=self.preprocess_rule_tree,
             main_rule_tree=self.main_rule_tree,
@@ -285,7 +285,7 @@ class BalanceSheetStandardizer(Standardizer):
 <dl>
 <dt id="secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizer"><code class="flex name class">
 <span>class <span class="ident">BalanceSheetStandardizer</span></span>
-<span>(</span><span>filter_for_main_statement: bool = False, iterations: int = 3)</span>
+<span>(</span><span>filter_for_main_statement: bool = True, iterations: int = 3)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>The goal of this Standardizer is to create BalanceSheets that are compareable,
@@ -436,7 +436,7 @@ as negated.</dd>
             )
         ])
 
-    main_rule_tree = RuleGroup(prefix=&#34;BS_&#34;,
+    main_rule_tree = RuleGroup(prefix=&#34;BS&#34;,
                                rules=[
                                    bs_rename_rg,
                                    bs_sumup_rg,
@@ -491,7 +491,7 @@ as negated.</dd>
     main_statement_tags = [&#39;Assets&#39;, &#39;AssetsCurrent&#39;, &#39;AssetsNoncurrent&#39;,
                            &#39;Liabilities&#39;, &#39;LiabilitiesCurrent&#39;, &#39;LiabilitiesNoncurrent&#39;]
 
-    def __init__(self, filter_for_main_statement: bool = False, iterations: int = 3):
+    def __init__(self, filter_for_main_statement: bool = True, iterations: int = 3):
         super().__init__(
             pre_rule_tree=self.preprocess_rule_tree,
             main_rule_tree=self.main_rule_tree,

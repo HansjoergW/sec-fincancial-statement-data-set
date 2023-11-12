@@ -8,7 +8,6 @@ from secfsdstools.f_standardize.base_rules import CopyTagRule, SumUpRule, \
 from secfsdstools.f_standardize.base_validation_rules import ValidationRule, SumValidationRule
 from secfsdstools.f_standardize.standardizing import Standardizer
 
-import pandas as pd
 
 class BalanceSheetStandardizer(Standardizer):
     """
@@ -105,23 +104,13 @@ class BalanceSheetStandardizer(Standardizer):
             )
         ])
 
-    rule_tree = RuleGroup(prefix="BS_",
-                          rules=[
-                              bs_rename_rg,
-                              bs_sumup_rg,
-                              bs_sum_completion,
-                          ])
+    main_rule_tree = RuleGroup(prefix="BS_",
+                               rules=[
+                                   bs_rename_rg,
+                                   bs_sumup_rg,
+                                   bs_sum_completion,
+                               ])
 
-    cleanup_rule_tree = RuleGroup(prefix="BS_POST",
-                                  rules=[
-                                      PostCopyToFirstSummand(sum_tag='Assets',
-                                                             first_summand='AssetsCurrent',
-                                                             other_summands=[
-                                                                 'AssetsNoncurrent']),
-                                      PostCopyToFirstSummand(sum_tag='Liabilities',
-                                                             first_summand='LiabilitiesCurrent',
-                                                             other_summands=[
-                                                                 'LiabilitiesNoncurrent'])])
     preprocess_rule_tree = RuleGroup(prefix="BS_PRE",
                                      rules=[
                                          PreSumUpCorrection(sum_tag='Assets',
@@ -132,11 +121,22 @@ class BalanceSheetStandardizer(Standardizer):
                                                             other_summand='AssetsNoncurrent'),
                                      ])
 
+    post_rule_tree = RuleGroup(prefix="BS_POST",
+                               rules=[
+                                   PostCopyToFirstSummand(sum_tag='Assets',
+                                                          first_summand='AssetsCurrent',
+                                                          other_summands=[
+                                                              'AssetsNoncurrent']),
+                                   PostCopyToFirstSummand(sum_tag='Liabilities',
+                                                          first_summand='LiabilitiesCurrent',
+                                                          other_summands=[
+                                                              'LiabilitiesNoncurrent'])])
+
     validation_rules: List[ValidationRule] = [
-        SumValidationRule(id='AssetsCheck',
+        SumValidationRule(identifier='AssetsCheck',
                           sum_tag='Assets',
                           summands=['AssetsCurrent', 'AssetsNoncurrent']),
-        SumValidationRule(id='LiabilitiesCheck',
+        SumValidationRule(identifier='LiabilitiesCheck',
                           sum_tag='Liabilities',
                           summands=['LiabilitiesCurrent', 'LiabilitiesNoncurrent'])
     ]
@@ -156,19 +156,19 @@ class BalanceSheetStandardizer(Standardizer):
     # which stmt value is BS.
     # however, we might be only interested in the "major" BS report. Usually this is the
     # one which has the least nan in the following columns
-    main_tags = ['Assets', 'AssetsCurrent', 'AssetsNoncurrent',
-                 'Liabilities', 'LiabilitiesCurrent', 'LiabilitiesNoncurrent']
+    main_statement_tags = ['Assets', 'AssetsCurrent', 'AssetsNoncurrent',
+                           'Liabilities', 'LiabilitiesCurrent', 'LiabilitiesNoncurrent']
 
-    def __init__(self, filter_for_main_report: bool = False, iterations: int = 3):
-        super().__init__(rule_tree=self.rule_tree,
-                         clean_up_rule_tree=self.cleanup_rule_tree,
-                         validation_rules=self.validation_rules,
-                         iterations=iterations,
-                         main_tags=self.main_tags, final_tags=self.final_tags,
-                         filter_for_main_report=filter_for_main_report)
-
-
-
+    def __init__(self, filter_for_main_statement: bool = False, iterations: int = 3):
+        super().__init__(
+            pre_rule_tree=self.preprocess_rule_tree,
+            main_rule_tree=self.main_rule_tree,
+            post_rule_tree=self.post_rule_tree,
+            validation_rules=self.validation_rules,
+            final_tags=self.final_tags,
+            main_iterations=iterations,
+            filter_for_main_statement=filter_for_main_statement,
+            main_statement_tags=self.main_statement_tags)
 
 #
 # class BalanceSheetStandardizerOld:

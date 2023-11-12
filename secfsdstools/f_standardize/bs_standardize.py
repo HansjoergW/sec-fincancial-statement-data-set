@@ -104,7 +104,7 @@ class BalanceSheetStandardizer(Standardizer):
             )
         ])
 
-    main_rule_tree = RuleGroup(prefix="BS_",
+    main_rule_tree = RuleGroup(prefix="BS",
                                rules=[
                                    bs_rename_rg,
                                    bs_sumup_rg,
@@ -159,7 +159,7 @@ class BalanceSheetStandardizer(Standardizer):
     main_statement_tags = ['Assets', 'AssetsCurrent', 'AssetsNoncurrent',
                            'Liabilities', 'LiabilitiesCurrent', 'LiabilitiesNoncurrent']
 
-    def __init__(self, filter_for_main_statement: bool = False, iterations: int = 3):
+    def __init__(self, filter_for_main_statement: bool = True, iterations: int = 3):
         super().__init__(
             pre_rule_tree=self.preprocess_rule_tree,
             main_rule_tree=self.main_rule_tree,

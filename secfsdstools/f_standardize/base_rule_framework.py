@@ -12,7 +12,7 @@ import pandera as pa
 
 class RuleEntity(ABC):
     """ Base RuleEntity, which provides the basic definition to craete a tree of rules. """
-    id: str = '<not set>'
+    identifier: str = '<not set>'
 
     @abstractmethod
     def get_input_tags(self) -> Set[str]:
@@ -23,20 +23,18 @@ class RuleEntity(ABC):
         Returns:
             Set[str] : a set of strings
         """
-        pass
 
-    def process(self, df: pd.DataFrame, log_df: Optional[pd.DataFrame] = None):
+    def process(self, data_df: pd.DataFrame, log_df: Optional[pd.DataFrame] = None):
         """
         Applies the rules on the provided dataframe.
         If a log_df is provided, the affected roles by every rule are logged into the
         log_df.
 
         Args:
-            df (pd.DataFrame): the dataframe on which the rules will be applied
+            data_df (pd.DataFrame): the dataframe on which the rules will be applied
             log_df (pd.DataFrame, optional, None): the logs-dataframe
 
         """
-        pass
 
     @abstractmethod
     def set_id(self, prefix: str):
@@ -45,7 +43,6 @@ class RuleEntity(ABC):
         Args:
             prefix: the prefix from the parent in the rule-tree which has to be part of the id
         """
-        pass
 
     @abstractmethod
     def get_description(self) -> str:
@@ -54,7 +51,6 @@ class RuleEntity(ABC):
         Returns:
             str: description
         """
-        pass
 
 
 class Rule(RuleEntity):
@@ -69,7 +65,6 @@ class Rule(RuleEntity):
             List[str]: list with affected tags/columns
 
         """
-        pass
 
     def get_target_tags_str(self) -> str:
         """
@@ -80,20 +75,19 @@ class Rule(RuleEntity):
         return "/".join(self.get_target_tags())
 
     @abstractmethod
-    def mask(self, df: pd.DataFrame) -> pa.typing.Series[bool]:
+    def mask(self, data_df: pd.DataFrame) -> pa.typing.Series[bool]:
         """
             returns a Series[bool] which defines the rows to which this rule has to be applied.
 
         Args:
-            df: dataframe on which the rules should be applied
+            data_df: dataframe on which the rules should be applied
 
         Returns:
             pa.typing.Series[bool]: a boolean Series that marks which rows have to be calculated
         """
-        pass
 
     @abstractmethod
-    def apply(self, df: pd.DataFrame, mask: pa.typing.Series[bool]):
+    def apply(self, data_df: pd.DataFrame, mask: pa.typing.Series[bool]):
         """
         apply the rule on the provided dataframe. the rows, on which the rule has to be applied
         is defined by the provide mask Series.
@@ -101,10 +95,9 @@ class Rule(RuleEntity):
         Important, the rules have to be applied "in-place", so now new dataframe is produced.
 
         Args:
-            df: dataframe on which the rule has to be applied
+            data_df: dataframe on which the rule has to be applied
             mask: a Series marking the rows in the dataframe on which the rule has to be applied
         """
-        pass
 
     def set_id(self, prefix: str):
         """
@@ -112,25 +105,25 @@ class Rule(RuleEntity):
         Args:
             prefix: the prefix from the parent in the rule-tree which has to be part of the id
         """
-        self.id = f'{prefix}_{self.get_target_tags_str()}'
+        self.identifier = f'{prefix}_{self.get_target_tags_str()}'
 
-    def process(self, df: pd.DataFrame, log_df: Optional[pd.DataFrame] = None):
+    def process(self, data_df: pd.DataFrame, log_df: Optional[pd.DataFrame] = None):
         """
         process the dataframe and apply the rule. If a log_df is provided, the rows on which
         the rule is applied to is added to the log_df.
 
         Args:
-            df (pd.DataFrame) : dataframe on which the rule has to be applied
+            data_df (pd.DataFrame) : dataframe on which the rule has to be applied
             log_df (pd.DataFrame, optional, None): the log dataframe
         """
-        mask = self.mask(df)
-        self.apply(df, mask)
+        mask = self.mask(data_df)
+        self.apply(data_df, mask)
 
         # if a log_df is provided, create a new column for this role and mark the rows that were
         # affected by the rule
         if (log_df is not None) and (len(log_df) == len(mask)):
-            log_df[self.id] = False
-            log_df.loc[mask, self.id] = True
+            log_df[self.identifier] = False
+            log_df.loc[mask, self.identifier] = True
 
 
 class RuleGroup(RuleEntity):
@@ -147,19 +140,19 @@ class RuleGroup(RuleEntity):
         self.prefix = prefix
         self.description = description
 
-    def set_id(self, parent_prefix: str):
+    def set_id(self, prefix: str):
         """
         sets the identifier of this rulegroup and calls the set_id method of the child rules
         Args:
             prefix: the prefix from the parent in the rule-tree which has to be part of the id
         """
         idx = 1
-        self.id = f'{parent_prefix}_{self.prefix}'
+        self.identifier = f'{prefix}_{self.prefix}'
         for rule in self.rules:
-            rule.set_id(f'{self.id}_#{idx}')
+            rule.set_id(f'{self.identifier}_#{idx}')
             idx = idx + 1
 
-    def process(self, df: pd.DataFrame, log_df: Optional[pd.DataFrame] = None):
+    def process(self, data_df: pd.DataFrame, log_df: Optional[pd.DataFrame] = None):
         """
         process the dataframe and apply the rules of this group.
         If a log_df is provided, the rows on which the rule is applied to is added to the log_df.
@@ -169,7 +162,7 @@ class RuleGroup(RuleEntity):
             log_df (pd.DataFrame, optional, None): the log dataframe
         """
         for rule in self.rules:
-            rule.process(df=df, log_df=log_df)
+            rule.process(data_df=data_df, log_df=log_df)
 
     def get_input_tags(self) -> Set[str]:
         """

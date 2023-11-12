@@ -96,4 +96,3 @@ class BaseCollector(ABC):
             RawDataBag: the collected Data
 
         """
-        pass

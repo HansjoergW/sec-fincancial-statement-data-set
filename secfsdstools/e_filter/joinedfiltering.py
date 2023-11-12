@@ -1,3 +1,5 @@
+"""contains Filters for the JoinedDataBag."""
+
 from secfsdstools.d_container.databagmodel import JoinedDataBag
 from secfsdstools.d_container.filter import FilterBase
 
@@ -21,7 +23,7 @@ class USDonlyFilter(FilterBase[JoinedDataBag]):
         mask_non_currency = databag.pre_num_df.uom.str.len() > 3
         mask_usd_only = databag.pre_num_df.uom == "USD"
 
-        prenum_filtered_for_USD = databag.pre_num_df[mask_non_currency | mask_usd_only]
+        prenum_filtered_for_usd = databag.pre_num_df[mask_non_currency | mask_usd_only]
 
         return JoinedDataBag.create(sub_df=databag.sub_df,
-                                    pre_num_df=prenum_filtered_for_USD)
+                                    pre_num_df=prenum_filtered_for_usd)

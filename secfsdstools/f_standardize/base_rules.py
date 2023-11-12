@@ -50,20 +50,21 @@ class PreSumUpCorrection(Rule):
         """
         return {self.sum_tag, self.mixed_up_summand, self.other_summand}
 
-    def mask(self, df: pd.DataFrame) -> pa.typing.Series[bool]:
+    def mask(self, data_df: pd.DataFrame) -> pa.typing.Series[bool]:
         """
             returns a Series[bool] which defines the rows to which this rule has to be applied.
 
         Args:
-            df: dataframe on which the rules should be applied
+            data_df: dataframe on which the rules should be applied
 
         Returns:
             pa.typing.Series[bool]: a boolean Series that marks which rows have to be calculated
         """
-        return (df[self.mixed_up_summand] == df[self.sum_tag] + df[self.other_summand]) \
-               & (df[self.other_summand] > 0)
+        return (data_df[self.mixed_up_summand] ==
+                       data_df[self.sum_tag] + data_df[self.other_summand]) \
+                and (data_df[self.other_summand] > 0)
 
-    def apply(self, df: pd.DataFrame, mask: pa.typing.Series[bool]):
+    def apply(self, data_df: pd.DataFrame, mask: pa.typing.Series[bool]):
         """
         apply the rule on the provided dataframe. the rows, on which the rule has to be applied
         is defined by the provide mask Series.
@@ -75,9 +76,9 @@ class PreSumUpCorrection(Rule):
             mask: a Series marking the rows in the dataframe on which the rule has to be applied
         """
 
-        mixed_up_values = df[self.mixed_up_summand].copy()
-        df.loc[mask, self.mixed_up_summand] = df[self.sum_tag]
-        df.loc[mask, self.sum_tag] = mixed_up_values
+        mixed_up_values = data_df[self.mixed_up_summand].copy()
+        data_df.loc[mask, self.mixed_up_summand] = data_df[self.sum_tag]
+        data_df.loc[mask, self.sum_tag] = mixed_up_values
 
     def get_description(self) -> str:
         """
@@ -104,20 +105,20 @@ class CopyTagRule(Rule):
         self.original = original
         self.target = target
 
-    def mask(self, df: pd.DataFrame) -> pa.typing.Series[bool]:
+    def mask(self, data_df: pd.DataFrame) -> pa.typing.Series[bool]:
         """
             returns a Series[bool] which defines the rows to which this rule has to be applied.
 
         Args:
-            df: dataframe on which the rules should be applied
+            data_df: dataframe on which the rules should be applied
 
         Returns:
             pa.typing.Series[bool]: a boolean Series that marks which rows have to be calculated
         """
-        return (df[self.target].isna() &
-                ~df[self.original].isna())
+        return (data_df[self.target].isna() &
+                ~data_df[self.original].isna())
 
-    def apply(self, df: pd.DataFrame, mask: pa.typing.Series[bool]):
+    def apply(self, data_df: pd.DataFrame, mask: pa.typing.Series[bool]):
         """
         apply the rule on the provided dataframe. the rows, on which the rule has to be applied
         is defined by the provide mask Series.
@@ -125,10 +126,10 @@ class CopyTagRule(Rule):
         Important, the rules have to be applied "in-place", so no new dataframe is produced.
 
         Args:
-            df: dataframe on which the rule has to be applied
+            data_df dataframe on which the rule has to be applied
             mask: a Series marking the rows in the dataframe on which the rule has to be applied
         """
-        df.loc[mask, self.target] = df[self.original]
+        data_df.loc[mask, self.target] = data_df[self.original]
 
     def get_input_tags(self) -> Set[str]:
         """
@@ -192,23 +193,23 @@ class MissingSumRule(Rule):
         result.update(self.summand_tags)
         return result
 
-    def mask(self, df: pd.DataFrame) -> pa.typing.Series[bool]:
+    def mask(self, data_df: pd.DataFrame) -> pa.typing.Series[bool]:
         """
             returns a Series[bool] which defines the rows to which this rule has to be applied.
 
         Args:
-            df: dataframe on which the rules should be applied
+            data_df dataframe on which the rules should be applied
 
         Returns:
             pa.typing.Series[bool]: a boolean Series that marks which rows have to be calculated
         """
-        mask = df[self.sum_tag].isna()
+        mask = data_df[self.sum_tag].isna()
         for summand_name in self.summand_tags:
-            mask = mask & ~df[summand_name].isna()
+            mask = mask & ~data_df[summand_name].isna()
 
         return mask
 
-    def apply(self, df: pd.DataFrame, mask: pa.typing.Series[bool]):
+    def apply(self, data_df: pd.DataFrame, mask: pa.typing.Series[bool]):
         """
         apply the rule on the provided dataframe. the rows, on which the rule has to be applied
         is defined by the provide mask Series.
@@ -216,10 +217,10 @@ class MissingSumRule(Rule):
         Important, the rules have to be applied "in-place", so no new dataframe is produced.
 
         Args:
-            df: dataframe on which the rule has to be applied
+            data_df dataframe on which the rule has to be applied
             mask: a Series marking the rows in the dataframe on which the rule has to be applied
         """
-        df.loc[mask, self.sum_tag] = df[self.summand_tags].sum(axis=1)
+        data_df.loc[mask, self.sum_tag] = data_df[self.summand_tags].sum(axis=1)
 
     def get_description(self) -> str:
         """
@@ -268,25 +269,25 @@ class MissingSummandRule(Rule):
         result.update(self.existing_summands_tags)
         return result
 
-    def mask(self, df: pd.DataFrame) -> pa.typing.Series[bool]:
+    def mask(self, data_df: pd.DataFrame) -> pa.typing.Series[bool]:
         """
             returns a Series[bool] which defines the rows to which this rule has to be applied.
 
         Args:
-            df: dataframe on which the rules should be applied
+            data_df dataframe on which the rules should be applied
 
         Returns:
             pa.typing.Series[bool]: a boolean Series that marks which rows have to be calculated
         """
 
         # sum and other_summands must be set, missing_summand must not be set
-        mask = ~df[self.sum_tag].isna()
+        mask = ~data_df[self.sum_tag].isna()
         for summand_name in self.existing_summands_tags:
-            mask = mask & ~df[summand_name].isna()
-        mask = mask & df[self.missing_summand_tag].isna()
+            mask = mask & ~data_df[summand_name].isna()
+        mask = mask & data_df[self.missing_summand_tag].isna()
         return mask
 
-    def apply(self, df: pd.DataFrame, mask: pa.typing.Series[bool]):
+    def apply(self, data_df: pd.DataFrame, mask: pa.typing.Series[bool]):
         """
         apply the rule on the provided dataframe. the rows, on which the rule has to be applied
         is defined by the provide mask Series.
@@ -294,12 +295,12 @@ class MissingSummandRule(Rule):
         Important, the rules have to be applied "in-place", so no new dataframe is produced.
 
         Args:
-            df: dataframe on which the rule has to be applied
+            data_df dataframe on which the rule has to be applied
             mask: a Series marking the rows in the dataframe on which the rule has to be applied
         """
 
-        df.loc[mask, self.missing_summand_tag] = \
-            df[self.sum_tag] - df[self.existing_summands_tags].sum(axis=1)
+        data_df.loc[mask, self.missing_summand_tag] = \
+            data_df[self.sum_tag] - data_df[self.existing_summands_tags].sum(axis=1)
 
     def get_description(self) -> str:
         """
@@ -346,21 +347,21 @@ class SumUpRule(Rule):
         result.update(self.potential_summands)
         return result
 
-    def mask(self, df: pd.DataFrame) -> pa.typing.Series[bool]:
+    def mask(self, data_df: pd.DataFrame) -> pa.typing.Series[bool]:
         """
             returns a Series[bool] which defines the rows to which this rule has to be applied.
 
         Args:
-            df: dataframe on which the rules should be applied
+            data_df dataframe on which the rules should be applied
 
         Returns:
             pa.typing.Series[bool]: a boolean Series that marks which rows have to be calculated
         """
 
         # mask if the target was not set
-        return df[self.sum_tag].isna()
+        return data_df[self.sum_tag].isna()
 
-    def apply(self, df: pd.DataFrame, mask: pa.typing.Series[bool]):
+    def apply(self, data_df: pd.DataFrame, mask: pa.typing.Series[bool]):
         """
         apply the rule on the provided dataframe. the rows, on which the rule has to be applied
         is defined by the provide mask Series.
@@ -368,13 +369,14 @@ class SumUpRule(Rule):
         Important, the rules have to be applied "in-place", so no new dataframe is produced.
 
         Args:
-            df: dataframe on which the rule has to be applied
+            data_df dataframe on which the rule has to be applied
             mask: a Series marking the rows in the dataframe on which the rule has to be applied
         """
-        df.loc[mask, self.sum_tag] = 0.0  # initialize
+        data_df.loc[mask, self.sum_tag] = 0.0  # initialize
         for potential_summand in self.potential_summands:
-            summand_mask = mask & ~df[potential_summand].isna()
-            df.loc[summand_mask, self.sum_tag] = df[self.sum_tag] + df[potential_summand]
+            summand_mask = mask & ~data_df[potential_summand].isna()
+            data_df.loc[summand_mask, self.sum_tag] = data_df[self.sum_tag] + data_df[
+                potential_summand]
 
     def get_description(self) -> str:
         """
@@ -394,9 +396,8 @@ class SetSumIfOnlyOneSummand(Rule):
 
     def __init__(self, sum_tag: str, summand_set: str, summands_nan: List[str]):
         """
-        
         Args:
-            sum_tag: target that contains the sum. 
+            sum_tag: target that contains the sum.
             summand_set: the summand that contains a value
             summands_nan: the summands without a value
         """
@@ -424,23 +425,23 @@ class SetSumIfOnlyOneSummand(Rule):
         result.update(self.summands_nan)
         return result
 
-    def mask(self, df: pd.DataFrame) -> pa.typing.Series[bool]:
+    def mask(self, data_df: pd.DataFrame) -> pa.typing.Series[bool]:
         """
             returns a Series[bool] which defines the rows to which this rule has to be applied.
 
         Args:
-            df: dataframe on which the rules should be applied
+            data_df dataframe on which the rules should be applied
 
         Returns:
             pa.typing.Series[bool]: a boolean Series that marks which rows have to be calculated
         """
-        mask = df[self.sum_tag].isna() & ~df[self.summand_set].isna()
+        mask = data_df[self.sum_tag].isna() & ~data_df[self.summand_set].isna()
         for summand_nan in self.summands_nan:
-            mask = mask & df[summand_nan].isna()
+            mask = mask & data_df[summand_nan].isna()
 
         return mask
 
-    def apply(self, df: pd.DataFrame, mask: pa.typing.Series[bool]):
+    def apply(self, data_df: pd.DataFrame, mask: pa.typing.Series[bool]):
         """
         apply the rule on the provided dataframe. the rows, on which the rule has to be applied
         is defined by the provide mask Series.
@@ -448,12 +449,12 @@ class SetSumIfOnlyOneSummand(Rule):
         Important, the rules have to be applied "in-place", so no new dataframe is produced.
 
         Args:
-            df: dataframe on which the rule has to be applied
+            data_df dataframe on which the rule has to be applied
             mask: a Series marking the rows in the dataframe on which the rule has to be applied
         """
-        df.loc[mask, self.sum_tag] = df[self.summand_set]  # initialize
+        data_df.loc[mask, self.sum_tag] = data_df[self.summand_set]  # initialize
         for summand_nan in self.summands_nan:
-            df.loc[mask, summand_nan] = 0.0
+            data_df.loc[mask, summand_nan] = 0.0
 
     def get_description(self) -> str:
         """
@@ -505,23 +506,23 @@ class PostCopyToFirstSummand(Rule):
         result.update(self.other_summands)
         return result
 
-    def mask(self, df: pd.DataFrame) -> pa.typing.Series[bool]:
+    def mask(self, data_df: pd.DataFrame) -> pa.typing.Series[bool]:
         """
             returns a Series[bool] which defines the rows to which this rule has to be applied.
 
         Args:
-            df: dataframe on which the rules should be applied
+            data_df dataframe on which the rules should be applied
 
         Returns:
             pa.typing.Series[bool]: a boolean Series that marks which rows have to be calculated
         """
-        mask = ~df[self.sum_tag].isna() & df[self.first_summand].isna()
+        mask = ~data_df[self.sum_tag].isna() & data_df[self.first_summand].isna()
         for other_summand in self.other_summands:
-            mask = mask & df[other_summand].isna()
+            mask = mask & data_df[other_summand].isna()
 
         return mask
 
-    def apply(self, df: pd.DataFrame, mask: pa.typing.Series[bool]):
+    def apply(self, data_df: pd.DataFrame, mask: pa.typing.Series[bool]):
         """
         apply the rule on the provided dataframe. the rows, on which the rule has to be applied
         is defined by the provide mask Series.
@@ -529,13 +530,13 @@ class PostCopyToFirstSummand(Rule):
         Important, the rules have to be applied "in-place", so no new dataframe is produced.
 
         Args:
-            df: dataframe on which the rule has to be applied
+            data_df dataframe on which the rule has to be applied
             mask: a Series marking the rows in the dataframe on which the rule has to be applied
         """
 
-        df.loc[mask, self.first_summand] = df[self.sum_tag]  # initialize
+        data_df.loc[mask, self.first_summand] = data_df[self.sum_tag]  # initialize
         for other_summand in self.other_summands:
-            df.loc[mask, other_summand] = 0.0
+            data_df.loc[mask, other_summand] = 0.0
 
     def get_description(self) -> str:
         """

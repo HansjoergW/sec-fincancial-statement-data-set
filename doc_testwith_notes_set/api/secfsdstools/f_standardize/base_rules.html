@@ -91,7 +91,7 @@ class PreSumUpCorrection(Rule):
         &#34;&#34;&#34;
         return (data_df[self.mixed_up_summand] ==
                        data_df[self.sum_tag] + data_df[self.other_summand]) \
-                and (data_df[self.other_summand] &gt; 0)
+                &amp; (data_df[self.other_summand] &gt; 0)
 
     def apply(self, data_df: pd.DataFrame, mask: pa.typing.Series[bool]):
         &#34;&#34;&#34;
@@ -1651,7 +1651,7 @@ it matches AssetsNoncurrent = Assets + AssetsCurrent.</p>
         &#34;&#34;&#34;
         return (data_df[self.mixed_up_summand] ==
                        data_df[self.sum_tag] + data_df[self.other_summand]) \
-                and (data_df[self.other_summand] &gt; 0)
+                &amp; (data_df[self.other_summand] &gt; 0)
 
     def apply(self, data_df: pd.DataFrame, mask: pa.typing.Series[bool]):
         &#34;&#34;&#34;

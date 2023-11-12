@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.10.0" />
 <title>secfsdstools.f_standardize.bs_standardize API documentation</title>
-<meta name="description" content="" />
+<meta name="description" content="Contains the definitions to standardize balance sheets." />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
 <link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
@@ -22,230 +22,23 @@
 <h1 class="title">Module <code>secfsdstools.f_standardize.bs_standardize</code></h1>
 </header>
 <section id="section-intro">
+<p>Contains the definitions to standardize balance sheets.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">from abc import ABC
-from abc import abstractmethod
-from typing import List, Optional, Set
+<pre><code class="python">&#34;&#34;&#34;Contains the definitions to standardize balance sheets.&#34;&#34;&#34;
+from typing import List
 
-import numpy as np
-import pandas as pd
-import pandera as pa
-
-from secfsdstools.f_standardize.base_rules import CopyTagRule, SumUpRule, SetSumIfOnlyOneSummand, \
-    PostCopyToFirstSummand, PreSumUpCorrection, missingsumparts_rules_creator
-
-from secfsdstools.f_standardize.rule_framework import RuleGroup
+from secfsdstools.f_standardize.base_rule_framework import RuleGroup
+from secfsdstools.f_standardize.base_rules import CopyTagRule, SumUpRule, \
+    missingsumparts_rules_creator, SetSumIfOnlyOneSummand, PostCopyToFirstSummand, \
+    PreSumUpCorrection
+from secfsdstools.f_standardize.base_validation_rules import ValidationRule, SumValidationRule
+from secfsdstools.f_standardize.standardizing import Standardizer
 
 
-class ValidationRule(ABC):
-
-    def __init__(self, id: str):
-        self.id = id
-
-    @abstractmethod
-    def mask(self, df: pd.DataFrame) -&gt; pa.typing.Series[bool]:
-        pass
-
-    @abstractmethod
-    def calculate_error(self, df: pd.DataFrame, mask: pa.typing.Series[bool]) -&gt; \
-            pa.typing.Series[np.float64]:
-        pass
-
-    def validate(self, df: pd.DataFrame):
-        mask = self.mask(df)
-        error = self.calculate_error(df, mask)
-
-        error_column_name = f&#39;{self.id}_error&#39;
-        cat_column_name = f&#39;{self.id}_cat&#39;
-
-        df[error_column_name] = None
-        df.loc[mask, error_column_name] = error
-
-        df.loc[mask, cat_column_name] = 100  # gt &gt; 0.1 / 10%
-        df.loc[df[error_column_name] &lt;= 0.1, cat_column_name] = 10  # 5-10 %
-        df.loc[df[error_column_name] &lt;= 0.05, cat_column_name] = 5  # 1-5 %
-        df.loc[df[error_column_name] &lt;= 0.01, cat_column_name] = 1  # &lt; 1%
-        df.loc[df[error_column_name] == 0.0, cat_column_name] = 0  # exact match
-
-
-class SumValidationRule(ValidationRule):
-
-    def __init__(self, id: str, sum_tag: str, summands: List[str]):
-        super().__init__(id)
-        self.sum_tag = sum_tag
-        self.summands = summands
-
-    def mask(self, df: pd.DataFrame) -&gt; pa.typing.Series[bool]:
-        mask = ~df[self.sum_tag].isna()
-        for summand in self.summands:
-            mask = mask &amp; ~df[summand].isna()
-
-        return mask
-
-    def calculate_error(self, df: pd.DataFrame, mask: pa.typing.Series[bool]) -&gt; \
-            pa.typing.Series[np.float64]:
-        return ((df[self.sum_tag] - df[self.summands].sum(axis=&#39;columns&#39;)) / df[self.sum_tag]).abs()
-
-
-class RuleProcessor:
-    identifier_tags = [&#39;adsh&#39;, &#39;coreg&#39;, &#39;report&#39;, &#39;ddate&#39;]
-
-    def __init__(self, rule_tree: RuleGroup, clean_up_rule_tree: RuleGroup,
-                 validation_rules: List[ValidationRule],
-                 iterations: int, main_tags: List[str], final_tags: List[str],
-                 filter_for_main_report: bool = True, invert_negated: bool = True):
-        self.rule_tree = rule_tree
-        self.clean_up_rule_tree = clean_up_rule_tree
-        self.validation_rules = validation_rules
-        self.iterations = iterations
-        self.main_tags = main_tags
-        self.final_tags = final_tags
-        self.filter_for_main_report = filter_for_main_report
-        self.invert_negated = invert_negated
-
-        self.final_col_order = self.identifier_tags + self.final_tags
-
-        self.preprocess_dupliate_log_df: Optional[pd.DataFrame] = None
-        self.log_df: Optional[pd.DataFrame] = None
-        self.applied_rules_sum_df: Optional[pd.DataFrame] = None
-        self.stats: Optional[pd.DataFrame] = None
-
-    def get_ruletree_descriptions(self):
-        # todo
-        pass
-
-    def process(self, df: pd.DataFrame) -&gt; pd.DataFrame:
-        all_input_tags = self.rule_tree.get_input_tags()
-
-        relevant_df = \
-            df[[&#39;adsh&#39;, &#39;coreg&#39;, &#39;tag&#39;, &#39;version&#39;, &#39;ddate&#39;, &#39;uom&#39;, &#39;value&#39;, &#39;report&#39;, &#39;line&#39;,
-                &#39;negating&#39;]][df.tag.isin(all_input_tags)]
-
-        # preprocessing ..
-        #  - deduplicate
-        cpy_df = self._deduplicate(relevant_df).copy()
-
-        #  - invert_negated
-        if self.invert_negated:
-            cpy_df.loc[cpy_df.negating == 1, &#39;value&#39;] = -cpy_df.value
-
-        # pivot the table, so that the tags become columns
-        # todo: folgende Zeile sollte nicht mehr notwendig sein, sobald alle Regeln implementiert sind
-        expected_tags = all_input_tags.union(self.final_tags)
-        pivot_df = self._pivot(df=cpy_df, expected_tags=expected_tags)
-
-        if self.filter_for_main_report:
-            pivot_df = self._filter_pivot_for_main_reports(pivot_df)
-
-        pivot_df_index_cols = [&#39;adsh&#39;, &#39;coreg&#39;, &#39;report&#39;, &#39;ddate&#39;, &#39;uom&#39;]
-        self.log_df = pivot_df[pivot_df_index_cols].copy()
-
-        total_length = len(pivot_df)
-
-        # calculate_pre_stats:
-        pre_apply_df = pivot_df[self.final_col_order]
-        self.pre_stats = self._calculate_stats(pivot_df=pre_apply_df)
-        self.pre_stats.name = &#34;pre&#34;
-
-        self.stats = pd.DataFrame(self.pre_stats)
-        self.stats[&#39;pre_rel&#39;] = self.stats.pre / total_length
-
-        self.stats = pd.DataFrame(self.pre_stats)
-
-        for i in range(self.iterations):
-            # set ids of the rules in the tree, use the iteration number as prefix
-            self.rule_tree.set_id(parent_prefix=f&#34;{i}_&#34;)
-
-            # apply the rule_tree
-            self.rule_tree.process(df=pivot_df, log_df=self.log_df)
-
-            self.post_stats = self._calculate_stats(pivot_df=pivot_df)
-            self.post_stats.name = f&#34;post_{i}&#34;
-
-            self.stats = self.stats.join(self.post_stats)
-            self.stats[self.post_stats.name + &#39;_rel&#39;] = \
-                self.stats[self.post_stats.name] / total_length
-            self.stats[self.post_stats.name + &#39;_red&#39;] = \
-                1 - (self.stats[self.post_stats.name] / self.stats.pre)
-
-        # clean up rules
-        self.clean_up_rule_tree.process(df=pivot_df, log_df=self.log_df)
-
-        # calculate cleanup stats
-        self.post_cleanup = self._calculate_stats(pivot_df=pivot_df)
-        self.post_cleanup.name = &#34;cleanup&#34;
-        self.stats = self.stats.join(self.post_cleanup)
-        self.stats[self.post_cleanup.name + &#39;_rel&#39;] = \
-            self.stats[self.post_cleanup.name] / total_length
-        self.stats[self.post_cleanup.name + &#39;_red&#39;] = \
-            1 - (self.stats[self.post_cleanup.name] / self.stats.pre)
-
-        # create a meaningful order
-        pivot_df = pivot_df[self.final_col_order].copy()
-
-        # apply validation rules
-        for validation_rule in self.validation_rules:
-            validation_rule.validate(pivot_df)
-
-        # caculate log_df summaries
-        if self.log_df is not None:
-            # filter for rule columns but making sure the order stays the same
-            rule_columns = [x for x in self.log_df.columns if x not in pivot_df_index_cols]
-            self.applied_rules_sum_df = self.log_df[rule_columns].sum()
-
-        return pivot_df
-
-    def _deduplicate(self, df: pd.DataFrame) -&gt; pd.DataFrame:
-        # find duplicated entries
-        # sometimes, only single tags are duplicated, however, there are also reports
-        # where all tags of a report are duplicated, maybe due to a problem with processing
-        duplicates_s = \
-            df.duplicated([&#39;adsh&#39;, &#39;coreg&#39;, &#39;report&#39;, &#39;uom&#39;, &#39;tag&#39;, &#39;version&#39;, &#39;ddate&#39;, &#39;value&#39;])
-
-        self.preprocess_dupliate_log_df = df[duplicates_s] \
-            [[&#39;adsh&#39;, &#39;coreg&#39;, &#39;report&#39;, &#39;tag&#39;, &#39;uom&#39;, &#39;version&#39;, &#39;ddate&#39;]].copy()
-
-        return df[~duplicates_s]
-
-    def _filter_pivot_for_main_reports(self, pivot_df: pd.DataFrame) -&gt; pd.DataFrame:
-        &#34;&#34;&#34; Some reports have more than one &#39;report number&#39; (column report) for a
-            certain statement. Generally, the one with the most tags is the one to take.
-            This method operates on the pivoted data and counts the none-values of the
-            &#34;main columns&#34;. The main columns are the fields, that generally should be there.
-             &#34;&#34;&#34;
-
-        cpy_pivot_df = pivot_df.copy()
-
-        cpy_pivot_df[&#39;nan_count&#39;] = cpy_pivot_df[self.main_tags].isna().sum(axis=1)
-        cpy_pivot_df.sort_values([&#39;adsh&#39;, &#39;coreg&#39;, &#39;nan_count&#39;], inplace=True)
-        cpy_pivot_df = cpy_pivot_df.groupby([&#39;adsh&#39;, &#39;coreg&#39;]).last()
-        cpy_pivot_df.reset_index(inplace=True)
-        return cpy_pivot_df
-
-    def _calculate_stats(self, pivot_df: pd.DataFrame) -&gt; pd.DataFrame:
-        return pivot_df[self.final_tags].isna().sum(axis=0)
-
-    def _pivot(self, df: pd.DataFrame, expected_tags: Set[str]) -&gt; pd.DataFrame:
-        # it is possible, that the same number appears multiple times in different lines,
-        # therefore, duplicates have to be removed, otherwise pivot is not possible
-        relevant_df = df[
-            [&#39;adsh&#39;, &#39;coreg&#39;, &#39;report&#39;, &#39;tag&#39;, &#39;value&#39;, &#39;uom&#39;, &#39;ddate&#39;]].drop_duplicates()
-
-        pivot_df = relevant_df.pivot(index=[&#39;adsh&#39;, &#39;coreg&#39;, &#39;report&#39;, &#39;uom&#39;, &#39;ddate&#39;],
-                                     columns=&#39;tag&#39;,
-                                     values=&#39;value&#39;)
-        pivot_df.reset_index(inplace=True)
-        missing_cols = set(expected_tags) - set(pivot_df.columns)
-        for missing_col in missing_cols:
-            pivot_df[missing_col] = np.nan
-        pivot_df[&#39;nan_count&#39;] = np.nan
-        return pivot_df
-
-
-class BalanceSheetStandardizer(RuleProcessor):
+class BalanceSheetStandardizer(Standardizer):
     &#34;&#34;&#34;
     The goal of this Standardizer is to create BalanceSheets that are compareable,
     meaning that they have the same tags.
@@ -340,24 +133,14 @@ class BalanceSheetStandardizer(RuleProcessor):
             )
         ])
 
-    rule_tree = RuleGroup(prefix=&#34;BS_&#34;,
-                          rules=[
-                              bs_rename_rg,
-                              bs_sumup_rg,
-                              bs_sum_completion,
-                          ])
+    main_rule_tree = RuleGroup(prefix=&#34;BS_&#34;,
+                               rules=[
+                                   bs_rename_rg,
+                                   bs_sumup_rg,
+                                   bs_sum_completion,
+                               ])
 
-    cleanup_rule_tree = RuleGroup(prefix=&#34;BS_POST&#34;,
-                                  rules=[
-                                      PostCopyToFirstSummand(sum_tag=&#39;Assets&#39;,
-                                                             first_summand=&#39;AssetsCurrent&#39;,
-                                                             other_summands=[
-                                                                 &#39;AssetsNoncurrent&#39;]),
-                                      PostCopyToFirstSummand(sum_tag=&#39;Liabilities&#39;,
-                                                             first_summand=&#39;LiabilitiesCurrent&#39;,
-                                                             other_summands=[
-                                                                 &#39;LiabilitiesNoncurrent&#39;])])
-    proprocess_rule_tree = RuleGroup(prefix=&#34;BS_PRE&#34;,
+    preprocess_rule_tree = RuleGroup(prefix=&#34;BS_PRE&#34;,
                                      rules=[
                                          PreSumUpCorrection(sum_tag=&#39;Assets&#39;,
                                                             mixed_up_summand=&#39;AssetsNoncurrent&#39;,
@@ -367,11 +150,22 @@ class BalanceSheetStandardizer(RuleProcessor):
                                                             other_summand=&#39;AssetsNoncurrent&#39;),
                                      ])
 
+    post_rule_tree = RuleGroup(prefix=&#34;BS_POST&#34;,
+                               rules=[
+                                   PostCopyToFirstSummand(sum_tag=&#39;Assets&#39;,
+                                                          first_summand=&#39;AssetsCurrent&#39;,
+                                                          other_summands=[
+                                                              &#39;AssetsNoncurrent&#39;]),
+                                   PostCopyToFirstSummand(sum_tag=&#39;Liabilities&#39;,
+                                                          first_summand=&#39;LiabilitiesCurrent&#39;,
+                                                          other_summands=[
+                                                              &#39;LiabilitiesNoncurrent&#39;])])
+
     validation_rules: List[ValidationRule] = [
-        SumValidationRule(id=&#39;AssetsCheck&#39;,
+        SumValidationRule(identifier=&#39;AssetsCheck&#39;,
                           sum_tag=&#39;Assets&#39;,
                           summands=[&#39;AssetsCurrent&#39;, &#39;AssetsNoncurrent&#39;]),
-        SumValidationRule(id=&#39;LiabilitiesCheck&#39;,
+        SumValidationRule(identifier=&#39;LiabilitiesCheck&#39;,
                           sum_tag=&#39;Liabilities&#39;,
                           summands=[&#39;LiabilitiesCurrent&#39;, &#39;LiabilitiesNoncurrent&#39;])
     ]
@@ -391,99 +185,93 @@ class BalanceSheetStandardizer(RuleProcessor):
     # which stmt value is BS.
     # however, we might be only interested in the &#34;major&#34; BS report. Usually this is the
     # one which has the least nan in the following columns
-    main_tags = [&#39;Assets&#39;, &#39;AssetsCurrent&#39;, &#39;AssetsNoncurrent&#39;,
-                 &#39;Liabilities&#39;, &#39;LiabilitiesCurrent&#39;, &#39;LiabilitiesNoncurrent&#39;]
+    main_statement_tags = [&#39;Assets&#39;, &#39;AssetsCurrent&#39;, &#39;AssetsNoncurrent&#39;,
+                           &#39;Liabilities&#39;, &#39;LiabilitiesCurrent&#39;, &#39;LiabilitiesNoncurrent&#39;]
 
-    def __init__(self, filter_for_main_report: bool = False, iterations: int = 3):
-        super().__init__(rule_tree=self.rule_tree,
-                         clean_up_rule_tree=self.cleanup_rule_tree,
-                         validation_rules=self.validation_rules,
-                         iterations=iterations,
-                         main_tags=self.main_tags, final_tags=self.final_tags,
-                         filter_for_main_report=filter_for_main_report)
+    def __init__(self, filter_for_main_statement: bool = False, iterations: int = 3):
+        super().__init__(
+            pre_rule_tree=self.preprocess_rule_tree,
+            main_rule_tree=self.main_rule_tree,
+            post_rule_tree=self.post_rule_tree,
+            validation_rules=self.validation_rules,
+            final_tags=self.final_tags,
+            main_iterations=iterations,
+            filter_for_main_statement=filter_for_main_statement,
+            main_statement_tags=self.main_statement_tags)
 
-
-# there are pre-pivot and post-pivot rules ..
-# in order to make a pre assesement on how many fields could be filled, we would need to have
-# pivot run without applying any rules, just pivot and return the desired colums,
-# or just the basic renaming ...
-# but without going for changing default names
-
-# man könnte noch checks einbauen, ob z.B. die Summen definition gültig sind,
-# d.h., dass der Wert der Summe in etwa der Summe der Werte der Summanden entsprciht
-
-
-class BalanceSheetStandardizerOld:
-
-    def fill_still_isna_summands(self, df: pd.DataFrame):
-        &#34;&#34;&#34; if we are left with unset summands&#34;&#34;&#34;
-
-        # for:
-        # &#39;Assets&#39;: (&#39;AssetsCurrent&#39;, &#39;AssetsNoncurrent&#39;),
-        # &#39;Liabilities&#39;: (&#39;LiabilitiesCurrent&#39;, &#39;LiabilitiesNoncurrent&#39;)
-        for total, summands in BalanceSheetStandardizerOld.sum_definition.items():
-            summand_1 = summands[0]
-            summand_2 = summands[1]
-
-            # if only the total is present, we assume that only the first summand (eg. currentassets are present)
-            # that is not really proper.
-            mask_total_nosum1_nosum2 = (~df[total].isna() &amp;
-                                        df[summand_1].isna() &amp;
-                                        df[summand_2].isna())
-            df.loc[mask_total_nosum1_nosum2, summand_1] = df[total]
-            df.loc[mask_total_nosum1_nosum2, summand_2] = 0.0
-
-            # if only the first summand is present, wie assume that the total is equal to the first summand
-            # and that the second summand is 0
-            mask_nototal_sum1_nosum2 = (df[total].isna() &amp;
-                                        ~df[summand_1].isna() &amp;
-                                        df[summand_2].isna())
-            df.loc[mask_nototal_sum1_nosum2, total] = df[summand_1]
-            df.loc[mask_nototal_sum1_nosum2, summand_2] = 0.0
-
-            # if only the second summand is present, wie assume that the total is equal to the second summand
-            # and that the first  summand is 0
-            mask_nototal_nosum1_sum2 = (df[total].isna() &amp;
-                                        df[summand_1].isna() &amp;
-                                        ~df[summand_2].isna())
-            df.loc[mask_nototal_nosum1_sum2, total] = df[summand_2]
-            df.loc[mask_nototal_nosum1_sum2, summand_1] = 0.0
-
-    def complete_special_rules(self, df: pd.DataFrame):
-        &#34;&#34;&#34;
-        Special rules which help to complete the information
-        &#34;&#34;&#34;
-
-        # self._basic_sum_completion(df, total=&#39;Assets&#39;, summand_1=&#39;Liabilities&#39;,
-        #                            summand_2=&#39;Equity&#39;)
-        #
-        # # actually, LiabilitiesAndStockholdersEquity should have the same value as Assets
-        # self._basic_sum_completion(df, total=&#39;LiabilitiesAndStockholdersEquity&#39;,
-        #                            summand_1=&#39;Liabilities&#39;,
-        #                            summand_2=&#39;Equity&#39;)
-
-        # run complete sum again, since total fields could be present now
-        # for:
-        # &#39;Assets&#39;: (&#39;AssetsCurrent&#39;, &#39;AssetsNoncurrent&#39;),
-        # &#39;Liabilities&#39;: (&#39;LiabilitiesCurrent&#39;, &#39;LiabilitiesNoncurrent&#39;)
-        self.complete_sums(df)
-
-        self.fill_still_isna_summands(df)
-
-        # if Equity == -Liabilities and Assets is nan, then
-        # Assets, AssetsCurrent, and AssetsNoncurrent is 0.0
-        mask = (df.Equity == -df.Liabilities) &amp; df.Assets.isna()
-        df.loc[mask, &#39;Assets&#39;] = 0.0
-        df.loc[mask, &#39;AssetsCurrent&#39;] = 0.0
-        df.loc[mask, &#39;AssetsNoncurrent&#39;] = 0.0
-
-        # if Cash is not set, then use CashOther to set Cash
-        mask = df.Cash.isna()
-        df.loc[mask, &#39;Cash&#39;] = df.CashOther
-
-        # set to zero
-        mask = df.InventoryNet.isna()
-        df.loc[mask, &#39;InventoryNet&#39;] = 0.0</code></pre>
+#
+# class BalanceSheetStandardizerOld:
+#
+#     def fill_still_isna_summands(self, df: pd.DataFrame):
+#         &#34;&#34;&#34; if we are left with unset summands&#34;&#34;&#34;
+#
+#         # for:
+#         # &#39;Assets&#39;: (&#39;AssetsCurrent&#39;, &#39;AssetsNoncurrent&#39;),
+#         # &#39;Liabilities&#39;: (&#39;LiabilitiesCurrent&#39;, &#39;LiabilitiesNoncurrent&#39;)
+#         for total, summands in BalanceSheetStandardizerOld.sum_definition.items():
+#             summand_1 = summands[0]
+#             summand_2 = summands[1]
+#
+#             # if only the total is present, we assume that only the first summand
+#             # (eg. currentassets are present)
+#             # that is not really proper.
+#             mask_total_nosum1_nosum2 = (~df[total].isna() &amp;
+#                                         df[summand_1].isna() &amp;
+#                                         df[summand_2].isna())
+#             df.loc[mask_total_nosum1_nosum2, summand_1] = df[total]
+#             df.loc[mask_total_nosum1_nosum2, summand_2] = 0.0
+#
+#             # if only the first summand is present, wie assume that the total is equal
+#             # to the first summand and that the second summand is 0
+#             mask_nototal_sum1_nosum2 = (df[total].isna() &amp;
+#                                         ~df[summand_1].isna() &amp;
+#                                         df[summand_2].isna())
+#             df.loc[mask_nototal_sum1_nosum2, total] = df[summand_1]
+#             df.loc[mask_nototal_sum1_nosum2, summand_2] = 0.0
+#
+#             # if only the second summand is present, wie assume that the total is equal
+#             # to the second summand and that the first  summand is 0
+#             mask_nototal_nosum1_sum2 = (df[total].isna() &amp;
+#                                         df[summand_1].isna() &amp;
+#                                         ~df[summand_2].isna())
+#             df.loc[mask_nototal_nosum1_sum2, total] = df[summand_2]
+#             df.loc[mask_nototal_nosum1_sum2, summand_1] = 0.0
+#
+#     def complete_special_rules(self, df: pd.DataFrame):
+#         &#34;&#34;&#34;
+#         Special rules which help to complete the information
+#         &#34;&#34;&#34;
+#
+#         # self._basic_sum_completion(df, total=&#39;Assets&#39;, summand_1=&#39;Liabilities&#39;,
+#         #                            summand_2=&#39;Equity&#39;)
+#         #
+#         # # actually, LiabilitiesAndStockholdersEquity should have the same value as Assets
+#         # self._basic_sum_completion(df, total=&#39;LiabilitiesAndStockholdersEquity&#39;,
+#         #                            summand_1=&#39;Liabilities&#39;,
+#         #                            summand_2=&#39;Equity&#39;)
+#
+#         # run complete sum again, since total fields could be present now
+#         # for:
+#         # &#39;Assets&#39;: (&#39;AssetsCurrent&#39;, &#39;AssetsNoncurrent&#39;),
+#         # &#39;Liabilities&#39;: (&#39;LiabilitiesCurrent&#39;, &#39;LiabilitiesNoncurrent&#39;)
+#         self.complete_sums(df)
+#
+#         self.fill_still_isna_summands(df)
+#
+#         # if Equity == -Liabilities and Assets is nan, then
+#         # Assets, AssetsCurrent, and AssetsNoncurrent is 0.0
+#         mask = (df.Equity == -df.Liabilities) &amp; df.Assets.isna()
+#         df.loc[mask, &#39;Assets&#39;] = 0.0
+#         df.loc[mask, &#39;AssetsCurrent&#39;] = 0.0
+#         df.loc[mask, &#39;AssetsNoncurrent&#39;] = 0.0
+#
+#         # if Cash is not set, then use CashOther to set Cash
+#         mask = df.Cash.isna()
+#         df.loc[mask, &#39;Cash&#39;] = df.CashOther
+#
+#         # set to zero
+#         mask = df.InventoryNet.isna()
+#         df.loc[mask, &#39;InventoryNet&#39;] = 0.0</code></pre>
 </details>
 </section>
 <section>
@@ -497,7 +285,7 @@ class BalanceSheetStandardizerOld:
 <dl>
 <dt id="secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizer"><code class="flex name class">
 <span>class <span class="ident">BalanceSheetStandardizer</span></span>
-<span>(</span><span>filter_for_main_report: bool = False, iterations: int = 3)</span>
+<span>(</span><span>filter_for_main_statement: bool = False, iterations: int = 3)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>The goal of this Standardizer is to create BalanceSheets that are compareable,
@@ -513,12 +301,47 @@ LiabilitiesNoncurrent
 OwnerEquity
 PaidInCapital
 RetainedEarnings
-LiabilitiesAndOwnerEquity</p></div>
+LiabilitiesAndOwnerEquity</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>pre_rule_tree</code></strong></dt>
+<dd>rules that are applied once before the main processing. These are mainly
+rules that try to correct existing data from obvious errors (like wrong
+tagging)</dd>
+<dt><strong><code>main_rule_tree</code></strong></dt>
+<dd>rules that are applied during the main processing rule and which do the
+heavy lifting. These rules can be excuted multipe times depending on the value
+of the main_iterations parameter</dd>
+<dt><strong><code>post_rule_tree</code></strong></dt>
+<dd>rules that are used to "cleanup", like setting certain values to
+0.0</dd>
+<dt><strong><code>validation_rules</code></strong></dt>
+<dd>Validation rules are applied after all rules were applied.
+they add validation columns to the main dataset. Validation rules do check
+if certain requirements are met. E.g. in a Balance Sheet, the following
+equation should be true: Assets = AssetsCurrent + AssetsNoncurrent</dd>
+<dt><strong><code>main_iterations</code></strong></dt>
+<dd>defining the number of iterations the main rules should be applied</dd>
+<dt><strong><code>final_tags</code></strong></dt>
+<dd>tbd</dd>
+<dt><strong><code>filter_for_main_statement</code></strong> :&ensp;<code>bool, Optional, True</code></dt>
+<dd>depending on the data, it could look
+as if multiple Balance Sheets statements could be present in a single report.
+However, there should only be one. Setting
+this flag to true (which is the default), tries to select the one that is most
+likely the real statement.
+the tags that are used are defined in the main_statement_tags parameter</dd>
+<dt><strong><code>main_statement_tags</code></strong></dt>
+<dd>tbd</dd>
+<dt><strong><code>invert_negated</code></strong> :&ensp;<code>bool, Optional, True</code></dt>
+<dd>inverts the value of the that are marked
+as negated.</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class BalanceSheetStandardizer(RuleProcessor):
+<pre><code class="python">class BalanceSheetStandardizer(Standardizer):
     &#34;&#34;&#34;
     The goal of this Standardizer is to create BalanceSheets that are compareable,
     meaning that they have the same tags.
@@ -613,24 +436,14 @@ LiabilitiesAndOwnerEquity</p></div>
             )
         ])
 
-    rule_tree = RuleGroup(prefix=&#34;BS_&#34;,
-                          rules=[
-                              bs_rename_rg,
-                              bs_sumup_rg,
-                              bs_sum_completion,
-                          ])
+    main_rule_tree = RuleGroup(prefix=&#34;BS_&#34;,
+                               rules=[
+                                   bs_rename_rg,
+                                   bs_sumup_rg,
+                                   bs_sum_completion,
+                               ])
 
-    cleanup_rule_tree = RuleGroup(prefix=&#34;BS_POST&#34;,
-                                  rules=[
-                                      PostCopyToFirstSummand(sum_tag=&#39;Assets&#39;,
-                                                             first_summand=&#39;AssetsCurrent&#39;,
-                                                             other_summands=[
-                                                                 &#39;AssetsNoncurrent&#39;]),
-                                      PostCopyToFirstSummand(sum_tag=&#39;Liabilities&#39;,
-                                                             first_summand=&#39;LiabilitiesCurrent&#39;,
-                                                             other_summands=[
-                                                                 &#39;LiabilitiesNoncurrent&#39;])])
-    proprocess_rule_tree = RuleGroup(prefix=&#34;BS_PRE&#34;,
+    preprocess_rule_tree = RuleGroup(prefix=&#34;BS_PRE&#34;,
                                      rules=[
                                          PreSumUpCorrection(sum_tag=&#39;Assets&#39;,
                                                             mixed_up_summand=&#39;AssetsNoncurrent&#39;,
@@ -640,11 +453,22 @@ LiabilitiesAndOwnerEquity</p></div>
                                                             other_summand=&#39;AssetsNoncurrent&#39;),
                                      ])
 
+    post_rule_tree = RuleGroup(prefix=&#34;BS_POST&#34;,
+                               rules=[
+                                   PostCopyToFirstSummand(sum_tag=&#39;Assets&#39;,
+                                                          first_summand=&#39;AssetsCurrent&#39;,
+                                                          other_summands=[
+                                                              &#39;AssetsNoncurrent&#39;]),
+                                   PostCopyToFirstSummand(sum_tag=&#39;Liabilities&#39;,
+                                                          first_summand=&#39;LiabilitiesCurrent&#39;,
+                                                          other_summands=[
+                                                              &#39;LiabilitiesNoncurrent&#39;])])
+
     validation_rules: List[ValidationRule] = [
-        SumValidationRule(id=&#39;AssetsCheck&#39;,
+        SumValidationRule(identifier=&#39;AssetsCheck&#39;,
                           sum_tag=&#39;Assets&#39;,
                           summands=[&#39;AssetsCurrent&#39;, &#39;AssetsNoncurrent&#39;]),
-        SumValidationRule(id=&#39;LiabilitiesCheck&#39;,
+        SumValidationRule(identifier=&#39;LiabilitiesCheck&#39;,
                           sum_tag=&#39;Liabilities&#39;,
                           summands=[&#39;LiabilitiesCurrent&#39;, &#39;LiabilitiesNoncurrent&#39;])
     ]
@@ -664,20 +488,23 @@ LiabilitiesAndOwnerEquity</p></div>
     # which stmt value is BS.
     # however, we might be only interested in the &#34;major&#34; BS report. Usually this is the
     # one which has the least nan in the following columns
-    main_tags = [&#39;Assets&#39;, &#39;AssetsCurrent&#39;, &#39;AssetsNoncurrent&#39;,
-                 &#39;Liabilities&#39;, &#39;LiabilitiesCurrent&#39;, &#39;LiabilitiesNoncurrent&#39;]
+    main_statement_tags = [&#39;Assets&#39;, &#39;AssetsCurrent&#39;, &#39;AssetsNoncurrent&#39;,
+                           &#39;Liabilities&#39;, &#39;LiabilitiesCurrent&#39;, &#39;LiabilitiesNoncurrent&#39;]
 
-    def __init__(self, filter_for_main_report: bool = False, iterations: int = 3):
-        super().__init__(rule_tree=self.rule_tree,
-                         clean_up_rule_tree=self.cleanup_rule_tree,
-                         validation_rules=self.validation_rules,
-                         iterations=iterations,
-                         main_tags=self.main_tags, final_tags=self.final_tags,
-                         filter_for_main_report=filter_for_main_report)</code></pre>
+    def __init__(self, filter_for_main_statement: bool = False, iterations: int = 3):
+        super().__init__(
+            pre_rule_tree=self.preprocess_rule_tree,
+            main_rule_tree=self.main_rule_tree,
+            post_rule_tree=self.post_rule_tree,
+            validation_rules=self.validation_rules,
+            final_tags=self.final_tags,
+            main_iterations=iterations,
+            filter_for_main_statement=filter_for_main_statement,
+            main_statement_tags=self.main_statement_tags)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li><a title="secfsdstools.f_standardize.bs_standardize.RuleProcessor" href="#secfsdstools.f_standardize.bs_standardize.RuleProcessor">RuleProcessor</a></li>
+<li><a title="secfsdstools.f_standardize.standardizing.Standardizer" href="standardizing.html#secfsdstools.f_standardize.standardizing.Standardizer">Standardizer</a></li>
 </ul>
 <h3>Class variables</h3>
 <dl>
@@ -693,667 +520,39 @@ LiabilitiesAndOwnerEquity</p></div>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizer.cleanup_rule_tree"><code class="name">var <span class="ident">cleanup_rule_tree</span></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
 <dt id="secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizer.final_tags"><code class="name">var <span class="ident">final_tags</span> : List[str]</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizer.main_tags"><code class="name">var <span class="ident">main_tags</span></code></dt>
+<dt id="secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizer.main_rule_tree"><code class="name">var <span class="ident">main_rule_tree</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizer.proprocess_rule_tree"><code class="name">var <span class="ident">proprocess_rule_tree</span></code></dt>
+<dt id="secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizer.main_statement_tags"><code class="name">var <span class="ident">main_statement_tags</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizer.rule_tree"><code class="name">var <span class="ident">rule_tree</span></code></dt>
+<dt id="secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizer.post_rule_tree"><code class="name">var <span class="ident">post_rule_tree</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizer.validation_rules"><code class="name">var <span class="ident">validation_rules</span> : List[<a title="secfsdstools.f_standardize.bs_standardize.ValidationRule" href="#secfsdstools.f_standardize.bs_standardize.ValidationRule">ValidationRule</a>]</code></dt>
+<dt id="secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizer.preprocess_rule_tree"><code class="name">var <span class="ident">preprocess_rule_tree</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizer.validation_rules"><code class="name">var <span class="ident">validation_rules</span> : List[<a title="secfsdstools.f_standardize.base_validation_rules.ValidationRule" href="base_validation_rules.html#secfsdstools.f_standardize.base_validation_rules.ValidationRule">ValidationRule</a>]</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
 </dl>
-</dd>
-<dt id="secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizerOld"><code class="flex name class">
-<span>class <span class="ident">BalanceSheetStandardizerOld</span></span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">class BalanceSheetStandardizerOld:
-
-    def fill_still_isna_summands(self, df: pd.DataFrame):
-        &#34;&#34;&#34; if we are left with unset summands&#34;&#34;&#34;
-
-        # for:
-        # &#39;Assets&#39;: (&#39;AssetsCurrent&#39;, &#39;AssetsNoncurrent&#39;),
-        # &#39;Liabilities&#39;: (&#39;LiabilitiesCurrent&#39;, &#39;LiabilitiesNoncurrent&#39;)
-        for total, summands in BalanceSheetStandardizerOld.sum_definition.items():
-            summand_1 = summands[0]
-            summand_2 = summands[1]
-
-            # if only the total is present, we assume that only the first summand (eg. currentassets are present)
-            # that is not really proper.
-            mask_total_nosum1_nosum2 = (~df[total].isna() &amp;
-                                        df[summand_1].isna() &amp;
-                                        df[summand_2].isna())
-            df.loc[mask_total_nosum1_nosum2, summand_1] = df[total]
-            df.loc[mask_total_nosum1_nosum2, summand_2] = 0.0
-
-            # if only the first summand is present, wie assume that the total is equal to the first summand
-            # and that the second summand is 0
-            mask_nototal_sum1_nosum2 = (df[total].isna() &amp;
-                                        ~df[summand_1].isna() &amp;
-                                        df[summand_2].isna())
-            df.loc[mask_nototal_sum1_nosum2, total] = df[summand_1]
-            df.loc[mask_nototal_sum1_nosum2, summand_2] = 0.0
-
-            # if only the second summand is present, wie assume that the total is equal to the second summand
-            # and that the first  summand is 0
-            mask_nototal_nosum1_sum2 = (df[total].isna() &amp;
-                                        df[summand_1].isna() &amp;
-                                        ~df[summand_2].isna())
-            df.loc[mask_nototal_nosum1_sum2, total] = df[summand_2]
-            df.loc[mask_nototal_nosum1_sum2, summand_1] = 0.0
-
-    def complete_special_rules(self, df: pd.DataFrame):
-        &#34;&#34;&#34;
-        Special rules which help to complete the information
-        &#34;&#34;&#34;
-
-        # self._basic_sum_completion(df, total=&#39;Assets&#39;, summand_1=&#39;Liabilities&#39;,
-        #                            summand_2=&#39;Equity&#39;)
-        #
-        # # actually, LiabilitiesAndStockholdersEquity should have the same value as Assets
-        # self._basic_sum_completion(df, total=&#39;LiabilitiesAndStockholdersEquity&#39;,
-        #                            summand_1=&#39;Liabilities&#39;,
-        #                            summand_2=&#39;Equity&#39;)
-
-        # run complete sum again, since total fields could be present now
-        # for:
-        # &#39;Assets&#39;: (&#39;AssetsCurrent&#39;, &#39;AssetsNoncurrent&#39;),
-        # &#39;Liabilities&#39;: (&#39;LiabilitiesCurrent&#39;, &#39;LiabilitiesNoncurrent&#39;)
-        self.complete_sums(df)
-
-        self.fill_still_isna_summands(df)
-
-        # if Equity == -Liabilities and Assets is nan, then
-        # Assets, AssetsCurrent, and AssetsNoncurrent is 0.0
-        mask = (df.Equity == -df.Liabilities) &amp; df.Assets.isna()
-        df.loc[mask, &#39;Assets&#39;] = 0.0
-        df.loc[mask, &#39;AssetsCurrent&#39;] = 0.0
-        df.loc[mask, &#39;AssetsNoncurrent&#39;] = 0.0
-
-        # if Cash is not set, then use CashOther to set Cash
-        mask = df.Cash.isna()
-        df.loc[mask, &#39;Cash&#39;] = df.CashOther
-
-        # set to zero
-        mask = df.InventoryNet.isna()
-        df.loc[mask, &#39;InventoryNet&#39;] = 0.0</code></pre>
-</details>
-<h3>Methods</h3>
-<dl>
-<dt id="secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizerOld.complete_special_rules"><code class="name flex">
-<span>def <span class="ident">complete_special_rules</span></span>(<span>self, df: pandas.core.frame.DataFrame)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Special rules which help to complete the information</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def complete_special_rules(self, df: pd.DataFrame):
-    &#34;&#34;&#34;
-    Special rules which help to complete the information
-    &#34;&#34;&#34;
-
-    # self._basic_sum_completion(df, total=&#39;Assets&#39;, summand_1=&#39;Liabilities&#39;,
-    #                            summand_2=&#39;Equity&#39;)
-    #
-    # # actually, LiabilitiesAndStockholdersEquity should have the same value as Assets
-    # self._basic_sum_completion(df, total=&#39;LiabilitiesAndStockholdersEquity&#39;,
-    #                            summand_1=&#39;Liabilities&#39;,
-    #                            summand_2=&#39;Equity&#39;)
-
-    # run complete sum again, since total fields could be present now
-    # for:
-    # &#39;Assets&#39;: (&#39;AssetsCurrent&#39;, &#39;AssetsNoncurrent&#39;),
-    # &#39;Liabilities&#39;: (&#39;LiabilitiesCurrent&#39;, &#39;LiabilitiesNoncurrent&#39;)
-    self.complete_sums(df)
-
-    self.fill_still_isna_summands(df)
-
-    # if Equity == -Liabilities and Assets is nan, then
-    # Assets, AssetsCurrent, and AssetsNoncurrent is 0.0
-    mask = (df.Equity == -df.Liabilities) &amp; df.Assets.isna()
-    df.loc[mask, &#39;Assets&#39;] = 0.0
-    df.loc[mask, &#39;AssetsCurrent&#39;] = 0.0
-    df.loc[mask, &#39;AssetsNoncurrent&#39;] = 0.0
-
-    # if Cash is not set, then use CashOther to set Cash
-    mask = df.Cash.isna()
-    df.loc[mask, &#39;Cash&#39;] = df.CashOther
-
-    # set to zero
-    mask = df.InventoryNet.isna()
-    df.loc[mask, &#39;InventoryNet&#39;] = 0.0</code></pre>
-</details>
-</dd>
-<dt id="secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizerOld.fill_still_isna_summands"><code class="name flex">
-<span>def <span class="ident">fill_still_isna_summands</span></span>(<span>self, df: pandas.core.frame.DataFrame)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>if we are left with unset summands</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def fill_still_isna_summands(self, df: pd.DataFrame):
-    &#34;&#34;&#34; if we are left with unset summands&#34;&#34;&#34;
-
-    # for:
-    # &#39;Assets&#39;: (&#39;AssetsCurrent&#39;, &#39;AssetsNoncurrent&#39;),
-    # &#39;Liabilities&#39;: (&#39;LiabilitiesCurrent&#39;, &#39;LiabilitiesNoncurrent&#39;)
-    for total, summands in BalanceSheetStandardizerOld.sum_definition.items():
-        summand_1 = summands[0]
-        summand_2 = summands[1]
-
-        # if only the total is present, we assume that only the first summand (eg. currentassets are present)
-        # that is not really proper.
-        mask_total_nosum1_nosum2 = (~df[total].isna() &amp;
-                                    df[summand_1].isna() &amp;
-                                    df[summand_2].isna())
-        df.loc[mask_total_nosum1_nosum2, summand_1] = df[total]
-        df.loc[mask_total_nosum1_nosum2, summand_2] = 0.0
-
-        # if only the first summand is present, wie assume that the total is equal to the first summand
-        # and that the second summand is 0
-        mask_nototal_sum1_nosum2 = (df[total].isna() &amp;
-                                    ~df[summand_1].isna() &amp;
-                                    df[summand_2].isna())
-        df.loc[mask_nototal_sum1_nosum2, total] = df[summand_1]
-        df.loc[mask_nototal_sum1_nosum2, summand_2] = 0.0
-
-        # if only the second summand is present, wie assume that the total is equal to the second summand
-        # and that the first  summand is 0
-        mask_nototal_nosum1_sum2 = (df[total].isna() &amp;
-                                    df[summand_1].isna() &amp;
-                                    ~df[summand_2].isna())
-        df.loc[mask_nototal_nosum1_sum2, total] = df[summand_2]
-        df.loc[mask_nototal_nosum1_sum2, summand_1] = 0.0</code></pre>
-</details>
-</dd>
-</dl>
-</dd>
-<dt id="secfsdstools.f_standardize.bs_standardize.RuleProcessor"><code class="flex name class">
-<span>class <span class="ident">RuleProcessor</span></span>
-<span>(</span><span>rule_tree: <a title="secfsdstools.f_standardize.rule_framework.RuleGroup" href="rule_framework.html#secfsdstools.f_standardize.rule_framework.RuleGroup">RuleGroup</a>, clean_up_rule_tree: <a title="secfsdstools.f_standardize.rule_framework.RuleGroup" href="rule_framework.html#secfsdstools.f_standardize.rule_framework.RuleGroup">RuleGroup</a>, validation_rules: List[<a title="secfsdstools.f_standardize.bs_standardize.ValidationRule" href="#secfsdstools.f_standardize.bs_standardize.ValidationRule">ValidationRule</a>], iterations: int, main_tags: List[str], final_tags: List[str], filter_for_main_report: bool = True, invert_negated: bool = True)</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">class RuleProcessor:
-    identifier_tags = [&#39;adsh&#39;, &#39;coreg&#39;, &#39;report&#39;, &#39;ddate&#39;]
-
-    def __init__(self, rule_tree: RuleGroup, clean_up_rule_tree: RuleGroup,
-                 validation_rules: List[ValidationRule],
-                 iterations: int, main_tags: List[str], final_tags: List[str],
-                 filter_for_main_report: bool = True, invert_negated: bool = True):
-        self.rule_tree = rule_tree
-        self.clean_up_rule_tree = clean_up_rule_tree
-        self.validation_rules = validation_rules
-        self.iterations = iterations
-        self.main_tags = main_tags
-        self.final_tags = final_tags
-        self.filter_for_main_report = filter_for_main_report
-        self.invert_negated = invert_negated
-
-        self.final_col_order = self.identifier_tags + self.final_tags
-
-        self.preprocess_dupliate_log_df: Optional[pd.DataFrame] = None
-        self.log_df: Optional[pd.DataFrame] = None
-        self.applied_rules_sum_df: Optional[pd.DataFrame] = None
-        self.stats: Optional[pd.DataFrame] = None
-
-    def get_ruletree_descriptions(self):
-        # todo
-        pass
-
-    def process(self, df: pd.DataFrame) -&gt; pd.DataFrame:
-        all_input_tags = self.rule_tree.get_input_tags()
-
-        relevant_df = \
-            df[[&#39;adsh&#39;, &#39;coreg&#39;, &#39;tag&#39;, &#39;version&#39;, &#39;ddate&#39;, &#39;uom&#39;, &#39;value&#39;, &#39;report&#39;, &#39;line&#39;,
-                &#39;negating&#39;]][df.tag.isin(all_input_tags)]
-
-        # preprocessing ..
-        #  - deduplicate
-        cpy_df = self._deduplicate(relevant_df).copy()
-
-        #  - invert_negated
-        if self.invert_negated:
-            cpy_df.loc[cpy_df.negating == 1, &#39;value&#39;] = -cpy_df.value
-
-        # pivot the table, so that the tags become columns
-        # todo: folgende Zeile sollte nicht mehr notwendig sein, sobald alle Regeln implementiert sind
-        expected_tags = all_input_tags.union(self.final_tags)
-        pivot_df = self._pivot(df=cpy_df, expected_tags=expected_tags)
-
-        if self.filter_for_main_report:
-            pivot_df = self._filter_pivot_for_main_reports(pivot_df)
-
-        pivot_df_index_cols = [&#39;adsh&#39;, &#39;coreg&#39;, &#39;report&#39;, &#39;ddate&#39;, &#39;uom&#39;]
-        self.log_df = pivot_df[pivot_df_index_cols].copy()
-
-        total_length = len(pivot_df)
-
-        # calculate_pre_stats:
-        pre_apply_df = pivot_df[self.final_col_order]
-        self.pre_stats = self._calculate_stats(pivot_df=pre_apply_df)
-        self.pre_stats.name = &#34;pre&#34;
-
-        self.stats = pd.DataFrame(self.pre_stats)
-        self.stats[&#39;pre_rel&#39;] = self.stats.pre / total_length
-
-        self.stats = pd.DataFrame(self.pre_stats)
-
-        for i in range(self.iterations):
-            # set ids of the rules in the tree, use the iteration number as prefix
-            self.rule_tree.set_id(parent_prefix=f&#34;{i}_&#34;)
-
-            # apply the rule_tree
-            self.rule_tree.process(df=pivot_df, log_df=self.log_df)
-
-            self.post_stats = self._calculate_stats(pivot_df=pivot_df)
-            self.post_stats.name = f&#34;post_{i}&#34;
-
-            self.stats = self.stats.join(self.post_stats)
-            self.stats[self.post_stats.name + &#39;_rel&#39;] = \
-                self.stats[self.post_stats.name] / total_length
-            self.stats[self.post_stats.name + &#39;_red&#39;] = \
-                1 - (self.stats[self.post_stats.name] / self.stats.pre)
-
-        # clean up rules
-        self.clean_up_rule_tree.process(df=pivot_df, log_df=self.log_df)
-
-        # calculate cleanup stats
-        self.post_cleanup = self._calculate_stats(pivot_df=pivot_df)
-        self.post_cleanup.name = &#34;cleanup&#34;
-        self.stats = self.stats.join(self.post_cleanup)
-        self.stats[self.post_cleanup.name + &#39;_rel&#39;] = \
-            self.stats[self.post_cleanup.name] / total_length
-        self.stats[self.post_cleanup.name + &#39;_red&#39;] = \
-            1 - (self.stats[self.post_cleanup.name] / self.stats.pre)
-
-        # create a meaningful order
-        pivot_df = pivot_df[self.final_col_order].copy()
-
-        # apply validation rules
-        for validation_rule in self.validation_rules:
-            validation_rule.validate(pivot_df)
-
-        # caculate log_df summaries
-        if self.log_df is not None:
-            # filter for rule columns but making sure the order stays the same
-            rule_columns = [x for x in self.log_df.columns if x not in pivot_df_index_cols]
-            self.applied_rules_sum_df = self.log_df[rule_columns].sum()
-
-        return pivot_df
-
-    def _deduplicate(self, df: pd.DataFrame) -&gt; pd.DataFrame:
-        # find duplicated entries
-        # sometimes, only single tags are duplicated, however, there are also reports
-        # where all tags of a report are duplicated, maybe due to a problem with processing
-        duplicates_s = \
-            df.duplicated([&#39;adsh&#39;, &#39;coreg&#39;, &#39;report&#39;, &#39;uom&#39;, &#39;tag&#39;, &#39;version&#39;, &#39;ddate&#39;, &#39;value&#39;])
-
-        self.preprocess_dupliate_log_df = df[duplicates_s] \
-            [[&#39;adsh&#39;, &#39;coreg&#39;, &#39;report&#39;, &#39;tag&#39;, &#39;uom&#39;, &#39;version&#39;, &#39;ddate&#39;]].copy()
-
-        return df[~duplicates_s]
-
-    def _filter_pivot_for_main_reports(self, pivot_df: pd.DataFrame) -&gt; pd.DataFrame:
-        &#34;&#34;&#34; Some reports have more than one &#39;report number&#39; (column report) for a
-            certain statement. Generally, the one with the most tags is the one to take.
-            This method operates on the pivoted data and counts the none-values of the
-            &#34;main columns&#34;. The main columns are the fields, that generally should be there.
-             &#34;&#34;&#34;
-
-        cpy_pivot_df = pivot_df.copy()
-
-        cpy_pivot_df[&#39;nan_count&#39;] = cpy_pivot_df[self.main_tags].isna().sum(axis=1)
-        cpy_pivot_df.sort_values([&#39;adsh&#39;, &#39;coreg&#39;, &#39;nan_count&#39;], inplace=True)
-        cpy_pivot_df = cpy_pivot_df.groupby([&#39;adsh&#39;, &#39;coreg&#39;]).last()
-        cpy_pivot_df.reset_index(inplace=True)
-        return cpy_pivot_df
-
-    def _calculate_stats(self, pivot_df: pd.DataFrame) -&gt; pd.DataFrame:
-        return pivot_df[self.final_tags].isna().sum(axis=0)
-
-    def _pivot(self, df: pd.DataFrame, expected_tags: Set[str]) -&gt; pd.DataFrame:
-        # it is possible, that the same number appears multiple times in different lines,
-        # therefore, duplicates have to be removed, otherwise pivot is not possible
-        relevant_df = df[
-            [&#39;adsh&#39;, &#39;coreg&#39;, &#39;report&#39;, &#39;tag&#39;, &#39;value&#39;, &#39;uom&#39;, &#39;ddate&#39;]].drop_duplicates()
-
-        pivot_df = relevant_df.pivot(index=[&#39;adsh&#39;, &#39;coreg&#39;, &#39;report&#39;, &#39;uom&#39;, &#39;ddate&#39;],
-                                     columns=&#39;tag&#39;,
-                                     values=&#39;value&#39;)
-        pivot_df.reset_index(inplace=True)
-        missing_cols = set(expected_tags) - set(pivot_df.columns)
-        for missing_col in missing_cols:
-            pivot_df[missing_col] = np.nan
-        pivot_df[&#39;nan_count&#39;] = np.nan
-        return pivot_df</code></pre>
-</details>
-<h3>Subclasses</h3>
+<h3>Inherited members</h3>
 <ul class="hlist">
-<li><a title="secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizer" href="#secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizer">BalanceSheetStandardizer</a></li>
-</ul>
-<h3>Class variables</h3>
-<dl>
-<dt id="secfsdstools.f_standardize.bs_standardize.RuleProcessor.identifier_tags"><code class="name">var <span class="ident">identifier_tags</span></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-</dl>
-<h3>Methods</h3>
-<dl>
-<dt id="secfsdstools.f_standardize.bs_standardize.RuleProcessor.get_ruletree_descriptions"><code class="name flex">
-<span>def <span class="ident">get_ruletree_descriptions</span></span>(<span>self)</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def get_ruletree_descriptions(self):
-    # todo
-    pass</code></pre>
-</details>
-</dd>
-<dt id="secfsdstools.f_standardize.bs_standardize.RuleProcessor.process"><code class="name flex">
-<span>def <span class="ident">process</span></span>(<span>self, df: pandas.core.frame.DataFrame) ‑> pandas.core.frame.DataFrame</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def process(self, df: pd.DataFrame) -&gt; pd.DataFrame:
-    all_input_tags = self.rule_tree.get_input_tags()
-
-    relevant_df = \
-        df[[&#39;adsh&#39;, &#39;coreg&#39;, &#39;tag&#39;, &#39;version&#39;, &#39;ddate&#39;, &#39;uom&#39;, &#39;value&#39;, &#39;report&#39;, &#39;line&#39;,
-            &#39;negating&#39;]][df.tag.isin(all_input_tags)]
-
-    # preprocessing ..
-    #  - deduplicate
-    cpy_df = self._deduplicate(relevant_df).copy()
-
-    #  - invert_negated
-    if self.invert_negated:
-        cpy_df.loc[cpy_df.negating == 1, &#39;value&#39;] = -cpy_df.value
-
-    # pivot the table, so that the tags become columns
-    # todo: folgende Zeile sollte nicht mehr notwendig sein, sobald alle Regeln implementiert sind
-    expected_tags = all_input_tags.union(self.final_tags)
-    pivot_df = self._pivot(df=cpy_df, expected_tags=expected_tags)
-
-    if self.filter_for_main_report:
-        pivot_df = self._filter_pivot_for_main_reports(pivot_df)
-
-    pivot_df_index_cols = [&#39;adsh&#39;, &#39;coreg&#39;, &#39;report&#39;, &#39;ddate&#39;, &#39;uom&#39;]
-    self.log_df = pivot_df[pivot_df_index_cols].copy()
-
-    total_length = len(pivot_df)
-
-    # calculate_pre_stats:
-    pre_apply_df = pivot_df[self.final_col_order]
-    self.pre_stats = self._calculate_stats(pivot_df=pre_apply_df)
-    self.pre_stats.name = &#34;pre&#34;
-
-    self.stats = pd.DataFrame(self.pre_stats)
-    self.stats[&#39;pre_rel&#39;] = self.stats.pre / total_length
-
-    self.stats = pd.DataFrame(self.pre_stats)
-
-    for i in range(self.iterations):
-        # set ids of the rules in the tree, use the iteration number as prefix
-        self.rule_tree.set_id(parent_prefix=f&#34;{i}_&#34;)
-
-        # apply the rule_tree
-        self.rule_tree.process(df=pivot_df, log_df=self.log_df)
-
-        self.post_stats = self._calculate_stats(pivot_df=pivot_df)
-        self.post_stats.name = f&#34;post_{i}&#34;
-
-        self.stats = self.stats.join(self.post_stats)
-        self.stats[self.post_stats.name + &#39;_rel&#39;] = \
-            self.stats[self.post_stats.name] / total_length
-        self.stats[self.post_stats.name + &#39;_red&#39;] = \
-            1 - (self.stats[self.post_stats.name] / self.stats.pre)
-
-    # clean up rules
-    self.clean_up_rule_tree.process(df=pivot_df, log_df=self.log_df)
-
-    # calculate cleanup stats
-    self.post_cleanup = self._calculate_stats(pivot_df=pivot_df)
-    self.post_cleanup.name = &#34;cleanup&#34;
-    self.stats = self.stats.join(self.post_cleanup)
-    self.stats[self.post_cleanup.name + &#39;_rel&#39;] = \
-        self.stats[self.post_cleanup.name] / total_length
-    self.stats[self.post_cleanup.name + &#39;_red&#39;] = \
-        1 - (self.stats[self.post_cleanup.name] / self.stats.pre)
-
-    # create a meaningful order
-    pivot_df = pivot_df[self.final_col_order].copy()
-
-    # apply validation rules
-    for validation_rule in self.validation_rules:
-        validation_rule.validate(pivot_df)
-
-    # caculate log_df summaries
-    if self.log_df is not None:
-        # filter for rule columns but making sure the order stays the same
-        rule_columns = [x for x in self.log_df.columns if x not in pivot_df_index_cols]
-        self.applied_rules_sum_df = self.log_df[rule_columns].sum()
-
-    return pivot_df</code></pre>
-</details>
-</dd>
-</dl>
-</dd>
-<dt id="secfsdstools.f_standardize.bs_standardize.SumValidationRule"><code class="flex name class">
-<span>class <span class="ident">SumValidationRule</span></span>
-<span>(</span><span>id: str, sum_tag: str, summands: List[str])</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Helper class that provides a standard way to create an ABC using
-inheritance.</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">class SumValidationRule(ValidationRule):
-
-    def __init__(self, id: str, sum_tag: str, summands: List[str]):
-        super().__init__(id)
-        self.sum_tag = sum_tag
-        self.summands = summands
-
-    def mask(self, df: pd.DataFrame) -&gt; pa.typing.Series[bool]:
-        mask = ~df[self.sum_tag].isna()
-        for summand in self.summands:
-            mask = mask &amp; ~df[summand].isna()
-
-        return mask
-
-    def calculate_error(self, df: pd.DataFrame, mask: pa.typing.Series[bool]) -&gt; \
-            pa.typing.Series[np.float64]:
-        return ((df[self.sum_tag] - df[self.summands].sum(axis=&#39;columns&#39;)) / df[self.sum_tag]).abs()</code></pre>
-</details>
-<h3>Ancestors</h3>
+<li><code><b><a title="secfsdstools.f_standardize.standardizing.Standardizer" href="standardizing.html#secfsdstools.f_standardize.standardizing.Standardizer">Standardizer</a></b></code>:
 <ul class="hlist">
-<li><a title="secfsdstools.f_standardize.bs_standardize.ValidationRule" href="#secfsdstools.f_standardize.bs_standardize.ValidationRule">ValidationRule</a></li>
-<li>abc.ABC</li>
+<li><code><a title="secfsdstools.f_standardize.standardizing.Standardizer.process" href="standardizing.html#secfsdstools.f_standardize.standardizing.Standardizer.process">process</a></code></li>
 </ul>
-<h3>Methods</h3>
-<dl>
-<dt id="secfsdstools.f_standardize.bs_standardize.SumValidationRule.calculate_error"><code class="name flex">
-<span>def <span class="ident">calculate_error</span></span>(<span>self, df: pandas.core.frame.DataFrame, mask: pandera.typing.pandas.Series[bool]) ‑> pandera.typing.pandas.Series[numpy.float64]</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def calculate_error(self, df: pd.DataFrame, mask: pa.typing.Series[bool]) -&gt; \
-        pa.typing.Series[np.float64]:
-    return ((df[self.sum_tag] - df[self.summands].sum(axis=&#39;columns&#39;)) / df[self.sum_tag]).abs()</code></pre>
-</details>
-</dd>
-<dt id="secfsdstools.f_standardize.bs_standardize.SumValidationRule.mask"><code class="name flex">
-<span>def <span class="ident">mask</span></span>(<span>self, df: pandas.core.frame.DataFrame) ‑> pandera.typing.pandas.Series[bool]</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def mask(self, df: pd.DataFrame) -&gt; pa.typing.Series[bool]:
-    mask = ~df[self.sum_tag].isna()
-    for summand in self.summands:
-        mask = mask &amp; ~df[summand].isna()
-
-    return mask</code></pre>
-</details>
-</dd>
-</dl>
-</dd>
-<dt id="secfsdstools.f_standardize.bs_standardize.ValidationRule"><code class="flex name class">
-<span>class <span class="ident">ValidationRule</span></span>
-<span>(</span><span>id: str)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Helper class that provides a standard way to create an ABC using
-inheritance.</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">class ValidationRule(ABC):
-
-    def __init__(self, id: str):
-        self.id = id
-
-    @abstractmethod
-    def mask(self, df: pd.DataFrame) -&gt; pa.typing.Series[bool]:
-        pass
-
-    @abstractmethod
-    def calculate_error(self, df: pd.DataFrame, mask: pa.typing.Series[bool]) -&gt; \
-            pa.typing.Series[np.float64]:
-        pass
-
-    def validate(self, df: pd.DataFrame):
-        mask = self.mask(df)
-        error = self.calculate_error(df, mask)
-
-        error_column_name = f&#39;{self.id}_error&#39;
-        cat_column_name = f&#39;{self.id}_cat&#39;
-
-        df[error_column_name] = None
-        df.loc[mask, error_column_name] = error
-
-        df.loc[mask, cat_column_name] = 100  # gt &gt; 0.1 / 10%
-        df.loc[df[error_column_name] &lt;= 0.1, cat_column_name] = 10  # 5-10 %
-        df.loc[df[error_column_name] &lt;= 0.05, cat_column_name] = 5  # 1-5 %
-        df.loc[df[error_column_name] &lt;= 0.01, cat_column_name] = 1  # &lt; 1%
-        df.loc[df[error_column_name] == 0.0, cat_column_name] = 0  # exact match</code></pre>
-</details>
-<h3>Ancestors</h3>
-<ul class="hlist">
-<li>abc.ABC</li>
+</li>
 </ul>
-<h3>Subclasses</h3>
-<ul class="hlist">
-<li><a title="secfsdstools.f_standardize.bs_standardize.SumValidationRule" href="#secfsdstools.f_standardize.bs_standardize.SumValidationRule">SumValidationRule</a></li>
-</ul>
-<h3>Methods</h3>
-<dl>
-<dt id="secfsdstools.f_standardize.bs_standardize.ValidationRule.calculate_error"><code class="name flex">
-<span>def <span class="ident">calculate_error</span></span>(<span>self, df: pandas.core.frame.DataFrame, mask: pandera.typing.pandas.Series[bool]) ‑> pandera.typing.pandas.Series[numpy.float64]</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">@abstractmethod
-def calculate_error(self, df: pd.DataFrame, mask: pa.typing.Series[bool]) -&gt; \
-        pa.typing.Series[np.float64]:
-    pass</code></pre>
-</details>
-</dd>
-<dt id="secfsdstools.f_standardize.bs_standardize.ValidationRule.mask"><code class="name flex">
-<span>def <span class="ident">mask</span></span>(<span>self, df: pandas.core.frame.DataFrame) ‑> pandera.typing.pandas.Series[bool]</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">@abstractmethod
-def mask(self, df: pd.DataFrame) -&gt; pa.typing.Series[bool]:
-    pass</code></pre>
-</details>
-</dd>
-<dt id="secfsdstools.f_standardize.bs_standardize.ValidationRule.validate"><code class="name flex">
-<span>def <span class="ident">validate</span></span>(<span>self, df: pandas.core.frame.DataFrame)</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def validate(self, df: pd.DataFrame):
-    mask = self.mask(df)
-    error = self.calculate_error(df, mask)
-
-    error_column_name = f&#39;{self.id}_error&#39;
-    cat_column_name = f&#39;{self.id}_cat&#39;
-
-    df[error_column_name] = None
-    df.loc[mask, error_column_name] = error
-
-    df.loc[mask, cat_column_name] = 100  # gt &gt; 0.1 / 10%
-    df.loc[df[error_column_name] &lt;= 0.1, cat_column_name] = 10  # 5-10 %
-    df.loc[df[error_column_name] &lt;= 0.05, cat_column_name] = 5  # 1-5 %
-    df.loc[df[error_column_name] &lt;= 0.01, cat_column_name] = 1  # &lt; 1%
-    df.loc[df[error_column_name] == 0.0, cat_column_name] = 0  # exact match</code></pre>
-</details>
-</dd>
-</dl>
 </dd>
 </dl>
 </section>
@@ -1377,42 +576,12 @@ def mask(self, df: pd.DataFrame) -&gt; pa.typing.Series[bool]:
 <li><code><a title="secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizer.bs_rename_rg" href="#secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizer.bs_rename_rg">bs_rename_rg</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizer.bs_sum_completion" href="#secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizer.bs_sum_completion">bs_sum_completion</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizer.bs_sumup_rg" href="#secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizer.bs_sumup_rg">bs_sumup_rg</a></code></li>
-<li><code><a title="secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizer.cleanup_rule_tree" href="#secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizer.cleanup_rule_tree">cleanup_rule_tree</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizer.final_tags" href="#secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizer.final_tags">final_tags</a></code></li>
-<li><code><a title="secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizer.main_tags" href="#secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizer.main_tags">main_tags</a></code></li>
-<li><code><a title="secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizer.proprocess_rule_tree" href="#secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizer.proprocess_rule_tree">proprocess_rule_tree</a></code></li>
-<li><code><a title="secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizer.rule_tree" href="#secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizer.rule_tree">rule_tree</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizer.main_rule_tree" href="#secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizer.main_rule_tree">main_rule_tree</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizer.main_statement_tags" href="#secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizer.main_statement_tags">main_statement_tags</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizer.post_rule_tree" href="#secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizer.post_rule_tree">post_rule_tree</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizer.preprocess_rule_tree" href="#secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizer.preprocess_rule_tree">preprocess_rule_tree</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizer.validation_rules" href="#secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizer.validation_rules">validation_rules</a></code></li>
-</ul>
-</li>
-<li>
-<h4><code><a title="secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizerOld" href="#secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizerOld">BalanceSheetStandardizerOld</a></code></h4>
-<ul class="">
-<li><code><a title="secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizerOld.complete_special_rules" href="#secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizerOld.complete_special_rules">complete_special_rules</a></code></li>
-<li><code><a title="secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizerOld.fill_still_isna_summands" href="#secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizerOld.fill_still_isna_summands">fill_still_isna_summands</a></code></li>
-</ul>
-</li>
-<li>
-<h4><code><a title="secfsdstools.f_standardize.bs_standardize.RuleProcessor" href="#secfsdstools.f_standardize.bs_standardize.RuleProcessor">RuleProcessor</a></code></h4>
-<ul class="">
-<li><code><a title="secfsdstools.f_standardize.bs_standardize.RuleProcessor.get_ruletree_descriptions" href="#secfsdstools.f_standardize.bs_standardize.RuleProcessor.get_ruletree_descriptions">get_ruletree_descriptions</a></code></li>
-<li><code><a title="secfsdstools.f_standardize.bs_standardize.RuleProcessor.identifier_tags" href="#secfsdstools.f_standardize.bs_standardize.RuleProcessor.identifier_tags">identifier_tags</a></code></li>
-<li><code><a title="secfsdstools.f_standardize.bs_standardize.RuleProcessor.process" href="#secfsdstools.f_standardize.bs_standardize.RuleProcessor.process">process</a></code></li>
-</ul>
-</li>
-<li>
-<h4><code><a title="secfsdstools.f_standardize.bs_standardize.SumValidationRule" href="#secfsdstools.f_standardize.bs_standardize.SumValidationRule">SumValidationRule</a></code></h4>
-<ul class="">
-<li><code><a title="secfsdstools.f_standardize.bs_standardize.SumValidationRule.calculate_error" href="#secfsdstools.f_standardize.bs_standardize.SumValidationRule.calculate_error">calculate_error</a></code></li>
-<li><code><a title="secfsdstools.f_standardize.bs_standardize.SumValidationRule.mask" href="#secfsdstools.f_standardize.bs_standardize.SumValidationRule.mask">mask</a></code></li>
-</ul>
-</li>
-<li>
-<h4><code><a title="secfsdstools.f_standardize.bs_standardize.ValidationRule" href="#secfsdstools.f_standardize.bs_standardize.ValidationRule">ValidationRule</a></code></h4>
-<ul class="">
-<li><code><a title="secfsdstools.f_standardize.bs_standardize.ValidationRule.calculate_error" href="#secfsdstools.f_standardize.bs_standardize.ValidationRule.calculate_error">calculate_error</a></code></li>
-<li><code><a title="secfsdstools.f_standardize.bs_standardize.ValidationRule.mask" href="#secfsdstools.f_standardize.bs_standardize.ValidationRule.mask">mask</a></code></li>
-<li><code><a title="secfsdstools.f_standardize.bs_standardize.ValidationRule.validate" href="#secfsdstools.f_standardize.bs_standardize.ValidationRule.validate">validate</a></code></li>
 </ul>
 </li>
 </ul>

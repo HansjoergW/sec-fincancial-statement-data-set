@@ -33,7 +33,7 @@ from typing import Set, List
 import pandas as pd
 import pandera as pa
 
-from secfsdstools.f_standardize.rule_framework import Rule, RuleEntity
+from secfsdstools.f_standardize.base_rule_framework import Rule, RuleEntity
 
 
 class PreSumUpCorrection(Rule):
@@ -79,20 +79,21 @@ class PreSumUpCorrection(Rule):
         &#34;&#34;&#34;
         return {self.sum_tag, self.mixed_up_summand, self.other_summand}
 
-    def mask(self, df: pd.DataFrame) -&gt; pa.typing.Series[bool]:
+    def mask(self, data_df: pd.DataFrame) -&gt; pa.typing.Series[bool]:
         &#34;&#34;&#34;
             returns a Series[bool] which defines the rows to which this rule has to be applied.
 
         Args:
-            df: dataframe on which the rules should be applied
+            data_df: dataframe on which the rules should be applied
 
         Returns:
             pa.typing.Series[bool]: a boolean Series that marks which rows have to be calculated
         &#34;&#34;&#34;
-        return (df[self.mixed_up_summand] == df[self.sum_tag] + df[self.other_summand]) \
-               &amp; (df[self.other_summand] &gt; 0)
+        return (data_df[self.mixed_up_summand] ==
+                       data_df[self.sum_tag] + data_df[self.other_summand]) \
+                and (data_df[self.other_summand] &gt; 0)
 
-    def apply(self, df: pd.DataFrame, mask: pa.typing.Series[bool]):
+    def apply(self, data_df: pd.DataFrame, mask: pa.typing.Series[bool]):
         &#34;&#34;&#34;
         apply the rule on the provided dataframe. the rows, on which the rule has to be applied
         is defined by the provide mask Series.
@@ -104,9 +105,9 @@ class PreSumUpCorrection(Rule):
             mask: a Series marking the rows in the dataframe on which the rule has to be applied
         &#34;&#34;&#34;
 
-        mixed_up_values = df[self.mixed_up_summand].copy()
-        df.loc[mask, self.mixed_up_summand] = df[self.sum_tag]
-        df.loc[mask, self.sum_tag] = mixed_up_values
+        mixed_up_values = data_df[self.mixed_up_summand].copy()
+        data_df.loc[mask, self.mixed_up_summand] = data_df[self.sum_tag]
+        data_df.loc[mask, self.sum_tag] = mixed_up_values
 
     def get_description(self) -&gt; str:
         &#34;&#34;&#34;
@@ -133,20 +134,20 @@ class CopyTagRule(Rule):
         self.original = original
         self.target = target
 
-    def mask(self, df: pd.DataFrame) -&gt; pa.typing.Series[bool]:
+    def mask(self, data_df: pd.DataFrame) -&gt; pa.typing.Series[bool]:
         &#34;&#34;&#34;
             returns a Series[bool] which defines the rows to which this rule has to be applied.
 
         Args:
-            df: dataframe on which the rules should be applied
+            data_df: dataframe on which the rules should be applied
 
         Returns:
             pa.typing.Series[bool]: a boolean Series that marks which rows have to be calculated
         &#34;&#34;&#34;
-        return (df[self.target].isna() &amp;
-                ~df[self.original].isna())
+        return (data_df[self.target].isna() &amp;
+                ~data_df[self.original].isna())
 
-    def apply(self, df: pd.DataFrame, mask: pa.typing.Series[bool]):
+    def apply(self, data_df: pd.DataFrame, mask: pa.typing.Series[bool]):
         &#34;&#34;&#34;
         apply the rule on the provided dataframe. the rows, on which the rule has to be applied
         is defined by the provide mask Series.
@@ -154,10 +155,10 @@ class CopyTagRule(Rule):
         Important, the rules have to be applied &#34;in-place&#34;, so no new dataframe is produced.
 
         Args:
-            df: dataframe on which the rule has to be applied
+            data_df dataframe on which the rule has to be applied
             mask: a Series marking the rows in the dataframe on which the rule has to be applied
         &#34;&#34;&#34;
-        df.loc[mask, self.target] = df[self.original]
+        data_df.loc[mask, self.target] = data_df[self.original]
 
     def get_input_tags(self) -&gt; Set[str]:
         &#34;&#34;&#34;
@@ -221,23 +222,23 @@ class MissingSumRule(Rule):
         result.update(self.summand_tags)
         return result
 
-    def mask(self, df: pd.DataFrame) -&gt; pa.typing.Series[bool]:
+    def mask(self, data_df: pd.DataFrame) -&gt; pa.typing.Series[bool]:
         &#34;&#34;&#34;
             returns a Series[bool] which defines the rows to which this rule has to be applied.
 
         Args:
-            df: dataframe on which the rules should be applied
+            data_df dataframe on which the rules should be applied
 
         Returns:
             pa.typing.Series[bool]: a boolean Series that marks which rows have to be calculated
         &#34;&#34;&#34;
-        mask = df[self.sum_tag].isna()
+        mask = data_df[self.sum_tag].isna()
         for summand_name in self.summand_tags:
-            mask = mask &amp; ~df[summand_name].isna()
+            mask = mask &amp; ~data_df[summand_name].isna()
 
         return mask
 
-    def apply(self, df: pd.DataFrame, mask: pa.typing.Series[bool]):
+    def apply(self, data_df: pd.DataFrame, mask: pa.typing.Series[bool]):
         &#34;&#34;&#34;
         apply the rule on the provided dataframe. the rows, on which the rule has to be applied
         is defined by the provide mask Series.
@@ -245,10 +246,10 @@ class MissingSumRule(Rule):
         Important, the rules have to be applied &#34;in-place&#34;, so no new dataframe is produced.
 
         Args:
-            df: dataframe on which the rule has to be applied
+            data_df dataframe on which the rule has to be applied
             mask: a Series marking the rows in the dataframe on which the rule has to be applied
         &#34;&#34;&#34;
-        df.loc[mask, self.sum_tag] = df[self.summand_tags].sum(axis=1)
+        data_df.loc[mask, self.sum_tag] = data_df[self.summand_tags].sum(axis=1)
 
     def get_description(self) -&gt; str:
         &#34;&#34;&#34;
@@ -297,25 +298,25 @@ class MissingSummandRule(Rule):
         result.update(self.existing_summands_tags)
         return result
 
-    def mask(self, df: pd.DataFrame) -&gt; pa.typing.Series[bool]:
+    def mask(self, data_df: pd.DataFrame) -&gt; pa.typing.Series[bool]:
         &#34;&#34;&#34;
             returns a Series[bool] which defines the rows to which this rule has to be applied.
 
         Args:
-            df: dataframe on which the rules should be applied
+            data_df dataframe on which the rules should be applied
 
         Returns:
             pa.typing.Series[bool]: a boolean Series that marks which rows have to be calculated
         &#34;&#34;&#34;
 
         # sum and other_summands must be set, missing_summand must not be set
-        mask = ~df[self.sum_tag].isna()
+        mask = ~data_df[self.sum_tag].isna()
         for summand_name in self.existing_summands_tags:
-            mask = mask &amp; ~df[summand_name].isna()
-        mask = mask &amp; df[self.missing_summand_tag].isna()
+            mask = mask &amp; ~data_df[summand_name].isna()
+        mask = mask &amp; data_df[self.missing_summand_tag].isna()
         return mask
 
-    def apply(self, df: pd.DataFrame, mask: pa.typing.Series[bool]):
+    def apply(self, data_df: pd.DataFrame, mask: pa.typing.Series[bool]):
         &#34;&#34;&#34;
         apply the rule on the provided dataframe. the rows, on which the rule has to be applied
         is defined by the provide mask Series.
@@ -323,12 +324,12 @@ class MissingSummandRule(Rule):
         Important, the rules have to be applied &#34;in-place&#34;, so no new dataframe is produced.
 
         Args:
-            df: dataframe on which the rule has to be applied
+            data_df dataframe on which the rule has to be applied
             mask: a Series marking the rows in the dataframe on which the rule has to be applied
         &#34;&#34;&#34;
 
-        df.loc[mask, self.missing_summand_tag] = \
-            df[self.sum_tag] - df[self.existing_summands_tags].sum(axis=1)
+        data_df.loc[mask, self.missing_summand_tag] = \
+            data_df[self.sum_tag] - data_df[self.existing_summands_tags].sum(axis=1)
 
     def get_description(self) -&gt; str:
         &#34;&#34;&#34;
@@ -375,21 +376,21 @@ class SumUpRule(Rule):
         result.update(self.potential_summands)
         return result
 
-    def mask(self, df: pd.DataFrame) -&gt; pa.typing.Series[bool]:
+    def mask(self, data_df: pd.DataFrame) -&gt; pa.typing.Series[bool]:
         &#34;&#34;&#34;
             returns a Series[bool] which defines the rows to which this rule has to be applied.
 
         Args:
-            df: dataframe on which the rules should be applied
+            data_df dataframe on which the rules should be applied
 
         Returns:
             pa.typing.Series[bool]: a boolean Series that marks which rows have to be calculated
         &#34;&#34;&#34;
 
         # mask if the target was not set
-        return df[self.sum_tag].isna()
+        return data_df[self.sum_tag].isna()
 
-    def apply(self, df: pd.DataFrame, mask: pa.typing.Series[bool]):
+    def apply(self, data_df: pd.DataFrame, mask: pa.typing.Series[bool]):
         &#34;&#34;&#34;
         apply the rule on the provided dataframe. the rows, on which the rule has to be applied
         is defined by the provide mask Series.
@@ -397,13 +398,14 @@ class SumUpRule(Rule):
         Important, the rules have to be applied &#34;in-place&#34;, so no new dataframe is produced.
 
         Args:
-            df: dataframe on which the rule has to be applied
+            data_df dataframe on which the rule has to be applied
             mask: a Series marking the rows in the dataframe on which the rule has to be applied
         &#34;&#34;&#34;
-        df.loc[mask, self.sum_tag] = 0.0  # initialize
+        data_df.loc[mask, self.sum_tag] = 0.0  # initialize
         for potential_summand in self.potential_summands:
-            summand_mask = mask &amp; ~df[potential_summand].isna()
-            df.loc[summand_mask, self.sum_tag] = df[self.sum_tag] + df[potential_summand]
+            summand_mask = mask &amp; ~data_df[potential_summand].isna()
+            data_df.loc[summand_mask, self.sum_tag] = data_df[self.sum_tag] + data_df[
+                potential_summand]
 
     def get_description(self) -&gt; str:
         &#34;&#34;&#34;
@@ -423,9 +425,8 @@ class SetSumIfOnlyOneSummand(Rule):
 
     def __init__(self, sum_tag: str, summand_set: str, summands_nan: List[str]):
         &#34;&#34;&#34;
-        
         Args:
-            sum_tag: target that contains the sum. 
+            sum_tag: target that contains the sum.
             summand_set: the summand that contains a value
             summands_nan: the summands without a value
         &#34;&#34;&#34;
@@ -453,23 +454,23 @@ class SetSumIfOnlyOneSummand(Rule):
         result.update(self.summands_nan)
         return result
 
-    def mask(self, df: pd.DataFrame) -&gt; pa.typing.Series[bool]:
+    def mask(self, data_df: pd.DataFrame) -&gt; pa.typing.Series[bool]:
         &#34;&#34;&#34;
             returns a Series[bool] which defines the rows to which this rule has to be applied.
 
         Args:
-            df: dataframe on which the rules should be applied
+            data_df dataframe on which the rules should be applied
 
         Returns:
             pa.typing.Series[bool]: a boolean Series that marks which rows have to be calculated
         &#34;&#34;&#34;
-        mask = df[self.sum_tag].isna() &amp; ~df[self.summand_set].isna()
+        mask = data_df[self.sum_tag].isna() &amp; ~data_df[self.summand_set].isna()
         for summand_nan in self.summands_nan:
-            mask = mask &amp; df[summand_nan].isna()
+            mask = mask &amp; data_df[summand_nan].isna()
 
         return mask
 
-    def apply(self, df: pd.DataFrame, mask: pa.typing.Series[bool]):
+    def apply(self, data_df: pd.DataFrame, mask: pa.typing.Series[bool]):
         &#34;&#34;&#34;
         apply the rule on the provided dataframe. the rows, on which the rule has to be applied
         is defined by the provide mask Series.
@@ -477,12 +478,12 @@ class SetSumIfOnlyOneSummand(Rule):
         Important, the rules have to be applied &#34;in-place&#34;, so no new dataframe is produced.
 
         Args:
-            df: dataframe on which the rule has to be applied
+            data_df dataframe on which the rule has to be applied
             mask: a Series marking the rows in the dataframe on which the rule has to be applied
         &#34;&#34;&#34;
-        df.loc[mask, self.sum_tag] = df[self.summand_set]  # initialize
+        data_df.loc[mask, self.sum_tag] = data_df[self.summand_set]  # initialize
         for summand_nan in self.summands_nan:
-            df.loc[mask, summand_nan] = 0.0
+            data_df.loc[mask, summand_nan] = 0.0
 
     def get_description(self) -&gt; str:
         &#34;&#34;&#34;
@@ -534,23 +535,23 @@ class PostCopyToFirstSummand(Rule):
         result.update(self.other_summands)
         return result
 
-    def mask(self, df: pd.DataFrame) -&gt; pa.typing.Series[bool]:
+    def mask(self, data_df: pd.DataFrame) -&gt; pa.typing.Series[bool]:
         &#34;&#34;&#34;
             returns a Series[bool] which defines the rows to which this rule has to be applied.
 
         Args:
-            df: dataframe on which the rules should be applied
+            data_df dataframe on which the rules should be applied
 
         Returns:
             pa.typing.Series[bool]: a boolean Series that marks which rows have to be calculated
         &#34;&#34;&#34;
-        mask = ~df[self.sum_tag].isna() &amp; df[self.first_summand].isna()
+        mask = ~data_df[self.sum_tag].isna() &amp; data_df[self.first_summand].isna()
         for other_summand in self.other_summands:
-            mask = mask &amp; df[other_summand].isna()
+            mask = mask &amp; data_df[other_summand].isna()
 
         return mask
 
-    def apply(self, df: pd.DataFrame, mask: pa.typing.Series[bool]):
+    def apply(self, data_df: pd.DataFrame, mask: pa.typing.Series[bool]):
         &#34;&#34;&#34;
         apply the rule on the provided dataframe. the rows, on which the rule has to be applied
         is defined by the provide mask Series.
@@ -558,13 +559,13 @@ class PostCopyToFirstSummand(Rule):
         Important, the rules have to be applied &#34;in-place&#34;, so no new dataframe is produced.
 
         Args:
-            df: dataframe on which the rule has to be applied
+            data_df dataframe on which the rule has to be applied
             mask: a Series marking the rows in the dataframe on which the rule has to be applied
         &#34;&#34;&#34;
 
-        df.loc[mask, self.first_summand] = df[self.sum_tag]  # initialize
+        data_df.loc[mask, self.first_summand] = data_df[self.sum_tag]  # initialize
         for other_summand in self.other_summands:
-            df.loc[mask, other_summand] = 0.0
+            data_df.loc[mask, other_summand] = 0.0
 
     def get_description(self) -&gt; str:
         &#34;&#34;&#34;
@@ -640,7 +641,7 @@ def setsumifonlyonesummand_rules_creator(sum_tag: str, summand_tags: List[str]) 
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
 <dt id="secfsdstools.f_standardize.base_rules.missingsumparts_rules_creator"><code class="name flex">
-<span>def <span class="ident">missingsumparts_rules_creator</span></span>(<span>sum_tag: str, summand_tags: List[str]) ‑> List[<a title="secfsdstools.f_standardize.rule_framework.RuleEntity" href="rule_framework.html#secfsdstools.f_standardize.rule_framework.RuleEntity">RuleEntity</a>]</span>
+<span>def <span class="ident">missingsumparts_rules_creator</span></span>(<span>sum_tag: str, summand_tags: List[str]) ‑> List[<a title="secfsdstools.f_standardize.base_rule_framework.RuleEntity" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.RuleEntity">RuleEntity</a>]</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Helper method that
@@ -696,7 +697,7 @@ an addition is not set. For instance, called with 'Assets' and
 </details>
 </dd>
 <dt id="secfsdstools.f_standardize.base_rules.setsumifonlyonesummand_rules_creator"><code class="name flex">
-<span>def <span class="ident">setsumifonlyonesummand_rules_creator</span></span>(<span>sum_tag: str, summand_tags: List[str]) ‑> List[<a title="secfsdstools.f_standardize.rule_framework.RuleEntity" href="rule_framework.html#secfsdstools.f_standardize.rule_framework.RuleEntity">RuleEntity</a>]</span>
+<span>def <span class="ident">setsumifonlyonesummand_rules_creator</span></span>(<span>sum_tag: str, summand_tags: List[str]) ‑> List[<a title="secfsdstools.f_standardize.base_rule_framework.RuleEntity" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.RuleEntity">RuleEntity</a>]</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Helper method that creates all the rules to copy the value from one summand to the sum, if
@@ -777,20 +778,20 @@ and the original tag is set</p>
         self.original = original
         self.target = target
 
-    def mask(self, df: pd.DataFrame) -&gt; pa.typing.Series[bool]:
+    def mask(self, data_df: pd.DataFrame) -&gt; pa.typing.Series[bool]:
         &#34;&#34;&#34;
             returns a Series[bool] which defines the rows to which this rule has to be applied.
 
         Args:
-            df: dataframe on which the rules should be applied
+            data_df: dataframe on which the rules should be applied
 
         Returns:
             pa.typing.Series[bool]: a boolean Series that marks which rows have to be calculated
         &#34;&#34;&#34;
-        return (df[self.target].isna() &amp;
-                ~df[self.original].isna())
+        return (data_df[self.target].isna() &amp;
+                ~data_df[self.original].isna())
 
-    def apply(self, df: pd.DataFrame, mask: pa.typing.Series[bool]):
+    def apply(self, data_df: pd.DataFrame, mask: pa.typing.Series[bool]):
         &#34;&#34;&#34;
         apply the rule on the provided dataframe. the rows, on which the rule has to be applied
         is defined by the provide mask Series.
@@ -798,10 +799,10 @@ and the original tag is set</p>
         Important, the rules have to be applied &#34;in-place&#34;, so no new dataframe is produced.
 
         Args:
-            df: dataframe on which the rule has to be applied
+            data_df dataframe on which the rule has to be applied
             mask: a Series marking the rows in the dataframe on which the rule has to be applied
         &#34;&#34;&#34;
-        df.loc[mask, self.target] = df[self.original]
+        data_df.loc[mask, self.target] = data_df[self.original]
 
     def get_input_tags(self) -&gt; Set[str]:
         &#34;&#34;&#34;
@@ -833,13 +834,13 @@ and the original tag is set</p>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li><a title="secfsdstools.f_standardize.rule_framework.Rule" href="rule_framework.html#secfsdstools.f_standardize.rule_framework.Rule">Rule</a></li>
-<li><a title="secfsdstools.f_standardize.rule_framework.RuleEntity" href="rule_framework.html#secfsdstools.f_standardize.rule_framework.RuleEntity">RuleEntity</a></li>
+<li><a title="secfsdstools.f_standardize.base_rule_framework.Rule" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.Rule">Rule</a></li>
+<li><a title="secfsdstools.f_standardize.base_rule_framework.RuleEntity" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.RuleEntity">RuleEntity</a></li>
 <li>abc.ABC</li>
 </ul>
 <h3>Class variables</h3>
 <dl>
-<dt id="secfsdstools.f_standardize.base_rules.CopyTagRule.id"><code class="name">var <span class="ident">id</span> : str</code></dt>
+<dt id="secfsdstools.f_standardize.base_rules.CopyTagRule.identifier"><code class="name">var <span class="ident">identifier</span> : str</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -847,7 +848,7 @@ and the original tag is set</p>
 <h3>Methods</h3>
 <dl>
 <dt id="secfsdstools.f_standardize.base_rules.CopyTagRule.apply"><code class="name flex">
-<span>def <span class="ident">apply</span></span>(<span>self, df: pandas.core.frame.DataFrame, mask: pandera.typing.pandas.Series[bool])</span>
+<span>def <span class="ident">apply</span></span>(<span>self, data_df: pandas.core.frame.DataFrame, mask: pandera.typing.pandas.Series[bool])</span>
 </code></dt>
 <dd>
 <div class="desc"><p>apply the rule on the provided dataframe. the rows, on which the rule has to be applied
@@ -855,8 +856,7 @@ is defined by the provide mask Series.</p>
 <p>Important, the rules have to be applied "in-place", so no new dataframe is produced.</p>
 <h2 id="args">Args</h2>
 <dl>
-<dt><strong><code>df</code></strong></dt>
-<dd>dataframe on which the rule has to be applied</dd>
+<dt>data_df dataframe on which the rule has to be applied</dt>
 <dt><strong><code>mask</code></strong></dt>
 <dd>a Series marking the rows in the dataframe on which the rule has to be applied</dd>
 </dl></div>
@@ -864,7 +864,7 @@ is defined by the provide mask Series.</p>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def apply(self, df: pd.DataFrame, mask: pa.typing.Series[bool]):
+<pre><code class="python">def apply(self, data_df: pd.DataFrame, mask: pa.typing.Series[bool]):
     &#34;&#34;&#34;
     apply the rule on the provided dataframe. the rows, on which the rule has to be applied
     is defined by the provide mask Series.
@@ -872,10 +872,10 @@ is defined by the provide mask Series.</p>
     Important, the rules have to be applied &#34;in-place&#34;, so no new dataframe is produced.
 
     Args:
-        df: dataframe on which the rule has to be applied
+        data_df dataframe on which the rule has to be applied
         mask: a Series marking the rows in the dataframe on which the rule has to be applied
     &#34;&#34;&#34;
-    df.loc[mask, self.target] = df[self.original]</code></pre>
+    data_df.loc[mask, self.target] = data_df[self.original]</code></pre>
 </details>
 </dd>
 <dt id="secfsdstools.f_standardize.base_rules.CopyTagRule.get_input_tags"><code class="name flex">
@@ -905,14 +905,14 @@ is defined by the provide mask Series.</p>
 </dl>
 <h3>Inherited members</h3>
 <ul class="hlist">
-<li><code><b><a title="secfsdstools.f_standardize.rule_framework.Rule" href="rule_framework.html#secfsdstools.f_standardize.rule_framework.Rule">Rule</a></b></code>:
+<li><code><b><a title="secfsdstools.f_standardize.base_rule_framework.Rule" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.Rule">Rule</a></b></code>:
 <ul class="hlist">
-<li><code><a title="secfsdstools.f_standardize.rule_framework.Rule.get_description" href="rule_framework.html#secfsdstools.f_standardize.rule_framework.RuleEntity.get_description">get_description</a></code></li>
-<li><code><a title="secfsdstools.f_standardize.rule_framework.Rule.get_target_tags" href="rule_framework.html#secfsdstools.f_standardize.rule_framework.Rule.get_target_tags">get_target_tags</a></code></li>
-<li><code><a title="secfsdstools.f_standardize.rule_framework.Rule.get_target_tags_str" href="rule_framework.html#secfsdstools.f_standardize.rule_framework.Rule.get_target_tags_str">get_target_tags_str</a></code></li>
-<li><code><a title="secfsdstools.f_standardize.rule_framework.Rule.mask" href="rule_framework.html#secfsdstools.f_standardize.rule_framework.Rule.mask">mask</a></code></li>
-<li><code><a title="secfsdstools.f_standardize.rule_framework.Rule.process" href="rule_framework.html#secfsdstools.f_standardize.rule_framework.Rule.process">process</a></code></li>
-<li><code><a title="secfsdstools.f_standardize.rule_framework.Rule.set_id" href="rule_framework.html#secfsdstools.f_standardize.rule_framework.RuleEntity.set_id">set_id</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.base_rule_framework.Rule.get_description" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.RuleEntity.get_description">get_description</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.base_rule_framework.Rule.get_target_tags" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.Rule.get_target_tags">get_target_tags</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.base_rule_framework.Rule.get_target_tags_str" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.Rule.get_target_tags_str">get_target_tags_str</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.base_rule_framework.Rule.mask" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.Rule.mask">mask</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.base_rule_framework.Rule.process" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.Rule.process">process</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.base_rule_framework.Rule.set_id" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.RuleEntity.set_id">set_id</a></code></li>
 </ul>
 </li>
 </ul>
@@ -968,23 +968,23 @@ sum_tag if the sum_tag is nan and all summand_tags have values</p>
         result.update(self.summand_tags)
         return result
 
-    def mask(self, df: pd.DataFrame) -&gt; pa.typing.Series[bool]:
+    def mask(self, data_df: pd.DataFrame) -&gt; pa.typing.Series[bool]:
         &#34;&#34;&#34;
             returns a Series[bool] which defines the rows to which this rule has to be applied.
 
         Args:
-            df: dataframe on which the rules should be applied
+            data_df dataframe on which the rules should be applied
 
         Returns:
             pa.typing.Series[bool]: a boolean Series that marks which rows have to be calculated
         &#34;&#34;&#34;
-        mask = df[self.sum_tag].isna()
+        mask = data_df[self.sum_tag].isna()
         for summand_name in self.summand_tags:
-            mask = mask &amp; ~df[summand_name].isna()
+            mask = mask &amp; ~data_df[summand_name].isna()
 
         return mask
 
-    def apply(self, df: pd.DataFrame, mask: pa.typing.Series[bool]):
+    def apply(self, data_df: pd.DataFrame, mask: pa.typing.Series[bool]):
         &#34;&#34;&#34;
         apply the rule on the provided dataframe. the rows, on which the rule has to be applied
         is defined by the provide mask Series.
@@ -992,10 +992,10 @@ sum_tag if the sum_tag is nan and all summand_tags have values</p>
         Important, the rules have to be applied &#34;in-place&#34;, so no new dataframe is produced.
 
         Args:
-            df: dataframe on which the rule has to be applied
+            data_df dataframe on which the rule has to be applied
             mask: a Series marking the rows in the dataframe on which the rule has to be applied
         &#34;&#34;&#34;
-        df.loc[mask, self.sum_tag] = df[self.summand_tags].sum(axis=1)
+        data_df.loc[mask, self.sum_tag] = data_df[self.summand_tags].sum(axis=1)
 
     def get_description(self) -&gt; str:
         &#34;&#34;&#34;
@@ -1009,13 +1009,13 @@ sum_tag if the sum_tag is nan and all summand_tags have values</p>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li><a title="secfsdstools.f_standardize.rule_framework.Rule" href="rule_framework.html#secfsdstools.f_standardize.rule_framework.Rule">Rule</a></li>
-<li><a title="secfsdstools.f_standardize.rule_framework.RuleEntity" href="rule_framework.html#secfsdstools.f_standardize.rule_framework.RuleEntity">RuleEntity</a></li>
+<li><a title="secfsdstools.f_standardize.base_rule_framework.Rule" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.Rule">Rule</a></li>
+<li><a title="secfsdstools.f_standardize.base_rule_framework.RuleEntity" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.RuleEntity">RuleEntity</a></li>
 <li>abc.ABC</li>
 </ul>
 <h3>Class variables</h3>
 <dl>
-<dt id="secfsdstools.f_standardize.base_rules.MissingSumRule.id"><code class="name">var <span class="ident">id</span> : str</code></dt>
+<dt id="secfsdstools.f_standardize.base_rules.MissingSumRule.identifier"><code class="name">var <span class="ident">identifier</span> : str</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -1023,7 +1023,7 @@ sum_tag if the sum_tag is nan and all summand_tags have values</p>
 <h3>Methods</h3>
 <dl>
 <dt id="secfsdstools.f_standardize.base_rules.MissingSumRule.apply"><code class="name flex">
-<span>def <span class="ident">apply</span></span>(<span>self, df: pandas.core.frame.DataFrame, mask: pandera.typing.pandas.Series[bool])</span>
+<span>def <span class="ident">apply</span></span>(<span>self, data_df: pandas.core.frame.DataFrame, mask: pandera.typing.pandas.Series[bool])</span>
 </code></dt>
 <dd>
 <div class="desc"><p>apply the rule on the provided dataframe. the rows, on which the rule has to be applied
@@ -1031,8 +1031,7 @@ is defined by the provide mask Series.</p>
 <p>Important, the rules have to be applied "in-place", so no new dataframe is produced.</p>
 <h2 id="args">Args</h2>
 <dl>
-<dt><strong><code>df</code></strong></dt>
-<dd>dataframe on which the rule has to be applied</dd>
+<dt>data_df dataframe on which the rule has to be applied</dt>
 <dt><strong><code>mask</code></strong></dt>
 <dd>a Series marking the rows in the dataframe on which the rule has to be applied</dd>
 </dl></div>
@@ -1040,7 +1039,7 @@ is defined by the provide mask Series.</p>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def apply(self, df: pd.DataFrame, mask: pa.typing.Series[bool]):
+<pre><code class="python">def apply(self, data_df: pd.DataFrame, mask: pa.typing.Series[bool]):
     &#34;&#34;&#34;
     apply the rule on the provided dataframe. the rows, on which the rule has to be applied
     is defined by the provide mask Series.
@@ -1048,10 +1047,10 @@ is defined by the provide mask Series.</p>
     Important, the rules have to be applied &#34;in-place&#34;, so no new dataframe is produced.
 
     Args:
-        df: dataframe on which the rule has to be applied
+        data_df dataframe on which the rule has to be applied
         mask: a Series marking the rows in the dataframe on which the rule has to be applied
     &#34;&#34;&#34;
-    df.loc[mask, self.sum_tag] = df[self.summand_tags].sum(axis=1)</code></pre>
+    data_df.loc[mask, self.sum_tag] = data_df[self.summand_tags].sum(axis=1)</code></pre>
 </details>
 </dd>
 <dt id="secfsdstools.f_standardize.base_rules.MissingSumRule.get_input_tags"><code class="name flex">
@@ -1080,17 +1079,49 @@ is defined by the provide mask Series.</p>
     return result</code></pre>
 </details>
 </dd>
+<dt id="secfsdstools.f_standardize.base_rules.MissingSumRule.mask"><code class="name flex">
+<span>def <span class="ident">mask</span></span>(<span>self, data_df: pandas.core.frame.DataFrame) ‑> pandera.typing.pandas.Series[bool]</span>
+</code></dt>
+<dd>
+<div class="desc"><p>returns a Series[bool] which defines the rows to which this rule has to be applied.</p>
+<h2 id="args">Args</h2>
+<p>data_df dataframe on which the rules should be applied</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>pa.typing.Series[bool]</code></dt>
+<dd>a boolean Series that marks which rows have to be calculated</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def mask(self, data_df: pd.DataFrame) -&gt; pa.typing.Series[bool]:
+    &#34;&#34;&#34;
+        returns a Series[bool] which defines the rows to which this rule has to be applied.
+
+    Args:
+        data_df dataframe on which the rules should be applied
+
+    Returns:
+        pa.typing.Series[bool]: a boolean Series that marks which rows have to be calculated
+    &#34;&#34;&#34;
+    mask = data_df[self.sum_tag].isna()
+    for summand_name in self.summand_tags:
+        mask = mask &amp; ~data_df[summand_name].isna()
+
+    return mask</code></pre>
+</details>
+</dd>
 </dl>
 <h3>Inherited members</h3>
 <ul class="hlist">
-<li><code><b><a title="secfsdstools.f_standardize.rule_framework.Rule" href="rule_framework.html#secfsdstools.f_standardize.rule_framework.Rule">Rule</a></b></code>:
+<li><code><b><a title="secfsdstools.f_standardize.base_rule_framework.Rule" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.Rule">Rule</a></b></code>:
 <ul class="hlist">
-<li><code><a title="secfsdstools.f_standardize.rule_framework.Rule.get_description" href="rule_framework.html#secfsdstools.f_standardize.rule_framework.RuleEntity.get_description">get_description</a></code></li>
-<li><code><a title="secfsdstools.f_standardize.rule_framework.Rule.get_target_tags" href="rule_framework.html#secfsdstools.f_standardize.rule_framework.Rule.get_target_tags">get_target_tags</a></code></li>
-<li><code><a title="secfsdstools.f_standardize.rule_framework.Rule.get_target_tags_str" href="rule_framework.html#secfsdstools.f_standardize.rule_framework.Rule.get_target_tags_str">get_target_tags_str</a></code></li>
-<li><code><a title="secfsdstools.f_standardize.rule_framework.Rule.mask" href="rule_framework.html#secfsdstools.f_standardize.rule_framework.Rule.mask">mask</a></code></li>
-<li><code><a title="secfsdstools.f_standardize.rule_framework.Rule.process" href="rule_framework.html#secfsdstools.f_standardize.rule_framework.Rule.process">process</a></code></li>
-<li><code><a title="secfsdstools.f_standardize.rule_framework.Rule.set_id" href="rule_framework.html#secfsdstools.f_standardize.rule_framework.RuleEntity.set_id">set_id</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.base_rule_framework.Rule.get_description" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.RuleEntity.get_description">get_description</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.base_rule_framework.Rule.get_target_tags" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.Rule.get_target_tags">get_target_tags</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.base_rule_framework.Rule.get_target_tags_str" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.Rule.get_target_tags_str">get_target_tags_str</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.base_rule_framework.Rule.process" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.Rule.process">process</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.base_rule_framework.Rule.set_id" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.RuleEntity.set_id">set_id</a></code></li>
 </ul>
 </li>
 </ul>
@@ -1150,25 +1181,25 @@ is defined by the provide mask Series.</p>
         result.update(self.existing_summands_tags)
         return result
 
-    def mask(self, df: pd.DataFrame) -&gt; pa.typing.Series[bool]:
+    def mask(self, data_df: pd.DataFrame) -&gt; pa.typing.Series[bool]:
         &#34;&#34;&#34;
             returns a Series[bool] which defines the rows to which this rule has to be applied.
 
         Args:
-            df: dataframe on which the rules should be applied
+            data_df dataframe on which the rules should be applied
 
         Returns:
             pa.typing.Series[bool]: a boolean Series that marks which rows have to be calculated
         &#34;&#34;&#34;
 
         # sum and other_summands must be set, missing_summand must not be set
-        mask = ~df[self.sum_tag].isna()
+        mask = ~data_df[self.sum_tag].isna()
         for summand_name in self.existing_summands_tags:
-            mask = mask &amp; ~df[summand_name].isna()
-        mask = mask &amp; df[self.missing_summand_tag].isna()
+            mask = mask &amp; ~data_df[summand_name].isna()
+        mask = mask &amp; data_df[self.missing_summand_tag].isna()
         return mask
 
-    def apply(self, df: pd.DataFrame, mask: pa.typing.Series[bool]):
+    def apply(self, data_df: pd.DataFrame, mask: pa.typing.Series[bool]):
         &#34;&#34;&#34;
         apply the rule on the provided dataframe. the rows, on which the rule has to be applied
         is defined by the provide mask Series.
@@ -1176,12 +1207,12 @@ is defined by the provide mask Series.</p>
         Important, the rules have to be applied &#34;in-place&#34;, so no new dataframe is produced.
 
         Args:
-            df: dataframe on which the rule has to be applied
+            data_df dataframe on which the rule has to be applied
             mask: a Series marking the rows in the dataframe on which the rule has to be applied
         &#34;&#34;&#34;
 
-        df.loc[mask, self.missing_summand_tag] = \
-            df[self.sum_tag] - df[self.existing_summands_tags].sum(axis=1)
+        data_df.loc[mask, self.missing_summand_tag] = \
+            data_df[self.sum_tag] - data_df[self.existing_summands_tags].sum(axis=1)
 
     def get_description(self) -&gt; str:
         &#34;&#34;&#34;
@@ -1196,13 +1227,13 @@ is defined by the provide mask Series.</p>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li><a title="secfsdstools.f_standardize.rule_framework.Rule" href="rule_framework.html#secfsdstools.f_standardize.rule_framework.Rule">Rule</a></li>
-<li><a title="secfsdstools.f_standardize.rule_framework.RuleEntity" href="rule_framework.html#secfsdstools.f_standardize.rule_framework.RuleEntity">RuleEntity</a></li>
+<li><a title="secfsdstools.f_standardize.base_rule_framework.Rule" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.Rule">Rule</a></li>
+<li><a title="secfsdstools.f_standardize.base_rule_framework.RuleEntity" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.RuleEntity">RuleEntity</a></li>
 <li>abc.ABC</li>
 </ul>
 <h3>Class variables</h3>
 <dl>
-<dt id="secfsdstools.f_standardize.base_rules.MissingSummandRule.id"><code class="name">var <span class="ident">id</span> : str</code></dt>
+<dt id="secfsdstools.f_standardize.base_rules.MissingSummandRule.identifier"><code class="name">var <span class="ident">identifier</span> : str</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -1210,7 +1241,7 @@ is defined by the provide mask Series.</p>
 <h3>Methods</h3>
 <dl>
 <dt id="secfsdstools.f_standardize.base_rules.MissingSummandRule.apply"><code class="name flex">
-<span>def <span class="ident">apply</span></span>(<span>self, df: pandas.core.frame.DataFrame, mask: pandera.typing.pandas.Series[bool])</span>
+<span>def <span class="ident">apply</span></span>(<span>self, data_df: pandas.core.frame.DataFrame, mask: pandera.typing.pandas.Series[bool])</span>
 </code></dt>
 <dd>
 <div class="desc"><p>apply the rule on the provided dataframe. the rows, on which the rule has to be applied
@@ -1218,8 +1249,7 @@ is defined by the provide mask Series.</p>
 <p>Important, the rules have to be applied "in-place", so no new dataframe is produced.</p>
 <h2 id="args">Args</h2>
 <dl>
-<dt><strong><code>df</code></strong></dt>
-<dd>dataframe on which the rule has to be applied</dd>
+<dt>data_df dataframe on which the rule has to be applied</dt>
 <dt><strong><code>mask</code></strong></dt>
 <dd>a Series marking the rows in the dataframe on which the rule has to be applied</dd>
 </dl></div>
@@ -1227,7 +1257,7 @@ is defined by the provide mask Series.</p>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def apply(self, df: pd.DataFrame, mask: pa.typing.Series[bool]):
+<pre><code class="python">def apply(self, data_df: pd.DataFrame, mask: pa.typing.Series[bool]):
     &#34;&#34;&#34;
     apply the rule on the provided dataframe. the rows, on which the rule has to be applied
     is defined by the provide mask Series.
@@ -1235,12 +1265,12 @@ is defined by the provide mask Series.</p>
     Important, the rules have to be applied &#34;in-place&#34;, so no new dataframe is produced.
 
     Args:
-        df: dataframe on which the rule has to be applied
+        data_df dataframe on which the rule has to be applied
         mask: a Series marking the rows in the dataframe on which the rule has to be applied
     &#34;&#34;&#34;
 
-    df.loc[mask, self.missing_summand_tag] = \
-        df[self.sum_tag] - df[self.existing_summands_tags].sum(axis=1)</code></pre>
+    data_df.loc[mask, self.missing_summand_tag] = \
+        data_df[self.sum_tag] - data_df[self.existing_summands_tags].sum(axis=1)</code></pre>
 </details>
 </dd>
 <dt id="secfsdstools.f_standardize.base_rules.MissingSummandRule.get_input_tags"><code class="name flex">
@@ -1269,17 +1299,51 @@ is defined by the provide mask Series.</p>
     return result</code></pre>
 </details>
 </dd>
+<dt id="secfsdstools.f_standardize.base_rules.MissingSummandRule.mask"><code class="name flex">
+<span>def <span class="ident">mask</span></span>(<span>self, data_df: pandas.core.frame.DataFrame) ‑> pandera.typing.pandas.Series[bool]</span>
+</code></dt>
+<dd>
+<div class="desc"><p>returns a Series[bool] which defines the rows to which this rule has to be applied.</p>
+<h2 id="args">Args</h2>
+<p>data_df dataframe on which the rules should be applied</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>pa.typing.Series[bool]</code></dt>
+<dd>a boolean Series that marks which rows have to be calculated</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def mask(self, data_df: pd.DataFrame) -&gt; pa.typing.Series[bool]:
+    &#34;&#34;&#34;
+        returns a Series[bool] which defines the rows to which this rule has to be applied.
+
+    Args:
+        data_df dataframe on which the rules should be applied
+
+    Returns:
+        pa.typing.Series[bool]: a boolean Series that marks which rows have to be calculated
+    &#34;&#34;&#34;
+
+    # sum and other_summands must be set, missing_summand must not be set
+    mask = ~data_df[self.sum_tag].isna()
+    for summand_name in self.existing_summands_tags:
+        mask = mask &amp; ~data_df[summand_name].isna()
+    mask = mask &amp; data_df[self.missing_summand_tag].isna()
+    return mask</code></pre>
+</details>
+</dd>
 </dl>
 <h3>Inherited members</h3>
 <ul class="hlist">
-<li><code><b><a title="secfsdstools.f_standardize.rule_framework.Rule" href="rule_framework.html#secfsdstools.f_standardize.rule_framework.Rule">Rule</a></b></code>:
+<li><code><b><a title="secfsdstools.f_standardize.base_rule_framework.Rule" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.Rule">Rule</a></b></code>:
 <ul class="hlist">
-<li><code><a title="secfsdstools.f_standardize.rule_framework.Rule.get_description" href="rule_framework.html#secfsdstools.f_standardize.rule_framework.RuleEntity.get_description">get_description</a></code></li>
-<li><code><a title="secfsdstools.f_standardize.rule_framework.Rule.get_target_tags" href="rule_framework.html#secfsdstools.f_standardize.rule_framework.Rule.get_target_tags">get_target_tags</a></code></li>
-<li><code><a title="secfsdstools.f_standardize.rule_framework.Rule.get_target_tags_str" href="rule_framework.html#secfsdstools.f_standardize.rule_framework.Rule.get_target_tags_str">get_target_tags_str</a></code></li>
-<li><code><a title="secfsdstools.f_standardize.rule_framework.Rule.mask" href="rule_framework.html#secfsdstools.f_standardize.rule_framework.Rule.mask">mask</a></code></li>
-<li><code><a title="secfsdstools.f_standardize.rule_framework.Rule.process" href="rule_framework.html#secfsdstools.f_standardize.rule_framework.Rule.process">process</a></code></li>
-<li><code><a title="secfsdstools.f_standardize.rule_framework.Rule.set_id" href="rule_framework.html#secfsdstools.f_standardize.rule_framework.RuleEntity.set_id">set_id</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.base_rule_framework.Rule.get_description" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.RuleEntity.get_description">get_description</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.base_rule_framework.Rule.get_target_tags" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.Rule.get_target_tags">get_target_tags</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.base_rule_framework.Rule.get_target_tags_str" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.Rule.get_target_tags_str">get_target_tags_str</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.base_rule_framework.Rule.process" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.Rule.process">process</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.base_rule_framework.Rule.set_id" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.RuleEntity.set_id">set_id</a></code></li>
 </ul>
 </li>
 </ul>
@@ -1342,23 +1406,23 @@ then copy the sum_tag value to the first summand and set the other summands to '
         result.update(self.other_summands)
         return result
 
-    def mask(self, df: pd.DataFrame) -&gt; pa.typing.Series[bool]:
+    def mask(self, data_df: pd.DataFrame) -&gt; pa.typing.Series[bool]:
         &#34;&#34;&#34;
             returns a Series[bool] which defines the rows to which this rule has to be applied.
 
         Args:
-            df: dataframe on which the rules should be applied
+            data_df dataframe on which the rules should be applied
 
         Returns:
             pa.typing.Series[bool]: a boolean Series that marks which rows have to be calculated
         &#34;&#34;&#34;
-        mask = ~df[self.sum_tag].isna() &amp; df[self.first_summand].isna()
+        mask = ~data_df[self.sum_tag].isna() &amp; data_df[self.first_summand].isna()
         for other_summand in self.other_summands:
-            mask = mask &amp; df[other_summand].isna()
+            mask = mask &amp; data_df[other_summand].isna()
 
         return mask
 
-    def apply(self, df: pd.DataFrame, mask: pa.typing.Series[bool]):
+    def apply(self, data_df: pd.DataFrame, mask: pa.typing.Series[bool]):
         &#34;&#34;&#34;
         apply the rule on the provided dataframe. the rows, on which the rule has to be applied
         is defined by the provide mask Series.
@@ -1366,13 +1430,13 @@ then copy the sum_tag value to the first summand and set the other summands to '
         Important, the rules have to be applied &#34;in-place&#34;, so no new dataframe is produced.
 
         Args:
-            df: dataframe on which the rule has to be applied
+            data_df dataframe on which the rule has to be applied
             mask: a Series marking the rows in the dataframe on which the rule has to be applied
         &#34;&#34;&#34;
 
-        df.loc[mask, self.first_summand] = df[self.sum_tag]  # initialize
+        data_df.loc[mask, self.first_summand] = data_df[self.sum_tag]  # initialize
         for other_summand in self.other_summands:
-            df.loc[mask, other_summand] = 0.0
+            data_df.loc[mask, other_summand] = 0.0
 
     def get_description(self) -&gt; str:
         &#34;&#34;&#34;
@@ -1387,13 +1451,13 @@ then copy the sum_tag value to the first summand and set the other summands to '
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li><a title="secfsdstools.f_standardize.rule_framework.Rule" href="rule_framework.html#secfsdstools.f_standardize.rule_framework.Rule">Rule</a></li>
-<li><a title="secfsdstools.f_standardize.rule_framework.RuleEntity" href="rule_framework.html#secfsdstools.f_standardize.rule_framework.RuleEntity">RuleEntity</a></li>
+<li><a title="secfsdstools.f_standardize.base_rule_framework.Rule" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.Rule">Rule</a></li>
+<li><a title="secfsdstools.f_standardize.base_rule_framework.RuleEntity" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.RuleEntity">RuleEntity</a></li>
 <li>abc.ABC</li>
 </ul>
 <h3>Class variables</h3>
 <dl>
-<dt id="secfsdstools.f_standardize.base_rules.PostCopyToFirstSummand.id"><code class="name">var <span class="ident">id</span> : str</code></dt>
+<dt id="secfsdstools.f_standardize.base_rules.PostCopyToFirstSummand.identifier"><code class="name">var <span class="ident">identifier</span> : str</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -1401,7 +1465,7 @@ then copy the sum_tag value to the first summand and set the other summands to '
 <h3>Methods</h3>
 <dl>
 <dt id="secfsdstools.f_standardize.base_rules.PostCopyToFirstSummand.apply"><code class="name flex">
-<span>def <span class="ident">apply</span></span>(<span>self, df: pandas.core.frame.DataFrame, mask: pandera.typing.pandas.Series[bool])</span>
+<span>def <span class="ident">apply</span></span>(<span>self, data_df: pandas.core.frame.DataFrame, mask: pandera.typing.pandas.Series[bool])</span>
 </code></dt>
 <dd>
 <div class="desc"><p>apply the rule on the provided dataframe. the rows, on which the rule has to be applied
@@ -1409,8 +1473,7 @@ is defined by the provide mask Series.</p>
 <p>Important, the rules have to be applied "in-place", so no new dataframe is produced.</p>
 <h2 id="args">Args</h2>
 <dl>
-<dt><strong><code>df</code></strong></dt>
-<dd>dataframe on which the rule has to be applied</dd>
+<dt>data_df dataframe on which the rule has to be applied</dt>
 <dt><strong><code>mask</code></strong></dt>
 <dd>a Series marking the rows in the dataframe on which the rule has to be applied</dd>
 </dl></div>
@@ -1418,7 +1481,7 @@ is defined by the provide mask Series.</p>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def apply(self, df: pd.DataFrame, mask: pa.typing.Series[bool]):
+<pre><code class="python">def apply(self, data_df: pd.DataFrame, mask: pa.typing.Series[bool]):
     &#34;&#34;&#34;
     apply the rule on the provided dataframe. the rows, on which the rule has to be applied
     is defined by the provide mask Series.
@@ -1426,13 +1489,13 @@ is defined by the provide mask Series.</p>
     Important, the rules have to be applied &#34;in-place&#34;, so no new dataframe is produced.
 
     Args:
-        df: dataframe on which the rule has to be applied
+        data_df dataframe on which the rule has to be applied
         mask: a Series marking the rows in the dataframe on which the rule has to be applied
     &#34;&#34;&#34;
 
-    df.loc[mask, self.first_summand] = df[self.sum_tag]  # initialize
+    data_df.loc[mask, self.first_summand] = data_df[self.sum_tag]  # initialize
     for other_summand in self.other_summands:
-        df.loc[mask, other_summand] = 0.0</code></pre>
+        data_df.loc[mask, other_summand] = 0.0</code></pre>
 </details>
 </dd>
 <dt id="secfsdstools.f_standardize.base_rules.PostCopyToFirstSummand.get_input_tags"><code class="name flex">
@@ -1461,17 +1524,49 @@ is defined by the provide mask Series.</p>
     return result</code></pre>
 </details>
 </dd>
+<dt id="secfsdstools.f_standardize.base_rules.PostCopyToFirstSummand.mask"><code class="name flex">
+<span>def <span class="ident">mask</span></span>(<span>self, data_df: pandas.core.frame.DataFrame) ‑> pandera.typing.pandas.Series[bool]</span>
+</code></dt>
+<dd>
+<div class="desc"><p>returns a Series[bool] which defines the rows to which this rule has to be applied.</p>
+<h2 id="args">Args</h2>
+<p>data_df dataframe on which the rules should be applied</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>pa.typing.Series[bool]</code></dt>
+<dd>a boolean Series that marks which rows have to be calculated</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def mask(self, data_df: pd.DataFrame) -&gt; pa.typing.Series[bool]:
+    &#34;&#34;&#34;
+        returns a Series[bool] which defines the rows to which this rule has to be applied.
+
+    Args:
+        data_df dataframe on which the rules should be applied
+
+    Returns:
+        pa.typing.Series[bool]: a boolean Series that marks which rows have to be calculated
+    &#34;&#34;&#34;
+    mask = ~data_df[self.sum_tag].isna() &amp; data_df[self.first_summand].isna()
+    for other_summand in self.other_summands:
+        mask = mask &amp; data_df[other_summand].isna()
+
+    return mask</code></pre>
+</details>
+</dd>
 </dl>
 <h3>Inherited members</h3>
 <ul class="hlist">
-<li><code><b><a title="secfsdstools.f_standardize.rule_framework.Rule" href="rule_framework.html#secfsdstools.f_standardize.rule_framework.Rule">Rule</a></b></code>:
+<li><code><b><a title="secfsdstools.f_standardize.base_rule_framework.Rule" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.Rule">Rule</a></b></code>:
 <ul class="hlist">
-<li><code><a title="secfsdstools.f_standardize.rule_framework.Rule.get_description" href="rule_framework.html#secfsdstools.f_standardize.rule_framework.RuleEntity.get_description">get_description</a></code></li>
-<li><code><a title="secfsdstools.f_standardize.rule_framework.Rule.get_target_tags" href="rule_framework.html#secfsdstools.f_standardize.rule_framework.Rule.get_target_tags">get_target_tags</a></code></li>
-<li><code><a title="secfsdstools.f_standardize.rule_framework.Rule.get_target_tags_str" href="rule_framework.html#secfsdstools.f_standardize.rule_framework.Rule.get_target_tags_str">get_target_tags_str</a></code></li>
-<li><code><a title="secfsdstools.f_standardize.rule_framework.Rule.mask" href="rule_framework.html#secfsdstools.f_standardize.rule_framework.Rule.mask">mask</a></code></li>
-<li><code><a title="secfsdstools.f_standardize.rule_framework.Rule.process" href="rule_framework.html#secfsdstools.f_standardize.rule_framework.Rule.process">process</a></code></li>
-<li><code><a title="secfsdstools.f_standardize.rule_framework.Rule.set_id" href="rule_framework.html#secfsdstools.f_standardize.rule_framework.RuleEntity.set_id">set_id</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.base_rule_framework.Rule.get_description" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.RuleEntity.get_description">get_description</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.base_rule_framework.Rule.get_target_tags" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.Rule.get_target_tags">get_target_tags</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.base_rule_framework.Rule.get_target_tags_str" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.Rule.get_target_tags_str">get_target_tags_str</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.base_rule_framework.Rule.process" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.Rule.process">process</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.base_rule_framework.Rule.set_id" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.RuleEntity.set_id">set_id</a></code></li>
 </ul>
 </li>
 </ul>
@@ -1544,20 +1639,21 @@ it matches AssetsNoncurrent = Assets + AssetsCurrent.</p>
         &#34;&#34;&#34;
         return {self.sum_tag, self.mixed_up_summand, self.other_summand}
 
-    def mask(self, df: pd.DataFrame) -&gt; pa.typing.Series[bool]:
+    def mask(self, data_df: pd.DataFrame) -&gt; pa.typing.Series[bool]:
         &#34;&#34;&#34;
             returns a Series[bool] which defines the rows to which this rule has to be applied.
 
         Args:
-            df: dataframe on which the rules should be applied
+            data_df: dataframe on which the rules should be applied
 
         Returns:
             pa.typing.Series[bool]: a boolean Series that marks which rows have to be calculated
         &#34;&#34;&#34;
-        return (df[self.mixed_up_summand] == df[self.sum_tag] + df[self.other_summand]) \
-               &amp; (df[self.other_summand] &gt; 0)
+        return (data_df[self.mixed_up_summand] ==
+                       data_df[self.sum_tag] + data_df[self.other_summand]) \
+                and (data_df[self.other_summand] &gt; 0)
 
-    def apply(self, df: pd.DataFrame, mask: pa.typing.Series[bool]):
+    def apply(self, data_df: pd.DataFrame, mask: pa.typing.Series[bool]):
         &#34;&#34;&#34;
         apply the rule on the provided dataframe. the rows, on which the rule has to be applied
         is defined by the provide mask Series.
@@ -1569,9 +1665,9 @@ it matches AssetsNoncurrent = Assets + AssetsCurrent.</p>
             mask: a Series marking the rows in the dataframe on which the rule has to be applied
         &#34;&#34;&#34;
 
-        mixed_up_values = df[self.mixed_up_summand].copy()
-        df.loc[mask, self.mixed_up_summand] = df[self.sum_tag]
-        df.loc[mask, self.sum_tag] = mixed_up_values
+        mixed_up_values = data_df[self.mixed_up_summand].copy()
+        data_df.loc[mask, self.mixed_up_summand] = data_df[self.sum_tag]
+        data_df.loc[mask, self.sum_tag] = mixed_up_values
 
     def get_description(self) -&gt; str:
         &#34;&#34;&#34;
@@ -1586,13 +1682,13 @@ it matches AssetsNoncurrent = Assets + AssetsCurrent.</p>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li><a title="secfsdstools.f_standardize.rule_framework.Rule" href="rule_framework.html#secfsdstools.f_standardize.rule_framework.Rule">Rule</a></li>
-<li><a title="secfsdstools.f_standardize.rule_framework.RuleEntity" href="rule_framework.html#secfsdstools.f_standardize.rule_framework.RuleEntity">RuleEntity</a></li>
+<li><a title="secfsdstools.f_standardize.base_rule_framework.Rule" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.Rule">Rule</a></li>
+<li><a title="secfsdstools.f_standardize.base_rule_framework.RuleEntity" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.RuleEntity">RuleEntity</a></li>
 <li>abc.ABC</li>
 </ul>
 <h3>Class variables</h3>
 <dl>
-<dt id="secfsdstools.f_standardize.base_rules.PreSumUpCorrection.id"><code class="name">var <span class="ident">id</span> : str</code></dt>
+<dt id="secfsdstools.f_standardize.base_rules.PreSumUpCorrection.identifier"><code class="name">var <span class="ident">identifier</span> : str</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -1600,7 +1696,7 @@ it matches AssetsNoncurrent = Assets + AssetsCurrent.</p>
 <h3>Methods</h3>
 <dl>
 <dt id="secfsdstools.f_standardize.base_rules.PreSumUpCorrection.apply"><code class="name flex">
-<span>def <span class="ident">apply</span></span>(<span>self, df: pandas.core.frame.DataFrame, mask: pandera.typing.pandas.Series[bool])</span>
+<span>def <span class="ident">apply</span></span>(<span>self, data_df: pandas.core.frame.DataFrame, mask: pandera.typing.pandas.Series[bool])</span>
 </code></dt>
 <dd>
 <div class="desc"><p>apply the rule on the provided dataframe. the rows, on which the rule has to be applied
@@ -1617,7 +1713,7 @@ is defined by the provide mask Series.</p>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def apply(self, df: pd.DataFrame, mask: pa.typing.Series[bool]):
+<pre><code class="python">def apply(self, data_df: pd.DataFrame, mask: pa.typing.Series[bool]):
     &#34;&#34;&#34;
     apply the rule on the provided dataframe. the rows, on which the rule has to be applied
     is defined by the provide mask Series.
@@ -1629,9 +1725,9 @@ is defined by the provide mask Series.</p>
         mask: a Series marking the rows in the dataframe on which the rule has to be applied
     &#34;&#34;&#34;
 
-    mixed_up_values = df[self.mixed_up_summand].copy()
-    df.loc[mask, self.mixed_up_summand] = df[self.sum_tag]
-    df.loc[mask, self.sum_tag] = mixed_up_values</code></pre>
+    mixed_up_values = data_df[self.mixed_up_summand].copy()
+    data_df.loc[mask, self.mixed_up_summand] = data_df[self.sum_tag]
+    data_df.loc[mask, self.sum_tag] = mixed_up_values</code></pre>
 </details>
 </dd>
 <dt id="secfsdstools.f_standardize.base_rules.PreSumUpCorrection.get_input_tags"><code class="name flex">
@@ -1661,14 +1757,14 @@ is defined by the provide mask Series.</p>
 </dl>
 <h3>Inherited members</h3>
 <ul class="hlist">
-<li><code><b><a title="secfsdstools.f_standardize.rule_framework.Rule" href="rule_framework.html#secfsdstools.f_standardize.rule_framework.Rule">Rule</a></b></code>:
+<li><code><b><a title="secfsdstools.f_standardize.base_rule_framework.Rule" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.Rule">Rule</a></b></code>:
 <ul class="hlist">
-<li><code><a title="secfsdstools.f_standardize.rule_framework.Rule.get_description" href="rule_framework.html#secfsdstools.f_standardize.rule_framework.RuleEntity.get_description">get_description</a></code></li>
-<li><code><a title="secfsdstools.f_standardize.rule_framework.Rule.get_target_tags" href="rule_framework.html#secfsdstools.f_standardize.rule_framework.Rule.get_target_tags">get_target_tags</a></code></li>
-<li><code><a title="secfsdstools.f_standardize.rule_framework.Rule.get_target_tags_str" href="rule_framework.html#secfsdstools.f_standardize.rule_framework.Rule.get_target_tags_str">get_target_tags_str</a></code></li>
-<li><code><a title="secfsdstools.f_standardize.rule_framework.Rule.mask" href="rule_framework.html#secfsdstools.f_standardize.rule_framework.Rule.mask">mask</a></code></li>
-<li><code><a title="secfsdstools.f_standardize.rule_framework.Rule.process" href="rule_framework.html#secfsdstools.f_standardize.rule_framework.Rule.process">process</a></code></li>
-<li><code><a title="secfsdstools.f_standardize.rule_framework.Rule.set_id" href="rule_framework.html#secfsdstools.f_standardize.rule_framework.RuleEntity.set_id">set_id</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.base_rule_framework.Rule.get_description" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.RuleEntity.get_description">get_description</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.base_rule_framework.Rule.get_target_tags" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.Rule.get_target_tags">get_target_tags</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.base_rule_framework.Rule.get_target_tags_str" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.Rule.get_target_tags_str">get_target_tags_str</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.base_rule_framework.Rule.mask" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.Rule.mask">mask</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.base_rule_framework.Rule.process" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.Rule.process">process</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.base_rule_framework.Rule.set_id" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.RuleEntity.set_id">set_id</a></code></li>
 </ul>
 </li>
 </ul>
@@ -1683,7 +1779,7 @@ sum_tag gets the copy of the summand available and the other summands are set to
 <h2 id="args">Args</h2>
 <dl>
 <dt><strong><code>sum_tag</code></strong></dt>
-<dd>target that contains the sum. </dd>
+<dd>target that contains the sum.</dd>
 <dt><strong><code>summand_set</code></strong></dt>
 <dd>the summand that contains a value</dd>
 <dt><strong><code>summands_nan</code></strong></dt>
@@ -1701,9 +1797,8 @@ sum_tag gets the copy of the summand available and the other summands are set to
 
     def __init__(self, sum_tag: str, summand_set: str, summands_nan: List[str]):
         &#34;&#34;&#34;
-        
         Args:
-            sum_tag: target that contains the sum. 
+            sum_tag: target that contains the sum.
             summand_set: the summand that contains a value
             summands_nan: the summands without a value
         &#34;&#34;&#34;
@@ -1731,23 +1826,23 @@ sum_tag gets the copy of the summand available and the other summands are set to
         result.update(self.summands_nan)
         return result
 
-    def mask(self, df: pd.DataFrame) -&gt; pa.typing.Series[bool]:
+    def mask(self, data_df: pd.DataFrame) -&gt; pa.typing.Series[bool]:
         &#34;&#34;&#34;
             returns a Series[bool] which defines the rows to which this rule has to be applied.
 
         Args:
-            df: dataframe on which the rules should be applied
+            data_df dataframe on which the rules should be applied
 
         Returns:
             pa.typing.Series[bool]: a boolean Series that marks which rows have to be calculated
         &#34;&#34;&#34;
-        mask = df[self.sum_tag].isna() &amp; ~df[self.summand_set].isna()
+        mask = data_df[self.sum_tag].isna() &amp; ~data_df[self.summand_set].isna()
         for summand_nan in self.summands_nan:
-            mask = mask &amp; df[summand_nan].isna()
+            mask = mask &amp; data_df[summand_nan].isna()
 
         return mask
 
-    def apply(self, df: pd.DataFrame, mask: pa.typing.Series[bool]):
+    def apply(self, data_df: pd.DataFrame, mask: pa.typing.Series[bool]):
         &#34;&#34;&#34;
         apply the rule on the provided dataframe. the rows, on which the rule has to be applied
         is defined by the provide mask Series.
@@ -1755,12 +1850,12 @@ sum_tag gets the copy of the summand available and the other summands are set to
         Important, the rules have to be applied &#34;in-place&#34;, so no new dataframe is produced.
 
         Args:
-            df: dataframe on which the rule has to be applied
+            data_df dataframe on which the rule has to be applied
             mask: a Series marking the rows in the dataframe on which the rule has to be applied
         &#34;&#34;&#34;
-        df.loc[mask, self.sum_tag] = df[self.summand_set]  # initialize
+        data_df.loc[mask, self.sum_tag] = data_df[self.summand_set]  # initialize
         for summand_nan in self.summands_nan:
-            df.loc[mask, summand_nan] = 0.0
+            data_df.loc[mask, summand_nan] = 0.0
 
     def get_description(self) -&gt; str:
         &#34;&#34;&#34;
@@ -1775,13 +1870,13 @@ sum_tag gets the copy of the summand available and the other summands are set to
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li><a title="secfsdstools.f_standardize.rule_framework.Rule" href="rule_framework.html#secfsdstools.f_standardize.rule_framework.Rule">Rule</a></li>
-<li><a title="secfsdstools.f_standardize.rule_framework.RuleEntity" href="rule_framework.html#secfsdstools.f_standardize.rule_framework.RuleEntity">RuleEntity</a></li>
+<li><a title="secfsdstools.f_standardize.base_rule_framework.Rule" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.Rule">Rule</a></li>
+<li><a title="secfsdstools.f_standardize.base_rule_framework.RuleEntity" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.RuleEntity">RuleEntity</a></li>
 <li>abc.ABC</li>
 </ul>
 <h3>Class variables</h3>
 <dl>
-<dt id="secfsdstools.f_standardize.base_rules.SetSumIfOnlyOneSummand.id"><code class="name">var <span class="ident">id</span> : str</code></dt>
+<dt id="secfsdstools.f_standardize.base_rules.SetSumIfOnlyOneSummand.identifier"><code class="name">var <span class="ident">identifier</span> : str</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -1789,7 +1884,7 @@ sum_tag gets the copy of the summand available and the other summands are set to
 <h3>Methods</h3>
 <dl>
 <dt id="secfsdstools.f_standardize.base_rules.SetSumIfOnlyOneSummand.apply"><code class="name flex">
-<span>def <span class="ident">apply</span></span>(<span>self, df: pandas.core.frame.DataFrame, mask: pandera.typing.pandas.Series[bool])</span>
+<span>def <span class="ident">apply</span></span>(<span>self, data_df: pandas.core.frame.DataFrame, mask: pandera.typing.pandas.Series[bool])</span>
 </code></dt>
 <dd>
 <div class="desc"><p>apply the rule on the provided dataframe. the rows, on which the rule has to be applied
@@ -1797,8 +1892,7 @@ is defined by the provide mask Series.</p>
 <p>Important, the rules have to be applied "in-place", so no new dataframe is produced.</p>
 <h2 id="args">Args</h2>
 <dl>
-<dt><strong><code>df</code></strong></dt>
-<dd>dataframe on which the rule has to be applied</dd>
+<dt>data_df dataframe on which the rule has to be applied</dt>
 <dt><strong><code>mask</code></strong></dt>
 <dd>a Series marking the rows in the dataframe on which the rule has to be applied</dd>
 </dl></div>
@@ -1806,7 +1900,7 @@ is defined by the provide mask Series.</p>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def apply(self, df: pd.DataFrame, mask: pa.typing.Series[bool]):
+<pre><code class="python">def apply(self, data_df: pd.DataFrame, mask: pa.typing.Series[bool]):
     &#34;&#34;&#34;
     apply the rule on the provided dataframe. the rows, on which the rule has to be applied
     is defined by the provide mask Series.
@@ -1814,12 +1908,12 @@ is defined by the provide mask Series.</p>
     Important, the rules have to be applied &#34;in-place&#34;, so no new dataframe is produced.
 
     Args:
-        df: dataframe on which the rule has to be applied
+        data_df dataframe on which the rule has to be applied
         mask: a Series marking the rows in the dataframe on which the rule has to be applied
     &#34;&#34;&#34;
-    df.loc[mask, self.sum_tag] = df[self.summand_set]  # initialize
+    data_df.loc[mask, self.sum_tag] = data_df[self.summand_set]  # initialize
     for summand_nan in self.summands_nan:
-        df.loc[mask, summand_nan] = 0.0</code></pre>
+        data_df.loc[mask, summand_nan] = 0.0</code></pre>
 </details>
 </dd>
 <dt id="secfsdstools.f_standardize.base_rules.SetSumIfOnlyOneSummand.get_input_tags"><code class="name flex">
@@ -1848,17 +1942,49 @@ is defined by the provide mask Series.</p>
     return result</code></pre>
 </details>
 </dd>
+<dt id="secfsdstools.f_standardize.base_rules.SetSumIfOnlyOneSummand.mask"><code class="name flex">
+<span>def <span class="ident">mask</span></span>(<span>self, data_df: pandas.core.frame.DataFrame) ‑> pandera.typing.pandas.Series[bool]</span>
+</code></dt>
+<dd>
+<div class="desc"><p>returns a Series[bool] which defines the rows to which this rule has to be applied.</p>
+<h2 id="args">Args</h2>
+<p>data_df dataframe on which the rules should be applied</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>pa.typing.Series[bool]</code></dt>
+<dd>a boolean Series that marks which rows have to be calculated</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def mask(self, data_df: pd.DataFrame) -&gt; pa.typing.Series[bool]:
+    &#34;&#34;&#34;
+        returns a Series[bool] which defines the rows to which this rule has to be applied.
+
+    Args:
+        data_df dataframe on which the rules should be applied
+
+    Returns:
+        pa.typing.Series[bool]: a boolean Series that marks which rows have to be calculated
+    &#34;&#34;&#34;
+    mask = data_df[self.sum_tag].isna() &amp; ~data_df[self.summand_set].isna()
+    for summand_nan in self.summands_nan:
+        mask = mask &amp; data_df[summand_nan].isna()
+
+    return mask</code></pre>
+</details>
+</dd>
 </dl>
 <h3>Inherited members</h3>
 <ul class="hlist">
-<li><code><b><a title="secfsdstools.f_standardize.rule_framework.Rule" href="rule_framework.html#secfsdstools.f_standardize.rule_framework.Rule">Rule</a></b></code>:
+<li><code><b><a title="secfsdstools.f_standardize.base_rule_framework.Rule" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.Rule">Rule</a></b></code>:
 <ul class="hlist">
-<li><code><a title="secfsdstools.f_standardize.rule_framework.Rule.get_description" href="rule_framework.html#secfsdstools.f_standardize.rule_framework.RuleEntity.get_description">get_description</a></code></li>
-<li><code><a title="secfsdstools.f_standardize.rule_framework.Rule.get_target_tags" href="rule_framework.html#secfsdstools.f_standardize.rule_framework.Rule.get_target_tags">get_target_tags</a></code></li>
-<li><code><a title="secfsdstools.f_standardize.rule_framework.Rule.get_target_tags_str" href="rule_framework.html#secfsdstools.f_standardize.rule_framework.Rule.get_target_tags_str">get_target_tags_str</a></code></li>
-<li><code><a title="secfsdstools.f_standardize.rule_framework.Rule.mask" href="rule_framework.html#secfsdstools.f_standardize.rule_framework.Rule.mask">mask</a></code></li>
-<li><code><a title="secfsdstools.f_standardize.rule_framework.Rule.process" href="rule_framework.html#secfsdstools.f_standardize.rule_framework.Rule.process">process</a></code></li>
-<li><code><a title="secfsdstools.f_standardize.rule_framework.Rule.set_id" href="rule_framework.html#secfsdstools.f_standardize.rule_framework.RuleEntity.set_id">set_id</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.base_rule_framework.Rule.get_description" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.RuleEntity.get_description">get_description</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.base_rule_framework.Rule.get_target_tags" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.Rule.get_target_tags">get_target_tags</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.base_rule_framework.Rule.get_target_tags_str" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.Rule.get_target_tags_str">get_target_tags_str</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.base_rule_framework.Rule.process" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.Rule.process">process</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.base_rule_framework.Rule.set_id" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.RuleEntity.set_id">set_id</a></code></li>
 </ul>
 </li>
 </ul>
@@ -1913,21 +2039,21 @@ is defined by the provide mask Series.</p>
         result.update(self.potential_summands)
         return result
 
-    def mask(self, df: pd.DataFrame) -&gt; pa.typing.Series[bool]:
+    def mask(self, data_df: pd.DataFrame) -&gt; pa.typing.Series[bool]:
         &#34;&#34;&#34;
             returns a Series[bool] which defines the rows to which this rule has to be applied.
 
         Args:
-            df: dataframe on which the rules should be applied
+            data_df dataframe on which the rules should be applied
 
         Returns:
             pa.typing.Series[bool]: a boolean Series that marks which rows have to be calculated
         &#34;&#34;&#34;
 
         # mask if the target was not set
-        return df[self.sum_tag].isna()
+        return data_df[self.sum_tag].isna()
 
-    def apply(self, df: pd.DataFrame, mask: pa.typing.Series[bool]):
+    def apply(self, data_df: pd.DataFrame, mask: pa.typing.Series[bool]):
         &#34;&#34;&#34;
         apply the rule on the provided dataframe. the rows, on which the rule has to be applied
         is defined by the provide mask Series.
@@ -1935,13 +2061,14 @@ is defined by the provide mask Series.</p>
         Important, the rules have to be applied &#34;in-place&#34;, so no new dataframe is produced.
 
         Args:
-            df: dataframe on which the rule has to be applied
+            data_df dataframe on which the rule has to be applied
             mask: a Series marking the rows in the dataframe on which the rule has to be applied
         &#34;&#34;&#34;
-        df.loc[mask, self.sum_tag] = 0.0  # initialize
+        data_df.loc[mask, self.sum_tag] = 0.0  # initialize
         for potential_summand in self.potential_summands:
-            summand_mask = mask &amp; ~df[potential_summand].isna()
-            df.loc[summand_mask, self.sum_tag] = df[self.sum_tag] + df[potential_summand]
+            summand_mask = mask &amp; ~data_df[potential_summand].isna()
+            data_df.loc[summand_mask, self.sum_tag] = data_df[self.sum_tag] + data_df[
+                potential_summand]
 
     def get_description(self) -&gt; str:
         &#34;&#34;&#34;
@@ -1954,13 +2081,13 @@ is defined by the provide mask Series.</p>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li><a title="secfsdstools.f_standardize.rule_framework.Rule" href="rule_framework.html#secfsdstools.f_standardize.rule_framework.Rule">Rule</a></li>
-<li><a title="secfsdstools.f_standardize.rule_framework.RuleEntity" href="rule_framework.html#secfsdstools.f_standardize.rule_framework.RuleEntity">RuleEntity</a></li>
+<li><a title="secfsdstools.f_standardize.base_rule_framework.Rule" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.Rule">Rule</a></li>
+<li><a title="secfsdstools.f_standardize.base_rule_framework.RuleEntity" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.RuleEntity">RuleEntity</a></li>
 <li>abc.ABC</li>
 </ul>
 <h3>Class variables</h3>
 <dl>
-<dt id="secfsdstools.f_standardize.base_rules.SumUpRule.id"><code class="name">var <span class="ident">id</span> : str</code></dt>
+<dt id="secfsdstools.f_standardize.base_rules.SumUpRule.identifier"><code class="name">var <span class="ident">identifier</span> : str</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -1968,7 +2095,7 @@ is defined by the provide mask Series.</p>
 <h3>Methods</h3>
 <dl>
 <dt id="secfsdstools.f_standardize.base_rules.SumUpRule.apply"><code class="name flex">
-<span>def <span class="ident">apply</span></span>(<span>self, df: pandas.core.frame.DataFrame, mask: pandera.typing.pandas.Series[bool])</span>
+<span>def <span class="ident">apply</span></span>(<span>self, data_df: pandas.core.frame.DataFrame, mask: pandera.typing.pandas.Series[bool])</span>
 </code></dt>
 <dd>
 <div class="desc"><p>apply the rule on the provided dataframe. the rows, on which the rule has to be applied
@@ -1976,8 +2103,7 @@ is defined by the provide mask Series.</p>
 <p>Important, the rules have to be applied "in-place", so no new dataframe is produced.</p>
 <h2 id="args">Args</h2>
 <dl>
-<dt><strong><code>df</code></strong></dt>
-<dd>dataframe on which the rule has to be applied</dd>
+<dt>data_df dataframe on which the rule has to be applied</dt>
 <dt><strong><code>mask</code></strong></dt>
 <dd>a Series marking the rows in the dataframe on which the rule has to be applied</dd>
 </dl></div>
@@ -1985,7 +2111,7 @@ is defined by the provide mask Series.</p>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def apply(self, df: pd.DataFrame, mask: pa.typing.Series[bool]):
+<pre><code class="python">def apply(self, data_df: pd.DataFrame, mask: pa.typing.Series[bool]):
     &#34;&#34;&#34;
     apply the rule on the provided dataframe. the rows, on which the rule has to be applied
     is defined by the provide mask Series.
@@ -1993,13 +2119,14 @@ is defined by the provide mask Series.</p>
     Important, the rules have to be applied &#34;in-place&#34;, so no new dataframe is produced.
 
     Args:
-        df: dataframe on which the rule has to be applied
+        data_df dataframe on which the rule has to be applied
         mask: a Series marking the rows in the dataframe on which the rule has to be applied
     &#34;&#34;&#34;
-    df.loc[mask, self.sum_tag] = 0.0  # initialize
+    data_df.loc[mask, self.sum_tag] = 0.0  # initialize
     for potential_summand in self.potential_summands:
-        summand_mask = mask &amp; ~df[potential_summand].isna()
-        df.loc[summand_mask, self.sum_tag] = df[self.sum_tag] + df[potential_summand]</code></pre>
+        summand_mask = mask &amp; ~data_df[potential_summand].isna()
+        data_df.loc[summand_mask, self.sum_tag] = data_df[self.sum_tag] + data_df[
+            potential_summand]</code></pre>
 </details>
 </dd>
 <dt id="secfsdstools.f_standardize.base_rules.SumUpRule.get_input_tags"><code class="name flex">
@@ -2028,17 +2155,47 @@ is defined by the provide mask Series.</p>
     return result</code></pre>
 </details>
 </dd>
+<dt id="secfsdstools.f_standardize.base_rules.SumUpRule.mask"><code class="name flex">
+<span>def <span class="ident">mask</span></span>(<span>self, data_df: pandas.core.frame.DataFrame) ‑> pandera.typing.pandas.Series[bool]</span>
+</code></dt>
+<dd>
+<div class="desc"><p>returns a Series[bool] which defines the rows to which this rule has to be applied.</p>
+<h2 id="args">Args</h2>
+<p>data_df dataframe on which the rules should be applied</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>pa.typing.Series[bool]</code></dt>
+<dd>a boolean Series that marks which rows have to be calculated</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def mask(self, data_df: pd.DataFrame) -&gt; pa.typing.Series[bool]:
+    &#34;&#34;&#34;
+        returns a Series[bool] which defines the rows to which this rule has to be applied.
+
+    Args:
+        data_df dataframe on which the rules should be applied
+
+    Returns:
+        pa.typing.Series[bool]: a boolean Series that marks which rows have to be calculated
+    &#34;&#34;&#34;
+
+    # mask if the target was not set
+    return data_df[self.sum_tag].isna()</code></pre>
+</details>
+</dd>
 </dl>
 <h3>Inherited members</h3>
 <ul class="hlist">
-<li><code><b><a title="secfsdstools.f_standardize.rule_framework.Rule" href="rule_framework.html#secfsdstools.f_standardize.rule_framework.Rule">Rule</a></b></code>:
+<li><code><b><a title="secfsdstools.f_standardize.base_rule_framework.Rule" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.Rule">Rule</a></b></code>:
 <ul class="hlist">
-<li><code><a title="secfsdstools.f_standardize.rule_framework.Rule.get_description" href="rule_framework.html#secfsdstools.f_standardize.rule_framework.RuleEntity.get_description">get_description</a></code></li>
-<li><code><a title="secfsdstools.f_standardize.rule_framework.Rule.get_target_tags" href="rule_framework.html#secfsdstools.f_standardize.rule_framework.Rule.get_target_tags">get_target_tags</a></code></li>
-<li><code><a title="secfsdstools.f_standardize.rule_framework.Rule.get_target_tags_str" href="rule_framework.html#secfsdstools.f_standardize.rule_framework.Rule.get_target_tags_str">get_target_tags_str</a></code></li>
-<li><code><a title="secfsdstools.f_standardize.rule_framework.Rule.mask" href="rule_framework.html#secfsdstools.f_standardize.rule_framework.Rule.mask">mask</a></code></li>
-<li><code><a title="secfsdstools.f_standardize.rule_framework.Rule.process" href="rule_framework.html#secfsdstools.f_standardize.rule_framework.Rule.process">process</a></code></li>
-<li><code><a title="secfsdstools.f_standardize.rule_framework.Rule.set_id" href="rule_framework.html#secfsdstools.f_standardize.rule_framework.RuleEntity.set_id">set_id</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.base_rule_framework.Rule.get_description" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.RuleEntity.get_description">get_description</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.base_rule_framework.Rule.get_target_tags" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.Rule.get_target_tags">get_target_tags</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.base_rule_framework.Rule.get_target_tags_str" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.Rule.get_target_tags_str">get_target_tags_str</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.base_rule_framework.Rule.process" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.Rule.process">process</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.base_rule_framework.Rule.set_id" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.RuleEntity.set_id">set_id</a></code></li>
 </ul>
 </li>
 </ul>
@@ -2070,7 +2227,7 @@ is defined by the provide mask Series.</p>
 <ul class="">
 <li><code><a title="secfsdstools.f_standardize.base_rules.CopyTagRule.apply" href="#secfsdstools.f_standardize.base_rules.CopyTagRule.apply">apply</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.base_rules.CopyTagRule.get_input_tags" href="#secfsdstools.f_standardize.base_rules.CopyTagRule.get_input_tags">get_input_tags</a></code></li>
-<li><code><a title="secfsdstools.f_standardize.base_rules.CopyTagRule.id" href="#secfsdstools.f_standardize.base_rules.CopyTagRule.id">id</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.base_rules.CopyTagRule.identifier" href="#secfsdstools.f_standardize.base_rules.CopyTagRule.identifier">identifier</a></code></li>
 </ul>
 </li>
 <li>
@@ -2078,7 +2235,8 @@ is defined by the provide mask Series.</p>
 <ul class="">
 <li><code><a title="secfsdstools.f_standardize.base_rules.MissingSumRule.apply" href="#secfsdstools.f_standardize.base_rules.MissingSumRule.apply">apply</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.base_rules.MissingSumRule.get_input_tags" href="#secfsdstools.f_standardize.base_rules.MissingSumRule.get_input_tags">get_input_tags</a></code></li>
-<li><code><a title="secfsdstools.f_standardize.base_rules.MissingSumRule.id" href="#secfsdstools.f_standardize.base_rules.MissingSumRule.id">id</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.base_rules.MissingSumRule.identifier" href="#secfsdstools.f_standardize.base_rules.MissingSumRule.identifier">identifier</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.base_rules.MissingSumRule.mask" href="#secfsdstools.f_standardize.base_rules.MissingSumRule.mask">mask</a></code></li>
 </ul>
 </li>
 <li>
@@ -2086,7 +2244,8 @@ is defined by the provide mask Series.</p>
 <ul class="">
 <li><code><a title="secfsdstools.f_standardize.base_rules.MissingSummandRule.apply" href="#secfsdstools.f_standardize.base_rules.MissingSummandRule.apply">apply</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.base_rules.MissingSummandRule.get_input_tags" href="#secfsdstools.f_standardize.base_rules.MissingSummandRule.get_input_tags">get_input_tags</a></code></li>
-<li><code><a title="secfsdstools.f_standardize.base_rules.MissingSummandRule.id" href="#secfsdstools.f_standardize.base_rules.MissingSummandRule.id">id</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.base_rules.MissingSummandRule.identifier" href="#secfsdstools.f_standardize.base_rules.MissingSummandRule.identifier">identifier</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.base_rules.MissingSummandRule.mask" href="#secfsdstools.f_standardize.base_rules.MissingSummandRule.mask">mask</a></code></li>
 </ul>
 </li>
 <li>
@@ -2094,7 +2253,8 @@ is defined by the provide mask Series.</p>
 <ul class="">
 <li><code><a title="secfsdstools.f_standardize.base_rules.PostCopyToFirstSummand.apply" href="#secfsdstools.f_standardize.base_rules.PostCopyToFirstSummand.apply">apply</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.base_rules.PostCopyToFirstSummand.get_input_tags" href="#secfsdstools.f_standardize.base_rules.PostCopyToFirstSummand.get_input_tags">get_input_tags</a></code></li>
-<li><code><a title="secfsdstools.f_standardize.base_rules.PostCopyToFirstSummand.id" href="#secfsdstools.f_standardize.base_rules.PostCopyToFirstSummand.id">id</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.base_rules.PostCopyToFirstSummand.identifier" href="#secfsdstools.f_standardize.base_rules.PostCopyToFirstSummand.identifier">identifier</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.base_rules.PostCopyToFirstSummand.mask" href="#secfsdstools.f_standardize.base_rules.PostCopyToFirstSummand.mask">mask</a></code></li>
 </ul>
 </li>
 <li>
@@ -2102,7 +2262,7 @@ is defined by the provide mask Series.</p>
 <ul class="">
 <li><code><a title="secfsdstools.f_standardize.base_rules.PreSumUpCorrection.apply" href="#secfsdstools.f_standardize.base_rules.PreSumUpCorrection.apply">apply</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.base_rules.PreSumUpCorrection.get_input_tags" href="#secfsdstools.f_standardize.base_rules.PreSumUpCorrection.get_input_tags">get_input_tags</a></code></li>
-<li><code><a title="secfsdstools.f_standardize.base_rules.PreSumUpCorrection.id" href="#secfsdstools.f_standardize.base_rules.PreSumUpCorrection.id">id</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.base_rules.PreSumUpCorrection.identifier" href="#secfsdstools.f_standardize.base_rules.PreSumUpCorrection.identifier">identifier</a></code></li>
 </ul>
 </li>
 <li>
@@ -2110,7 +2270,8 @@ is defined by the provide mask Series.</p>
 <ul class="">
 <li><code><a title="secfsdstools.f_standardize.base_rules.SetSumIfOnlyOneSummand.apply" href="#secfsdstools.f_standardize.base_rules.SetSumIfOnlyOneSummand.apply">apply</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.base_rules.SetSumIfOnlyOneSummand.get_input_tags" href="#secfsdstools.f_standardize.base_rules.SetSumIfOnlyOneSummand.get_input_tags">get_input_tags</a></code></li>
-<li><code><a title="secfsdstools.f_standardize.base_rules.SetSumIfOnlyOneSummand.id" href="#secfsdstools.f_standardize.base_rules.SetSumIfOnlyOneSummand.id">id</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.base_rules.SetSumIfOnlyOneSummand.identifier" href="#secfsdstools.f_standardize.base_rules.SetSumIfOnlyOneSummand.identifier">identifier</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.base_rules.SetSumIfOnlyOneSummand.mask" href="#secfsdstools.f_standardize.base_rules.SetSumIfOnlyOneSummand.mask">mask</a></code></li>
 </ul>
 </li>
 <li>
@@ -2118,7 +2279,8 @@ is defined by the provide mask Series.</p>
 <ul class="">
 <li><code><a title="secfsdstools.f_standardize.base_rules.SumUpRule.apply" href="#secfsdstools.f_standardize.base_rules.SumUpRule.apply">apply</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.base_rules.SumUpRule.get_input_tags" href="#secfsdstools.f_standardize.base_rules.SumUpRule.get_input_tags">get_input_tags</a></code></li>
-<li><code><a title="secfsdstools.f_standardize.base_rules.SumUpRule.id" href="#secfsdstools.f_standardize.base_rules.SumUpRule.id">id</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.base_rules.SumUpRule.identifier" href="#secfsdstools.f_standardize.base_rules.SumUpRule.identifier">identifier</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.base_rules.SumUpRule.mask" href="#secfsdstools.f_standardize.base_rules.SumUpRule.mask">mask</a></code></li>
 </ul>
 </li>
 </ul>

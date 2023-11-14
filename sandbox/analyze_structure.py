@@ -99,6 +99,7 @@ if __name__ == '__main__':
     # check_for_equity_tags(fs_df)
 
     print("fs_df.shape", fs_df.shape)
+    print("fs columns", fs_df.columns)
 
     standardizer = BalanceSheetStandardizer()
     df = standardizer.process(fs_df)

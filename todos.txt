@@ -19,8 +19,6 @@ New
 todo:
 - Tests Standardizer
 - summary description -> als Tabelle, als markdown?
-- log/stats überarbeiten
-  - stats in prozent and change pro iteration, so dass man direkt sieht, wo sich nichts verandert hat
 
 - TotalEquity = PartnerCapital oder StockholdersEquity
   - Besteht aus PaidIn capital und retained earnings

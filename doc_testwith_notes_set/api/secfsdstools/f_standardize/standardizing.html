@@ -111,7 +111,6 @@ class Stats:
 class Standardizer:
     &#34;&#34;&#34;
     The Standardizer implements the base processing logic to standardize financial statements.
-
     &#34;&#34;&#34;
 
     # this tags identify single statements in the final standardized table
@@ -202,11 +201,7 @@ class Standardizer:
         return data_df[~duplicates_s]
 
     def _preprocess_pivot(self, data_df: pd.DataFrame, expected_tags: Set[str]) -&gt; pd.DataFrame:
-        # remove duplicated entries, otherwise pivot is not possible
-        relevant_df = data_df[
-            [&#39;adsh&#39;, &#39;coreg&#39;, &#39;report&#39;, &#39;tag&#39;, &#39;value&#39;, &#39;uom&#39;, &#39;ddate&#39;]].drop_duplicates()
-
-        pivot_df = relevant_df.pivot(index=self.pivot_df_index_cols,
+        pivot_df = data_df.pivot(index=self.pivot_df_index_cols,
                                      columns=&#39;tag&#39;,
                                      values=&#39;value&#39;)
 
@@ -543,7 +538,6 @@ as negated.</dd>
 <pre><code class="python">class Standardizer:
     &#34;&#34;&#34;
     The Standardizer implements the base processing logic to standardize financial statements.
-
     &#34;&#34;&#34;
 
     # this tags identify single statements in the final standardized table
@@ -634,11 +628,7 @@ as negated.</dd>
         return data_df[~duplicates_s]
 
     def _preprocess_pivot(self, data_df: pd.DataFrame, expected_tags: Set[str]) -&gt; pd.DataFrame:
-        # remove duplicated entries, otherwise pivot is not possible
-        relevant_df = data_df[
-            [&#39;adsh&#39;, &#39;coreg&#39;, &#39;report&#39;, &#39;tag&#39;, &#39;value&#39;, &#39;uom&#39;, &#39;ddate&#39;]].drop_duplicates()
-
-        pivot_df = relevant_df.pivot(index=self.pivot_df_index_cols,
+        pivot_df = data_df.pivot(index=self.pivot_df_index_cols,
                                      columns=&#39;tag&#39;,
                                      values=&#39;value&#39;)
 

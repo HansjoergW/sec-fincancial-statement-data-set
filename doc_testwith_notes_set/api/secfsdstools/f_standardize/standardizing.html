@@ -222,14 +222,13 @@ class Standardizer:
              &#34;&#34;&#34;
 
         cpy_pivot_df = pivot_df.copy()
-
-        cpy_pivot_df[&#39;nan_count&#39;] = np.nan
         cpy_pivot_df[&#39;nan_count&#39;] = cpy_pivot_df[self.main_statement_tags].isna().sum(axis=1)
 
         cpy_pivot_df.sort_values([&#39;adsh&#39;, &#39;coreg&#39;, &#39;nan_count&#39;], inplace=True)
-        cpy_pivot_df = cpy_pivot_df.groupby([&#39;adsh&#39;, &#39;coreg&#39;]).last()
-        cpy_pivot_df.reset_index(inplace=True)
-        return cpy_pivot_df
+
+        filtered_pivot_df = cpy_pivot_df.groupby([&#39;adsh&#39;, &#39;coreg&#39;]).first()
+        filtered_pivot_df.reset_index(inplace=True)
+        return filtered_pivot_df
 
     def _preprocess(self, data_df: pd.DataFrame) -&gt; pd.DataFrame:
         # only select rows with tags that are actually used by the defined rules
@@ -649,14 +648,13 @@ as negated.</dd>
              &#34;&#34;&#34;
 
         cpy_pivot_df = pivot_df.copy()
-
-        cpy_pivot_df[&#39;nan_count&#39;] = np.nan
         cpy_pivot_df[&#39;nan_count&#39;] = cpy_pivot_df[self.main_statement_tags].isna().sum(axis=1)
 
         cpy_pivot_df.sort_values([&#39;adsh&#39;, &#39;coreg&#39;, &#39;nan_count&#39;], inplace=True)
-        cpy_pivot_df = cpy_pivot_df.groupby([&#39;adsh&#39;, &#39;coreg&#39;]).last()
-        cpy_pivot_df.reset_index(inplace=True)
-        return cpy_pivot_df
+
+        filtered_pivot_df = cpy_pivot_df.groupby([&#39;adsh&#39;, &#39;coreg&#39;]).first()
+        filtered_pivot_df.reset_index(inplace=True)
+        return filtered_pivot_df
 
     def _preprocess(self, data_df: pd.DataFrame) -&gt; pd.DataFrame:
         # only select rows with tags that are actually used by the defined rules

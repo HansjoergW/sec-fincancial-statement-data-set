@@ -1,3 +1,4 @@
+import numpy as np
 import pandas as pd
 import pytest
 
@@ -57,3 +58,84 @@ def test_preprocess_deduplicate(empty_instance, sample_dataframe_duplications):
     assert result_df['version'].tolist() == ['V1', 'V2', 'V3']
     assert result_df['ddate'].tolist() == ['D1', 'D2', 'D3']
     assert result_df['value'].tolist() == [10, 20, 30]
+
+
+@pytest.fixture
+def sample_dataframe_pivot():
+    # Create a sample DataFrame for testing with potential duplicates
+    data = {
+        'adsh': ['A1', 'A2', 'A3'],
+        'coreg': ['C1', 'C2', 'C3'],
+        'report': ['R1', 'R2', 'R3'],
+        'tag': ['T1', 'T2', 'T3'],
+        'uom': ['U1', 'U2', 'U3'],
+        'value': [100, 50, 80],
+        'ddate': ['D1', 'D2', 'D3'],
+    }
+    return pd.DataFrame(data)
+
+
+def test_preprocess_pivot(empty_instance, sample_dataframe_pivot):
+    # Initialize the instance with the sample data
+    empty_instance.data_df = sample_dataframe_pivot.copy()
+
+    # Define expected_tags
+    expected_tags = {'T1', 'T2', 'T3', 'T4', 'T5'}
+
+    # Test the _preprocess_pivot method
+    result_df = empty_instance._preprocess_pivot(empty_instance.data_df, expected_tags)
+
+    # Check the structure of the result DataFrame
+    assert result_df.shape == (3, len(empty_instance.pivot_df_index_cols) + len(expected_tags))
+
+    # Check the content of the result DataFrame
+    expected_columns = empty_instance.pivot_df_index_cols + list(expected_tags)
+    assert len(set(result_df.columns.tolist()) - set(expected_columns)) == 0
+
+    # Check values in the result DataFrame
+    columns_to_test = ['T1', 'T2', 'T3', 'T4', 'T5']
+
+    # define which entries should not be nan
+    no_nan_definition = {'T1': 0, 'T2': 1, 'T3': 2}
+
+    # a little cumbersome, since we have to check for nan values
+    for column_to_test in columns_to_test:
+        data = result_df[column_to_test].tolist()
+        for idx in range(len(data)):
+            value = data[idx]
+            if no_nan_definition.get(column_to_test, 0) == idx:
+                assert value is not None
+            else:
+                assert np.isnan(value)
+
+
+@pytest.fixture
+def sample_dataframe_filter():
+    # Create a sample DataFrame for testing
+    data = {
+        'adsh': ['A1', 'A1', 'A1', 'A2', 'A2', 'A3', 'A3', 'A3'],
+        'coreg': ['C1', 'C1', 'C1', 'C2', 'C2', 'C3', 'C3', 'C3'],
+        'report': ['1', '2', '3', '1', '2', '1', '2', '3'],
+        'T1': [10, np.nan, 30, 40, 50, 60, 70, 80],
+        'T2': [20, np.nan, 35, np.nan, 55, 65, 75, 85],
+        'T3': [30, 35, np.nan, 50, 60, np.nan, 80, 90],
+        'T4': [40, 45, 55, 60, 70, 80, np.nan, 100],
+        'T5': [50, 55, 65, 70, 80, 90, 100, 110],
+    }
+    return pd.DataFrame(data)
+
+
+def test__preprocess_filter_pivot_for_main_statement(empty_instance, sample_dataframe_filter):
+    empty_instance.main_statement_tags = ['T1', 'T2', 'T3', 'T4', 'T5']
+
+    filtered_df = empty_instance._preprocess_filter_pivot_for_main_statement(
+        sample_dataframe_filter)
+
+    # there should be one single report for A1, A2, and A3
+    assert len(filtered_df) == 3
+
+    # the data was defined in a way, that the selected rows don't have a nan
+    assert filtered_df['nan_count'].sum() == 0
+
+    # from A1, report 1 should be selected, from A2, report 2 and from A3, report 3
+    assert filtered_df.report.tolist() == ['1', '2', '3']

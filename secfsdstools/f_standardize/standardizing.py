@@ -193,14 +193,13 @@ class Standardizer:
              """
 
         cpy_pivot_df = pivot_df.copy()
-
-        cpy_pivot_df['nan_count'] = np.nan
         cpy_pivot_df['nan_count'] = cpy_pivot_df[self.main_statement_tags].isna().sum(axis=1)
 
         cpy_pivot_df.sort_values(['adsh', 'coreg', 'nan_count'], inplace=True)
-        cpy_pivot_df = cpy_pivot_df.groupby(['adsh', 'coreg']).last()
-        cpy_pivot_df.reset_index(inplace=True)
-        return cpy_pivot_df
+
+        filtered_pivot_df = cpy_pivot_df.groupby(['adsh', 'coreg']).first()
+        filtered_pivot_df.reset_index(inplace=True)
+        return filtered_pivot_df
 
     def _preprocess(self, data_df: pd.DataFrame) -> pd.DataFrame:
         # only select rows with tags that are actually used by the defined rules

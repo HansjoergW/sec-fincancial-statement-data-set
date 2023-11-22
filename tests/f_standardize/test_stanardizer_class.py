@@ -62,7 +62,6 @@ def test_preprocess_deduplicate(empty_instance, sample_dataframe_duplications):
 
 @pytest.fixture
 def sample_dataframe_pivot():
-    # Create a sample DataFrame for testing with potential duplicates
     data = {
         'adsh': ['A1', 'A2', 'A3'],
         'coreg': ['C1', 'C2', 'C3'],
@@ -125,7 +124,7 @@ def sample_dataframe_filter():
     return pd.DataFrame(data)
 
 
-def test__preprocess_filter_pivot_for_main_statement(empty_instance, sample_dataframe_filter):
+def test_preprocess_filter_pivot_for_main_statement(empty_instance, sample_dataframe_filter):
     empty_instance.main_statement_tags = ['T1', 'T2', 'T3', 'T4', 'T5']
 
     filtered_df = empty_instance._preprocess_filter_pivot_for_main_statement(
@@ -137,5 +136,40 @@ def test__preprocess_filter_pivot_for_main_statement(empty_instance, sample_data
     # the data was defined in a way, that the selected rows don't have a nan
     assert filtered_df['nan_count'].sum() == 0
 
+    # based on the input data:
     # from A1, report 1 should be selected, from A2, report 2 and from A3, report 3
     assert filtered_df.report.tolist() == ['1', '2', '3']
+
+
+@pytest.fixture
+def sample_dataframe_preprocess():
+    data = {
+        'adsh': ['A1', 'A2', 'A3'],
+        'coreg': ['C1', 'C2', 'C3'],
+        'report': ['R1', 'R2', 'R3'],
+        'tag': ['T1', 'T2', 'T3'],
+        'uom': ['U1', 'U2', 'U3'],
+        'value': [100, 50, 80],
+        'ddate': ['D1', 'D2', 'D3'],
+        'version': ['1', '1', '1'],
+        'line': [1, 1, 1],
+        'negating': [0, 0, 0]
+    }
+    return pd.DataFrame(data)
+
+
+def test_preprocess(empty_instance, sample_dataframe_preprocess):
+    empty_instance.all_input_tags = {'T1', 'T2', 'T3'}
+    pivoted_df = empty_instance._preprocess(sample_dataframe_preprocess)
+
+    # ensure that the dataframe was pivoted
+    assert 'T1' in pivoted_df.columns.tolist()
+    assert 'T2' in pivoted_df.columns.tolist()
+    assert 'T3' in pivoted_df.columns.tolist()
+
+    # we expect that the applied_rules_log_df was instantiated
+    assert empty_instance.applied_rules_log_df.columns.tolist() == \
+           ['adsh', 'coreg', 'report', 'ddate', 'uom']
+
+    # ensure that the stats are initialized and that the pre column was added
+    assert empty_instance.stats.stats.columns.tolist() == ['pre']

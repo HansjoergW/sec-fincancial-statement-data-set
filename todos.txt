@@ -20,6 +20,9 @@ todo:
 - Tests Standardizer
 - summary description -> als Tabelle, als markdown?
 
+- Assets check error abfangen, wenn assets 0 ist
+  also wenn geteilt durch 0
+
 - TotalEquity = PartnerCapital oder StockholdersEquity
   - Besteht aus PaidIn capital und retained earnings
    -> Paid für PartnerCapital -> PartnersCapitalAccount (General.., Limited..)

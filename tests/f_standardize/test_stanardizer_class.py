@@ -86,10 +86,10 @@ def test_preprocess_pivot(empty_instance, sample_dataframe_pivot):
     result_df = empty_instance._preprocess_pivot(empty_instance.data_df, expected_tags)
 
     # Check the structure of the result DataFrame
-    assert result_df.shape == (3, len(empty_instance.pivot_df_index_cols) + len(expected_tags))
+    assert result_df.shape == (3, len(empty_instance.identifier_tags) + len(expected_tags))
 
     # Check the content of the result DataFrame
-    expected_columns = empty_instance.pivot_df_index_cols + list(expected_tags)
+    expected_columns = empty_instance.identifier_tags + list(expected_tags)
     assert len(set(result_df.columns.tolist()) - set(expected_columns)) == 0
 
     # Check values in the result DataFrame

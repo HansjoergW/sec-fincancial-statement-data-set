@@ -90,8 +90,8 @@ class PreSumUpCorrection(Rule):
             pa.typing.Series[bool]: a boolean Series that marks which rows have to be calculated
         &#34;&#34;&#34;
         return (data_df[self.mixed_up_summand] ==
-                       data_df[self.sum_tag] + data_df[self.other_summand]) \
-                &amp; (data_df[self.other_summand] &gt; 0)
+                data_df[self.sum_tag] + data_df[self.other_summand]) \
+               &amp; (data_df[self.other_summand] &gt; 0)
 
     def apply(self, data_df: pd.DataFrame, mask: pa.typing.Series[bool]):
         &#34;&#34;&#34;
@@ -387,8 +387,9 @@ class SumUpRule(Rule):
             pa.typing.Series[bool]: a boolean Series that marks which rows have to be calculated
         &#34;&#34;&#34;
 
-        # mask if the target was not set
-        return data_df[self.sum_tag].isna()
+        # mask if the target was not set and at least one of the summands is present
+        mask_summands = (~data_df[self.potential_summands].isna()).any(axis=1)
+        return data_df[self.sum_tag].isna() &amp; mask_summands
 
     def apply(self, data_df: pd.DataFrame, mask: pa.typing.Series[bool]):
         &#34;&#34;&#34;
@@ -577,6 +578,72 @@ class PostCopyToFirstSummand(Rule):
                f&#34;&#39;{self.first_summand}&#39; and set the other summands {self.other_summands} to 0.0 &#34; \
                f&#34;if &#39;{self.sum_tag} is set and the summands &#34; \
                f&#34;{[self.first_summand, *self.other_summands]} are nan.&#34;
+
+
+class PostSetToZero(Rule):
+    &#34;&#34;&#34;sets all tags to zero if all tags are not set&#34;&#34;&#34;
+
+    def __init__(self, tags: List[str]):
+        &#34;&#34;&#34;
+
+        Args:
+            tags: list of tags that should be zeroed if all tags not set
+        &#34;&#34;&#34;
+        self.tags = tags
+
+    def get_target_tags(self) -&gt; List[str]:
+        &#34;&#34;&#34;
+        returns a list of tags that could be affected/changed by this rule
+
+        Returns:
+            List[str]: list with affected tags/columns
+        &#34;&#34;&#34;
+        return self.tags
+
+    def get_input_tags(self) -&gt; Set[str]:
+        &#34;&#34;&#34;
+        return all tags that the rules within this group need.
+
+        Returns:
+            Set[str]: set of all input tags that are used by rules in this group
+        &#34;&#34;&#34;
+        return set(self.tags)
+
+    def mask(self, data_df: pd.DataFrame) -&gt; pa.typing.Series[bool]:
+        &#34;&#34;&#34;
+            returns a Series[bool] which defines the rows to which this rule has to be applied.
+
+        Args:
+            data_df dataframe on which the rules should be applied
+
+        Returns:
+            pa.typing.Series[bool]: a boolean Series that marks which rows have to be calculated
+        &#34;&#34;&#34;
+        return data_df[self.tags].isna().all(axis=1)
+
+    def apply(self, data_df: pd.DataFrame, mask: pa.typing.Series[bool]):
+        &#34;&#34;&#34;
+        apply the rule on the provided dataframe. the rows, on which the rule has to be applied
+        is defined by the provide mask Series.
+
+        Important, the rules have to be applied &#34;in-place&#34;, so no new dataframe is produced.
+
+        Args:
+            data_df dataframe on which the rule has to be applied
+            mask: a Series marking the rows in the dataframe on which the rule has to be applied
+        &#34;&#34;&#34;
+
+        for tag in self.tags:
+            data_df.loc[mask, tag] = 0.0
+
+    def get_description(self) -&gt; str:
+        &#34;&#34;&#34;
+        Returns the description String
+        Returns:
+            str: description
+        &#34;&#34;&#34;
+        return f&#34;Set the value of the {self.tags} to 0.0 &#34; \
+               f&#34;if all {self.tags} are nan.&#34;
 
 
 def missingsumparts_rules_creator(sum_tag: str, summand_tags: List[str]) -&gt; List[RuleEntity]:
@@ -1571,6 +1638,201 @@ is defined by the provide mask Series.</p>
 </li>
 </ul>
 </dd>
+<dt id="secfsdstools.f_standardize.base_rules.PostSetToZero"><code class="flex name class">
+<span>class <span class="ident">PostSetToZero</span></span>
+<span>(</span><span>tags: List[str])</span>
+</code></dt>
+<dd>
+<div class="desc"><p>sets all tags to zero if all tags are not set</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>tags</code></strong></dt>
+<dd>list of tags that should be zeroed if all tags not set</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class PostSetToZero(Rule):
+    &#34;&#34;&#34;sets all tags to zero if all tags are not set&#34;&#34;&#34;
+
+    def __init__(self, tags: List[str]):
+        &#34;&#34;&#34;
+
+        Args:
+            tags: list of tags that should be zeroed if all tags not set
+        &#34;&#34;&#34;
+        self.tags = tags
+
+    def get_target_tags(self) -&gt; List[str]:
+        &#34;&#34;&#34;
+        returns a list of tags that could be affected/changed by this rule
+
+        Returns:
+            List[str]: list with affected tags/columns
+        &#34;&#34;&#34;
+        return self.tags
+
+    def get_input_tags(self) -&gt; Set[str]:
+        &#34;&#34;&#34;
+        return all tags that the rules within this group need.
+
+        Returns:
+            Set[str]: set of all input tags that are used by rules in this group
+        &#34;&#34;&#34;
+        return set(self.tags)
+
+    def mask(self, data_df: pd.DataFrame) -&gt; pa.typing.Series[bool]:
+        &#34;&#34;&#34;
+            returns a Series[bool] which defines the rows to which this rule has to be applied.
+
+        Args:
+            data_df dataframe on which the rules should be applied
+
+        Returns:
+            pa.typing.Series[bool]: a boolean Series that marks which rows have to be calculated
+        &#34;&#34;&#34;
+        return data_df[self.tags].isna().all(axis=1)
+
+    def apply(self, data_df: pd.DataFrame, mask: pa.typing.Series[bool]):
+        &#34;&#34;&#34;
+        apply the rule on the provided dataframe. the rows, on which the rule has to be applied
+        is defined by the provide mask Series.
+
+        Important, the rules have to be applied &#34;in-place&#34;, so no new dataframe is produced.
+
+        Args:
+            data_df dataframe on which the rule has to be applied
+            mask: a Series marking the rows in the dataframe on which the rule has to be applied
+        &#34;&#34;&#34;
+
+        for tag in self.tags:
+            data_df.loc[mask, tag] = 0.0
+
+    def get_description(self) -&gt; str:
+        &#34;&#34;&#34;
+        Returns the description String
+        Returns:
+            str: description
+        &#34;&#34;&#34;
+        return f&#34;Set the value of the {self.tags} to 0.0 &#34; \
+               f&#34;if all {self.tags} are nan.&#34;</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="secfsdstools.f_standardize.base_rule_framework.Rule" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.Rule">Rule</a></li>
+<li><a title="secfsdstools.f_standardize.base_rule_framework.RuleEntity" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.RuleEntity">RuleEntity</a></li>
+<li>abc.ABC</li>
+</ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="secfsdstools.f_standardize.base_rules.PostSetToZero.identifier"><code class="name">var <span class="ident">identifier</span> : str</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="secfsdstools.f_standardize.base_rules.PostSetToZero.apply"><code class="name flex">
+<span>def <span class="ident">apply</span></span>(<span>self, data_df: pandas.core.frame.DataFrame, mask: pandera.typing.pandas.Series[bool])</span>
+</code></dt>
+<dd>
+<div class="desc"><p>apply the rule on the provided dataframe. the rows, on which the rule has to be applied
+is defined by the provide mask Series.</p>
+<p>Important, the rules have to be applied "in-place", so no new dataframe is produced.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt>data_df dataframe on which the rule has to be applied</dt>
+<dt><strong><code>mask</code></strong></dt>
+<dd>a Series marking the rows in the dataframe on which the rule has to be applied</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def apply(self, data_df: pd.DataFrame, mask: pa.typing.Series[bool]):
+    &#34;&#34;&#34;
+    apply the rule on the provided dataframe. the rows, on which the rule has to be applied
+    is defined by the provide mask Series.
+
+    Important, the rules have to be applied &#34;in-place&#34;, so no new dataframe is produced.
+
+    Args:
+        data_df dataframe on which the rule has to be applied
+        mask: a Series marking the rows in the dataframe on which the rule has to be applied
+    &#34;&#34;&#34;
+
+    for tag in self.tags:
+        data_df.loc[mask, tag] = 0.0</code></pre>
+</details>
+</dd>
+<dt id="secfsdstools.f_standardize.base_rules.PostSetToZero.get_input_tags"><code class="name flex">
+<span>def <span class="ident">get_input_tags</span></span>(<span>self) ‑> Set[str]</span>
+</code></dt>
+<dd>
+<div class="desc"><p>return all tags that the rules within this group need.</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>Set[str]</code></dt>
+<dd>set of all input tags that are used by rules in this group</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_input_tags(self) -&gt; Set[str]:
+    &#34;&#34;&#34;
+    return all tags that the rules within this group need.
+
+    Returns:
+        Set[str]: set of all input tags that are used by rules in this group
+    &#34;&#34;&#34;
+    return set(self.tags)</code></pre>
+</details>
+</dd>
+<dt id="secfsdstools.f_standardize.base_rules.PostSetToZero.mask"><code class="name flex">
+<span>def <span class="ident">mask</span></span>(<span>self, data_df: pandas.core.frame.DataFrame) ‑> pandera.typing.pandas.Series[bool]</span>
+</code></dt>
+<dd>
+<div class="desc"><p>returns a Series[bool] which defines the rows to which this rule has to be applied.</p>
+<h2 id="args">Args</h2>
+<p>data_df dataframe on which the rules should be applied</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>pa.typing.Series[bool]</code></dt>
+<dd>a boolean Series that marks which rows have to be calculated</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def mask(self, data_df: pd.DataFrame) -&gt; pa.typing.Series[bool]:
+    &#34;&#34;&#34;
+        returns a Series[bool] which defines the rows to which this rule has to be applied.
+
+    Args:
+        data_df dataframe on which the rules should be applied
+
+    Returns:
+        pa.typing.Series[bool]: a boolean Series that marks which rows have to be calculated
+    &#34;&#34;&#34;
+    return data_df[self.tags].isna().all(axis=1)</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="secfsdstools.f_standardize.base_rule_framework.Rule" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.Rule">Rule</a></b></code>:
+<ul class="hlist">
+<li><code><a title="secfsdstools.f_standardize.base_rule_framework.Rule.get_description" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.RuleEntity.get_description">get_description</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.base_rule_framework.Rule.get_target_tags" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.Rule.get_target_tags">get_target_tags</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.base_rule_framework.Rule.get_target_tags_str" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.Rule.get_target_tags_str">get_target_tags_str</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.base_rule_framework.Rule.process" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.Rule.process">process</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.base_rule_framework.Rule.set_id" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.RuleEntity.set_id">set_id</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
 <dt id="secfsdstools.f_standardize.base_rules.PreSumUpCorrection"><code class="flex name class">
 <span>class <span class="ident">PreSumUpCorrection</span></span>
 <span>(</span><span>sum_tag: str, mixed_up_summand: str, other_summand: str)</span>
@@ -1650,8 +1912,8 @@ it matches AssetsNoncurrent = Assets + AssetsCurrent.</p>
             pa.typing.Series[bool]: a boolean Series that marks which rows have to be calculated
         &#34;&#34;&#34;
         return (data_df[self.mixed_up_summand] ==
-                       data_df[self.sum_tag] + data_df[self.other_summand]) \
-                &amp; (data_df[self.other_summand] &gt; 0)
+                data_df[self.sum_tag] + data_df[self.other_summand]) \
+               &amp; (data_df[self.other_summand] &gt; 0)
 
     def apply(self, data_df: pd.DataFrame, mask: pa.typing.Series[bool]):
         &#34;&#34;&#34;
@@ -2050,8 +2312,9 @@ is defined by the provide mask Series.</p>
             pa.typing.Series[bool]: a boolean Series that marks which rows have to be calculated
         &#34;&#34;&#34;
 
-        # mask if the target was not set
-        return data_df[self.sum_tag].isna()
+        # mask if the target was not set and at least one of the summands is present
+        mask_summands = (~data_df[self.potential_summands].isna()).any(axis=1)
+        return data_df[self.sum_tag].isna() &amp; mask_summands
 
     def apply(self, data_df: pd.DataFrame, mask: pa.typing.Series[bool]):
         &#34;&#34;&#34;
@@ -2182,8 +2445,9 @@ is defined by the provide mask Series.</p>
         pa.typing.Series[bool]: a boolean Series that marks which rows have to be calculated
     &#34;&#34;&#34;
 
-    # mask if the target was not set
-    return data_df[self.sum_tag].isna()</code></pre>
+    # mask if the target was not set and at least one of the summands is present
+    mask_summands = (~data_df[self.potential_summands].isna()).any(axis=1)
+    return data_df[self.sum_tag].isna() &amp; mask_summands</code></pre>
 </details>
 </dd>
 </dl>
@@ -2255,6 +2519,15 @@ is defined by the provide mask Series.</p>
 <li><code><a title="secfsdstools.f_standardize.base_rules.PostCopyToFirstSummand.get_input_tags" href="#secfsdstools.f_standardize.base_rules.PostCopyToFirstSummand.get_input_tags">get_input_tags</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.base_rules.PostCopyToFirstSummand.identifier" href="#secfsdstools.f_standardize.base_rules.PostCopyToFirstSummand.identifier">identifier</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.base_rules.PostCopyToFirstSummand.mask" href="#secfsdstools.f_standardize.base_rules.PostCopyToFirstSummand.mask">mask</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="secfsdstools.f_standardize.base_rules.PostSetToZero" href="#secfsdstools.f_standardize.base_rules.PostSetToZero">PostSetToZero</a></code></h4>
+<ul class="">
+<li><code><a title="secfsdstools.f_standardize.base_rules.PostSetToZero.apply" href="#secfsdstools.f_standardize.base_rules.PostSetToZero.apply">apply</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.base_rules.PostSetToZero.get_input_tags" href="#secfsdstools.f_standardize.base_rules.PostSetToZero.get_input_tags">get_input_tags</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.base_rules.PostSetToZero.identifier" href="#secfsdstools.f_standardize.base_rules.PostSetToZero.identifier">identifier</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.base_rules.PostSetToZero.mask" href="#secfsdstools.f_standardize.base_rules.PostSetToZero.mask">mask</a></code></li>
 </ul>
 </li>
 <li>

@@ -33,7 +33,7 @@ from typing import List
 from secfsdstools.f_standardize.base_rule_framework import RuleGroup
 from secfsdstools.f_standardize.base_rules import CopyTagRule, SumUpRule, \
     missingsumparts_rules_creator, SetSumIfOnlyOneSummand, PostCopyToFirstSummand, \
-    PreSumUpCorrection
+    PreSumUpCorrection, PostSetToZero
 from secfsdstools.f_standardize.base_validation_rules import ValidationRule, SumValidationRule
 from secfsdstools.f_standardize.standardizing import Standardizer
 
@@ -53,6 +53,7 @@ class BalanceSheetStandardizer(Standardizer):
        LiabilitiesNoncurrent
     OwnerEquity
         PaidInCapital
+        TreasuryStockValue
         RetainedEarnings
     LiabilitiesAndOwnerEquity
 
@@ -62,33 +63,41 @@ class BalanceSheetStandardizer(Standardizer):
         rules=[
             # sometimes, the total Assets is contained in the AssetsNet tag
             CopyTagRule(original=&#39;AssetsNet&#39;, target=&#39;Assets&#39;),
+            # StockholdersEquityIncludingPortionAttributableToNoncontrollingInterest
+            # has precedence over StockholdersEquity
+            CopyTagRule(
+                original=&#39;StockholdersEquityIncludingPortionAttributableToNoncontrollingInterest&#39;,
+                target=&#39;OwnerEquity&#39;),
             # either there is a StockholderEquity tag or a PartnersCapital tag,
             # but both to never appear together
             CopyTagRule(original=&#39;PartnersCapital&#39;, target=&#39;OwnerEquity&#39;),
             CopyTagRule(original=&#39;StockholdersEquity&#39;, target=&#39;OwnerEquity&#39;),
             CopyTagRule(original=&#39;CashAndCashEquivalentsAtCarryingValue&#39;, target=&#39;Cash&#39;),
             CopyTagRule(original=&#39;LiabilitiesAndStockholdersEquity&#39;,
-                        target=&#39;LiabilitiesAndOwnerEquity&#39;)
-
-            # RenameRule(
-            #     original=&#39;StockholdersEquityIncludingPortionAttributableToNoncontrollingInterest&#39;,
-            #     target=&#39;Equity&#39;),
-            # RenameRule(original=&#39;RetainedEarningsAppropriated&#39;, target=&#39;RetainedEarnings&#39;),
-            # RenameRule(original=&#39;RetainedEarningsAccumulatedDeficit&#39;, target=&#39;RetainedEarnings&#39;)
+                        target=&#39;LiabilitiesAndOwnerEquity&#39;),
+            # most of the time, RetainedEarningsAccumulatedDeficit is used
+            CopyTagRule(original=&#39;RetainedEarningsAccumulatedDeficit&#39;, target=&#39;RetainedEarnings&#39;)
         ],
         prefix=&#34;BR&#34;
     )
 
     # todo: CashOther wird noch nirgends verwendet
     bs_sumup_rg = RuleGroup(
-        rules=[SumUpRule(
-            sum_tag=&#39;CashOther&#39;,
-            potential_summands=[
-                &#39;CashAndCashEquivalentsAtFairValue&#39;,
-                &#39;CashAndDueFromBanks&#39;,
-                &#39;CashCashEquivalentsAndFederalFundsSold&#39;,
-                &#39;RestrictedCashAndCashEquivalentsAtCarryingValue&#39;,
-                &#39;CashAndCashEquivalentsInForeignCurrencyAtCarryingValue&#39;])],
+        rules=[
+            SumUpRule(
+                sum_tag=&#39;Cash&#39;,
+                potential_summands=[
+                    &#39;CashAndCashEquivalentsAtFairValue&#39;,
+                    &#39;CashAndDueFromBanks&#39;,
+                    &#39;CashCashEquivalentsAndFederalFundsSold&#39;,
+                    &#39;RestrictedCashAndCashEquivalentsAtCarryingValue&#39;,
+                    &#39;CashAndCashEquivalentsInForeignCurrencyAtCarryingValue&#39;]),
+            SumUpRule(
+                sum_tag=&#39;RetainedEarnings&#39;,
+                potential_summands=[
+                    &#39;RetainedEarningsUnappropriated&#39;,
+                    &#39;RetainedEarningsAppropriated&#39;])
+        ],
         prefix=&#34;SU&#34;
     )
 
@@ -159,7 +168,13 @@ class BalanceSheetStandardizer(Standardizer):
                                    PostCopyToFirstSummand(sum_tag=&#39;Liabilities&#39;,
                                                           first_summand=&#39;LiabilitiesCurrent&#39;,
                                                           other_summands=[
-                                                              &#39;LiabilitiesNoncurrent&#39;])])
+                                                              &#39;LiabilitiesNoncurrent&#39;]),
+                                   PostSetToZero(
+                                       tags=[&#39;Assets&#39;, &#39;AssetsCurrent&#39;, &#39;AssetsNoncurrent&#39;]),
+                                   PostSetToZero(
+                                       tags=[&#39;Liabilities&#39;, &#39;LiabilitiesCurrent&#39;,
+                                             &#39;LiabilitiesNoncurrent&#39;])
+                               ])
 
     validation_rules: List[ValidationRule] = [
         SumValidationRule(identifier=&#39;AssetsCheck&#39;,
@@ -167,17 +182,23 @@ class BalanceSheetStandardizer(Standardizer):
                           summands=[&#39;AssetsCurrent&#39;, &#39;AssetsNoncurrent&#39;]),
         SumValidationRule(identifier=&#39;LiabilitiesCheck&#39;,
                           sum_tag=&#39;Liabilities&#39;,
-                          summands=[&#39;LiabilitiesCurrent&#39;, &#39;LiabilitiesNoncurrent&#39;])
+                          summands=[&#39;LiabilitiesCurrent&#39;, &#39;LiabilitiesNoncurrent&#39;]),
+        SumValidationRule(identifier=&#39;OwnerEquityCheck&#39;,
+                          sum_tag=&#39;LiabilitiesAndOwnerEquity&#39;,
+                          summands=[&#39;OwnerEquity&#39;, &#39;Liabilities&#39;]),
+        SumValidationRule(identifier=&#39;AssetsLiaEquCheck&#39;,
+                          sum_tag=&#39;Assets&#39;,
+                          summands=[&#39;OwnerEquity&#39;, &#39;Liabilities&#39;]),
     ]
 
     # these are the columns that finally are returned after the standardization
     final_tags: List[str] = [&#39;Assets&#39;, &#39;AssetsCurrent&#39;, &#39;AssetsNoncurrent&#39;,
                              &#39;Liabilities&#39;, &#39;LiabilitiesCurrent&#39;, &#39;LiabilitiesNoncurrent&#39;,
                              &#39;OwnerEquity&#39;, &#39;LiabilitiesAndOwnerEquity&#39;,
-                             &#39;InventoryNet&#39;,
                              &#39;Cash&#39;,
-                             &#39;CashOther&#39;,
-                             &#39;RetainedEarnings&#39;
+                             &#39;RetainedEarnings&#39;,
+                             &#39;AdditionalPaidInCapital&#39;,
+                             &#39;TreasuryStockValue&#39;
                              ]
 
     # used to evaluate if a report is the main balancesheet report
@@ -197,81 +218,7 @@ class BalanceSheetStandardizer(Standardizer):
             final_tags=self.final_tags,
             main_iterations=iterations,
             filter_for_main_statement=filter_for_main_statement,
-            main_statement_tags=self.main_statement_tags)
-
-#
-# class BalanceSheetStandardizerOld:
-#
-#     def fill_still_isna_summands(self, df: pd.DataFrame):
-#         &#34;&#34;&#34; if we are left with unset summands&#34;&#34;&#34;
-#
-#         # for:
-#         # &#39;Assets&#39;: (&#39;AssetsCurrent&#39;, &#39;AssetsNoncurrent&#39;),
-#         # &#39;Liabilities&#39;: (&#39;LiabilitiesCurrent&#39;, &#39;LiabilitiesNoncurrent&#39;)
-#         for total, summands in BalanceSheetStandardizerOld.sum_definition.items():
-#             summand_1 = summands[0]
-#             summand_2 = summands[1]
-#
-#             # if only the total is present, we assume that only the first summand
-#             # (eg. currentassets are present)
-#             # that is not really proper.
-#             mask_total_nosum1_nosum2 = (~df[total].isna() &amp;
-#                                         df[summand_1].isna() &amp;
-#                                         df[summand_2].isna())
-#             df.loc[mask_total_nosum1_nosum2, summand_1] = df[total]
-#             df.loc[mask_total_nosum1_nosum2, summand_2] = 0.0
-#
-#             # if only the first summand is present, wie assume that the total is equal
-#             # to the first summand and that the second summand is 0
-#             mask_nototal_sum1_nosum2 = (df[total].isna() &amp;
-#                                         ~df[summand_1].isna() &amp;
-#                                         df[summand_2].isna())
-#             df.loc[mask_nototal_sum1_nosum2, total] = df[summand_1]
-#             df.loc[mask_nototal_sum1_nosum2, summand_2] = 0.0
-#
-#             # if only the second summand is present, wie assume that the total is equal
-#             # to the second summand and that the first  summand is 0
-#             mask_nototal_nosum1_sum2 = (df[total].isna() &amp;
-#                                         df[summand_1].isna() &amp;
-#                                         ~df[summand_2].isna())
-#             df.loc[mask_nototal_nosum1_sum2, total] = df[summand_2]
-#             df.loc[mask_nototal_nosum1_sum2, summand_1] = 0.0
-#
-#     def complete_special_rules(self, df: pd.DataFrame):
-#         &#34;&#34;&#34;
-#         Special rules which help to complete the information
-#         &#34;&#34;&#34;
-#
-#         # self._basic_sum_completion(df, total=&#39;Assets&#39;, summand_1=&#39;Liabilities&#39;,
-#         #                            summand_2=&#39;Equity&#39;)
-#         #
-#         # # actually, LiabilitiesAndStockholdersEquity should have the same value as Assets
-#         # self._basic_sum_completion(df, total=&#39;LiabilitiesAndStockholdersEquity&#39;,
-#         #                            summand_1=&#39;Liabilities&#39;,
-#         #                            summand_2=&#39;Equity&#39;)
-#
-#         # run complete sum again, since total fields could be present now
-#         # for:
-#         # &#39;Assets&#39;: (&#39;AssetsCurrent&#39;, &#39;AssetsNoncurrent&#39;),
-#         # &#39;Liabilities&#39;: (&#39;LiabilitiesCurrent&#39;, &#39;LiabilitiesNoncurrent&#39;)
-#         self.complete_sums(df)
-#
-#         self.fill_still_isna_summands(df)
-#
-#         # if Equity == -Liabilities and Assets is nan, then
-#         # Assets, AssetsCurrent, and AssetsNoncurrent is 0.0
-#         mask = (df.Equity == -df.Liabilities) &amp; df.Assets.isna()
-#         df.loc[mask, &#39;Assets&#39;] = 0.0
-#         df.loc[mask, &#39;AssetsCurrent&#39;] = 0.0
-#         df.loc[mask, &#39;AssetsNoncurrent&#39;] = 0.0
-#
-#         # if Cash is not set, then use CashOther to set Cash
-#         mask = df.Cash.isna()
-#         df.loc[mask, &#39;Cash&#39;] = df.CashOther
-#
-#         # set to zero
-#         mask = df.InventoryNet.isna()
-#         df.loc[mask, &#39;InventoryNet&#39;] = 0.0</code></pre>
+            main_statement_tags=self.main_statement_tags)</code></pre>
 </details>
 </section>
 <section>
@@ -300,6 +247,7 @@ LiabilitiesCurrent
 LiabilitiesNoncurrent
 OwnerEquity
 PaidInCapital
+TreasuryStockValue
 RetainedEarnings
 LiabilitiesAndOwnerEquity</p>
 <h2 id="args">Args</h2>
@@ -356,6 +304,7 @@ as negated.</dd>
        LiabilitiesNoncurrent
     OwnerEquity
         PaidInCapital
+        TreasuryStockValue
         RetainedEarnings
     LiabilitiesAndOwnerEquity
 
@@ -365,33 +314,41 @@ as negated.</dd>
         rules=[
             # sometimes, the total Assets is contained in the AssetsNet tag
             CopyTagRule(original=&#39;AssetsNet&#39;, target=&#39;Assets&#39;),
+            # StockholdersEquityIncludingPortionAttributableToNoncontrollingInterest
+            # has precedence over StockholdersEquity
+            CopyTagRule(
+                original=&#39;StockholdersEquityIncludingPortionAttributableToNoncontrollingInterest&#39;,
+                target=&#39;OwnerEquity&#39;),
             # either there is a StockholderEquity tag or a PartnersCapital tag,
             # but both to never appear together
             CopyTagRule(original=&#39;PartnersCapital&#39;, target=&#39;OwnerEquity&#39;),
             CopyTagRule(original=&#39;StockholdersEquity&#39;, target=&#39;OwnerEquity&#39;),
             CopyTagRule(original=&#39;CashAndCashEquivalentsAtCarryingValue&#39;, target=&#39;Cash&#39;),
             CopyTagRule(original=&#39;LiabilitiesAndStockholdersEquity&#39;,
-                        target=&#39;LiabilitiesAndOwnerEquity&#39;)
-
-            # RenameRule(
-            #     original=&#39;StockholdersEquityIncludingPortionAttributableToNoncontrollingInterest&#39;,
-            #     target=&#39;Equity&#39;),
-            # RenameRule(original=&#39;RetainedEarningsAppropriated&#39;, target=&#39;RetainedEarnings&#39;),
-            # RenameRule(original=&#39;RetainedEarningsAccumulatedDeficit&#39;, target=&#39;RetainedEarnings&#39;)
+                        target=&#39;LiabilitiesAndOwnerEquity&#39;),
+            # most of the time, RetainedEarningsAccumulatedDeficit is used
+            CopyTagRule(original=&#39;RetainedEarningsAccumulatedDeficit&#39;, target=&#39;RetainedEarnings&#39;)
         ],
         prefix=&#34;BR&#34;
     )
 
     # todo: CashOther wird noch nirgends verwendet
     bs_sumup_rg = RuleGroup(
-        rules=[SumUpRule(
-            sum_tag=&#39;CashOther&#39;,
-            potential_summands=[
-                &#39;CashAndCashEquivalentsAtFairValue&#39;,
-                &#39;CashAndDueFromBanks&#39;,
-                &#39;CashCashEquivalentsAndFederalFundsSold&#39;,
-                &#39;RestrictedCashAndCashEquivalentsAtCarryingValue&#39;,
-                &#39;CashAndCashEquivalentsInForeignCurrencyAtCarryingValue&#39;])],
+        rules=[
+            SumUpRule(
+                sum_tag=&#39;Cash&#39;,
+                potential_summands=[
+                    &#39;CashAndCashEquivalentsAtFairValue&#39;,
+                    &#39;CashAndDueFromBanks&#39;,
+                    &#39;CashCashEquivalentsAndFederalFundsSold&#39;,
+                    &#39;RestrictedCashAndCashEquivalentsAtCarryingValue&#39;,
+                    &#39;CashAndCashEquivalentsInForeignCurrencyAtCarryingValue&#39;]),
+            SumUpRule(
+                sum_tag=&#39;RetainedEarnings&#39;,
+                potential_summands=[
+                    &#39;RetainedEarningsUnappropriated&#39;,
+                    &#39;RetainedEarningsAppropriated&#39;])
+        ],
         prefix=&#34;SU&#34;
     )
 
@@ -462,7 +419,13 @@ as negated.</dd>
                                    PostCopyToFirstSummand(sum_tag=&#39;Liabilities&#39;,
                                                           first_summand=&#39;LiabilitiesCurrent&#39;,
                                                           other_summands=[
-                                                              &#39;LiabilitiesNoncurrent&#39;])])
+                                                              &#39;LiabilitiesNoncurrent&#39;]),
+                                   PostSetToZero(
+                                       tags=[&#39;Assets&#39;, &#39;AssetsCurrent&#39;, &#39;AssetsNoncurrent&#39;]),
+                                   PostSetToZero(
+                                       tags=[&#39;Liabilities&#39;, &#39;LiabilitiesCurrent&#39;,
+                                             &#39;LiabilitiesNoncurrent&#39;])
+                               ])
 
     validation_rules: List[ValidationRule] = [
         SumValidationRule(identifier=&#39;AssetsCheck&#39;,
@@ -470,17 +433,23 @@ as negated.</dd>
                           summands=[&#39;AssetsCurrent&#39;, &#39;AssetsNoncurrent&#39;]),
         SumValidationRule(identifier=&#39;LiabilitiesCheck&#39;,
                           sum_tag=&#39;Liabilities&#39;,
-                          summands=[&#39;LiabilitiesCurrent&#39;, &#39;LiabilitiesNoncurrent&#39;])
+                          summands=[&#39;LiabilitiesCurrent&#39;, &#39;LiabilitiesNoncurrent&#39;]),
+        SumValidationRule(identifier=&#39;OwnerEquityCheck&#39;,
+                          sum_tag=&#39;LiabilitiesAndOwnerEquity&#39;,
+                          summands=[&#39;OwnerEquity&#39;, &#39;Liabilities&#39;]),
+        SumValidationRule(identifier=&#39;AssetsLiaEquCheck&#39;,
+                          sum_tag=&#39;Assets&#39;,
+                          summands=[&#39;OwnerEquity&#39;, &#39;Liabilities&#39;]),
     ]
 
     # these are the columns that finally are returned after the standardization
     final_tags: List[str] = [&#39;Assets&#39;, &#39;AssetsCurrent&#39;, &#39;AssetsNoncurrent&#39;,
                              &#39;Liabilities&#39;, &#39;LiabilitiesCurrent&#39;, &#39;LiabilitiesNoncurrent&#39;,
                              &#39;OwnerEquity&#39;, &#39;LiabilitiesAndOwnerEquity&#39;,
-                             &#39;InventoryNet&#39;,
                              &#39;Cash&#39;,
-                             &#39;CashOther&#39;,
-                             &#39;RetainedEarnings&#39;
+                             &#39;RetainedEarnings&#39;,
+                             &#39;AdditionalPaidInCapital&#39;,
+                             &#39;TreasuryStockValue&#39;
                              ]
 
     # used to evaluate if a report is the main balancesheet report

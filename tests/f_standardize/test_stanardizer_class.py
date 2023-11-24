@@ -3,6 +3,7 @@ import pandas as pd
 import pytest
 
 from secfsdstools.f_standardize.base_rule_framework import RuleGroup
+from secfsdstools.f_standardize.base_validation_rules import SumValidationRule
 from secfsdstools.f_standardize.standardizing import Standardizer
 
 
@@ -173,3 +174,49 @@ def test_preprocess(empty_instance, sample_dataframe_preprocess):
 
     # ensure that the stats are initialized and that the pre column was added
     assert empty_instance.stats.stats.columns.tolist() == ['pre']
+
+
+def test_finalize():
+    instance = Standardizer(
+        pre_rule_tree=RuleGroup(prefix='pre', rules=[]),
+        main_rule_tree=RuleGroup(prefix='main', rules=[]),
+        post_rule_tree=RuleGroup(prefix='post', rules=[]),
+        validation_rules=[SumValidationRule(identifier='V1', sum_tag='T1', summands=['T2', 'T3'])],
+        final_tags=['T1', 'T2', 'T3'],
+        filter_for_main_statement=False
+    )
+
+    data = {
+        'adsh': ['A1', 'A2', 'A3'],
+        'coreg': ['C1', 'C2', 'C3'],
+        'report': ['1', '2', '3'],
+        'ddate': ['20221231', '20221231', '20221231'],
+        'uom': ['USD', 'USD', 'USD'],
+        'T1': [60, 70, 80],
+        'T2': [20, 35, 90],
+        'T3': [40, 40, -10],
+    }
+
+    data_df = pd.DataFrame(data).copy()
+
+    # configure log dataframes and stats
+    rules_log_df = data_df[instance.identifier_tags].copy()
+    instance.applied_rules_log_df = rules_log_df
+
+    # add pseudo rule
+    instance.applied_rules_log_df['RULE1'] = False
+
+    instance.stats.initialize(data_df=data_df, process_step_name="pre")
+    instance.stats.add_stats_entry(data_df=data_df, process_step_name="post")
+
+    result = instance._finalize(data_df=data_df)
+
+    assert 'V1_error' in result.columns.tolist()
+    assert 'V1_cat' in result.columns.tolist()
+
+    # check if summary was created for RULE1
+    assert len(instance.applied_rules_sum_s) == 1
+    assert instance.applied_rules_sum_s.loc['RULE1'] == 0
+
+    # check if expected rows are present for stats
+    assert instance.stats.stats.columns.tolist() == ['pre', 'pre_rel', 'post', 'post_rel', 'post_gain']

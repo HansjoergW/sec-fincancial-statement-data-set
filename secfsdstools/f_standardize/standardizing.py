@@ -85,10 +85,7 @@ class Standardizer:
     """
 
     # this tags identify single statements in the final standardized table
-    identifier_tags = ['adsh', 'coreg', 'report', 'ddate']
-
-    # pivot columns
-    pivot_df_index_cols = ['adsh', 'coreg', 'report', 'ddate', 'uom']
+    identifier_tags = ['adsh', 'coreg', 'report', 'ddate', 'uom']
 
     def __init__(self,
                  pre_rule_tree: RuleGroup,
@@ -153,7 +150,7 @@ class Standardizer:
         self.applied_rules_log_df: Optional[pd.DataFrame] = None
         # .. shows the total of how often a rule was applied, mainly counts the Trues per column
         #    in self.applied_rules_log_df
-        self.applied_rules_sum_df: Optional[pd.DataFrame] = None
+        self.applied_rules_sum_s: Optional[pd.Series] = None
 
         self.stats = Stats(self.final_tags)
 
@@ -172,9 +169,9 @@ class Standardizer:
         return data_df[~duplicates_s]
 
     def _preprocess_pivot(self, data_df: pd.DataFrame, expected_tags: Set[str]) -> pd.DataFrame:
-        pivot_df = data_df.pivot(index=self.pivot_df_index_cols,
-                                     columns='tag',
-                                     values='value')
+        pivot_df = data_df.pivot(index=self.identifier_tags,
+                                 columns='tag',
+                                 values='value')
 
         pivot_df.reset_index(inplace=True)
 
@@ -222,7 +219,7 @@ class Standardizer:
             pivot_df = self._preprocess_filter_pivot_for_main_statement(pivot_df)
 
         # prepare the log dataframe -> it must have all rows
-        self.applied_rules_log_df = pivot_df[self.pivot_df_index_cols].copy()
+        self.applied_rules_log_df = pivot_df[self.identifier_tags].copy()
 
         # finally apply the pre-rules
         self.pre_rule_tree.set_id("PRE")
@@ -235,16 +232,15 @@ class Standardizer:
 
     def _main_processing(self, data_df: pd.DataFrame):
         for i in range(self.main_iterations):
-            # set ids of the rules in the tree, use the iteration number as prefix
+            # apply the main rule tree
             self.main_rule_tree.set_id(prefix=f"MAIN_{i}")
-
-            # apply the rule_tree
             self.main_rule_tree.process(data_df=data_df, log_df=self.applied_rules_log_df)
 
             # calculate stats and add them to the stats log
             self.stats.add_stats_entry(data_df=data_df, process_step_name=f'MAIN_{i}')
 
     def _post_processing(self, data_df: pd.DataFrame):
+        # apply the post rule tree
         self.post_rule_tree.set_id(prefix="POST")
         self.post_rule_tree.process(data_df=data_df, log_df=self.applied_rules_log_df)
 
@@ -259,11 +255,11 @@ class Standardizer:
         for validation_rule in self.validation_rules:
             validation_rule.validate(finalized_df)
 
-        # caculate log_df summaries
+        # calculate log_df summaries
         # filter for rule columns but making sure the order stays the same
         rule_columns = [x for x in self.applied_rules_log_df.columns if
-                        x not in self.pivot_df_index_cols]
-        self.applied_rules_sum_df = self.applied_rules_log_df[rule_columns].sum()
+                        x not in self.identifier_tags]
+        self.applied_rules_sum_s = self.applied_rules_log_df[rule_columns].sum()
 
         # finalize the stats table, adding the rel and the gain columns
         self.stats.finalize_stats(len(data_df))

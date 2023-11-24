@@ -61,8 +61,8 @@ class PreSumUpCorrection(Rule):
             pa.typing.Series[bool]: a boolean Series that marks which rows have to be calculated
         """
         return (data_df[self.mixed_up_summand] ==
-                       data_df[self.sum_tag] + data_df[self.other_summand]) \
-                & (data_df[self.other_summand] > 0)
+                data_df[self.sum_tag] + data_df[self.other_summand]) \
+               & (data_df[self.other_summand] > 0)
 
     def apply(self, data_df: pd.DataFrame, mask: pa.typing.Series[bool]):
         """
@@ -358,8 +358,9 @@ class SumUpRule(Rule):
             pa.typing.Series[bool]: a boolean Series that marks which rows have to be calculated
         """
 
-        # mask if the target was not set
-        return data_df[self.sum_tag].isna()
+        # mask if the target was not set and at least one of the summands is present
+        mask_summands = (~data_df[self.potential_summands].isna()).any(axis=1)
+        return data_df[self.sum_tag].isna() & mask_summands
 
     def apply(self, data_df: pd.DataFrame, mask: pa.typing.Series[bool]):
         """
@@ -548,6 +549,72 @@ class PostCopyToFirstSummand(Rule):
                f"'{self.first_summand}' and set the other summands {self.other_summands} to 0.0 " \
                f"if '{self.sum_tag} is set and the summands " \
                f"{[self.first_summand, *self.other_summands]} are nan."
+
+
+class PostSetToZero(Rule):
+    """sets all tags to zero if all tags are not set"""
+
+    def __init__(self, tags: List[str]):
+        """
+
+        Args:
+            tags: list of tags that should be zeroed if all tags not set
+        """
+        self.tags = tags
+
+    def get_target_tags(self) -> List[str]:
+        """
+        returns a list of tags that could be affected/changed by this rule
+
+        Returns:
+            List[str]: list with affected tags/columns
+        """
+        return self.tags
+
+    def get_input_tags(self) -> Set[str]:
+        """
+        return all tags that the rules within this group need.
+
+        Returns:
+            Set[str]: set of all input tags that are used by rules in this group
+        """
+        return set(self.tags)
+
+    def mask(self, data_df: pd.DataFrame) -> pa.typing.Series[bool]:
+        """
+            returns a Series[bool] which defines the rows to which this rule has to be applied.
+
+        Args:
+            data_df dataframe on which the rules should be applied
+
+        Returns:
+            pa.typing.Series[bool]: a boolean Series that marks which rows have to be calculated
+        """
+        return data_df[self.tags].isna().all(axis=1)
+
+    def apply(self, data_df: pd.DataFrame, mask: pa.typing.Series[bool]):
+        """
+        apply the rule on the provided dataframe. the rows, on which the rule has to be applied
+        is defined by the provide mask Series.
+
+        Important, the rules have to be applied "in-place", so no new dataframe is produced.
+
+        Args:
+            data_df dataframe on which the rule has to be applied
+            mask: a Series marking the rows in the dataframe on which the rule has to be applied
+        """
+
+        for tag in self.tags:
+            data_df.loc[mask, tag] = 0.0
+
+    def get_description(self) -> str:
+        """
+        Returns the description String
+        Returns:
+            str: description
+        """
+        return f"Set the value of the {self.tags} to 0.0 " \
+               f"if all {self.tags} are nan."
 
 
 def missingsumparts_rules_creator(sum_tag: str, summand_tags: List[str]) -> List[RuleEntity]:

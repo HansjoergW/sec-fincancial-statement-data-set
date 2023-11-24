@@ -135,7 +135,8 @@ class Standardizer:
         self.invert_negated = invert_negated
 
         self.all_input_tags: Set[str] = self.pre_rule_tree.get_input_tags() | \
-                                        self.main_rule_tree.get_input_tags()
+                                        self.main_rule_tree.get_input_tags() | \
+                                        set(final_tags)
 
         if filter_for_main_statement and (main_statement_tags is None):
             raise ValueError("if filter_for_main_statement is true, also the "

@@ -74,7 +74,8 @@ def test_validate_within_1_percent(sample_dataframe_sum, sum_validation_rule):
     sum_validation_rule.validate(sample_dataframe_sum)
 
     assert sample_dataframe_sum['test_sum_rule_cat'].equals(pd.Series([1.0, 0.0, 0.0, 0.0]))
-    assert sample_dataframe_sum['test_sum_rule_error'].round(decimals=3).equals(pd.Series([0.005, 0.0, 0.0, 0.0]))
+    assert sample_dataframe_sum['test_sum_rule_error'].round(decimals=3).equals(
+        pd.Series([0.005, 0.0, 0.0, 0.0]))
 
 
 def test_validate_within_5_percent(sample_dataframe_sum, sum_validation_rule):
@@ -85,7 +86,8 @@ def test_validate_within_5_percent(sample_dataframe_sum, sum_validation_rule):
     sum_validation_rule.validate(sample_dataframe_sum)
 
     assert sample_dataframe_sum['test_sum_rule_cat'].equals(pd.Series([5.0, 0.0, 0.0, 0.0]))
-    assert sample_dataframe_sum['test_sum_rule_error'].round(decimals=2).equals(pd.Series([0.05, 0.0, 0.0, 0.0]))
+    assert sample_dataframe_sum['test_sum_rule_error'].round(decimals=2).equals(
+        pd.Series([0.05, 0.0, 0.0, 0.0]))
 
 
 def test_validate_within_10_percent(sample_dataframe_sum, sum_validation_rule):
@@ -96,7 +98,8 @@ def test_validate_within_10_percent(sample_dataframe_sum, sum_validation_rule):
     sum_validation_rule.validate(sample_dataframe_sum)
 
     assert sample_dataframe_sum['test_sum_rule_cat'].equals(pd.Series([10.0, 0.0, 0.0, 0.0]))
-    assert sample_dataframe_sum['test_sum_rule_error'].round(decimals=1).equals(pd.Series([0.1, 0.0, 0.0, 0.0]))
+    assert sample_dataframe_sum['test_sum_rule_error'].round(decimals=1).equals(
+        pd.Series([0.1, 0.0, 0.0, 0.0]))
 
 
 def test_validate_above_10_percent(sample_dataframe_sum, sum_validation_rule):
@@ -107,4 +110,20 @@ def test_validate_above_10_percent(sample_dataframe_sum, sum_validation_rule):
     sum_validation_rule.validate(sample_dataframe_sum)
 
     assert sample_dataframe_sum['test_sum_rule_cat'].equals(pd.Series([100.0, 0.0, 0.0, 0.0]))
-    assert sample_dataframe_sum['test_sum_rule_error'].round(decimals=1).equals(pd.Series([0.2, 0.0, 0.0, 0.0]))
+    assert sample_dataframe_sum['test_sum_rule_error'].round(decimals=1).equals(
+        pd.Series([0.2, 0.0, 0.0, 0.0]))
+
+
+def test_with_zero_sum(sum_validation_rule):
+    data = {
+        'Assets': [0.0],
+        'AssetsCurrent': [0.0],
+        'AssetsNoncurrent': [0.0],
+    }
+    data_df = pd.DataFrame(data)
+
+    sum_validation_rule.validate(data_df)
+
+    assert data_df['test_sum_rule_cat'].equals(pd.Series([0.0]))
+    assert data_df['test_sum_rule_error'].round(decimals=1).equals(pd.Series([0.0]))
+

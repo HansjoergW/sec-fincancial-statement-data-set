@@ -1,14 +1,10 @@
 BS Assets
 ---------
 Retained Earnings
-- plabel scheint auch noch interessante informationen zu bieten.
-  z.b. Bei Filter auf RetainedEarningsAccumulatedDeficit sieht man plabels mit "Accumulated deficit" oder Reatained deficit oder Retained earnings or Accumulated earnings
-- Suche nach tags die mit RetainedEarnings starten
-  > summieren pro adsh und dann schauen, welche Reports mehr als 1 Eintrag hat
-  Das wären dann die Ausnahme
-
-- Es gibt auch RetainedEarningsAppropriated und RetainedEarningUnapproriated... aber ohne RetainedEarnings
-  -> unsere Regel ist hier also sicher falsch, bloss die beiden bekannten nach retained earnings umzubenennen
+- Retained Earnings sind ziemlich vollständig
+  -> entweder als RetainedEarnings oder RetainedEarningsAccumulatedDeficit bezeichnet,
+     oder dann als die Summe von RetainedEarningsUnappropriated und RetainedEarningsAppropriated
+    => bringt ca.
 
 
 Errors in Reports

@@ -142,8 +142,16 @@ class SumValidationRule(ValidationRule):
 
         # subtract the sum of all summands from the sum_tag and make it relatvie by dividing
         # with the sum_tag. finally make the result absolute, so that error is always positive
-        return ((data_df[self.sum_tag] - data_df[self.summands].sum(axis='columns'))
+
+
+        result = ((data_df[self.sum_tag] - data_df[self.summands].sum(axis='columns'))
                 / data_df[self.sum_tag]).abs()
+
+        # correct if we did devide by zero
+        mask_zero = data_df[self.sum_tag] == 0.0
+        result.loc[mask_zero & (data_df[self.summands].sum(axis='columns') == 0.0)] = 0.0
+
+        return result
 
     def get_description(self) -> str:
         """

@@ -187,11 +187,11 @@ def test_sumup_rule():
     assert df.sumtag.tolist()[0] == 11.0
     assert df.sumtag.tolist()[1] == 2.0
     assert df.sumtag.tolist()[2] == 30.0
-    assert df.sumtag.tolist()[3] == 0.0
+    assert np.isnan(df.sumtag.tolist()[3])
     assert df.sumtag.tolist()[4] == 99.0
 
     # check the log column, in order to test if the rule was applied to the right rows
-    assert log_df.R_sumtag.tolist() == [False, True, True, True, False]
+    assert log_df.R_sumtag.tolist() == [False, True, True, False, False]
 
 
 def test_setsumifonlyonesummand():

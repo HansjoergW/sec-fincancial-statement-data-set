@@ -1,0 +1,908 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.10.0" />
+<title>secfsdstools.f_standardize.base_rule_framework API documentation</title>
+<meta name="description" content="This module defines a simple rule framework that allows to define concrete rules and build
+a rule hierarchy that then is used in the standardizer." />
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
+<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js" integrity="sha256-Uv3H6lx7dJmRfRvH8TH6kJD1TSK1aFcwgx+mdg3epi8=" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>secfsdstools.f_standardize.base_rule_framework</code></h1>
+</header>
+<section id="section-intro">
+<p>This module defines a simple rule framework that allows to define concrete rules and build
+a rule hierarchy that then is used in the standardizer.</p>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">&#34;&#34;&#34;
+This module defines a simple rule framework that allows to define concrete rules and build
+a rule hierarchy that then is used in the standardizer.
+&#34;&#34;&#34;
+from abc import ABC
+from abc import abstractmethod
+from typing import Optional, Set, List
+
+import pandas as pd
+import pandera as pa
+
+
+class RuleEntity(ABC):
+    &#34;&#34;&#34; Base RuleEntity, which provides the basic definition to craete a tree of rules. &#34;&#34;&#34;
+    identifier: str = &#39;&lt;not set&gt;&#39;
+
+    @abstractmethod
+    def get_input_tags(self) -&gt; Set[str]:
+        &#34;&#34;&#34;
+        Returns the List of tags that used by this rule entity. All these tags have to be
+        present as columns in the dataframe that is provided in the process method.
+
+        Returns:
+            Set[str] : a set of strings
+        &#34;&#34;&#34;
+
+    def process(self, data_df: pd.DataFrame, log_df: Optional[pd.DataFrame] = None):
+        &#34;&#34;&#34;
+        Applies the rules on the provided dataframe.
+        If a log_df is provided, the affected roles by every rule are logged into the
+        log_df.
+
+        Args:
+            data_df (pd.DataFrame): the dataframe on which the rules will be applied
+            log_df (pd.DataFrame, optional, None): the logs-dataframe
+
+        &#34;&#34;&#34;
+
+    @abstractmethod
+    def set_id(self, prefix: str):
+        &#34;&#34;&#34;
+        sets the identifier of this rule entity
+        Args:
+            prefix: the prefix from the parent in the rule-tree which has to be part of the id
+        &#34;&#34;&#34;
+
+    @abstractmethod
+    def get_description(self) -&gt; str:
+        &#34;&#34;&#34;
+        Returns the description String
+        Returns:
+            str: description
+        &#34;&#34;&#34;
+
+
+class Rule(RuleEntity):
+    &#34;&#34;&#34;Base class to define a single rule&#34;&#34;&#34;
+
+    @abstractmethod
+    def get_target_tags(self) -&gt; List[str]:
+        &#34;&#34;&#34;
+        returns a list of tags that could be affected/changed by this rule
+
+        Returns:
+            List[str]: list with affected tags/columns
+
+        &#34;&#34;&#34;
+
+    def get_target_tags_str(self) -&gt; str:
+        &#34;&#34;&#34;
+        returns a single string in which all target_tags are separated by a &#34;/&#34;
+        Returns:
+            str: a string containing all target tags
+        &#34;&#34;&#34;
+        return &#34;/&#34;.join(self.get_target_tags())
+
+    @abstractmethod
+    def mask(self, data_df: pd.DataFrame) -&gt; pa.typing.Series[bool]:
+        &#34;&#34;&#34;
+            returns a Series[bool] which defines the rows to which this rule has to be applied.
+
+        Args:
+            data_df: dataframe on which the rules should be applied
+
+        Returns:
+            pa.typing.Series[bool]: a boolean Series that marks which rows have to be calculated
+        &#34;&#34;&#34;
+
+    @abstractmethod
+    def apply(self, data_df: pd.DataFrame, mask: pa.typing.Series[bool]):
+        &#34;&#34;&#34;
+        apply the rule on the provided dataframe. the rows, on which the rule has to be applied
+        is defined by the provide mask Series.
+
+        Important, the rules have to be applied &#34;in-place&#34;, so now new dataframe is produced.
+
+        Args:
+            data_df: dataframe on which the rule has to be applied
+            mask: a Series marking the rows in the dataframe on which the rule has to be applied
+        &#34;&#34;&#34;
+
+    def set_id(self, prefix: str):
+        &#34;&#34;&#34;
+        sets the identifier of this rule entity
+        Args:
+            prefix: the prefix from the parent in the rule-tree which has to be part of the id
+        &#34;&#34;&#34;
+        self.identifier = f&#39;{prefix}_{self.get_target_tags_str()}&#39;
+
+    def process(self, data_df: pd.DataFrame, log_df: Optional[pd.DataFrame] = None):
+        &#34;&#34;&#34;
+        process the dataframe and apply the rule. If a log_df is provided, the rows on which
+        the rule is applied to is added to the log_df.
+
+        Args:
+            data_df (pd.DataFrame) : dataframe on which the rule has to be applied
+            log_df (pd.DataFrame, optional, None): the log dataframe
+        &#34;&#34;&#34;
+        mask = self.mask(data_df)
+        self.apply(data_df, mask)
+
+        # if a log_df is provided, create a new column for this role and mark the rows that were
+        # affected by the rule
+        if (log_df is not None) and (len(log_df) == len(mask)):
+            log_df[self.identifier] = False
+            log_df.loc[mask, self.identifier] = True
+
+
+class RuleGroup(RuleEntity):
+    &#34;&#34;&#34;Class which can manage a group of rule entities&#34;&#34;&#34;
+
+    def __init__(self, rules: List[RuleEntity], prefix: str, description: str = &#34;&#34;):
+        &#34;&#34;&#34;
+        Args:
+            rules (List[RuleEntity]]): a list of RuleEntitys
+            prefix: identification prefix
+            description: a short description of the purpose of the group
+        &#34;&#34;&#34;
+        self.rules = rules
+        self.prefix = prefix
+        self.description = description
+
+    def set_id(self, prefix: str):
+        &#34;&#34;&#34;
+        sets the identifier of this rulegroup and calls the set_id method of the child rules
+        Args:
+            prefix: the prefix from the parent in the rule-tree which has to be part of the id
+        &#34;&#34;&#34;
+        idx = 1
+        self.identifier = f&#39;{prefix}_{self.prefix}&#39;
+        for rule in self.rules:
+            rule.set_id(f&#39;{self.identifier}_#{idx}&#39;)
+            idx = idx + 1
+
+    def process(self, data_df: pd.DataFrame, log_df: Optional[pd.DataFrame] = None):
+        &#34;&#34;&#34;
+        process the dataframe and apply the rules of this group.
+        If a log_df is provided, the rows on which the rule is applied to is added to the log_df.
+
+        Args:
+            df (pd.DataFrame) : dataframe on which the rule has to be applied
+            log_df (pd.DataFrame, optional, None): the log dataframe
+        &#34;&#34;&#34;
+        for rule in self.rules:
+            rule.process(data_df=data_df, log_df=log_df)
+
+    def get_input_tags(self) -&gt; Set[str]:
+        &#34;&#34;&#34;
+        return all tags that the rules within this group need.
+
+        Returns:
+            Set[str]: set of all input tags that are used by rules in this group
+        &#34;&#34;&#34;
+        result: Set[str] = set()
+        for rule in self.rules:
+            result.update(rule.get_input_tags())
+        return result
+
+    def get_description(self) -&gt; str:
+        &#34;&#34;&#34;
+        Returns the description String
+        Returns:
+            str: description
+        &#34;&#34;&#34;
+
+        return self.description</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="secfsdstools.f_standardize.base_rule_framework.Rule"><code class="flex name class">
+<span>class <span class="ident">Rule</span></span>
+</code></dt>
+<dd>
+<div class="desc"><p>Base class to define a single rule</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class Rule(RuleEntity):
+    &#34;&#34;&#34;Base class to define a single rule&#34;&#34;&#34;
+
+    @abstractmethod
+    def get_target_tags(self) -&gt; List[str]:
+        &#34;&#34;&#34;
+        returns a list of tags that could be affected/changed by this rule
+
+        Returns:
+            List[str]: list with affected tags/columns
+
+        &#34;&#34;&#34;
+
+    def get_target_tags_str(self) -&gt; str:
+        &#34;&#34;&#34;
+        returns a single string in which all target_tags are separated by a &#34;/&#34;
+        Returns:
+            str: a string containing all target tags
+        &#34;&#34;&#34;
+        return &#34;/&#34;.join(self.get_target_tags())
+
+    @abstractmethod
+    def mask(self, data_df: pd.DataFrame) -&gt; pa.typing.Series[bool]:
+        &#34;&#34;&#34;
+            returns a Series[bool] which defines the rows to which this rule has to be applied.
+
+        Args:
+            data_df: dataframe on which the rules should be applied
+
+        Returns:
+            pa.typing.Series[bool]: a boolean Series that marks which rows have to be calculated
+        &#34;&#34;&#34;
+
+    @abstractmethod
+    def apply(self, data_df: pd.DataFrame, mask: pa.typing.Series[bool]):
+        &#34;&#34;&#34;
+        apply the rule on the provided dataframe. the rows, on which the rule has to be applied
+        is defined by the provide mask Series.
+
+        Important, the rules have to be applied &#34;in-place&#34;, so now new dataframe is produced.
+
+        Args:
+            data_df: dataframe on which the rule has to be applied
+            mask: a Series marking the rows in the dataframe on which the rule has to be applied
+        &#34;&#34;&#34;
+
+    def set_id(self, prefix: str):
+        &#34;&#34;&#34;
+        sets the identifier of this rule entity
+        Args:
+            prefix: the prefix from the parent in the rule-tree which has to be part of the id
+        &#34;&#34;&#34;
+        self.identifier = f&#39;{prefix}_{self.get_target_tags_str()}&#39;
+
+    def process(self, data_df: pd.DataFrame, log_df: Optional[pd.DataFrame] = None):
+        &#34;&#34;&#34;
+        process the dataframe and apply the rule. If a log_df is provided, the rows on which
+        the rule is applied to is added to the log_df.
+
+        Args:
+            data_df (pd.DataFrame) : dataframe on which the rule has to be applied
+            log_df (pd.DataFrame, optional, None): the log dataframe
+        &#34;&#34;&#34;
+        mask = self.mask(data_df)
+        self.apply(data_df, mask)
+
+        # if a log_df is provided, create a new column for this role and mark the rows that were
+        # affected by the rule
+        if (log_df is not None) and (len(log_df) == len(mask)):
+            log_df[self.identifier] = False
+            log_df.loc[mask, self.identifier] = True</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="secfsdstools.f_standardize.base_rule_framework.RuleEntity" href="#secfsdstools.f_standardize.base_rule_framework.RuleEntity">RuleEntity</a></li>
+<li>abc.ABC</li>
+</ul>
+<h3>Subclasses</h3>
+<ul class="hlist">
+<li><a title="secfsdstools.f_standardize.base_rules.CopyTagRule" href="base_rules.html#secfsdstools.f_standardize.base_rules.CopyTagRule">CopyTagRule</a></li>
+<li><a title="secfsdstools.f_standardize.base_rules.MissingSumRule" href="base_rules.html#secfsdstools.f_standardize.base_rules.MissingSumRule">MissingSumRule</a></li>
+<li><a title="secfsdstools.f_standardize.base_rules.MissingSummandRule" href="base_rules.html#secfsdstools.f_standardize.base_rules.MissingSummandRule">MissingSummandRule</a></li>
+<li><a title="secfsdstools.f_standardize.base_rules.PostCopyToFirstSummand" href="base_rules.html#secfsdstools.f_standardize.base_rules.PostCopyToFirstSummand">PostCopyToFirstSummand</a></li>
+<li><a title="secfsdstools.f_standardize.base_rules.PostSetToZero" href="base_rules.html#secfsdstools.f_standardize.base_rules.PostSetToZero">PostSetToZero</a></li>
+<li><a title="secfsdstools.f_standardize.base_rules.PreSumUpCorrection" href="base_rules.html#secfsdstools.f_standardize.base_rules.PreSumUpCorrection">PreSumUpCorrection</a></li>
+<li><a title="secfsdstools.f_standardize.base_rules.SetSumIfOnlyOneSummand" href="base_rules.html#secfsdstools.f_standardize.base_rules.SetSumIfOnlyOneSummand">SetSumIfOnlyOneSummand</a></li>
+<li><a title="secfsdstools.f_standardize.base_rules.SumUpRule" href="base_rules.html#secfsdstools.f_standardize.base_rules.SumUpRule">SumUpRule</a></li>
+</ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="secfsdstools.f_standardize.base_rule_framework.Rule.identifier"><code class="name">var <span class="ident">identifier</span> : str</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="secfsdstools.f_standardize.base_rule_framework.Rule.apply"><code class="name flex">
+<span>def <span class="ident">apply</span></span>(<span>self, data_df: pandas.core.frame.DataFrame, mask: pandera.typing.pandas.Series[bool])</span>
+</code></dt>
+<dd>
+<div class="desc"><p>apply the rule on the provided dataframe. the rows, on which the rule has to be applied
+is defined by the provide mask Series.</p>
+<p>Important, the rules have to be applied "in-place", so now new dataframe is produced.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>data_df</code></strong></dt>
+<dd>dataframe on which the rule has to be applied</dd>
+<dt><strong><code>mask</code></strong></dt>
+<dd>a Series marking the rows in the dataframe on which the rule has to be applied</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@abstractmethod
+def apply(self, data_df: pd.DataFrame, mask: pa.typing.Series[bool]):
+    &#34;&#34;&#34;
+    apply the rule on the provided dataframe. the rows, on which the rule has to be applied
+    is defined by the provide mask Series.
+
+    Important, the rules have to be applied &#34;in-place&#34;, so now new dataframe is produced.
+
+    Args:
+        data_df: dataframe on which the rule has to be applied
+        mask: a Series marking the rows in the dataframe on which the rule has to be applied
+    &#34;&#34;&#34;</code></pre>
+</details>
+</dd>
+<dt id="secfsdstools.f_standardize.base_rule_framework.Rule.get_target_tags"><code class="name flex">
+<span>def <span class="ident">get_target_tags</span></span>(<span>self) ‑> List[str]</span>
+</code></dt>
+<dd>
+<div class="desc"><p>returns a list of tags that could be affected/changed by this rule</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>List[str]</code></dt>
+<dd>list with affected tags/columns</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@abstractmethod
+def get_target_tags(self) -&gt; List[str]:
+    &#34;&#34;&#34;
+    returns a list of tags that could be affected/changed by this rule
+
+    Returns:
+        List[str]: list with affected tags/columns
+
+    &#34;&#34;&#34;</code></pre>
+</details>
+</dd>
+<dt id="secfsdstools.f_standardize.base_rule_framework.Rule.get_target_tags_str"><code class="name flex">
+<span>def <span class="ident">get_target_tags_str</span></span>(<span>self) ‑> str</span>
+</code></dt>
+<dd>
+<div class="desc"><p>returns a single string in which all target_tags are separated by a "/"</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>str</code></dt>
+<dd>a string containing all target tags</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_target_tags_str(self) -&gt; str:
+    &#34;&#34;&#34;
+    returns a single string in which all target_tags are separated by a &#34;/&#34;
+    Returns:
+        str: a string containing all target tags
+    &#34;&#34;&#34;
+    return &#34;/&#34;.join(self.get_target_tags())</code></pre>
+</details>
+</dd>
+<dt id="secfsdstools.f_standardize.base_rule_framework.Rule.mask"><code class="name flex">
+<span>def <span class="ident">mask</span></span>(<span>self, data_df: pandas.core.frame.DataFrame) ‑> pandera.typing.pandas.Series[bool]</span>
+</code></dt>
+<dd>
+<div class="desc"><p>returns a Series[bool] which defines the rows to which this rule has to be applied.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>data_df</code></strong></dt>
+<dd>dataframe on which the rules should be applied</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>pa.typing.Series[bool]</code></dt>
+<dd>a boolean Series that marks which rows have to be calculated</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@abstractmethod
+def mask(self, data_df: pd.DataFrame) -&gt; pa.typing.Series[bool]:
+    &#34;&#34;&#34;
+        returns a Series[bool] which defines the rows to which this rule has to be applied.
+
+    Args:
+        data_df: dataframe on which the rules should be applied
+
+    Returns:
+        pa.typing.Series[bool]: a boolean Series that marks which rows have to be calculated
+    &#34;&#34;&#34;</code></pre>
+</details>
+</dd>
+<dt id="secfsdstools.f_standardize.base_rule_framework.Rule.process"><code class="name flex">
+<span>def <span class="ident">process</span></span>(<span>self, data_df: pandas.core.frame.DataFrame, log_df: Optional[pandas.core.frame.DataFrame] = None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>process the dataframe and apply the rule. If a log_df is provided, the rows on which
+the rule is applied to is added to the log_df.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt>data_df (pd.DataFrame) : dataframe on which the rule has to be applied</dt>
+<dt><strong><code>log_df</code></strong> :&ensp;<code>pd.DataFrame</code>, optional<code>, None</code></dt>
+<dd>the log dataframe</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def process(self, data_df: pd.DataFrame, log_df: Optional[pd.DataFrame] = None):
+    &#34;&#34;&#34;
+    process the dataframe and apply the rule. If a log_df is provided, the rows on which
+    the rule is applied to is added to the log_df.
+
+    Args:
+        data_df (pd.DataFrame) : dataframe on which the rule has to be applied
+        log_df (pd.DataFrame, optional, None): the log dataframe
+    &#34;&#34;&#34;
+    mask = self.mask(data_df)
+    self.apply(data_df, mask)
+
+    # if a log_df is provided, create a new column for this role and mark the rows that were
+    # affected by the rule
+    if (log_df is not None) and (len(log_df) == len(mask)):
+        log_df[self.identifier] = False
+        log_df.loc[mask, self.identifier] = True</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="secfsdstools.f_standardize.base_rule_framework.RuleEntity" href="#secfsdstools.f_standardize.base_rule_framework.RuleEntity">RuleEntity</a></b></code>:
+<ul class="hlist">
+<li><code><a title="secfsdstools.f_standardize.base_rule_framework.RuleEntity.get_description" href="#secfsdstools.f_standardize.base_rule_framework.RuleEntity.get_description">get_description</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.base_rule_framework.RuleEntity.get_input_tags" href="#secfsdstools.f_standardize.base_rule_framework.RuleEntity.get_input_tags">get_input_tags</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.base_rule_framework.RuleEntity.set_id" href="#secfsdstools.f_standardize.base_rule_framework.RuleEntity.set_id">set_id</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+<dt id="secfsdstools.f_standardize.base_rule_framework.RuleEntity"><code class="flex name class">
+<span>class <span class="ident">RuleEntity</span></span>
+</code></dt>
+<dd>
+<div class="desc"><p>Base RuleEntity, which provides the basic definition to craete a tree of rules.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class RuleEntity(ABC):
+    &#34;&#34;&#34; Base RuleEntity, which provides the basic definition to craete a tree of rules. &#34;&#34;&#34;
+    identifier: str = &#39;&lt;not set&gt;&#39;
+
+    @abstractmethod
+    def get_input_tags(self) -&gt; Set[str]:
+        &#34;&#34;&#34;
+        Returns the List of tags that used by this rule entity. All these tags have to be
+        present as columns in the dataframe that is provided in the process method.
+
+        Returns:
+            Set[str] : a set of strings
+        &#34;&#34;&#34;
+
+    def process(self, data_df: pd.DataFrame, log_df: Optional[pd.DataFrame] = None):
+        &#34;&#34;&#34;
+        Applies the rules on the provided dataframe.
+        If a log_df is provided, the affected roles by every rule are logged into the
+        log_df.
+
+        Args:
+            data_df (pd.DataFrame): the dataframe on which the rules will be applied
+            log_df (pd.DataFrame, optional, None): the logs-dataframe
+
+        &#34;&#34;&#34;
+
+    @abstractmethod
+    def set_id(self, prefix: str):
+        &#34;&#34;&#34;
+        sets the identifier of this rule entity
+        Args:
+            prefix: the prefix from the parent in the rule-tree which has to be part of the id
+        &#34;&#34;&#34;
+
+    @abstractmethod
+    def get_description(self) -&gt; str:
+        &#34;&#34;&#34;
+        Returns the description String
+        Returns:
+            str: description
+        &#34;&#34;&#34;</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>abc.ABC</li>
+</ul>
+<h3>Subclasses</h3>
+<ul class="hlist">
+<li><a title="secfsdstools.f_standardize.base_rule_framework.Rule" href="#secfsdstools.f_standardize.base_rule_framework.Rule">Rule</a></li>
+<li><a title="secfsdstools.f_standardize.base_rule_framework.RuleGroup" href="#secfsdstools.f_standardize.base_rule_framework.RuleGroup">RuleGroup</a></li>
+</ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="secfsdstools.f_standardize.base_rule_framework.RuleEntity.identifier"><code class="name">var <span class="ident">identifier</span> : str</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="secfsdstools.f_standardize.base_rule_framework.RuleEntity.get_description"><code class="name flex">
+<span>def <span class="ident">get_description</span></span>(<span>self) ‑> str</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Returns the description String</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>str</code></dt>
+<dd>description</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@abstractmethod
+def get_description(self) -&gt; str:
+    &#34;&#34;&#34;
+    Returns the description String
+    Returns:
+        str: description
+    &#34;&#34;&#34;</code></pre>
+</details>
+</dd>
+<dt id="secfsdstools.f_standardize.base_rule_framework.RuleEntity.get_input_tags"><code class="name flex">
+<span>def <span class="ident">get_input_tags</span></span>(<span>self) ‑> Set[str]</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Returns the List of tags that used by this rule entity. All these tags have to be
+present as columns in the dataframe that is provided in the process method.</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>Set[str] </code></dt>
+<dd>a set of strings</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@abstractmethod
+def get_input_tags(self) -&gt; Set[str]:
+    &#34;&#34;&#34;
+    Returns the List of tags that used by this rule entity. All these tags have to be
+    present as columns in the dataframe that is provided in the process method.
+
+    Returns:
+        Set[str] : a set of strings
+    &#34;&#34;&#34;</code></pre>
+</details>
+</dd>
+<dt id="secfsdstools.f_standardize.base_rule_framework.RuleEntity.process"><code class="name flex">
+<span>def <span class="ident">process</span></span>(<span>self, data_df: pandas.core.frame.DataFrame, log_df: Optional[pandas.core.frame.DataFrame] = None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Applies the rules on the provided dataframe.
+If a log_df is provided, the affected roles by every rule are logged into the
+log_df.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>data_df</code></strong> :&ensp;<code>pd.DataFrame</code></dt>
+<dd>the dataframe on which the rules will be applied</dd>
+<dt><strong><code>log_df</code></strong> :&ensp;<code>pd.DataFrame</code>, optional<code>, None</code></dt>
+<dd>the logs-dataframe</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def process(self, data_df: pd.DataFrame, log_df: Optional[pd.DataFrame] = None):
+    &#34;&#34;&#34;
+    Applies the rules on the provided dataframe.
+    If a log_df is provided, the affected roles by every rule are logged into the
+    log_df.
+
+    Args:
+        data_df (pd.DataFrame): the dataframe on which the rules will be applied
+        log_df (pd.DataFrame, optional, None): the logs-dataframe
+
+    &#34;&#34;&#34;</code></pre>
+</details>
+</dd>
+<dt id="secfsdstools.f_standardize.base_rule_framework.RuleEntity.set_id"><code class="name flex">
+<span>def <span class="ident">set_id</span></span>(<span>self, prefix: str)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>sets the identifier of this rule entity</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>prefix</code></strong></dt>
+<dd>the prefix from the parent in the rule-tree which has to be part of the id</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@abstractmethod
+def set_id(self, prefix: str):
+    &#34;&#34;&#34;
+    sets the identifier of this rule entity
+    Args:
+        prefix: the prefix from the parent in the rule-tree which has to be part of the id
+    &#34;&#34;&#34;</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+<dt id="secfsdstools.f_standardize.base_rule_framework.RuleGroup"><code class="flex name class">
+<span>class <span class="ident">RuleGroup</span></span>
+<span>(</span><span>rules: List[<a title="secfsdstools.f_standardize.base_rule_framework.RuleEntity" href="#secfsdstools.f_standardize.base_rule_framework.RuleEntity">RuleEntity</a>], prefix: str, description: str = '')</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Class which can manage a group of rule entities</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>rules</code></strong> :&ensp;<code>List[<a title="secfsdstools.f_standardize.base_rule_framework.RuleEntity" href="#secfsdstools.f_standardize.base_rule_framework.RuleEntity">RuleEntity</a>]]</code></dt>
+<dd>a list of RuleEntitys</dd>
+<dt><strong><code>prefix</code></strong></dt>
+<dd>identification prefix</dd>
+<dt><strong><code>description</code></strong></dt>
+<dd>a short description of the purpose of the group</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class RuleGroup(RuleEntity):
+    &#34;&#34;&#34;Class which can manage a group of rule entities&#34;&#34;&#34;
+
+    def __init__(self, rules: List[RuleEntity], prefix: str, description: str = &#34;&#34;):
+        &#34;&#34;&#34;
+        Args:
+            rules (List[RuleEntity]]): a list of RuleEntitys
+            prefix: identification prefix
+            description: a short description of the purpose of the group
+        &#34;&#34;&#34;
+        self.rules = rules
+        self.prefix = prefix
+        self.description = description
+
+    def set_id(self, prefix: str):
+        &#34;&#34;&#34;
+        sets the identifier of this rulegroup and calls the set_id method of the child rules
+        Args:
+            prefix: the prefix from the parent in the rule-tree which has to be part of the id
+        &#34;&#34;&#34;
+        idx = 1
+        self.identifier = f&#39;{prefix}_{self.prefix}&#39;
+        for rule in self.rules:
+            rule.set_id(f&#39;{self.identifier}_#{idx}&#39;)
+            idx = idx + 1
+
+    def process(self, data_df: pd.DataFrame, log_df: Optional[pd.DataFrame] = None):
+        &#34;&#34;&#34;
+        process the dataframe and apply the rules of this group.
+        If a log_df is provided, the rows on which the rule is applied to is added to the log_df.
+
+        Args:
+            df (pd.DataFrame) : dataframe on which the rule has to be applied
+            log_df (pd.DataFrame, optional, None): the log dataframe
+        &#34;&#34;&#34;
+        for rule in self.rules:
+            rule.process(data_df=data_df, log_df=log_df)
+
+    def get_input_tags(self) -&gt; Set[str]:
+        &#34;&#34;&#34;
+        return all tags that the rules within this group need.
+
+        Returns:
+            Set[str]: set of all input tags that are used by rules in this group
+        &#34;&#34;&#34;
+        result: Set[str] = set()
+        for rule in self.rules:
+            result.update(rule.get_input_tags())
+        return result
+
+    def get_description(self) -&gt; str:
+        &#34;&#34;&#34;
+        Returns the description String
+        Returns:
+            str: description
+        &#34;&#34;&#34;
+
+        return self.description</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="secfsdstools.f_standardize.base_rule_framework.RuleEntity" href="#secfsdstools.f_standardize.base_rule_framework.RuleEntity">RuleEntity</a></li>
+<li>abc.ABC</li>
+</ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="secfsdstools.f_standardize.base_rule_framework.RuleGroup.identifier"><code class="name">var <span class="ident">identifier</span> : str</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="secfsdstools.f_standardize.base_rule_framework.RuleGroup.get_input_tags"><code class="name flex">
+<span>def <span class="ident">get_input_tags</span></span>(<span>self) ‑> Set[str]</span>
+</code></dt>
+<dd>
+<div class="desc"><p>return all tags that the rules within this group need.</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>Set[str]</code></dt>
+<dd>set of all input tags that are used by rules in this group</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_input_tags(self) -&gt; Set[str]:
+    &#34;&#34;&#34;
+    return all tags that the rules within this group need.
+
+    Returns:
+        Set[str]: set of all input tags that are used by rules in this group
+    &#34;&#34;&#34;
+    result: Set[str] = set()
+    for rule in self.rules:
+        result.update(rule.get_input_tags())
+    return result</code></pre>
+</details>
+</dd>
+<dt id="secfsdstools.f_standardize.base_rule_framework.RuleGroup.process"><code class="name flex">
+<span>def <span class="ident">process</span></span>(<span>self, data_df: pandas.core.frame.DataFrame, log_df: Optional[pandas.core.frame.DataFrame] = None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>process the dataframe and apply the rules of this group.
+If a log_df is provided, the rows on which the rule is applied to is added to the log_df.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt>df (pd.DataFrame) : dataframe on which the rule has to be applied</dt>
+<dt><strong><code>log_df</code></strong> :&ensp;<code>pd.DataFrame</code>, optional<code>, None</code></dt>
+<dd>the log dataframe</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def process(self, data_df: pd.DataFrame, log_df: Optional[pd.DataFrame] = None):
+    &#34;&#34;&#34;
+    process the dataframe and apply the rules of this group.
+    If a log_df is provided, the rows on which the rule is applied to is added to the log_df.
+
+    Args:
+        df (pd.DataFrame) : dataframe on which the rule has to be applied
+        log_df (pd.DataFrame, optional, None): the log dataframe
+    &#34;&#34;&#34;
+    for rule in self.rules:
+        rule.process(data_df=data_df, log_df=log_df)</code></pre>
+</details>
+</dd>
+<dt id="secfsdstools.f_standardize.base_rule_framework.RuleGroup.set_id"><code class="name flex">
+<span>def <span class="ident">set_id</span></span>(<span>self, prefix: str)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>sets the identifier of this rulegroup and calls the set_id method of the child rules</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>prefix</code></strong></dt>
+<dd>the prefix from the parent in the rule-tree which has to be part of the id</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def set_id(self, prefix: str):
+    &#34;&#34;&#34;
+    sets the identifier of this rulegroup and calls the set_id method of the child rules
+    Args:
+        prefix: the prefix from the parent in the rule-tree which has to be part of the id
+    &#34;&#34;&#34;
+    idx = 1
+    self.identifier = f&#39;{prefix}_{self.prefix}&#39;
+    for rule in self.rules:
+        rule.set_id(f&#39;{self.identifier}_#{idx}&#39;)
+        idx = idx + 1</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="secfsdstools.f_standardize.base_rule_framework.RuleEntity" href="#secfsdstools.f_standardize.base_rule_framework.RuleEntity">RuleEntity</a></b></code>:
+<ul class="hlist">
+<li><code><a title="secfsdstools.f_standardize.base_rule_framework.RuleEntity.get_description" href="#secfsdstools.f_standardize.base_rule_framework.RuleEntity.get_description">get_description</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+</dl>
+</section>
+</article>
+<nav id="sidebar">
+<h1>Index</h1>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="secfsdstools.f_standardize" href="index.html">secfsdstools.f_standardize</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="secfsdstools.f_standardize.base_rule_framework.Rule" href="#secfsdstools.f_standardize.base_rule_framework.Rule">Rule</a></code></h4>
+<ul class="two-column">
+<li><code><a title="secfsdstools.f_standardize.base_rule_framework.Rule.apply" href="#secfsdstools.f_standardize.base_rule_framework.Rule.apply">apply</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.base_rule_framework.Rule.get_target_tags" href="#secfsdstools.f_standardize.base_rule_framework.Rule.get_target_tags">get_target_tags</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.base_rule_framework.Rule.get_target_tags_str" href="#secfsdstools.f_standardize.base_rule_framework.Rule.get_target_tags_str">get_target_tags_str</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.base_rule_framework.Rule.identifier" href="#secfsdstools.f_standardize.base_rule_framework.Rule.identifier">identifier</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.base_rule_framework.Rule.mask" href="#secfsdstools.f_standardize.base_rule_framework.Rule.mask">mask</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.base_rule_framework.Rule.process" href="#secfsdstools.f_standardize.base_rule_framework.Rule.process">process</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="secfsdstools.f_standardize.base_rule_framework.RuleEntity" href="#secfsdstools.f_standardize.base_rule_framework.RuleEntity">RuleEntity</a></code></h4>
+<ul class="">
+<li><code><a title="secfsdstools.f_standardize.base_rule_framework.RuleEntity.get_description" href="#secfsdstools.f_standardize.base_rule_framework.RuleEntity.get_description">get_description</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.base_rule_framework.RuleEntity.get_input_tags" href="#secfsdstools.f_standardize.base_rule_framework.RuleEntity.get_input_tags">get_input_tags</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.base_rule_framework.RuleEntity.identifier" href="#secfsdstools.f_standardize.base_rule_framework.RuleEntity.identifier">identifier</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.base_rule_framework.RuleEntity.process" href="#secfsdstools.f_standardize.base_rule_framework.RuleEntity.process">process</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.base_rule_framework.RuleEntity.set_id" href="#secfsdstools.f_standardize.base_rule_framework.RuleEntity.set_id">set_id</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="secfsdstools.f_standardize.base_rule_framework.RuleGroup" href="#secfsdstools.f_standardize.base_rule_framework.RuleGroup">RuleGroup</a></code></h4>
+<ul class="">
+<li><code><a title="secfsdstools.f_standardize.base_rule_framework.RuleGroup.get_input_tags" href="#secfsdstools.f_standardize.base_rule_framework.RuleGroup.get_input_tags">get_input_tags</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.base_rule_framework.RuleGroup.identifier" href="#secfsdstools.f_standardize.base_rule_framework.RuleGroup.identifier">identifier</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.base_rule_framework.RuleGroup.process" href="#secfsdstools.f_standardize.base_rule_framework.RuleGroup.process">process</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.base_rule_framework.RuleGroup.set_id" href="#secfsdstools.f_standardize.base_rule_framework.RuleGroup.set_id">set_id</a></code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.10.0</a>.</p>
+</footer>
+</body>
+</html>

@@ -5,7 +5,7 @@ from typing import List, Optional, Set
 import numpy as np
 import pandas as pd
 
-from secfsdstools.f_standardize.base_rule_framework import RuleGroup
+from secfsdstools.f_standardize.base_rule_framework import RuleGroup, DescriptionEntry
 from secfsdstools.f_standardize.base_validation_rules import ValidationRule
 
 
@@ -282,3 +282,23 @@ class Standardizer:
         self._post_processing(ready_df)
 
         return self._finalize(ready_df)
+
+    def get_process_description(self) -> pd.DataFrame:
+        """
+            returns the description of the applied rules as a table in a pandas dataframe
+        Returns:
+            pd.DataFrame: a table with the description of the applied rules
+        """
+
+        all_descriptions: List[DescriptionEntry] = []
+
+        self.pre_rule_tree.set_id("PRE")
+        all_descriptions.extend(self.pre_rule_tree.collect_description("PRE"))
+        self.main_rule_tree.set_id("MAIN")
+        all_descriptions.extend(self.main_rule_tree.collect_description("MAIN"))
+        self.post_rule_tree.set_id("POST")
+        all_descriptions.extend(self.post_rule_tree.collect_description("POST"))
+
+        all_descriptions.extend([vr.collect_description("VALID") for vr in self.validation_rules])
+
+        return pd.DataFrame(all_descriptions)

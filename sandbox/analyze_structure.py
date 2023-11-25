@@ -92,6 +92,9 @@ def assets_check(df: pd.DataFrame):
 
 
 if __name__ == '__main__':
+    standardizer = BalanceSheetStandardizer()
+    df_description = standardizer.get_process_description()
+
     #fs_df = get_fs_from_single_report('0001741257-19-000014')
 
     fs_df = get_fs_from_all_bs()
@@ -101,7 +104,6 @@ if __name__ == '__main__':
     print("fs_df.shape", fs_df.shape)
     print("fs columns", fs_df.columns)
 
-    standardizer = BalanceSheetStandardizer()
     df = standardizer.process(fs_df)
 
     # assets_check(df) # adding the AssetsCheck columns

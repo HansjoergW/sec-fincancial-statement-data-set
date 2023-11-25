@@ -14,6 +14,7 @@ v.1.2.0
 New
 - USDonlyFilter
 - BS Standardizer
+- Standardizer Basic
 - bulk processing examples
 
 todo:
@@ -21,8 +22,6 @@ todo:
 
 
 Next:
-
-
 - vlt switch um parallele verarbeitung komplett auszuschalten?
 - vlt switch maximale parallelität?
 

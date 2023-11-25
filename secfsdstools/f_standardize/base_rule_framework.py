@@ -4,10 +4,20 @@ a rule hierarchy that then is used in the standardizer.
 """
 from abc import ABC
 from abc import abstractmethod
+from dataclasses import dataclass
 from typing import Optional, Set, List
 
 import pandas as pd
 import pandera as pa
+
+
+@dataclass
+class DescriptionEntry:
+    part: str
+    type: str
+    ruleclass: str
+    id: str
+    description: str
 
 
 class RuleEntity(ABC):
@@ -50,6 +60,17 @@ class RuleEntity(ABC):
         Returns the description String
         Returns:
             str: description
+        """
+
+    @abstractmethod
+    def collect_description(self, part: str) -> List[DescriptionEntry]:
+        """
+        Returns the description of these elements and its children as a list
+
+        Args:
+            part (str): the part to which the element belongs to
+        Returns:
+            List (DescriptionEntry)
         """
 
 
@@ -125,6 +146,23 @@ class Rule(RuleEntity):
             log_df[self.identifier] = False
             log_df.loc[mask, self.identifier] = True
 
+    def collect_description(self, part: str) -> List[DescriptionEntry]:
+        """
+        Returns the description of this rule elements and its children as a list.
+
+        Args:
+            part (str): the part to which the element belongs to
+
+        Returns:
+            List (DescriptionEntry)
+        """
+        return [DescriptionEntry(
+            part=part,
+            type="Rule",
+            ruleclass=self.__class__.__name__,
+            id=self.identifier,
+            description=self.get_description())]
+
 
 class RuleGroup(RuleEntity):
     """Class which can manage a group of rule entities"""
@@ -184,3 +222,26 @@ class RuleGroup(RuleEntity):
         """
 
         return self.description
+
+    def collect_description(self, part: str) -> List[DescriptionEntry]:
+        """
+        Returns the description of this rule elements and its children as a list.
+
+        Args:
+            part (str): the part to which the group belongs to
+
+        Returns:
+            List (DescriptionEntry): all description elements of the group and its children
+        """
+        entries: List[DescriptionEntry] = [
+            DescriptionEntry(
+                part=part,
+                type="Group",
+                ruleclass="",
+                id=self.identifier,
+                description=self.get_description())]
+
+        for rule in self.rules:
+            entries.extend(rule.collect_description(part))
+
+        return entries

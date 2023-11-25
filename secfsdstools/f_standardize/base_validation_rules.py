@@ -9,6 +9,8 @@ import numpy as np
 import pandas as pd
 import pandera as pa
 
+from secfsdstools.f_standardize.base_rule_framework import DescriptionEntry
+
 
 class ValidationRule(ABC):
     """
@@ -91,6 +93,23 @@ class ValidationRule(ABC):
             str: description
         """
 
+    def collect_description(self, part: str) -> DescriptionEntry:
+        """
+        Returns the description of this rule elements and its children as a list.
+
+        Args:
+            part (str): the part to which the element belongs to
+
+        Returns:
+            DescriptionEntry
+        """
+        return DescriptionEntry(
+            part=part,
+            type="Validation",
+            ruleclass=self.__class__.__name__,
+            id=self.identifier,
+            description=self.get_description())
+
 
 class SumValidationRule(ValidationRule):
     """
@@ -143,9 +162,8 @@ class SumValidationRule(ValidationRule):
         # subtract the sum of all summands from the sum_tag and make it relatvie by dividing
         # with the sum_tag. finally make the result absolute, so that error is always positive
 
-
         result = ((data_df[self.sum_tag] - data_df[self.summands].sum(axis='columns'))
-                / data_df[self.sum_tag]).abs()
+                  / data_df[self.sum_tag]).abs()
 
         # correct if we did devide by zero
         mask_zero = data_df[self.sum_tag] == 0.0

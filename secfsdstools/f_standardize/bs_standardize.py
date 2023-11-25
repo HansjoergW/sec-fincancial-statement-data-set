@@ -11,7 +11,7 @@ from secfsdstools.f_standardize.standardizing import Standardizer
 
 class BalanceSheetStandardizer(Standardizer):
     """
-    The goal of this Standardizer is to create BalanceSheets that are compareable,
+    The goal of this Standardizer is to create BalanceSheets that are comparable,
     meaning that they have the same tags.
 
     At the end, the standardized BS contains the following columns
@@ -173,7 +173,7 @@ class BalanceSheetStandardizer(Standardizer):
                              ]
 
     # used to evaluate if a report is the main balancesheet report
-    # inside a report, there can be several different tables (different report nr)
+    # inside a report, there can be several tables (different report nr)
     # which stmt value is BS.
     # however, we might be only interested in the "major" BS report. Usually this is the
     # one which has the least nan in the following columns

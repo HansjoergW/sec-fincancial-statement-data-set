@@ -40,7 +40,7 @@ from secfsdstools.f_standardize.standardizing import Standardizer
 
 class BalanceSheetStandardizer(Standardizer):
     &#34;&#34;&#34;
-    The goal of this Standardizer is to create BalanceSheets that are compareable,
+    The goal of this Standardizer is to create BalanceSheets that are comparable,
     meaning that they have the same tags.
 
     At the end, the standardized BS contains the following columns
@@ -202,7 +202,7 @@ class BalanceSheetStandardizer(Standardizer):
                              ]
 
     # used to evaluate if a report is the main balancesheet report
-    # inside a report, there can be several different tables (different report nr)
+    # inside a report, there can be several tables (different report nr)
     # which stmt value is BS.
     # however, we might be only interested in the &#34;major&#34; BS report. Usually this is the
     # one which has the least nan in the following columns
@@ -235,7 +235,7 @@ class BalanceSheetStandardizer(Standardizer):
 <span>(</span><span>filter_for_main_statement: bool = True, iterations: int = 3)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>The goal of this Standardizer is to create BalanceSheets that are compareable,
+<div class="desc"><p>The goal of this Standardizer is to create BalanceSheets that are comparable,
 meaning that they have the same tags.</p>
 <p>At the end, the standardized BS contains the following columns
 Assets
@@ -291,7 +291,7 @@ as negated.</dd>
 </summary>
 <pre><code class="python">class BalanceSheetStandardizer(Standardizer):
     &#34;&#34;&#34;
-    The goal of this Standardizer is to create BalanceSheets that are compareable,
+    The goal of this Standardizer is to create BalanceSheets that are comparable,
     meaning that they have the same tags.
 
     At the end, the standardized BS contains the following columns
@@ -453,7 +453,7 @@ as negated.</dd>
                              ]
 
     # used to evaluate if a report is the main balancesheet report
-    # inside a report, there can be several different tables (different report nr)
+    # inside a report, there can be several tables (different report nr)
     # which stmt value is BS.
     # however, we might be only interested in the &#34;major&#34; BS report. Usually this is the
     # one which has the least nan in the following columns
@@ -518,6 +518,7 @@ as negated.</dd>
 <ul class="hlist">
 <li><code><b><a title="secfsdstools.f_standardize.standardizing.Standardizer" href="standardizing.html#secfsdstools.f_standardize.standardizing.Standardizer">Standardizer</a></b></code>:
 <ul class="hlist">
+<li><code><a title="secfsdstools.f_standardize.standardizing.Standardizer.get_process_description" href="standardizing.html#secfsdstools.f_standardize.standardizing.Standardizer.get_process_description">get_process_description</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.standardizing.Standardizer.process" href="standardizing.html#secfsdstools.f_standardize.standardizing.Standardizer.process">process</a></code></li>
 </ul>
 </li>

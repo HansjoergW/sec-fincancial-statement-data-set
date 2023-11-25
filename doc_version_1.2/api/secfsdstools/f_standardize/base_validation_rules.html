@@ -38,6 +38,8 @@ import numpy as np
 import pandas as pd
 import pandera as pa
 
+from secfsdstools.f_standardize.base_rule_framework import DescriptionEntry
+
 
 class ValidationRule(ABC):
     &#34;&#34;&#34;
@@ -120,6 +122,23 @@ class ValidationRule(ABC):
             str: description
         &#34;&#34;&#34;
 
+    def collect_description(self, part: str) -&gt; DescriptionEntry:
+        &#34;&#34;&#34;
+        Returns the description of this rule elements and its children as a list.
+
+        Args:
+            part (str): the part to which the element belongs to
+
+        Returns:
+            DescriptionEntry
+        &#34;&#34;&#34;
+        return DescriptionEntry(
+            part=part,
+            type=&#34;Validation&#34;,
+            ruleclass=self.__class__.__name__,
+            id=self.identifier,
+            description=self.get_description())
+
 
 class SumValidationRule(ValidationRule):
     &#34;&#34;&#34;
@@ -172,9 +191,8 @@ class SumValidationRule(ValidationRule):
         # subtract the sum of all summands from the sum_tag and make it relatvie by dividing
         # with the sum_tag. finally make the result absolute, so that error is always positive
 
-
         result = ((data_df[self.sum_tag] - data_df[self.summands].sum(axis=&#39;columns&#39;))
-                / data_df[self.sum_tag]).abs()
+                  / data_df[self.sum_tag]).abs()
 
         # correct if we did devide by zero
         mask_zero = data_df[self.sum_tag] == 0.0
@@ -271,9 +289,8 @@ Assets = AssetsCurrent + AssetsNoncurrent is actually true.</p>
         # subtract the sum of all summands from the sum_tag and make it relatvie by dividing
         # with the sum_tag. finally make the result absolute, so that error is always positive
 
-
         result = ((data_df[self.sum_tag] - data_df[self.summands].sum(axis=&#39;columns&#39;))
-                / data_df[self.sum_tag]).abs()
+                  / data_df[self.sum_tag]).abs()
 
         # correct if we did devide by zero
         mask_zero = data_df[self.sum_tag] == 0.0
@@ -342,6 +359,7 @@ are available.</p>
 <li><code><b><a title="secfsdstools.f_standardize.base_validation_rules.ValidationRule" href="#secfsdstools.f_standardize.base_validation_rules.ValidationRule">ValidationRule</a></b></code>:
 <ul class="hlist">
 <li><code><a title="secfsdstools.f_standardize.base_validation_rules.ValidationRule.calculate_error" href="#secfsdstools.f_standardize.base_validation_rules.ValidationRule.calculate_error">calculate_error</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.base_validation_rules.ValidationRule.collect_description" href="#secfsdstools.f_standardize.base_validation_rules.ValidationRule.collect_description">collect_description</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.base_validation_rules.ValidationRule.get_description" href="#secfsdstools.f_standardize.base_validation_rules.ValidationRule.get_description">get_description</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.base_validation_rules.ValidationRule.validate" href="#secfsdstools.f_standardize.base_validation_rules.ValidationRule.validate">validate</a></code></li>
 </ul>
@@ -452,7 +470,24 @@ added to the dataframe.</p>
         Returns the description String
         Returns:
             str: description
-        &#34;&#34;&#34;</code></pre>
+        &#34;&#34;&#34;
+
+    def collect_description(self, part: str) -&gt; DescriptionEntry:
+        &#34;&#34;&#34;
+        Returns the description of this rule elements and its children as a list.
+
+        Args:
+            part (str): the part to which the element belongs to
+
+        Returns:
+            DescriptionEntry
+        &#34;&#34;&#34;
+        return DescriptionEntry(
+            part=part,
+            type=&#34;Validation&#34;,
+            ruleclass=self.__class__.__name__,
+            id=self.identifier,
+            description=self.get_description())</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -497,6 +532,40 @@ def calculate_error(self, data_df: pd.DataFrame, mask: pa.typing.Series[bool]) -
     Returns:
         pa.typing.Series[np.float64]: containing the relative error
     &#34;&#34;&#34;</code></pre>
+</details>
+</dd>
+<dt id="secfsdstools.f_standardize.base_validation_rules.ValidationRule.collect_description"><code class="name flex">
+<span>def <span class="ident">collect_description</span></span>(<span>self, part: str) ‑> <a title="secfsdstools.f_standardize.base_rule_framework.DescriptionEntry" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.DescriptionEntry">DescriptionEntry</a></span>
+</code></dt>
+<dd>
+<div class="desc"><p>Returns the description of this rule elements and its children as a list.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>part</code></strong> :&ensp;<code>str</code></dt>
+<dd>the part to which the element belongs to</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<p>DescriptionEntry</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def collect_description(self, part: str) -&gt; DescriptionEntry:
+    &#34;&#34;&#34;
+    Returns the description of this rule elements and its children as a list.
+
+    Args:
+        part (str): the part to which the element belongs to
+
+    Returns:
+        DescriptionEntry
+    &#34;&#34;&#34;
+    return DescriptionEntry(
+        part=part,
+        type=&#34;Validation&#34;,
+        ruleclass=self.__class__.__name__,
+        id=self.identifier,
+        description=self.get_description())</code></pre>
 </details>
 </dd>
 <dt id="secfsdstools.f_standardize.base_validation_rules.ValidationRule.get_description"><code class="name flex">
@@ -617,6 +686,7 @@ dataframe. <id>_error containing the relative error and <id>_cat containing the 
 <h4><code><a title="secfsdstools.f_standardize.base_validation_rules.ValidationRule" href="#secfsdstools.f_standardize.base_validation_rules.ValidationRule">ValidationRule</a></code></h4>
 <ul class="">
 <li><code><a title="secfsdstools.f_standardize.base_validation_rules.ValidationRule.calculate_error" href="#secfsdstools.f_standardize.base_validation_rules.ValidationRule.calculate_error">calculate_error</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.base_validation_rules.ValidationRule.collect_description" href="#secfsdstools.f_standardize.base_validation_rules.ValidationRule.collect_description">collect_description</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.base_validation_rules.ValidationRule.get_description" href="#secfsdstools.f_standardize.base_validation_rules.ValidationRule.get_description">get_description</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.base_validation_rules.ValidationRule.mask" href="#secfsdstools.f_standardize.base_validation_rules.ValidationRule.mask">mask</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.base_validation_rules.ValidationRule.validate" href="#secfsdstools.f_standardize.base_validation_rules.ValidationRule.validate">validate</a></code></li>

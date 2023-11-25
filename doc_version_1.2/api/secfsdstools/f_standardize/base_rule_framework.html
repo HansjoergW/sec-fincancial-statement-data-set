@@ -35,10 +35,20 @@ a rule hierarchy that then is used in the standardizer.
 &#34;&#34;&#34;
 from abc import ABC
 from abc import abstractmethod
+from dataclasses import dataclass
 from typing import Optional, Set, List
 
 import pandas as pd
 import pandera as pa
+
+
+@dataclass
+class DescriptionEntry:
+    part: str
+    type: str
+    ruleclass: str
+    id: str
+    description: str
 
 
 class RuleEntity(ABC):
@@ -81,6 +91,17 @@ class RuleEntity(ABC):
         Returns the description String
         Returns:
             str: description
+        &#34;&#34;&#34;
+
+    @abstractmethod
+    def collect_description(self, part: str) -&gt; List[DescriptionEntry]:
+        &#34;&#34;&#34;
+        Returns the description of these elements and its children as a list
+
+        Args:
+            part (str): the part to which the element belongs to
+        Returns:
+            List (DescriptionEntry)
         &#34;&#34;&#34;
 
 
@@ -156,6 +177,23 @@ class Rule(RuleEntity):
             log_df[self.identifier] = False
             log_df.loc[mask, self.identifier] = True
 
+    def collect_description(self, part: str) -&gt; List[DescriptionEntry]:
+        &#34;&#34;&#34;
+        Returns the description of this rule elements and its children as a list.
+
+        Args:
+            part (str): the part to which the element belongs to
+
+        Returns:
+            List (DescriptionEntry)
+        &#34;&#34;&#34;
+        return [DescriptionEntry(
+            part=part,
+            type=&#34;Rule&#34;,
+            ruleclass=self.__class__.__name__,
+            id=self.identifier,
+            description=self.get_description())]
+
 
 class RuleGroup(RuleEntity):
     &#34;&#34;&#34;Class which can manage a group of rule entities&#34;&#34;&#34;
@@ -214,7 +252,30 @@ class RuleGroup(RuleEntity):
             str: description
         &#34;&#34;&#34;
 
-        return self.description</code></pre>
+        return self.description
+
+    def collect_description(self, part: str) -&gt; List[DescriptionEntry]:
+        &#34;&#34;&#34;
+        Returns the description of this rule elements and its children as a list.
+
+        Args:
+            part (str): the part to which the group belongs to
+
+        Returns:
+            List (DescriptionEntry): all description elements of the group and its children
+        &#34;&#34;&#34;
+        entries: List[DescriptionEntry] = [
+            DescriptionEntry(
+                part=part,
+                type=&#34;Group&#34;,
+                ruleclass=&#34;&#34;,
+                id=self.identifier,
+                description=self.get_description())]
+
+        for rule in self.rules:
+            entries.extend(rule.collect_description(part))
+
+        return entries</code></pre>
 </details>
 </section>
 <section>
@@ -226,6 +287,47 @@ class RuleGroup(RuleEntity):
 <section>
 <h2 class="section-title" id="header-classes">Classes</h2>
 <dl>
+<dt id="secfsdstools.f_standardize.base_rule_framework.DescriptionEntry"><code class="flex name class">
+<span>class <span class="ident">DescriptionEntry</span></span>
+<span>(</span><span>part: str, type: str, ruleclass: str, id: str, description: str)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>DescriptionEntry(part: str, type: str, ruleclass: str, id: str, description: str)</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class DescriptionEntry:
+    part: str
+    type: str
+    ruleclass: str
+    id: str
+    description: str</code></pre>
+</details>
+<h3>Class variables</h3>
+<dl>
+<dt id="secfsdstools.f_standardize.base_rule_framework.DescriptionEntry.description"><code class="name">var <span class="ident">description</span> : str</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="secfsdstools.f_standardize.base_rule_framework.DescriptionEntry.id"><code class="name">var <span class="ident">id</span> : str</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="secfsdstools.f_standardize.base_rule_framework.DescriptionEntry.part"><code class="name">var <span class="ident">part</span> : str</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="secfsdstools.f_standardize.base_rule_framework.DescriptionEntry.ruleclass"><code class="name">var <span class="ident">ruleclass</span> : str</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="secfsdstools.f_standardize.base_rule_framework.DescriptionEntry.type"><code class="name">var <span class="ident">type</span> : str</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+</dd>
 <dt id="secfsdstools.f_standardize.base_rule_framework.Rule"><code class="flex name class">
 <span>class <span class="ident">Rule</span></span>
 </code></dt>
@@ -305,7 +407,24 @@ class RuleGroup(RuleEntity):
         # affected by the rule
         if (log_df is not None) and (len(log_df) == len(mask)):
             log_df[self.identifier] = False
-            log_df.loc[mask, self.identifier] = True</code></pre>
+            log_df.loc[mask, self.identifier] = True
+
+    def collect_description(self, part: str) -&gt; List[DescriptionEntry]:
+        &#34;&#34;&#34;
+        Returns the description of this rule elements and its children as a list.
+
+        Args:
+            part (str): the part to which the element belongs to
+
+        Returns:
+            List (DescriptionEntry)
+        &#34;&#34;&#34;
+        return [DescriptionEntry(
+            part=part,
+            type=&#34;Rule&#34;,
+            ruleclass=self.__class__.__name__,
+            id=self.identifier,
+            description=self.get_description())]</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -362,6 +481,40 @@ def apply(self, data_df: pd.DataFrame, mask: pa.typing.Series[bool]):
         data_df: dataframe on which the rule has to be applied
         mask: a Series marking the rows in the dataframe on which the rule has to be applied
     &#34;&#34;&#34;</code></pre>
+</details>
+</dd>
+<dt id="secfsdstools.f_standardize.base_rule_framework.Rule.collect_description"><code class="name flex">
+<span>def <span class="ident">collect_description</span></span>(<span>self, part: str) ‑> List[<a title="secfsdstools.f_standardize.base_rule_framework.DescriptionEntry" href="#secfsdstools.f_standardize.base_rule_framework.DescriptionEntry">DescriptionEntry</a>]</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Returns the description of this rule elements and its children as a list.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>part</code></strong> :&ensp;<code>str</code></dt>
+<dd>the part to which the element belongs to</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<p>List (DescriptionEntry)</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def collect_description(self, part: str) -&gt; List[DescriptionEntry]:
+    &#34;&#34;&#34;
+    Returns the description of this rule elements and its children as a list.
+
+    Args:
+        part (str): the part to which the element belongs to
+
+    Returns:
+        List (DescriptionEntry)
+    &#34;&#34;&#34;
+    return [DescriptionEntry(
+        part=part,
+        type=&#34;Rule&#34;,
+        ruleclass=self.__class__.__name__,
+        id=self.identifier,
+        description=self.get_description())]</code></pre>
 </details>
 </dd>
 <dt id="secfsdstools.f_standardize.base_rule_framework.Rule.get_target_tags"><code class="name flex">
@@ -540,6 +693,17 @@ the rule is applied to is added to the log_df.</p>
         Returns the description String
         Returns:
             str: description
+        &#34;&#34;&#34;
+
+    @abstractmethod
+    def collect_description(self, part: str) -&gt; List[DescriptionEntry]:
+        &#34;&#34;&#34;
+        Returns the description of these elements and its children as a list
+
+        Args:
+            part (str): the part to which the element belongs to
+        Returns:
+            List (DescriptionEntry)
         &#34;&#34;&#34;</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -560,6 +724,34 @@ the rule is applied to is added to the log_df.</p>
 </dl>
 <h3>Methods</h3>
 <dl>
+<dt id="secfsdstools.f_standardize.base_rule_framework.RuleEntity.collect_description"><code class="name flex">
+<span>def <span class="ident">collect_description</span></span>(<span>self, part: str) ‑> List[<a title="secfsdstools.f_standardize.base_rule_framework.DescriptionEntry" href="#secfsdstools.f_standardize.base_rule_framework.DescriptionEntry">DescriptionEntry</a>]</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Returns the description of these elements and its children as a list</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>part</code></strong> :&ensp;<code>str</code></dt>
+<dd>the part to which the element belongs to</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<p>List (DescriptionEntry)</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@abstractmethod
+def collect_description(self, part: str) -&gt; List[DescriptionEntry]:
+    &#34;&#34;&#34;
+    Returns the description of these elements and its children as a list
+
+    Args:
+        part (str): the part to which the element belongs to
+    Returns:
+        List (DescriptionEntry)
+    &#34;&#34;&#34;</code></pre>
+</details>
+</dd>
 <dt id="secfsdstools.f_standardize.base_rule_framework.RuleEntity.get_description"><code class="name flex">
 <span>def <span class="ident">get_description</span></span>(<span>self) ‑> str</span>
 </code></dt>
@@ -741,7 +933,30 @@ def set_id(self, prefix: str):
             str: description
         &#34;&#34;&#34;
 
-        return self.description</code></pre>
+        return self.description
+
+    def collect_description(self, part: str) -&gt; List[DescriptionEntry]:
+        &#34;&#34;&#34;
+        Returns the description of this rule elements and its children as a list.
+
+        Args:
+            part (str): the part to which the group belongs to
+
+        Returns:
+            List (DescriptionEntry): all description elements of the group and its children
+        &#34;&#34;&#34;
+        entries: List[DescriptionEntry] = [
+            DescriptionEntry(
+                part=part,
+                type=&#34;Group&#34;,
+                ruleclass=&#34;&#34;,
+                id=self.identifier,
+                description=self.get_description())]
+
+        for rule in self.rules:
+            entries.extend(rule.collect_description(part))
+
+        return entries</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -757,6 +972,46 @@ def set_id(self, prefix: str):
 </dl>
 <h3>Methods</h3>
 <dl>
+<dt id="secfsdstools.f_standardize.base_rule_framework.RuleGroup.collect_description"><code class="name flex">
+<span>def <span class="ident">collect_description</span></span>(<span>self, part: str) ‑> List[<a title="secfsdstools.f_standardize.base_rule_framework.DescriptionEntry" href="#secfsdstools.f_standardize.base_rule_framework.DescriptionEntry">DescriptionEntry</a>]</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Returns the description of this rule elements and its children as a list.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>part</code></strong> :&ensp;<code>str</code></dt>
+<dd>the part to which the group belongs to</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<p>List (DescriptionEntry): all description elements of the group and its children</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def collect_description(self, part: str) -&gt; List[DescriptionEntry]:
+    &#34;&#34;&#34;
+    Returns the description of this rule elements and its children as a list.
+
+    Args:
+        part (str): the part to which the group belongs to
+
+    Returns:
+        List (DescriptionEntry): all description elements of the group and its children
+    &#34;&#34;&#34;
+    entries: List[DescriptionEntry] = [
+        DescriptionEntry(
+            part=part,
+            type=&#34;Group&#34;,
+            ruleclass=&#34;&#34;,
+            id=self.identifier,
+            description=self.get_description())]
+
+    for rule in self.rules:
+        entries.extend(rule.collect_description(part))
+
+    return entries</code></pre>
+</details>
+</dd>
 <dt id="secfsdstools.f_standardize.base_rule_framework.RuleGroup.get_input_tags"><code class="name flex">
 <span>def <span class="ident">get_input_tags</span></span>(<span>self) ‑> Set[str]</span>
 </code></dt>
@@ -867,9 +1122,20 @@ If a log_df is provided, the rows on which the rule is applied to is added to th
 <li><h3><a href="#header-classes">Classes</a></h3>
 <ul>
 <li>
+<h4><code><a title="secfsdstools.f_standardize.base_rule_framework.DescriptionEntry" href="#secfsdstools.f_standardize.base_rule_framework.DescriptionEntry">DescriptionEntry</a></code></h4>
+<ul class="">
+<li><code><a title="secfsdstools.f_standardize.base_rule_framework.DescriptionEntry.description" href="#secfsdstools.f_standardize.base_rule_framework.DescriptionEntry.description">description</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.base_rule_framework.DescriptionEntry.id" href="#secfsdstools.f_standardize.base_rule_framework.DescriptionEntry.id">id</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.base_rule_framework.DescriptionEntry.part" href="#secfsdstools.f_standardize.base_rule_framework.DescriptionEntry.part">part</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.base_rule_framework.DescriptionEntry.ruleclass" href="#secfsdstools.f_standardize.base_rule_framework.DescriptionEntry.ruleclass">ruleclass</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.base_rule_framework.DescriptionEntry.type" href="#secfsdstools.f_standardize.base_rule_framework.DescriptionEntry.type">type</a></code></li>
+</ul>
+</li>
+<li>
 <h4><code><a title="secfsdstools.f_standardize.base_rule_framework.Rule" href="#secfsdstools.f_standardize.base_rule_framework.Rule">Rule</a></code></h4>
 <ul class="two-column">
 <li><code><a title="secfsdstools.f_standardize.base_rule_framework.Rule.apply" href="#secfsdstools.f_standardize.base_rule_framework.Rule.apply">apply</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.base_rule_framework.Rule.collect_description" href="#secfsdstools.f_standardize.base_rule_framework.Rule.collect_description">collect_description</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.base_rule_framework.Rule.get_target_tags" href="#secfsdstools.f_standardize.base_rule_framework.Rule.get_target_tags">get_target_tags</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.base_rule_framework.Rule.get_target_tags_str" href="#secfsdstools.f_standardize.base_rule_framework.Rule.get_target_tags_str">get_target_tags_str</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.base_rule_framework.Rule.identifier" href="#secfsdstools.f_standardize.base_rule_framework.Rule.identifier">identifier</a></code></li>
@@ -879,7 +1145,8 @@ If a log_df is provided, the rows on which the rule is applied to is added to th
 </li>
 <li>
 <h4><code><a title="secfsdstools.f_standardize.base_rule_framework.RuleEntity" href="#secfsdstools.f_standardize.base_rule_framework.RuleEntity">RuleEntity</a></code></h4>
-<ul class="">
+<ul class="two-column">
+<li><code><a title="secfsdstools.f_standardize.base_rule_framework.RuleEntity.collect_description" href="#secfsdstools.f_standardize.base_rule_framework.RuleEntity.collect_description">collect_description</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.base_rule_framework.RuleEntity.get_description" href="#secfsdstools.f_standardize.base_rule_framework.RuleEntity.get_description">get_description</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.base_rule_framework.RuleEntity.get_input_tags" href="#secfsdstools.f_standardize.base_rule_framework.RuleEntity.get_input_tags">get_input_tags</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.base_rule_framework.RuleEntity.identifier" href="#secfsdstools.f_standardize.base_rule_framework.RuleEntity.identifier">identifier</a></code></li>
@@ -890,6 +1157,7 @@ If a log_df is provided, the rows on which the rule is applied to is added to th
 <li>
 <h4><code><a title="secfsdstools.f_standardize.base_rule_framework.RuleGroup" href="#secfsdstools.f_standardize.base_rule_framework.RuleGroup">RuleGroup</a></code></h4>
 <ul class="">
+<li><code><a title="secfsdstools.f_standardize.base_rule_framework.RuleGroup.collect_description" href="#secfsdstools.f_standardize.base_rule_framework.RuleGroup.collect_description">collect_description</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.base_rule_framework.RuleGroup.get_input_tags" href="#secfsdstools.f_standardize.base_rule_framework.RuleGroup.get_input_tags">get_input_tags</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.base_rule_framework.RuleGroup.identifier" href="#secfsdstools.f_standardize.base_rule_framework.RuleGroup.identifier">identifier</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.base_rule_framework.RuleGroup.process" href="#secfsdstools.f_standardize.base_rule_framework.RuleGroup.process">process</a></code></li>

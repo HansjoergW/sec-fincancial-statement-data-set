@@ -34,7 +34,7 @@ from typing import List, Optional, Set
 import numpy as np
 import pandas as pd
 
-from secfsdstools.f_standardize.base_rule_framework import RuleGroup
+from secfsdstools.f_standardize.base_rule_framework import RuleGroup, DescriptionEntry
 from secfsdstools.f_standardize.base_validation_rules import ValidationRule
 
 
@@ -310,7 +310,27 @@ class Standardizer:
         self._main_processing(ready_df)
         self._post_processing(ready_df)
 
-        return self._finalize(ready_df)</code></pre>
+        return self._finalize(ready_df)
+
+    def get_process_description(self) -&gt; pd.DataFrame:
+        &#34;&#34;&#34;
+            returns the description of the applied rules as a table in a pandas dataframe
+        Returns:
+            pd.DataFrame: a table with the description of the applied rules
+        &#34;&#34;&#34;
+
+        all_descriptions: List[DescriptionEntry] = []
+
+        self.pre_rule_tree.set_id(&#34;PRE&#34;)
+        all_descriptions.extend(self.pre_rule_tree.collect_description(&#34;PRE&#34;))
+        self.main_rule_tree.set_id(&#34;MAIN&#34;)
+        all_descriptions.extend(self.main_rule_tree.collect_description(&#34;MAIN&#34;))
+        self.post_rule_tree.set_id(&#34;POST&#34;)
+        all_descriptions.extend(self.post_rule_tree.collect_description(&#34;POST&#34;))
+
+        all_descriptions.extend([vr.collect_description(&#34;VALID&#34;) for vr in self.validation_rules])
+
+        return pd.DataFrame(all_descriptions)</code></pre>
 </details>
 </section>
 <section>
@@ -569,7 +589,27 @@ as negated.</dd>
         self._main_processing(ready_df)
         self._post_processing(ready_df)
 
-        return self._finalize(ready_df)</code></pre>
+        return self._finalize(ready_df)
+
+    def get_process_description(self) -&gt; pd.DataFrame:
+        &#34;&#34;&#34;
+            returns the description of the applied rules as a table in a pandas dataframe
+        Returns:
+            pd.DataFrame: a table with the description of the applied rules
+        &#34;&#34;&#34;
+
+        all_descriptions: List[DescriptionEntry] = []
+
+        self.pre_rule_tree.set_id(&#34;PRE&#34;)
+        all_descriptions.extend(self.pre_rule_tree.collect_description(&#34;PRE&#34;))
+        self.main_rule_tree.set_id(&#34;MAIN&#34;)
+        all_descriptions.extend(self.main_rule_tree.collect_description(&#34;MAIN&#34;))
+        self.post_rule_tree.set_id(&#34;POST&#34;)
+        all_descriptions.extend(self.post_rule_tree.collect_description(&#34;POST&#34;))
+
+        all_descriptions.extend([vr.collect_description(&#34;VALID&#34;) for vr in self.validation_rules])
+
+        return pd.DataFrame(all_descriptions)</code></pre>
 </details>
 <h3>Subclasses</h3>
 <ul class="hlist">
@@ -584,6 +624,41 @@ as negated.</dd>
 </dl>
 <h3>Methods</h3>
 <dl>
+<dt id="secfsdstools.f_standardize.standardizing.Standardizer.get_process_description"><code class="name flex">
+<span>def <span class="ident">get_process_description</span></span>(<span>self) ‑> pandas.core.frame.DataFrame</span>
+</code></dt>
+<dd>
+<div class="desc"><p>returns the description of the applied rules as a table in a pandas dataframe</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>pd.DataFrame</code></dt>
+<dd>a table with the description of the applied rules</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_process_description(self) -&gt; pd.DataFrame:
+    &#34;&#34;&#34;
+        returns the description of the applied rules as a table in a pandas dataframe
+    Returns:
+        pd.DataFrame: a table with the description of the applied rules
+    &#34;&#34;&#34;
+
+    all_descriptions: List[DescriptionEntry] = []
+
+    self.pre_rule_tree.set_id(&#34;PRE&#34;)
+    all_descriptions.extend(self.pre_rule_tree.collect_description(&#34;PRE&#34;))
+    self.main_rule_tree.set_id(&#34;MAIN&#34;)
+    all_descriptions.extend(self.main_rule_tree.collect_description(&#34;MAIN&#34;))
+    self.post_rule_tree.set_id(&#34;POST&#34;)
+    all_descriptions.extend(self.post_rule_tree.collect_description(&#34;POST&#34;))
+
+    all_descriptions.extend([vr.collect_description(&#34;VALID&#34;) for vr in self.validation_rules])
+
+    return pd.DataFrame(all_descriptions)</code></pre>
+</details>
+</dd>
 <dt id="secfsdstools.f_standardize.standardizing.Standardizer.process"><code class="name flex">
 <span>def <span class="ident">process</span></span>(<span>self, data_df: pandas.core.frame.DataFrame) ‑> pandas.core.frame.DataFrame</span>
 </code></dt>
@@ -823,6 +898,7 @@ to the previous step.</p></div>
 <li>
 <h4><code><a title="secfsdstools.f_standardize.standardizing.Standardizer" href="#secfsdstools.f_standardize.standardizing.Standardizer">Standardizer</a></code></h4>
 <ul class="">
+<li><code><a title="secfsdstools.f_standardize.standardizing.Standardizer.get_process_description" href="#secfsdstools.f_standardize.standardizing.Standardizer.get_process_description">get_process_description</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.standardizing.Standardizer.identifier_tags" href="#secfsdstools.f_standardize.standardizing.Standardizer.identifier_tags">identifier_tags</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.standardizing.Standardizer.process" href="#secfsdstools.f_standardize.standardizing.Standardizer.process">process</a></code></li>
 </ul>

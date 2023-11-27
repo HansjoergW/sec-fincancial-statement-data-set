@@ -13,10 +13,12 @@ import pandera as pa
 
 @dataclass
 class DescriptionEntry:
+    """ Dataclass used to collect the rule descriptions and to create the
+    process descrption table. """
     part: str
     type: str
     ruleclass: str
-    id: str
+    identifier: str
     description: str
 
 
@@ -160,7 +162,7 @@ class Rule(RuleEntity):
             part=part,
             type="Rule",
             ruleclass=self.__class__.__name__,
-            id=self.identifier,
+            identifier=self.identifier,
             description=self.get_description())]
 
 
@@ -238,7 +240,7 @@ class RuleGroup(RuleEntity):
                 part=part,
                 type="Group",
                 ruleclass="",
-                id=self.identifier,
+                identifier=self.identifier,
                 description=self.get_description())]
 
         for rule in self.rules:

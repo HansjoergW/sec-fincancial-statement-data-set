@@ -107,7 +107,7 @@ class ValidationRule(ABC):
             part=part,
             type="Validation",
             ruleclass=self.__class__.__name__,
-            id=self.identifier,
+            identifier=self.identifier,
             description=self.get_description())
 
 

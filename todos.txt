@@ -10,14 +10,11 @@ New Release
 - adapt releases in project.toml
 - merge back into main
 
-v.1.1.0
-- API Changes
-  - zipcollecting has now a factory method that can load multiple zip files as one
-  - zipcollecting has now a factory method that can load all zip files at one
-- New
-  - Filter for official tags only -> company specific tags
-  - RawDataBag / JoinedDataBag have now copy_bag method
-  - Zipcollector factory method new filter "post_load_filter"
+v.1.2.0
+- USDOnlyFilter
+- Alle Filter auch für Joined
+- Notebook: Bulk Processing -> einen grossen Datensatz für BS
+
 
 
 

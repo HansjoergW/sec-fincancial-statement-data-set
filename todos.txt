@@ -18,7 +18,8 @@ New
 - bulk processing examples
 
 todo:
-- summary description -> als Tabelle, als markdown?
+- evtl. sollte jede Regel noch eine "Explanation" bekommen. Ein Text, der die Regel spezifisch erklärt,
+  nicht allgemein wie in description.
 
 
 Next:

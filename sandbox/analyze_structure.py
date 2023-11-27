@@ -5,8 +5,8 @@ import pandas as pd
 from secfsdstools.d_container.databagmodel import JoinedDataBag
 from secfsdstools.e_collector.reportcollecting import SingleReportCollector
 from secfsdstools.e_collector.zipcollecting import ZipCollector
-from secfsdstools.e_filter.joinedfiltering import USDonlyFilter as USDonlyJoined
-from secfsdstools.e_filter.rawfiltering import ReportPeriodRawFilter, MainCoregFilter, USDonlyFilter
+from secfsdstools.e_filter.joinedfiltering import USDOnlyFilter as USDonlyJoined
+from secfsdstools.e_filter.rawfiltering import ReportPeriodRawFilter, MainCoregFilter, USDOnlyFilter
 from secfsdstools.f_standardize.bs_standardize import BalanceSheetStandardizer
 
 apple_10k_2017 = "0000320193-17-000070"
@@ -26,7 +26,7 @@ def get_fs_from_all_bs() -> pd.DataFrame:
 def get_fs_from_single_report(adsh: str) -> pd.DataFrame:
     reader = SingleReportCollector.get_report_by_adsh(adsh=adsh, stmt_filter=['BS'])
     return reader.collect()[MainCoregFilter()][ReportPeriodRawFilter()][
-        USDonlyFilter()].join().get_pre_num_copy()
+        USDOnlyFilter()].join().get_pre_num_copy()
 
 
 def get_uniques_col(df: pd.DataFrame, col: str) -> List[str]:

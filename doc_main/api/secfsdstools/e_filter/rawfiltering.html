@@ -185,7 +185,7 @@ class TagRawFilter(FilterBase[RawDataBag]):
                                  num_df=num_filtered_for_tags)
 
 
-class MainCoregFilter(FilterBase[RawDataBag]):
+class MainCoregRawFilter(FilterBase[RawDataBag]):
     &#34;&#34;&#34;
     Filters only for the main coreg entries (coreg == &#39;&#39;)
     &#34;&#34;&#34;
@@ -207,7 +207,7 @@ class MainCoregFilter(FilterBase[RawDataBag]):
                                  num_df=num_filtered_for_main_coreg)
 
 
-class OfficialTagsOnlyFilter(FilterBase[RawDataBag]):
+class OfficialTagsOnlyRawFilter(FilterBase[RawDataBag]):
     &#34;&#34;&#34;
     Filters only the official tags. These are the tags that contain an official XBRL version
     within the version column. &#34;inofficial&#34; (resp. company specific) tags are identified with
@@ -232,7 +232,7 @@ class OfficialTagsOnlyFilter(FilterBase[RawDataBag]):
                                  num_df=num_filtered_for_tags)
 
 
-class USDOnlyFilter(FilterBase[RawDataBag]):
+class USDOnlyRawFilter(FilterBase[RawDataBag]):
     &#34;&#34;&#34;
     Removes all entries which have a currency in the column uom that is not USD.
     &#34;&#34;&#34;
@@ -350,8 +350,8 @@ are contained.</p>
 </dd>
 </dl>
 </dd>
-<dt id="secfsdstools.e_filter.rawfiltering.MainCoregFilter"><code class="flex name class">
-<span>class <span class="ident">MainCoregFilter</span></span>
+<dt id="secfsdstools.e_filter.rawfiltering.MainCoregRawFilter"><code class="flex name class">
+<span>class <span class="ident">MainCoregRawFilter</span></span>
 <span>(</span><span>*args, **kwds)</span>
 </code></dt>
 <dd>
@@ -360,7 +360,7 @@ are contained.</p>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class MainCoregFilter(FilterBase[RawDataBag]):
+<pre><code class="python">class MainCoregRawFilter(FilterBase[RawDataBag]):
     &#34;&#34;&#34;
     Filters only for the main coreg entries (coreg == &#39;&#39;)
     &#34;&#34;&#34;
@@ -388,7 +388,7 @@ are contained.</p>
 </ul>
 <h3>Methods</h3>
 <dl>
-<dt id="secfsdstools.e_filter.rawfiltering.MainCoregFilter.filter"><code class="name flex">
+<dt id="secfsdstools.e_filter.rawfiltering.MainCoregRawFilter.filter"><code class="name flex">
 <span>def <span class="ident">filter</span></span>(<span>self, databag: <a title="secfsdstools.d_container.databagmodel.RawDataBag" href="../d_container/databagmodel.html#secfsdstools.d_container.databagmodel.RawDataBag">RawDataBag</a>) ‑> <a title="secfsdstools.d_container.databagmodel.RawDataBag" href="../d_container/databagmodel.html#secfsdstools.d_container.databagmodel.RawDataBag">RawDataBag</a></span>
 </code></dt>
 <dd>
@@ -424,8 +424,8 @@ are contained.</p>
 </dd>
 </dl>
 </dd>
-<dt id="secfsdstools.e_filter.rawfiltering.OfficialTagsOnlyFilter"><code class="flex name class">
-<span>class <span class="ident">OfficialTagsOnlyFilter</span></span>
+<dt id="secfsdstools.e_filter.rawfiltering.OfficialTagsOnlyRawFilter"><code class="flex name class">
+<span>class <span class="ident">OfficialTagsOnlyRawFilter</span></span>
 <span>(</span><span>*args, **kwds)</span>
 </code></dt>
 <dd>
@@ -436,7 +436,7 @@ the version column containing the value of the adsh.</p></div>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class OfficialTagsOnlyFilter(FilterBase[RawDataBag]):
+<pre><code class="python">class OfficialTagsOnlyRawFilter(FilterBase[RawDataBag]):
     &#34;&#34;&#34;
     Filters only the official tags. These are the tags that contain an official XBRL version
     within the version column. &#34;inofficial&#34; (resp. company specific) tags are identified with
@@ -467,7 +467,7 @@ the version column containing the value of the adsh.</p></div>
 </ul>
 <h3>Methods</h3>
 <dl>
-<dt id="secfsdstools.e_filter.rawfiltering.OfficialTagsOnlyFilter.filter"><code class="name flex">
+<dt id="secfsdstools.e_filter.rawfiltering.OfficialTagsOnlyRawFilter.filter"><code class="name flex">
 <span>def <span class="ident">filter</span></span>(<span>self, databag: <a title="secfsdstools.d_container.databagmodel.RawDataBag" href="../d_container/databagmodel.html#secfsdstools.d_container.databagmodel.RawDataBag">RawDataBag</a>) ‑> <a title="secfsdstools.d_container.databagmodel.RawDataBag" href="../d_container/databagmodel.html#secfsdstools.d_container.databagmodel.RawDataBag">RawDataBag</a></span>
 </code></dt>
 <dd>
@@ -852,8 +852,8 @@ that is in the provided list.</p>
 </dd>
 </dl>
 </dd>
-<dt id="secfsdstools.e_filter.rawfiltering.USDOnlyFilter"><code class="flex name class">
-<span>class <span class="ident">USDOnlyFilter</span></span>
+<dt id="secfsdstools.e_filter.rawfiltering.USDOnlyRawFilter"><code class="flex name class">
+<span>class <span class="ident">USDOnlyRawFilter</span></span>
 <span>(</span><span>*args, **kwds)</span>
 </code></dt>
 <dd>
@@ -862,7 +862,7 @@ that is in the provided list.</p>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class USDOnlyFilter(FilterBase[RawDataBag]):
+<pre><code class="python">class USDOnlyRawFilter(FilterBase[RawDataBag]):
     &#34;&#34;&#34;
     Removes all entries which have a currency in the column uom that is not USD.
     &#34;&#34;&#34;
@@ -894,7 +894,7 @@ that is in the provided list.</p>
 </ul>
 <h3>Methods</h3>
 <dl>
-<dt id="secfsdstools.e_filter.rawfiltering.USDOnlyFilter.filter"><code class="name flex">
+<dt id="secfsdstools.e_filter.rawfiltering.USDOnlyRawFilter.filter"><code class="name flex">
 <span>def <span class="ident">filter</span></span>(<span>self, databag: <a title="secfsdstools.d_container.databagmodel.RawDataBag" href="../d_container/databagmodel.html#secfsdstools.d_container.databagmodel.RawDataBag">RawDataBag</a>) ‑> <a title="secfsdstools.d_container.databagmodel.RawDataBag" href="../d_container/databagmodel.html#secfsdstools.d_container.databagmodel.RawDataBag">RawDataBag</a></span>
 </code></dt>
 <dd>
@@ -956,15 +956,15 @@ that is in the provided list.</p>
 </ul>
 </li>
 <li>
-<h4><code><a title="secfsdstools.e_filter.rawfiltering.MainCoregFilter" href="#secfsdstools.e_filter.rawfiltering.MainCoregFilter">MainCoregFilter</a></code></h4>
+<h4><code><a title="secfsdstools.e_filter.rawfiltering.MainCoregRawFilter" href="#secfsdstools.e_filter.rawfiltering.MainCoregRawFilter">MainCoregRawFilter</a></code></h4>
 <ul class="">
-<li><code><a title="secfsdstools.e_filter.rawfiltering.MainCoregFilter.filter" href="#secfsdstools.e_filter.rawfiltering.MainCoregFilter.filter">filter</a></code></li>
+<li><code><a title="secfsdstools.e_filter.rawfiltering.MainCoregRawFilter.filter" href="#secfsdstools.e_filter.rawfiltering.MainCoregRawFilter.filter">filter</a></code></li>
 </ul>
 </li>
 <li>
-<h4><code><a title="secfsdstools.e_filter.rawfiltering.OfficialTagsOnlyFilter" href="#secfsdstools.e_filter.rawfiltering.OfficialTagsOnlyFilter">OfficialTagsOnlyFilter</a></code></h4>
+<h4><code><a title="secfsdstools.e_filter.rawfiltering.OfficialTagsOnlyRawFilter" href="#secfsdstools.e_filter.rawfiltering.OfficialTagsOnlyRawFilter">OfficialTagsOnlyRawFilter</a></code></h4>
 <ul class="">
-<li><code><a title="secfsdstools.e_filter.rawfiltering.OfficialTagsOnlyFilter.filter" href="#secfsdstools.e_filter.rawfiltering.OfficialTagsOnlyFilter.filter">filter</a></code></li>
+<li><code><a title="secfsdstools.e_filter.rawfiltering.OfficialTagsOnlyRawFilter.filter" href="#secfsdstools.e_filter.rawfiltering.OfficialTagsOnlyRawFilter.filter">filter</a></code></li>
 </ul>
 </li>
 <li>
@@ -992,9 +992,9 @@ that is in the provided list.</p>
 </ul>
 </li>
 <li>
-<h4><code><a title="secfsdstools.e_filter.rawfiltering.USDOnlyFilter" href="#secfsdstools.e_filter.rawfiltering.USDOnlyFilter">USDOnlyFilter</a></code></h4>
+<h4><code><a title="secfsdstools.e_filter.rawfiltering.USDOnlyRawFilter" href="#secfsdstools.e_filter.rawfiltering.USDOnlyRawFilter">USDOnlyRawFilter</a></code></h4>
 <ul class="">
-<li><code><a title="secfsdstools.e_filter.rawfiltering.USDOnlyFilter.filter" href="#secfsdstools.e_filter.rawfiltering.USDOnlyFilter.filter">filter</a></code></li>
+<li><code><a title="secfsdstools.e_filter.rawfiltering.USDOnlyRawFilter.filter" href="#secfsdstools.e_filter.rawfiltering.USDOnlyRawFilter.filter">filter</a></code></li>
 </ul>
 </li>
 </ul>

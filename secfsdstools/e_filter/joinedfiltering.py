@@ -10,7 +10,7 @@ from secfsdstools.d_container.databagmodel import JoinedDataBag
 from secfsdstools.d_container.filter import FilterBase
 
 
-class AdshRawFilter(FilterBase[JoinedDataBag]):
+class AdshJoinedFilter(FilterBase[JoinedDataBag]):
     """
     Filters the data by a list of adshs. This filter operates on the sub, pre_df and the num_df.
     """
@@ -36,7 +36,7 @@ class AdshRawFilter(FilterBase[JoinedDataBag]):
                                     pre_num_df=pre_num_filtered_for_adshs)
 
 
-class StmtRawFilter(FilterBase[JoinedDataBag]):
+class StmtJoinedFilter(FilterBase[JoinedDataBag]):
     """
     Filters the data by a list of statement type (BS, IS, CF, ...).
     This filter operates on the pre_df.
@@ -51,10 +51,10 @@ class StmtRawFilter(FilterBase[JoinedDataBag]):
         are contained.
 
         Args:
-            databag(RawDataBag) : rawdatabag to apply the filter to
+            databag(JoinedDataBag) : Joineddatabag to apply the filter to
 
         Returns:
-            RawDataBag: the databag with the filtered data
+            JoinedDataBag: the databag with the filtered data
         """
         pre_num_filtered_for_stmts = databag.pre_num_df[databag.pre_num_df.stmt.isin(self.stmts)]
 
@@ -62,7 +62,7 @@ class StmtRawFilter(FilterBase[JoinedDataBag]):
                                     pre_num_df=pre_num_filtered_for_stmts)
 
 
-class ReportPeriodRawFilter(FilterBase[JoinedDataBag]):
+class ReportPeriodJoinedFilter(FilterBase[JoinedDataBag]):
     """
     Filters the data so that only datapoints are contained which ddate-attribute equals the
     period date of the report. Therefore, the filter operates on the num_df dataframe.
@@ -89,7 +89,7 @@ class ReportPeriodRawFilter(FilterBase[JoinedDataBag]):
                                     pre_num_df=pre_num_filtered_for_ddates)
 
 
-class ReportPeriodAndPreviousPeriodRawFilter(FilterBase[JoinedDataBag]):
+class ReportPeriodAndPreviousPeriodJoinedFilter(FilterBase[JoinedDataBag]):
     """
     Filters the data so that only datapoints are contained which ddate-attribute equals the
     period date of the report or the period date of the previous (a year ago) report.
@@ -125,7 +125,7 @@ class ReportPeriodAndPreviousPeriodRawFilter(FilterBase[JoinedDataBag]):
                                     pre_num_df=pre_num_filtered_for_ddates)
 
 
-class TagRawFilter(FilterBase[JoinedDataBag]):
+class TagJoinedFilter(FilterBase[JoinedDataBag]):
     """
     Filters the data by a list of tags. This filter operates on the pre_df and the num_df.
     """
@@ -149,7 +149,7 @@ class TagRawFilter(FilterBase[JoinedDataBag]):
                                     pre_num_df=pre_num_filtered_for_tags)
 
 
-class MainCoregFilter(FilterBase[JoinedDataBag]):
+class MainCoregJoinedFilter(FilterBase[JoinedDataBag]):
     """
     Filters only for the main coreg entries (coreg == '')
     """
@@ -170,7 +170,7 @@ class MainCoregFilter(FilterBase[JoinedDataBag]):
                                     pre_num_df=pre_num_filtered_for_main_coreg)
 
 
-class OfficialTagsOnlyFilter(FilterBase[JoinedDataBag]):
+class OfficialTagsOnlyJoinedFilter(FilterBase[JoinedDataBag]):
     """
     Filters only the official tags. These are the tags that contain an official XBRL version
     within the version column. "inofficial" (resp. company specific) tags are identified with
@@ -194,7 +194,7 @@ class OfficialTagsOnlyFilter(FilterBase[JoinedDataBag]):
                                     pre_num_df=pre_num_filtered_for_tags)
 
 
-class USDOnlyFilter(FilterBase[JoinedDataBag]):
+class USDOnlyJoinedFilter(FilterBase[JoinedDataBag]):
     """
     Removes all entries which have a currency in the column uom that is not USD.
     """
@@ -204,10 +204,10 @@ class USDOnlyFilter(FilterBase[JoinedDataBag]):
         Removes all currency entries in the uom colum of the pre_num_df that are not USD.
 
         Args:
-            databag(RawDataBag) : rawdatabag to apply the filter to
+            databag(JoinedDataBag) : Joineddatabag to apply the filter to
 
         Returns:
-            RawDataBag: the databag with the filtered data
+            JoinedDataBag: the databag with the filtered data
 
         """
         mask_non_currency = databag.pre_num_df.uom.str.len() > 3

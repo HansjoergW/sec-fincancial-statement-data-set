@@ -11,11 +11,10 @@ New Release
 - merge back into main
 
 v.1.2.0
-- USDOnlyFilter
+- USDOnlyRawFilter
+- MainCoregFilter -> MainCoregRawFilter
 - Alle Filter auch für Joined
 - Notebook: Bulk Processing -> einen grossen Datensatz für BS
-
-
 
 
 Next:

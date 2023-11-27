@@ -202,7 +202,7 @@ class OfficialTagsOnlyFilter(FilterBase[RawDataBag]):
                                  num_df=num_filtered_for_tags)
 
 
-class USDonlyFilter(FilterBase[RawDataBag]):
+class USDOnlyFilter(FilterBase[RawDataBag]):
     """
     Removes all entries which have a currency in the column uom that is not USD.
     """

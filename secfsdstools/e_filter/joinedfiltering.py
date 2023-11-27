@@ -4,7 +4,7 @@ from secfsdstools.d_container.databagmodel import JoinedDataBag
 from secfsdstools.d_container.filter import FilterBase
 
 
-class USDonlyFilter(FilterBase[JoinedDataBag]):
+class USDOnlyFilter(FilterBase[JoinedDataBag]):
     """
     Removes all entries which have a currency in the column uom that is not USD.
     """

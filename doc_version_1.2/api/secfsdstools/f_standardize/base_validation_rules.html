@@ -136,7 +136,7 @@ class ValidationRule(ABC):
             part=part,
             type=&#34;Validation&#34;,
             ruleclass=self.__class__.__name__,
-            id=self.identifier,
+            identifier=self.identifier,
             description=self.get_description())
 
 
@@ -486,7 +486,7 @@ added to the dataframe.</p>
             part=part,
             type=&#34;Validation&#34;,
             ruleclass=self.__class__.__name__,
-            id=self.identifier,
+            identifier=self.identifier,
             description=self.get_description())</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -564,7 +564,7 @@ def calculate_error(self, data_df: pd.DataFrame, mask: pa.typing.Series[bool]) -
         part=part,
         type=&#34;Validation&#34;,
         ruleclass=self.__class__.__name__,
-        id=self.identifier,
+        identifier=self.identifier,
         description=self.get_description())</code></pre>
 </details>
 </dd>

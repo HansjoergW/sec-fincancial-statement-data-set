@@ -13,6 +13,7 @@ New Release
 v.1.2.0
 - USDOnlyRawFilter
 - MainCoregFilter -> MainCoregRawFilter
+- OfficialTagsOnlyFilter -> OfficialTagsOnlyRawFilter
 - Alle Filter auch für Joined
 - Notebook: Bulk Processing -> einen grossen Datensatz für BS
 

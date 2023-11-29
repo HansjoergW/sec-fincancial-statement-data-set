@@ -38,7 +38,7 @@ See the [Release Notes](https://hansjoergw.github.io/sec-fincancial-statement-da
 * `secfsdstools.e_collector.zipcollecting.ZipCollector` supports now loading of multiple zip files:<br>
   Examples: Notebook [04_collector_deep_dive](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/04_collector_deep_dive.ipynb)
 
-* `secfsdstools.e_filter.rawfiltering.OfficialTagsOnlyFilter` is new and removes none us-gaap tags
+* `secfsdstools.e_filter.rawfiltering.OfficialTagsOnlyRawFilter` is new and removes none us-gaap tags
 
 ## 0.5 -> 1.0
 * The API was redesigned completely from version 0.5 to version 1.0 <br>  
@@ -564,9 +564,9 @@ Framework (module `secfsdstools.e_filter.rawfiltering`:
    ````
    a_filtered_RawDataBag = a_RawDataBag.filter(TagRawFilter(tags=['Assets', 'Liabilities']))
    ````
-* `MainCoregFilter` <br> Filters the `RawDataBag` so that data of subsidiaries are removed.
+* `MainCoregRawFilter` <br> Filters the `RawDataBag` so that data of subsidiaries are removed.
    ````
-   a_filtered_RawDataBag = a_RawDataBag.filter(MainCoregFilter()) 
+   a_filtered_RawDataBag = a_RawDataBag.filter(MainCoregRawFilter()) 
    ````
 * `ReportPeriodAndPreviousPeriodRawFilter` <br> The data of a report usually also contains data from previous years.
   However, often you want just to analyze the data of the current and the previous year. This filter ensures that
@@ -581,12 +581,19 @@ Framework (module `secfsdstools.e_filter.rawfiltering`:
    ````
    a_filtered_RawDataBag = a_RawDataBag.filter(ReportPeriodRawFilter()) 
    ````
-* `OfficialTagsOnlyFilter` <br> Sometimes company provide their own tags, which are not defined by the us-gaap XBRL
+* `OfficialTagsOnlyRawFilter` <br> Sometimes company provide their own tags, which are not defined by the us-gaap XBRL
   definition. In such cases, the version columns contains the value of the adsh instead of something like us-gab/2022.
   This filter removes unofficial tags.
    ````
-   a_filtered_RawDataBag = a_RawDataBag.filter(OfficialTagsOnlyFilter()) 
+   a_filtered_RawDataBag = a_RawDataBag.filter(OfficialTagsOnlyRawFilter()) 
    ````  
+* `USDOnlyRawFilter` <br> Reports often also contain datapoints in other currency than USD. So it might happen that
+  the same datapoint in a balance sheet is present in different currencies. If you are just interested in the USD
+  currency, then we can use this filter.
+   ````
+   a_filtered_RawDataBag = a_RawDataBag.filter(USDOnlyRawFilter()) 
+   ````  
+
 
 
 ## Joined Processing: working with joined data
@@ -606,8 +613,8 @@ The `JoinedDataBag` provides the following methods:
   produces a new instance of `JoinedDataBag` with the filtered data. Therefore, filters can also be chained like
   `a_filtered_JoinedDataBag = a_JoinedDataBag.filter(filter1).filter(filter2)`. Moreover, the `__get__item` method
   is forwarded to the filter method, so you can also write `a_filtered_JoinedDataBag = a_JoinedDataBag[filter1][filter2]`.
-  **Note**: There aren't any filters for the JoinedDataBag in the framework yet. However, you can write them in the same
-  way as a filter for a `RawDataBag` is being written.
+  **Note**: The same filters that are present for the `RawDataBag` are also available for the `JoinedDataBag`. Just
+  look into the module `secfsdstools.e_filter.joinedfiltering`
 * `present` <br> The idea of the present method is to make a final presentation of the data as pandas dataframe. 
   The method has a parameter presenter of type Presenter.
 

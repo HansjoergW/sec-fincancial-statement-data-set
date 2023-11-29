@@ -155,7 +155,7 @@ class TagRawFilter(FilterBase[RawDataBag]):
                                  num_df=num_filtered_for_tags)
 
 
-class MainCoregFilter(FilterBase[RawDataBag]):
+class MainCoregRawFilter(FilterBase[RawDataBag]):
     """
     Filters only for the main coreg entries (coreg == '')
     """
@@ -177,7 +177,7 @@ class MainCoregFilter(FilterBase[RawDataBag]):
                                  num_df=num_filtered_for_main_coreg)
 
 
-class OfficialTagsOnlyFilter(FilterBase[RawDataBag]):
+class OfficialTagsOnlyRawFilter(FilterBase[RawDataBag]):
     """
     Filters only the official tags. These are the tags that contain an official XBRL version
     within the version column. "inofficial" (resp. company specific) tags are identified with
@@ -202,7 +202,7 @@ class OfficialTagsOnlyFilter(FilterBase[RawDataBag]):
                                  num_df=num_filtered_for_tags)
 
 
-class USDOnlyFilter(FilterBase[RawDataBag]):
+class USDOnlyRawFilter(FilterBase[RawDataBag]):
     """
     Removes all entries which have a currency in the column uom that is not USD.
     """

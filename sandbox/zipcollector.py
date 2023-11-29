@@ -2,17 +2,17 @@ import os
 
 from secfsdstools.d_container.databagmodel import RawDataBag
 from secfsdstools.e_collector.zipcollecting import ZipCollector
-from secfsdstools.e_filter.rawfiltering import ReportPeriodRawFilter, MainCoregFilter
+from secfsdstools.e_filter.rawfiltering import ReportPeriodRawFilter, MainCoregRawFilter
 
 
 if __name__ == '__main__':
 
     def postloadfilter(databag: RawDataBag) -> RawDataBag:
-        from secfsdstools.e_filter.rawfiltering import ReportPeriodRawFilter, MainCoregFilter
-        return databag[ReportPeriodRawFilter()][MainCoregFilter()].copy_bag()
+        from secfsdstools.e_filter.rawfiltering import ReportPeriodRawFilter, MainCoregRawFilter
+        return databag[ReportPeriodRawFilter()][MainCoregRawFilter()].copy_bag()
 
-    post_filter = lambda x: x[ReportPeriodRawFilter()][MainCoregFilter()].copy_bag()
-    post_filter_no_copy = lambda x: x[ReportPeriodRawFilter()][MainCoregFilter()]
+    post_filter = lambda x: x[ReportPeriodRawFilter()][MainCoregRawFilter()].copy_bag()
+    post_filter_no_copy = lambda x: x[ReportPeriodRawFilter()][MainCoregRawFilter()]
 
     collector: ZipCollector = ZipCollector.get_all_zips(forms_filter=["10-K", "10-Q"],
                                                         stmt_filter=["BS"],

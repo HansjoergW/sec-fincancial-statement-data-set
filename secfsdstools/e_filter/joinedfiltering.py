@@ -212,10 +212,11 @@ class USDOnlyJoinedFilter(FilterBase[JoinedDataBag]):
         """
         # currency is always in uppercase, so if it is not all uppercase, it is not a currency
         mask_has_lower = ~databag.pre_num_df.uom.str.isupper()
-
+        mask_is_none_currency = databag.pre_num_df.uom.str.len() != 3
         mask_usd_only = databag.pre_num_df.uom == "USD"
 
-        prenum_filtered_for_usd = databag.pre_num_df[mask_has_lower | mask_usd_only]
+        prenum_filtered_for_usd = databag.pre_num_df[
+            mask_has_lower | mask_is_none_currency | mask_usd_only]
 
         return JoinedDataBag.create(sub_df=databag.sub_df,
                                     pre_num_df=prenum_filtered_for_usd)

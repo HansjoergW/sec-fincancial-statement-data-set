@@ -254,10 +254,13 @@ class USDOnlyRawFilter(FilterBase[RawDataBag]):
         # currency is always in uppercase, so if it is not all uppercase, it is not a currency
         mask_has_lower = ~databag.num_df.uom.str.isupper()
 
+        # currency is always 3 letters
+        mask_is_none_currency = databag.num_df.uom.str.len() != 3
+
         # keep USD
         mask_usd_only = databag.num_df.uom == &#34;USD&#34;
 
-        num_filtered_for_usd = databag.num_df[mask_has_lower | mask_usd_only]
+        num_filtered_for_usd = databag.num_df[mask_has_lower | mask_is_none_currency | mask_usd_only]
 
         return RawDataBag.create(sub_df=databag.sub_df,
                                  pre_df=databag.pre_df,
@@ -892,10 +895,13 @@ that is in the provided list.</p>
         # currency is always in uppercase, so if it is not all uppercase, it is not a currency
         mask_has_lower = ~databag.num_df.uom.str.isupper()
 
+        # currency is always 3 letters
+        mask_is_none_currency = databag.num_df.uom.str.len() != 3
+
         # keep USD
         mask_usd_only = databag.num_df.uom == &#34;USD&#34;
 
-        num_filtered_for_usd = databag.num_df[mask_has_lower | mask_usd_only]
+        num_filtered_for_usd = databag.num_df[mask_has_lower | mask_is_none_currency | mask_usd_only]
 
         return RawDataBag.create(sub_df=databag.sub_df,
                                  pre_df=databag.pre_df,
@@ -939,10 +945,13 @@ that is in the provided list.</p>
     # currency is always in uppercase, so if it is not all uppercase, it is not a currency
     mask_has_lower = ~databag.num_df.uom.str.isupper()
 
+    # currency is always 3 letters
+    mask_is_none_currency = databag.num_df.uom.str.len() != 3
+
     # keep USD
     mask_usd_only = databag.num_df.uom == &#34;USD&#34;
 
-    num_filtered_for_usd = databag.num_df[mask_has_lower | mask_usd_only]
+    num_filtered_for_usd = databag.num_df[mask_has_lower | mask_is_none_currency | mask_usd_only]
 
     return RawDataBag.create(sub_df=databag.sub_df,
                              pre_df=databag.pre_df,

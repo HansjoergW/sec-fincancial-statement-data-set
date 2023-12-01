@@ -188,7 +188,7 @@ class OfficialTagsOnlyJoinedFilter(FilterBase[JoinedDataBag]):
             JoinedDataBag: the databag with the filtered data
         """
         pre_num_filtered_for_tags = databag.pre_num_df[
-            databag.pre_num_df.version != databag.pre_num_df.adsh]
+            databag.pre_num_df.version.isin(databag.sub_df.adsh)]
 
         return JoinedDataBag.create(sub_df=databag.sub_df,
                                     pre_num_df=pre_num_filtered_for_tags)
@@ -210,10 +210,12 @@ class USDOnlyJoinedFilter(FilterBase[JoinedDataBag]):
             JoinedDataBag: the databag with the filtered data
 
         """
-        mask_non_currency = databag.pre_num_df.uom.str.len() > 3
+        # currency is always in uppercase, so if it is not all uppercase, it is not a currency
+        mask_has_lower = ~databag.pre_num_df.uom.str.isupper()
+
         mask_usd_only = databag.pre_num_df.uom == "USD"
 
-        prenum_filtered_for_usd = databag.pre_num_df[mask_non_currency | mask_usd_only]
+        prenum_filtered_for_usd = databag.pre_num_df[mask_has_lower | mask_usd_only]
 
         return JoinedDataBag.create(sub_df=databag.sub_df,
                                     pre_num_df=prenum_filtered_for_usd)

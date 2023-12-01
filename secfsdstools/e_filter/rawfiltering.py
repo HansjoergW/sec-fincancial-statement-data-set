@@ -194,8 +194,10 @@ class OfficialTagsOnlyRawFilter(FilterBase[RawDataBag]):
         Returns:
             RawDataBag: the databag with the filtered data
         """
-        pre_filtered_for_tags = databag.pre_df[databag.pre_df.version != databag.pre_df.adsh]
-        num_filtered_for_tags = databag.num_df[databag.num_df.version != databag.num_df.adsh]
+        # using isin is performant, so we just make sure to filter the rows
+        # which do not have an adsh as version
+        pre_filtered_for_tags = databag.pre_df[~databag.pre_df.version.isin(databag.sub_df.adsh)]
+        num_filtered_for_tags = databag.num_df[~databag.num_df.version.isin(databag.sub_df.adsh)]
 
         return RawDataBag.create(sub_df=databag.sub_df,
                                  pre_df=pre_filtered_for_tags,
@@ -218,10 +220,14 @@ class USDOnlyRawFilter(FilterBase[RawDataBag]):
             RawDataBag: the databag with the filtered data
 
         """
-        mask_non_currency = databag.num_df.uom.str.len() > 3
+
+        # currency is always in uppercase, so if it is not all uppercase, it is not a currency
+        mask_has_lower = ~databag.num_df.uom.str.isupper()
+
+        # keep USD
         mask_usd_only = databag.num_df.uom == "USD"
 
-        num_filtered_for_usd = databag.num_df[mask_non_currency | mask_usd_only]
+        num_filtered_for_usd = databag.num_df[mask_has_lower | mask_usd_only]
 
         return RawDataBag.create(sub_df=databag.sub_df,
                                  pre_df=databag.pre_df,

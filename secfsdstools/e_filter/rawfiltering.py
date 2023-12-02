@@ -230,7 +230,8 @@ class USDOnlyRawFilter(FilterBase[RawDataBag]):
         # keep USD
         mask_usd_only = databag.num_df.uom == "USD"
 
-        num_filtered_for_usd = databag.num_df[mask_has_lower | mask_is_none_currency | mask_usd_only]
+        num_filtered_for_usd = \
+            databag.num_df[mask_has_lower | mask_is_none_currency | mask_usd_only]
 
         return RawDataBag.create(sub_df=databag.sub_df,
                                  pre_df=databag.pre_df,

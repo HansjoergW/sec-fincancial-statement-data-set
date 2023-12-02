@@ -15,8 +15,9 @@ v.1.2.0
 - MainCoregFilter -> MainCoregRawFilter
 - OfficialTagsOnlyFilter -> OfficialTagsOnlyRawFilter
 - Alle Filter auch für Joined
-- Notebook: Bulk Processing -> einen grossen Datensatz für BS
+- Filter deep dive
 
+v.1.3.0
 
 v.1.3.0
 New

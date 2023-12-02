@@ -8,6 +8,15 @@ permalink: /releasenotes/
 ## Upcoming
 * 
 
+## 1.2.0 2023-Dec-02
+* API Changes
+  - `MainCoregFilter` was renamed to `MainCoregRawFilter`
+  - `OfficialTagsOnlyFilter` was renamed to `OfficialTagsOnlyRawFilter`
+* New
+  - `secfsdstools.e_filter.rawfiltering.USDOnlyRawFilter` is new and removes none USD currency datapoints
+  - All filters have been implemented for the JoinedDataBag as well: `secfsdstools.e_filter.joinedfiltering`
+  - Notebook [05_filter_deep_dive notebook](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/05_filter_deep_dive.ipynb).
+
 ## 1.1.0 2023-Oct-28
 * API Changes
   - Zipcollector has now a factory method that can load multiple zip files as one

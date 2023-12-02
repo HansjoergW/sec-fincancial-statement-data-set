@@ -16,8 +16,8 @@ v.1.2.0
 - OfficialTagsOnlyFilter -> OfficialTagsOnlyRawFilter
 - Alle Filter auch für Joined
 - Filter deep dive
-- Notebook: Bulk Processing -> einen grossen Datensatz für BS
 
+v.1.3.0
 
 Next:
 - vlt switch um parallele verarbeitung komplett auszuschalten?

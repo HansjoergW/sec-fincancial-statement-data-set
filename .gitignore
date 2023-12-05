@@ -1,11 +1,13 @@
 # ide
 .idea
 secrets.txt
+launchjupyter.bat
 /data/
 /docs/api
 /tests/secfsdstools.db
 /sandbox/saved_data/
 /notebooks/bs_10k_10q_all_joined
+/notebooks/set
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

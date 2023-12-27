@@ -4,9 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.10.0" />
-<title>secfsdstools.t_tools.bulk_loading API documentation</title>
-<meta name="description" content="Contains basic logic which helps to laod data from all zip files and producing prefiltered
-datasets from all zipfiles …" />
+<title>secfsdstools.u_usecases.bulk_loading API documentation</title>
+<meta name="description" content="Contains basic logic that produces separated databags for every of the main financial statements (BS, CF, IS)
+containing data from all available zip …" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
 <link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
@@ -20,23 +20,23 @@ datasets from all zipfiles …" />
 <main>
 <article id="content">
 <header>
-<h1 class="title">Module <code>secfsdstools.t_tools.bulk_loading</code></h1>
+<h1 class="title">Module <code>secfsdstools.u_usecases.bulk_loading</code></h1>
 </header>
 <section id="section-intro">
-<p>Contains basic logic which helps to laod data from all zip files and producing prefiltered
-datasets from all zipfiles.</p>
-<p>the logic is also contained and further explained in the
-06_bulk_data_processing_deep_dive.ipynb notebook.</p>
+<p>Contains basic logic that produces separated databags for every of the main financial statements (BS, CF, IS)
+containing data from all available zip files.</p>
+<p>The same logic is also contained and further explained in the 06_bulk_data_processing_deep_dive.ipynb notebook.
+Please have a look at this notebook for a detailed explanation of the logic</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">&#34;&#34;&#34;
-Contains basic logic which helps to laod data from all zip files and producing prefiltered
-datasets from all zipfiles.
+Contains basic logic that produces separated databags for every of the main financial statements (BS, CF, IS)
+containing data from all available zip files.
 
-the logic is also contained and further explained in the
-06_bulk_data_processing_deep_dive.ipynb notebook.
+The same logic is also contained and further explained in the 06_bulk_data_processing_deep_dive.ipynb notebook.
+Please have a look at this notebook for a detailed explanation of the logic
 &#34;&#34;&#34;
 import os
 from glob import glob
@@ -120,7 +120,9 @@ def load_all_financial_statements_parallel(
 
 def create_datasets_for_main_statements_parallel(base_path: str = &#34;./set/parallel/&#34;):
     &#34;&#34;&#34;
-    creates the raw and joined datasets for all the three main statements: BS, CF, IS
+    Creates the raw and joined datasets for all the three main statements: BS, CF, IS.
+
+    The data from the different zip files are loaded in parallel. Therefore, about 16GB of free memory is needed.
 
     the created folder hiearchy looks as follows:
     &lt;pre&gt;
@@ -138,6 +140,7 @@ def create_datasets_for_main_statements_parallel(base_path: str = &#34;./set/par
     &#34;&#34;&#34;
 
     for statement_to_load in [&#34;BS&#34;, &#34;CF&#34;, &#34;IS&#34;]:
+        print(&#34;load data for &#34;, statement_to_load)
         rawdatabag = load_all_financial_statements_parallel(
             financial_statement=statement_to_load,
             post_load_filter=default_postloadfilter
@@ -188,25 +191,17 @@ def build_tmp_set(financial_statement: str,
         save_databag(databag=rawdatabag, base_path=target_path, sub_path=financial_statement)
 
 
-def build_tmp_sets_serial():
-    &#34;&#34;&#34;
-    This method creates the prefiltered datasets for every zip file so that they can be
-    concatenated in the following step.
-
-    This is all done in a serial manner, so it consumes less resources as the parallel version.
-    &#34;&#34;&#34;
-    all_zip_file_names: List[str] = read_all_zip_names()
-    for statement_to_process in [&#34;BS&#34;, &#34;CF&#34;, &#34;IS&#34;]:
-        build_tmp_set(financial_statement=statement_to_process,
-                      file_names=all_zip_file_names,
-                      base_path=&#34;set/tmp&#34;,
-                      post_load_filter=default_postloadfilter
-                      )
-
-
 def create_rawdatabag(financial_statement: str,
-                      tmp_path: str,
-                      target_path: str):
+                      tmp_path: str = &#34;set/tmp/&#34;,
+                      target_path: str = &#34;set/serial/&#34;):
+    &#34;&#34;&#34;
+    Concatenates the preprocessed and by statement separated rawdatabags into a single databag.
+
+    Args:
+        financial_statement: the statement for which data has to be concatenated.
+        tmp_path: the path where the temporary files are stored
+        target_path: the target path of the daset
+    &#34;&#34;&#34;
     raw_files = glob(f&#34;{tmp_path}/*/{financial_statement}/raw/&#34;, recursive=True)
     raw_databags = [RawDataBag.load(file) for file in raw_files]
     raw_databag = RawDataBag.concat(raw_databags)
@@ -217,15 +212,76 @@ def create_rawdatabag(financial_statement: str,
 
 
 def create_joineddatabag(financial_statement: str,
-                         tmp_path: str,
-                         target_path: str):
+                         tmp_path: str = &#34;set/tmp/&#34;,
+                         target_path: str = &#34;set/serial/&#34;):
+    &#34;&#34;&#34;
+    Concatenates the preprocessed and by statement separated joineddatabag into a single databag.
+
+    Args:
+        financial_statement: the statement for which data has to be concatenated.
+        tmp_path: the path where the temporary files are stored
+        target_path: the target path of the daset
+    &#34;&#34;&#34;
+
     joined_files = glob(f&#34;{tmp_path}/*/{financial_statement}/joined/&#34;, recursive=True)
     joined_databags = [JoinedDataBag.load(file) for file in joined_files]
     joined_databag = JoinedDataBag.concat(joined_databags)
     target_path_joined = os.path.join(target_path, financial_statement, &#39;joined&#39;)
     print(f&#34;store joineddatabag under {target_path_joined}&#34;)
     os.makedirs(target_path_joined, exist_ok=True)
-    joined_databag.save(target_path_joined)</code></pre>
+    joined_databag.save(target_path_joined)
+
+
+def create_datasets_for_main_statements_serial(target_path: str = &#34;set/parallel/&#34;,
+                                               tmp_path: str = &#34;set/tmp&#34;):
+    &#34;&#34;&#34;
+    Creates the rawdatabag and joineddatabag for all three main financial statements (BS, CF, IS).
+
+    It is done in serial manner, and therefore needs less resources than the parallel approach.
+
+    the created folder hiearchy looks as follows:
+    &lt;pre&gt;
+        - &lt;target_path&gt;
+          - BS
+            - raw
+            - joined
+          - CF
+            - raw
+            - joined
+          - IS
+            - raw
+            - joined
+    &lt;/pre&gt;
+    &#34;&#34;&#34;
+    file_names = read_all_zip_names()
+
+    # create the temporary datasets
+    # Note: calling the build_tmp_set doesn&#39;t needs a lot of memory
+    build_tmp_set(financial_statement=&#34;BS&#34;, file_names=file_names,
+                  post_load_filter=default_postloadfilter, base_path=tmp_path)
+    build_tmp_set(financial_statement=&#34;IS&#34;, file_names=file_names,
+                  post_load_filter=default_postloadfilter, base_path=tmp_path)
+    build_tmp_set(financial_statement=&#34;CF&#34;, file_names=file_names,
+                  post_load_filter=default_postloadfilter, base_path=tmp_path)
+
+    # Note: calling the create_rawdatabag needs about 8-10 GB of free memory.
+    #       the memory should be garbage collected between the different create_rawdatabag calls
+    create_rawdatabag(financial_statement=&#34;BS&#34;, target_path=target_path, tmp_path=tmp_path)
+    create_rawdatabag(financial_statement=&#34;IS&#34;, target_path=target_path, tmp_path=tmp_path)
+    create_rawdatabag(financial_statement=&#34;CF&#34;, target_path=target_path, tmp_path=tmp_path)
+
+    # Note: calling the create_joinedatabag needs about 4 GB of free memory.
+    #       the memory should be garbage collected between the different create_joineddatabag calls
+    create_joineddatabag(financial_statement=&#34;BS&#34;, target_path=target_path, tmp_path=tmp_path)
+    create_joineddatabag(financial_statement=&#34;IS&#34;, target_path=target_path, tmp_path=tmp_path)
+    create_joineddatabag(financial_statement=&#34;CF&#34;, target_path=target_path, tmp_path=tmp_path)
+
+
+if __name__ == &#39;__main__&#39;:
+    print(&#34;depending on your hardware resources, run the parallel or the serial logic.&#34;,
+          &#34;Just uncommented the desired line..&#34;)
+    create_datasets_for_main_statements_parallel()
+    # create_datasets_for_main_statements_serial()</code></pre>
 </details>
 </section>
 <section>
@@ -235,7 +291,7 @@ def create_joineddatabag(financial_statement: str,
 <section>
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
-<dt id="secfsdstools.t_tools.bulk_loading.build_tmp_set"><code class="name flex">
+<dt id="secfsdstools.u_usecases.bulk_loading.build_tmp_set"><code class="name flex">
 <span>def <span class="ident">build_tmp_set</span></span>(<span>financial_statement: str, file_names: List[str], base_path: str = 'set/tmp/', post_load_filter: Optional[Callable[[<a title="secfsdstools.d_container.databagmodel.RawDataBag" href="../d_container/databagmodel.html#secfsdstools.d_container.databagmodel.RawDataBag">RawDataBag</a>], <a title="secfsdstools.d_container.databagmodel.RawDataBag" href="../d_container/databagmodel.html#secfsdstools.d_container.databagmodel.RawDataBag">RawDataBag</a>]] = None)</span>
 </code></dt>
 <dd>
@@ -295,38 +351,12 @@ specific subfolders.</p>
         save_databag(databag=rawdatabag, base_path=target_path, sub_path=financial_statement)</code></pre>
 </details>
 </dd>
-<dt id="secfsdstools.t_tools.bulk_loading.build_tmp_sets_serial"><code class="name flex">
-<span>def <span class="ident">build_tmp_sets_serial</span></span>(<span>)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>This method creates the prefiltered datasets for every zip file so that they can be
-concatenated in the following step.</p>
-<p>This is all done in a serial manner, so it consumes less resources as the parallel version.</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def build_tmp_sets_serial():
-    &#34;&#34;&#34;
-    This method creates the prefiltered datasets for every zip file so that they can be
-    concatenated in the following step.
-
-    This is all done in a serial manner, so it consumes less resources as the parallel version.
-    &#34;&#34;&#34;
-    all_zip_file_names: List[str] = read_all_zip_names()
-    for statement_to_process in [&#34;BS&#34;, &#34;CF&#34;, &#34;IS&#34;]:
-        build_tmp_set(financial_statement=statement_to_process,
-                      file_names=all_zip_file_names,
-                      base_path=&#34;set/tmp&#34;,
-                      post_load_filter=default_postloadfilter
-                      )</code></pre>
-</details>
-</dd>
-<dt id="secfsdstools.t_tools.bulk_loading.create_datasets_for_main_statements_parallel"><code class="name flex">
+<dt id="secfsdstools.u_usecases.bulk_loading.create_datasets_for_main_statements_parallel"><code class="name flex">
 <span>def <span class="ident">create_datasets_for_main_statements_parallel</span></span>(<span>base_path: str = './set/parallel/')</span>
 </code></dt>
 <dd>
-<div class="desc"><p>creates the raw and joined datasets for all the three main statements: BS, CF, IS</p>
+<div class="desc"><p>Creates the raw and joined datasets for all the three main statements: BS, CF, IS.</p>
+<p>The data from the different zip files are loaded in parallel. Therefore, about 16GB of free memory is needed.</p>
 <p>the created folder hiearchy looks as follows:</p>
 <pre>
     - <base_path>
@@ -346,7 +376,9 @@ concatenated in the following step.</p>
 </summary>
 <pre><code class="python">def create_datasets_for_main_statements_parallel(base_path: str = &#34;./set/parallel/&#34;):
     &#34;&#34;&#34;
-    creates the raw and joined datasets for all the three main statements: BS, CF, IS
+    Creates the raw and joined datasets for all the three main statements: BS, CF, IS.
+
+    The data from the different zip files are loaded in parallel. Therefore, about 16GB of free memory is needed.
 
     the created folder hiearchy looks as follows:
     &lt;pre&gt;
@@ -364,6 +396,7 @@ concatenated in the following step.</p>
     &#34;&#34;&#34;
 
     for statement_to_load in [&#34;BS&#34;, &#34;CF&#34;, &#34;IS&#34;]:
+        print(&#34;load data for &#34;, statement_to_load)
         rawdatabag = load_all_financial_statements_parallel(
             financial_statement=statement_to_load,
             post_load_filter=default_postloadfilter
@@ -371,18 +404,104 @@ concatenated in the following step.</p>
         save_databag(databag=rawdatabag, base_path=base_path, sub_path=statement_to_load)</code></pre>
 </details>
 </dd>
-<dt id="secfsdstools.t_tools.bulk_loading.create_joineddatabag"><code class="name flex">
-<span>def <span class="ident">create_joineddatabag</span></span>(<span>financial_statement: str, tmp_path: str, target_path: str)</span>
+<dt id="secfsdstools.u_usecases.bulk_loading.create_datasets_for_main_statements_serial"><code class="name flex">
+<span>def <span class="ident">create_datasets_for_main_statements_serial</span></span>(<span>target_path: str = 'set/parallel/', tmp_path: str = 'set/tmp')</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Creates the rawdatabag and joineddatabag for all three main financial statements (BS, CF, IS).</p>
+<p>It is done in serial manner, and therefore needs less resources than the parallel approach.</p>
+<p>the created folder hiearchy looks as follows:</p>
+<pre>
+    - <target_path>
+      - BS
+        - raw
+        - joined
+      - CF
+        - raw
+        - joined
+      - IS
+        - raw
+        - joined
+</pre></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def create_datasets_for_main_statements_serial(target_path: str = &#34;set/parallel/&#34;,
+                                               tmp_path: str = &#34;set/tmp&#34;):
+    &#34;&#34;&#34;
+    Creates the rawdatabag and joineddatabag for all three main financial statements (BS, CF, IS).
+
+    It is done in serial manner, and therefore needs less resources than the parallel approach.
+
+    the created folder hiearchy looks as follows:
+    &lt;pre&gt;
+        - &lt;target_path&gt;
+          - BS
+            - raw
+            - joined
+          - CF
+            - raw
+            - joined
+          - IS
+            - raw
+            - joined
+    &lt;/pre&gt;
+    &#34;&#34;&#34;
+    file_names = read_all_zip_names()
+
+    # create the temporary datasets
+    # Note: calling the build_tmp_set doesn&#39;t needs a lot of memory
+    build_tmp_set(financial_statement=&#34;BS&#34;, file_names=file_names,
+                  post_load_filter=default_postloadfilter, base_path=tmp_path)
+    build_tmp_set(financial_statement=&#34;IS&#34;, file_names=file_names,
+                  post_load_filter=default_postloadfilter, base_path=tmp_path)
+    build_tmp_set(financial_statement=&#34;CF&#34;, file_names=file_names,
+                  post_load_filter=default_postloadfilter, base_path=tmp_path)
+
+    # Note: calling the create_rawdatabag needs about 8-10 GB of free memory.
+    #       the memory should be garbage collected between the different create_rawdatabag calls
+    create_rawdatabag(financial_statement=&#34;BS&#34;, target_path=target_path, tmp_path=tmp_path)
+    create_rawdatabag(financial_statement=&#34;IS&#34;, target_path=target_path, tmp_path=tmp_path)
+    create_rawdatabag(financial_statement=&#34;CF&#34;, target_path=target_path, tmp_path=tmp_path)
+
+    # Note: calling the create_joinedatabag needs about 4 GB of free memory.
+    #       the memory should be garbage collected between the different create_joineddatabag calls
+    create_joineddatabag(financial_statement=&#34;BS&#34;, target_path=target_path, tmp_path=tmp_path)
+    create_joineddatabag(financial_statement=&#34;IS&#34;, target_path=target_path, tmp_path=tmp_path)
+    create_joineddatabag(financial_statement=&#34;CF&#34;, target_path=target_path, tmp_path=tmp_path)</code></pre>
+</details>
+</dd>
+<dt id="secfsdstools.u_usecases.bulk_loading.create_joineddatabag"><code class="name flex">
+<span>def <span class="ident">create_joineddatabag</span></span>(<span>financial_statement: str, tmp_path: str = 'set/tmp/', target_path: str = 'set/serial/')</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Concatenates the preprocessed and by statement separated joineddatabag into a single databag.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>financial_statement</code></strong></dt>
+<dd>the statement for which data has to be concatenated.</dd>
+<dt><strong><code>tmp_path</code></strong></dt>
+<dd>the path where the temporary files are stored</dd>
+<dt><strong><code>target_path</code></strong></dt>
+<dd>the target path of the daset</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def create_joineddatabag(financial_statement: str,
-                         tmp_path: str,
-                         target_path: str):
+                         tmp_path: str = &#34;set/tmp/&#34;,
+                         target_path: str = &#34;set/serial/&#34;):
+    &#34;&#34;&#34;
+    Concatenates the preprocessed and by statement separated joineddatabag into a single databag.
+
+    Args:
+        financial_statement: the statement for which data has to be concatenated.
+        tmp_path: the path where the temporary files are stored
+        target_path: the target path of the daset
+    &#34;&#34;&#34;
+
     joined_files = glob(f&#34;{tmp_path}/*/{financial_statement}/joined/&#34;, recursive=True)
     joined_databags = [JoinedDataBag.load(file) for file in joined_files]
     joined_databag = JoinedDataBag.concat(joined_databags)
@@ -392,18 +511,35 @@ concatenated in the following step.</p>
     joined_databag.save(target_path_joined)</code></pre>
 </details>
 </dd>
-<dt id="secfsdstools.t_tools.bulk_loading.create_rawdatabag"><code class="name flex">
-<span>def <span class="ident">create_rawdatabag</span></span>(<span>financial_statement: str, tmp_path: str, target_path: str)</span>
+<dt id="secfsdstools.u_usecases.bulk_loading.create_rawdatabag"><code class="name flex">
+<span>def <span class="ident">create_rawdatabag</span></span>(<span>financial_statement: str, tmp_path: str = 'set/tmp/', target_path: str = 'set/serial/')</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Concatenates the preprocessed and by statement separated rawdatabags into a single databag.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>financial_statement</code></strong></dt>
+<dd>the statement for which data has to be concatenated.</dd>
+<dt><strong><code>tmp_path</code></strong></dt>
+<dd>the path where the temporary files are stored</dd>
+<dt><strong><code>target_path</code></strong></dt>
+<dd>the target path of the daset</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def create_rawdatabag(financial_statement: str,
-                      tmp_path: str,
-                      target_path: str):
+                      tmp_path: str = &#34;set/tmp/&#34;,
+                      target_path: str = &#34;set/serial/&#34;):
+    &#34;&#34;&#34;
+    Concatenates the preprocessed and by statement separated rawdatabags into a single databag.
+
+    Args:
+        financial_statement: the statement for which data has to be concatenated.
+        tmp_path: the path where the temporary files are stored
+        target_path: the target path of the daset
+    &#34;&#34;&#34;
     raw_files = glob(f&#34;{tmp_path}/*/{financial_statement}/raw/&#34;, recursive=True)
     raw_databags = [RawDataBag.load(file) for file in raw_files]
     raw_databag = RawDataBag.concat(raw_databags)
@@ -413,7 +549,7 @@ concatenated in the following step.</p>
     raw_databag.save(target_path_raw)</code></pre>
 </details>
 </dd>
-<dt id="secfsdstools.t_tools.bulk_loading.default_postloadfilter"><code class="name flex">
+<dt id="secfsdstools.u_usecases.bulk_loading.default_postloadfilter"><code class="name flex">
 <span>def <span class="ident">default_postloadfilter</span></span>(<span>databag: <a title="secfsdstools.d_container.databagmodel.RawDataBag" href="../d_container/databagmodel.html#secfsdstools.d_container.databagmodel.RawDataBag">RawDataBag</a>) ‑> <a title="secfsdstools.d_container.databagmodel.RawDataBag" href="../d_container/databagmodel.html#secfsdstools.d_container.databagmodel.RawDataBag">RawDataBag</a></span>
 </code></dt>
 <dd>
@@ -437,7 +573,7 @@ ReportPeriodRawFilter, MainCoregRawFilter, OfficialTagsOnlyRawFilter, USDOnlyRaw
         USDOnlyRawFilter()]</code></pre>
 </details>
 </dd>
-<dt id="secfsdstools.t_tools.bulk_loading.load_all_financial_statements_parallel"><code class="name flex">
+<dt id="secfsdstools.u_usecases.bulk_loading.load_all_financial_statements_parallel"><code class="name flex">
 <span>def <span class="ident">load_all_financial_statements_parallel</span></span>(<span>financial_statement: str, post_load_filter: Optional[Callable[[<a title="secfsdstools.d_container.databagmodel.RawDataBag" href="../d_container/databagmodel.html#secfsdstools.d_container.databagmodel.RawDataBag">RawDataBag</a>], <a title="secfsdstools.d_container.databagmodel.RawDataBag" href="../d_container/databagmodel.html#secfsdstools.d_container.databagmodel.RawDataBag">RawDataBag</a>]] = None) ‑> <a title="secfsdstools.d_container.databagmodel.RawDataBag" href="../d_container/databagmodel.html#secfsdstools.d_container.databagmodel.RawDataBag">RawDataBag</a></span>
 </code></dt>
 <dd>
@@ -485,7 +621,7 @@ it filters for 10-K and 10-Q reports.</p>
     return collector.collect()</code></pre>
 </details>
 </dd>
-<dt id="secfsdstools.t_tools.bulk_loading.read_all_zip_names"><code class="name flex">
+<dt id="secfsdstools.u_usecases.bulk_loading.read_all_zip_names"><code class="name flex">
 <span>def <span class="ident">read_all_zip_names</span></span>(<span>) ‑> List[str]</span>
 </code></dt>
 <dd>
@@ -503,7 +639,7 @@ it filters for 10-K and 10-Q reports.</p>
             not x.fullPath.endswith(&#34;2009q1.zip&#34;)]</code></pre>
 </details>
 </dd>
-<dt id="secfsdstools.t_tools.bulk_loading.save_databag"><code class="name flex">
+<dt id="secfsdstools.u_usecases.bulk_loading.save_databag"><code class="name flex">
 <span>def <span class="ident">save_databag</span></span>(<span>databag: <a title="secfsdstools.d_container.databagmodel.RawDataBag" href="../d_container/databagmodel.html#secfsdstools.d_container.databagmodel.RawDataBag">RawDataBag</a>, base_path: str, sub_path: str) ‑> <a title="secfsdstools.d_container.databagmodel.JoinedDataBag" href="../d_container/databagmodel.html#secfsdstools.d_container.databagmodel.JoinedDataBag">JoinedDataBag</a></span>
 </code></dt>
 <dd>
@@ -574,20 +710,20 @@ the target path for the joineddatabag is <base_path>/<sub_path>/joined.</p>
 <ul id="index">
 <li><h3>Super-module</h3>
 <ul>
-<li><code><a title="secfsdstools.t_tools" href="index.html">secfsdstools.t_tools</a></code></li>
+<li><code><a title="secfsdstools.u_usecases" href="index.html">secfsdstools.u_usecases</a></code></li>
 </ul>
 </li>
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
-<li><code><a title="secfsdstools.t_tools.bulk_loading.build_tmp_set" href="#secfsdstools.t_tools.bulk_loading.build_tmp_set">build_tmp_set</a></code></li>
-<li><code><a title="secfsdstools.t_tools.bulk_loading.build_tmp_sets_serial" href="#secfsdstools.t_tools.bulk_loading.build_tmp_sets_serial">build_tmp_sets_serial</a></code></li>
-<li><code><a title="secfsdstools.t_tools.bulk_loading.create_datasets_for_main_statements_parallel" href="#secfsdstools.t_tools.bulk_loading.create_datasets_for_main_statements_parallel">create_datasets_for_main_statements_parallel</a></code></li>
-<li><code><a title="secfsdstools.t_tools.bulk_loading.create_joineddatabag" href="#secfsdstools.t_tools.bulk_loading.create_joineddatabag">create_joineddatabag</a></code></li>
-<li><code><a title="secfsdstools.t_tools.bulk_loading.create_rawdatabag" href="#secfsdstools.t_tools.bulk_loading.create_rawdatabag">create_rawdatabag</a></code></li>
-<li><code><a title="secfsdstools.t_tools.bulk_loading.default_postloadfilter" href="#secfsdstools.t_tools.bulk_loading.default_postloadfilter">default_postloadfilter</a></code></li>
-<li><code><a title="secfsdstools.t_tools.bulk_loading.load_all_financial_statements_parallel" href="#secfsdstools.t_tools.bulk_loading.load_all_financial_statements_parallel">load_all_financial_statements_parallel</a></code></li>
-<li><code><a title="secfsdstools.t_tools.bulk_loading.read_all_zip_names" href="#secfsdstools.t_tools.bulk_loading.read_all_zip_names">read_all_zip_names</a></code></li>
-<li><code><a title="secfsdstools.t_tools.bulk_loading.save_databag" href="#secfsdstools.t_tools.bulk_loading.save_databag">save_databag</a></code></li>
+<li><code><a title="secfsdstools.u_usecases.bulk_loading.build_tmp_set" href="#secfsdstools.u_usecases.bulk_loading.build_tmp_set">build_tmp_set</a></code></li>
+<li><code><a title="secfsdstools.u_usecases.bulk_loading.create_datasets_for_main_statements_parallel" href="#secfsdstools.u_usecases.bulk_loading.create_datasets_for_main_statements_parallel">create_datasets_for_main_statements_parallel</a></code></li>
+<li><code><a title="secfsdstools.u_usecases.bulk_loading.create_datasets_for_main_statements_serial" href="#secfsdstools.u_usecases.bulk_loading.create_datasets_for_main_statements_serial">create_datasets_for_main_statements_serial</a></code></li>
+<li><code><a title="secfsdstools.u_usecases.bulk_loading.create_joineddatabag" href="#secfsdstools.u_usecases.bulk_loading.create_joineddatabag">create_joineddatabag</a></code></li>
+<li><code><a title="secfsdstools.u_usecases.bulk_loading.create_rawdatabag" href="#secfsdstools.u_usecases.bulk_loading.create_rawdatabag">create_rawdatabag</a></code></li>
+<li><code><a title="secfsdstools.u_usecases.bulk_loading.default_postloadfilter" href="#secfsdstools.u_usecases.bulk_loading.default_postloadfilter">default_postloadfilter</a></code></li>
+<li><code><a title="secfsdstools.u_usecases.bulk_loading.load_all_financial_statements_parallel" href="#secfsdstools.u_usecases.bulk_loading.load_all_financial_statements_parallel">load_all_financial_statements_parallel</a></code></li>
+<li><code><a title="secfsdstools.u_usecases.bulk_loading.read_all_zip_names" href="#secfsdstools.u_usecases.bulk_loading.read_all_zip_names">read_all_zip_names</a></code></li>
+<li><code><a title="secfsdstools.u_usecases.bulk_loading.save_databag" href="#secfsdstools.u_usecases.bulk_loading.save_databag">save_databag</a></code></li>
 </ul>
 </li>
 </ul>

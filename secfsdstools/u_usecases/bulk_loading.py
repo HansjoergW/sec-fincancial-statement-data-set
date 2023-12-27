@@ -1,9 +1,9 @@
 """
-Contains basic logic which helps to laod data from all zip files and producing prefiltered
-datasets from all zipfiles.
+Contains basic logic that produces separated databags for every of the main financial statements (BS, CF, IS)
+containing data from all available zip files.
 
-the logic is also contained and further explained in the
-06_bulk_data_processing_deep_dive.ipynb notebook.
+The same logic is also contained and further explained in the 06_bulk_data_processing_deep_dive.ipynb notebook.
+Please have a look at this notebook for a detailed explanation of the logic
 """
 import os
 from glob import glob
@@ -87,7 +87,9 @@ def load_all_financial_statements_parallel(
 
 def create_datasets_for_main_statements_parallel(base_path: str = "./set/parallel/"):
     """
-    creates the raw and joined datasets for all the three main statements: BS, CF, IS
+    Creates the raw and joined datasets for all the three main statements: BS, CF, IS.
+
+    The data from the different zip files are loaded in parallel. Therefore, about 16GB of free memory is needed.
 
     the created folder hiearchy looks as follows:
     <pre>
@@ -105,6 +107,7 @@ def create_datasets_for_main_statements_parallel(base_path: str = "./set/paralle
     """
 
     for statement_to_load in ["BS", "CF", "IS"]:
+        print("load data for ", statement_to_load)
         rawdatabag = load_all_financial_statements_parallel(
             financial_statement=statement_to_load,
             post_load_filter=default_postloadfilter
@@ -155,25 +158,17 @@ def build_tmp_set(financial_statement: str,
         save_databag(databag=rawdatabag, base_path=target_path, sub_path=financial_statement)
 
 
-def build_tmp_sets_serial():
-    """
-    This method creates the prefiltered datasets for every zip file so that they can be
-    concatenated in the following step.
-
-    This is all done in a serial manner, so it consumes less resources as the parallel version.
-    """
-    all_zip_file_names: List[str] = read_all_zip_names()
-    for statement_to_process in ["BS", "CF", "IS"]:
-        build_tmp_set(financial_statement=statement_to_process,
-                      file_names=all_zip_file_names,
-                      base_path="set/tmp",
-                      post_load_filter=default_postloadfilter
-                      )
-
-
 def create_rawdatabag(financial_statement: str,
-                      tmp_path: str,
-                      target_path: str):
+                      tmp_path: str = "set/tmp/",
+                      target_path: str = "set/serial/"):
+    """
+    Concatenates the preprocessed and by statement separated rawdatabags into a single databag.
+
+    Args:
+        financial_statement: the statement for which data has to be concatenated.
+        tmp_path: the path where the temporary files are stored
+        target_path: the target path of the daset
+    """
     raw_files = glob(f"{tmp_path}/*/{financial_statement}/raw/", recursive=True)
     raw_databags = [RawDataBag.load(file) for file in raw_files]
     raw_databag = RawDataBag.concat(raw_databags)
@@ -184,8 +179,17 @@ def create_rawdatabag(financial_statement: str,
 
 
 def create_joineddatabag(financial_statement: str,
-                         tmp_path: str,
-                         target_path: str):
+                         tmp_path: str = "set/tmp/",
+                         target_path: str = "set/serial/"):
+    """
+    Concatenates the preprocessed and by statement separated joineddatabag into a single databag.
+
+    Args:
+        financial_statement: the statement for which data has to be concatenated.
+        tmp_path: the path where the temporary files are stored
+        target_path: the target path of the daset
+    """
+
     joined_files = glob(f"{tmp_path}/*/{financial_statement}/joined/", recursive=True)
     joined_databags = [JoinedDataBag.load(file) for file in joined_files]
     joined_databag = JoinedDataBag.concat(joined_databags)
@@ -193,3 +197,55 @@ def create_joineddatabag(financial_statement: str,
     print(f"store joineddatabag under {target_path_joined}")
     os.makedirs(target_path_joined, exist_ok=True)
     joined_databag.save(target_path_joined)
+
+
+def create_datasets_for_main_statements_serial(target_path: str = "set/parallel/",
+                                               tmp_path: str = "set/tmp"):
+    """
+    Creates the rawdatabag and joineddatabag for all three main financial statements (BS, CF, IS).
+
+    It is done in serial manner, and therefore needs less resources than the parallel approach.
+
+    the created folder hiearchy looks as follows:
+    <pre>
+        - <target_path>
+          - BS
+            - raw
+            - joined
+          - CF
+            - raw
+            - joined
+          - IS
+            - raw
+            - joined
+    </pre>
+    """
+    file_names = read_all_zip_names()
+
+    # create the temporary datasets
+    # Note: calling the build_tmp_set doesn't needs a lot of memory
+    build_tmp_set(financial_statement="BS", file_names=file_names,
+                  post_load_filter=default_postloadfilter, base_path=tmp_path)
+    build_tmp_set(financial_statement="IS", file_names=file_names,
+                  post_load_filter=default_postloadfilter, base_path=tmp_path)
+    build_tmp_set(financial_statement="CF", file_names=file_names,
+                  post_load_filter=default_postloadfilter, base_path=tmp_path)
+
+    # Note: calling the create_rawdatabag needs about 8-10 GB of free memory.
+    #       the memory should be garbage collected between the different create_rawdatabag calls
+    create_rawdatabag(financial_statement="BS", target_path=target_path, tmp_path=tmp_path)
+    create_rawdatabag(financial_statement="IS", target_path=target_path, tmp_path=tmp_path)
+    create_rawdatabag(financial_statement="CF", target_path=target_path, tmp_path=tmp_path)
+
+    # Note: calling the create_joinedatabag needs about 4 GB of free memory.
+    #       the memory should be garbage collected between the different create_joineddatabag calls
+    create_joineddatabag(financial_statement="BS", target_path=target_path, tmp_path=tmp_path)
+    create_joineddatabag(financial_statement="IS", target_path=target_path, tmp_path=tmp_path)
+    create_joineddatabag(financial_statement="CF", target_path=target_path, tmp_path=tmp_path)
+
+
+if __name__ == '__main__':
+    print("depending on your hardware resources, run the parallel or the serial logic.",
+          "Just uncommented the desired line..")
+    create_datasets_for_main_statements_parallel()
+    # create_datasets_for_main_statements_serial()

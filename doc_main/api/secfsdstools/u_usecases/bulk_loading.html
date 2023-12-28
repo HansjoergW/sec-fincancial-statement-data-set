@@ -5,8 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.10.0" />
 <title>secfsdstools.u_usecases.bulk_loading API documentation</title>
-<meta name="description" content="Contains basic logic that produces separated databags for every of the main financial statements (BS, CF, IS)
-containing data from all available zip …" />
+<meta name="description" content="Contains basic logic that produces separated databags for every of the main financial
+statements (BS, CF, IS) containing data from all available zip …" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
 <link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
@@ -23,19 +23,21 @@ containing data from all available zip …" />
 <h1 class="title">Module <code>secfsdstools.u_usecases.bulk_loading</code></h1>
 </header>
 <section id="section-intro">
-<p>Contains basic logic that produces separated databags for every of the main financial statements (BS, CF, IS)
-containing data from all available zip files.</p>
-<p>The same logic is also contained and further explained in the 06_bulk_data_processing_deep_dive.ipynb notebook.
+<p>Contains basic logic that produces separated databags for every of the main financial
+statements (BS, CF, IS) containing data from all available zip files.</p>
+<p>The same logic is also contained and further explained in the
+06_bulk_data_processing_deep_dive.ipynb notebook.
 Please have a look at this notebook for a detailed explanation of the logic</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">&#34;&#34;&#34;
-Contains basic logic that produces separated databags for every of the main financial statements (BS, CF, IS)
-containing data from all available zip files.
+Contains basic logic that produces separated databags for every of the main financial
+statements (BS, CF, IS) containing data from all available zip files.
 
-The same logic is also contained and further explained in the 06_bulk_data_processing_deep_dive.ipynb notebook.
+The same logic is also contained and further explained in the
+06_bulk_data_processing_deep_dive.ipynb notebook.
 Please have a look at this notebook for a detailed explanation of the logic
 &#34;&#34;&#34;
 import os
@@ -55,6 +57,7 @@ def default_postloadfilter(databag: RawDataBag) -&gt; RawDataBag:
     It combines the filters:
         ReportPeriodRawFilter, MainCoregRawFilter, OfficialTagsOnlyRawFilter, USDOnlyRawFilter
     &#34;&#34;&#34;
+    # pylint: disable=C0415
     from secfsdstools.e_filter.rawfiltering import ReportPeriodRawFilter, MainCoregRawFilter, \
         OfficialTagsOnlyRawFilter, USDOnlyRawFilter
 
@@ -122,7 +125,8 @@ def create_datasets_for_main_statements_parallel(base_path: str = &#34;./set/par
     &#34;&#34;&#34;
     Creates the raw and joined datasets for all the three main statements: BS, CF, IS.
 
-    The data from the different zip files are loaded in parallel. Therefore, about 16GB of free memory is needed.
+    The data from the different zip files are loaded in parallel. Therefore, about 16GB
+    of free memory is needed.
 
     the created folder hiearchy looks as follows:
     &lt;pre&gt;
@@ -149,6 +153,12 @@ def create_datasets_for_main_statements_parallel(base_path: str = &#34;./set/par
 
 
 def read_all_zip_names() -&gt; List[str]:
+    &#34;&#34;&#34;
+    Returns a list with all available zip-file names.
+
+    Returns:
+        List[str]: list with the names of the available zip files
+    &#34;&#34;&#34;
     configuration = ConfigurationManager.read_config_file()
     dbaccessor = ParquetDBIndexingAccessor(db_dir=configuration.db_dir)
 
@@ -279,8 +289,8 @@ def create_datasets_for_main_statements_serial(target_path: str = &#34;set/paral
 
 if __name__ == &#39;__main__&#39;:
     print(&#34;depending on your hardware resources, run the parallel or the serial logic.&#34;,
-          &#34;Just uncommented the desired line..&#34;)
-    create_datasets_for_main_statements_parallel()
+          &#34;Just uncommented the desired line of code..&#34;)
+    # create_datasets_for_main_statements_parallel()
     # create_datasets_for_main_statements_serial()</code></pre>
 </details>
 </section>
@@ -356,7 +366,8 @@ specific subfolders.</p>
 </code></dt>
 <dd>
 <div class="desc"><p>Creates the raw and joined datasets for all the three main statements: BS, CF, IS.</p>
-<p>The data from the different zip files are loaded in parallel. Therefore, about 16GB of free memory is needed.</p>
+<p>The data from the different zip files are loaded in parallel. Therefore, about 16GB
+of free memory is needed.</p>
 <p>the created folder hiearchy looks as follows:</p>
 <pre>
     - <base_path>
@@ -378,7 +389,8 @@ specific subfolders.</p>
     &#34;&#34;&#34;
     Creates the raw and joined datasets for all the three main statements: BS, CF, IS.
 
-    The data from the different zip files are loaded in parallel. Therefore, about 16GB of free memory is needed.
+    The data from the different zip files are loaded in parallel. Therefore, about 16GB
+    of free memory is needed.
 
     the created folder hiearchy looks as follows:
     &lt;pre&gt;
@@ -566,6 +578,7 @@ ReportPeriodRawFilter, MainCoregRawFilter, OfficialTagsOnlyRawFilter, USDOnlyRaw
     It combines the filters:
         ReportPeriodRawFilter, MainCoregRawFilter, OfficialTagsOnlyRawFilter, USDOnlyRawFilter
     &#34;&#34;&#34;
+    # pylint: disable=C0415
     from secfsdstools.e_filter.rawfiltering import ReportPeriodRawFilter, MainCoregRawFilter, \
         OfficialTagsOnlyRawFilter, USDOnlyRawFilter
 
@@ -625,12 +638,23 @@ it filters for 10-K and 10-Q reports.</p>
 <span>def <span class="ident">read_all_zip_names</span></span>(<span>) ‑> List[str]</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Returns a list with all available zip-file names.</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>List[str]</code></dt>
+<dd>list with the names of the available zip files</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def read_all_zip_names() -&gt; List[str]:
+    &#34;&#34;&#34;
+    Returns a list with all available zip-file names.
+
+    Returns:
+        List[str]: list with the names of the available zip files
+    &#34;&#34;&#34;
     configuration = ConfigurationManager.read_config_file()
     dbaccessor = ParquetDBIndexingAccessor(db_dir=configuration.db_dir)
 

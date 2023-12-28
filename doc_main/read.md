@@ -34,23 +34,28 @@ and therefore providing a possibility to receive the latest filings on a daily b
 
 # Latest news / most important changes from previous versions
 See the [Release Notes](https://hansjoergw.github.io/sec-fincancial-statement-data-set/releasenotes/) for details.
+## 1.2 -> 1.3
+* New notebook [06_bulk_data_processing_deep_dive](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/06_bulk_data_processing_deep_dive.ipynb)<br>
+  This first version shows how datasets can be created with data from all available zip files. It shows a faster
+  parallel approach which uses more memory and cpu resources and a slower serial approach which uses significant
+  less resources.
+* New package `u_usecases` introduced. This package is a place to provide concrete examples what you can do
+  with the `secfsdstools` library. As a first usecase, the logic shown and explained in the `06_bulk_data_processing_deep_dive`
+  is provided as logic within the modul `bulk_loading`.
+
+
 ## 1.1 -> 1.2
 * `secfsdstools.e_filter.rawfiltering.USDOnlyRawFilter` is new and removes none USD currency datapoints
 * `MainCoregFilter` was renamed to `MainCoregRawFilter`
 * `OfficialTagsOnlyFilter` was renamed to `OfficialTagsOnlyRawFilter`
 * All filters have been implemented for the JoinedDataBag as well: `secfsdstools.e_filter.joinedfiltering`
-* new notebook [filter_deep_dive notebook](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/05_filter_deep_dive.ipynb).
+* New notebook [05_filter_deep_dive](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/05_filter_deep_dive.ipynb).
 
 
 ## 1.0 -> 1.1
 * `secfsdstools.e_collector.zipcollecting.ZipCollector` supports now loading of multiple zip files:<br>
   Examples: Notebook [04_collector_deep_dive](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/04_collector_deep_dive.ipynb)
-
 * `secfsdstools.e_filter.rawfiltering.OfficialTagsOnlyRawFilter` is new and removes none us-gaap tags
-
-## 0.5 -> 1.0
-* The API was redesigned completely from version 0.5 to version 1.0 <br>  
-Please read the chapter "Working with the SECFSDSTools library" carefully to understand how to use the new API.
 
 
 # Principles
@@ -78,8 +83,9 @@ report into pandas dataframe tables.
 * [QuickStart Jupyter Notebook](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/01_quickstart.ipynb)
 * [Connect to the daily-sec-financial-statement-dataset Notebook](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/02_connect_rapidapi.ipynb)
 * [Explore the data with an interactive Notebook](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/03_explore_with_interactive_notebook.ipynb)
-* [collector_deep_dive](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/04_collector_deep_dive.ipynb)
-* [filter_deep_dive notebook](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/05_filter_deep_dive.ipynb).
+* [collector_deep_dive Notebook](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/04_collector_deep_dive.ipynb)
+* [filter_deep_dive Notebook](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/05_filter_deep_dive.ipynb).
+* [bulk_data_processing_deep_dive Notebook](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/06_bulk_data_processing_deep_dive.ipynb)
 
 # Installation
 
@@ -693,8 +699,10 @@ implementations (module `secfsdstools.e_presenter.presenting`):
 * [QuickStart Jupyter Notebook](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/01_quickstart.ipynb)
 * [Explore the data with an interactive Notebook](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/03_explore_with_interactive_notebook.ipynb)
 * [Connect to the daily-sec-financial-statement-dataset Notebook](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/02_connect_rapidapi.ipynb) 
-* [collector_deep_dive](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/04_collector_deep_dive.ipynb)
-* [filter_deep_dive notebook](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/05_filter_deep_dive.ipynb).
+* [collector_deep_dive Notebook](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/04_collector_deep_dive.ipynb)
+* [filter_deep_dive Notebook](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/05_filter_deep_dive.ipynb).
+* [bulk_data_processing_deep_dive Notebook](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/06_bulk_data_processing_deep_dive.ipynb)
+* [checkout the `u_usecases` package](https://hansjoergw.github.io/sec-fincancial-statement-data-set/doc_latest/api/secfsdstools/u_usecases/index.html)
 
 
 # Troubleshooting

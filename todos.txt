@@ -13,7 +13,7 @@ New Release
 - on github -> under code releases: draft new release
 
 
-v.1.3.0
+v.1.4.0
 New
 - BS Standardizer
 - Standardizer Basic
@@ -67,16 +67,9 @@ later
 -correct quarter naming -> was meine ich damit?
 -db-version for updates
 
-features
-- Example Notebooks
-  - example report reading
-  - example zip reading
-  - example extension -> z.B. db access / erweiteren reader
 
 build, release & docu
 - coverage report padge
-
-
 
 Checkout für Visualisierung
 - https://gist.github.com/mwouts/a2de16feb90d33fd89334fb09f62742f

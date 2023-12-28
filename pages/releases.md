@@ -8,6 +8,18 @@ permalink: /releasenotes/
 ## Upcoming
 * 
 
+## 1.3.0 2023-Dec-28
+* New
+  - Notebook [06_bulk_data_processing_deep_dive](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/06_bulk_data_processing_deep_dive.ipynb)<br>
+    This first version shows how datasets can be created with data from all available zip files. It shows a faster
+    parallel approach which uses more memory and cpu resources and a slower serial approach which uses significant
+    less resources.
+  - Package `u_usecases` introduced. <br>
+    This package is a place to provide concrete examples showing what you can do
+    with the `secfsdstools` library. As a first usecase, the logic shown and explained in the `06_bulk_data_processing_deep_dive`
+    is provided as logic within the modul `bulk_loading`.
+
+
 ## 1.2.0 2023-Dec-02
 * API Changes
   - `MainCoregFilter` was renamed to `MainCoregRawFilter`

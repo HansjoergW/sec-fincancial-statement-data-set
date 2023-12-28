@@ -1,8 +1,9 @@
 """
-Contains basic logic that produces separated databags for every of the main financial statements (BS, CF, IS)
-containing data from all available zip files.
+Contains basic logic that produces separated databags for every of the main financial
+statements (BS, CF, IS) containing data from all available zip files.
 
-The same logic is also contained and further explained in the 06_bulk_data_processing_deep_dive.ipynb notebook.
+The same logic is also contained and further explained in the
+06_bulk_data_processing_deep_dive.ipynb notebook.
 Please have a look at this notebook for a detailed explanation of the logic
 """
 import os
@@ -22,6 +23,7 @@ def default_postloadfilter(databag: RawDataBag) -> RawDataBag:
     It combines the filters:
         ReportPeriodRawFilter, MainCoregRawFilter, OfficialTagsOnlyRawFilter, USDOnlyRawFilter
     """
+    # pylint: disable=C0415
     from secfsdstools.e_filter.rawfiltering import ReportPeriodRawFilter, MainCoregRawFilter, \
         OfficialTagsOnlyRawFilter, USDOnlyRawFilter
 
@@ -89,7 +91,8 @@ def create_datasets_for_main_statements_parallel(base_path: str = "./set/paralle
     """
     Creates the raw and joined datasets for all the three main statements: BS, CF, IS.
 
-    The data from the different zip files are loaded in parallel. Therefore, about 16GB of free memory is needed.
+    The data from the different zip files are loaded in parallel. Therefore, about 16GB
+    of free memory is needed.
 
     the created folder hiearchy looks as follows:
     <pre>
@@ -116,6 +119,12 @@ def create_datasets_for_main_statements_parallel(base_path: str = "./set/paralle
 
 
 def read_all_zip_names() -> List[str]:
+    """
+    Returns a list with all available zip-file names.
+
+    Returns:
+        List[str]: list with the names of the available zip files
+    """
     configuration = ConfigurationManager.read_config_file()
     dbaccessor = ParquetDBIndexingAccessor(db_dir=configuration.db_dir)
 
@@ -246,6 +255,6 @@ def create_datasets_for_main_statements_serial(target_path: str = "set/parallel/
 
 if __name__ == '__main__':
     print("depending on your hardware resources, run the parallel or the serial logic.",
-          "Just uncommented the desired line..")
-    create_datasets_for_main_statements_parallel()
+          "Just uncommented the desired line of code..")
+    # create_datasets_for_main_statements_parallel()
     # create_datasets_for_main_statements_serial()

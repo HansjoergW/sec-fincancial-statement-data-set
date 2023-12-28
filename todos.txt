@@ -10,14 +10,13 @@ New Release
 - adapt releases in project.toml
 - merge back into main
 
-v.1.2.0
-- USDOnlyRawFilter
-- MainCoregFilter -> MainCoregRawFilter
-- OfficialTagsOnlyFilter -> OfficialTagsOnlyRawFilter
-- Alle Filter auch für Joined
-- Filter deep dive
 
 v.1.3.0
+- BulkData Processing Deep Dive Notebook
+  - first version showing how to collect data from all zipfiles
+- u_usecase pakage introduced
+  bulk_loading: provides the logic from the notebook in the library
+
 
 Next:
 - vlt switch um parallele verarbeitung komplett auszuschalten?
@@ -63,16 +62,9 @@ later
 -correct quarter naming -> was meine ich damit?
 -db-version for updates
 
-features
-- Example Notebooks
-  - example report reading
-  - example zip reading
-  - example extension -> z.B. db access / erweiteren reader
 
 build, release & docu
 - coverage report padge
-
-
 
 Checkout für Visualisierung
 - https://gist.github.com/mwouts/a2de16feb90d33fd89334fb09f62742f

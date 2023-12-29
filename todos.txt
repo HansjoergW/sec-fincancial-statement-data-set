@@ -23,6 +23,10 @@ New
 todo:
 - evtl. sollte jede Regel noch eine "Explanation" bekommen. Ein Text, der die Regel spezifisch erklärt,
   nicht allgemein wie in description.
+- versions problem: pandera 0.18 läuft nicht mit python 3.7.17
+  -> local pandera 0.9 und python 3.7.9
+
+
 
 Next:
 - vlt switch um parallele verarbeitung komplett auszuschalten?

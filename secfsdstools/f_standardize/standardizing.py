@@ -1,12 +1,83 @@
 """Contains the base implementation of the standardizer"""
-
-from typing import List, Optional, Set
+import os
+from typing import List, Optional, Set, TypeVar
 
 import numpy as np
 import pandas as pd
 
+from secfsdstools.d_container.databagmodel import JoinedDataBag
+from secfsdstools.e_presenter.presenting import Presenter
 from secfsdstools.f_standardize.base_rule_framework import RuleGroup, DescriptionEntry
 from secfsdstools.f_standardize.base_validation_rules import ValidationRule
+
+STANDARDIZED = TypeVar('STANDARDIZED', bound='StandardizedBag')
+
+
+class StandardizedBag:
+
+    def __init__(self,
+                 result_df: pd.DataFrame,
+                 preprocess_duplicate_log_df: pd.DataFrame,
+                 applied_rules_log_df: pd.DataFrame,
+                 stats_df: pd.DataFrame,
+                 applied_rules_sum_s: pd.Series):
+
+        self.result_df = result_df
+        self.preprocess_duplicate_log_df = preprocess_duplicate_log_df
+        self.applied_rules_log_df = applied_rules_log_df
+        self.stats_df = stats_df
+        self.applied_rules_sum_s = applied_rules_sum_s
+
+    def save(self, target_path: str):
+        """
+        Stores the last result and the log dataframesunder the given directory.
+        The directory has to exist and must be empty.
+
+        Args:
+            databag: the bag to be saved
+            target_path: the directory under which the parquet files for sub and pre_num
+                  will be created
+
+        """
+        if not os.path.isdir(target_path):
+            raise ValueError(f"the path {target_path} does not exist")
+
+        if len(os.listdir(target_path)) > 0:
+            raise ValueError(f"the target_path {target_path} is not empty")
+
+        self.result_df.to_parquet(os.path.join(target_path, 'result.parquet'))
+        self.preprocess_duplicate_log_df.to_parquet(
+            os.path.join(target_path, 'duplicate_log.parquet'))
+        self.applied_rules_log_df.to_parquet(os.path.join(target_path, 'applied_rules_log.parquet'))
+        self.stats_df.to_parquet(os.path.join(target_path, 'stats.parquet'))
+        self.applied_rules_sum_s.to_csv(os.path.join(target_path, 'applied_rules_sum.csv'))
+
+    @staticmethod
+    def load(target_path: str) -> STANDARDIZED:
+        """
+        Loads the content of the bag at the specified location.
+
+        Args:
+            target_path: the directory which contains the parquet files
+
+        Returns:
+            STANDARDIZED: the loaded Databag
+        """
+
+        result_df = pd.read_parquet(os.path.join(target_path, 'result.parquet'))
+        preprocess_duplicate_log_df = pd.read_parquet(
+            os.path.join(target_path, 'duplicate_log.parquet'))
+        applied_rules_log_df = pd.read_parquet(
+            os.path.join(target_path, 'applied_rules_log.parquet'))
+        stats_df = pd.read_parquet(os.path.join(target_path, 'stats.parquet'))
+        applied_rules_sum_s = pd.read_csv(
+            os.path.join(target_path, 'applied_rules_sum.csv'),
+            header=None, index_col=0, squeeze=True)
+
+        return StandardizedBag(result_df=result_df,
+                               preprocess_duplicate_log_df=preprocess_duplicate_log_df,
+                               applied_rules_log_df=applied_rules_log_df, stats_df=stats_df,
+                               applied_rules_sum_s=applied_rules_sum_s)
 
 
 class Stats:
@@ -79,7 +150,7 @@ class Stats:
         self.stats = self.stats[final_stats_columns]
 
 
-class Standardizer:
+class Standardizer(Presenter[JoinedDataBag]):
     """
     The Standardizer implements the base processing logic to standardize financial statements.
     """
@@ -144,9 +215,12 @@ class Standardizer:
 
         self.final_col_order = self.identifier_tags + self.final_tags
 
+        # attribute to store the last result of calling the process method
+        self.result: Optional[pd.DataFrame] = None
+
         # define log dataframes ..
         # .. a special log that shows the duplicated records that were found and removed
-        self.preprocess_dupliate_log_df: Optional[pd.DataFrame] = None
+        self.preprocess_duplicate_log_df: Optional[pd.DataFrame] = None
         # .. the main_log that shows which rules were applied on which statement/row
         self.applied_rules_log_df: Optional[pd.DataFrame] = None
         # .. shows the total of how often a rule was applied, mainly counts the Trues per column
@@ -164,7 +238,7 @@ class Standardizer:
             data_df.duplicated(
                 ['adsh', 'coreg', 'report', 'uom', 'tag', 'version', 'ddate', 'value'])
 
-        self.preprocess_dupliate_log_df = data_df[duplicates_s] \
+        self.preprocess_duplicate_log_df = data_df[duplicates_s] \
             [['adsh', 'coreg', 'report', 'tag', 'uom', 'version', 'ddate']].copy()
 
         return data_df[~duplicates_s]
@@ -281,7 +355,8 @@ class Standardizer:
         self._main_processing(ready_df)
         self._post_processing(ready_df)
 
-        return self._finalize(ready_df)
+        self.result = self._finalize(ready_df)
+        return self.result
 
     def get_process_description(self) -> pd.DataFrame:
         """
@@ -302,3 +377,25 @@ class Standardizer:
         all_descriptions.extend([vr.collect_description("VALID") for vr in self.validation_rules])
 
         return pd.DataFrame(all_descriptions)
+
+    def present(self, databag: JoinedDataBag) -> pd.DataFrame:
+        """
+        implements a presenter which reformats the bag into dataframe.
+        Args:
+            databag (T): the bag to transform into presentation df
+
+        Returns:
+            pd.DataFrame: the data to be presented
+        """
+        return self.process(databag.pre_num_df)
+
+    def get_standardize_bag(self):
+        """
+            returns the Bag with all the calculated information.
+            the bag can then be used to directly store the information on disk and reload it for later analysis
+        """
+        return StandardizedBag(result_df=self.result,
+                               applied_rules_log_df=self.applied_rules_log_df,
+                               preprocess_duplicate_log_df=self.preprocess_duplicate_log_df,
+                               stats_df=self.stats.stats,
+                               applied_rules_sum_s=self.applied_rules_sum_s)

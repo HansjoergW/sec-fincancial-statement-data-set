@@ -24,5 +24,4 @@ class Presenter(Generic[T]):
 
         Returns:
             pd.DataFrame: the data to be presented
-
         """

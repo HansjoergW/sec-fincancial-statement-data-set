@@ -122,7 +122,6 @@ class JoinedDataBag(DataBagBase[JOINED]):
         The directory has to exist and must be empty.
 
         Args:
-            databag: the bag to be saved
             target_path: the directory under which the parquet files for sub and pre_num
                   will be created
 
@@ -296,7 +295,6 @@ class RawDataBag(DataBagBase[RAW]):
         The directory has to exist and must be empty.
 
         Args:
-            databag: the bag to be saved
             target_path: the directory under which three parquet files for sub_txt, pre_text,
                   and num_txt will be created
 

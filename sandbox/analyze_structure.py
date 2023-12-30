@@ -5,8 +5,8 @@ import pandas as pd
 from secfsdstools.d_container.databagmodel import JoinedDataBag
 from secfsdstools.e_collector.reportcollecting import SingleReportCollector
 from secfsdstools.e_collector.zipcollecting import ZipCollector
-from secfsdstools.e_filter.joinedfiltering import USDOnlyFilter as USDonlyJoined
-from secfsdstools.e_filter.rawfiltering import ReportPeriodRawFilter, MainCoregFilter, USDOnlyFilter
+from secfsdstools.e_filter.joinedfiltering import USDOnlyJoinedFilter
+from secfsdstools.e_filter.rawfiltering import ReportPeriodRawFilter, MainCoregRawFilter, USDOnlyRawFilter
 from secfsdstools.f_standardize.bs_standardize import BalanceSheetStandardizer
 
 apple_10k_2017 = "0000320193-17-000070"
@@ -15,18 +15,18 @@ apple_10k_2017 = "0000320193-17-000070"
 def get_fs_from_zip() -> pd.DataFrame:
     reader = ZipCollector(datapath="../data/parquet/quarter/2017q4.zip", stmt_filter=['BS'],
                           forms_filter=['10-K', '10-Q'])
-    return reader.collect()[MainCoregFilter()][ReportPeriodRawFilter()].join().get_pre_num_copy()
+    return reader.collect()[MainCoregRawFilter()][ReportPeriodRawFilter()].join().get_pre_num_copy()
 
 
 def get_fs_from_all_bs() -> pd.DataFrame:
     save_path_BS_all = "./saved_data/bs_10k_10q_all_joined"
-    return JoinedDataBag.load(save_path_BS_all)[USDonlyJoined()].get_pre_num_copy()
+    return JoinedDataBag.load(save_path_BS_all)[USDOnlyJoinedFilter()].get_pre_num_copy()
 
 
 def get_fs_from_single_report(adsh: str) -> pd.DataFrame:
     reader = SingleReportCollector.get_report_by_adsh(adsh=adsh, stmt_filter=['BS'])
-    return reader.collect()[MainCoregFilter()][ReportPeriodRawFilter()][
-        USDOnlyFilter()].join().get_pre_num_copy()
+    return reader.collect()[MainCoregRawFilter()][ReportPeriodRawFilter()][
+        USDOnlyRawFilter()].join().get_pre_num_copy()
 
 
 def get_uniques_col(df: pd.DataFrame, col: str) -> List[str]:

@@ -15,17 +15,20 @@ New Release
 
 v.1.4.0
 New
-- BS Standardizer
 - Standardizer Basic
-- bulk processing
+  - Goal: what is a standard
+  - process: preprocess, process, postprocess
+  - rules: what is a rule, rule overview
+  - logging: overall, per report, filtering, validation
+- BS Standardizer
+
 
 
 todo:
 - evtl. sollte jede Regel noch eine "Explanation" bekommen. Ein Text, der die Regel spezifisch erklärt,
   nicht allgemein wie in description.
-- versions problem: pandera 0.18 läuft nicht mit python 3.7.17
-  -> local pandera 0.9 und python 3.7.9
-
+- standardizer sollte ergebnisse speichern, inkl. aller logs..
+  - sollte auch eine Art save und load funktion haben..
 
 
 Next:

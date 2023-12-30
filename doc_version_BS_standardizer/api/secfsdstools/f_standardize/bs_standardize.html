@@ -61,7 +61,7 @@ class BalanceSheetStandardizer(Standardizer):
 
     bs_rename_rg = RuleGroup(
         rules=[
-            # sometimes, the total Assets is contained in the AssetsNet tag
+            # sometimes, the total Assets is tagged as AssetsNet
             CopyTagRule(original=&#39;AssetsNet&#39;, target=&#39;Assets&#39;),
             # StockholdersEquityIncludingPortionAttributableToNoncontrollingInterest
             # has precedence over StockholdersEquity
@@ -69,7 +69,7 @@ class BalanceSheetStandardizer(Standardizer):
                 original=&#39;StockholdersEquityIncludingPortionAttributableToNoncontrollingInterest&#39;,
                 target=&#39;OwnerEquity&#39;),
             # either there is a StockholderEquity tag or a PartnersCapital tag,
-            # but both to never appear together
+            # but both never appear together
             CopyTagRule(original=&#39;PartnersCapital&#39;, target=&#39;OwnerEquity&#39;),
             CopyTagRule(original=&#39;StockholdersEquity&#39;, target=&#39;OwnerEquity&#39;),
             CopyTagRule(original=&#39;CashAndCashEquivalentsAtCarryingValue&#39;, target=&#39;Cash&#39;),
@@ -81,9 +81,10 @@ class BalanceSheetStandardizer(Standardizer):
         prefix=&#34;BR&#34;
     )
 
-    # todo: CashOther wird noch nirgends verwendet
     bs_sumup_rg = RuleGroup(
         rules=[
+            # if there was now CashAndCashEquivalentsAtCarryingValue tag, sum up these tags into the
+            # Cash tag
             SumUpRule(
                 sum_tag=&#39;Cash&#39;,
                 potential_summands=[
@@ -92,6 +93,8 @@ class BalanceSheetStandardizer(Standardizer):
                     &#39;CashCashEquivalentsAndFederalFundsSold&#39;,
                     &#39;RestrictedCashAndCashEquivalentsAtCarryingValue&#39;,
                     &#39;CashAndCashEquivalentsInForeignCurrencyAtCarryingValue&#39;]),
+            # if there is not RetainedEarnings  tag or RetainedEarningsAccumulatedDeficit
+            # sum up these to RetainedEarnings
             SumUpRule(
                 sum_tag=&#39;RetainedEarnings&#39;,
                 potential_summands=[
@@ -104,38 +107,46 @@ class BalanceSheetStandardizer(Standardizer):
     bs_sum_completion = RuleGroup(
         prefix=&#34;SC&#34;,
         rules=[
+            # if only one tag of these are missing, calculate the missing one
             *missingsumparts_rules_creator(
                 sum_tag=&#39;Assets&#39;,
                 summand_tags=[&#39;AssetsCurrent&#39;, &#39;AssetsNoncurrent&#39;]
             ),
+            # if there is only AssetsCurrent, set Assets to the same value and set AssetsNoncurrent to 0
             SetSumIfOnlyOneSummand(
                 sum_tag=&#39;Assets&#39;,
                 summand_set=&#39;AssetsCurrent&#39;,
                 summands_nan=[&#39;AssetsNoncurrent&#39;]
             ),
+            # if there is only AssetsNoncurrent, set Assets to the same value and set AssetsCurrent to 0
             SetSumIfOnlyOneSummand(
                 sum_tag=&#39;Assets&#39;,
                 summand_set=&#39;AssetsNoncurrent&#39;,
                 summands_nan=[&#39;AssetsCurrent&#39;]
             ),
+            # if only one tag of these are missing, calculate the missing one
             *missingsumparts_rules_creator(
                 sum_tag=&#39;Liabilities&#39;,
                 summand_tags=[&#39;LiabilitiesCurrent&#39;, &#39;LiabilitiesNoncurrent&#39;]
             ),
+            # if there is only LiabilitiesCurrent, set Liabilities to the same value and set LiabilitiesNoncurrent to 0
             SetSumIfOnlyOneSummand(
                 sum_tag=&#39;Liabilities&#39;,
                 summand_set=&#39;LiabilitiesCurrent&#39;,
                 summands_nan=[&#39;LiabilitiesNoncurrent&#39;]
             ),
+            # if there is only LiabilitiesNoncurrent, set Liabilities to the same value and set LiabilitiesCurrent to 0
             SetSumIfOnlyOneSummand(
                 sum_tag=&#39;Liabilities&#39;,
                 summand_set=&#39;LiabilitiesNoncurrent&#39;,
                 summands_nan=[&#39;LiabilitiesCurrent&#39;]
             ),
+            # if only one tag of these are missing, calculate the missing one
             *missingsumparts_rules_creator(
-                sum_tag=&#39;AssLiaOwe&#39;,
+                sum_tag=&#39;Assets&#39;,
                 summand_tags=[&#39;Liabilities&#39;, &#39;OwnerEquity&#39;]
             ),
+            # if only one tag of these are missing, calculate the missing one
             *missingsumparts_rules_creator(
                 sum_tag=&#39;LiabilitiesAndOwnerEquity&#39;,
                 summand_tags=[&#39;Liabilities&#39;, &#39;OwnerEquity&#39;]
@@ -151,6 +162,9 @@ class BalanceSheetStandardizer(Standardizer):
 
     preprocess_rule_tree = RuleGroup(prefix=&#34;BS_PRE&#34;,
                                      rules=[
+                                         # sometimes values are tagged the wrong way.
+                                         # there are cases when the real Assets Value is tagged as AssetsNoncurrent
+                                         # and vice versa. fix that
                                          PreSumUpCorrection(sum_tag=&#39;Assets&#39;,
                                                             mixed_up_summand=&#39;AssetsNoncurrent&#39;,
                                                             other_summand=&#39;AssetsCurrent&#39;),
@@ -161,16 +175,22 @@ class BalanceSheetStandardizer(Standardizer):
 
     post_rule_tree = RuleGroup(prefix=&#34;BS_POST&#34;,
                                rules=[
+                                   # if only Assets is sets, set the AssetsCurrent to value of Assets and
+                                   # AssetsNoncurrent to 0
                                    PostCopyToFirstSummand(sum_tag=&#39;Assets&#39;,
                                                           first_summand=&#39;AssetsCurrent&#39;,
                                                           other_summands=[
                                                               &#39;AssetsNoncurrent&#39;]),
+                                   # if only Liabilities is sets, set the LiabilitiesCurrent to value of Liabilities
+                                   # and LiabilitiesNoncurrent to 0
                                    PostCopyToFirstSummand(sum_tag=&#39;Liabilities&#39;,
                                                           first_summand=&#39;LiabilitiesCurrent&#39;,
                                                           other_summands=[
                                                               &#39;LiabilitiesNoncurrent&#39;]),
+                                   # if none of these tags is present, set them to 0
                                    PostSetToZero(
                                        tags=[&#39;Assets&#39;, &#39;AssetsCurrent&#39;, &#39;AssetsNoncurrent&#39;]),
+                                   # if none of these tags is present, set them to 0
                                    PostSetToZero(
                                        tags=[&#39;Liabilities&#39;, &#39;LiabilitiesCurrent&#39;,
                                              &#39;LiabilitiesNoncurrent&#39;])
@@ -312,7 +332,7 @@ as negated.</dd>
 
     bs_rename_rg = RuleGroup(
         rules=[
-            # sometimes, the total Assets is contained in the AssetsNet tag
+            # sometimes, the total Assets is tagged as AssetsNet
             CopyTagRule(original=&#39;AssetsNet&#39;, target=&#39;Assets&#39;),
             # StockholdersEquityIncludingPortionAttributableToNoncontrollingInterest
             # has precedence over StockholdersEquity
@@ -320,7 +340,7 @@ as negated.</dd>
                 original=&#39;StockholdersEquityIncludingPortionAttributableToNoncontrollingInterest&#39;,
                 target=&#39;OwnerEquity&#39;),
             # either there is a StockholderEquity tag or a PartnersCapital tag,
-            # but both to never appear together
+            # but both never appear together
             CopyTagRule(original=&#39;PartnersCapital&#39;, target=&#39;OwnerEquity&#39;),
             CopyTagRule(original=&#39;StockholdersEquity&#39;, target=&#39;OwnerEquity&#39;),
             CopyTagRule(original=&#39;CashAndCashEquivalentsAtCarryingValue&#39;, target=&#39;Cash&#39;),
@@ -332,9 +352,10 @@ as negated.</dd>
         prefix=&#34;BR&#34;
     )
 
-    # todo: CashOther wird noch nirgends verwendet
     bs_sumup_rg = RuleGroup(
         rules=[
+            # if there was now CashAndCashEquivalentsAtCarryingValue tag, sum up these tags into the
+            # Cash tag
             SumUpRule(
                 sum_tag=&#39;Cash&#39;,
                 potential_summands=[
@@ -343,6 +364,8 @@ as negated.</dd>
                     &#39;CashCashEquivalentsAndFederalFundsSold&#39;,
                     &#39;RestrictedCashAndCashEquivalentsAtCarryingValue&#39;,
                     &#39;CashAndCashEquivalentsInForeignCurrencyAtCarryingValue&#39;]),
+            # if there is not RetainedEarnings  tag or RetainedEarningsAccumulatedDeficit
+            # sum up these to RetainedEarnings
             SumUpRule(
                 sum_tag=&#39;RetainedEarnings&#39;,
                 potential_summands=[
@@ -355,38 +378,46 @@ as negated.</dd>
     bs_sum_completion = RuleGroup(
         prefix=&#34;SC&#34;,
         rules=[
+            # if only one tag of these are missing, calculate the missing one
             *missingsumparts_rules_creator(
                 sum_tag=&#39;Assets&#39;,
                 summand_tags=[&#39;AssetsCurrent&#39;, &#39;AssetsNoncurrent&#39;]
             ),
+            # if there is only AssetsCurrent, set Assets to the same value and set AssetsNoncurrent to 0
             SetSumIfOnlyOneSummand(
                 sum_tag=&#39;Assets&#39;,
                 summand_set=&#39;AssetsCurrent&#39;,
                 summands_nan=[&#39;AssetsNoncurrent&#39;]
             ),
+            # if there is only AssetsNoncurrent, set Assets to the same value and set AssetsCurrent to 0
             SetSumIfOnlyOneSummand(
                 sum_tag=&#39;Assets&#39;,
                 summand_set=&#39;AssetsNoncurrent&#39;,
                 summands_nan=[&#39;AssetsCurrent&#39;]
             ),
+            # if only one tag of these are missing, calculate the missing one
             *missingsumparts_rules_creator(
                 sum_tag=&#39;Liabilities&#39;,
                 summand_tags=[&#39;LiabilitiesCurrent&#39;, &#39;LiabilitiesNoncurrent&#39;]
             ),
+            # if there is only LiabilitiesCurrent, set Liabilities to the same value and set LiabilitiesNoncurrent to 0
             SetSumIfOnlyOneSummand(
                 sum_tag=&#39;Liabilities&#39;,
                 summand_set=&#39;LiabilitiesCurrent&#39;,
                 summands_nan=[&#39;LiabilitiesNoncurrent&#39;]
             ),
+            # if there is only LiabilitiesNoncurrent, set Liabilities to the same value and set LiabilitiesCurrent to 0
             SetSumIfOnlyOneSummand(
                 sum_tag=&#39;Liabilities&#39;,
                 summand_set=&#39;LiabilitiesNoncurrent&#39;,
                 summands_nan=[&#39;LiabilitiesCurrent&#39;]
             ),
+            # if only one tag of these are missing, calculate the missing one
             *missingsumparts_rules_creator(
-                sum_tag=&#39;AssLiaOwe&#39;,
+                sum_tag=&#39;Assets&#39;,
                 summand_tags=[&#39;Liabilities&#39;, &#39;OwnerEquity&#39;]
             ),
+            # if only one tag of these are missing, calculate the missing one
             *missingsumparts_rules_creator(
                 sum_tag=&#39;LiabilitiesAndOwnerEquity&#39;,
                 summand_tags=[&#39;Liabilities&#39;, &#39;OwnerEquity&#39;]
@@ -402,6 +433,9 @@ as negated.</dd>
 
     preprocess_rule_tree = RuleGroup(prefix=&#34;BS_PRE&#34;,
                                      rules=[
+                                         # sometimes values are tagged the wrong way.
+                                         # there are cases when the real Assets Value is tagged as AssetsNoncurrent
+                                         # and vice versa. fix that
                                          PreSumUpCorrection(sum_tag=&#39;Assets&#39;,
                                                             mixed_up_summand=&#39;AssetsNoncurrent&#39;,
                                                             other_summand=&#39;AssetsCurrent&#39;),
@@ -412,16 +446,22 @@ as negated.</dd>
 
     post_rule_tree = RuleGroup(prefix=&#34;BS_POST&#34;,
                                rules=[
+                                   # if only Assets is sets, set the AssetsCurrent to value of Assets and
+                                   # AssetsNoncurrent to 0
                                    PostCopyToFirstSummand(sum_tag=&#39;Assets&#39;,
                                                           first_summand=&#39;AssetsCurrent&#39;,
                                                           other_summands=[
                                                               &#39;AssetsNoncurrent&#39;]),
+                                   # if only Liabilities is sets, set the LiabilitiesCurrent to value of Liabilities
+                                   # and LiabilitiesNoncurrent to 0
                                    PostCopyToFirstSummand(sum_tag=&#39;Liabilities&#39;,
                                                           first_summand=&#39;LiabilitiesCurrent&#39;,
                                                           other_summands=[
                                                               &#39;LiabilitiesNoncurrent&#39;]),
+                                   # if none of these tags is present, set them to 0
                                    PostSetToZero(
                                        tags=[&#39;Assets&#39;, &#39;AssetsCurrent&#39;, &#39;AssetsNoncurrent&#39;]),
+                                   # if none of these tags is present, set them to 0
                                    PostSetToZero(
                                        tags=[&#39;Liabilities&#39;, &#39;LiabilitiesCurrent&#39;,
                                              &#39;LiabilitiesNoncurrent&#39;])
@@ -474,6 +514,8 @@ as negated.</dd>
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li><a title="secfsdstools.f_standardize.standardizing.Standardizer" href="standardizing.html#secfsdstools.f_standardize.standardizing.Standardizer">Standardizer</a></li>
+<li><a title="secfsdstools.d_container.presentation.Presenter" href="../d_container/presentation.html#secfsdstools.d_container.presentation.Presenter">Presenter</a></li>
+<li>typing.Generic</li>
 </ul>
 <h3>Class variables</h3>
 <dl>
@@ -519,6 +561,8 @@ as negated.</dd>
 <li><code><b><a title="secfsdstools.f_standardize.standardizing.Standardizer" href="standardizing.html#secfsdstools.f_standardize.standardizing.Standardizer">Standardizer</a></b></code>:
 <ul class="hlist">
 <li><code><a title="secfsdstools.f_standardize.standardizing.Standardizer.get_process_description" href="standardizing.html#secfsdstools.f_standardize.standardizing.Standardizer.get_process_description">get_process_description</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.standardizing.Standardizer.get_standardize_bag" href="standardizing.html#secfsdstools.f_standardize.standardizing.Standardizer.get_standardize_bag">get_standardize_bag</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.standardizing.Standardizer.present" href="../d_container/presentation.html#secfsdstools.d_container.presentation.Presenter.present">present</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.standardizing.Standardizer.process" href="standardizing.html#secfsdstools.f_standardize.standardizing.Standardizer.process">process</a></code></li>
 </ul>
 </li>

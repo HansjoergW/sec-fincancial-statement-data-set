@@ -1,34 +1,33 @@
 BS Assets
 ---------
-Retained Earnings
-- Retained Earnings sind ziemlich vollständig
-  -> entweder als RetainedEarnings oder RetainedEarningsAccumulatedDeficit bezeichnet,
-     oder dann als die Summe von RetainedEarningsUnappropriated und RetainedEarningsAppropriated
-    => bringt ca.
 
+OwnerEquityCheck_cat==100 -> > 40'000
+    Liabilities and LiabilitiesNoncurrent not present
+    - problem -> Liabilities wird auf LiabilitiesCurent gesetzt, aber in der Regel gibt es
+      untertags von LiablitiesNoncurrent
 
-Errors in Reports
-- All Entries of BS report doubled in the same report
-  some reports have all entries doubled within the same report-nr, but with different lines.
-  they will fail to be pivoted correctly. so the question is wheter we should filter such entries
-  For instance: check_for_equity_tags() -> 0000215466-21-000071, 0000215466-21-000096
+    Führt dazu, das ownerequity check daneben liegt
 
-  we could either filter out such report, somehow -> as a first step analog to the
-   check_for_equity_tags() use this method to build a special filter
-   -> also needs a report
-   -> drop rules
+        OwnerEquityCheck_cat	AssetsLiaEquCheck_cat
+    0	252511	                252006
+    1	10830	                11013
+    5	8436	                8504
+    10	4546	                4569
+    100	42342	                42743
 
-  or when discovered check at which position the last tag appears before, and if it is in the middle,
-  cut off the rest, or we can try to de-duplicate somehow
-
-
-
-Regeln -> important to analyze properly
-- wenn 2 verschiedene Rename Regeln das selbe target tag haben,
-  erscheint nur eine im log -> die ID fehlt
--
-
-- there are entries with assets, currentassets, but noncurrentassets was still nan after processing
-
-- man müsste sicher CashAndCashEqui bevorzugen.. und dann vielleicht noch other Cash summieren
-und nur other cash verwenden, wenn cash and cashEqui nicht vorhanden..
+    Neue Regeln:
+                SumUpRule(
+                    sum_tag='LongTermDebt',
+                    potential_summands=[
+                        'LongTermDebtNoncurrent',
+                        'LongTermDebtAndCapitalLeaseObligations',
+                    ]
+                ),
+                SumUpRule(
+                  sum_tag='LiabilitiesNoncurrent',
+                  potential_summands=[
+                      'LongTermDebt',
+                      'OperatingLeaseLiabilityNoncurrent',
+                      'FinanceLeaseLiabilityNoncurrent',
+                      'DerivativeLiabilitiesNoncurrent',
+                      'OtherLiabilitiesNoncurrent'

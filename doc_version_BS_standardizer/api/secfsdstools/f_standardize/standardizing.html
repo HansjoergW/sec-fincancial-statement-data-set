@@ -49,13 +49,15 @@ class StandardizedBag:
                  preprocess_duplicate_log_df: pd.DataFrame,
                  applied_rules_log_df: pd.DataFrame,
                  stats_df: pd.DataFrame,
-                 applied_rules_sum_s: pd.Series):
+                 applied_rules_sum_s: pd.Series,
+                 validation_overview_df: pd.DataFrame):
 
         self.result_df = result_df
         self.preprocess_duplicate_log_df = preprocess_duplicate_log_df
         self.applied_rules_log_df = applied_rules_log_df
         self.stats_df = stats_df
         self.applied_rules_sum_s = applied_rules_sum_s
+        self.validation_overview_df = validation_overview_df
 
     def save(self, target_path: str):
         &#34;&#34;&#34;
@@ -80,6 +82,8 @@ class StandardizedBag:
         self.applied_rules_log_df.to_parquet(os.path.join(target_path, &#39;applied_rules_log.parquet&#39;))
         self.stats_df.to_parquet(os.path.join(target_path, &#39;stats.parquet&#39;))
         self.applied_rules_sum_s.to_csv(os.path.join(target_path, &#39;applied_rules_sum.csv&#39;))
+        self.validation_overview_df.to_parquet(
+            os.path.join(target_path, &#39;validation_overview.parquet&#39;))
 
     @staticmethod
     def load(target_path: str) -&gt; STANDARDIZED:
@@ -102,11 +106,14 @@ class StandardizedBag:
         applied_rules_sum_s = pd.read_csv(
             os.path.join(target_path, &#39;applied_rules_sum.csv&#39;),
             header=None, index_col=0, squeeze=True)
+        validation_overview_df = pd.read_parquet(
+            os.path.join(target_path, &#39;validation_overview.parquet&#39;))
 
         return StandardizedBag(result_df=result_df,
                                preprocess_duplicate_log_df=preprocess_duplicate_log_df,
                                applied_rules_log_df=applied_rules_log_df, stats_df=stats_df,
-                               applied_rules_sum_s=applied_rules_sum_s)
+                               applied_rules_sum_s=applied_rules_sum_s,
+                               validation_overview_df=validation_overview_df)
 
 
 class Stats:
@@ -255,6 +262,7 @@ class Standardizer(Presenter[JoinedDataBag]):
         # .. shows the total of how often a rule was applied, mainly counts the Trues per column
         #    in self.applied_rules_log_df
         self.applied_rules_sum_s: Optional[pd.Series] = None
+        self.validation_overview_df: Optional[pd.DataFrame] = None
 
         self.stats = Stats(self.final_tags)
 
@@ -359,6 +367,12 @@ class Standardizer(Presenter[JoinedDataBag]):
         for validation_rule in self.validation_rules:
             validation_rule.validate(finalized_df)
 
+        cat_cols = [x for x in finalized_df.columns if x.endswith(&#34;_cat&#34;)]
+        self.validation_overview_df = pd.DataFrame(index=[0, 1, 5, 10, 100], columns=cat_cols)
+
+        for column in cat_cols:
+            self.validation_overview_df[column] = finalized_df[column].value_counts()
+
         # calculate log_df summaries
         # filter for rule columns but making sure the order stays the same
         rule_columns = [x for x in self.applied_rules_log_df.columns if
@@ -427,7 +441,8 @@ class Standardizer(Presenter[JoinedDataBag]):
                                applied_rules_log_df=self.applied_rules_log_df,
                                preprocess_duplicate_log_df=self.preprocess_duplicate_log_df,
                                stats_df=self.stats.stats,
-                               applied_rules_sum_s=self.applied_rules_sum_s)</code></pre>
+                               applied_rules_sum_s=self.applied_rules_sum_s,
+                               validation_overview_df=self.validation_overview_df)</code></pre>
 </details>
 </section>
 <section>
@@ -441,7 +456,7 @@ class Standardizer(Presenter[JoinedDataBag]):
 <dl>
 <dt id="secfsdstools.f_standardize.standardizing.StandardizedBag"><code class="flex name class">
 <span>class <span class="ident">StandardizedBag</span></span>
-<span>(</span><span>result_df: pandas.core.frame.DataFrame, preprocess_duplicate_log_df: pandas.core.frame.DataFrame, applied_rules_log_df: pandas.core.frame.DataFrame, stats_df: pandas.core.frame.DataFrame, applied_rules_sum_s: pandas.core.series.Series)</span>
+<span>(</span><span>result_df: pandas.core.frame.DataFrame, preprocess_duplicate_log_df: pandas.core.frame.DataFrame, applied_rules_log_df: pandas.core.frame.DataFrame, stats_df: pandas.core.frame.DataFrame, applied_rules_sum_s: pandas.core.series.Series, validation_overview_df: pandas.core.frame.DataFrame)</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -456,13 +471,15 @@ class Standardizer(Presenter[JoinedDataBag]):
                  preprocess_duplicate_log_df: pd.DataFrame,
                  applied_rules_log_df: pd.DataFrame,
                  stats_df: pd.DataFrame,
-                 applied_rules_sum_s: pd.Series):
+                 applied_rules_sum_s: pd.Series,
+                 validation_overview_df: pd.DataFrame):
 
         self.result_df = result_df
         self.preprocess_duplicate_log_df = preprocess_duplicate_log_df
         self.applied_rules_log_df = applied_rules_log_df
         self.stats_df = stats_df
         self.applied_rules_sum_s = applied_rules_sum_s
+        self.validation_overview_df = validation_overview_df
 
     def save(self, target_path: str):
         &#34;&#34;&#34;
@@ -487,6 +504,8 @@ class Standardizer(Presenter[JoinedDataBag]):
         self.applied_rules_log_df.to_parquet(os.path.join(target_path, &#39;applied_rules_log.parquet&#39;))
         self.stats_df.to_parquet(os.path.join(target_path, &#39;stats.parquet&#39;))
         self.applied_rules_sum_s.to_csv(os.path.join(target_path, &#39;applied_rules_sum.csv&#39;))
+        self.validation_overview_df.to_parquet(
+            os.path.join(target_path, &#39;validation_overview.parquet&#39;))
 
     @staticmethod
     def load(target_path: str) -&gt; STANDARDIZED:
@@ -509,11 +528,14 @@ class Standardizer(Presenter[JoinedDataBag]):
         applied_rules_sum_s = pd.read_csv(
             os.path.join(target_path, &#39;applied_rules_sum.csv&#39;),
             header=None, index_col=0, squeeze=True)
+        validation_overview_df = pd.read_parquet(
+            os.path.join(target_path, &#39;validation_overview.parquet&#39;))
 
         return StandardizedBag(result_df=result_df,
                                preprocess_duplicate_log_df=preprocess_duplicate_log_df,
                                applied_rules_log_df=applied_rules_log_df, stats_df=stats_df,
-                               applied_rules_sum_s=applied_rules_sum_s)</code></pre>
+                               applied_rules_sum_s=applied_rules_sum_s,
+                               validation_overview_df=validation_overview_df)</code></pre>
 </details>
 <h3>Static methods</h3>
 <dl>
@@ -557,11 +579,14 @@ def load(target_path: str) -&gt; STANDARDIZED:
     applied_rules_sum_s = pd.read_csv(
         os.path.join(target_path, &#39;applied_rules_sum.csv&#39;),
         header=None, index_col=0, squeeze=True)
+    validation_overview_df = pd.read_parquet(
+        os.path.join(target_path, &#39;validation_overview.parquet&#39;))
 
     return StandardizedBag(result_df=result_df,
                            preprocess_duplicate_log_df=preprocess_duplicate_log_df,
                            applied_rules_log_df=applied_rules_log_df, stats_df=stats_df,
-                           applied_rules_sum_s=applied_rules_sum_s)</code></pre>
+                           applied_rules_sum_s=applied_rules_sum_s,
+                           validation_overview_df=validation_overview_df)</code></pre>
 </details>
 </dd>
 </dl>
@@ -607,7 +632,9 @@ will be created</dd>
         os.path.join(target_path, &#39;duplicate_log.parquet&#39;))
     self.applied_rules_log_df.to_parquet(os.path.join(target_path, &#39;applied_rules_log.parquet&#39;))
     self.stats_df.to_parquet(os.path.join(target_path, &#39;stats.parquet&#39;))
-    self.applied_rules_sum_s.to_csv(os.path.join(target_path, &#39;applied_rules_sum.csv&#39;))</code></pre>
+    self.applied_rules_sum_s.to_csv(os.path.join(target_path, &#39;applied_rules_sum.csv&#39;))
+    self.validation_overview_df.to_parquet(
+        os.path.join(target_path, &#39;validation_overview.parquet&#39;))</code></pre>
 </details>
 </dd>
 </dl>
@@ -733,6 +760,7 @@ as negated.</dd>
         # .. shows the total of how often a rule was applied, mainly counts the Trues per column
         #    in self.applied_rules_log_df
         self.applied_rules_sum_s: Optional[pd.Series] = None
+        self.validation_overview_df: Optional[pd.DataFrame] = None
 
         self.stats = Stats(self.final_tags)
 
@@ -837,6 +865,12 @@ as negated.</dd>
         for validation_rule in self.validation_rules:
             validation_rule.validate(finalized_df)
 
+        cat_cols = [x for x in finalized_df.columns if x.endswith(&#34;_cat&#34;)]
+        self.validation_overview_df = pd.DataFrame(index=[0, 1, 5, 10, 100], columns=cat_cols)
+
+        for column in cat_cols:
+            self.validation_overview_df[column] = finalized_df[column].value_counts()
+
         # calculate log_df summaries
         # filter for rule columns but making sure the order stays the same
         rule_columns = [x for x in self.applied_rules_log_df.columns if
@@ -905,7 +939,8 @@ as negated.</dd>
                                applied_rules_log_df=self.applied_rules_log_df,
                                preprocess_duplicate_log_df=self.preprocess_duplicate_log_df,
                                stats_df=self.stats.stats,
-                               applied_rules_sum_s=self.applied_rules_sum_s)</code></pre>
+                               applied_rules_sum_s=self.applied_rules_sum_s,
+                               validation_overview_df=self.validation_overview_df)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -979,7 +1014,8 @@ the bag can then be used to directly store the information on disk and reload it
                            applied_rules_log_df=self.applied_rules_log_df,
                            preprocess_duplicate_log_df=self.preprocess_duplicate_log_df,
                            stats_df=self.stats.stats,
-                           applied_rules_sum_s=self.applied_rules_sum_s)</code></pre>
+                           applied_rules_sum_s=self.applied_rules_sum_s,
+                           validation_overview_df=self.validation_overview_df)</code></pre>
 </details>
 </dd>
 <dt id="secfsdstools.f_standardize.standardizing.Standardizer.process"><code class="name flex">

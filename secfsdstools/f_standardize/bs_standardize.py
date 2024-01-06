@@ -22,11 +22,14 @@ class BalanceSheetStandardizer(Standardizer):
     Liabilities
        LiabilitiesCurrent
        LiabilitiesNoncurrent
-    OwnerEquity
-        PaidInCapital
-        TreasuryStockValue
-        RetainedEarnings
-    LiabilitiesAndOwnerEquity
+    Equity
+        HolderEquity
+            PaidInCapital
+            TreasuryStockValue
+            RetainedEarnings
+        TemporaryEquity
+        RedeemableEquity
+    LiabilitiesAndEquity
 
     """
 
@@ -38,7 +41,7 @@ class BalanceSheetStandardizer(Standardizer):
             # has precedence over StockholdersEquity
             CopyTagRule(original='CashAndCashEquivalentsAtCarryingValue', target='Cash'),
             CopyTagRule(original='LiabilitiesAndStockholdersEquity',
-                        target='LiabilitiesAndOwnerEquity'),
+                        target='LiabilitiesAndEquity'),
             # most of the time, RetainedEarningsAccumulatedDeficit is used
             CopyTagRule(original='RetainedEarningsAccumulatedDeficit', target='RetainedEarnings')
         ],
@@ -55,7 +58,7 @@ class BalanceSheetStandardizer(Standardizer):
             # but both never appear together
             CopyTagRule(original='PartnersCapital', target='HolderEquity'),
             CopyTagRule(original='StockholdersEquity', target='HolderEquity'),
-            # often, there is also a TemporaryEquityCarryingAmountAttributableToParent which is part of OwnerEquity
+            # often, there is also a TemporaryEquityCarryingAmountAttributableToParent which is part of Equity
             SumUpRule(
                 sum_tag='TemporaryEquity',
                 potential_summands=[
@@ -77,7 +80,7 @@ class BalanceSheetStandardizer(Standardizer):
                 ]
             ),
             SumUpRule(
-                sum_tag='OwnerEquity',
+                sum_tag='Equity',
                 potential_summands=[
                     'HolderEquity',
                     'TemporaryEquity',
@@ -103,12 +106,12 @@ class BalanceSheetStandardizer(Standardizer):
             # if only one tag of these are missing, calculate the missing one
             *missingsumparts_rules_creator(
                 sum_tag='Assets',
-                summand_tags=['Liabilities', 'OwnerEquity']
+                summand_tags=['Liabilities', 'Equity']
             ),
             # if only one tag of these are missing, calculate the missing one
             *missingsumparts_rules_creator(
-                sum_tag='LiabilitiesAndOwnerEquity',
-                summand_tags=['Liabilities', 'OwnerEquity']
+                sum_tag='LiabilitiesAndEquity',
+                summand_tags=['Liabilities', 'Equity']
             )
         ])
 
@@ -252,19 +255,19 @@ class BalanceSheetStandardizer(Standardizer):
         SumValidationRule(identifier='LiabilitiesCheck',
                           sum_tag='Liabilities',
                           summands=['LiabilitiesCurrent', 'LiabilitiesNoncurrent']),
-        SumValidationRule(identifier='OwnerEquityCheck',
-                          sum_tag='LiabilitiesAndOwnerEquity',
-                          summands=['OwnerEquity', 'Liabilities']),
+        SumValidationRule(identifier='EquityCheck',
+                          sum_tag='LiabilitiesAndEquity',
+                          summands=['Equity', 'Liabilities']),
         SumValidationRule(identifier='AssetsLiaEquCheck',
                           sum_tag='Assets',
-                          summands=['OwnerEquity', 'Liabilities']),
+                          summands=['Equity', 'Liabilities']),
     ]
 
     # these are the columns that finally are returned after the standardization
     final_tags: List[str] = ['Assets', 'AssetsCurrent', 'AssetsNoncurrent',
                              'Liabilities', 'LiabilitiesCurrent', 'LiabilitiesNoncurrent',
-                             'HolderEquity', 'TemporaryEquity', 'RedeemableEquity', 'OwnerEquity',
-                             'LiabilitiesAndOwnerEquity',
+                             'HolderEquity', 'TemporaryEquity', 'RedeemableEquity', 'Equity',
+                             'LiabilitiesAndEquity',
                              'Cash',
                              'RetainedEarnings',
                              'AdditionalPaidInCapital',
@@ -289,18 +292,3 @@ class BalanceSheetStandardizer(Standardizer):
             main_iterations=iterations,
             filter_for_main_statement=filter_for_main_statement,
             main_statement_tags=self.main_statement_tags)
-
-
-if __name__ == '__main__':
-    from secfsdstools.e_collector.reportcollecting import SingleReportCollector
-    from secfsdstools.u_usecases.bulk_loading import default_postloadfilter
-
-    report = SingleReportCollector.get_report_by_adsh(adsh='0001104659-21-071013',
-                                                      stmt_filter=['BS'])
-
-    bag = report.collect()
-    filtered_bag = default_postloadfilter(bag)
-
-    bs_std = BalanceSheetStandardizer()
-    result = bs_std.present(filtered_bag.join())
-    print(result)

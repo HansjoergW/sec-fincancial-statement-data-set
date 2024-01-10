@@ -295,8 +295,7 @@ class Standardizer(Presenter[JoinedDataBag]):
             cpy_df.loc[cpy_df.negating == 1, 'value'] = -cpy_df.value
 
         # pivot the table
-        expected_tags = self.all_input_tags.union(self.final_tags)
-        pivot_df = self._preprocess_pivot(data_df=cpy_df, expected_tags=expected_tags)
+        pivot_df = self._preprocess_pivot(data_df=cpy_df, expected_tags=self.all_input_tags)
 
         if self.filter_for_main_statement:
             pivot_df = self._preprocess_filter_pivot_for_main_statement(pivot_df)

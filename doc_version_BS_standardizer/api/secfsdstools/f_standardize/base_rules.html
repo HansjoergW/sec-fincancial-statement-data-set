@@ -186,7 +186,7 @@ class CopyTagRule(Rule):
             str: description
         &#34;&#34;&#34;
         return f&#34;Copies the values from {self.original} to {self.target} &#34; \
-               f&#34;if {self.original} is not null and {self.target} is null&#34;
+               f&#34;if {self.original} is not null and {self.target} is nan&#34;
 
 
 class MissingSumRule(Rule):
@@ -897,7 +897,7 @@ and the original tag is set</p>
             str: description
         &#34;&#34;&#34;
         return f&#34;Copies the values from {self.original} to {self.target} &#34; \
-               f&#34;if {self.original} is not null and {self.target} is null&#34;</code></pre>
+               f&#34;if {self.original} is not null and {self.target} is nan&#34;</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">

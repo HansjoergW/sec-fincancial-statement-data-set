@@ -274,7 +274,9 @@ class BalanceSheetStandardizer(Standardizer):
                                        tags=[&#39;Liabilities&#39;, &#39;LiabilitiesCurrent&#39;,
                                              &#39;LiabilitiesNoncurrent&#39;]),
                                    PostSetToZero(tags=[&#39;TemporaryEquity&#39;]),
-                                   PostSetToZero(tags=[&#39;RedeemableEquity&#39;])
+                                   PostSetToZero(tags=[&#39;RedeemableEquity&#39;]),
+                                   PostSetToZero(tags=[&#39;AdditionalPaidInCapital&#39;]),
+                                   PostSetToZero(tags=[&#39;TreasuryStockValue&#39;]),
                                ])
 
     validation_rules: List[ValidationRule] = [
@@ -630,7 +632,9 @@ as negated.</dd>
                                        tags=[&#39;Liabilities&#39;, &#39;LiabilitiesCurrent&#39;,
                                              &#39;LiabilitiesNoncurrent&#39;]),
                                    PostSetToZero(tags=[&#39;TemporaryEquity&#39;]),
-                                   PostSetToZero(tags=[&#39;RedeemableEquity&#39;])
+                                   PostSetToZero(tags=[&#39;RedeemableEquity&#39;]),
+                                   PostSetToZero(tags=[&#39;AdditionalPaidInCapital&#39;]),
+                                   PostSetToZero(tags=[&#39;TreasuryStockValue&#39;]),
                                ])
 
     validation_rules: List[ValidationRule] = [

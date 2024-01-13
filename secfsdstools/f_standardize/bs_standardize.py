@@ -245,7 +245,9 @@ class BalanceSheetStandardizer(Standardizer):
                                        tags=['Liabilities', 'LiabilitiesCurrent',
                                              'LiabilitiesNoncurrent']),
                                    PostSetToZero(tags=['TemporaryEquity']),
-                                   PostSetToZero(tags=['RedeemableEquity'])
+                                   PostSetToZero(tags=['RedeemableEquity']),
+                                   PostSetToZero(tags=['AdditionalPaidInCapital']),
+                                   PostSetToZero(tags=['TreasuryStockValue']),
                                ])
 
     validation_rules: List[ValidationRule] = [

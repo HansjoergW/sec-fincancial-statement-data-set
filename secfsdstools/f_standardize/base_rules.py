@@ -157,7 +157,7 @@ class CopyTagRule(Rule):
             str: description
         """
         return f"Copies the values from {self.original} to {self.target} " \
-               f"if {self.original} is not null and {self.target} is null"
+               f"if {self.original} is not null and {self.target} is nan"
 
 
 class MissingSumRule(Rule):

@@ -21,7 +21,7 @@ def default_postloadfilter(databag: RawDataBag) -> RawDataBag:
     """
     defines a default post filter method that can be used ba ZipCollectors.
     It combines the filters:
-        ReportPeriodRawFilter, MainCoregRawFilter, OfficialTagsOnlyRawFilter, USDOnlyRawFilter
+            ReportPeriodRawFilter, MainCoregRawFilter, OfficialTagsOnlyRawFilter, USDOnlyRawFilter
     """
     # pylint: disable=C0415
     from secfsdstools.e_filter.rawfiltering import ReportPeriodRawFilter, MainCoregRawFilter, \

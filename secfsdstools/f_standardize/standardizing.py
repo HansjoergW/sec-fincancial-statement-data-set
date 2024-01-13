@@ -21,7 +21,8 @@ class StandardizedBag:
                  applied_rules_log_df: pd.DataFrame,
                  stats_df: pd.DataFrame,
                  applied_rules_sum_s: pd.Series,
-                 validation_overview_df: pd.DataFrame):
+                 validation_overview_df: pd.DataFrame,
+                 process_description_df: pd.DataFrame):
 
         self.result_df = result_df
         self.preprocess_duplicate_log_df = preprocess_duplicate_log_df
@@ -29,6 +30,7 @@ class StandardizedBag:
         self.stats_df = stats_df
         self.applied_rules_sum_s = applied_rules_sum_s
         self.validation_overview_df = validation_overview_df
+        self.process_description_df = process_description_df
 
     def save(self, target_path: str):
         """
@@ -55,6 +57,8 @@ class StandardizedBag:
         self.applied_rules_sum_s.to_csv(os.path.join(target_path, 'applied_rules_sum.csv'))
         self.validation_overview_df.to_parquet(
             os.path.join(target_path, 'validation_overview.parquet'))
+        self.process_description_df.to_parquet(
+            os.path.join(target_path, 'process_description.parquet'))
 
     @staticmethod
     def load(target_path: str) -> STANDARDIZED:
@@ -79,12 +83,15 @@ class StandardizedBag:
             header=None, index_col=0, squeeze=True)
         validation_overview_df = pd.read_parquet(
             os.path.join(target_path, 'validation_overview.parquet'))
+        process_description_df = pd.read_parquet(
+            os.path.join(target_path, 'process_description.parquet'))
 
         return StandardizedBag(result_df=result_df,
                                preprocess_duplicate_log_df=preprocess_duplicate_log_df,
                                applied_rules_log_df=applied_rules_log_df, stats_df=stats_df,
                                applied_rules_sum_s=applied_rules_sum_s,
-                               validation_overview_df=validation_overview_df)
+                               validation_overview_df=validation_overview_df,
+                               process_description_df=process_description_df)
 
 
 class Stats:
@@ -412,4 +419,5 @@ class Standardizer(Presenter[JoinedDataBag]):
                                preprocess_duplicate_log_df=self.preprocess_duplicate_log_df,
                                stats_df=self.stats.stats,
                                applied_rules_sum_s=self.applied_rules_sum_s,
-                               validation_overview_df=self.validation_overview_df)
+                               validation_overview_df=self.validation_overview_df,
+                               process_description_df=self.get_process_description())

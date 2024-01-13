@@ -49,7 +49,7 @@ class BalanceSheetStandardizer(Standardizer):
     )
 
     bs_owner_equity = RuleGroup(
-        prefix='OE',
+        prefix='EQ',
         rules=[
             CopyTagRule(
                 original='StockholdersEquityIncludingPortionAttributableToNoncontrollingInterest',

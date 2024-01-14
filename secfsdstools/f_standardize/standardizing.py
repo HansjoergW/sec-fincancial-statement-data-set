@@ -322,11 +322,11 @@ class Standardizer(Presenter[JoinedDataBag]):
     def _main_processing(self, data_df: pd.DataFrame):
         for i in range(self.main_iterations):
             # apply the main rule tree
-            self.main_rule_tree.set_id(prefix=f"MAIN_{i+1}")
+            self.main_rule_tree.set_id(prefix=f"MAIN_{i + 1}")
             self.main_rule_tree.process(data_df=data_df, log_df=self.applied_rules_log_df)
 
             # calculate stats and add them to the stats log
-            self.stats.add_stats_entry(data_df=data_df, process_step_name=f'MAIN_{i+i}')
+            self.stats.add_stats_entry(data_df=data_df, process_step_name=f'MAIN_{i + i}')
 
     def _post_processing(self, data_df: pd.DataFrame):
         # apply the post rule tree
@@ -349,6 +349,12 @@ class Standardizer(Presenter[JoinedDataBag]):
 
         for column in cat_cols:
             self.validation_overview_df[column] = finalized_df[column].value_counts()
+
+        for column in self.validation_overview_df.columns:
+            new_column_name = column + '_pct'
+            self.validation_overview_df = (
+                self.validation_overview_df.assign(
+                    **{new_column_name: (100 * self.validation_overview_df[column] / len(finalized_df)).round(2)}))
 
         # calculate log_df summaries
         # filter for rule columns but making sure the order stays the same

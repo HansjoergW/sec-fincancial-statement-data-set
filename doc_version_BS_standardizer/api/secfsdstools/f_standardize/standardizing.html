@@ -355,7 +355,7 @@ class Standardizer(Presenter[JoinedDataBag]):
             self.main_rule_tree.process(data_df=data_df, log_df=self.applied_rules_log_df)
 
             # calculate stats and add them to the stats log
-            self.stats.add_stats_entry(data_df=data_df, process_step_name=f&#39;MAIN_{i + i}&#39;)
+            self.stats.add_stats_entry(data_df=data_df, process_step_name=f&#39;MAIN_{i + 1}&#39;)
 
     def _post_processing(self, data_df: pd.DataFrame):
         # apply the post rule tree
@@ -871,7 +871,7 @@ as negated.</dd>
             self.main_rule_tree.process(data_df=data_df, log_df=self.applied_rules_log_df)
 
             # calculate stats and add them to the stats log
-            self.stats.add_stats_entry(data_df=data_df, process_step_name=f&#39;MAIN_{i + i}&#39;)
+            self.stats.add_stats_entry(data_df=data_df, process_step_name=f&#39;MAIN_{i + 1}&#39;)
 
     def _post_processing(self, data_df: pd.DataFrame):
         # apply the post rule tree

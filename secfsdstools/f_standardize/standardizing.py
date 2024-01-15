@@ -326,7 +326,7 @@ class Standardizer(Presenter[JoinedDataBag]):
             self.main_rule_tree.process(data_df=data_df, log_df=self.applied_rules_log_df)
 
             # calculate stats and add them to the stats log
-            self.stats.add_stats_entry(data_df=data_df, process_step_name=f'MAIN_{i + i}')
+            self.stats.add_stats_entry(data_df=data_df, process_step_name=f'MAIN_{i + 1}')
 
     def _post_processing(self, data_df: pd.DataFrame):
         # apply the post rule tree

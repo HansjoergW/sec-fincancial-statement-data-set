@@ -354,7 +354,8 @@ class Standardizer(Presenter[JoinedDataBag]):
             new_column_name = column + '_pct'
             self.validation_overview_df = (
                 self.validation_overview_df.assign(
-                    **{new_column_name: (100 * self.validation_overview_df[column] / len(finalized_df)).round(2)}))
+                    **{new_column_name: (100 * self.validation_overview_df[column] / len(
+                        finalized_df)).round(2)}))
 
         # calculate log_df summaries
         # filter for rule columns but making sure the order stays the same
@@ -406,14 +407,46 @@ class Standardizer(Presenter[JoinedDataBag]):
 
     def present(self, databag: JoinedDataBag) -> pd.DataFrame:
         """
-        implements a presenter which reformats the bag into dataframe.
+        implements a presenter which reformats the bag into standardized dataframe.
+        it also merges the main attributes from the sub_df to the result (cik, name, form, fye, fy, fp).
+
+        Note: as name always the latest available name is used.
+
         Args:
-            databag (T): the bag to transform into presentation df
+            databag (T): the bag to transform into the presentation df
 
         Returns:
             pd.DataFrame: the data to be presented
         """
-        return self.process(databag.pre_num_df)
+        standardized_df = self.process(databag.pre_num_df)
+
+        data_to_merge_df = databag.sub_df[['adsh', 'cik', 'form', 'fye', 'fy', 'fp']].copy()
+
+        # we want to have the same name for the same cik and since a name can change during the lifetime of a company
+        # we first have to extract the latest company name:
+
+        # first, create a cik-name look up table, so that we can use the name in the plot
+        # therefore we sort by period and use the latest entry
+        df_latest = databag.sub_df[['cik', 'name', 'period']].sort_values('period').drop_duplicates(
+            'cik', keep='last')
+        # Create the dictionary
+        cik_name_dict = dict(zip(df_latest['cik'], df_latest['name']))
+
+        data_to_merge_df['name'] = data_to_merge_df['cik'].map(cik_name_dict)
+
+        merged_df = pd.merge(data_to_merge_df, standardized_df, on='adsh', how='inner')
+
+        # create the date column and sort by date
+        merged_df['date'] = pd.to_datetime(merged_df['ddate'], format='%Y%m%d')
+
+        # sort the columns
+        merged_df = merged_df[['adsh', 'cik', 'name', 'form', 'fye', 'fy', 'fp', 'date'] +
+                              standardized_df.columns.tolist()[1:]]
+
+        # store it in the standardizer object as new result
+        self.result = merged_df.sort_values(by='date')
+
+        return self.result
 
     def get_standardize_bag(self):
         """

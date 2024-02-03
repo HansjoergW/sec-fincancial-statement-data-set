@@ -383,7 +383,8 @@ class Standardizer(Presenter[JoinedDataBag]):
             new_column_name = column + &#39;_pct&#39;
             self.validation_overview_df = (
                 self.validation_overview_df.assign(
-                    **{new_column_name: (100 * self.validation_overview_df[column] / len(finalized_df)).round(2)}))
+                    **{new_column_name: (100 * self.validation_overview_df[column] / len(
+                        finalized_df)).round(2)}))
 
         # calculate log_df summaries
         # filter for rule columns but making sure the order stays the same
@@ -435,14 +436,46 @@ class Standardizer(Presenter[JoinedDataBag]):
 
     def present(self, databag: JoinedDataBag) -&gt; pd.DataFrame:
         &#34;&#34;&#34;
-        implements a presenter which reformats the bag into dataframe.
+        implements a presenter which reformats the bag into standardized dataframe.
+        it also merges the main attributes from the sub_df to the result (cik, name, form, fye, fy, fp).
+
+        Note: as name always the latest available name is used.
+
         Args:
-            databag (T): the bag to transform into presentation df
+            databag (T): the bag to transform into the presentation df
 
         Returns:
             pd.DataFrame: the data to be presented
         &#34;&#34;&#34;
-        return self.process(databag.pre_num_df)
+        standardized_df = self.process(databag.pre_num_df)
+
+        data_to_merge_df = databag.sub_df[[&#39;adsh&#39;, &#39;cik&#39;, &#39;form&#39;, &#39;fye&#39;, &#39;fy&#39;, &#39;fp&#39;]].copy()
+
+        # we want to have the same name for the same cik and since a name can change during the lifetime of a company
+        # we first have to extract the latest company name:
+
+        # first, create a cik-name look up table, so that we can use the name in the plot
+        # therefore we sort by period and use the latest entry
+        df_latest = databag.sub_df[[&#39;cik&#39;, &#39;name&#39;, &#39;period&#39;]].sort_values(&#39;period&#39;).drop_duplicates(
+            &#39;cik&#39;, keep=&#39;last&#39;)
+        # Create the dictionary
+        cik_name_dict = dict(zip(df_latest[&#39;cik&#39;], df_latest[&#39;name&#39;]))
+
+        data_to_merge_df[&#39;name&#39;] = data_to_merge_df[&#39;cik&#39;].map(cik_name_dict)
+
+        merged_df = pd.merge(data_to_merge_df, standardized_df, on=&#39;adsh&#39;, how=&#39;inner&#39;)
+
+        # create the date column and sort by date
+        merged_df[&#39;date&#39;] = pd.to_datetime(merged_df[&#39;ddate&#39;], format=&#39;%Y%m%d&#39;)
+
+        # sort the columns
+        merged_df = merged_df[[&#39;adsh&#39;, &#39;cik&#39;, &#39;name&#39;, &#39;form&#39;, &#39;fye&#39;, &#39;fy&#39;, &#39;fp&#39;, &#39;date&#39;] +
+                              standardized_df.columns.tolist()[1:]]
+
+        # store it in the standardizer object as new result
+        self.result = merged_df.sort_values(by=&#39;date&#39;)
+
+        return self.result
 
     def get_standardize_bag(self):
         &#34;&#34;&#34;
@@ -899,7 +932,8 @@ as negated.</dd>
             new_column_name = column + &#39;_pct&#39;
             self.validation_overview_df = (
                 self.validation_overview_df.assign(
-                    **{new_column_name: (100 * self.validation_overview_df[column] / len(finalized_df)).round(2)}))
+                    **{new_column_name: (100 * self.validation_overview_df[column] / len(
+                        finalized_df)).round(2)}))
 
         # calculate log_df summaries
         # filter for rule columns but making sure the order stays the same
@@ -951,14 +985,46 @@ as negated.</dd>
 
     def present(self, databag: JoinedDataBag) -&gt; pd.DataFrame:
         &#34;&#34;&#34;
-        implements a presenter which reformats the bag into dataframe.
+        implements a presenter which reformats the bag into standardized dataframe.
+        it also merges the main attributes from the sub_df to the result (cik, name, form, fye, fy, fp).
+
+        Note: as name always the latest available name is used.
+
         Args:
-            databag (T): the bag to transform into presentation df
+            databag (T): the bag to transform into the presentation df
 
         Returns:
             pd.DataFrame: the data to be presented
         &#34;&#34;&#34;
-        return self.process(databag.pre_num_df)
+        standardized_df = self.process(databag.pre_num_df)
+
+        data_to_merge_df = databag.sub_df[[&#39;adsh&#39;, &#39;cik&#39;, &#39;form&#39;, &#39;fye&#39;, &#39;fy&#39;, &#39;fp&#39;]].copy()
+
+        # we want to have the same name for the same cik and since a name can change during the lifetime of a company
+        # we first have to extract the latest company name:
+
+        # first, create a cik-name look up table, so that we can use the name in the plot
+        # therefore we sort by period and use the latest entry
+        df_latest = databag.sub_df[[&#39;cik&#39;, &#39;name&#39;, &#39;period&#39;]].sort_values(&#39;period&#39;).drop_duplicates(
+            &#39;cik&#39;, keep=&#39;last&#39;)
+        # Create the dictionary
+        cik_name_dict = dict(zip(df_latest[&#39;cik&#39;], df_latest[&#39;name&#39;]))
+
+        data_to_merge_df[&#39;name&#39;] = data_to_merge_df[&#39;cik&#39;].map(cik_name_dict)
+
+        merged_df = pd.merge(data_to_merge_df, standardized_df, on=&#39;adsh&#39;, how=&#39;inner&#39;)
+
+        # create the date column and sort by date
+        merged_df[&#39;date&#39;] = pd.to_datetime(merged_df[&#39;ddate&#39;], format=&#39;%Y%m%d&#39;)
+
+        # sort the columns
+        merged_df = merged_df[[&#39;adsh&#39;, &#39;cik&#39;, &#39;name&#39;, &#39;form&#39;, &#39;fye&#39;, &#39;fy&#39;, &#39;fp&#39;, &#39;date&#39;] +
+                              standardized_df.columns.tolist()[1:]]
+
+        # store it in the standardizer object as new result
+        self.result = merged_df.sort_values(by=&#39;date&#39;)
+
+        return self.result
 
     def get_standardize_bag(self):
         &#34;&#34;&#34;
@@ -1050,6 +1116,71 @@ the bag can then be used to directly store the information on disk and reload it
                            process_description_df=self.get_process_description())</code></pre>
 </details>
 </dd>
+<dt id="secfsdstools.f_standardize.standardizing.Standardizer.present"><code class="name flex">
+<span>def <span class="ident">present</span></span>(<span>self, databag: <a title="secfsdstools.d_container.databagmodel.JoinedDataBag" href="../d_container/databagmodel.html#secfsdstools.d_container.databagmodel.JoinedDataBag">JoinedDataBag</a>) ‑> pandas.core.frame.DataFrame</span>
+</code></dt>
+<dd>
+<div class="desc"><p>implements a presenter which reformats the bag into standardized dataframe.
+it also merges the main attributes from the sub_df to the result (cik, name, form, fye, fy, fp).</p>
+<p>Note: as name always the latest available name is used.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>databag</code></strong> :&ensp;<code>T</code></dt>
+<dd>the bag to transform into the presentation df</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>pd.DataFrame</code></dt>
+<dd>the data to be presented</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def present(self, databag: JoinedDataBag) -&gt; pd.DataFrame:
+    &#34;&#34;&#34;
+    implements a presenter which reformats the bag into standardized dataframe.
+    it also merges the main attributes from the sub_df to the result (cik, name, form, fye, fy, fp).
+
+    Note: as name always the latest available name is used.
+
+    Args:
+        databag (T): the bag to transform into the presentation df
+
+    Returns:
+        pd.DataFrame: the data to be presented
+    &#34;&#34;&#34;
+    standardized_df = self.process(databag.pre_num_df)
+
+    data_to_merge_df = databag.sub_df[[&#39;adsh&#39;, &#39;cik&#39;, &#39;form&#39;, &#39;fye&#39;, &#39;fy&#39;, &#39;fp&#39;]].copy()
+
+    # we want to have the same name for the same cik and since a name can change during the lifetime of a company
+    # we first have to extract the latest company name:
+
+    # first, create a cik-name look up table, so that we can use the name in the plot
+    # therefore we sort by period and use the latest entry
+    df_latest = databag.sub_df[[&#39;cik&#39;, &#39;name&#39;, &#39;period&#39;]].sort_values(&#39;period&#39;).drop_duplicates(
+        &#39;cik&#39;, keep=&#39;last&#39;)
+    # Create the dictionary
+    cik_name_dict = dict(zip(df_latest[&#39;cik&#39;], df_latest[&#39;name&#39;]))
+
+    data_to_merge_df[&#39;name&#39;] = data_to_merge_df[&#39;cik&#39;].map(cik_name_dict)
+
+    merged_df = pd.merge(data_to_merge_df, standardized_df, on=&#39;adsh&#39;, how=&#39;inner&#39;)
+
+    # create the date column and sort by date
+    merged_df[&#39;date&#39;] = pd.to_datetime(merged_df[&#39;ddate&#39;], format=&#39;%Y%m%d&#39;)
+
+    # sort the columns
+    merged_df = merged_df[[&#39;adsh&#39;, &#39;cik&#39;, &#39;name&#39;, &#39;form&#39;, &#39;fye&#39;, &#39;fy&#39;, &#39;fp&#39;, &#39;date&#39;] +
+                          standardized_df.columns.tolist()[1:]]
+
+    # store it in the standardizer object as new result
+    self.result = merged_df.sort_values(by=&#39;date&#39;)
+
+    return self.result</code></pre>
+</details>
+</dd>
 <dt id="secfsdstools.f_standardize.standardizing.Standardizer.process"><code class="name flex">
 <span>def <span class="ident">process</span></span>(<span>self, data_df: pandas.core.frame.DataFrame) ‑> pandas.core.frame.DataFrame</span>
 </code></dt>
@@ -1088,14 +1219,6 @@ the bag can then be used to directly store the information on disk and reload it
 </details>
 </dd>
 </dl>
-<h3>Inherited members</h3>
-<ul class="hlist">
-<li><code><b><a title="secfsdstools.d_container.presentation.Presenter" href="../d_container/presentation.html#secfsdstools.d_container.presentation.Presenter">Presenter</a></b></code>:
-<ul class="hlist">
-<li><code><a title="secfsdstools.d_container.presentation.Presenter.present" href="../d_container/presentation.html#secfsdstools.d_container.presentation.Presenter.present">present</a></code></li>
-</ul>
-</li>
-</ul>
 </dd>
 <dt id="secfsdstools.f_standardize.standardizing.Stats"><code class="flex name class">
 <span>class <span class="ident">Stats</span></span>
@@ -1308,6 +1431,7 @@ to the previous step.</p></div>
 <li><code><a title="secfsdstools.f_standardize.standardizing.Standardizer.get_process_description" href="#secfsdstools.f_standardize.standardizing.Standardizer.get_process_description">get_process_description</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.standardizing.Standardizer.get_standardize_bag" href="#secfsdstools.f_standardize.standardizing.Standardizer.get_standardize_bag">get_standardize_bag</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.standardizing.Standardizer.identifier_tags" href="#secfsdstools.f_standardize.standardizing.Standardizer.identifier_tags">identifier_tags</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.standardizing.Standardizer.present" href="#secfsdstools.f_standardize.standardizing.Standardizer.present">present</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.standardizing.Standardizer.process" href="#secfsdstools.f_standardize.standardizing.Standardizer.process">process</a></code></li>
 </ul>
 </li>

@@ -43,6 +43,9 @@ STANDARDIZED = TypeVar(&#39;STANDARDIZED&#39;, bound=&#39;StandardizedBag&#39;)
 
 
 class StandardizedBag:
+    &#34;&#34;&#34;
+    A class to contain the results of a standardizer.
+    &#34;&#34;&#34;
 
     def __init__(self,
                  result_df: pd.DataFrame,
@@ -437,7 +440,10 @@ class Standardizer(Presenter[JoinedDataBag]):
     def present(self, databag: JoinedDataBag) -&gt; pd.DataFrame:
         &#34;&#34;&#34;
         implements a presenter which reformats the bag into standardized dataframe.
-        it also merges the main attributes from the sub_df to the result (cik, name, form, fye, fy, fp).
+
+        It also merges the main attributes from the sub_df to the result
+        (cik, name, form, fye, fy, fp) and
+        creates a date column based on the ddated value.
 
         Note: as name always the latest available name is used.
 
@@ -451,13 +457,14 @@ class Standardizer(Presenter[JoinedDataBag]):
 
         data_to_merge_df = databag.sub_df[[&#39;adsh&#39;, &#39;cik&#39;, &#39;form&#39;, &#39;fye&#39;, &#39;fy&#39;, &#39;fp&#39;]].copy()
 
-        # we want to have the same name for the same cik and since a name can change during the lifetime of a company
-        # we first have to extract the latest company name:
+        # The name of a company can change during its liftime. However, we want to have the
+        # same name for the same cik in all entries. Therefore, we first have to find the
+        # latest name of the company.
 
-        # first, create a cik-name look up table, so that we can use the name in the plot
-        # therefore we sort by period and use the latest entry
-        df_latest = databag.sub_df[[&#39;cik&#39;, &#39;name&#39;, &#39;period&#39;]].sort_values(&#39;period&#39;).drop_duplicates(
-            &#39;cik&#39;, keep=&#39;last&#39;)
+        # first, create a cik-name look up table,
+        df_latest = (databag.sub_df[[&#39;cik&#39;, &#39;name&#39;, &#39;period&#39;]].sort_values(&#39;period&#39;)
+                     .drop_duplicates(&#39;cik&#39;, keep=&#39;last&#39;))
+
         # Create the dictionary
         cik_name_dict = dict(zip(df_latest[&#39;cik&#39;], df_latest[&#39;name&#39;]))
 
@@ -477,10 +484,11 @@ class Standardizer(Presenter[JoinedDataBag]):
 
         return self.result
 
-    def get_standardize_bag(self):
+    def get_standardize_bag(self) -&gt; StandardizedBag:
         &#34;&#34;&#34;
-            returns the Bag with all the calculated information.
-            the bag can then be used to directly store the information on disk and reload it for later analysis
+            returns an instance of StandardizedBag with all the calculated
+            information. the bag can then be used to directly save the information
+            on disk and reload it for later analysis
         &#34;&#34;&#34;
         return StandardizedBag(result_df=self.result,
                                applied_rules_log_df=self.applied_rules_log_df,
@@ -505,12 +513,15 @@ class Standardizer(Presenter[JoinedDataBag]):
 <span>(</span><span>result_df: pandas.core.frame.DataFrame, preprocess_duplicate_log_df: pandas.core.frame.DataFrame, applied_rules_log_df: pandas.core.frame.DataFrame, stats_df: pandas.core.frame.DataFrame, applied_rules_sum_s: pandas.core.series.Series, validation_overview_df: pandas.core.frame.DataFrame, process_description_df: pandas.core.frame.DataFrame)</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>A class to contain the results of a standardizer.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class StandardizedBag:
+    &#34;&#34;&#34;
+    A class to contain the results of a standardizer.
+    &#34;&#34;&#34;
 
     def __init__(self,
                  result_df: pd.DataFrame,
@@ -986,7 +997,10 @@ as negated.</dd>
     def present(self, databag: JoinedDataBag) -&gt; pd.DataFrame:
         &#34;&#34;&#34;
         implements a presenter which reformats the bag into standardized dataframe.
-        it also merges the main attributes from the sub_df to the result (cik, name, form, fye, fy, fp).
+
+        It also merges the main attributes from the sub_df to the result
+        (cik, name, form, fye, fy, fp) and
+        creates a date column based on the ddated value.
 
         Note: as name always the latest available name is used.
 
@@ -1000,13 +1014,14 @@ as negated.</dd>
 
         data_to_merge_df = databag.sub_df[[&#39;adsh&#39;, &#39;cik&#39;, &#39;form&#39;, &#39;fye&#39;, &#39;fy&#39;, &#39;fp&#39;]].copy()
 
-        # we want to have the same name for the same cik and since a name can change during the lifetime of a company
-        # we first have to extract the latest company name:
+        # The name of a company can change during its liftime. However, we want to have the
+        # same name for the same cik in all entries. Therefore, we first have to find the
+        # latest name of the company.
 
-        # first, create a cik-name look up table, so that we can use the name in the plot
-        # therefore we sort by period and use the latest entry
-        df_latest = databag.sub_df[[&#39;cik&#39;, &#39;name&#39;, &#39;period&#39;]].sort_values(&#39;period&#39;).drop_duplicates(
-            &#39;cik&#39;, keep=&#39;last&#39;)
+        # first, create a cik-name look up table,
+        df_latest = (databag.sub_df[[&#39;cik&#39;, &#39;name&#39;, &#39;period&#39;]].sort_values(&#39;period&#39;)
+                     .drop_duplicates(&#39;cik&#39;, keep=&#39;last&#39;))
+
         # Create the dictionary
         cik_name_dict = dict(zip(df_latest[&#39;cik&#39;], df_latest[&#39;name&#39;]))
 
@@ -1026,10 +1041,11 @@ as negated.</dd>
 
         return self.result
 
-    def get_standardize_bag(self):
+    def get_standardize_bag(self) -&gt; StandardizedBag:
         &#34;&#34;&#34;
-            returns the Bag with all the calculated information.
-            the bag can then be used to directly store the information on disk and reload it for later analysis
+            returns an instance of StandardizedBag with all the calculated
+            information. the bag can then be used to directly save the information
+            on disk and reload it for later analysis
         &#34;&#34;&#34;
         return StandardizedBag(result_df=self.result,
                                applied_rules_log_df=self.applied_rules_log_df,
@@ -1093,19 +1109,21 @@ as negated.</dd>
 </details>
 </dd>
 <dt id="secfsdstools.f_standardize.standardizing.Standardizer.get_standardize_bag"><code class="name flex">
-<span>def <span class="ident">get_standardize_bag</span></span>(<span>self)</span>
+<span>def <span class="ident">get_standardize_bag</span></span>(<span>self) ‑> <a title="secfsdstools.f_standardize.standardizing.StandardizedBag" href="#secfsdstools.f_standardize.standardizing.StandardizedBag">StandardizedBag</a></span>
 </code></dt>
 <dd>
-<div class="desc"><p>returns the Bag with all the calculated information.
-the bag can then be used to directly store the information on disk and reload it for later analysis</p></div>
+<div class="desc"><p>returns an instance of StandardizedBag with all the calculated
+information. the bag can then be used to directly save the information
+on disk and reload it for later analysis</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def get_standardize_bag(self):
+<pre><code class="python">def get_standardize_bag(self) -&gt; StandardizedBag:
     &#34;&#34;&#34;
-        returns the Bag with all the calculated information.
-        the bag can then be used to directly store the information on disk and reload it for later analysis
+        returns an instance of StandardizedBag with all the calculated
+        information. the bag can then be used to directly save the information
+        on disk and reload it for later analysis
     &#34;&#34;&#34;
     return StandardizedBag(result_df=self.result,
                            applied_rules_log_df=self.applied_rules_log_df,
@@ -1120,8 +1138,10 @@ the bag can then be used to directly store the information on disk and reload it
 <span>def <span class="ident">present</span></span>(<span>self, databag: <a title="secfsdstools.d_container.databagmodel.JoinedDataBag" href="../d_container/databagmodel.html#secfsdstools.d_container.databagmodel.JoinedDataBag">JoinedDataBag</a>) ‑> pandas.core.frame.DataFrame</span>
 </code></dt>
 <dd>
-<div class="desc"><p>implements a presenter which reformats the bag into standardized dataframe.
-it also merges the main attributes from the sub_df to the result (cik, name, form, fye, fy, fp).</p>
+<div class="desc"><p>implements a presenter which reformats the bag into standardized dataframe.</p>
+<p>It also merges the main attributes from the sub_df to the result
+(cik, name, form, fye, fy, fp) and
+creates a date column based on the ddated value.</p>
 <p>Note: as name always the latest available name is used.</p>
 <h2 id="args">Args</h2>
 <dl>
@@ -1140,7 +1160,10 @@ it also merges the main attributes from the sub_df to the result (cik, name, for
 <pre><code class="python">def present(self, databag: JoinedDataBag) -&gt; pd.DataFrame:
     &#34;&#34;&#34;
     implements a presenter which reformats the bag into standardized dataframe.
-    it also merges the main attributes from the sub_df to the result (cik, name, form, fye, fy, fp).
+
+    It also merges the main attributes from the sub_df to the result
+    (cik, name, form, fye, fy, fp) and
+    creates a date column based on the ddated value.
 
     Note: as name always the latest available name is used.
 
@@ -1154,13 +1177,14 @@ it also merges the main attributes from the sub_df to the result (cik, name, for
 
     data_to_merge_df = databag.sub_df[[&#39;adsh&#39;, &#39;cik&#39;, &#39;form&#39;, &#39;fye&#39;, &#39;fy&#39;, &#39;fp&#39;]].copy()
 
-    # we want to have the same name for the same cik and since a name can change during the lifetime of a company
-    # we first have to extract the latest company name:
+    # The name of a company can change during its liftime. However, we want to have the
+    # same name for the same cik in all entries. Therefore, we first have to find the
+    # latest name of the company.
 
-    # first, create a cik-name look up table, so that we can use the name in the plot
-    # therefore we sort by period and use the latest entry
-    df_latest = databag.sub_df[[&#39;cik&#39;, &#39;name&#39;, &#39;period&#39;]].sort_values(&#39;period&#39;).drop_duplicates(
-        &#39;cik&#39;, keep=&#39;last&#39;)
+    # first, create a cik-name look up table,
+    df_latest = (databag.sub_df[[&#39;cik&#39;, &#39;name&#39;, &#39;period&#39;]].sort_values(&#39;period&#39;)
+                 .drop_duplicates(&#39;cik&#39;, keep=&#39;last&#39;))
+
     # Create the dictionary
     cik_name_dict = dict(zip(df_latest[&#39;cik&#39;], df_latest[&#39;name&#39;]))
 

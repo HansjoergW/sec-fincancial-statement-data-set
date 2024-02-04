@@ -14,6 +14,9 @@ STANDARDIZED = TypeVar('STANDARDIZED', bound='StandardizedBag')
 
 
 class StandardizedBag:
+    """
+    A class to contain the results of a standardizer.
+    """
 
     def __init__(self,
                  result_df: pd.DataFrame,
@@ -408,7 +411,10 @@ class Standardizer(Presenter[JoinedDataBag]):
     def present(self, databag: JoinedDataBag) -> pd.DataFrame:
         """
         implements a presenter which reformats the bag into standardized dataframe.
-        it also merges the main attributes from the sub_df to the result (cik, name, form, fye, fy, fp).
+
+        It also merges the main attributes from the sub_df to the result
+        (cik, name, form, fye, fy, fp) and
+        creates a date column based on the ddated value.
 
         Note: as name always the latest available name is used.
 
@@ -422,13 +428,14 @@ class Standardizer(Presenter[JoinedDataBag]):
 
         data_to_merge_df = databag.sub_df[['adsh', 'cik', 'form', 'fye', 'fy', 'fp']].copy()
 
-        # we want to have the same name for the same cik and since a name can change during the lifetime of a company
-        # we first have to extract the latest company name:
+        # The name of a company can change during its liftime. However, we want to have the
+        # same name for the same cik in all entries. Therefore, we first have to find the
+        # latest name of the company.
 
-        # first, create a cik-name look up table, so that we can use the name in the plot
-        # therefore we sort by period and use the latest entry
-        df_latest = databag.sub_df[['cik', 'name', 'period']].sort_values('period').drop_duplicates(
-            'cik', keep='last')
+        # first, create a cik-name look up table,
+        df_latest = (databag.sub_df[['cik', 'name', 'period']].sort_values('period')
+                     .drop_duplicates('cik', keep='last'))
+
         # Create the dictionary
         cik_name_dict = dict(zip(df_latest['cik'], df_latest['name']))
 
@@ -448,10 +455,11 @@ class Standardizer(Presenter[JoinedDataBag]):
 
         return self.result
 
-    def get_standardize_bag(self):
+    def get_standardize_bag(self) -> StandardizedBag:
         """
-            returns the Bag with all the calculated information.
-            the bag can then be used to directly store the information on disk and reload it for later analysis
+            returns an instance of StandardizedBag with all the calculated
+            information. the bag can then be used to directly save the information
+            on disk and reload it for later analysis
         """
         return StandardizedBag(result_df=self.result,
                                applied_rules_log_df=self.applied_rules_log_df,

@@ -58,7 +58,8 @@ class BalanceSheetStandardizer(Standardizer):
             # but both never appear together
             CopyTagRule(original='PartnersCapital', target='HolderEquity'),
             CopyTagRule(original='StockholdersEquity', target='HolderEquity'),
-            # often, there is also a TemporaryEquityCarryingAmountAttributableToParent which is part of Equity
+            # often, there is also a TemporaryEquityCarryingAmountAttributableToParent
+            # which is part of Equity
             SumUpRule(
                 sum_tag='TemporaryEquity',
                 potential_summands=[
@@ -174,25 +175,29 @@ class BalanceSheetStandardizer(Standardizer):
         # set the Sum Tag if only one of the summands is present
         prefix="SetSum",
         rules=[
-            # if there is only AssetsCurrent, set Assets to the same value and set AssetsNoncurrent to 0
+            # if there is only AssetsCurrent, set Assets to the same value and set
+            # AssetsNoncurrent to 0
             SetSumIfOnlyOneSummand(
                 sum_tag='Assets',
                 summand_set='AssetsCurrent',
                 summands_nan=['AssetsNoncurrent']
             ),
-            # if there is only AssetsNoncurrent, set Assets to the same value and set AssetsCurrent to 0
+            # if there is only AssetsNoncurrent, set Assets to the same value and set
+            # AssetsCurrent to 0
             SetSumIfOnlyOneSummand(
                 sum_tag='Assets',
                 summand_set='AssetsNoncurrent',
                 summands_nan=['AssetsCurrent']
             ),
-            # if there is only LiabilitiesCurrent, set Liabilities to the same value and set LiabilitiesNoncurrent to 0
+            # if there is only LiabilitiesCurrent, set Liabilities to the same value and set
+            # LiabilitiesNoncurrent to 0
             SetSumIfOnlyOneSummand(
                 sum_tag='Liabilities',
                 summand_set='LiabilitiesCurrent',
                 summands_nan=['LiabilitiesNoncurrent']
             ),
-            # if there is only LiabilitiesNoncurrent, set Liabilities to the same value and set LiabilitiesCurrent to 0
+            # if there is only LiabilitiesNoncurrent, set Liabilities to the same value and set
+            # LiabilitiesCurrent to 0
             SetSumIfOnlyOneSummand(
                 sum_tag='Liabilities',
                 summand_set='LiabilitiesNoncurrent',
@@ -213,8 +218,8 @@ class BalanceSheetStandardizer(Standardizer):
     preprocess_rule_tree = RuleGroup(prefix="BS_PRE",
                                      rules=[
                                          # sometimes values are tagged the wrong way.
-                                         # there are cases when the real Assets Value is tagged as AssetsNoncurrent
-                                         # and vice versa. fix that
+                                         # there are cases when the real Assets Value is
+                                         # tagged as AssetsNoncurrent and vice versa. fix that
                                          PreSumUpCorrection(sum_tag='Assets',
                                                             mixed_up_summand='AssetsNoncurrent',
                                                             other_summand='AssetsCurrent'),
@@ -225,14 +230,14 @@ class BalanceSheetStandardizer(Standardizer):
 
     post_rule_tree = RuleGroup(prefix="BS_POST",
                                rules=[
-                                   # if only Assets is sets, set the AssetsCurrent to value of Assets and
-                                   # AssetsNoncurrent to 0
+                                   # if only Assets is sets, set the AssetsCurrent to value
+                                   # of Assets and AssetsNoncurrent to 0
                                    PostCopyToFirstSummand(sum_tag='Assets',
                                                           first_summand='AssetsCurrent',
                                                           other_summands=[
                                                               'AssetsNoncurrent']),
-                                   # if only Liabilities is sets, set the LiabilitiesCurrent to value of Liabilities
-                                   # and LiabilitiesNoncurrent to 0
+                                   # if only Liabilities is sets, set the LiabilitiesCurrent to
+                                   # value of Liabilities and LiabilitiesNoncurrent to 0
                                    PostCopyToFirstSummand(sum_tag='Liabilities',
                                                           first_summand='LiabilitiesCurrent',
                                                           other_summands=[

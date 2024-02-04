@@ -40,14 +40,14 @@ def test_preprocess_deduplicate(empty_instance, sample_dataframe_duplications):
     result_df = empty_instance._preprocess_deduplicate(sample_dataframe_duplications)
 
     # Check that the duplicates are logged correctly
-    assert empty_instance.preprocess_dupliate_log_df.shape == (1, 7)
-    assert 'adsh' in empty_instance.preprocess_dupliate_log_df.columns
-    assert 'coreg' in empty_instance.preprocess_dupliate_log_df.columns
-    assert 'report' in empty_instance.preprocess_dupliate_log_df.columns
-    assert 'tag' in empty_instance.preprocess_dupliate_log_df.columns
-    assert 'uom' in empty_instance.preprocess_dupliate_log_df.columns
-    assert 'version' in empty_instance.preprocess_dupliate_log_df.columns
-    assert 'ddate' in empty_instance.preprocess_dupliate_log_df.columns
+    assert empty_instance.preprocess_duplicate_log_df.shape == (1, 7)
+    assert 'adsh' in empty_instance.preprocess_duplicate_log_df.columns
+    assert 'coreg' in empty_instance.preprocess_duplicate_log_df.columns
+    assert 'report' in empty_instance.preprocess_duplicate_log_df.columns
+    assert 'tag' in empty_instance.preprocess_duplicate_log_df.columns
+    assert 'uom' in empty_instance.preprocess_duplicate_log_df.columns
+    assert 'version' in empty_instance.preprocess_duplicate_log_df.columns
+    assert 'ddate' in empty_instance.preprocess_duplicate_log_df.columns
 
     # Check that duplicates are removed from the result DataFrame
     assert result_df.shape == (3, 8)  # One duplicate row removed

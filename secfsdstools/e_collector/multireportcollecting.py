@@ -12,9 +12,6 @@ from secfsdstools.a_config.configmodel import Configuration
 from secfsdstools.a_utils.parallelexecution import ParallelExecutor
 from secfsdstools.c_index.indexdataaccess import IndexReport, ParquetDBIndexingAccessor
 from secfsdstools.d_container.databagmodel import RawDataBag
-from secfsdstools.e_collector.reportcollecting import SingleReportCollector
-from secfsdstools.e_collector.zipcollecting import ZipCollector
-
 
 @dataclass
 class MultiReportCollector:
@@ -100,8 +97,8 @@ class MultiReportCollector:
 
         # organize by originfile
         adshs_per_file: Dict[str, List[IndexReport]] = defaultdict(list)
-        for r in reports:
-            adshs_per_file[r.originFile].append(r)
+        for report in reports:
+            adshs_per_file[report.originFile].append(report)
 
         def get_entries() -> List[List[IndexReport]]:
             # the result is a list of list of IndexReports. Every IndexReport list has the same

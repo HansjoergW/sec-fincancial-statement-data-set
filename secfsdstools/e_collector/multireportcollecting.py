@@ -126,7 +126,7 @@ class MultiReportCollector:
             # do nothing
             return parts
 
-        execute_serial = True ### !!! Wieder zurück
+        execute_serial = False
         if len(self.index_reports) == 1:
             execute_serial = True
         executor = ParallelExecutor(chunksize=0, execute_serial=execute_serial)

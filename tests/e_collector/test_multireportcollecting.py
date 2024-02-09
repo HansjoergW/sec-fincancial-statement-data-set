@@ -41,11 +41,11 @@ def multireportcollector():
 
 def test_cm_get_report_by_adshs(basicconf):
     indexreports = [
-        IndexReport(cik=320193, name="", form="", filed=0, period=0, originFile="",
+        IndexReport(cik=320193, name="", form="", filed=0, period=0, originFile="2010q1.zip",
                     originFileType="", url="",
                     adsh=APPLE_ADSH_10Q_2010_Q1,
                     fullPath=PATH_TO_PARQUET_Q1),
-        IndexReport(cik=320193, name="", form="", filed=0, period=0, originFile="",
+        IndexReport(cik=320193, name="", form="", filed=0, period=0, originFile="2010q2.zip",
                     originFileType="", url="",
                     adsh=APPLE_ADSH_10Q_2010_Q2,
                     fullPath=PATH_TO_PARQUET_Q2),
@@ -57,8 +57,8 @@ def test_cm_get_report_by_adshs(basicconf):
         collector = MultiReportCollector.get_reports_by_adshs(
             adshs=[APPLE_ADSH_10Q_2010_Q1, APPLE_ADSH_10Q_2010_Q2],
             configuration=basicconf)
-
-        assert collector.collect().num_df.shape == (321, 9)
+        bag = collector.collect()
+        assert bag.num_df.shape == (321, 9)
 
 
 def test_read_raw_data(multireportcollector):

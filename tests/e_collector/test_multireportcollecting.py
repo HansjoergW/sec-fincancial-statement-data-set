@@ -1,13 +1,11 @@
 import os
-from unittest.mock import patch, MagicMock, create_autospec
+from unittest.mock import patch
 
 import pytest
-from secfsdstools.e_collector.basecollector import BaseCollector
 
 from secfsdstools.c_index.indexdataaccess import IndexReport
 from secfsdstools.d_container.databagmodel import RawDataBag
-from secfsdstools.e_collector.multireportcollecting import MultiReportCollector, \
-    MultiReportCollectorOptimized
+from secfsdstools.e_collector.multireportcollecting import MultiReportCollector
 
 APPLE_ADSH_10Q_2010_Q1 = '0001193125-10-012085'
 APPLE_ADSH_10Q_2010_Q2 = '0001193125-10-088957'
@@ -102,7 +100,7 @@ def test_optimized_load(basicconf, caplog):
     with patch(
             "secfsdstools.c_index.indexdataaccess.ParquetDBIndexingAccessor.read_index_reports_for_adshs",
             return_value=indexreports):
-        collector = MultiReportCollectorOptimized.get_reports_by_adshs(
+        collector = MultiReportCollector.get_reports_by_adshs(
             adshs=[APPLE_ADSH_10Q_2010_Q1, APPLE_ADSH_10Q_2010_Q2, APPLE_ADSH_10Q_2010_Q3,
                    APPLE_ADSH_10K_2010_Q4, MSFT_ADSH_10Q_2010_Q1, MSFT_ADSH_10Q_2010_Q2,
                    MSFT_ADSH_10K_2010_Q3, MSFT_ADSH_10Q_2010_Q4],

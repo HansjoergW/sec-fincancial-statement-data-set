@@ -27,8 +27,6 @@ New
 todo:
 - evtl. sollte jede Regel noch eine "Explanation" bekommen. Ein Text, der die Regel spezifisch erklärt,
   nicht allgemein wie in description.
-- standardizer sollte ergebnisse speichern, inkl. aller logs..
-  - sollte auch eine Art save und load funktion haben..
 
 
 Next:

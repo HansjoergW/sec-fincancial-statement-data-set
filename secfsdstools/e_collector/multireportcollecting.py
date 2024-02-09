@@ -1,8 +1,11 @@
 """
 Reads several reports from different files parallel
 """
+from collections import defaultdict
 from dataclasses import dataclass
-from typing import Optional, List
+from typing import Optional, List, Dict
+
+from secfsdstools.e_collector.basecollector import BaseCollector
 
 from secfsdstools.a_config.configmgt import ConfigurationManager
 from secfsdstools.a_config.configmodel import Configuration
@@ -10,6 +13,7 @@ from secfsdstools.a_utils.parallelexecution import ParallelExecutor
 from secfsdstools.c_index.indexdataaccess import IndexReport, ParquetDBIndexingAccessor
 from secfsdstools.d_container.databagmodel import RawDataBag
 from secfsdstools.e_collector.reportcollecting import SingleReportCollector
+from secfsdstools.e_collector.zipcollecting import ZipCollector
 
 
 @dataclass
@@ -94,21 +98,35 @@ class MultiReportCollector:
         #   and use the filter option on pd.read_parquet()
         reports: List[IndexReport] = self.index_reports
 
-        def get_entries() -> List[IndexReport]:
-            return reports
+        # organize by originfile
+        adshs_per_file: Dict[str, List[IndexReport]] = defaultdict(list)
+        for r in reports:
+            adshs_per_file[r.originFile].append(r)
 
-        def process_element(element: IndexReport) -> RawDataBag:
-            print(element.adsh)
-            collector = SingleReportCollector.get_report_by_indexreport(
-                index_report=element, stmt_filter=self.stmt_filter, tag_filter=self.tag_filter)
+        def get_entries() -> List[List[IndexReport]]:
+            # the result is a list of list of IndexReports. Every IndexReport list has the same
+            # originFile and therefore also the same fullPath.
+            return list(adshs_per_file.values())
 
-            return collector.collect()
+        def process_element(element: List[IndexReport]) -> RawDataBag:
+            # the received list only contains reports that are stored in the same file, so
+            # they all have the same fullPath.
+            datapath = element[0].fullPath
+            adshs = [x.adsh for x in element]
+
+            collector = BaseCollector(datapath=datapath,
+                                      stmt_filter=self.stmt_filter,
+                                      tag_filter=self.tag_filter)
+
+            adsh_filter = ('adsh', 'in', adshs)
+
+            return collector.basecollect(sub_df_filter=adsh_filter)
 
         def post_process(parts: List[RawDataBag]) -> List[RawDataBag]:
             # do nothing
             return parts
 
-        execute_serial = False
+        execute_serial = True ### !!! Wieder zurück
         if len(self.index_reports) == 1:
             execute_serial = True
         executor = ParallelExecutor(chunksize=0, execute_serial=execute_serial)

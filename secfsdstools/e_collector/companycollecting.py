@@ -51,7 +51,6 @@ class CompanyReportCollector:
         # todo: if daily entries are also in index, it returns mutliple matches!
         #       probably fix directly in read_index_reports-> filter for two and check source
         #       prefer to use zip instead of daly?
-        # todo: multiple ciks should be possible
         index_reports: List[IndexReport] = dbaccessor.read_index_reports_for_ciks(ciks,
                                                                                   forms_filter)
 

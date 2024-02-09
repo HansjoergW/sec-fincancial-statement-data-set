@@ -8,6 +8,19 @@ permalink: /releasenotes/
 ## Upcoming
 * 
 
+## 1.4.0 2024-Feb-02
+* New
+  - Introducing the Standardizer Framework and the **Balance Sheet Standardizer** as a first implementation.<br>
+    The Balance Sheet Standardizer makes the balance sheets easily comparable.<br>
+    Check out the following notebooks: <br>
+    [07_00_standardizer_basics](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/07_00_standardizer_basics.ipynb) <br>
+    [07_01_BS_standardizer](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/07_01_BS_standardizer.ipynb) <br>
+* Improvements
+  - Efficiency improvements for `MultiReportCollector`: Every zip file is opened just once if there are multiple reports
+    to load from the same zip file.
+
+
+
 ## 1.3.0 2023-Dec-28
 * New
   - Notebook [06_bulk_data_processing_deep_dive](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/06_bulk_data_processing_deep_dive.ipynb)<br>

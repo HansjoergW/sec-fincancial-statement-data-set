@@ -153,7 +153,6 @@ class JoinedDataBag(DataBagBase[JOINED]):
         The directory has to exist and must be empty.
 
         Args:
-            databag: the bag to be saved
             target_path: the directory under which the parquet files for sub and pre_num
                   will be created
 
@@ -327,7 +326,6 @@ class RawDataBag(DataBagBase[RAW]):
         The directory has to exist and must be empty.
 
         Args:
-            databag: the bag to be saved
             target_path: the directory under which three parquet files for sub_txt, pre_text,
                   and num_txt will be created
 
@@ -591,7 +589,6 @@ adsh, tag, and version.</p>
         The directory has to exist and must be empty.
 
         Args:
-            databag: the bag to be saved
             target_path: the directory under which the parquet files for sub and pre_num
                   will be created
 
@@ -844,8 +841,6 @@ def load(target_path: str) -&gt; JOINED:
 The directory has to exist and must be empty.</p>
 <h2 id="args">Args</h2>
 <dl>
-<dt><strong><code>databag</code></strong></dt>
-<dd>the bag to be saved</dd>
 <dt><strong><code>target_path</code></strong></dt>
 <dd>the directory under which the parquet files for sub and pre_num
 will be created</dd>
@@ -860,7 +855,6 @@ will be created</dd>
     The directory has to exist and must be empty.
 
     Args:
-        databag: the bag to be saved
         target_path: the directory under which the parquet files for sub and pre_num
               will be created
 
@@ -1008,7 +1002,6 @@ will be created</dd>
         The directory has to exist and must be empty.
 
         Args:
-            databag: the bag to be saved
             target_path: the directory under which three parquet files for sub_txt, pre_text,
                   and num_txt will be created
 
@@ -1326,8 +1319,6 @@ def load(target_path: str) -&gt; RAW:
 The directory has to exist and must be empty.</p>
 <h2 id="args">Args</h2>
 <dl>
-<dt><strong><code>databag</code></strong></dt>
-<dd>the bag to be saved</dd>
 <dt><strong><code>target_path</code></strong></dt>
 <dd>the directory under which three parquet files for sub_txt, pre_text,
 and num_txt will be created</dd>
@@ -1342,7 +1333,6 @@ and num_txt will be created</dd>
     The directory has to exist and must be empty.
 
     Args:
-        databag: the bag to be saved
         target_path: the directory under which three parquet files for sub_txt, pre_text,
               and num_txt will be created
 

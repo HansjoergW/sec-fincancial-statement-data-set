@@ -80,6 +80,7 @@ class CompanyReportCollector:
         # todo: if daily entries are also in index, it returns mutliple matches!
         #       probably fix directly in read_index_reports-&gt; filter for two and check source
         #       prefer to use zip instead of daly?
+        # todo: multiple ciks should be possible
         index_reports: List[IndexReport] = dbaccessor.read_index_reports_for_ciks(ciks,
                                                                                   forms_filter)
 
@@ -152,6 +153,7 @@ For instance, it is a simple way to read all 10-K reports of serveral companies.
         # todo: if daily entries are also in index, it returns mutliple matches!
         #       probably fix directly in read_index_reports-&gt; filter for two and check source
         #       prefer to use zip instead of daly?
+        # todo: multiple ciks should be possible
         index_reports: List[IndexReport] = dbaccessor.read_index_reports_for_ciks(ciks,
                                                                                   forms_filter)
 
@@ -227,6 +229,7 @@ def get_company_collector(
     # todo: if daily entries are also in index, it returns mutliple matches!
     #       probably fix directly in read_index_reports-&gt; filter for two and check source
     #       prefer to use zip instead of daly?
+    # todo: multiple ciks should be possible
     index_reports: List[IndexReport] = dbaccessor.read_index_reports_for_ciks(ciks,
                                                                               forms_filter)
 

@@ -28,14 +28,102 @@
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">&#34;&#34;&#34;Contains the base implementation of the standardizer&#34;&#34;&#34;
-
-from typing import List, Optional, Set
+import os
+from typing import List, Optional, Set, TypeVar
 
 import numpy as np
 import pandas as pd
 
+from secfsdstools.d_container.databagmodel import JoinedDataBag
+from secfsdstools.e_presenter.presenting import Presenter
 from secfsdstools.f_standardize.base_rule_framework import RuleGroup, DescriptionEntry
 from secfsdstools.f_standardize.base_validation_rules import ValidationRule
+
+STANDARDIZED = TypeVar(&#39;STANDARDIZED&#39;, bound=&#39;StandardizedBag&#39;)
+
+
+class StandardizedBag:
+    &#34;&#34;&#34;
+    A class to contain the results of a standardizer.
+    &#34;&#34;&#34;
+
+    def __init__(self,
+                 result_df: pd.DataFrame,
+                 preprocess_duplicate_log_df: pd.DataFrame,
+                 applied_rules_log_df: pd.DataFrame,
+                 stats_df: pd.DataFrame,
+                 applied_rules_sum_s: pd.Series,
+                 validation_overview_df: pd.DataFrame,
+                 process_description_df: pd.DataFrame):
+
+        self.result_df = result_df
+        self.preprocess_duplicate_log_df = preprocess_duplicate_log_df
+        self.applied_rules_log_df = applied_rules_log_df
+        self.stats_df = stats_df
+        self.applied_rules_sum_s = applied_rules_sum_s
+        self.validation_overview_df = validation_overview_df
+        self.process_description_df = process_description_df
+
+    def save(self, target_path: str):
+        &#34;&#34;&#34;
+        Stores the last result and the log dataframesunder the given directory.
+        The directory has to exist and must be empty.
+
+        Args:
+            databag: the bag to be saved
+            target_path: the directory under which the parquet files for sub and pre_num
+                  will be created
+
+        &#34;&#34;&#34;
+        if not os.path.isdir(target_path):
+            raise ValueError(f&#34;the path {target_path} does not exist&#34;)
+
+        if len(os.listdir(target_path)) &gt; 0:
+            raise ValueError(f&#34;the target_path {target_path} is not empty&#34;)
+
+        self.result_df.to_parquet(os.path.join(target_path, &#39;result.parquet&#39;))
+        self.preprocess_duplicate_log_df.to_parquet(
+            os.path.join(target_path, &#39;duplicate_log.parquet&#39;))
+        self.applied_rules_log_df.to_parquet(os.path.join(target_path, &#39;applied_rules_log.parquet&#39;))
+        self.stats_df.to_parquet(os.path.join(target_path, &#39;stats.parquet&#39;))
+        self.applied_rules_sum_s.to_csv(os.path.join(target_path, &#39;applied_rules_sum.csv&#39;))
+        self.validation_overview_df.to_parquet(
+            os.path.join(target_path, &#39;validation_overview.parquet&#39;))
+        self.process_description_df.to_parquet(
+            os.path.join(target_path, &#39;process_description.parquet&#39;))
+
+    @staticmethod
+    def load(target_path: str) -&gt; STANDARDIZED:
+        &#34;&#34;&#34;
+        Loads the content of the bag at the specified location.
+
+        Args:
+            target_path: the directory which contains the parquet files
+
+        Returns:
+            STANDARDIZED: the loaded Databag
+        &#34;&#34;&#34;
+
+        result_df = pd.read_parquet(os.path.join(target_path, &#39;result.parquet&#39;))
+        preprocess_duplicate_log_df = pd.read_parquet(
+            os.path.join(target_path, &#39;duplicate_log.parquet&#39;))
+        applied_rules_log_df = pd.read_parquet(
+            os.path.join(target_path, &#39;applied_rules_log.parquet&#39;))
+        stats_df = pd.read_parquet(os.path.join(target_path, &#39;stats.parquet&#39;))
+        applied_rules_sum_s = pd.read_csv(
+            os.path.join(target_path, &#39;applied_rules_sum.csv&#39;),
+            header=None, index_col=0, squeeze=True)
+        validation_overview_df = pd.read_parquet(
+            os.path.join(target_path, &#39;validation_overview.parquet&#39;))
+        process_description_df = pd.read_parquet(
+            os.path.join(target_path, &#39;process_description.parquet&#39;))
+
+        return StandardizedBag(result_df=result_df,
+                               preprocess_duplicate_log_df=preprocess_duplicate_log_df,
+                               applied_rules_log_df=applied_rules_log_df, stats_df=stats_df,
+                               applied_rules_sum_s=applied_rules_sum_s,
+                               validation_overview_df=validation_overview_df,
+                               process_description_df=process_description_df)
 
 
 class Stats:
@@ -108,7 +196,7 @@ class Stats:
         self.stats = self.stats[final_stats_columns]
 
 
-class Standardizer:
+class Standardizer(Presenter[JoinedDataBag]):
     &#34;&#34;&#34;
     The Standardizer implements the base processing logic to standardize financial statements.
     &#34;&#34;&#34;
@@ -173,14 +261,18 @@ class Standardizer:
 
         self.final_col_order = self.identifier_tags + self.final_tags
 
+        # attribute to store the last result of calling the process method
+        self.result: Optional[pd.DataFrame] = None
+
         # define log dataframes ..
         # .. a special log that shows the duplicated records that were found and removed
-        self.preprocess_dupliate_log_df: Optional[pd.DataFrame] = None
+        self.preprocess_duplicate_log_df: Optional[pd.DataFrame] = None
         # .. the main_log that shows which rules were applied on which statement/row
         self.applied_rules_log_df: Optional[pd.DataFrame] = None
         # .. shows the total of how often a rule was applied, mainly counts the Trues per column
         #    in self.applied_rules_log_df
         self.applied_rules_sum_s: Optional[pd.Series] = None
+        self.validation_overview_df: Optional[pd.DataFrame] = None
 
         self.stats = Stats(self.final_tags)
 
@@ -193,7 +285,7 @@ class Standardizer:
             data_df.duplicated(
                 [&#39;adsh&#39;, &#39;coreg&#39;, &#39;report&#39;, &#39;uom&#39;, &#39;tag&#39;, &#39;version&#39;, &#39;ddate&#39;, &#39;value&#39;])
 
-        self.preprocess_dupliate_log_df = data_df[duplicates_s] \
+        self.preprocess_duplicate_log_df = data_df[duplicates_s] \
             [[&#39;adsh&#39;, &#39;coreg&#39;, &#39;report&#39;, &#39;tag&#39;, &#39;uom&#39;, &#39;version&#39;, &#39;ddate&#39;]].copy()
 
         return data_df[~duplicates_s]
@@ -242,8 +334,7 @@ class Standardizer:
             cpy_df.loc[cpy_df.negating == 1, &#39;value&#39;] = -cpy_df.value
 
         # pivot the table
-        expected_tags = self.all_input_tags.union(self.final_tags)
-        pivot_df = self._preprocess_pivot(data_df=cpy_df, expected_tags=expected_tags)
+        pivot_df = self._preprocess_pivot(data_df=cpy_df, expected_tags=self.all_input_tags)
 
         if self.filter_for_main_statement:
             pivot_df = self._preprocess_filter_pivot_for_main_statement(pivot_df)
@@ -263,11 +354,11 @@ class Standardizer:
     def _main_processing(self, data_df: pd.DataFrame):
         for i in range(self.main_iterations):
             # apply the main rule tree
-            self.main_rule_tree.set_id(prefix=f&#34;MAIN_{i}&#34;)
+            self.main_rule_tree.set_id(prefix=f&#34;MAIN_{i + 1}&#34;)
             self.main_rule_tree.process(data_df=data_df, log_df=self.applied_rules_log_df)
 
             # calculate stats and add them to the stats log
-            self.stats.add_stats_entry(data_df=data_df, process_step_name=f&#39;MAIN_{i}&#39;)
+            self.stats.add_stats_entry(data_df=data_df, process_step_name=f&#39;MAIN_{i + 1}&#39;)
 
     def _post_processing(self, data_df: pd.DataFrame):
         # apply the post rule tree
@@ -284,6 +375,19 @@ class Standardizer:
         # apply validation rules
         for validation_rule in self.validation_rules:
             validation_rule.validate(finalized_df)
+
+        cat_cols = [x for x in finalized_df.columns if x.endswith(&#34;_cat&#34;)]
+        self.validation_overview_df = pd.DataFrame(index=[0, 1, 5, 10, 100], columns=cat_cols)
+
+        for column in cat_cols:
+            self.validation_overview_df[column] = finalized_df[column].value_counts()
+
+        for column in self.validation_overview_df.columns:
+            new_column_name = column + &#39;_pct&#39;
+            self.validation_overview_df = (
+                self.validation_overview_df.assign(
+                    **{new_column_name: (100 * self.validation_overview_df[column] / len(
+                        finalized_df)).round(2)}))
 
         # calculate log_df summaries
         # filter for rule columns but making sure the order stays the same
@@ -310,7 +414,8 @@ class Standardizer:
         self._main_processing(ready_df)
         self._post_processing(ready_df)
 
-        return self._finalize(ready_df)
+        self.result = self._finalize(ready_df)
+        return self.result
 
     def get_process_description(self) -&gt; pd.DataFrame:
         &#34;&#34;&#34;
@@ -330,7 +435,68 @@ class Standardizer:
 
         all_descriptions.extend([vr.collect_description(&#34;VALID&#34;) for vr in self.validation_rules])
 
-        return pd.DataFrame(all_descriptions)</code></pre>
+        return pd.DataFrame(all_descriptions)
+
+    def present(self, databag: JoinedDataBag) -&gt; pd.DataFrame:
+        &#34;&#34;&#34;
+        implements a presenter which reformats the bag into standardized dataframe.
+
+        It also merges the main attributes from the sub_df to the result
+        (cik, name, form, fye, fy, fp) and
+        creates a date column based on the ddated value.
+
+        Note: as name always the latest available name is used.
+
+        Args:
+            databag (T): the bag to transform into the presentation df
+
+        Returns:
+            pd.DataFrame: the data to be presented
+        &#34;&#34;&#34;
+        standardized_df = self.process(databag.pre_num_df)
+
+        data_to_merge_df = databag.sub_df[[&#39;adsh&#39;, &#39;cik&#39;, &#39;form&#39;, &#39;fye&#39;, &#39;fy&#39;, &#39;fp&#39;]].copy()
+
+        # The name of a company can change during its liftime. However, we want to have the
+        # same name for the same cik in all entries. Therefore, we first have to find the
+        # latest name of the company.
+
+        # first, create a cik-name look up table,
+        df_latest = (databag.sub_df[[&#39;cik&#39;, &#39;name&#39;, &#39;period&#39;]].sort_values(&#39;period&#39;)
+                     .drop_duplicates(&#39;cik&#39;, keep=&#39;last&#39;))
+
+        # Create the dictionary
+        cik_name_dict = dict(zip(df_latest[&#39;cik&#39;], df_latest[&#39;name&#39;]))
+
+        data_to_merge_df[&#39;name&#39;] = data_to_merge_df[&#39;cik&#39;].map(cik_name_dict)
+
+        merged_df = pd.merge(data_to_merge_df, standardized_df, on=&#39;adsh&#39;, how=&#39;inner&#39;)
+
+        # create the date column and sort by date
+        merged_df[&#39;date&#39;] = pd.to_datetime(merged_df[&#39;ddate&#39;], format=&#39;%Y%m%d&#39;)
+
+        # sort the columns
+        merged_df = merged_df[[&#39;adsh&#39;, &#39;cik&#39;, &#39;name&#39;, &#39;form&#39;, &#39;fye&#39;, &#39;fy&#39;, &#39;fp&#39;, &#39;date&#39;] +
+                              standardized_df.columns.tolist()[1:]]
+
+        # store it in the standardizer object as new result
+        self.result = merged_df.sort_values(by=&#39;date&#39;)
+
+        return self.result
+
+    def get_standardize_bag(self) -&gt; StandardizedBag:
+        &#34;&#34;&#34;
+            returns an instance of StandardizedBag with all the calculated
+            information. the bag can then be used to directly save the information
+            on disk and reload it for later analysis
+        &#34;&#34;&#34;
+        return StandardizedBag(result_df=self.result,
+                               applied_rules_log_df=self.applied_rules_log_df,
+                               preprocess_duplicate_log_df=self.preprocess_duplicate_log_df,
+                               stats_df=self.stats.stats,
+                               applied_rules_sum_s=self.applied_rules_sum_s,
+                               validation_overview_df=self.validation_overview_df,
+                               process_description_df=self.get_process_description())</code></pre>
 </details>
 </section>
 <section>
@@ -342,6 +508,206 @@ class Standardizer:
 <section>
 <h2 class="section-title" id="header-classes">Classes</h2>
 <dl>
+<dt id="secfsdstools.f_standardize.standardizing.StandardizedBag"><code class="flex name class">
+<span>class <span class="ident">StandardizedBag</span></span>
+<span>(</span><span>result_df: pandas.core.frame.DataFrame, preprocess_duplicate_log_df: pandas.core.frame.DataFrame, applied_rules_log_df: pandas.core.frame.DataFrame, stats_df: pandas.core.frame.DataFrame, applied_rules_sum_s: pandas.core.series.Series, validation_overview_df: pandas.core.frame.DataFrame, process_description_df: pandas.core.frame.DataFrame)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>A class to contain the results of a standardizer.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class StandardizedBag:
+    &#34;&#34;&#34;
+    A class to contain the results of a standardizer.
+    &#34;&#34;&#34;
+
+    def __init__(self,
+                 result_df: pd.DataFrame,
+                 preprocess_duplicate_log_df: pd.DataFrame,
+                 applied_rules_log_df: pd.DataFrame,
+                 stats_df: pd.DataFrame,
+                 applied_rules_sum_s: pd.Series,
+                 validation_overview_df: pd.DataFrame,
+                 process_description_df: pd.DataFrame):
+
+        self.result_df = result_df
+        self.preprocess_duplicate_log_df = preprocess_duplicate_log_df
+        self.applied_rules_log_df = applied_rules_log_df
+        self.stats_df = stats_df
+        self.applied_rules_sum_s = applied_rules_sum_s
+        self.validation_overview_df = validation_overview_df
+        self.process_description_df = process_description_df
+
+    def save(self, target_path: str):
+        &#34;&#34;&#34;
+        Stores the last result and the log dataframesunder the given directory.
+        The directory has to exist and must be empty.
+
+        Args:
+            databag: the bag to be saved
+            target_path: the directory under which the parquet files for sub and pre_num
+                  will be created
+
+        &#34;&#34;&#34;
+        if not os.path.isdir(target_path):
+            raise ValueError(f&#34;the path {target_path} does not exist&#34;)
+
+        if len(os.listdir(target_path)) &gt; 0:
+            raise ValueError(f&#34;the target_path {target_path} is not empty&#34;)
+
+        self.result_df.to_parquet(os.path.join(target_path, &#39;result.parquet&#39;))
+        self.preprocess_duplicate_log_df.to_parquet(
+            os.path.join(target_path, &#39;duplicate_log.parquet&#39;))
+        self.applied_rules_log_df.to_parquet(os.path.join(target_path, &#39;applied_rules_log.parquet&#39;))
+        self.stats_df.to_parquet(os.path.join(target_path, &#39;stats.parquet&#39;))
+        self.applied_rules_sum_s.to_csv(os.path.join(target_path, &#39;applied_rules_sum.csv&#39;))
+        self.validation_overview_df.to_parquet(
+            os.path.join(target_path, &#39;validation_overview.parquet&#39;))
+        self.process_description_df.to_parquet(
+            os.path.join(target_path, &#39;process_description.parquet&#39;))
+
+    @staticmethod
+    def load(target_path: str) -&gt; STANDARDIZED:
+        &#34;&#34;&#34;
+        Loads the content of the bag at the specified location.
+
+        Args:
+            target_path: the directory which contains the parquet files
+
+        Returns:
+            STANDARDIZED: the loaded Databag
+        &#34;&#34;&#34;
+
+        result_df = pd.read_parquet(os.path.join(target_path, &#39;result.parquet&#39;))
+        preprocess_duplicate_log_df = pd.read_parquet(
+            os.path.join(target_path, &#39;duplicate_log.parquet&#39;))
+        applied_rules_log_df = pd.read_parquet(
+            os.path.join(target_path, &#39;applied_rules_log.parquet&#39;))
+        stats_df = pd.read_parquet(os.path.join(target_path, &#39;stats.parquet&#39;))
+        applied_rules_sum_s = pd.read_csv(
+            os.path.join(target_path, &#39;applied_rules_sum.csv&#39;),
+            header=None, index_col=0, squeeze=True)
+        validation_overview_df = pd.read_parquet(
+            os.path.join(target_path, &#39;validation_overview.parquet&#39;))
+        process_description_df = pd.read_parquet(
+            os.path.join(target_path, &#39;process_description.parquet&#39;))
+
+        return StandardizedBag(result_df=result_df,
+                               preprocess_duplicate_log_df=preprocess_duplicate_log_df,
+                               applied_rules_log_df=applied_rules_log_df, stats_df=stats_df,
+                               applied_rules_sum_s=applied_rules_sum_s,
+                               validation_overview_df=validation_overview_df,
+                               process_description_df=process_description_df)</code></pre>
+</details>
+<h3>Static methods</h3>
+<dl>
+<dt id="secfsdstools.f_standardize.standardizing.StandardizedBag.load"><code class="name flex">
+<span>def <span class="ident">load</span></span>(<span>target_path: str) ‑> ~STANDARDIZED</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Loads the content of the bag at the specified location.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>target_path</code></strong></dt>
+<dd>the directory which contains the parquet files</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>STANDARDIZED</code></dt>
+<dd>the loaded Databag</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@staticmethod
+def load(target_path: str) -&gt; STANDARDIZED:
+    &#34;&#34;&#34;
+    Loads the content of the bag at the specified location.
+
+    Args:
+        target_path: the directory which contains the parquet files
+
+    Returns:
+        STANDARDIZED: the loaded Databag
+    &#34;&#34;&#34;
+
+    result_df = pd.read_parquet(os.path.join(target_path, &#39;result.parquet&#39;))
+    preprocess_duplicate_log_df = pd.read_parquet(
+        os.path.join(target_path, &#39;duplicate_log.parquet&#39;))
+    applied_rules_log_df = pd.read_parquet(
+        os.path.join(target_path, &#39;applied_rules_log.parquet&#39;))
+    stats_df = pd.read_parquet(os.path.join(target_path, &#39;stats.parquet&#39;))
+    applied_rules_sum_s = pd.read_csv(
+        os.path.join(target_path, &#39;applied_rules_sum.csv&#39;),
+        header=None, index_col=0, squeeze=True)
+    validation_overview_df = pd.read_parquet(
+        os.path.join(target_path, &#39;validation_overview.parquet&#39;))
+    process_description_df = pd.read_parquet(
+        os.path.join(target_path, &#39;process_description.parquet&#39;))
+
+    return StandardizedBag(result_df=result_df,
+                           preprocess_duplicate_log_df=preprocess_duplicate_log_df,
+                           applied_rules_log_df=applied_rules_log_df, stats_df=stats_df,
+                           applied_rules_sum_s=applied_rules_sum_s,
+                           validation_overview_df=validation_overview_df,
+                           process_description_df=process_description_df)</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="secfsdstools.f_standardize.standardizing.StandardizedBag.save"><code class="name flex">
+<span>def <span class="ident">save</span></span>(<span>self, target_path: str)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Stores the last result and the log dataframesunder the given directory.
+The directory has to exist and must be empty.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>databag</code></strong></dt>
+<dd>the bag to be saved</dd>
+<dt><strong><code>target_path</code></strong></dt>
+<dd>the directory under which the parquet files for sub and pre_num
+will be created</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def save(self, target_path: str):
+    &#34;&#34;&#34;
+    Stores the last result and the log dataframesunder the given directory.
+    The directory has to exist and must be empty.
+
+    Args:
+        databag: the bag to be saved
+        target_path: the directory under which the parquet files for sub and pre_num
+              will be created
+
+    &#34;&#34;&#34;
+    if not os.path.isdir(target_path):
+        raise ValueError(f&#34;the path {target_path} does not exist&#34;)
+
+    if len(os.listdir(target_path)) &gt; 0:
+        raise ValueError(f&#34;the target_path {target_path} is not empty&#34;)
+
+    self.result_df.to_parquet(os.path.join(target_path, &#39;result.parquet&#39;))
+    self.preprocess_duplicate_log_df.to_parquet(
+        os.path.join(target_path, &#39;duplicate_log.parquet&#39;))
+    self.applied_rules_log_df.to_parquet(os.path.join(target_path, &#39;applied_rules_log.parquet&#39;))
+    self.stats_df.to_parquet(os.path.join(target_path, &#39;stats.parquet&#39;))
+    self.applied_rules_sum_s.to_csv(os.path.join(target_path, &#39;applied_rules_sum.csv&#39;))
+    self.validation_overview_df.to_parquet(
+        os.path.join(target_path, &#39;validation_overview.parquet&#39;))
+    self.process_description_df.to_parquet(
+        os.path.join(target_path, &#39;process_description.parquet&#39;))</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
 <dt id="secfsdstools.f_standardize.standardizing.Standardizer"><code class="flex name class">
 <span>class <span class="ident">Standardizer</span></span>
 <span>(</span><span>pre_rule_tree: <a title="secfsdstools.f_standardize.base_rule_framework.RuleGroup" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.RuleGroup">RuleGroup</a>, main_rule_tree: <a title="secfsdstools.f_standardize.base_rule_framework.RuleGroup" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.RuleGroup">RuleGroup</a>, post_rule_tree: <a title="secfsdstools.f_standardize.base_rule_framework.RuleGroup" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.RuleGroup">RuleGroup</a>, validation_rules: List[<a title="secfsdstools.f_standardize.base_validation_rules.ValidationRule" href="base_validation_rules.html#secfsdstools.f_standardize.base_validation_rules.ValidationRule">ValidationRule</a>], final_tags: List[str], main_iterations: int = 2, filter_for_main_statement: bool = True, main_statement_tags: List[str] = None, invert_negated: bool = True)</span>
@@ -387,7 +753,7 @@ as negated.</dd>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class Standardizer:
+<pre><code class="python">class Standardizer(Presenter[JoinedDataBag]):
     &#34;&#34;&#34;
     The Standardizer implements the base processing logic to standardize financial statements.
     &#34;&#34;&#34;
@@ -452,14 +818,18 @@ as negated.</dd>
 
         self.final_col_order = self.identifier_tags + self.final_tags
 
+        # attribute to store the last result of calling the process method
+        self.result: Optional[pd.DataFrame] = None
+
         # define log dataframes ..
         # .. a special log that shows the duplicated records that were found and removed
-        self.preprocess_dupliate_log_df: Optional[pd.DataFrame] = None
+        self.preprocess_duplicate_log_df: Optional[pd.DataFrame] = None
         # .. the main_log that shows which rules were applied on which statement/row
         self.applied_rules_log_df: Optional[pd.DataFrame] = None
         # .. shows the total of how often a rule was applied, mainly counts the Trues per column
         #    in self.applied_rules_log_df
         self.applied_rules_sum_s: Optional[pd.Series] = None
+        self.validation_overview_df: Optional[pd.DataFrame] = None
 
         self.stats = Stats(self.final_tags)
 
@@ -472,7 +842,7 @@ as negated.</dd>
             data_df.duplicated(
                 [&#39;adsh&#39;, &#39;coreg&#39;, &#39;report&#39;, &#39;uom&#39;, &#39;tag&#39;, &#39;version&#39;, &#39;ddate&#39;, &#39;value&#39;])
 
-        self.preprocess_dupliate_log_df = data_df[duplicates_s] \
+        self.preprocess_duplicate_log_df = data_df[duplicates_s] \
             [[&#39;adsh&#39;, &#39;coreg&#39;, &#39;report&#39;, &#39;tag&#39;, &#39;uom&#39;, &#39;version&#39;, &#39;ddate&#39;]].copy()
 
         return data_df[~duplicates_s]
@@ -521,8 +891,7 @@ as negated.</dd>
             cpy_df.loc[cpy_df.negating == 1, &#39;value&#39;] = -cpy_df.value
 
         # pivot the table
-        expected_tags = self.all_input_tags.union(self.final_tags)
-        pivot_df = self._preprocess_pivot(data_df=cpy_df, expected_tags=expected_tags)
+        pivot_df = self._preprocess_pivot(data_df=cpy_df, expected_tags=self.all_input_tags)
 
         if self.filter_for_main_statement:
             pivot_df = self._preprocess_filter_pivot_for_main_statement(pivot_df)
@@ -542,11 +911,11 @@ as negated.</dd>
     def _main_processing(self, data_df: pd.DataFrame):
         for i in range(self.main_iterations):
             # apply the main rule tree
-            self.main_rule_tree.set_id(prefix=f&#34;MAIN_{i}&#34;)
+            self.main_rule_tree.set_id(prefix=f&#34;MAIN_{i + 1}&#34;)
             self.main_rule_tree.process(data_df=data_df, log_df=self.applied_rules_log_df)
 
             # calculate stats and add them to the stats log
-            self.stats.add_stats_entry(data_df=data_df, process_step_name=f&#39;MAIN_{i}&#39;)
+            self.stats.add_stats_entry(data_df=data_df, process_step_name=f&#39;MAIN_{i + 1}&#39;)
 
     def _post_processing(self, data_df: pd.DataFrame):
         # apply the post rule tree
@@ -563,6 +932,19 @@ as negated.</dd>
         # apply validation rules
         for validation_rule in self.validation_rules:
             validation_rule.validate(finalized_df)
+
+        cat_cols = [x for x in finalized_df.columns if x.endswith(&#34;_cat&#34;)]
+        self.validation_overview_df = pd.DataFrame(index=[0, 1, 5, 10, 100], columns=cat_cols)
+
+        for column in cat_cols:
+            self.validation_overview_df[column] = finalized_df[column].value_counts()
+
+        for column in self.validation_overview_df.columns:
+            new_column_name = column + &#39;_pct&#39;
+            self.validation_overview_df = (
+                self.validation_overview_df.assign(
+                    **{new_column_name: (100 * self.validation_overview_df[column] / len(
+                        finalized_df)).round(2)}))
 
         # calculate log_df summaries
         # filter for rule columns but making sure the order stays the same
@@ -589,7 +971,8 @@ as negated.</dd>
         self._main_processing(ready_df)
         self._post_processing(ready_df)
 
-        return self._finalize(ready_df)
+        self.result = self._finalize(ready_df)
+        return self.result
 
     def get_process_description(self) -&gt; pd.DataFrame:
         &#34;&#34;&#34;
@@ -609,8 +992,74 @@ as negated.</dd>
 
         all_descriptions.extend([vr.collect_description(&#34;VALID&#34;) for vr in self.validation_rules])
 
-        return pd.DataFrame(all_descriptions)</code></pre>
+        return pd.DataFrame(all_descriptions)
+
+    def present(self, databag: JoinedDataBag) -&gt; pd.DataFrame:
+        &#34;&#34;&#34;
+        implements a presenter which reformats the bag into standardized dataframe.
+
+        It also merges the main attributes from the sub_df to the result
+        (cik, name, form, fye, fy, fp) and
+        creates a date column based on the ddated value.
+
+        Note: as name always the latest available name is used.
+
+        Args:
+            databag (T): the bag to transform into the presentation df
+
+        Returns:
+            pd.DataFrame: the data to be presented
+        &#34;&#34;&#34;
+        standardized_df = self.process(databag.pre_num_df)
+
+        data_to_merge_df = databag.sub_df[[&#39;adsh&#39;, &#39;cik&#39;, &#39;form&#39;, &#39;fye&#39;, &#39;fy&#39;, &#39;fp&#39;]].copy()
+
+        # The name of a company can change during its liftime. However, we want to have the
+        # same name for the same cik in all entries. Therefore, we first have to find the
+        # latest name of the company.
+
+        # first, create a cik-name look up table,
+        df_latest = (databag.sub_df[[&#39;cik&#39;, &#39;name&#39;, &#39;period&#39;]].sort_values(&#39;period&#39;)
+                     .drop_duplicates(&#39;cik&#39;, keep=&#39;last&#39;))
+
+        # Create the dictionary
+        cik_name_dict = dict(zip(df_latest[&#39;cik&#39;], df_latest[&#39;name&#39;]))
+
+        data_to_merge_df[&#39;name&#39;] = data_to_merge_df[&#39;cik&#39;].map(cik_name_dict)
+
+        merged_df = pd.merge(data_to_merge_df, standardized_df, on=&#39;adsh&#39;, how=&#39;inner&#39;)
+
+        # create the date column and sort by date
+        merged_df[&#39;date&#39;] = pd.to_datetime(merged_df[&#39;ddate&#39;], format=&#39;%Y%m%d&#39;)
+
+        # sort the columns
+        merged_df = merged_df[[&#39;adsh&#39;, &#39;cik&#39;, &#39;name&#39;, &#39;form&#39;, &#39;fye&#39;, &#39;fy&#39;, &#39;fp&#39;, &#39;date&#39;] +
+                              standardized_df.columns.tolist()[1:]]
+
+        # store it in the standardizer object as new result
+        self.result = merged_df.sort_values(by=&#39;date&#39;)
+
+        return self.result
+
+    def get_standardize_bag(self) -&gt; StandardizedBag:
+        &#34;&#34;&#34;
+            returns an instance of StandardizedBag with all the calculated
+            information. the bag can then be used to directly save the information
+            on disk and reload it for later analysis
+        &#34;&#34;&#34;
+        return StandardizedBag(result_df=self.result,
+                               applied_rules_log_df=self.applied_rules_log_df,
+                               preprocess_duplicate_log_df=self.preprocess_duplicate_log_df,
+                               stats_df=self.stats.stats,
+                               applied_rules_sum_s=self.applied_rules_sum_s,
+                               validation_overview_df=self.validation_overview_df,
+                               process_description_df=self.get_process_description())</code></pre>
 </details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="secfsdstools.d_container.presentation.Presenter" href="../d_container/presentation.html#secfsdstools.d_container.presentation.Presenter">Presenter</a></li>
+<li>typing.Generic</li>
+</ul>
 <h3>Subclasses</h3>
 <ul class="hlist">
 <li><a title="secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizer" href="bs_standardize.html#secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizer">BalanceSheetStandardizer</a></li>
@@ -659,6 +1108,103 @@ as negated.</dd>
     return pd.DataFrame(all_descriptions)</code></pre>
 </details>
 </dd>
+<dt id="secfsdstools.f_standardize.standardizing.Standardizer.get_standardize_bag"><code class="name flex">
+<span>def <span class="ident">get_standardize_bag</span></span>(<span>self) ‑> <a title="secfsdstools.f_standardize.standardizing.StandardizedBag" href="#secfsdstools.f_standardize.standardizing.StandardizedBag">StandardizedBag</a></span>
+</code></dt>
+<dd>
+<div class="desc"><p>returns an instance of StandardizedBag with all the calculated
+information. the bag can then be used to directly save the information
+on disk and reload it for later analysis</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_standardize_bag(self) -&gt; StandardizedBag:
+    &#34;&#34;&#34;
+        returns an instance of StandardizedBag with all the calculated
+        information. the bag can then be used to directly save the information
+        on disk and reload it for later analysis
+    &#34;&#34;&#34;
+    return StandardizedBag(result_df=self.result,
+                           applied_rules_log_df=self.applied_rules_log_df,
+                           preprocess_duplicate_log_df=self.preprocess_duplicate_log_df,
+                           stats_df=self.stats.stats,
+                           applied_rules_sum_s=self.applied_rules_sum_s,
+                           validation_overview_df=self.validation_overview_df,
+                           process_description_df=self.get_process_description())</code></pre>
+</details>
+</dd>
+<dt id="secfsdstools.f_standardize.standardizing.Standardizer.present"><code class="name flex">
+<span>def <span class="ident">present</span></span>(<span>self, databag: <a title="secfsdstools.d_container.databagmodel.JoinedDataBag" href="../d_container/databagmodel.html#secfsdstools.d_container.databagmodel.JoinedDataBag">JoinedDataBag</a>) ‑> pandas.core.frame.DataFrame</span>
+</code></dt>
+<dd>
+<div class="desc"><p>implements a presenter which reformats the bag into standardized dataframe.</p>
+<p>It also merges the main attributes from the sub_df to the result
+(cik, name, form, fye, fy, fp) and
+creates a date column based on the ddated value.</p>
+<p>Note: as name always the latest available name is used.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>databag</code></strong> :&ensp;<code>T</code></dt>
+<dd>the bag to transform into the presentation df</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>pd.DataFrame</code></dt>
+<dd>the data to be presented</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def present(self, databag: JoinedDataBag) -&gt; pd.DataFrame:
+    &#34;&#34;&#34;
+    implements a presenter which reformats the bag into standardized dataframe.
+
+    It also merges the main attributes from the sub_df to the result
+    (cik, name, form, fye, fy, fp) and
+    creates a date column based on the ddated value.
+
+    Note: as name always the latest available name is used.
+
+    Args:
+        databag (T): the bag to transform into the presentation df
+
+    Returns:
+        pd.DataFrame: the data to be presented
+    &#34;&#34;&#34;
+    standardized_df = self.process(databag.pre_num_df)
+
+    data_to_merge_df = databag.sub_df[[&#39;adsh&#39;, &#39;cik&#39;, &#39;form&#39;, &#39;fye&#39;, &#39;fy&#39;, &#39;fp&#39;]].copy()
+
+    # The name of a company can change during its liftime. However, we want to have the
+    # same name for the same cik in all entries. Therefore, we first have to find the
+    # latest name of the company.
+
+    # first, create a cik-name look up table,
+    df_latest = (databag.sub_df[[&#39;cik&#39;, &#39;name&#39;, &#39;period&#39;]].sort_values(&#39;period&#39;)
+                 .drop_duplicates(&#39;cik&#39;, keep=&#39;last&#39;))
+
+    # Create the dictionary
+    cik_name_dict = dict(zip(df_latest[&#39;cik&#39;], df_latest[&#39;name&#39;]))
+
+    data_to_merge_df[&#39;name&#39;] = data_to_merge_df[&#39;cik&#39;].map(cik_name_dict)
+
+    merged_df = pd.merge(data_to_merge_df, standardized_df, on=&#39;adsh&#39;, how=&#39;inner&#39;)
+
+    # create the date column and sort by date
+    merged_df[&#39;date&#39;] = pd.to_datetime(merged_df[&#39;ddate&#39;], format=&#39;%Y%m%d&#39;)
+
+    # sort the columns
+    merged_df = merged_df[[&#39;adsh&#39;, &#39;cik&#39;, &#39;name&#39;, &#39;form&#39;, &#39;fye&#39;, &#39;fy&#39;, &#39;fp&#39;, &#39;date&#39;] +
+                          standardized_df.columns.tolist()[1:]]
+
+    # store it in the standardizer object as new result
+    self.result = merged_df.sort_values(by=&#39;date&#39;)
+
+    return self.result</code></pre>
+</details>
+</dd>
 <dt id="secfsdstools.f_standardize.standardizing.Standardizer.process"><code class="name flex">
 <span>def <span class="ident">process</span></span>(<span>self, data_df: pandas.core.frame.DataFrame) ‑> pandas.core.frame.DataFrame</span>
 </code></dt>
@@ -692,7 +1238,8 @@ as negated.</dd>
     self._main_processing(ready_df)
     self._post_processing(ready_df)
 
-    return self._finalize(ready_df)</code></pre>
+    self.result = self._finalize(ready_df)
+    return self.result</code></pre>
 </details>
 </dd>
 </dl>
@@ -896,10 +1443,19 @@ to the previous step.</p></div>
 <li><h3><a href="#header-classes">Classes</a></h3>
 <ul>
 <li>
+<h4><code><a title="secfsdstools.f_standardize.standardizing.StandardizedBag" href="#secfsdstools.f_standardize.standardizing.StandardizedBag">StandardizedBag</a></code></h4>
+<ul class="">
+<li><code><a title="secfsdstools.f_standardize.standardizing.StandardizedBag.load" href="#secfsdstools.f_standardize.standardizing.StandardizedBag.load">load</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.standardizing.StandardizedBag.save" href="#secfsdstools.f_standardize.standardizing.StandardizedBag.save">save</a></code></li>
+</ul>
+</li>
+<li>
 <h4><code><a title="secfsdstools.f_standardize.standardizing.Standardizer" href="#secfsdstools.f_standardize.standardizing.Standardizer">Standardizer</a></code></h4>
 <ul class="">
 <li><code><a title="secfsdstools.f_standardize.standardizing.Standardizer.get_process_description" href="#secfsdstools.f_standardize.standardizing.Standardizer.get_process_description">get_process_description</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.standardizing.Standardizer.get_standardize_bag" href="#secfsdstools.f_standardize.standardizing.Standardizer.get_standardize_bag">get_standardize_bag</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.standardizing.Standardizer.identifier_tags" href="#secfsdstools.f_standardize.standardizing.Standardizer.identifier_tags">identifier_tags</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.standardizing.Standardizer.present" href="#secfsdstools.f_standardize.standardizing.Standardizer.present">present</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.standardizing.Standardizer.process" href="#secfsdstools.f_standardize.standardizing.Standardizer.process">process</a></code></li>
 </ul>
 </li>

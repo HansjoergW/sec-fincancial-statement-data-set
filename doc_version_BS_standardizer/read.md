@@ -34,23 +34,36 @@ and therefore providing a possibility to receive the latest filings on a daily b
 
 # Latest news / most important changes from previous versions
 See the [Release Notes](https://hansjoergw.github.io/sec-fincancial-statement-data-set/releasenotes/) for details.
+## 1.3 -> 1.4
+* Introducing the Standardizer Framework and the **Balance Sheet Standardizer** as a first implementation.<br>
+  The Balance Sheet Standardizer makes the balance sheets easily comparable.<br>
+  Check out the following notebooks: <br>
+  [07_00_standardizer_basics](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/07_00_standardizer_basics.ipynb) <br>
+  [07_01_BS_standardizer](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/07_01_BS_standardizer.ipynb) <br>
+* Efficiency improvements for `MultiReportCollector`. 
+
+## 1.2 -> 1.3
+* New notebook [06_bulk_data_processing_deep_dive](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/06_bulk_data_processing_deep_dive.ipynb)<br>
+  This first version shows how datasets can be created with data from all available zip files. It shows a faster
+  parallel approach which uses more memory and cpu resources and a slower serial approach which uses significant
+  less resources.
+* New package `u_usecases` introduced. This package is a place to provide concrete examples what you can do
+  with the `secfsdstools` library. As a first usecase, the logic shown and explained in the `06_bulk_data_processing_deep_dive`
+  is provided as logic within the modul `bulk_loading`.
+
+
 ## 1.1 -> 1.2
 * `secfsdstools.e_filter.rawfiltering.USDOnlyRawFilter` is new and removes none USD currency datapoints
 * `MainCoregFilter` was renamed to `MainCoregRawFilter`
 * `OfficialTagsOnlyFilter` was renamed to `OfficialTagsOnlyRawFilter`
 * All filters have been implemented for the JoinedDataBag as well: `secfsdstools.e_filter.joinedfiltering`
-* new notebook [filter_deep_dive notebook](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/05_filter_deep_dive.ipynb).
+* New notebook [05_filter_deep_dive](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/05_filter_deep_dive.ipynb).
 
 
 ## 1.0 -> 1.1
 * `secfsdstools.e_collector.zipcollecting.ZipCollector` supports now loading of multiple zip files:<br>
   Examples: Notebook [04_collector_deep_dive](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/04_collector_deep_dive.ipynb)
-
 * `secfsdstools.e_filter.rawfiltering.OfficialTagsOnlyRawFilter` is new and removes none us-gaap tags
-
-## 0.5 -> 1.0
-* The API was redesigned completely from version 0.5 to version 1.0 <br>  
-Please read the chapter "Working with the SECFSDSTools library" carefully to understand how to use the new API.
 
 
 # Principles
@@ -78,8 +91,12 @@ report into pandas dataframe tables.
 * [QuickStart Jupyter Notebook](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/01_quickstart.ipynb)
 * [Connect to the daily-sec-financial-statement-dataset Notebook](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/02_connect_rapidapi.ipynb)
 * [Explore the data with an interactive Notebook](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/03_explore_with_interactive_notebook.ipynb)
-* [collector_deep_dive](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/04_collector_deep_dive.ipynb)
-* [filter_deep_dive notebook](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/05_filter_deep_dive.ipynb).
+* [collector_deep_dive Notebook](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/04_collector_deep_dive.ipynb)
+* [filter_deep_dive Notebook](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/05_filter_deep_dive.ipynb).
+* [bulk_data_processing_deep_dive Notebook](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/06_bulk_data_processing_deep_dive.ipynb)
+* [standardizer_basics](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/07_00_standardizer_basics.ipynb)
+* [BS_standardizer](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/07_01_BS_standardizer.ipynb)
+
 
 # Installation
 
@@ -688,13 +705,79 @@ implementations (module `secfsdstools.e_presenter.presenting`):
   If you compare this with the real report at https://www.sec.gov/ix?doc=/Archives/edgar/data/320193/000032019322000108/aapl-20220924.htm
   you will notice, that order of the tags and the values are the same.
 
+* `Standardizer` <br>
+  Even if xbrl is a standard on how to tag positions and numbers in financial statements, that doesn't mean that financial
+  statements can then be compared easily. For instance, there are over 3000 tags which can be used in a balance sheet.
+  Moreover, some tags can mean similar things or can be grouped behind a "parent" tag, which itself might not be present.
+  For instance, "AccountsNoncurrent" is often not shown in statements. So you would find the position for "Accounts"
+  and "AccountsCurrent", but not for "AccountsNoncurrent". Instead, only child tags for "AccountsNoncurrent" might be
+  present.<br><br>
+  The standardizer helps to solve these problems by unifying the information of financial statements.<br> <br>
+  With the standardized financial statements, you can then actually compare the statements between different
+  companies or different years, and you can use the dataset for ML. <br><br>
+  Have a look at [standardizer_basics](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/07_00_standardizer_basics.ipynb) which explains it in more details.<br><br>
+
+  * `BalanceSheetStandardizer` <br>
+  The `BalanceSheetStandardizer` collects and/or calculates the following positions of balance sheets:  
+
+    - Assets
+      - AssetsCurrent
+        - Cash
+      - AssetsNoncurrent
+    - Liabilities
+      - LiabilitiesCurrent
+      - LiabilitiesNoncurrent
+    - Equity
+      - HolderEquity (mainly StockholderEquity or PartnerCapital)
+        - RetainedEarnings
+        - AdditionalPaidInCapital
+        - TreasuryStockValue
+      - TemporaryEquity
+      - RedeemableEquity
+    - LiabilitiesAndEquity
+
+  With just a few lines of code, you'll get a comparable dataset with the main positions of a balance sheet for Microsoft, Alphabet, and Amazon:
+  (see the [stanardize the balance sheets and make them comparable](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/07_01_BS_standardizer.ipynb) for details)
+   ````python
+   from secfsdstools.e_collector.companycollecting import CompanyReportCollector
+   from secfsdstools.e_filter.rawfiltering import ReportPeriodRawFilter, MainCoregRawFilter, OfficialTagsOnlyRawFilter, USDOnlyRawFilter
+   from secfsdstools.f_standardize.bs_standardize import BalanceSheetStandardizer
+   
+   bag = CompanyReportCollector.get_company_collector(ciks=[789019, 1652044,1018724]).collect() #Microsoft, Alphabet, Amazon
+   filtered_bag = bag[ReportPeriodRawFilter()][MainCoregRawFilter()][OfficialTagsOnlyRawFilter()][USDOnlyRawFilter()]
+   joined_bag = filtered_bag.join()
+   
+   standardizer = BalanceSheetStandardizer()
+   
+   standardized_bs_df = joined_bag.present(standardizer)
+   
+   import matplotlib.pyplot as plt
+   # Group by 'name' and plot equity for each group
+   # Note: using the `present` method ensured that the same cik has always the same name even if the company name did change in the past
+   for name, group in standardized_bs_df.groupby('name'):
+     plt.plot(group['date'], group['Equity'], label=name, linestyle='-')
+   
+   # Add labels and title
+   plt.xlabel('Date')
+   plt.ylabel('Equity')
+   plt.title('Equity Over Time for Different Companies (CIKs)')
+   
+   # Display legend
+   plt.legend()
+   ````
+   ![Equity Compare](https://github.com/HansjoergW/sec-fincancial-statement-data-set/raw/main/docs/images/equity_compare.png)
+
+
 # What to explore further
 
 * [QuickStart Jupyter Notebook](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/01_quickstart.ipynb)
 * [Explore the data with an interactive Notebook](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/03_explore_with_interactive_notebook.ipynb)
 * [Connect to the daily-sec-financial-statement-dataset Notebook](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/02_connect_rapidapi.ipynb) 
-* [collector_deep_dive](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/04_collector_deep_dive.ipynb)
-* [filter_deep_dive notebook](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/05_filter_deep_dive.ipynb).
+* [collector_deep_dive Notebook](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/04_collector_deep_dive.ipynb)
+* [filter_deep_dive Notebook](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/05_filter_deep_dive.ipynb).
+* [bulk_data_processing_deep_dive Notebook](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/06_bulk_data_processing_deep_dive.ipynb)
+* [checkout the `u_usecases` package](https://hansjoergw.github.io/sec-fincancial-statement-data-set/doc_latest/api/secfsdstools/u_usecases/index.html)
+* [stanardize the balance sheets and make them comparable](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/07_01_BS_standardizer.ipynb)
 
 
 # Troubleshooting

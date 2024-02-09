@@ -13,21 +13,13 @@ New Release
 - on github -> under code releases: draft new release
 
 
-v.1.4.0
-New
-- Standardizer Basic
-  - Goal: what is a standard
-  - process: preprocess, process, postprocess
-  - rules: what is a rule, rule overview
-  - logging: overall, per report, filtering, validation
-- BS Standardizer
-
+v.1.5.0
+- ..
 
 
 todo:
 - evtl. sollte jede Regel noch eine "Explanation" bekommen. Ein Text, der die Regel spezifisch erklärt,
   nicht allgemein wie in description.
-
 
 Next:
 - vlt switch um parallele verarbeitung komplett auszuschalten?

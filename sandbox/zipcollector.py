@@ -35,7 +35,7 @@ if __name__ == '__main__':
     rawdatabag.save(save_path_raw)
 
     # filtering and joining
-    filtered_joined = rawdatabag[MainCoregFilter()][ReportPeriodRawFilter()].join()
+    filtered_joined = rawdatabag[MainCoregRawFilter()][ReportPeriodRawFilter()].join()
 
     print("pre_num", filtered_joined.pre_num_df.shape)
 

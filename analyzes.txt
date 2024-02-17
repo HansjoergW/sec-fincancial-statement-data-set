@@ -1,33 +1,42 @@
-BS Assets
----------
+IS
+--
+main positions to calculate:
 
-OwnerEquityCheck_cat==100 -> > 40'000
-    Liabilities and LiabilitiesNoncurrent not present
-    - problem -> Liabilities wird auf LiabilitiesCurent gesetzt, aber in der Regel gibt es
-      untertags von LiablitiesNoncurrent
+Revenues (Umsatzerlöse): us-gaap:Revenues
 
-    Führt dazu, das ownerequity check daneben liegt
+Cost of Goods Sold (Kosten der verkauften Waren): us-gaap:CostOfGoodsAndServicesSold
 
-        OwnerEquityCheck_cat	AssetsLiaEquCheck_cat
-    0	252511	                252006
-    1	10830	                11013
-    5	8436	                8504
-    10	4546	                4569
-    100	42342	                42743
+Gross Profit (Bruttogewinn): us-gaap:GrossProfit
 
-    Neue Regeln:
-                SumUpRule(
-                    sum_tag='LongTermDebt',
-                    potential_summands=[
-                        'LongTermDebtNoncurrent',
-                        'LongTermDebtAndCapitalLeaseObligations',
-                    ]
-                ),
-                SumUpRule(
-                  sum_tag='LiabilitiesNoncurrent',
-                  potential_summands=[
-                      'LongTermDebt',
-                      'OperatingLeaseLiabilityNoncurrent',
-                      'FinanceLeaseLiabilityNoncurrent',
-                      'DerivativeLiabilitiesNoncurrent',
-                      'OtherLiabilitiesNoncurrent'
+Operating Expenses (Betriebsaufwendungen): us-gaap:OperatingExpenses
+
+  Hierzu gehören verschiedene Unterkategorien wie:
+    us-gaap:ResearchAndDevelopmentExpense
+    us-gaap:SellingGeneralAndAdministrativeExpense
+
+Operating Income (Betriebsergebnis): us-gaap:OperatingIncomeLoss
+
+Other Income and Expenses (Sonstige Erträge und Aufwendungen): us-gaap:NonoperatingIncomeExpense
+
+Income Before Tax (Ergebnis vor Steuern):us-gaap:IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest
+
+Income Tax Expense (Ertragsteueraufwand):us-gaap:IncomeTaxExpenseBenefit
+
+Net Income (Nettogewinn): us-gaap:NetIncomeLoss
+
+Earnings Per Share (Gewinn je Aktie): us-gaap:EarningsPerShareBasicAndDiluted
+
+Comprehensive Income (Gesamtergebnis): us-gaap:ComprehensiveIncomeNetOfTax
+
+
+Revenue
+-------
+us-gaap:Revenues
+  us-gaap:SalesRevenueNet
+    us-gaap:ProductSalesRevenue
+    us-gaap:ServiceRevenue
+
+
+Achtung:
+- wir haben oft daten in IS und CI (comprehensive Income)
+- prüfen, ob 10-Q immer Q? Einträge in fp hat und ob 10-K immer ein FY hat

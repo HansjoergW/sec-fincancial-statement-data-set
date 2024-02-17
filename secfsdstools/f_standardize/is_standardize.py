@@ -15,8 +15,21 @@ class IncomeStatementStandardizer(Standardizer):
     meaning that they have the same tags.
 
     At the end, the standardized IS contains the following columns
-        .. TBD
 
+    Position	Relation
+    Revenues
+    Cost of Goods and Services Sold
+
+    Gross Profit	                Revenues - Cost of Goods and Services Sold
+    Operating Expenses
+
+    Operating Income (Loss)	        Gross Profit - Operating Expenses
+    Other Income and Expenses
+
+    Income Before Tax               Operating Income + Other Income and Expenses
+    Income Tax Expense (Benefit)
+
+    Net Income (Loss)               Income Before Tax - Income Tax Expense
     """
 
 
@@ -36,7 +49,13 @@ class IncomeStatementStandardizer(Standardizer):
     ]
 
     # these are the columns that finally are returned after the standardization
-    final_tags: List[str] = [
+    final_tags: List[str] = ['Revenues',
+                             'CostOfGoodsAndServicesSold',
+                             'GrossProfit',
+                             'OperatingIncomeLoss',
+                             'IncomeLossBeforeIncomeTaxExpenseBenefit',
+                             'IncomeTaxExpenseBenefit',
+                             'NetIncomeLoss'
                              ]
 
     # used to evaluate if a report is the main balancesheet report
@@ -44,7 +63,24 @@ class IncomeStatementStandardizer(Standardizer):
     # which stmt value is BS.
     # however, we might be only interested in the "major" BS report. Usually this is the
     # one which has the least nan in the following columns
-    main_statement_tags = []
+    main_statement_tags = ['Revenues',
+                           'SalesRevenueNet',
+                           'SalesRevenueGoodsNet',
+                           'SalesRevenueServicesNet',
+                           'CostOfRevenue',
+                           'CostOfGoodsAndServicesSold',
+                           'CostOfGoodsSold',
+                           'CostOfServices',
+                           'GrossProfit',
+                           'OperatingExpenses',
+                           'OperatingIncomeLoss',
+                           'IncomeLossFromContinuingOperationsBeforeIncomeTaxesMinorityInterestAndIncomeLossFromEquityMethodInvestments',
+                           'IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest',
+                           'IncomeLossBeforeIncomeTaxExpenseBenefit',
+                           'IncomeTaxExpenseBenefit',
+                           'NetIncomeLoss',
+                           'ProfitLoss'
+                           ]
 
     def __init__(self, filter_for_main_statement: bool = True, iterations: int = 3):
         super().__init__(

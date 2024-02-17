@@ -12,6 +12,43 @@ New Release
 - set tag and push tag (format vx.x.x)
 - on github -> under code releases: draft new release
 
+
+v.1.5.0
+- ..
+
+ToCheck:
+- In der Thesis wurde IS entweder basierend auf IS oder CI berechnet
+- in der Thesis habe ich beim Filtern noch auf die qtrs info geachtet,
+  evtl. müsste man das hier auch überprüfen, bzw. einen entsprechenden Filter verwenden,
+  bzw. als "PRE" Rule / Filter einfügen
+
+            bs_mask    = (all_df.stmt == 'BS') & (all_df.period == all_df.ddate) & (all_df.qtrs == 0)
+
+            is_ci_mask = all_df.stmt.isin(['IS', 'CI']) & (all_df.period == all_df.ddate) & (
+                                            ((all_df.form == '10-K') & (all_df.qtrs == 4))
+                                         |  ((all_df.form == '10-Q') & (all_df.qtrs == 1))
+                                                            )
+
+            # Generally: a CF for a quarterly report contains almost always the values from the beginning
+            # of the financial year up to the end of the current quarter.
+            # Sometimes, also just the information for that current quarter is present as well.
+            # Seldom, only the current Quarter is present.
+            cf_mask = (all_df.stmt == 'CF') & (all_df.period == all_df.ddate) & (
+                             (all_df.tag == 'CashAndCashEquivalentsAtCarryingValue')
+                         |   ((all_df.form == '10-K') & (all_df.qtrs == 4))
+                         |   (
+                              (all_df.form == '10-Q') & (
+                                                     ((all_df.fp == 'Q1') & (all_df.qtrs == 1))
+                                                   | ((all_df.fp == 'Q2') & (all_df.qtrs == 2))
+                                                   | ((all_df.fp == 'Q3') & (all_df.qtrs == 3))
+                                                   | ((all_df.fp == 'Q4') & (all_df.qtrs == 4))
+                                                          )
+
+
+
+
+
+
 todo:
 - sollte homepage nicht auf https://hansjoergw.github.io/sec-fincancial-statement-data-set/ zeigen?
 

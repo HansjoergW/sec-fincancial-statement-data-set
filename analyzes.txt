@@ -62,3 +62,21 @@ IncomeLossFromContinuingOperationsBeforeIncomeTaxesMinorityInterestAndIncomeLoss
 IncomeTaxExpenseBenefit -> income tax benefit
 
 NetIncomeLoss -> netincome loss
+
+
+
+Todos:
+- CostOfGoodAndServices Solds -> Es gibt sowohl positive, wie auch negative Beträge,
+  was merkwürdig ist.
+- das CI müsste man eigentlich auch beachten.
+
+
+Sonstiges
+---------
+Falls Firmen nur die Resultate für Q2 und Q3 seit Beginn angeben, könnte man die Differenz für das einzelne Quartal
+nachträglich berechnen. Wenn man beim Standardizer angeben könnte, ob qrtrs ein Bestandteil des Keys ist, könnte man diese auch direkt
+berechnen und dann in einem Post Schritt das ganze cleanen, so, dass nur "einzelne Quarter" als Ergebnisse angezeigt werden.
+
+Dazu müsste man eigentlich nur die adshs für Q2 und Q3 ermitteln, welche nur ein einziges Qrtr angeben. Von allen Q2 und Q3
+werden dann diese abgezogen und es bleiben diejenigen übrig, die für Q2 und Q3 zwei, bzw. drei qrtr angeben.
+dort kann man dann von Q2 Q1 abziehen und von Q3 das Ergebnis von Q2-Q1

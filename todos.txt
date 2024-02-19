@@ -16,6 +16,13 @@ New Release
 v.1.5.0
 - SumUpRule: additional parameter optional_summands
 
+
+Todo:
+- StandardStatementPresenter muss auch die Qrtrs berücksichtigen, sonst stimmt
+  die Darstellung für IS nicht!
+  -> könnte man auch gleich als neue Version herausgeben..
+
+
 ToCheck:
 - In der Thesis wurde IS entweder basierend auf IS oder CI berechnet
 - in der Thesis habe ich beim Filtern noch auf die qtrs info geachtet,

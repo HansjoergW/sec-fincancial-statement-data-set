@@ -2,10 +2,8 @@
 from typing import List
 
 from secfsdstools.f_standardize.base_rule_framework import RuleGroup
-from secfsdstools.f_standardize.base_rules import CopyTagRule, SumUpRule, \
-    missingsumparts_rules_creator, SetSumIfOnlyOneSummand, PostCopyToFirstSummand, \
-    PreSumUpCorrection, PostSetToZero
-from secfsdstools.f_standardize.base_validation_rules import ValidationRule, SumValidationRule
+from secfsdstools.f_standardize.base_rules import CopyTagRule, SumUpRule
+from secfsdstools.f_standardize.base_validation_rules import ValidationRule
 from secfsdstools.f_standardize.standardizing import Standardizer
 
 
@@ -17,7 +15,11 @@ class IncomeStatementStandardizer(Standardizer):
     At the end, the standardized IS contains the following columns
 
     Position	Relation
-    Revenues
+    Revenues / SalesRevenueNet
+      RevenueFromContractWithCustomerExcludingAssessedTax
+      OtherSalesRevenueNet
+
+
     Cost of Goods and Services Sold
 
     Gross Profit	                Revenues - Cost of Goods and Services Sold
@@ -32,9 +34,45 @@ class IncomeStatementStandardizer(Standardizer):
     Net Income (Loss)               Income Before Tax - Income Tax Expense
     """
 
+    is_basic_sumup_rg = RuleGroup(
+        prefix="",
+        rules=[]
+    )
+
+    #     Problem: OtherSalesRevenueNet kann mit SalesREvneues.. auftauchen
+    #      aber auch mit RevenueFromContractWithCustomerExcludingAssessedTax
+    #      Other dürfte nicht alleine summiert werden
+    #
+    #     in der sumup rule müsste eine zweite Liste vorhanden sein, can be present :)
+    #
+    #     OtherSalesRevenue darf nur addiert werden, wenn SalesRevenueGoods/Service vorhanden sind
+    # oder mit RevenueFromContractWithCustomerExcludingAssessedTax
+
+    is_revenue_rg = RuleGroup(
+        prefix="Rev",
+        rules=[
+            SumUpRule(sum_tag='SalesRevenueNet',
+                      potential_summands=[
+                          'SalesRevenueGoodsNet',
+                          'SalesRevenueServicesNet'],
+                      optional_summands=[
+                          'OtherSalesRevenueNet'
+                      ]),
+            CopyTagRule(original='SalesRevenueNet', target='Revenues'),
+            SumUpRule(sum_tag='RevenuesSum',
+                      potential_summands=[
+                          'RevenueFromContractWithCustomerExcludingAssessedTax'],
+                      optional_summands=[
+                          'OtherSalesRevenueNet'
+                      ]),
+            CopyTagRule(original='RevenuesSum', target='Revenues'),
+            CopyTagRule(original='InterestAndDividendIncomeOperating', target='Revenues')
+        ]
+    )
 
     main_rule_tree = RuleGroup(prefix="IS",
                                rules=[
+                                   is_revenue_rg
                                ])
 
     preprocess_rule_tree = RuleGroup(prefix="IS_PRE",
@@ -50,6 +88,7 @@ class IncomeStatementStandardizer(Standardizer):
 
     # these are the columns that finally are returned after the standardization
     final_tags: List[str] = ['Revenues',
+                             'RevenuesSum',
                              'CostOfGoodsAndServicesSold',
                              'GrossProfit',
                              'OperatingIncomeLoss',

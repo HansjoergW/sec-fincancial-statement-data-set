@@ -283,7 +283,8 @@ class Standardizer(Presenter[JoinedDataBag]):
              """
 
         cpy_pivot_df = pivot_df.copy()
-        cpy_pivot_df['nan_count'] = cpy_pivot_df[self.main_statement_tags].isna().sum(axis=1)
+        available_main_statements = set(cpy_pivot_df.columns.tolist()).intersection(set(self.main_statement_tags))
+        cpy_pivot_df['nan_count'] = cpy_pivot_df[available_main_statements].isna().sum(axis=1)
 
         cpy_pivot_df.sort_values(['adsh', 'coreg', 'nan_count'], inplace=True)
 

@@ -14,7 +14,7 @@ New Release
 
 
 v.1.5.0
-- ..
+- SumUpRule: additional parameter optional_summands
 
 ToCheck:
 - In der Thesis wurde IS entweder basierend auf IS oder CI berechnet

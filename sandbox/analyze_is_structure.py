@@ -24,9 +24,15 @@ def timing(f):
     return wrap
 
 
+def prepare_all_data_set():
+    bag = JoinedDataBag.load("../notebooks/set/parallel/IS/joined")
+    bag = bag[ISQrtrsFilter()]
+    bag.save("../notebooks/set/filtered/IS/joined")
+
+
 @timing
 def load_joined_IS_set() -> JoinedDataBag:
-    return JoinedDataBag.load("../notebooks/set/parallel/IS/joined")
+    return JoinedDataBag.load("../notebooks/set/filtered/IS/joined")
 
 
 @timing
@@ -36,7 +42,7 @@ def create_smaller_sample_IS_set():
                                                            'IS']).collect()  # Microsoft, Alphabet, Amazon
     filtered_bag = bag[ReportPeriodRawFilter()][MainCoregRawFilter()][OfficialTagsOnlyRawFilter()][
         USDOnlyRawFilter()]
-    filtered_bag.join().save("./saved_data/is_small_joined")
+    filtered_bag.join()[ISQrtrsFilter()].save("./saved_data/is_small_joined")
 
 
 @timing
@@ -45,7 +51,13 @@ def load_smaller_sample_IS_set() -> JoinedDataBag:
 
 
 def filter_tags(pre_num_df: pd.DataFrame, tag_like: str) -> List[str]:
-    return [x for x in pre_num_df.tag.unique().tolist() if "Revenue" in x]
+    return [x for x in pre_num_df.tag.unique().tolist() if tag_like in x]
+
+
+def find_entries_with_all_tags(bag: JoinedDataBag, tag_list: List[str]):
+    filtered_df = bag.pre_num_df[bag.pre_num_df.tag.isin(tag_list)][['adsh', 'tag']]
+    counted_df = filtered_df.groupby(['adsh']).count()
+    return counted_df[counted_df.tag == len(tag_list)].index.tolist()
 
 
 @timing
@@ -63,7 +75,8 @@ class ISQrtrsFilter(FilterBase):
 
     def filter(self, bag: JoinedDataBag) -> JoinedDataBag:
         # Temporäres DataFrame für "form" hinzufügen
-        temp_pre_num_df = pd.merge(bag.pre_num_df, bag.sub_df[['adsh', 'form']], on='adsh', how='inner')
+        temp_pre_num_df = pd.merge(bag.pre_num_df, bag.sub_df[['adsh', 'form']], on='adsh',
+                                   how='inner')
 
         # Filterkriterien
         criteria = (
@@ -79,22 +92,23 @@ class ISQrtrsFilter(FilterBase):
 
 if __name__ == '__main__':
     # create_smaller_sample_IS_set()
+    # prepare_all_data_set()
 
     is_joined_bag: JoinedDataBag = load_joined_IS_set()
-    # is_joined_bag = load_smaller_sample_IS_set()
+    #is_joined_bag = load_smaller_sample_IS_set()
 
-    # print(filter_tags(is_joined_bag.pre_num_df, tag_like="Revenue"))
+    # print(find_entries_with_all_tags(bag=is_joined_bag,
+    #                            tag_list=[
+    #                            'SalesRevenueGoodsNet',
+    #                           'SalesRevenueServicesNet',
+    #                           'OtherSalesRevenueNet']))
+    # print(filter_tags(is_joined_bag.pre_num_df, tag_like="SalesRevenue"))
     #
     # # check the loaded data
     print("sub_df", is_joined_bag.sub_df.shape)
     print("pre_num_df", is_joined_bag.pre_num_df.shape)
 
-    is_joined_bag_filtered = is_joined_bag[ISQrtrsFilter()]
-    print("filtered pre_num_df", is_joined_bag_filtered.pre_num_df.shape)
-
-
-
-    standardized_bag = standardize(is_joined_bag_filtered)
+    standardized_bag = standardize(is_joined_bag)
 
     print(standardized_bag.result_df.shape)
 

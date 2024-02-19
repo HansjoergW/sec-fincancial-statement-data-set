@@ -194,6 +194,42 @@ def test_sumup_rule():
     assert log_df.R_sumtag.tolist() == [False, True, True, False, False]
 
 
+def test_sumup_rule_with_optional():
+    rule = SumUpRule(sum_tag='sumtag',
+                     potential_summands=['summand1', 'summand2'],
+                     optional_summands=['optsummand'])
+
+    rule.set_id("R")
+
+    assert rule.get_input_tags() == {'sumtag', 'summand1', 'summand2', 'optsummand'}
+    assert rule.get_target_tags() == ['sumtag']
+    assert rule.identifier == 'R_sumtag'
+
+    # col1: sumtag, cal2: summand1, col3: summand2, col4: optsummand
+    data = [[11, 1, 10, 0],
+            [np.nan, 2, np.nan, 5],
+            [np.nan, np.nan, 30, 7],
+            [np.nan, np.nan, np.nan, 8],
+            [np.nan, np.nan, np.nan, np.nan],
+            [99, np.nan, np.nan]]
+
+    df = pd.DataFrame(data, columns=['sumtag', 'summand1', 'summand2', 'optsummand'])
+
+    log_df = df.copy()
+    rule.process(data_df=df, log_df=log_df)
+
+    # check the values of the target column
+    assert df.sumtag.tolist()[0] == 11.0
+    assert df.sumtag.tolist()[1] == 7.0
+    assert df.sumtag.tolist()[2] == 37.0
+    assert np.isnan(df.sumtag.tolist()[3])
+    assert np.isnan(df.sumtag.tolist()[4])
+    assert df.sumtag.tolist()[5] == 99.0
+
+    # check the log column, in order to test if the rule was applied to the right rows
+    assert log_df.R_sumtag.tolist() == [False, True, True, False, False, False]
+
+
 def test_setsumifonlyonesummand():
     rule = SetSumIfOnlyOneSummand(sum_tag='sumtag',
                                   summand_set='summandset',

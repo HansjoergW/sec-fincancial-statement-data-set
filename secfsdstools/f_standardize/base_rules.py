@@ -62,7 +62,7 @@ class PreSumUpCorrection(Rule):
         """
         return (data_df[self.mixed_up_summand] ==
                 data_df[self.sum_tag] + data_df[self.other_summand]) \
-               & (data_df[self.other_summand] > 0)
+            & (data_df[self.other_summand] > 0)
 
     def apply(self, data_df: pd.DataFrame, mask: pa.typing.Series[bool]):
         """
@@ -317,14 +317,22 @@ class MissingSummandRule(Rule):
 class SumUpRule(Rule):
     """Sums app the available Summands to a target column if the target colum is not set"""
 
-    def __init__(self, sum_tag: str, potential_summands: List[str]):
+    def __init__(self, sum_tag: str, potential_summands: List[str],
+                 optional_summands=None):
         """
         Args:
             sum_tag: the tag containing the sum
             potential_summands: potential tags with values that have to be summed up
+            optional_summands: optional summands are only added if at least one potential summand
+                               is present
         """
+        if optional_summands is None:
+            optional_summands = []
+
         self.sum_tag = sum_tag
         self.potential_summands = potential_summands
+        self.optional_summands = optional_summands
+        self.all_summands = potential_summands + optional_summands
 
     def get_target_tags(self) -> List[str]:
         """
@@ -345,6 +353,7 @@ class SumUpRule(Rule):
         """
         result = {self.sum_tag}
         result.update(self.potential_summands)
+        result.update(self.optional_summands)
         return result
 
     def mask(self, data_df: pd.DataFrame) -> pa.typing.Series[bool]:
@@ -358,8 +367,10 @@ class SumUpRule(Rule):
             pa.typing.Series[bool]: a boolean Series that marks which rows have to be calculated
         """
 
-        # mask if the target was not set and at least one of the summands is present
+        # mask if the target was not set and at least one of the summands is present.
+        # only  potential summands are relevant to mask which entries are selected
         mask_summands = (~data_df[self.potential_summands].isna()).any(axis=1)
+
         return data_df[self.sum_tag].isna() & mask_summands
 
     def apply(self, data_df: pd.DataFrame, mask: pa.typing.Series[bool]):
@@ -374,10 +385,11 @@ class SumUpRule(Rule):
             mask: a Series marking the rows in the dataframe on which the rule has to be applied
         """
         data_df.loc[mask, self.sum_tag] = 0.0  # initialize
-        for potential_summand in self.potential_summands:
-            summand_mask = mask & ~data_df[potential_summand].isna()
+
+        for summand in self.all_summands:
+            summand_mask = mask & ~data_df[summand].isna()
             data_df.loc[summand_mask, self.sum_tag] = data_df[self.sum_tag] + data_df[
-                potential_summand]
+                summand]
 
     def get_description(self) -> str:
         """
@@ -385,8 +397,15 @@ class SumUpRule(Rule):
         Returns:
             str: description
         """
-        return f"Sums up the availalbe values in the columns {self.potential_summands} into" \
-               f" the column '{self.sum_tag}', if the column '{self.sum_tag}' is nan"
+
+        if len(self.optional_summands) > 0:
+            return f"Sums up the available values in the columns {self.potential_summands} and" \
+                   f" {self.optional_summands} into the column '{self.sum_tag}'. Values from " \
+                   f"{self.optional_summands} are only added, if at least one value in " \
+                   f" {self.potential_summands} is present. '{self.sum_tag}' must be nan."
+        else:
+            return f"Sums up the availalbe values in the columns {self.potential_summands} into" \
+                   f" the column '{self.sum_tag}', if the column '{self.sum_tag}' is nan"
 
 
 class SetSumIfOnlyOneSummand(Rule):

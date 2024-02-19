@@ -90,10 +90,39 @@ class IncomeStatementStandardizer(Standardizer):
             CopyTagRule(original=&#39;SalesRevenueNet&#39;, target=&#39;Revenues&#39;),
             SumUpRule(sum_tag=&#39;RevenuesSum&#39;,
                       potential_summands=[
-                          &#39;RevenueFromContractWithCustomerExcludingAssessedTax&#39;],
+                          &#39;RevenueFromContractWithCustomerExcludingAssessedTax&#39;,
+                          &#39;RevenueFromContractWithCustomerIncludingAssessedTax&#39;,
+                          &#39;RevenuesExcludingInterestAndDividends&#39;,
+                          &#39;RegulatedAndUnregulatedOperatingRevenue&#39;,
+                          &#39;HealthCareOrganizationPatientServiceRevenue&#39;,
+                          &#39;SalesRevenueGoodsGross&#39;,
+                          &#39;ContractsRevenue&#39;,
+                          &#39;RevenueOilAndGasServices&#39;,
+                          &#39;HealthCareOrganizationRevenue&#39;,
+                          &#39;RevenueMineralSales&#39;,
+                          &#39;SalesRevenueEnergyServices&#39;,
+                          &#39;RealEstateRevenueNet&#39;,
+                          &#39;InterestAndDividendIncomeOperating&#39;,
+                          &#39;InterestIncomeExpenseNet&#39;,
+                          &#39;NoninterestIncome&#39;,
+                          &#39;OtherSalesRevenueNet&#39;, &#39;OperatingLeasesIncomeStatementLeaseRevenue&#39;, &#39;LicensesRevenue&#39;, &#39;RevenueFromRelatedParties&#39;,
+                          &#39;BrokerageCommissionsRevenue&#39;, &#39;RoyaltyRevenue&#39;, &#39;OilAndGasSalesRevenue&#39;, &#39;OilAndGasRevenue&#39;, &#39;OtherRealEstateRevenue&#39;,
+                          &#39;TechnologyServicesRevenue&#39;, &#39;ManagementFeesRevenue&#39;, &#39;ReimbursementRevenue&#39;, &#39;OperatingLeasesIncomeStatementMinimumLeaseRevenue&#39;,
+                          &#39;FoodAndBeverageRevenue&#39;, &#39;MaintenanceRevenue&#39;, &#39;LicenseAndServicesRevenue&#39;, &#39;FranchiseRevenue&#39;, &#39;SubscriptionRevenue&#39;, &#39;FinancialServicesRevenue&#39;,
+                          &#39;RevenueFromGrants&#39;, &#39;GasGatheringTransportationMarketingAndProcessingRevenue&#39;, &#39;OccupancyRevenue&#39;, &#39;NaturalGasProductionRevenue&#39;,
+                          &#39;SalesRevenueServicesGross&#39;, &#39;InvestmentBankingRevenue&#39;, &#39;AdvertisingRevenue&#39;, &#39;RevenueOtherFinancialServices&#39;,
+                          &#39;OilAndCondensateRevenue&#39;, &#39;RevenueFromLeasedAndOwnedHotels&#39;, &#39;RevenuesNetOfInterestExpense&#39;, &#39;RegulatedAndUnregulatedOperatingRevenue&#39;,
+                          &#39;UnregulatedOperatingRevenue&#39;, &#39;ElectricUtilityRevenue&#39;, &#39;CargoAndFreightRevenue&#39;, &#39;OtherHotelOperatingRevenue&#39;,
+                          &#39;CasinoRevenue&#39;, &#39;RefiningAndMarketingRevenue&#39;, &#39;PrincipalTransactionsRevenue&#39;, &#39;InterestRevenueExpenseNet&#39;,
+                          &#39;HomeBuildingRevenue&#39;, &#39;OtherRevenueExpenseFromRealEstateOperations&#39;, &#39;GasDomesticRegulatedRevenue&#39;, &#39;LicenseAndMaintenanceRevenue&#39;,
+                          &#39;RegulatedOperatingRevenue&#39;, &#39;AdmissionsRevenue&#39;,&#39;PassengerRevenue&#39;,
+                           # specials
+                          &#39;IncomeLossFromContinuingOperations&#39;
+                      ],
                       optional_summands=[
                           &#39;OtherSalesRevenueNet&#39;
                       ]),
+
             CopyTagRule(original=&#39;RevenuesSum&#39;, target=&#39;Revenues&#39;),
             CopyTagRule(original=&#39;InterestAndDividendIncomeOperating&#39;, target=&#39;Revenues&#39;)
         ]
@@ -289,10 +318,39 @@ as negated.</dd>
             CopyTagRule(original=&#39;SalesRevenueNet&#39;, target=&#39;Revenues&#39;),
             SumUpRule(sum_tag=&#39;RevenuesSum&#39;,
                       potential_summands=[
-                          &#39;RevenueFromContractWithCustomerExcludingAssessedTax&#39;],
+                          &#39;RevenueFromContractWithCustomerExcludingAssessedTax&#39;,
+                          &#39;RevenueFromContractWithCustomerIncludingAssessedTax&#39;,
+                          &#39;RevenuesExcludingInterestAndDividends&#39;,
+                          &#39;RegulatedAndUnregulatedOperatingRevenue&#39;,
+                          &#39;HealthCareOrganizationPatientServiceRevenue&#39;,
+                          &#39;SalesRevenueGoodsGross&#39;,
+                          &#39;ContractsRevenue&#39;,
+                          &#39;RevenueOilAndGasServices&#39;,
+                          &#39;HealthCareOrganizationRevenue&#39;,
+                          &#39;RevenueMineralSales&#39;,
+                          &#39;SalesRevenueEnergyServices&#39;,
+                          &#39;RealEstateRevenueNet&#39;,
+                          &#39;InterestAndDividendIncomeOperating&#39;,
+                          &#39;InterestIncomeExpenseNet&#39;,
+                          &#39;NoninterestIncome&#39;,
+                          &#39;OtherSalesRevenueNet&#39;, &#39;OperatingLeasesIncomeStatementLeaseRevenue&#39;, &#39;LicensesRevenue&#39;, &#39;RevenueFromRelatedParties&#39;,
+                          &#39;BrokerageCommissionsRevenue&#39;, &#39;RoyaltyRevenue&#39;, &#39;OilAndGasSalesRevenue&#39;, &#39;OilAndGasRevenue&#39;, &#39;OtherRealEstateRevenue&#39;,
+                          &#39;TechnologyServicesRevenue&#39;, &#39;ManagementFeesRevenue&#39;, &#39;ReimbursementRevenue&#39;, &#39;OperatingLeasesIncomeStatementMinimumLeaseRevenue&#39;,
+                          &#39;FoodAndBeverageRevenue&#39;, &#39;MaintenanceRevenue&#39;, &#39;LicenseAndServicesRevenue&#39;, &#39;FranchiseRevenue&#39;, &#39;SubscriptionRevenue&#39;, &#39;FinancialServicesRevenue&#39;,
+                          &#39;RevenueFromGrants&#39;, &#39;GasGatheringTransportationMarketingAndProcessingRevenue&#39;, &#39;OccupancyRevenue&#39;, &#39;NaturalGasProductionRevenue&#39;,
+                          &#39;SalesRevenueServicesGross&#39;, &#39;InvestmentBankingRevenue&#39;, &#39;AdvertisingRevenue&#39;, &#39;RevenueOtherFinancialServices&#39;,
+                          &#39;OilAndCondensateRevenue&#39;, &#39;RevenueFromLeasedAndOwnedHotels&#39;, &#39;RevenuesNetOfInterestExpense&#39;, &#39;RegulatedAndUnregulatedOperatingRevenue&#39;,
+                          &#39;UnregulatedOperatingRevenue&#39;, &#39;ElectricUtilityRevenue&#39;, &#39;CargoAndFreightRevenue&#39;, &#39;OtherHotelOperatingRevenue&#39;,
+                          &#39;CasinoRevenue&#39;, &#39;RefiningAndMarketingRevenue&#39;, &#39;PrincipalTransactionsRevenue&#39;, &#39;InterestRevenueExpenseNet&#39;,
+                          &#39;HomeBuildingRevenue&#39;, &#39;OtherRevenueExpenseFromRealEstateOperations&#39;, &#39;GasDomesticRegulatedRevenue&#39;, &#39;LicenseAndMaintenanceRevenue&#39;,
+                          &#39;RegulatedOperatingRevenue&#39;, &#39;AdmissionsRevenue&#39;,&#39;PassengerRevenue&#39;,
+                           # specials
+                          &#39;IncomeLossFromContinuingOperations&#39;
+                      ],
                       optional_summands=[
                           &#39;OtherSalesRevenueNet&#39;
                       ]),
+
             CopyTagRule(original=&#39;RevenuesSum&#39;, target=&#39;Revenues&#39;),
             CopyTagRule(original=&#39;InterestAndDividendIncomeOperating&#39;, target=&#39;Revenues&#39;)
         ]

@@ -67,7 +67,6 @@ class StandardStatementPresenter(Presenter[JoinedDataBag]):
         )
 
         # some cleanup and ordering
-        #num_pre_pivot_df.rename_axis(None, axis=1, inplace=True)
         num_pre_pivot_df.sort_values(['adsh', 'coreg', 'stmt', 'report', 'line', 'inpth'],
                                      inplace=True)
 

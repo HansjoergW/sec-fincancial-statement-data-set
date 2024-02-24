@@ -75,9 +75,10 @@ class RuleEntity(ABC):
             List (DescriptionEntry)
         """
 
-
-class Rule(RuleEntity):
-    """Base class to define a single rule"""
+class AbstractRule(RuleEntity):
+    """
+    Abstract Base class für single rules
+    """
 
     @abstractmethod
     def get_target_tags(self) -> List[str]:
@@ -164,6 +165,51 @@ class Rule(RuleEntity):
             ruleclass=self.__class__.__name__,
             identifier=self.identifier,
             description=self.get_description())]
+
+
+class PrePivotRule(AbstractRule):
+    """Base class to define a single rule that is applied before the dataframe was pivoted"""
+
+    def process(self, data_df: pd.DataFrame, log_df: Optional[pd.DataFrame] = None):
+        """
+        process the dataframe and apply the rule. If a log_df is provided, the rows on which
+        the rule is applied to is added to the log_df.
+
+        Args:
+            data_df (pd.DataFrame) : dataframe on which the rule has to be applied
+            log_df (pd.DataFrame, optional, None): the log dataframe
+        """
+        mask = self.mask(data_df)
+        self.apply(data_df, mask)
+
+        # if a log_df is provided, create a new column for this role and mark the rows that were
+        # affected by the rule
+        if (log_df is not None) and (len(log_df) == len(mask)):
+            log_df[self.identifier] = False
+            log_df.loc[mask, self.identifier] = True
+
+
+class Rule(AbstractRule):
+    """Base class to define a single rule that is used after the dataframe was pivoted"""
+
+    def process(self, data_df: pd.DataFrame, log_df: Optional[pd.DataFrame] = None):
+        """
+        process the dataframe and apply the rule. If a log_df is provided, the rows on which
+        the rule is applied to is added to the log_df.
+
+        Args:
+            data_df (pd.DataFrame) : dataframe on which the rule has to be applied
+            log_df (pd.DataFrame, optional, None): the log dataframe
+        """
+        mask = self.mask(data_df)
+        self.apply(data_df, mask)
+
+        # if a log_df is provided, create a new column for this role and mark the rows that were
+        # affected by the rule
+        if (log_df is not None) and (len(log_df) == len(mask)):
+            log_df[self.identifier] = False
+            log_df.loc[mask, self.identifier] = True
+
 
 
 class RuleGroup(RuleEntity):

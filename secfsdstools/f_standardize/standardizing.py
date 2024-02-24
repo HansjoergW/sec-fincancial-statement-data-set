@@ -298,12 +298,12 @@ class Standardizer(Presenter[JoinedDataBag]):
             data_df[['adsh', 'coreg', 'tag', 'version', 'ddate', 'uom', 'value', 'report', 'line',
                      'negating']][data_df.tag.isin(self.all_input_tags)]
 
-        # deduplicate
-        cpy_df = self._preprocess_deduplicate(relevant_df).copy()
-
         # invert the entries that have the negating flag set
         if self.invert_negated:
-            cpy_df.loc[cpy_df.negating == 1, 'value'] = -cpy_df.value
+            relevant_df.loc[relevant_df.negating == 1, 'value'] = -relevant_df.value
+
+        # deduplicate
+        cpy_df = self._preprocess_deduplicate(relevant_df).copy()
 
         # pivot the table
         pivot_df = self._preprocess_pivot(data_df=cpy_df, expected_tags=self.all_input_tags)

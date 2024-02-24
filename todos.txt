@@ -15,12 +15,35 @@ New Release
 
 v.1.5.0
 - SumUpRule: additional parameter optional_summands
+- Standardizer: new PrePivotRules are possible
+    -> deduplication is added to PrePivotRule
+    -> deduplication-log is part of the PrePivotRule log
 
+v.1.4.2 ?
+- fix für StandardStatementPresenter
 
 Todo:
-- StandardStatementPresenter muss auch die Qrtrs berücksichtigen, sonst stimmt
-  die Darstellung für IS nicht!
-  -> könnte man auch gleich als neue Version herausgeben..
+- Es werden PrePivotRuls benötigt
+  Hier ist noch die Frage, wie man mit den Logs umgehen soll. Evtl. macht
+  es sinn, dass ein einziges Log erstellt wird, mit einer neuen Spalte, welche die Regel ID enthält.
+  Wenn wir quasi alle vorhandenen 'adsh', 'coreg', 'report', 'tag', 'uom', 'version', 'ddate'
+  ins log aufnehmen, dann werden dass sehr viele Zeilen (mehre Millionen). Das könnte ein Problem sein.
+  Man könnte auch so loggen und dann erst am Schluss pivotieren., falls man das möchte.
+  Also: ein log, dass immer mit einträgen erweitert wird
+
+
+- Es wird eine PrePivot Regel mit eigenem Log benötigt.
+  Erste Regel, die angewendet werdne muss, ist sicherzustellen, dass das value für gewisse Tag
+  entweder positiv oder negativ ist.
+- die neue Regel muss auch für BalanceSheet nachdefiniert werden.
+
+- Standardizer muss auch qtrs berücksitigen, entsprechend muss der Pivot Key
+  auch qtrs berücksichtigen.
+  -> Achtung der Key ist überall present, z.B. auch beim Handling von duplication
+- eine prePivot regel sollte auch qtrs korrigieren können. z.B. sollte für BS infos immer nur
+  qtrs 0 vorhanen sein, bzw. sollte auf 0 korrigiert werden, falls 10-k und gleich 4, oder
+  ja nach analyse der vorhanden qtrs werte für 10-q
+
 
 
 ToCheck:

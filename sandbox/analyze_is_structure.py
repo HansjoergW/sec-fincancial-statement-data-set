@@ -69,7 +69,7 @@ def standardize(is_joined_bag: JoinedDataBag) -> StandardizedBag:
 
 class ISQrtrsFilter(FilterBase):
     """
-    Filters the data, so that only datapoints for 4 qrtrs for 10-K,
+    Filters the data, so that only datapoints for 4 qtrs for 10-K,
     and 1 qtrs for 10-Q are kept.
     """
 
@@ -90,18 +90,35 @@ class ISQrtrsFilter(FilterBase):
         return JoinedDataBag.create(sub_df=bag.sub_df, pre_num_df=pre_num_df)
 
 
+def check_signed_values(is_joined_bag: JoinedDataBag, tag_list: List[str]):
+
+    just_cost = is_joined_bag.pre_num_df[['tag', 'value', 'negating']]
+    just_cost = just_cost[just_cost.tag.isin(tag_list)]
+    just_cost = just_cost[~(just_cost.value.isna() | (just_cost.value == 0.0))]
+    just_cost['value_pos'] = just_cost.value >= 0.0
+    return just_cost.groupby(['negating', 'value_neg']).count()
+
+
 if __name__ == '__main__':
     # create_smaller_sample_IS_set()
     # prepare_all_data_set()
 
     is_joined_bag: JoinedDataBag = load_joined_IS_set()
+    print(check_signed_values(is_joined_bag, tag_list=['LicenseCost',
+                                                 'CostOfRevenue',
+                                                 'CostOfGoodsAndServicesSold',
+                                                 'CostOfGoodsSold',
+                                                 'CostOfServices']))
+
     #is_joined_bag = load_smaller_sample_IS_set()
 
-    # print(find_entries_with_all_tags(bag=is_joined_bag,
-    #                            tag_list=[
-    #                            'SalesRevenueGoodsNet',
-    #                           'SalesRevenueServicesNet',
-    #                           'OtherSalesRevenueNet']))
+    print(find_entries_with_all_tags(bag=is_joined_bag,
+                               tag_list=[
+                                'LicenseCost',
+                               'CostOfRevenue',
+                              'CostOfGoodsAndServicesSold',
+                              'CostOfGoodsSold',
+                              'CostOfServices']))
     # print(filter_tags(is_joined_bag.pre_num_df, tag_like="SalesRevenue"))
     #
     # # check the loaded data

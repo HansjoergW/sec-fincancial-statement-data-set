@@ -7,7 +7,7 @@ import pandas as pd
 
 from secfsdstools.d_container.databagmodel import JoinedDataBag
 from secfsdstools.e_presenter.presenting import Presenter
-from secfsdstools.f_standardize.base_rule_framework import RuleGroup, DescriptionEntry
+from secfsdstools.f_standardize.base_rule_framework import RuleGroup, DescriptionEntry, PrePivotRule
 from secfsdstools.f_standardize.base_validation_rules import ValidationRule
 
 STANDARDIZED = TypeVar('STANDARDIZED', bound='StandardizedBag')
@@ -176,6 +176,7 @@ class Standardizer(Presenter[JoinedDataBag]):
     identifier_tags = ['adsh', 'coreg', 'report', 'ddate', 'uom']
 
     def __init__(self,
+                 prepivot_rule_tree: RuleGroup,
                  pre_rule_tree: RuleGroup,
                  main_rule_tree: RuleGroup,
                  post_rule_tree: RuleGroup,
@@ -188,6 +189,8 @@ class Standardizer(Presenter[JoinedDataBag]):
         """
 
         Args:
+            prepivot_rule_tree: rules that are applied before the data is pivoted. These are rules
+                    that filter (like deduplicate) or correct values.
             pre_rule_tree: rules that are applied once before the main processing. These are mainly
                     rules that try to correct existing data from obvious errors (like wrong
                     tagging)
@@ -212,6 +215,7 @@ class Standardizer(Presenter[JoinedDataBag]):
             invert_negated (bool, Optional, True): inverts the value of the that are marked
                    as negated.
         """
+        self.prepivot_rule_tree = prepivot_rule_tree
         self.pre_rule_tree = pre_rule_tree
         self.main_rule_tree = main_rule_tree
         self.post_rule_tree = post_rule_tree
@@ -236,8 +240,10 @@ class Standardizer(Presenter[JoinedDataBag]):
         self.result: Optional[pd.DataFrame] = None
 
         # define log dataframes ..
-        # .. a special log that shows the duplicated records that were found and removed
-        self.preprocess_duplicate_log_df: Optional[pd.DataFrame] = None
+        # a special log that logs which prepivot rules were applied
+        self.applied_prepivot_rules_log_df: Optional[pd.DataFrame] = None
+        # # .. a special log that shows the duplicated records that were found and removed
+        # self.preprocess_duplicate_log_df: Optional[pd.DataFrame] = None
         # .. the main_log that shows which rules were applied on which statement/row
         self.applied_rules_log_df: Optional[pd.DataFrame] = None
         # .. shows the total of how often a rule was applied, mainly counts the Trues per column
@@ -302,11 +308,14 @@ class Standardizer(Presenter[JoinedDataBag]):
         if self.invert_negated:
             relevant_df.loc[relevant_df.negating == 1, 'value'] = -relevant_df.value
 
-        # deduplicate
-        cpy_df = self._preprocess_deduplicate(relevant_df).copy()
+        # apply prepivot_rule_tree
+        self.applied_prepivot_rules_log_df = pd.DataFrame(columns=(PrePivotRule.index_cols + ['id']))
+        self.prepivot_rule_tree.set_id("PREPIVOT")
+        self.prepivot_rule_tree.process(data_df=relevant_df,
+                                        log_df=self.applied_prepivot_rules_log_df)
 
         # pivot the table
-        pivot_df = self._preprocess_pivot(data_df=cpy_df, expected_tags=self.all_input_tags)
+        pivot_df = self._preprocess_pivot(data_df=relevant_df, expected_tags=self.all_input_tags)
 
         if self.filter_for_main_statement:
             pivot_df = self._preprocess_filter_pivot_for_main_statement(pivot_df)

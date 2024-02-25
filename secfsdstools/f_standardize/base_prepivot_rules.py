@@ -65,7 +65,7 @@ class PrePivotCorrectSign(PrePivotRule):
     This rules ensures, that the provided tags have the expected sign.
     """
 
-    def __init__(self, tag_list: List[str], is_positive: bool):
+    def __init__(self, rule_id:str, tag_list: List[str], is_positive: bool):
         """
         ensure that the values of the tags in the tag_list are positive (if is_positive is true),
         or are negative (if is_positive is false).
@@ -74,26 +74,9 @@ class PrePivotCorrectSign(PrePivotRule):
             tag_list: list with the names of tag that have to be checked
             is_positive: flag that indicates whether positive or negative values are expected
         """
+        super().__init__(rule_id)
         self.tag_list = tag_list
         self.is_positive = is_positive
-
-    def get_target_tags(self) -> List[str]:
-        """
-        returns a list of tags that could be affected/changed by this rule
-
-        Returns:
-            List[str]: list with affected tags/columns
-        """
-        return self.tag_list
-
-    def get_input_tags(self) -> Set[str]:
-        """
-        return all tags that the rules within this group need.
-
-        Returns:
-            Set[str]: set of all input tags that are used by rules in this group
-        """
-        return set(self.tag_list)
 
     def mask(self, data_df: pd.DataFrame) -> pa.typing.Series[bool]:
         """

@@ -62,23 +62,21 @@ class StandardStatementPresenter(Presenter[JoinedDataBag]):
         num_pre_pivot_df = pre_num_df.pivot_table(
             index=['adsh', 'coreg', 'tag', 'version', 'stmt',
                    'report', 'line', 'uom', 'negating', 'inpth'],
-            columns='ddate',
+            columns=['qtrs', 'ddate'], # we need to pivot by qtrs and ddate
             values='value'
         )
 
         # some cleanup and ordering
-        num_pre_pivot_df.rename_axis(None, axis=1, inplace=True)
+        #num_pre_pivot_df.rename_axis(None, axis=1, inplace=True)
         num_pre_pivot_df.sort_values(['adsh', 'coreg', 'stmt', 'report', 'line', 'inpth'],
                                      inplace=True)
 
-        # the values for ddate are ints, not string
-        # if we pivot, then the column names stay ints, which is unexpected, so we change
-        # the type of the column to strings
-        num_pre_pivot_df.rename(columns={x: str(x) for x in num_pre_pivot_df.columns},
-                                inplace=True)
         #  ensure column order, so that the latest date is first
         col_order = sorted(num_pre_pivot_df.columns.values, reverse=True)
         num_pre_pivot_df = num_pre_pivot_df[col_order]
+
+        # the columns have a multi index (by qtrs and ddate) so we flatten the names of the columns
+        num_pre_pivot_df.columns = [f"qrtrs_{qtrs}/{ddate}" for qtrs, ddate in num_pre_pivot_df.columns.values]
 
         if self.flatten_index:
             num_pre_pivot_df.reset_index(drop=False, inplace=True)

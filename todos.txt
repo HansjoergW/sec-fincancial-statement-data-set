@@ -21,8 +21,13 @@ v.1.5.0
 
 v.1.4.2 ?
 - fix für StandardStatementPresenter
+ + Notebook visualisation
+- consider qtrs in Standardizer
+ + Doku und Notebooks
 
 Todo:
+- Introduce PrePivotRules with logging
+
 - Es werden PrePivotRules benötigt
   Logs werden immer erweitert
 

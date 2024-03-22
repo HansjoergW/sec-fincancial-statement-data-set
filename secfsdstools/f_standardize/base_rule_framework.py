@@ -76,26 +76,10 @@ class RuleEntity(ABC):
         """
 
 
-class Rule(RuleEntity):
-    """Base class to define a single rule"""
-
-    @abstractmethod
-    def get_target_tags(self) -> List[str]:
-        """
-        returns a list of tags that could be affected/changed by this rule
-
-        Returns:
-            List[str]: list with affected tags/columns
-
-        """
-
-    def get_target_tags_str(self) -> str:
-        """
-        returns a single string in which all target_tags are separated by a "/"
-        Returns:
-            str: a string containing all target tags
-        """
-        return "/".join(self.get_target_tags())
+class AbstractRule(RuleEntity):
+    """
+    Abstract Base class für single rules
+    """
 
     @abstractmethod
     def mask(self, data_df: pd.DataFrame) -> pa.typing.Series[bool]:
@@ -121,14 +105,6 @@ class Rule(RuleEntity):
             data_df: dataframe on which the rule has to be applied
             mask: a Series marking the rows in the dataframe on which the rule has to be applied
         """
-
-    def set_id(self, prefix: str):
-        """
-        sets the identifier of this rule entity
-        Args:
-            prefix: the prefix from the parent in the rule-tree which has to be part of the id
-        """
-        self.identifier = f'{prefix}_{self.get_target_tags_str()}'
 
     def process(self, data_df: pd.DataFrame, log_df: Optional[pd.DataFrame] = None):
         """
@@ -164,6 +140,95 @@ class Rule(RuleEntity):
             ruleclass=self.__class__.__name__,
             identifier=self.identifier,
             description=self.get_description())]
+
+
+class PrePivotRule(AbstractRule):
+    index_cols = ['adsh', 'coreg', 'report', 'ddate', 'uom', 'qtrs', 'tag', 'version']
+
+    """Base class to define a single rule that is applied before the dataframe was pivoted"""
+
+    def __init__(self, rule_id: str):
+        self.rule_id = rule_id
+
+    def set_id(self, prefix: str):
+        """
+        sets the identifier of this rule entity
+        Args:
+            prefix: the prefix from the parent in the rule-tree which has to be part of the id
+        """
+        self.identifier = f'{prefix}_{self.rule_id}'
+
+    def process(self, data_df: pd.DataFrame, log_df: Optional[pd.DataFrame] = None):
+        """
+        process the dataframe and apply the rule. If a log_df is provided, the rows on which
+        the rule is applied to is added to the log_df.
+
+        Args:
+            data_df (pd.DataFrame) : dataframe on which the rule has to be applied
+            log_df (pd.DataFrame, optional, None): the log dataframe
+        """
+        mask = self.mask(data_df)
+
+        # if a log_df is provided, create a new column for this role and mark the rows that were
+        # affected by the rule
+        if log_df is not None:
+            # since apply can also change the data_df, we have to create the log changes, before
+            # the rule is applied
+            affected_rows_df = data_df[mask][self.index_cols].copy()
+            affected_rows_df['id'] = self.identifier
+            log_df.append(affected_rows_df, ignore_index=True)
+
+        self.apply(data_df, mask)
+
+    def get_input_tags(self) -> Set[str]:
+        return set()  # not relevant for PrePivotRules
+
+
+class Rule(AbstractRule):
+    """Base class to define a single rule that is used after the dataframe was pivoted"""
+
+    @abstractmethod
+    def get_target_tags(self) -> List[str]:
+        """
+        returns a list of tags that could be affected/changed by this rule
+
+        Returns:
+            List[str]: list with affected tags/columns
+        """
+
+    def get_target_tags_str(self) -> str:
+        """
+        returns a single string in which all target_tags are separated by a "/"
+        Returns:
+            str: a string containing all target tags
+        """
+        return "/".join(self.get_target_tags())
+
+    def set_id(self, prefix: str):
+        """
+        sets the identifier of this rule entity
+        Args:
+            prefix: the prefix from the parent in the rule-tree which has to be part of the id
+        """
+        self.identifier = f'{prefix}_{self.get_target_tags_str()}'
+
+    def process(self, data_df: pd.DataFrame, log_df: Optional[pd.DataFrame] = None):
+        """
+        process the dataframe and apply the rule. If a log_df is provided, the rows on which
+        the rule is applied to is added to the log_df.
+
+        Args:
+            data_df (pd.DataFrame) : dataframe on which the rule has to be applied
+            log_df (pd.DataFrame, optional, None): the log dataframe
+        """
+        mask = self.mask(data_df)
+        self.apply(data_df, mask)
+
+        # if a log_df is provided, create a new column for this role and mark the rows that were
+        # affected by the rule
+        if (log_df is not None) and (len(log_df) == len(mask)):
+            log_df[self.identifier] = False
+            log_df.loc[mask, self.identifier] = True
 
 
 class RuleGroup(RuleEntity):

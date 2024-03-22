@@ -34,6 +34,7 @@ class BalanceSheetStandardizer(Standardizer):
     """
 
     bs_rename_rg = RuleGroup(
+        prefix="BR",
         rules=[
             # sometimes, the total Assets is tagged as AssetsNet
             CopyTagRule(original='AssetsNet', target='Assets'),
@@ -44,8 +45,7 @@ class BalanceSheetStandardizer(Standardizer):
                         target='LiabilitiesAndEquity'),
             # most of the time, RetainedEarningsAccumulatedDeficit is used
             CopyTagRule(original='RetainedEarningsAccumulatedDeficit', target='RetainedEarnings')
-        ],
-        prefix="BR"
+        ]
     )
 
     bs_owner_equity = RuleGroup(

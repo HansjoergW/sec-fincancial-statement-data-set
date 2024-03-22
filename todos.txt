@@ -16,12 +16,15 @@ New Release
 v.1.4.2
 - fix für StandardStatementPresenter
  + Notebook visualisation
-- consider qtrs in Standardizer
+- consider qtrs in Standardizer &
+  introduce prepivot rules
  + Doku und Notebooks
 
 
 todo:
 - StandardStatementPresenter tests not yet done
+- BS Standardizer not adapted inkl. Tests
+- Standardizer doku not yet adapted
 
 
 - evtl. sollte jede Regel noch eine "Explanation" bekommen. Ein Text, der die Regel spezifisch erklärt,

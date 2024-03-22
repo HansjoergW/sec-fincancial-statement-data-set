@@ -86,10 +86,10 @@ def test_preprocess_pivot(empty_instance, sample_dataframe_pivot):
     result_df = empty_instance._preprocess_pivot(empty_instance.data_df, expected_tags)
 
     # Check the structure of the result DataFrame
-    assert result_df.shape == (3, len(empty_instance.identifier_tags) + len(expected_tags))
+    assert result_df.shape == (3, len(empty_instance.identifier_cols) + len(expected_tags))
 
     # Check the content of the result DataFrame
-    expected_columns = empty_instance.identifier_tags + list(expected_tags)
+    expected_columns = empty_instance.identifier_cols + list(expected_tags)
     assert len(set(result_df.columns.tolist()) - set(expected_columns)) == 0
 
     # Check values in the result DataFrame
@@ -200,7 +200,7 @@ def test_finalize():
     data_df = pd.DataFrame(data).copy()
 
     # configure log dataframes and stats
-    rules_log_df = data_df[instance.identifier_tags].copy()
+    rules_log_df = data_df[instance.identifier_cols].copy()
     instance.applied_rules_log_df = rules_log_df
 
     # add pseudo rule

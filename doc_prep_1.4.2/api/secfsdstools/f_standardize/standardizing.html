@@ -36,7 +36,7 @@ import pandas as pd
 
 from secfsdstools.d_container.databagmodel import JoinedDataBag
 from secfsdstools.e_presenter.presenting import Presenter
-from secfsdstools.f_standardize.base_rule_framework import RuleGroup, DescriptionEntry
+from secfsdstools.f_standardize.base_rule_framework import RuleGroup, DescriptionEntry, PrePivotRule
 from secfsdstools.f_standardize.base_validation_rules import ValidationRule
 
 STANDARDIZED = TypeVar(&#39;STANDARDIZED&#39;, bound=&#39;StandardizedBag&#39;)
@@ -49,7 +49,7 @@ class StandardizedBag:
 
     def __init__(self,
                  result_df: pd.DataFrame,
-                 preprocess_duplicate_log_df: pd.DataFrame,
+                 applied_prepivot_rules_log_df: pd.DataFrame,
                  applied_rules_log_df: pd.DataFrame,
                  stats_df: pd.DataFrame,
                  applied_rules_sum_s: pd.Series,
@@ -57,7 +57,7 @@ class StandardizedBag:
                  process_description_df: pd.DataFrame):
 
         self.result_df = result_df
-        self.preprocess_duplicate_log_df = preprocess_duplicate_log_df
+        self.applied_prepivot_rules_log_df = applied_prepivot_rules_log_df
         self.applied_rules_log_df = applied_rules_log_df
         self.stats_df = stats_df
         self.applied_rules_sum_s = applied_rules_sum_s
@@ -82,8 +82,8 @@ class StandardizedBag:
             raise ValueError(f&#34;the target_path {target_path} is not empty&#34;)
 
         self.result_df.to_parquet(os.path.join(target_path, &#39;result.parquet&#39;))
-        self.preprocess_duplicate_log_df.to_parquet(
-            os.path.join(target_path, &#39;duplicate_log.parquet&#39;))
+        self.applied_prepivot_rules_log_df.to_parquet(
+            os.path.join(target_path, &#39;applied_prepivot_rules_log.parquet&#39;))
         self.applied_rules_log_df.to_parquet(os.path.join(target_path, &#39;applied_rules_log.parquet&#39;))
         self.stats_df.to_parquet(os.path.join(target_path, &#39;stats.parquet&#39;))
         self.applied_rules_sum_s.to_csv(os.path.join(target_path, &#39;applied_rules_sum.csv&#39;))
@@ -105,8 +105,8 @@ class StandardizedBag:
         &#34;&#34;&#34;
 
         result_df = pd.read_parquet(os.path.join(target_path, &#39;result.parquet&#39;))
-        preprocess_duplicate_log_df = pd.read_parquet(
-            os.path.join(target_path, &#39;duplicate_log.parquet&#39;))
+        applied_prepivot_rules_log_df = pd.read_parquet(
+            os.path.join(target_path, &#39;applied_prepivot_rules_log.parquet&#39;))
         applied_rules_log_df = pd.read_parquet(
             os.path.join(target_path, &#39;applied_rules_log.parquet&#39;))
         stats_df = pd.read_parquet(os.path.join(target_path, &#39;stats.parquet&#39;))
@@ -119,7 +119,7 @@ class StandardizedBag:
             os.path.join(target_path, &#39;process_description.parquet&#39;))
 
         return StandardizedBag(result_df=result_df,
-                               preprocess_duplicate_log_df=preprocess_duplicate_log_df,
+                               applied_prepivot_rules_log_df=applied_prepivot_rules_log_df,
                                applied_rules_log_df=applied_rules_log_df, stats_df=stats_df,
                                applied_rules_sum_s=applied_rules_sum_s,
                                validation_overview_df=validation_overview_df,
@@ -202,9 +202,11 @@ class Standardizer(Presenter[JoinedDataBag]):
     &#34;&#34;&#34;
 
     # this tags identify single statements in the final standardized table
-    identifier_tags = [&#39;adsh&#39;, &#39;coreg&#39;, &#39;report&#39;, &#39;ddate&#39;, &#39;uom&#39;]
+    identifier_cols = [&#39;adsh&#39;, &#39;coreg&#39;, &#39;report&#39;, &#39;ddate&#39;, &#39;uom&#39;, &#39;qtrs&#39;]
+    duplicate_log_cols = [&#39;adsh&#39;, &#39;coreg&#39;, &#39;report&#39;, &#39;ddate&#39;, &#39;uom&#39;, &#39;qtrs&#39;, &#39;tag&#39;, &#39;version&#39;]
 
     def __init__(self,
+                 prepivot_rule_tree: RuleGroup,
                  pre_rule_tree: RuleGroup,
                  main_rule_tree: RuleGroup,
                  post_rule_tree: RuleGroup,
@@ -217,6 +219,8 @@ class Standardizer(Presenter[JoinedDataBag]):
         &#34;&#34;&#34;
 
         Args:
+            prepivot_rule_tree: rules that are applied before the data is pivoted. These are rules
+                    that filter (like deduplicate) or correct values.
             pre_rule_tree: rules that are applied once before the main processing. These are mainly
                     rules that try to correct existing data from obvious errors (like wrong
                     tagging)
@@ -241,6 +245,7 @@ class Standardizer(Presenter[JoinedDataBag]):
             invert_negated (bool, Optional, True): inverts the value of the that are marked
                    as negated.
         &#34;&#34;&#34;
+        self.prepivot_rule_tree = prepivot_rule_tree
         self.pre_rule_tree = pre_rule_tree
         self.main_rule_tree = main_rule_tree
         self.post_rule_tree = post_rule_tree
@@ -259,14 +264,14 @@ class Standardizer(Presenter[JoinedDataBag]):
             raise ValueError(&#34;if filter_for_main_statement is true, also the &#34;
                              &#34;main_statement_tags list has to be provided&#34;)
 
-        self.final_col_order = self.identifier_tags + self.final_tags
+        self.final_col_order = self.identifier_cols + self.final_tags
 
         # attribute to store the last result of calling the process method
         self.result: Optional[pd.DataFrame] = None
 
         # define log dataframes ..
-        # .. a special log that shows the duplicated records that were found and removed
-        self.preprocess_duplicate_log_df: Optional[pd.DataFrame] = None
+        # a special log that logs which prepivot rules were applied
+        self.applied_prepivot_rules_log_df: Optional[pd.DataFrame] = None
         # .. the main_log that shows which rules were applied on which statement/row
         self.applied_rules_log_df: Optional[pd.DataFrame] = None
         # .. shows the total of how often a rule was applied, mainly counts the Trues per column
@@ -281,17 +286,15 @@ class Standardizer(Presenter[JoinedDataBag]):
         # sometimes, only single tags are duplicated, however, there are also reports
         # where all tags of a report are duplicated.
 
-        duplicates_s = \
-            data_df.duplicated(
-                [&#39;adsh&#39;, &#39;coreg&#39;, &#39;report&#39;, &#39;uom&#39;, &#39;tag&#39;, &#39;version&#39;, &#39;ddate&#39;, &#39;value&#39;])
+        relevant_tags_duplication = self.identifier_cols + [&#39;tag&#39;, &#39;version&#39;, &#39;value&#39;]
+        duplicates_s = data_df.duplicated(relevant_tags_duplication)
 
-        self.preprocess_duplicate_log_df = data_df[duplicates_s] \
-            [[&#39;adsh&#39;, &#39;coreg&#39;, &#39;report&#39;, &#39;tag&#39;, &#39;uom&#39;, &#39;version&#39;, &#39;ddate&#39;]].copy()
+        self.preprocess_duplicate_log_df = data_df[duplicates_s][self.duplicate_log_cols].copy()
 
         return data_df[~duplicates_s]
 
     def _preprocess_pivot(self, data_df: pd.DataFrame, expected_tags: Set[str]) -&gt; pd.DataFrame:
-        pivot_df = data_df.pivot(index=self.identifier_tags,
+        pivot_df = data_df.pivot(index=self.identifier_cols,
                                  columns=&#39;tag&#39;,
                                  values=&#39;value&#39;)
 
@@ -312,7 +315,8 @@ class Standardizer(Presenter[JoinedDataBag]):
              &#34;&#34;&#34;
 
         cpy_pivot_df = pivot_df.copy()
-        cpy_pivot_df[&#39;nan_count&#39;] = cpy_pivot_df[self.main_statement_tags].isna().sum(axis=1)
+        available_main_statements = set(cpy_pivot_df.columns.tolist()).intersection(set(self.main_statement_tags))
+        cpy_pivot_df[&#39;nan_count&#39;] = cpy_pivot_df[available_main_statements].isna().sum(axis=1)
 
         cpy_pivot_df.sort_values([&#39;adsh&#39;, &#39;coreg&#39;, &#39;nan_count&#39;], inplace=True)
 
@@ -322,25 +326,31 @@ class Standardizer(Presenter[JoinedDataBag]):
 
     def _preprocess(self, data_df: pd.DataFrame) -&gt; pd.DataFrame:
         # only select rows with tags that are actually used by the defined rules
-        relevant_df = \
-            data_df[[&#39;adsh&#39;, &#39;coreg&#39;, &#39;tag&#39;, &#39;version&#39;, &#39;ddate&#39;, &#39;uom&#39;, &#39;value&#39;, &#39;report&#39;, &#39;line&#39;,
-                     &#39;negating&#39;]][data_df.tag.isin(self.all_input_tags)]
 
-        # deduplicate
-        cpy_df = self._preprocess_deduplicate(relevant_df).copy()
+        relevant_pivot_cols = \
+            self.identifier_cols + [&#39;tag&#39;, &#39;version&#39;,  &#39;value&#39;, &#39;line&#39;, &#39;negating&#39;]
+
+        relevant_df = \
+            data_df[relevant_pivot_cols][data_df.tag.isin(self.all_input_tags)]
 
         # invert the entries that have the negating flag set
         if self.invert_negated:
-            cpy_df.loc[cpy_df.negating == 1, &#39;value&#39;] = -cpy_df.value
+            relevant_df.loc[relevant_df.negating == 1, &#39;value&#39;] = -relevant_df.value
+
+        # apply prepivot_rule_tree
+        self.applied_prepivot_rules_log_df = pd.DataFrame(columns=(PrePivotRule.index_cols + [&#39;id&#39;]))
+        self.prepivot_rule_tree.set_id(&#34;PREPIVOT&#34;)
+        self.prepivot_rule_tree.process(data_df=relevant_df,
+                                        log_df=self.applied_prepivot_rules_log_df)
 
         # pivot the table
-        pivot_df = self._preprocess_pivot(data_df=cpy_df, expected_tags=self.all_input_tags)
+        pivot_df = self._preprocess_pivot(data_df=relevant_df, expected_tags=self.all_input_tags)
 
         if self.filter_for_main_statement:
             pivot_df = self._preprocess_filter_pivot_for_main_statement(pivot_df)
 
         # prepare the log dataframe -&gt; it must have all rows
-        self.applied_rules_log_df = pivot_df[self.identifier_tags].copy()
+        self.applied_rules_log_df = pivot_df[self.identifier_cols].copy()
 
         # finally apply the pre-rules
         self.pre_rule_tree.set_id(&#34;PRE&#34;)
@@ -392,7 +402,7 @@ class Standardizer(Presenter[JoinedDataBag]):
         # calculate log_df summaries
         # filter for rule columns but making sure the order stays the same
         rule_columns = [x for x in self.applied_rules_log_df.columns if
-                        x not in self.identifier_tags]
+                        x not in self.identifier_cols]
         self.applied_rules_sum_s = self.applied_rules_log_df[rule_columns].sum()
 
         # finalize the stats table, adding the rel and the gain columns
@@ -492,7 +502,7 @@ class Standardizer(Presenter[JoinedDataBag]):
         &#34;&#34;&#34;
         return StandardizedBag(result_df=self.result,
                                applied_rules_log_df=self.applied_rules_log_df,
-                               preprocess_duplicate_log_df=self.preprocess_duplicate_log_df,
+                               applied_prepivot_rules_log_df=self.applied_prepivot_rules_log_df,
                                stats_df=self.stats.stats,
                                applied_rules_sum_s=self.applied_rules_sum_s,
                                validation_overview_df=self.validation_overview_df,
@@ -510,7 +520,7 @@ class Standardizer(Presenter[JoinedDataBag]):
 <dl>
 <dt id="secfsdstools.f_standardize.standardizing.StandardizedBag"><code class="flex name class">
 <span>class <span class="ident">StandardizedBag</span></span>
-<span>(</span><span>result_df: pandas.core.frame.DataFrame, preprocess_duplicate_log_df: pandas.core.frame.DataFrame, applied_rules_log_df: pandas.core.frame.DataFrame, stats_df: pandas.core.frame.DataFrame, applied_rules_sum_s: pandas.core.series.Series, validation_overview_df: pandas.core.frame.DataFrame, process_description_df: pandas.core.frame.DataFrame)</span>
+<span>(</span><span>result_df: pandas.core.frame.DataFrame, applied_prepivot_rules_log_df: pandas.core.frame.DataFrame, applied_rules_log_df: pandas.core.frame.DataFrame, stats_df: pandas.core.frame.DataFrame, applied_rules_sum_s: pandas.core.series.Series, validation_overview_df: pandas.core.frame.DataFrame, process_description_df: pandas.core.frame.DataFrame)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>A class to contain the results of a standardizer.</p></div>
@@ -525,7 +535,7 @@ class Standardizer(Presenter[JoinedDataBag]):
 
     def __init__(self,
                  result_df: pd.DataFrame,
-                 preprocess_duplicate_log_df: pd.DataFrame,
+                 applied_prepivot_rules_log_df: pd.DataFrame,
                  applied_rules_log_df: pd.DataFrame,
                  stats_df: pd.DataFrame,
                  applied_rules_sum_s: pd.Series,
@@ -533,7 +543,7 @@ class Standardizer(Presenter[JoinedDataBag]):
                  process_description_df: pd.DataFrame):
 
         self.result_df = result_df
-        self.preprocess_duplicate_log_df = preprocess_duplicate_log_df
+        self.applied_prepivot_rules_log_df = applied_prepivot_rules_log_df
         self.applied_rules_log_df = applied_rules_log_df
         self.stats_df = stats_df
         self.applied_rules_sum_s = applied_rules_sum_s
@@ -558,8 +568,8 @@ class Standardizer(Presenter[JoinedDataBag]):
             raise ValueError(f&#34;the target_path {target_path} is not empty&#34;)
 
         self.result_df.to_parquet(os.path.join(target_path, &#39;result.parquet&#39;))
-        self.preprocess_duplicate_log_df.to_parquet(
-            os.path.join(target_path, &#39;duplicate_log.parquet&#39;))
+        self.applied_prepivot_rules_log_df.to_parquet(
+            os.path.join(target_path, &#39;applied_prepivot_rules_log.parquet&#39;))
         self.applied_rules_log_df.to_parquet(os.path.join(target_path, &#39;applied_rules_log.parquet&#39;))
         self.stats_df.to_parquet(os.path.join(target_path, &#39;stats.parquet&#39;))
         self.applied_rules_sum_s.to_csv(os.path.join(target_path, &#39;applied_rules_sum.csv&#39;))
@@ -581,8 +591,8 @@ class Standardizer(Presenter[JoinedDataBag]):
         &#34;&#34;&#34;
 
         result_df = pd.read_parquet(os.path.join(target_path, &#39;result.parquet&#39;))
-        preprocess_duplicate_log_df = pd.read_parquet(
-            os.path.join(target_path, &#39;duplicate_log.parquet&#39;))
+        applied_prepivot_rules_log_df = pd.read_parquet(
+            os.path.join(target_path, &#39;applied_prepivot_rules_log.parquet&#39;))
         applied_rules_log_df = pd.read_parquet(
             os.path.join(target_path, &#39;applied_rules_log.parquet&#39;))
         stats_df = pd.read_parquet(os.path.join(target_path, &#39;stats.parquet&#39;))
@@ -595,7 +605,7 @@ class Standardizer(Presenter[JoinedDataBag]):
             os.path.join(target_path, &#39;process_description.parquet&#39;))
 
         return StandardizedBag(result_df=result_df,
-                               preprocess_duplicate_log_df=preprocess_duplicate_log_df,
+                               applied_prepivot_rules_log_df=applied_prepivot_rules_log_df,
                                applied_rules_log_df=applied_rules_log_df, stats_df=stats_df,
                                applied_rules_sum_s=applied_rules_sum_s,
                                validation_overview_df=validation_overview_df,
@@ -635,8 +645,8 @@ def load(target_path: str) -&gt; STANDARDIZED:
     &#34;&#34;&#34;
 
     result_df = pd.read_parquet(os.path.join(target_path, &#39;result.parquet&#39;))
-    preprocess_duplicate_log_df = pd.read_parquet(
-        os.path.join(target_path, &#39;duplicate_log.parquet&#39;))
+    applied_prepivot_rules_log_df = pd.read_parquet(
+        os.path.join(target_path, &#39;applied_prepivot_rules_log.parquet&#39;))
     applied_rules_log_df = pd.read_parquet(
         os.path.join(target_path, &#39;applied_rules_log.parquet&#39;))
     stats_df = pd.read_parquet(os.path.join(target_path, &#39;stats.parquet&#39;))
@@ -649,7 +659,7 @@ def load(target_path: str) -&gt; STANDARDIZED:
         os.path.join(target_path, &#39;process_description.parquet&#39;))
 
     return StandardizedBag(result_df=result_df,
-                           preprocess_duplicate_log_df=preprocess_duplicate_log_df,
+                           applied_prepivot_rules_log_df=applied_prepivot_rules_log_df,
                            applied_rules_log_df=applied_rules_log_df, stats_df=stats_df,
                            applied_rules_sum_s=applied_rules_sum_s,
                            validation_overview_df=validation_overview_df,
@@ -695,8 +705,8 @@ will be created</dd>
         raise ValueError(f&#34;the target_path {target_path} is not empty&#34;)
 
     self.result_df.to_parquet(os.path.join(target_path, &#39;result.parquet&#39;))
-    self.preprocess_duplicate_log_df.to_parquet(
-        os.path.join(target_path, &#39;duplicate_log.parquet&#39;))
+    self.applied_prepivot_rules_log_df.to_parquet(
+        os.path.join(target_path, &#39;applied_prepivot_rules_log.parquet&#39;))
     self.applied_rules_log_df.to_parquet(os.path.join(target_path, &#39;applied_rules_log.parquet&#39;))
     self.stats_df.to_parquet(os.path.join(target_path, &#39;stats.parquet&#39;))
     self.applied_rules_sum_s.to_csv(os.path.join(target_path, &#39;applied_rules_sum.csv&#39;))
@@ -710,12 +720,15 @@ will be created</dd>
 </dd>
 <dt id="secfsdstools.f_standardize.standardizing.Standardizer"><code class="flex name class">
 <span>class <span class="ident">Standardizer</span></span>
-<span>(</span><span>pre_rule_tree: <a title="secfsdstools.f_standardize.base_rule_framework.RuleGroup" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.RuleGroup">RuleGroup</a>, main_rule_tree: <a title="secfsdstools.f_standardize.base_rule_framework.RuleGroup" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.RuleGroup">RuleGroup</a>, post_rule_tree: <a title="secfsdstools.f_standardize.base_rule_framework.RuleGroup" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.RuleGroup">RuleGroup</a>, validation_rules: List[<a title="secfsdstools.f_standardize.base_validation_rules.ValidationRule" href="base_validation_rules.html#secfsdstools.f_standardize.base_validation_rules.ValidationRule">ValidationRule</a>], final_tags: List[str], main_iterations: int = 2, filter_for_main_statement: bool = True, main_statement_tags: List[str] = None, invert_negated: bool = True)</span>
+<span>(</span><span>prepivot_rule_tree: <a title="secfsdstools.f_standardize.base_rule_framework.RuleGroup" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.RuleGroup">RuleGroup</a>, pre_rule_tree: <a title="secfsdstools.f_standardize.base_rule_framework.RuleGroup" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.RuleGroup">RuleGroup</a>, main_rule_tree: <a title="secfsdstools.f_standardize.base_rule_framework.RuleGroup" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.RuleGroup">RuleGroup</a>, post_rule_tree: <a title="secfsdstools.f_standardize.base_rule_framework.RuleGroup" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.RuleGroup">RuleGroup</a>, validation_rules: List[<a title="secfsdstools.f_standardize.base_validation_rules.ValidationRule" href="base_validation_rules.html#secfsdstools.f_standardize.base_validation_rules.ValidationRule">ValidationRule</a>], final_tags: List[str], main_iterations: int = 2, filter_for_main_statement: bool = True, main_statement_tags: List[str] = None, invert_negated: bool = True)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>The Standardizer implements the base processing logic to standardize financial statements.</p>
 <h2 id="args">Args</h2>
 <dl>
+<dt><strong><code>prepivot_rule_tree</code></strong></dt>
+<dd>rules that are applied before the data is pivoted. These are rules
+that filter (like deduplicate) or correct values.</dd>
 <dt><strong><code>pre_rule_tree</code></strong></dt>
 <dd>rules that are applied once before the main processing. These are mainly
 rules that try to correct existing data from obvious errors (like wrong
@@ -759,9 +772,11 @@ as negated.</dd>
     &#34;&#34;&#34;
 
     # this tags identify single statements in the final standardized table
-    identifier_tags = [&#39;adsh&#39;, &#39;coreg&#39;, &#39;report&#39;, &#39;ddate&#39;, &#39;uom&#39;]
+    identifier_cols = [&#39;adsh&#39;, &#39;coreg&#39;, &#39;report&#39;, &#39;ddate&#39;, &#39;uom&#39;, &#39;qtrs&#39;]
+    duplicate_log_cols = [&#39;adsh&#39;, &#39;coreg&#39;, &#39;report&#39;, &#39;ddate&#39;, &#39;uom&#39;, &#39;qtrs&#39;, &#39;tag&#39;, &#39;version&#39;]
 
     def __init__(self,
+                 prepivot_rule_tree: RuleGroup,
                  pre_rule_tree: RuleGroup,
                  main_rule_tree: RuleGroup,
                  post_rule_tree: RuleGroup,
@@ -774,6 +789,8 @@ as negated.</dd>
         &#34;&#34;&#34;
 
         Args:
+            prepivot_rule_tree: rules that are applied before the data is pivoted. These are rules
+                    that filter (like deduplicate) or correct values.
             pre_rule_tree: rules that are applied once before the main processing. These are mainly
                     rules that try to correct existing data from obvious errors (like wrong
                     tagging)
@@ -798,6 +815,7 @@ as negated.</dd>
             invert_negated (bool, Optional, True): inverts the value of the that are marked
                    as negated.
         &#34;&#34;&#34;
+        self.prepivot_rule_tree = prepivot_rule_tree
         self.pre_rule_tree = pre_rule_tree
         self.main_rule_tree = main_rule_tree
         self.post_rule_tree = post_rule_tree
@@ -816,14 +834,14 @@ as negated.</dd>
             raise ValueError(&#34;if filter_for_main_statement is true, also the &#34;
                              &#34;main_statement_tags list has to be provided&#34;)
 
-        self.final_col_order = self.identifier_tags + self.final_tags
+        self.final_col_order = self.identifier_cols + self.final_tags
 
         # attribute to store the last result of calling the process method
         self.result: Optional[pd.DataFrame] = None
 
         # define log dataframes ..
-        # .. a special log that shows the duplicated records that were found and removed
-        self.preprocess_duplicate_log_df: Optional[pd.DataFrame] = None
+        # a special log that logs which prepivot rules were applied
+        self.applied_prepivot_rules_log_df: Optional[pd.DataFrame] = None
         # .. the main_log that shows which rules were applied on which statement/row
         self.applied_rules_log_df: Optional[pd.DataFrame] = None
         # .. shows the total of how often a rule was applied, mainly counts the Trues per column
@@ -838,17 +856,15 @@ as negated.</dd>
         # sometimes, only single tags are duplicated, however, there are also reports
         # where all tags of a report are duplicated.
 
-        duplicates_s = \
-            data_df.duplicated(
-                [&#39;adsh&#39;, &#39;coreg&#39;, &#39;report&#39;, &#39;uom&#39;, &#39;tag&#39;, &#39;version&#39;, &#39;ddate&#39;, &#39;value&#39;])
+        relevant_tags_duplication = self.identifier_cols + [&#39;tag&#39;, &#39;version&#39;, &#39;value&#39;]
+        duplicates_s = data_df.duplicated(relevant_tags_duplication)
 
-        self.preprocess_duplicate_log_df = data_df[duplicates_s] \
-            [[&#39;adsh&#39;, &#39;coreg&#39;, &#39;report&#39;, &#39;tag&#39;, &#39;uom&#39;, &#39;version&#39;, &#39;ddate&#39;]].copy()
+        self.preprocess_duplicate_log_df = data_df[duplicates_s][self.duplicate_log_cols].copy()
 
         return data_df[~duplicates_s]
 
     def _preprocess_pivot(self, data_df: pd.DataFrame, expected_tags: Set[str]) -&gt; pd.DataFrame:
-        pivot_df = data_df.pivot(index=self.identifier_tags,
+        pivot_df = data_df.pivot(index=self.identifier_cols,
                                  columns=&#39;tag&#39;,
                                  values=&#39;value&#39;)
 
@@ -869,7 +885,8 @@ as negated.</dd>
              &#34;&#34;&#34;
 
         cpy_pivot_df = pivot_df.copy()
-        cpy_pivot_df[&#39;nan_count&#39;] = cpy_pivot_df[self.main_statement_tags].isna().sum(axis=1)
+        available_main_statements = set(cpy_pivot_df.columns.tolist()).intersection(set(self.main_statement_tags))
+        cpy_pivot_df[&#39;nan_count&#39;] = cpy_pivot_df[available_main_statements].isna().sum(axis=1)
 
         cpy_pivot_df.sort_values([&#39;adsh&#39;, &#39;coreg&#39;, &#39;nan_count&#39;], inplace=True)
 
@@ -879,25 +896,31 @@ as negated.</dd>
 
     def _preprocess(self, data_df: pd.DataFrame) -&gt; pd.DataFrame:
         # only select rows with tags that are actually used by the defined rules
-        relevant_df = \
-            data_df[[&#39;adsh&#39;, &#39;coreg&#39;, &#39;tag&#39;, &#39;version&#39;, &#39;ddate&#39;, &#39;uom&#39;, &#39;value&#39;, &#39;report&#39;, &#39;line&#39;,
-                     &#39;negating&#39;]][data_df.tag.isin(self.all_input_tags)]
 
-        # deduplicate
-        cpy_df = self._preprocess_deduplicate(relevant_df).copy()
+        relevant_pivot_cols = \
+            self.identifier_cols + [&#39;tag&#39;, &#39;version&#39;,  &#39;value&#39;, &#39;line&#39;, &#39;negating&#39;]
+
+        relevant_df = \
+            data_df[relevant_pivot_cols][data_df.tag.isin(self.all_input_tags)]
 
         # invert the entries that have the negating flag set
         if self.invert_negated:
-            cpy_df.loc[cpy_df.negating == 1, &#39;value&#39;] = -cpy_df.value
+            relevant_df.loc[relevant_df.negating == 1, &#39;value&#39;] = -relevant_df.value
+
+        # apply prepivot_rule_tree
+        self.applied_prepivot_rules_log_df = pd.DataFrame(columns=(PrePivotRule.index_cols + [&#39;id&#39;]))
+        self.prepivot_rule_tree.set_id(&#34;PREPIVOT&#34;)
+        self.prepivot_rule_tree.process(data_df=relevant_df,
+                                        log_df=self.applied_prepivot_rules_log_df)
 
         # pivot the table
-        pivot_df = self._preprocess_pivot(data_df=cpy_df, expected_tags=self.all_input_tags)
+        pivot_df = self._preprocess_pivot(data_df=relevant_df, expected_tags=self.all_input_tags)
 
         if self.filter_for_main_statement:
             pivot_df = self._preprocess_filter_pivot_for_main_statement(pivot_df)
 
         # prepare the log dataframe -&gt; it must have all rows
-        self.applied_rules_log_df = pivot_df[self.identifier_tags].copy()
+        self.applied_rules_log_df = pivot_df[self.identifier_cols].copy()
 
         # finally apply the pre-rules
         self.pre_rule_tree.set_id(&#34;PRE&#34;)
@@ -949,7 +972,7 @@ as negated.</dd>
         # calculate log_df summaries
         # filter for rule columns but making sure the order stays the same
         rule_columns = [x for x in self.applied_rules_log_df.columns if
-                        x not in self.identifier_tags]
+                        x not in self.identifier_cols]
         self.applied_rules_sum_s = self.applied_rules_log_df[rule_columns].sum()
 
         # finalize the stats table, adding the rel and the gain columns
@@ -1049,7 +1072,7 @@ as negated.</dd>
         &#34;&#34;&#34;
         return StandardizedBag(result_df=self.result,
                                applied_rules_log_df=self.applied_rules_log_df,
-                               preprocess_duplicate_log_df=self.preprocess_duplicate_log_df,
+                               applied_prepivot_rules_log_df=self.applied_prepivot_rules_log_df,
                                stats_df=self.stats.stats,
                                applied_rules_sum_s=self.applied_rules_sum_s,
                                validation_overview_df=self.validation_overview_df,
@@ -1066,7 +1089,11 @@ as negated.</dd>
 </ul>
 <h3>Class variables</h3>
 <dl>
-<dt id="secfsdstools.f_standardize.standardizing.Standardizer.identifier_tags"><code class="name">var <span class="ident">identifier_tags</span></code></dt>
+<dt id="secfsdstools.f_standardize.standardizing.Standardizer.duplicate_log_cols"><code class="name">var <span class="ident">duplicate_log_cols</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="secfsdstools.f_standardize.standardizing.Standardizer.identifier_cols"><code class="name">var <span class="ident">identifier_cols</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -1127,7 +1154,7 @@ on disk and reload it for later analysis</p></div>
     &#34;&#34;&#34;
     return StandardizedBag(result_df=self.result,
                            applied_rules_log_df=self.applied_rules_log_df,
-                           preprocess_duplicate_log_df=self.preprocess_duplicate_log_df,
+                           applied_prepivot_rules_log_df=self.applied_prepivot_rules_log_df,
                            stats_df=self.stats.stats,
                            applied_rules_sum_s=self.applied_rules_sum_s,
                            validation_overview_df=self.validation_overview_df,
@@ -1452,9 +1479,10 @@ to the previous step.</p></div>
 <li>
 <h4><code><a title="secfsdstools.f_standardize.standardizing.Standardizer" href="#secfsdstools.f_standardize.standardizing.Standardizer">Standardizer</a></code></h4>
 <ul class="">
+<li><code><a title="secfsdstools.f_standardize.standardizing.Standardizer.duplicate_log_cols" href="#secfsdstools.f_standardize.standardizing.Standardizer.duplicate_log_cols">duplicate_log_cols</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.standardizing.Standardizer.get_process_description" href="#secfsdstools.f_standardize.standardizing.Standardizer.get_process_description">get_process_description</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.standardizing.Standardizer.get_standardize_bag" href="#secfsdstools.f_standardize.standardizing.Standardizer.get_standardize_bag">get_standardize_bag</a></code></li>
-<li><code><a title="secfsdstools.f_standardize.standardizing.Standardizer.identifier_tags" href="#secfsdstools.f_standardize.standardizing.Standardizer.identifier_tags">identifier_tags</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.standardizing.Standardizer.identifier_cols" href="#secfsdstools.f_standardize.standardizing.Standardizer.identifier_cols">identifier_cols</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.standardizing.Standardizer.present" href="#secfsdstools.f_standardize.standardizing.Standardizer.present">present</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.standardizing.Standardizer.process" href="#secfsdstools.f_standardize.standardizing.Standardizer.process">process</a></code></li>
 </ul>

@@ -336,7 +336,7 @@ class Standardizer(Presenter[JoinedDataBag]):
             self.applied_prepivot_rules_log_df = pd.concat(prepivot_logs)
         else:
             self.applied_prepivot_rules_log_df = pd.DataFrame(
-                columns=(PrePivotRule.index_cols + [&#39;id&#39;]))
+                columns=PrePivotRule.index_cols + [&#39;id&#39;])
 
         # pivot the table
         pivot_df = self._preprocess_pivot(data_df=relevant_df, expected_tags=self.all_input_tags)
@@ -901,7 +901,7 @@ as negated.</dd>
             self.applied_prepivot_rules_log_df = pd.concat(prepivot_logs)
         else:
             self.applied_prepivot_rules_log_df = pd.DataFrame(
-                columns=(PrePivotRule.index_cols + [&#39;id&#39;]))
+                columns=PrePivotRule.index_cols + [&#39;id&#39;])
 
         # pivot the table
         pivot_df = self._preprocess_pivot(data_df=relevant_df, expected_tags=self.all_input_tags)

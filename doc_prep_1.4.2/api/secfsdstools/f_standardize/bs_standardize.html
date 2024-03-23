@@ -31,6 +31,7 @@
 from typing import List
 
 from secfsdstools.f_standardize.base_rule_framework import RuleGroup
+from secfsdstools.f_standardize.base_prepivot_rules import PrePivotDeduplicate
 from secfsdstools.f_standardize.base_rules import CopyTagRule, SumUpRule, \
     missingsumparts_rules_creator, SetSumIfOnlyOneSummand, PostCopyToFirstSummand, \
     PreSumUpCorrection, PostSetToZero
@@ -61,7 +62,22 @@ class BalanceSheetStandardizer(Standardizer):
     LiabilitiesAndEquity
 
     &#34;&#34;&#34;
+    prepivot_rule_tree = RuleGroup(prefix=&#34;BS_PREPIV&#34;,
+                                     rules=[PrePivotDeduplicate()
+                                     ])
 
+    preprocess_rule_tree = RuleGroup(prefix=&#34;BS_PRE&#34;,
+                                     rules=[
+                                         # sometimes values are tagged the wrong way.
+                                         # there are cases when the real Assets Value is
+                                         # tagged as AssetsNoncurrent and vice versa. fix that
+                                         PreSumUpCorrection(sum_tag=&#39;Assets&#39;,
+                                                            mixed_up_summand=&#39;AssetsNoncurrent&#39;,
+                                                            other_summand=&#39;AssetsCurrent&#39;),
+                                         PreSumUpCorrection(sum_tag=&#39;Assets&#39;,
+                                                            mixed_up_summand=&#39;AssetsCurrent&#39;,
+                                                            other_summand=&#39;AssetsNoncurrent&#39;),
+                                     ])
     bs_rename_rg = RuleGroup(
         prefix=&#34;BR&#34;,
         rules=[
@@ -244,19 +260,6 @@ class BalanceSheetStandardizer(Standardizer):
                                    bs_setsum_rg
                                ])
 
-    preprocess_rule_tree = RuleGroup(prefix=&#34;BS_PRE&#34;,
-                                     rules=[
-                                         # sometimes values are tagged the wrong way.
-                                         # there are cases when the real Assets Value is
-                                         # tagged as AssetsNoncurrent and vice versa. fix that
-                                         PreSumUpCorrection(sum_tag=&#39;Assets&#39;,
-                                                            mixed_up_summand=&#39;AssetsNoncurrent&#39;,
-                                                            other_summand=&#39;AssetsCurrent&#39;),
-                                         PreSumUpCorrection(sum_tag=&#39;Assets&#39;,
-                                                            mixed_up_summand=&#39;AssetsCurrent&#39;,
-                                                            other_summand=&#39;AssetsNoncurrent&#39;),
-                                     ])
-
     post_rule_tree = RuleGroup(prefix=&#34;BS_POST&#34;,
                                rules=[
                                    # if only Assets is sets, set the AssetsCurrent to value
@@ -320,6 +323,7 @@ class BalanceSheetStandardizer(Standardizer):
 
     def __init__(self, filter_for_main_statement: bool = True, iterations: int = 3):
         super().__init__(
+            prepivot_rule_tree=self.prepivot_rule_tree,
             pre_rule_tree=self.preprocess_rule_tree,
             main_rule_tree=self.main_rule_tree,
             post_rule_tree=self.post_rule_tree,
@@ -427,7 +431,22 @@ as negated.</dd>
     LiabilitiesAndEquity
 
     &#34;&#34;&#34;
+    prepivot_rule_tree = RuleGroup(prefix=&#34;BS_PREPIV&#34;,
+                                     rules=[PrePivotDeduplicate()
+                                     ])
 
+    preprocess_rule_tree = RuleGroup(prefix=&#34;BS_PRE&#34;,
+                                     rules=[
+                                         # sometimes values are tagged the wrong way.
+                                         # there are cases when the real Assets Value is
+                                         # tagged as AssetsNoncurrent and vice versa. fix that
+                                         PreSumUpCorrection(sum_tag=&#39;Assets&#39;,
+                                                            mixed_up_summand=&#39;AssetsNoncurrent&#39;,
+                                                            other_summand=&#39;AssetsCurrent&#39;),
+                                         PreSumUpCorrection(sum_tag=&#39;Assets&#39;,
+                                                            mixed_up_summand=&#39;AssetsCurrent&#39;,
+                                                            other_summand=&#39;AssetsNoncurrent&#39;),
+                                     ])
     bs_rename_rg = RuleGroup(
         prefix=&#34;BR&#34;,
         rules=[
@@ -610,19 +629,6 @@ as negated.</dd>
                                    bs_setsum_rg
                                ])
 
-    preprocess_rule_tree = RuleGroup(prefix=&#34;BS_PRE&#34;,
-                                     rules=[
-                                         # sometimes values are tagged the wrong way.
-                                         # there are cases when the real Assets Value is
-                                         # tagged as AssetsNoncurrent and vice versa. fix that
-                                         PreSumUpCorrection(sum_tag=&#39;Assets&#39;,
-                                                            mixed_up_summand=&#39;AssetsNoncurrent&#39;,
-                                                            other_summand=&#39;AssetsCurrent&#39;),
-                                         PreSumUpCorrection(sum_tag=&#39;Assets&#39;,
-                                                            mixed_up_summand=&#39;AssetsCurrent&#39;,
-                                                            other_summand=&#39;AssetsNoncurrent&#39;),
-                                     ])
-
     post_rule_tree = RuleGroup(prefix=&#34;BS_POST&#34;,
                                rules=[
                                    # if only Assets is sets, set the AssetsCurrent to value
@@ -686,6 +692,7 @@ as negated.</dd>
 
     def __init__(self, filter_for_main_statement: bool = True, iterations: int = 3):
         super().__init__(
+            prepivot_rule_tree=self.prepivot_rule_tree,
             pre_rule_tree=self.preprocess_rule_tree,
             main_rule_tree=self.main_rule_tree,
             post_rule_tree=self.post_rule_tree,
@@ -739,6 +746,10 @@ as negated.</dd>
 <dd>
 <div class="desc"></div>
 </dd>
+<dt id="secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizer.prepivot_rule_tree"><code class="name">var <span class="ident">prepivot_rule_tree</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
 <dt id="secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizer.preprocess_rule_tree"><code class="name">var <span class="ident">preprocess_rule_tree</span></code></dt>
 <dd>
 <div class="desc"></div>
@@ -788,6 +799,7 @@ as negated.</dd>
 <li><code><a title="secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizer.main_rule_tree" href="#secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizer.main_rule_tree">main_rule_tree</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizer.main_statement_tags" href="#secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizer.main_statement_tags">main_statement_tags</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizer.post_rule_tree" href="#secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizer.post_rule_tree">post_rule_tree</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizer.prepivot_rule_tree" href="#secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizer.prepivot_rule_tree">prepivot_rule_tree</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizer.preprocess_rule_tree" href="#secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizer.preprocess_rule_tree">preprocess_rule_tree</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizer.validation_rules" href="#secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizer.validation_rules">validation_rules</a></code></li>
 </ul>

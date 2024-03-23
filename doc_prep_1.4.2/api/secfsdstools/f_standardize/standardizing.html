@@ -203,7 +203,6 @@ class Standardizer(Presenter[JoinedDataBag]):
 
     # this tags identify single statements in the final standardized table
     identifier_cols = [&#39;adsh&#39;, &#39;coreg&#39;, &#39;report&#39;, &#39;ddate&#39;, &#39;uom&#39;, &#39;qtrs&#39;]
-    duplicate_log_cols = [&#39;adsh&#39;, &#39;coreg&#39;, &#39;report&#39;, &#39;ddate&#39;, &#39;uom&#39;, &#39;qtrs&#39;, &#39;tag&#39;, &#39;version&#39;]
 
     def __init__(self,
                  prepivot_rule_tree: RuleGroup,
@@ -281,18 +280,6 @@ class Standardizer(Presenter[JoinedDataBag]):
 
         self.stats = Stats(self.final_tags)
 
-    def _preprocess_deduplicate(self, data_df: pd.DataFrame) -&gt; pd.DataFrame:
-        # find duplicated entries
-        # sometimes, only single tags are duplicated, however, there are also reports
-        # where all tags of a report are duplicated.
-
-        relevant_tags_duplication = self.identifier_cols + [&#39;tag&#39;, &#39;version&#39;, &#39;value&#39;]
-        duplicates_s = data_df.duplicated(relevant_tags_duplication)
-
-        self.preprocess_duplicate_log_df = data_df[duplicates_s][self.duplicate_log_cols].copy()
-
-        return data_df[~duplicates_s]
-
     def _preprocess_pivot(self, data_df: pd.DataFrame, expected_tags: Set[str]) -&gt; pd.DataFrame:
         pivot_df = data_df.pivot(index=self.identifier_cols,
                                  columns=&#39;tag&#39;,
@@ -338,10 +325,12 @@ class Standardizer(Presenter[JoinedDataBag]):
             relevant_df.loc[relevant_df.negating == 1, &#39;value&#39;] = -relevant_df.value
 
         # apply prepivot_rule_tree
-        self.applied_prepivot_rules_log_df = pd.DataFrame(columns=(PrePivotRule.index_cols + [&#39;id&#39;]))
         self.prepivot_rule_tree.set_id(&#34;PREPIVOT&#34;)
-        self.prepivot_rule_tree.process(data_df=relevant_df,
-                                        log_df=self.applied_prepivot_rules_log_df)
+        self.prepivot_rule_tree.process(data_df=relevant_df)
+        # we cannot directly add rows than existing dataframe, therefore prepivot rules
+        # so every prepivot rules stores the log within and in the end, we concat it together
+        prepivot_logs = [x.log_df for x in self.prepivot_rule_tree.rules]
+        self.applied_prepivot_rules_log_df = pd.concat(prepivot_logs)
 
         # pivot the table
         pivot_df = self._preprocess_pivot(data_df=relevant_df, expected_tags=self.all_input_tags)
@@ -773,7 +762,6 @@ as negated.</dd>
 
     # this tags identify single statements in the final standardized table
     identifier_cols = [&#39;adsh&#39;, &#39;coreg&#39;, &#39;report&#39;, &#39;ddate&#39;, &#39;uom&#39;, &#39;qtrs&#39;]
-    duplicate_log_cols = [&#39;adsh&#39;, &#39;coreg&#39;, &#39;report&#39;, &#39;ddate&#39;, &#39;uom&#39;, &#39;qtrs&#39;, &#39;tag&#39;, &#39;version&#39;]
 
     def __init__(self,
                  prepivot_rule_tree: RuleGroup,
@@ -851,18 +839,6 @@ as negated.</dd>
 
         self.stats = Stats(self.final_tags)
 
-    def _preprocess_deduplicate(self, data_df: pd.DataFrame) -&gt; pd.DataFrame:
-        # find duplicated entries
-        # sometimes, only single tags are duplicated, however, there are also reports
-        # where all tags of a report are duplicated.
-
-        relevant_tags_duplication = self.identifier_cols + [&#39;tag&#39;, &#39;version&#39;, &#39;value&#39;]
-        duplicates_s = data_df.duplicated(relevant_tags_duplication)
-
-        self.preprocess_duplicate_log_df = data_df[duplicates_s][self.duplicate_log_cols].copy()
-
-        return data_df[~duplicates_s]
-
     def _preprocess_pivot(self, data_df: pd.DataFrame, expected_tags: Set[str]) -&gt; pd.DataFrame:
         pivot_df = data_df.pivot(index=self.identifier_cols,
                                  columns=&#39;tag&#39;,
@@ -908,10 +884,12 @@ as negated.</dd>
             relevant_df.loc[relevant_df.negating == 1, &#39;value&#39;] = -relevant_df.value
 
         # apply prepivot_rule_tree
-        self.applied_prepivot_rules_log_df = pd.DataFrame(columns=(PrePivotRule.index_cols + [&#39;id&#39;]))
         self.prepivot_rule_tree.set_id(&#34;PREPIVOT&#34;)
-        self.prepivot_rule_tree.process(data_df=relevant_df,
-                                        log_df=self.applied_prepivot_rules_log_df)
+        self.prepivot_rule_tree.process(data_df=relevant_df)
+        # we cannot directly add rows than existing dataframe, therefore prepivot rules
+        # so every prepivot rules stores the log within and in the end, we concat it together
+        prepivot_logs = [x.log_df for x in self.prepivot_rule_tree.rules]
+        self.applied_prepivot_rules_log_df = pd.concat(prepivot_logs)
 
         # pivot the table
         pivot_df = self._preprocess_pivot(data_df=relevant_df, expected_tags=self.all_input_tags)
@@ -1089,10 +1067,6 @@ as negated.</dd>
 </ul>
 <h3>Class variables</h3>
 <dl>
-<dt id="secfsdstools.f_standardize.standardizing.Standardizer.duplicate_log_cols"><code class="name">var <span class="ident">duplicate_log_cols</span></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
 <dt id="secfsdstools.f_standardize.standardizing.Standardizer.identifier_cols"><code class="name">var <span class="ident">identifier_cols</span></code></dt>
 <dd>
 <div class="desc"></div>
@@ -1479,7 +1453,6 @@ to the previous step.</p></div>
 <li>
 <h4><code><a title="secfsdstools.f_standardize.standardizing.Standardizer" href="#secfsdstools.f_standardize.standardizing.Standardizer">Standardizer</a></code></h4>
 <ul class="">
-<li><code><a title="secfsdstools.f_standardize.standardizing.Standardizer.duplicate_log_cols" href="#secfsdstools.f_standardize.standardizing.Standardizer.duplicate_log_cols">duplicate_log_cols</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.standardizing.Standardizer.get_process_description" href="#secfsdstools.f_standardize.standardizing.Standardizer.get_process_description">get_process_description</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.standardizing.Standardizer.get_standardize_bag" href="#secfsdstools.f_standardize.standardizing.Standardizer.get_standardize_bag">get_standardize_bag</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.standardizing.Standardizer.identifier_cols" href="#secfsdstools.f_standardize.standardizing.Standardizer.identifier_cols">identifier_cols</a></code></li>

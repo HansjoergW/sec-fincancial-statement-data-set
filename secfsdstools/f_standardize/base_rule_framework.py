@@ -106,24 +106,6 @@ class AbstractRule(RuleEntity):
             mask: a Series marking the rows in the dataframe on which the rule has to be applied
         """
 
-    def process(self, data_df: pd.DataFrame, log_df: Optional[pd.DataFrame] = None):
-        """
-        process the dataframe and apply the rule. If a log_df is provided, the rows on which
-        the rule is applied to is added to the log_df.
-
-        Args:
-            data_df (pd.DataFrame) : dataframe on which the rule has to be applied
-            log_df (pd.DataFrame, optional, None): the log dataframe
-        """
-        mask = self.mask(data_df)
-        self.apply(data_df, mask)
-
-        # if a log_df is provided, create a new column for this role and mark the rows that were
-        # affected by the rule
-        if (log_df is not None) and (len(log_df) == len(mask)):
-            log_df[self.identifier] = False
-            log_df.loc[mask, self.identifier] = True
-
     def collect_description(self, part: str) -> List[DescriptionEntry]:
         """
         Returns the description of this rule elements and its children as a list.
@@ -149,6 +131,7 @@ class PrePivotRule(AbstractRule):
 
     def __init__(self, rule_id: str):
         self.rule_id = rule_id
+        self.log_df: Optional[pd.DataFrame] = pd.DataFrame(columns=(self.index_cols + ['id']))
 
     def set_id(self, prefix: str):
         """
@@ -169,14 +152,10 @@ class PrePivotRule(AbstractRule):
         """
         mask = self.mask(data_df)
 
-        # if a log_df is provided, create a new column for this role and mark the rows that were
-        # affected by the rule
-        if log_df is not None:
-            # since apply can also change the data_df, we have to create the log changes, before
-            # the rule is applied
-            affected_rows_df = data_df[mask][self.index_cols].copy()
-            affected_rows_df['id'] = self.identifier
-            log_df.append(affected_rows_df, ignore_index=True)
+        # since apply can also change the data_df, we have to create the log changes, before
+        # the rule is applied
+        self.log_df = data_df[mask][self.index_cols].copy()
+        self.log_df['id'] = self.identifier
 
         self.apply(data_df, mask)
 

@@ -2,6 +2,7 @@
 from typing import List
 
 from secfsdstools.f_standardize.base_rule_framework import RuleGroup
+from secfsdstools.f_standardize.base_prepivot_rules import PrePivotDeduplicate
 from secfsdstools.f_standardize.base_rules import CopyTagRule, SumUpRule, \
     missingsumparts_rules_creator, SetSumIfOnlyOneSummand, PostCopyToFirstSummand, \
     PreSumUpCorrection, PostSetToZero
@@ -32,7 +33,22 @@ class BalanceSheetStandardizer(Standardizer):
     LiabilitiesAndEquity
 
     """
+    prepivot_rule_tree = RuleGroup(prefix="BS_PREPIV",
+                                     rules=[PrePivotDeduplicate()
+                                     ])
 
+    preprocess_rule_tree = RuleGroup(prefix="BS_PRE",
+                                     rules=[
+                                         # sometimes values are tagged the wrong way.
+                                         # there are cases when the real Assets Value is
+                                         # tagged as AssetsNoncurrent and vice versa. fix that
+                                         PreSumUpCorrection(sum_tag='Assets',
+                                                            mixed_up_summand='AssetsNoncurrent',
+                                                            other_summand='AssetsCurrent'),
+                                         PreSumUpCorrection(sum_tag='Assets',
+                                                            mixed_up_summand='AssetsCurrent',
+                                                            other_summand='AssetsNoncurrent'),
+                                     ])
     bs_rename_rg = RuleGroup(
         prefix="BR",
         rules=[
@@ -215,19 +231,6 @@ class BalanceSheetStandardizer(Standardizer):
                                    bs_setsum_rg
                                ])
 
-    preprocess_rule_tree = RuleGroup(prefix="BS_PRE",
-                                     rules=[
-                                         # sometimes values are tagged the wrong way.
-                                         # there are cases when the real Assets Value is
-                                         # tagged as AssetsNoncurrent and vice versa. fix that
-                                         PreSumUpCorrection(sum_tag='Assets',
-                                                            mixed_up_summand='AssetsNoncurrent',
-                                                            other_summand='AssetsCurrent'),
-                                         PreSumUpCorrection(sum_tag='Assets',
-                                                            mixed_up_summand='AssetsCurrent',
-                                                            other_summand='AssetsNoncurrent'),
-                                     ])
-
     post_rule_tree = RuleGroup(prefix="BS_POST",
                                rules=[
                                    # if only Assets is sets, set the AssetsCurrent to value
@@ -291,6 +294,7 @@ class BalanceSheetStandardizer(Standardizer):
 
     def __init__(self, filter_for_main_statement: bool = True, iterations: int = 3):
         super().__init__(
+            prepivot_rule_tree=self.prepivot_rule_tree,
             pre_rule_tree=self.preprocess_rule_tree,
             main_rule_tree=self.main_rule_tree,
             post_rule_tree=self.post_rule_tree,

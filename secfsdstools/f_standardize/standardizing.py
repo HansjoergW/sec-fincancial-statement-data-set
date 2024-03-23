@@ -174,7 +174,6 @@ class Standardizer(Presenter[JoinedDataBag]):
 
     # this tags identify single statements in the final standardized table
     identifier_cols = ['adsh', 'coreg', 'report', 'ddate', 'uom', 'qtrs']
-    duplicate_log_cols = ['adsh', 'coreg', 'report', 'ddate', 'uom', 'qtrs', 'tag', 'version']
 
     def __init__(self,
                  prepivot_rule_tree: RuleGroup,
@@ -252,18 +251,6 @@ class Standardizer(Presenter[JoinedDataBag]):
 
         self.stats = Stats(self.final_tags)
 
-    def _preprocess_deduplicate(self, data_df: pd.DataFrame) -> pd.DataFrame:
-        # find duplicated entries
-        # sometimes, only single tags are duplicated, however, there are also reports
-        # where all tags of a report are duplicated.
-
-        relevant_tags_duplication = self.identifier_cols + ['tag', 'version', 'value']
-        duplicates_s = data_df.duplicated(relevant_tags_duplication)
-
-        self.preprocess_duplicate_log_df = data_df[duplicates_s][self.duplicate_log_cols].copy()
-
-        return data_df[~duplicates_s]
-
     def _preprocess_pivot(self, data_df: pd.DataFrame, expected_tags: Set[str]) -> pd.DataFrame:
         pivot_df = data_df.pivot(index=self.identifier_cols,
                                  columns='tag',
@@ -309,10 +296,12 @@ class Standardizer(Presenter[JoinedDataBag]):
             relevant_df.loc[relevant_df.negating == 1, 'value'] = -relevant_df.value
 
         # apply prepivot_rule_tree
-        self.applied_prepivot_rules_log_df = pd.DataFrame(columns=(PrePivotRule.index_cols + ['id']))
         self.prepivot_rule_tree.set_id("PREPIVOT")
-        self.prepivot_rule_tree.process(data_df=relevant_df,
-                                        log_df=self.applied_prepivot_rules_log_df)
+        self.prepivot_rule_tree.process(data_df=relevant_df)
+        # we cannot directly add rows than existing dataframe, therefore prepivot rules
+        # so every prepivot rules stores the log within and in the end, we concat it together
+        prepivot_logs = [x.log_df for x in self.prepivot_rule_tree.rules]
+        self.applied_prepivot_rules_log_df = pd.concat(prepivot_logs)
 
         # pivot the table
         pivot_df = self._preprocess_pivot(data_df=relevant_df, expected_tags=self.all_input_tags)

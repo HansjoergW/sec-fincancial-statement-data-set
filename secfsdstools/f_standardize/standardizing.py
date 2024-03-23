@@ -273,7 +273,8 @@ class Standardizer(Presenter[JoinedDataBag]):
              """
 
         cpy_pivot_df = pivot_df.copy()
-        available_main_statements = set(cpy_pivot_df.columns.tolist()).intersection(set(self.main_statement_tags))
+        available_main_statements = \
+            set(cpy_pivot_df.columns.tolist()).intersection(set(self.main_statement_tags))
         cpy_pivot_df['nan_count'] = cpy_pivot_df[available_main_statements].isna().sum(axis=1)
 
         cpy_pivot_df.sort_values(['adsh', 'coreg', 'nan_count'], inplace=True)
@@ -287,7 +288,7 @@ class Standardizer(Presenter[JoinedDataBag]):
         # only select rows with tags that are actually used by the defined rules
 
         relevant_pivot_cols = \
-            self.identifier_cols + ['tag', 'version',  'value', 'line', 'negating']
+            self.identifier_cols + ['tag', 'version', 'value', 'line', 'negating']
 
         relevant_df = \
             data_df[relevant_pivot_cols][data_df.tag.isin(self.all_input_tags)]
@@ -302,11 +303,11 @@ class Standardizer(Presenter[JoinedDataBag]):
         # we cannot directly add rows than existing dataframe, therefore prepivot rules
         # so every prepivot rules stores the log within and in the end, we concat it together
         prepivot_logs = [x.log_df for x in self.prepivot_rule_tree.rules]
-        if len(prepivot_logs) > 0: 
+        if len(prepivot_logs) > 0:
             self.applied_prepivot_rules_log_df = pd.concat(prepivot_logs)
         else:
-            self.applied_prepivot_rules_log_df = pd.DataFrame(columns=(PrePivotRule.index_cols + ['id']))
-
+            self.applied_prepivot_rules_log_df = pd.DataFrame(
+                columns=(PrePivotRule.index_cols + ['id']))
 
         # pivot the table
         pivot_df = self._preprocess_pivot(data_df=relevant_df, expected_tags=self.all_input_tags)

@@ -76,7 +76,8 @@ class StandardStatementPresenter(Presenter[JoinedDataBag]):
         num_pre_pivot_df = num_pre_pivot_df[col_order]
 
         # the columns have a multi index (by qtrs and ddate) so we flatten the names of the columns
-        num_pre_pivot_df.columns = [f"qrtrs_{qtrs}/{ddate}" for qtrs, ddate in num_pre_pivot_df.columns.values]
+        num_pre_pivot_df.columns = [f"qrtrs_{qtrs}/{ddate}"
+                                    for qtrs, ddate in num_pre_pivot_df.columns.values]
 
         if self.flatten_index:
             num_pre_pivot_df.reset_index(drop=False, inplace=True)

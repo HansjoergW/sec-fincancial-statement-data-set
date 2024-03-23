@@ -125,9 +125,10 @@ class AbstractRule(RuleEntity):
 
 
 class PrePivotRule(AbstractRule):
+    """Base class to define a single rule that is applied before the dataframe was pivoted"""
+
     index_cols = ['adsh', 'coreg', 'report', 'ddate', 'uom', 'qtrs', 'tag', 'version']
 
-    """Base class to define a single rule that is applied before the dataframe was pivoted"""
 
     def __init__(self, rule_id: str):
         self.rule_id = rule_id

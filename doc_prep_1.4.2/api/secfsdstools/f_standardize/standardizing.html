@@ -303,7 +303,7 @@ class Standardizer(Presenter[JoinedDataBag]):
 
         cpy_pivot_df = pivot_df.copy()
         available_main_statements = \
-            set(cpy_pivot_df.columns.tolist()).intersection(set(self.main_statement_tags))
+            list(set(cpy_pivot_df.columns.tolist()).intersection(set(self.main_statement_tags)))
         cpy_pivot_df[&#39;nan_count&#39;] = cpy_pivot_df[available_main_statements].isna().sum(axis=1)
 
         cpy_pivot_df.sort_values([&#39;adsh&#39;, &#39;coreg&#39;, &#39;nan_count&#39;], inplace=True)
@@ -868,7 +868,7 @@ as negated.</dd>
 
         cpy_pivot_df = pivot_df.copy()
         available_main_statements = \
-            set(cpy_pivot_df.columns.tolist()).intersection(set(self.main_statement_tags))
+            list(set(cpy_pivot_df.columns.tolist()).intersection(set(self.main_statement_tags)))
         cpy_pivot_df[&#39;nan_count&#39;] = cpy_pivot_df[available_main_statements].isna().sum(axis=1)
 
         cpy_pivot_df.sort_values([&#39;adsh&#39;, &#39;coreg&#39;, &#39;nan_count&#39;], inplace=True)

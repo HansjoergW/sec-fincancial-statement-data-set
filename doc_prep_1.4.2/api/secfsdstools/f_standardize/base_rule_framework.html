@@ -156,9 +156,10 @@ class AbstractRule(RuleEntity):
 
 
 class PrePivotRule(AbstractRule):
+    &#34;&#34;&#34;Base class to define a single rule that is applied before the dataframe was pivoted&#34;&#34;&#34;
+
     index_cols = [&#39;adsh&#39;, &#39;coreg&#39;, &#39;report&#39;, &#39;ddate&#39;, &#39;uom&#39;, &#39;qtrs&#39;, &#39;tag&#39;, &#39;version&#39;]
 
-    &#34;&#34;&#34;Base class to define a single rule that is applied before the dataframe was pivoted&#34;&#34;&#34;
 
     def __init__(self, rule_id: str):
         self.rule_id = rule_id
@@ -568,15 +569,16 @@ process descrption table.</p></div>
 <span>(</span><span>rule_id: str)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Abstract Base class für single rules</p></div>
+<div class="desc"><p>Base class to define a single rule that is applied before the dataframe was pivoted</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class PrePivotRule(AbstractRule):
+    &#34;&#34;&#34;Base class to define a single rule that is applied before the dataframe was pivoted&#34;&#34;&#34;
+
     index_cols = [&#39;adsh&#39;, &#39;coreg&#39;, &#39;report&#39;, &#39;ddate&#39;, &#39;uom&#39;, &#39;qtrs&#39;, &#39;tag&#39;, &#39;version&#39;]
 
-    &#34;&#34;&#34;Base class to define a single rule that is applied before the dataframe was pivoted&#34;&#34;&#34;
 
     def __init__(self, rule_id: str):
         self.rule_id = rule_id
@@ -629,7 +631,7 @@ process descrption table.</p></div>
 </dd>
 <dt id="secfsdstools.f_standardize.base_rule_framework.PrePivotRule.index_cols"><code class="name">var <span class="ident">index_cols</span></code></dt>
 <dd>
-<div class="desc"><p>Base class to define a single rule that is applied before the dataframe was pivoted</p></div>
+<div class="desc"></div>
 </dd>
 </dl>
 <h3>Methods</h3>

@@ -12,7 +12,8 @@ def test_deduplicate_dataframe_with_no_duplicates():
                             'tag': ['T1', 'T2', 'T3'],
                             'version': ['V1', 'V2', 'V3'],
                             'ddate': ['D1', 'D2', 'D3'],
-                            'value': [1, 2, 3]})
+                            'value': [1, 2, 3],
+                            'qtrs': [1, 1, 1]})
     expected_df = data_df.copy()
 
     # Act
@@ -32,7 +33,8 @@ def test_handle_dataframe_with_one_row():
                             'tag': ['T1'],
                             'version': ['V1'],
                             'ddate': ['D1'],
-                            'value': [1]})
+                            'value': [1],
+                            'qtrs': [1]})
     expected_df = data_df.copy()
 
     # Act
@@ -53,7 +55,8 @@ def test_deduplicate_dataframe_with_duplicates():
         'tag': ['T1', 'T1', 'T2', 'T2', 'T3'],
         'version': ['V1', 'V1', 'V2', 'V2', 'V3'],
         'ddate': ['D1', 'D1', 'D2', 'D2', 'D3'],
-        'value': [1, 1, 2, 2, 3]
+        'value': [1, 1, 2, 2, 3],
+        'qtrs': [1, 1, 1, 1, 1]
     }
     df = pd.DataFrame(data)
 

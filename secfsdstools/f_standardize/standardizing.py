@@ -283,6 +283,7 @@ class Standardizer(Presenter[JoinedDataBag]):
         return filtered_pivot_df
 
     def _preprocess(self, data_df: pd.DataFrame) -> pd.DataFrame:
+        # sourcery skip: simplify-len-comparison, use-named-expression
         # only select rows with tags that are actually used by the defined rules
 
         relevant_pivot_cols = \
@@ -301,7 +302,11 @@ class Standardizer(Presenter[JoinedDataBag]):
         # we cannot directly add rows than existing dataframe, therefore prepivot rules
         # so every prepivot rules stores the log within and in the end, we concat it together
         prepivot_logs = [x.log_df for x in self.prepivot_rule_tree.rules]
-        self.applied_prepivot_rules_log_df = pd.concat(prepivot_logs)
+        if len(prepivot_logs) > 0: 
+            self.applied_prepivot_rules_log_df = pd.concat(prepivot_logs)
+        else:
+            self.applied_prepivot_rules_log_df = pd.DataFrame(columns=(PrePivotRule.index_cols + ['id']))
+
 
         # pivot the table
         pivot_df = self._preprocess_pivot(data_df=relevant_df, expected_tags=self.all_input_tags)

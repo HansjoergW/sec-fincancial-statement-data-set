@@ -20,7 +20,7 @@ def test_StandardStatementPresenter():
 
     presentation: pd.DataFrame = joined_bag.present(StandardStatementPresenter())
 
-    assert presentation.shape == (74, 11)
+    assert presentation.shape == (74, 12)
 
 
 def test_StandardStatementPresenter_not_flatten():
@@ -31,7 +31,7 @@ def test_StandardStatementPresenter_not_flatten():
 
     presentation: pd.DataFrame = joined_bag.present(StandardStatementPresenter(flatten_index=False))
 
-    assert presentation.shape == (74, 1)
+    assert presentation.shape == (74, 2)
 
 
 def test_StandardStatementPresenter_form_col():
@@ -43,4 +43,4 @@ def test_StandardStatementPresenter_form_col():
     presentation: pd.DataFrame = \
         joined_bag.present(StandardStatementPresenter(flatten_index=True, add_form_column=True))
 
-    assert presentation.shape == (74, 12)
+    assert presentation.shape == (74, 13)

@@ -131,7 +131,7 @@ class PrePivotRule(AbstractRule):
 
     def __init__(self, rule_id: str):
         self.rule_id = rule_id
-        self.log_df: Optional[pd.DataFrame] = pd.DataFrame(columns=(self.index_cols + ['id']))
+        self.log_df: pd.DataFrame = pd.DataFrame(columns=(self.index_cols + ['id']))
 
     def set_id(self, prefix: str):
         """

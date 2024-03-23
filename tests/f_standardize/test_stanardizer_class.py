@@ -10,6 +10,7 @@ from secfsdstools.f_standardize.standardizing import Standardizer
 @pytest.fixture
 def empty_instance() -> Standardizer:
     return Standardizer(
+        prepivot_rule_tree=RuleGroup(prefix='prepvt', rules=[]),
         pre_rule_tree=RuleGroup(prefix="pre", rules=[]),
         main_rule_tree=RuleGroup(prefix="main", rules=[]),
         post_rule_tree=RuleGroup(prefix="post", rules=[]),
@@ -31,34 +32,9 @@ def sample_dataframe_duplications():
         'version': ['V1', 'V2', 'V3', 'V1'],
         'ddate': ['D1', 'D2', 'D3', 'D1'],
         'value': [10, 20, 30, 10],
+        'qtrs': [1, 1, 1, 1]
     }
     return pd.DataFrame(data).copy()
-
-
-def test_preprocess_deduplicate(empty_instance, sample_dataframe_duplications):
-    # Test the _preprocess_deduplicate method
-    result_df = empty_instance._preprocess_deduplicate(sample_dataframe_duplications)
-
-    # Check that the duplicates are logged correctly
-    assert empty_instance.preprocess_duplicate_log_df.shape == (1, 7)
-    assert 'adsh' in empty_instance.preprocess_duplicate_log_df.columns
-    assert 'coreg' in empty_instance.preprocess_duplicate_log_df.columns
-    assert 'report' in empty_instance.preprocess_duplicate_log_df.columns
-    assert 'tag' in empty_instance.preprocess_duplicate_log_df.columns
-    assert 'uom' in empty_instance.preprocess_duplicate_log_df.columns
-    assert 'version' in empty_instance.preprocess_duplicate_log_df.columns
-    assert 'ddate' in empty_instance.preprocess_duplicate_log_df.columns
-
-    # Check that duplicates are removed from the result DataFrame
-    assert result_df.shape == (3, 8)  # One duplicate row removed
-    assert result_df['adsh'].tolist() == ['A1', 'A2', 'A3']
-    assert result_df['coreg'].tolist() == ['C1', 'C2', 'C3']
-    assert result_df['report'].tolist() == ['R1', 'R2', 'R3']
-    assert result_df['tag'].tolist() == ['T1', 'T2', 'T3']
-    assert result_df['uom'].tolist() == ['U1', 'U2', 'U3']
-    assert result_df['version'].tolist() == ['V1', 'V2', 'V3']
-    assert result_df['ddate'].tolist() == ['D1', 'D2', 'D3']
-    assert result_df['value'].tolist() == [10, 20, 30]
 
 
 @pytest.fixture
@@ -71,6 +47,7 @@ def sample_dataframe_pivot():
         'uom': ['U1', 'U2', 'U3'],
         'value': [100, 50, 80],
         'ddate': ['D1', 'D2', 'D3'],
+        'qtrs': [1, 1, 1]
     }
     return pd.DataFrame(data)
 
@@ -150,6 +127,7 @@ def sample_dataframe_preprocess():
         'report': ['R1', 'R2', 'R3'],
         'tag': ['T1', 'T2', 'T3'],
         'uom': ['U1', 'U2', 'U3'],
+        'qtrs': [1, 1, 1],
         'value': [100, 50, 80],
         'ddate': ['D1', 'D2', 'D3'],
         'version': ['1', '1', '1'],
@@ -170,7 +148,7 @@ def test_preprocess(empty_instance, sample_dataframe_preprocess):
 
     # we expect that the applied_rules_log_df was instantiated
     assert empty_instance.applied_rules_log_df.columns.tolist() == \
-           ['adsh', 'coreg', 'report', 'ddate', 'uom']
+           ['adsh', 'coreg', 'report', 'ddate', 'uom', 'qtrs']
 
     # ensure that the stats are initialized and that the pre column was added
     assert empty_instance.stats.stats.columns.tolist() == ['pre']
@@ -178,6 +156,7 @@ def test_preprocess(empty_instance, sample_dataframe_preprocess):
 
 def test_finalize():
     instance = Standardizer(
+        prepivot_rule_tree=RuleGroup(prefix='prepvt', rules=[]),
         pre_rule_tree=RuleGroup(prefix='pre', rules=[]),
         main_rule_tree=RuleGroup(prefix='main', rules=[]),
         post_rule_tree=RuleGroup(prefix='post', rules=[]),
@@ -192,6 +171,7 @@ def test_finalize():
         'report': ['1', '2', '3'],
         'ddate': ['20221231', '20221231', '20221231'],
         'uom': ['USD', 'USD', 'USD'],
+        'qtrs': [1, 1, 1],
         'T1': [60, 70, 80],
         'T2': [20, 35, 90],
         'T3': [40, 40, -10],

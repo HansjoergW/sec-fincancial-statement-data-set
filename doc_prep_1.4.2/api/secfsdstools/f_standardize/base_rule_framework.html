@@ -162,7 +162,7 @@ class PrePivotRule(AbstractRule):
 
     def __init__(self, rule_id: str):
         self.rule_id = rule_id
-        self.log_df: Optional[pd.DataFrame] = pd.DataFrame(columns=(self.index_cols + [&#39;id&#39;]))
+        self.log_df: pd.DataFrame = pd.DataFrame(columns=(self.index_cols + [&#39;id&#39;]))
 
     def set_id(self, prefix: str):
         &#34;&#34;&#34;
@@ -580,7 +580,7 @@ process descrption table.</p></div>
 
     def __init__(self, rule_id: str):
         self.rule_id = rule_id
-        self.log_df: Optional[pd.DataFrame] = pd.DataFrame(columns=(self.index_cols + [&#39;id&#39;]))
+        self.log_df: pd.DataFrame = pd.DataFrame(columns=(self.index_cols + [&#39;id&#39;]))
 
     def set_id(self, prefix: str):
         &#34;&#34;&#34;

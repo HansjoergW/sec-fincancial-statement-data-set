@@ -22,8 +22,6 @@ v.1.4.2
 
 
 todo:
-- StandardStatementPresenter tests not yet done
-- BS Standardizer and Tests not adapted
 - Standardizer doku not yet adapted
 
 

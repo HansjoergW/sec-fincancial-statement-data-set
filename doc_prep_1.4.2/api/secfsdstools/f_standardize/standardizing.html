@@ -430,7 +430,8 @@ class Standardizer(Presenter[JoinedDataBag]):
         &#34;&#34;&#34;
 
         all_descriptions: List[DescriptionEntry] = []
-
+        self.prepivot_rule_tree.set_id(&#34;PREPIVOT&#34;)
+        all_descriptions.extend(self.prepivot_rule_tree.collect_description(&#34;PREPIVOT&#34;))
         self.pre_rule_tree.set_id(&#34;PRE&#34;)
         all_descriptions.extend(self.pre_rule_tree.collect_description(&#34;PRE&#34;))
         self.main_rule_tree.set_id(&#34;MAIN&#34;)
@@ -995,7 +996,8 @@ as negated.</dd>
         &#34;&#34;&#34;
 
         all_descriptions: List[DescriptionEntry] = []
-
+        self.prepivot_rule_tree.set_id(&#34;PREPIVOT&#34;)
+        all_descriptions.extend(self.prepivot_rule_tree.collect_description(&#34;PREPIVOT&#34;))
         self.pre_rule_tree.set_id(&#34;PRE&#34;)
         all_descriptions.extend(self.pre_rule_tree.collect_description(&#34;PRE&#34;))
         self.main_rule_tree.set_id(&#34;MAIN&#34;)
@@ -1108,7 +1110,8 @@ as negated.</dd>
     &#34;&#34;&#34;
 
     all_descriptions: List[DescriptionEntry] = []
-
+    self.prepivot_rule_tree.set_id(&#34;PREPIVOT&#34;)
+    all_descriptions.extend(self.prepivot_rule_tree.collect_description(&#34;PREPIVOT&#34;))
     self.pre_rule_tree.set_id(&#34;PRE&#34;)
     all_descriptions.extend(self.pre_rule_tree.collect_description(&#34;PRE&#34;))
     self.main_rule_tree.set_id(&#34;MAIN&#34;)

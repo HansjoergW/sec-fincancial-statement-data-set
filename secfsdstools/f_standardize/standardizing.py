@@ -401,7 +401,8 @@ class Standardizer(Presenter[JoinedDataBag]):
         """
 
         all_descriptions: List[DescriptionEntry] = []
-
+        self.prepivot_rule_tree.set_id("PREPIVOT")
+        all_descriptions.extend(self.prepivot_rule_tree.collect_description("PREPIVOT"))
         self.pre_rule_tree.set_id("PRE")
         all_descriptions.extend(self.pre_rule_tree.collect_description("PRE"))
         self.main_rule_tree.set_id("MAIN")

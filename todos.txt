@@ -22,7 +22,7 @@ v.1.4.2
 
 
 todo:
-- Standardizer doku not yet adapted
+- BS Standardizer doku not yet adapted
 
 
 - evtl. sollte jede Regel noch eine "Explanation" bekommen. Ein Text, der die Regel spezifisch erklärt,

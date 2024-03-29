@@ -34,6 +34,12 @@ and therefore providing a possibility to receive the latest filings on a daily b
 
 # Latest news / most important changes from previous versions
 See the [Release Notes](https://hansjoergw.github.io/sec-fincancial-statement-data-set/releasenotes/) for details.
+## 1.4 -> 1.4.2
+* Fix in `StandardStatementPresenter`: <br>
+  The `StandardStatementPresenter` also considers `qtrs` when displaying the information.
+  This was a problem when displaying information for income statements and cash flows, since they often show
+  data for different periods.
+* Improvements in the Standardizer framework as preparation to implement the income statement and cash flow standardizer.
 ## 1.3 -> 1.4
 * Introducing the Standardizer Framework and the **Balance Sheet Standardizer** as a first implementation.<br>
   The Balance Sheet Standardizer makes the balance sheets easily comparable.<br>
@@ -58,12 +64,6 @@ See the [Release Notes](https://hansjoergw.github.io/sec-fincancial-statement-da
 * `OfficialTagsOnlyFilter` was renamed to `OfficialTagsOnlyRawFilter`
 * All filters have been implemented for the JoinedDataBag as well: `secfsdstools.e_filter.joinedfiltering`
 * New notebook [05_filter_deep_dive](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/05_filter_deep_dive.ipynb).
-
-
-## 1.0 -> 1.1
-* `secfsdstools.e_collector.zipcollecting.ZipCollector` supports now loading of multiple zip files:<br>
-  Examples: Notebook [04_collector_deep_dive](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/04_collector_deep_dive.ipynb)
-* `secfsdstools.e_filter.rawfiltering.OfficialTagsOnlyRawFilter` is new and removes none us-gaap tags
 
 
 # Principles

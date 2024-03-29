@@ -13,6 +13,9 @@ New Release
 - on github -> under code releases: draft new release
 
 todo:
+- sollte homepage nicht auf https://hansjoergw.github.io/sec-fincancial-statement-data-set/ zeigen?
+
+
 - evtl. sollte jede Regel noch eine "Explanation" bekommen. Ein Text, der die Regel spezifisch erklärt,
   nicht allgemein wie in description.
 

@@ -8,6 +8,14 @@ permalink: /releasenotes/
 ## Upcoming
 * 
 
+## 1.4.2 2024-Mar-29
+* Fix
+  - The StandardStatementPresenter didn't consider `qtrs` when displaying the data. This was a problem for the 
+    Income Statement and the Cash Flow.
+* Improvements
+  - Several in the `Standardizer` as preparation to implement the Income Statement and Cash Flow `Standardizer`. 
+
+
 ## 1.4.0 2024-Feb-02
 * New
   - Introducing the Standardizer Framework and the **Balance Sheet Standardizer** as a first implementation.<br>
@@ -18,7 +26,6 @@ permalink: /releasenotes/
 * Improvements
   - Efficiency improvements for `MultiReportCollector`: Every zip file is opened just once if there are multiple reports
     to load from the same zip file.
-
 
 
 ## 1.3.0 2023-Dec-28

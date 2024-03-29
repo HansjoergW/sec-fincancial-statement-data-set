@@ -9,22 +9,10 @@ New Release
     - adapt index
 - adapt releases in project.toml
 - merge back into main
-- set tag and push tag
+- set tag and push tag (format vx.x.x)
 - on github -> under code releases: draft new release
 
-
-v.1.4.2
-- fix für StandardStatementPresenter
- + Notebook visualisation
-- consider qtrs in Standardizer &
-  introduce prepivot rules
- + Doku und Notebooks
-
-
 todo:
-- BS Standardizer doku not yet adapted
-
-
 - evtl. sollte jede Regel noch eine "Explanation" bekommen. Ein Text, der die Regel spezifisch erklärt,
   nicht allgemein wie in description.
 

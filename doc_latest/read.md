@@ -34,6 +34,12 @@ and therefore providing a possibility to receive the latest filings on a daily b
 
 # Latest news / most important changes from previous versions
 See the [Release Notes](https://hansjoergw.github.io/sec-fincancial-statement-data-set/releasenotes/) for details.
+## 1.4 -> 1.4.2
+* Fix in `StandardStatementPresenter`: <br>
+  The `StandardStatementPresenter` also considers `qtrs` when displaying the information.
+  This was a problem when displaying information for income statements and cash flows, since they often show
+  data for different periods.
+* Improvements in the Standardizer framework as preparation to implement the income statement and cash flow standardizer.
 ## 1.3 -> 1.4
 * Introducing the Standardizer Framework and the **Balance Sheet Standardizer** as a first implementation.<br>
   The Balance Sheet Standardizer makes the balance sheets easily comparable.<br>
@@ -58,12 +64,6 @@ See the [Release Notes](https://hansjoergw.github.io/sec-fincancial-statement-da
 * `OfficialTagsOnlyFilter` was renamed to `OfficialTagsOnlyRawFilter`
 * All filters have been implemented for the JoinedDataBag as well: `secfsdstools.e_filter.joinedfiltering`
 * New notebook [05_filter_deep_dive](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/05_filter_deep_dive.ipynb).
-
-
-## 1.0 -> 1.1
-* `secfsdstools.e_collector.zipcollecting.ZipCollector` supports now loading of multiple zip files:<br>
-  Examples: Notebook [04_collector_deep_dive](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/04_collector_deep_dive.ipynb)
-* `secfsdstools.e_filter.rawfiltering.OfficialTagsOnlyRawFilter` is new and removes none us-gaap tags
 
 
 # Principles
@@ -669,38 +669,38 @@ implementations (module `secfsdstools.e_presenter.presenting`):
   ````
   <br>*Output*:
   ````  
-                       adsh coreg                                              tag       version stmt  report  line     uom  negating  inpth      20220930      20210930
-   0   0000320193-22-000108                  CashAndCashEquivalentsAtCarryingValue  us-gaap/2022   BS       5     3     USD         0      0  2.364600e+10  3.494000e+10
-   1   0000320193-22-000108                            MarketableSecuritiesCurrent  us-gaap/2022   BS       5     4     USD         0      0  2.465800e+10  2.769900e+10
-   2   0000320193-22-000108                           AccountsReceivableNetCurrent  us-gaap/2022   BS       5     5     USD         0      0  2.818400e+10  2.627800e+10
-   3   0000320193-22-000108                                           InventoryNet  us-gaap/2022   BS       5     6     USD         0      0  4.946000e+09  6.580000e+09
-   4   0000320193-22-000108                             NontradeReceivablesCurrent  us-gaap/2022   BS       5     7     USD         0      0  3.274800e+10  2.522800e+10
-   5   0000320193-22-000108                                     OtherAssetsCurrent  us-gaap/2022   BS       5     8     USD         0      0  2.122300e+10  1.411100e+10
-   6   0000320193-22-000108                                          AssetsCurrent  us-gaap/2022   BS       5     9     USD         0      0  1.354050e+11  1.348360e+11
-   7   0000320193-22-000108                         MarketableSecuritiesNoncurrent  us-gaap/2022   BS       5    11     USD         0      0  1.208050e+11  1.278770e+11
-   8   0000320193-22-000108                           PropertyPlantAndEquipmentNet  us-gaap/2022   BS       5    12     USD         0      0  4.211700e+10  3.944000e+10
-   9   0000320193-22-000108                                  OtherAssetsNoncurrent  us-gaap/2022   BS       5    13     USD         0      0  5.442800e+10  4.884900e+10
-   10  0000320193-22-000108                                       AssetsNoncurrent  us-gaap/2022   BS       5    14     USD         0      0  2.173500e+11  2.161660e+11
-   11  0000320193-22-000108                                                 Assets  us-gaap/2022   BS       5    15     USD         0      0  3.527550e+11  3.510020e+11
-   12  0000320193-22-000108                                 AccountsPayableCurrent  us-gaap/2022   BS       5    18     USD         0      0  6.411500e+10  5.476300e+10
-   13  0000320193-22-000108                                OtherLiabilitiesCurrent  us-gaap/2022   BS       5    19     USD         0      0  6.084500e+10  4.749300e+10
-   14  0000320193-22-000108                   ContractWithCustomerLiabilityCurrent  us-gaap/2022   BS       5    20     USD         0      0  7.912000e+09  7.612000e+09
-   15  0000320193-22-000108                                        CommercialPaper  us-gaap/2022   BS       5    21     USD         0      0  9.982000e+09  6.000000e+09
-   16  0000320193-22-000108                                    LongTermDebtCurrent  us-gaap/2022   BS       5    22     USD         0      0  1.112800e+10  9.613000e+09
-   17  0000320193-22-000108                                     LiabilitiesCurrent  us-gaap/2022   BS       5    23     USD         0      0  1.539820e+11  1.254810e+11
-   18  0000320193-22-000108                                 LongTermDebtNoncurrent  us-gaap/2022   BS       5    25     USD         0      0  9.895900e+10  1.091060e+11
-   19  0000320193-22-000108                             OtherLiabilitiesNoncurrent  us-gaap/2022   BS       5    26     USD         0      0  4.914200e+10  5.332500e+10
-   20  0000320193-22-000108                                  LiabilitiesNoncurrent  us-gaap/2022   BS       5    27     USD         0      0  1.481010e+11  1.624310e+11
-   21  0000320193-22-000108                                            Liabilities  us-gaap/2022   BS       5    28     USD         0      0  3.020830e+11  2.879120e+11
-   22  0000320193-22-000108           CommonStocksIncludingAdditionalPaidInCapital  us-gaap/2022   BS       5    31     USD         0      0  6.484900e+10  5.736500e+10
-   23  0000320193-22-000108                     RetainedEarningsAccumulatedDeficit  us-gaap/2022   BS       5    32     USD         0      0 -3.068000e+09  5.562000e+09
-   24  0000320193-22-000108        AccumulatedOtherComprehensiveIncomeLossNetOfTax  us-gaap/2022   BS       5    33     USD         0      0 -1.110900e+10  1.630000e+08
-   25  0000320193-22-000108                                     StockholdersEquity  us-gaap/2022   BS       5    34     USD         0      0  5.067200e+10  6.309000e+10
-   26  0000320193-22-000108                       LiabilitiesAndStockholdersEquity  us-gaap/2022   BS       5    35     USD         0      0  3.527550e+11  3.510020e+11
-   27  0000320193-22-000108                    CommonStockParOrStatedValuePerShare  us-gaap/2022   BS       6     1     USD         0      1  0.000000e+00  0.000000e+00
-   28  0000320193-22-000108                            CommonStockSharesAuthorized  us-gaap/2022   BS       6     2  shares         0      1  5.040000e+10  5.040000e+10
-   29  0000320193-22-000108                                CommonStockSharesIssued  us-gaap/2022   BS       6     3  shares         0      1  1.594342e+10  1.642679e+10
-   30  0000320193-22-000108                           CommonStockSharesOutstanding  us-gaap/2022   BS       6     4  shares         0      1  1.594342e+10  1.642679e+10  
+                        adsh coreg                                              tag       version stmt  report  line     uom  negating  inpth  qrtrs_0/20220930  qrtrs_0/20210930
+   0   0000320193-22-000108                  CashAndCashEquivalentsAtCarryingValue  us-gaap/2022   BS       5     3     USD         0      0        2.364600e+10        3.494000e+10
+   1   0000320193-22-000108                            MarketableSecuritiesCurrent  us-gaap/2022   BS       5     4     USD         0      0        2.465800e+10        2.769900e+10
+   2   0000320193-22-000108                           AccountsReceivableNetCurrent  us-gaap/2022   BS       5     5     USD         0      0        2.818400e+10        2.627800e+10
+   3   0000320193-22-000108                                           InventoryNet  us-gaap/2022   BS       5     6     USD         0      0        4.946000e+09        6.580000e+09
+   4   0000320193-22-000108                             NontradeReceivablesCurrent  us-gaap/2022   BS       5     7     USD         0      0        3.274800e+10        2.522800e+10
+   5   0000320193-22-000108                                     OtherAssetsCurrent  us-gaap/2022   BS       5     8     USD         0      0        2.122300e+10        1.411100e+10
+   6   0000320193-22-000108                                          AssetsCurrent  us-gaap/2022   BS       5     9     USD         0      0        1.354050e+11        1.348360e+11
+   7   0000320193-22-000108                         MarketableSecuritiesNoncurrent  us-gaap/2022   BS       5    11     USD         0      0        1.208050e+11        1.278770e+11
+   8   0000320193-22-000108                           PropertyPlantAndEquipmentNet  us-gaap/2022   BS       5    12     USD         0      0        4.211700e+10        3.944000e+10
+   9   0000320193-22-000108                                  OtherAssetsNoncurrent  us-gaap/2022   BS       5    13     USD         0      0        5.442800e+10        4.884900e+10
+   10  0000320193-22-000108                                       AssetsNoncurrent  us-gaap/2022   BS       5    14     USD         0      0        2.173500e+11        2.161660e+11
+   11  0000320193-22-000108                                                 Assets  us-gaap/2022   BS       5    15     USD         0      0        3.527550e+11        3.510020e+11
+   12  0000320193-22-000108                                 AccountsPayableCurrent  us-gaap/2022   BS       5    18     USD         0      0        6.411500e+10        5.476300e+10
+   13  0000320193-22-000108                                OtherLiabilitiesCurrent  us-gaap/2022   BS       5    19     USD         0      0        6.084500e+10        4.749300e+10
+   14  0000320193-22-000108                   ContractWithCustomerLiabilityCurrent  us-gaap/2022   BS       5    20     USD         0      0        7.912000e+09        7.612000e+09
+   15  0000320193-22-000108                                        CommercialPaper  us-gaap/2022   BS       5    21     USD         0      0        9.982000e+09        6.000000e+09
+   16  0000320193-22-000108                                    LongTermDebtCurrent  us-gaap/2022   BS       5    22     USD         0      0        1.112800e+10        9.613000e+09
+   17  0000320193-22-000108                                     LiabilitiesCurrent  us-gaap/2022   BS       5    23     USD         0      0        1.539820e+11        1.254810e+11
+   18  0000320193-22-000108                                 LongTermDebtNoncurrent  us-gaap/2022   BS       5    25     USD         0      0        9.895900e+10        1.091060e+11
+   19  0000320193-22-000108                             OtherLiabilitiesNoncurrent  us-gaap/2022   BS       5    26     USD         0      0        4.914200e+10        5.332500e+10
+   20  0000320193-22-000108                                  LiabilitiesNoncurrent  us-gaap/2022   BS       5    27     USD         0      0        1.481010e+11        1.624310e+11
+   21  0000320193-22-000108                                            Liabilities  us-gaap/2022   BS       5    28     USD         0      0        3.020830e+11        2.879120e+11
+   22  0000320193-22-000108           CommonStocksIncludingAdditionalPaidInCapital  us-gaap/2022   BS       5    31     USD         0      0        6.484900e+10        5.736500e+10
+   23  0000320193-22-000108                     RetainedEarningsAccumulatedDeficit  us-gaap/2022   BS       5    32     USD         0      0       -3.068000e+09        5.562000e+09
+   24  0000320193-22-000108        AccumulatedOtherComprehensiveIncomeLossNetOfTax  us-gaap/2022   BS       5    33     USD         0      0       -1.110900e+10        1.630000e+08
+   25  0000320193-22-000108                                     StockholdersEquity  us-gaap/2022   BS       5    34     USD         0      0        5.067200e+10        6.309000e+10
+   26  0000320193-22-000108                       LiabilitiesAndStockholdersEquity  us-gaap/2022   BS       5    35     USD         0      0        3.527550e+11        3.510020e+11
+   27  0000320193-22-000108                    CommonStockParOrStatedValuePerShare  us-gaap/2022   BS       6     1     USD         0      1        0.000000e+00        0.000000e+00
+   28  0000320193-22-000108                            CommonStockSharesAuthorized  us-gaap/2022   BS       6     2  shares         0      1        5.040000e+10        5.040000e+10
+   29  0000320193-22-000108                                CommonStockSharesIssued  us-gaap/2022   BS       6     3  shares         0      1        1.594342e+10        1.642679e+10
+   30  0000320193-22-000108                           CommonStockSharesOutstanding  us-gaap/2022   BS       6     4  shares         0      1        1.594342e+10        1.642679e+10  
   ````  
   If you compare this with the real report at https://www.sec.gov/ix?doc=/Archives/edgar/data/320193/000032019322000108/aapl-20220924.htm
   you will notice, that order of the tags and the values are the same.

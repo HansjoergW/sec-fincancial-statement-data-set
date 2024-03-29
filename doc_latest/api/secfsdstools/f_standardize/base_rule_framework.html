@@ -107,26 +107,10 @@ class RuleEntity(ABC):
         &#34;&#34;&#34;
 
 
-class Rule(RuleEntity):
-    &#34;&#34;&#34;Base class to define a single rule&#34;&#34;&#34;
-
-    @abstractmethod
-    def get_target_tags(self) -&gt; List[str]:
-        &#34;&#34;&#34;
-        returns a list of tags that could be affected/changed by this rule
-
-        Returns:
-            List[str]: list with affected tags/columns
-
-        &#34;&#34;&#34;
-
-    def get_target_tags_str(self) -&gt; str:
-        &#34;&#34;&#34;
-        returns a single string in which all target_tags are separated by a &#34;/&#34;
-        Returns:
-            str: a string containing all target tags
-        &#34;&#34;&#34;
-        return &#34;/&#34;.join(self.get_target_tags())
+class AbstractRule(RuleEntity):
+    &#34;&#34;&#34;
+    Abstract Base class für single rules
+    &#34;&#34;&#34;
 
     @abstractmethod
     def mask(self, data_df: pd.DataFrame) -&gt; pa.typing.Series[bool]:
@@ -153,6 +137,84 @@ class Rule(RuleEntity):
             mask: a Series marking the rows in the dataframe on which the rule has to be applied
         &#34;&#34;&#34;
 
+    def collect_description(self, part: str) -&gt; List[DescriptionEntry]:
+        &#34;&#34;&#34;
+        Returns the description of this rule elements and its children as a list.
+
+        Args:
+            part (str): the part to which the element belongs to
+
+        Returns:
+            List (DescriptionEntry)
+        &#34;&#34;&#34;
+        return [DescriptionEntry(
+            part=part,
+            type=&#34;Rule&#34;,
+            ruleclass=self.__class__.__name__,
+            identifier=self.identifier,
+            description=self.get_description())]
+
+
+class PrePivotRule(AbstractRule):
+    &#34;&#34;&#34;Base class to define a single rule that is applied before the dataframe was pivoted&#34;&#34;&#34;
+
+    index_cols = [&#39;adsh&#39;, &#39;coreg&#39;, &#39;report&#39;, &#39;ddate&#39;, &#39;uom&#39;, &#39;qtrs&#39;, &#39;tag&#39;, &#39;version&#39;]
+
+
+    def __init__(self, rule_id: str):
+        self.rule_id = rule_id
+        self.log_df: pd.DataFrame = pd.DataFrame(columns=self.index_cols + [&#39;id&#39;])
+
+    def set_id(self, prefix: str):
+        &#34;&#34;&#34;
+        sets the identifier of this rule entity
+        Args:
+            prefix: the prefix from the parent in the rule-tree which has to be part of the id
+        &#34;&#34;&#34;
+        self.identifier = f&#39;{prefix}_{self.rule_id}&#39;
+
+    def process(self, data_df: pd.DataFrame, log_df: Optional[pd.DataFrame] = None):
+        &#34;&#34;&#34;
+        process the dataframe and apply the rule. If a log_df is provided, the rows on which
+        the rule is applied to is added to the log_df.
+
+        Args:
+            data_df (pd.DataFrame) : dataframe on which the rule has to be applied
+            log_df (pd.DataFrame, optional, None): the log dataframe
+        &#34;&#34;&#34;
+        mask = self.mask(data_df)
+
+        # since apply can also change the data_df, we have to create the log changes, before
+        # the rule is applied
+        self.log_df = data_df[mask][self.index_cols].copy()
+        self.log_df[&#39;id&#39;] = self.identifier
+
+        self.apply(data_df, mask)
+
+    def get_input_tags(self) -&gt; Set[str]:
+        return set()  # not relevant for PrePivotRules
+
+
+class Rule(AbstractRule):
+    &#34;&#34;&#34;Base class to define a single rule that is used after the dataframe was pivoted&#34;&#34;&#34;
+
+    @abstractmethod
+    def get_target_tags(self) -&gt; List[str]:
+        &#34;&#34;&#34;
+        returns a list of tags that could be affected/changed by this rule
+
+        Returns:
+            List[str]: list with affected tags/columns
+        &#34;&#34;&#34;
+
+    def get_target_tags_str(self) -&gt; str:
+        &#34;&#34;&#34;
+        returns a single string in which all target_tags are separated by a &#34;/&#34;
+        Returns:
+            str: a string containing all target tags
+        &#34;&#34;&#34;
+        return &#34;/&#34;.join(self.get_target_tags())
+
     def set_id(self, prefix: str):
         &#34;&#34;&#34;
         sets the identifier of this rule entity
@@ -178,23 +240,6 @@ class Rule(RuleEntity):
         if (log_df is not None) and (len(log_df) == len(mask)):
             log_df[self.identifier] = False
             log_df.loc[mask, self.identifier] = True
-
-    def collect_description(self, part: str) -&gt; List[DescriptionEntry]:
-        &#34;&#34;&#34;
-        Returns the description of this rule elements and its children as a list.
-
-        Args:
-            part (str): the part to which the element belongs to
-
-        Returns:
-            List (DescriptionEntry)
-        &#34;&#34;&#34;
-        return [DescriptionEntry(
-            part=part,
-            type=&#34;Rule&#34;,
-            ruleclass=self.__class__.__name__,
-            identifier=self.identifier,
-            description=self.get_description())]
 
 
 class RuleGroup(RuleEntity):
@@ -289,6 +334,192 @@ class RuleGroup(RuleEntity):
 <section>
 <h2 class="section-title" id="header-classes">Classes</h2>
 <dl>
+<dt id="secfsdstools.f_standardize.base_rule_framework.AbstractRule"><code class="flex name class">
+<span>class <span class="ident">AbstractRule</span></span>
+</code></dt>
+<dd>
+<div class="desc"><p>Abstract Base class für single rules</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class AbstractRule(RuleEntity):
+    &#34;&#34;&#34;
+    Abstract Base class für single rules
+    &#34;&#34;&#34;
+
+    @abstractmethod
+    def mask(self, data_df: pd.DataFrame) -&gt; pa.typing.Series[bool]:
+        &#34;&#34;&#34;
+            returns a Series[bool] which defines the rows to which this rule has to be applied.
+
+        Args:
+            data_df: dataframe on which the rules should be applied
+
+        Returns:
+            pa.typing.Series[bool]: a boolean Series that marks which rows have to be calculated
+        &#34;&#34;&#34;
+
+    @abstractmethod
+    def apply(self, data_df: pd.DataFrame, mask: pa.typing.Series[bool]):
+        &#34;&#34;&#34;
+        apply the rule on the provided dataframe. the rows, on which the rule has to be applied
+        is defined by the provide mask Series.
+
+        Important, the rules have to be applied &#34;in-place&#34;, so now new dataframe is produced.
+
+        Args:
+            data_df: dataframe on which the rule has to be applied
+            mask: a Series marking the rows in the dataframe on which the rule has to be applied
+        &#34;&#34;&#34;
+
+    def collect_description(self, part: str) -&gt; List[DescriptionEntry]:
+        &#34;&#34;&#34;
+        Returns the description of this rule elements and its children as a list.
+
+        Args:
+            part (str): the part to which the element belongs to
+
+        Returns:
+            List (DescriptionEntry)
+        &#34;&#34;&#34;
+        return [DescriptionEntry(
+            part=part,
+            type=&#34;Rule&#34;,
+            ruleclass=self.__class__.__name__,
+            identifier=self.identifier,
+            description=self.get_description())]</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="secfsdstools.f_standardize.base_rule_framework.RuleEntity" href="#secfsdstools.f_standardize.base_rule_framework.RuleEntity">RuleEntity</a></li>
+<li>abc.ABC</li>
+</ul>
+<h3>Subclasses</h3>
+<ul class="hlist">
+<li><a title="secfsdstools.f_standardize.base_rule_framework.PrePivotRule" href="#secfsdstools.f_standardize.base_rule_framework.PrePivotRule">PrePivotRule</a></li>
+<li><a title="secfsdstools.f_standardize.base_rule_framework.Rule" href="#secfsdstools.f_standardize.base_rule_framework.Rule">Rule</a></li>
+</ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="secfsdstools.f_standardize.base_rule_framework.AbstractRule.identifier"><code class="name">var <span class="ident">identifier</span> : str</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="secfsdstools.f_standardize.base_rule_framework.AbstractRule.apply"><code class="name flex">
+<span>def <span class="ident">apply</span></span>(<span>self, data_df: pandas.core.frame.DataFrame, mask: pandera.typing.pandas.Series[bool])</span>
+</code></dt>
+<dd>
+<div class="desc"><p>apply the rule on the provided dataframe. the rows, on which the rule has to be applied
+is defined by the provide mask Series.</p>
+<p>Important, the rules have to be applied "in-place", so now new dataframe is produced.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>data_df</code></strong></dt>
+<dd>dataframe on which the rule has to be applied</dd>
+<dt><strong><code>mask</code></strong></dt>
+<dd>a Series marking the rows in the dataframe on which the rule has to be applied</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@abstractmethod
+def apply(self, data_df: pd.DataFrame, mask: pa.typing.Series[bool]):
+    &#34;&#34;&#34;
+    apply the rule on the provided dataframe. the rows, on which the rule has to be applied
+    is defined by the provide mask Series.
+
+    Important, the rules have to be applied &#34;in-place&#34;, so now new dataframe is produced.
+
+    Args:
+        data_df: dataframe on which the rule has to be applied
+        mask: a Series marking the rows in the dataframe on which the rule has to be applied
+    &#34;&#34;&#34;</code></pre>
+</details>
+</dd>
+<dt id="secfsdstools.f_standardize.base_rule_framework.AbstractRule.collect_description"><code class="name flex">
+<span>def <span class="ident">collect_description</span></span>(<span>self, part: str) ‑> List[<a title="secfsdstools.f_standardize.base_rule_framework.DescriptionEntry" href="#secfsdstools.f_standardize.base_rule_framework.DescriptionEntry">DescriptionEntry</a>]</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Returns the description of this rule elements and its children as a list.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>part</code></strong> :&ensp;<code>str</code></dt>
+<dd>the part to which the element belongs to</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<p>List (DescriptionEntry)</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def collect_description(self, part: str) -&gt; List[DescriptionEntry]:
+    &#34;&#34;&#34;
+    Returns the description of this rule elements and its children as a list.
+
+    Args:
+        part (str): the part to which the element belongs to
+
+    Returns:
+        List (DescriptionEntry)
+    &#34;&#34;&#34;
+    return [DescriptionEntry(
+        part=part,
+        type=&#34;Rule&#34;,
+        ruleclass=self.__class__.__name__,
+        identifier=self.identifier,
+        description=self.get_description())]</code></pre>
+</details>
+</dd>
+<dt id="secfsdstools.f_standardize.base_rule_framework.AbstractRule.mask"><code class="name flex">
+<span>def <span class="ident">mask</span></span>(<span>self, data_df: pandas.core.frame.DataFrame) ‑> pandera.typing.pandas.Series[bool]</span>
+</code></dt>
+<dd>
+<div class="desc"><p>returns a Series[bool] which defines the rows to which this rule has to be applied.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>data_df</code></strong></dt>
+<dd>dataframe on which the rules should be applied</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>pa.typing.Series[bool]</code></dt>
+<dd>a boolean Series that marks which rows have to be calculated</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@abstractmethod
+def mask(self, data_df: pd.DataFrame) -&gt; pa.typing.Series[bool]:
+    &#34;&#34;&#34;
+        returns a Series[bool] which defines the rows to which this rule has to be applied.
+
+    Args:
+        data_df: dataframe on which the rules should be applied
+
+    Returns:
+        pa.typing.Series[bool]: a boolean Series that marks which rows have to be calculated
+    &#34;&#34;&#34;</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="secfsdstools.f_standardize.base_rule_framework.RuleEntity" href="#secfsdstools.f_standardize.base_rule_framework.RuleEntity">RuleEntity</a></b></code>:
+<ul class="hlist">
+<li><code><a title="secfsdstools.f_standardize.base_rule_framework.RuleEntity.get_description" href="#secfsdstools.f_standardize.base_rule_framework.RuleEntity.get_description">get_description</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.base_rule_framework.RuleEntity.get_input_tags" href="#secfsdstools.f_standardize.base_rule_framework.RuleEntity.get_input_tags">get_input_tags</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.base_rule_framework.RuleEntity.process" href="#secfsdstools.f_standardize.base_rule_framework.RuleEntity.process">process</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.base_rule_framework.RuleEntity.set_id" href="#secfsdstools.f_standardize.base_rule_framework.RuleEntity.set_id">set_id</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
 <dt id="secfsdstools.f_standardize.base_rule_framework.DescriptionEntry"><code class="flex name class">
 <span>class <span class="ident">DescriptionEntry</span></span>
 <span>(</span><span>part: str, type: str, ruleclass: str, identifier: str, description: str)</span>
@@ -333,17 +564,139 @@ process descrption table.</p></div>
 </dd>
 </dl>
 </dd>
-<dt id="secfsdstools.f_standardize.base_rule_framework.Rule"><code class="flex name class">
-<span>class <span class="ident">Rule</span></span>
+<dt id="secfsdstools.f_standardize.base_rule_framework.PrePivotRule"><code class="flex name class">
+<span>class <span class="ident">PrePivotRule</span></span>
+<span>(</span><span>rule_id: str)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Base class to define a single rule</p></div>
+<div class="desc"><p>Base class to define a single rule that is applied before the dataframe was pivoted</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class Rule(RuleEntity):
-    &#34;&#34;&#34;Base class to define a single rule&#34;&#34;&#34;
+<pre><code class="python">class PrePivotRule(AbstractRule):
+    &#34;&#34;&#34;Base class to define a single rule that is applied before the dataframe was pivoted&#34;&#34;&#34;
+
+    index_cols = [&#39;adsh&#39;, &#39;coreg&#39;, &#39;report&#39;, &#39;ddate&#39;, &#39;uom&#39;, &#39;qtrs&#39;, &#39;tag&#39;, &#39;version&#39;]
+
+
+    def __init__(self, rule_id: str):
+        self.rule_id = rule_id
+        self.log_df: pd.DataFrame = pd.DataFrame(columns=self.index_cols + [&#39;id&#39;])
+
+    def set_id(self, prefix: str):
+        &#34;&#34;&#34;
+        sets the identifier of this rule entity
+        Args:
+            prefix: the prefix from the parent in the rule-tree which has to be part of the id
+        &#34;&#34;&#34;
+        self.identifier = f&#39;{prefix}_{self.rule_id}&#39;
+
+    def process(self, data_df: pd.DataFrame, log_df: Optional[pd.DataFrame] = None):
+        &#34;&#34;&#34;
+        process the dataframe and apply the rule. If a log_df is provided, the rows on which
+        the rule is applied to is added to the log_df.
+
+        Args:
+            data_df (pd.DataFrame) : dataframe on which the rule has to be applied
+            log_df (pd.DataFrame, optional, None): the log dataframe
+        &#34;&#34;&#34;
+        mask = self.mask(data_df)
+
+        # since apply can also change the data_df, we have to create the log changes, before
+        # the rule is applied
+        self.log_df = data_df[mask][self.index_cols].copy()
+        self.log_df[&#39;id&#39;] = self.identifier
+
+        self.apply(data_df, mask)
+
+    def get_input_tags(self) -&gt; Set[str]:
+        return set()  # not relevant for PrePivotRules</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="secfsdstools.f_standardize.base_rule_framework.AbstractRule" href="#secfsdstools.f_standardize.base_rule_framework.AbstractRule">AbstractRule</a></li>
+<li><a title="secfsdstools.f_standardize.base_rule_framework.RuleEntity" href="#secfsdstools.f_standardize.base_rule_framework.RuleEntity">RuleEntity</a></li>
+<li>abc.ABC</li>
+</ul>
+<h3>Subclasses</h3>
+<ul class="hlist">
+<li><a title="secfsdstools.f_standardize.base_prepivot_rules.PrePivotDeduplicate" href="base_prepivot_rules.html#secfsdstools.f_standardize.base_prepivot_rules.PrePivotDeduplicate">PrePivotDeduplicate</a></li>
+</ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="secfsdstools.f_standardize.base_rule_framework.PrePivotRule.identifier"><code class="name">var <span class="ident">identifier</span> : str</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="secfsdstools.f_standardize.base_rule_framework.PrePivotRule.index_cols"><code class="name">var <span class="ident">index_cols</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="secfsdstools.f_standardize.base_rule_framework.PrePivotRule.process"><code class="name flex">
+<span>def <span class="ident">process</span></span>(<span>self, data_df: pandas.core.frame.DataFrame, log_df: Optional[pandas.core.frame.DataFrame] = None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>process the dataframe and apply the rule. If a log_df is provided, the rows on which
+the rule is applied to is added to the log_df.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt>data_df (pd.DataFrame) : dataframe on which the rule has to be applied</dt>
+<dt><strong><code>log_df</code></strong> :&ensp;<code>pd.DataFrame</code>, optional<code>, None</code></dt>
+<dd>the log dataframe</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def process(self, data_df: pd.DataFrame, log_df: Optional[pd.DataFrame] = None):
+    &#34;&#34;&#34;
+    process the dataframe and apply the rule. If a log_df is provided, the rows on which
+    the rule is applied to is added to the log_df.
+
+    Args:
+        data_df (pd.DataFrame) : dataframe on which the rule has to be applied
+        log_df (pd.DataFrame, optional, None): the log dataframe
+    &#34;&#34;&#34;
+    mask = self.mask(data_df)
+
+    # since apply can also change the data_df, we have to create the log changes, before
+    # the rule is applied
+    self.log_df = data_df[mask][self.index_cols].copy()
+    self.log_df[&#39;id&#39;] = self.identifier
+
+    self.apply(data_df, mask)</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="secfsdstools.f_standardize.base_rule_framework.AbstractRule" href="#secfsdstools.f_standardize.base_rule_framework.AbstractRule">AbstractRule</a></b></code>:
+<ul class="hlist">
+<li><code><a title="secfsdstools.f_standardize.base_rule_framework.AbstractRule.apply" href="#secfsdstools.f_standardize.base_rule_framework.AbstractRule.apply">apply</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.base_rule_framework.AbstractRule.collect_description" href="#secfsdstools.f_standardize.base_rule_framework.AbstractRule.collect_description">collect_description</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.base_rule_framework.AbstractRule.get_description" href="#secfsdstools.f_standardize.base_rule_framework.RuleEntity.get_description">get_description</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.base_rule_framework.AbstractRule.get_input_tags" href="#secfsdstools.f_standardize.base_rule_framework.RuleEntity.get_input_tags">get_input_tags</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.base_rule_framework.AbstractRule.mask" href="#secfsdstools.f_standardize.base_rule_framework.AbstractRule.mask">mask</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.base_rule_framework.AbstractRule.set_id" href="#secfsdstools.f_standardize.base_rule_framework.RuleEntity.set_id">set_id</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+<dt id="secfsdstools.f_standardize.base_rule_framework.Rule"><code class="flex name class">
+<span>class <span class="ident">Rule</span></span>
+</code></dt>
+<dd>
+<div class="desc"><p>Base class to define a single rule that is used after the dataframe was pivoted</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class Rule(AbstractRule):
+    &#34;&#34;&#34;Base class to define a single rule that is used after the dataframe was pivoted&#34;&#34;&#34;
 
     @abstractmethod
     def get_target_tags(self) -&gt; List[str]:
@@ -352,7 +705,6 @@ process descrption table.</p></div>
 
         Returns:
             List[str]: list with affected tags/columns
-
         &#34;&#34;&#34;
 
     def get_target_tags_str(self) -&gt; str:
@@ -362,31 +714,6 @@ process descrption table.</p></div>
             str: a string containing all target tags
         &#34;&#34;&#34;
         return &#34;/&#34;.join(self.get_target_tags())
-
-    @abstractmethod
-    def mask(self, data_df: pd.DataFrame) -&gt; pa.typing.Series[bool]:
-        &#34;&#34;&#34;
-            returns a Series[bool] which defines the rows to which this rule has to be applied.
-
-        Args:
-            data_df: dataframe on which the rules should be applied
-
-        Returns:
-            pa.typing.Series[bool]: a boolean Series that marks which rows have to be calculated
-        &#34;&#34;&#34;
-
-    @abstractmethod
-    def apply(self, data_df: pd.DataFrame, mask: pa.typing.Series[bool]):
-        &#34;&#34;&#34;
-        apply the rule on the provided dataframe. the rows, on which the rule has to be applied
-        is defined by the provide mask Series.
-
-        Important, the rules have to be applied &#34;in-place&#34;, so now new dataframe is produced.
-
-        Args:
-            data_df: dataframe on which the rule has to be applied
-            mask: a Series marking the rows in the dataframe on which the rule has to be applied
-        &#34;&#34;&#34;
 
     def set_id(self, prefix: str):
         &#34;&#34;&#34;
@@ -412,27 +739,11 @@ process descrption table.</p></div>
         # affected by the rule
         if (log_df is not None) and (len(log_df) == len(mask)):
             log_df[self.identifier] = False
-            log_df.loc[mask, self.identifier] = True
-
-    def collect_description(self, part: str) -&gt; List[DescriptionEntry]:
-        &#34;&#34;&#34;
-        Returns the description of this rule elements and its children as a list.
-
-        Args:
-            part (str): the part to which the element belongs to
-
-        Returns:
-            List (DescriptionEntry)
-        &#34;&#34;&#34;
-        return [DescriptionEntry(
-            part=part,
-            type=&#34;Rule&#34;,
-            ruleclass=self.__class__.__name__,
-            identifier=self.identifier,
-            description=self.get_description())]</code></pre>
+            log_df.loc[mask, self.identifier] = True</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
+<li><a title="secfsdstools.f_standardize.base_rule_framework.AbstractRule" href="#secfsdstools.f_standardize.base_rule_framework.AbstractRule">AbstractRule</a></li>
 <li><a title="secfsdstools.f_standardize.base_rule_framework.RuleEntity" href="#secfsdstools.f_standardize.base_rule_framework.RuleEntity">RuleEntity</a></li>
 <li>abc.ABC</li>
 </ul>
@@ -456,72 +767,6 @@ process descrption table.</p></div>
 </dl>
 <h3>Methods</h3>
 <dl>
-<dt id="secfsdstools.f_standardize.base_rule_framework.Rule.apply"><code class="name flex">
-<span>def <span class="ident">apply</span></span>(<span>self, data_df: pandas.core.frame.DataFrame, mask: pandera.typing.pandas.Series[bool])</span>
-</code></dt>
-<dd>
-<div class="desc"><p>apply the rule on the provided dataframe. the rows, on which the rule has to be applied
-is defined by the provide mask Series.</p>
-<p>Important, the rules have to be applied "in-place", so now new dataframe is produced.</p>
-<h2 id="args">Args</h2>
-<dl>
-<dt><strong><code>data_df</code></strong></dt>
-<dd>dataframe on which the rule has to be applied</dd>
-<dt><strong><code>mask</code></strong></dt>
-<dd>a Series marking the rows in the dataframe on which the rule has to be applied</dd>
-</dl></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">@abstractmethod
-def apply(self, data_df: pd.DataFrame, mask: pa.typing.Series[bool]):
-    &#34;&#34;&#34;
-    apply the rule on the provided dataframe. the rows, on which the rule has to be applied
-    is defined by the provide mask Series.
-
-    Important, the rules have to be applied &#34;in-place&#34;, so now new dataframe is produced.
-
-    Args:
-        data_df: dataframe on which the rule has to be applied
-        mask: a Series marking the rows in the dataframe on which the rule has to be applied
-    &#34;&#34;&#34;</code></pre>
-</details>
-</dd>
-<dt id="secfsdstools.f_standardize.base_rule_framework.Rule.collect_description"><code class="name flex">
-<span>def <span class="ident">collect_description</span></span>(<span>self, part: str) ‑> List[<a title="secfsdstools.f_standardize.base_rule_framework.DescriptionEntry" href="#secfsdstools.f_standardize.base_rule_framework.DescriptionEntry">DescriptionEntry</a>]</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Returns the description of this rule elements and its children as a list.</p>
-<h2 id="args">Args</h2>
-<dl>
-<dt><strong><code>part</code></strong> :&ensp;<code>str</code></dt>
-<dd>the part to which the element belongs to</dd>
-</dl>
-<h2 id="returns">Returns</h2>
-<p>List (DescriptionEntry)</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def collect_description(self, part: str) -&gt; List[DescriptionEntry]:
-    &#34;&#34;&#34;
-    Returns the description of this rule elements and its children as a list.
-
-    Args:
-        part (str): the part to which the element belongs to
-
-    Returns:
-        List (DescriptionEntry)
-    &#34;&#34;&#34;
-    return [DescriptionEntry(
-        part=part,
-        type=&#34;Rule&#34;,
-        ruleclass=self.__class__.__name__,
-        identifier=self.identifier,
-        description=self.get_description())]</code></pre>
-</details>
-</dd>
 <dt id="secfsdstools.f_standardize.base_rule_framework.Rule.get_target_tags"><code class="name flex">
 <span>def <span class="ident">get_target_tags</span></span>(<span>self) ‑> List[str]</span>
 </code></dt>
@@ -543,7 +788,6 @@ def get_target_tags(self) -&gt; List[str]:
 
     Returns:
         List[str]: list with affected tags/columns
-
     &#34;&#34;&#34;</code></pre>
 </details>
 </dd>
@@ -568,38 +812,6 @@ def get_target_tags(self) -&gt; List[str]:
         str: a string containing all target tags
     &#34;&#34;&#34;
     return &#34;/&#34;.join(self.get_target_tags())</code></pre>
-</details>
-</dd>
-<dt id="secfsdstools.f_standardize.base_rule_framework.Rule.mask"><code class="name flex">
-<span>def <span class="ident">mask</span></span>(<span>self, data_df: pandas.core.frame.DataFrame) ‑> pandera.typing.pandas.Series[bool]</span>
-</code></dt>
-<dd>
-<div class="desc"><p>returns a Series[bool] which defines the rows to which this rule has to be applied.</p>
-<h2 id="args">Args</h2>
-<dl>
-<dt><strong><code>data_df</code></strong></dt>
-<dd>dataframe on which the rules should be applied</dd>
-</dl>
-<h2 id="returns">Returns</h2>
-<dl>
-<dt><code>pa.typing.Series[bool]</code></dt>
-<dd>a boolean Series that marks which rows have to be calculated</dd>
-</dl></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">@abstractmethod
-def mask(self, data_df: pd.DataFrame) -&gt; pa.typing.Series[bool]:
-    &#34;&#34;&#34;
-        returns a Series[bool] which defines the rows to which this rule has to be applied.
-
-    Args:
-        data_df: dataframe on which the rules should be applied
-
-    Returns:
-        pa.typing.Series[bool]: a boolean Series that marks which rows have to be calculated
-    &#34;&#34;&#34;</code></pre>
 </details>
 </dd>
 <dt id="secfsdstools.f_standardize.base_rule_framework.Rule.process"><code class="name flex">
@@ -640,11 +852,14 @@ the rule is applied to is added to the log_df.</p>
 </dl>
 <h3>Inherited members</h3>
 <ul class="hlist">
-<li><code><b><a title="secfsdstools.f_standardize.base_rule_framework.RuleEntity" href="#secfsdstools.f_standardize.base_rule_framework.RuleEntity">RuleEntity</a></b></code>:
+<li><code><b><a title="secfsdstools.f_standardize.base_rule_framework.AbstractRule" href="#secfsdstools.f_standardize.base_rule_framework.AbstractRule">AbstractRule</a></b></code>:
 <ul class="hlist">
-<li><code><a title="secfsdstools.f_standardize.base_rule_framework.RuleEntity.get_description" href="#secfsdstools.f_standardize.base_rule_framework.RuleEntity.get_description">get_description</a></code></li>
-<li><code><a title="secfsdstools.f_standardize.base_rule_framework.RuleEntity.get_input_tags" href="#secfsdstools.f_standardize.base_rule_framework.RuleEntity.get_input_tags">get_input_tags</a></code></li>
-<li><code><a title="secfsdstools.f_standardize.base_rule_framework.RuleEntity.set_id" href="#secfsdstools.f_standardize.base_rule_framework.RuleEntity.set_id">set_id</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.base_rule_framework.AbstractRule.apply" href="#secfsdstools.f_standardize.base_rule_framework.AbstractRule.apply">apply</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.base_rule_framework.AbstractRule.collect_description" href="#secfsdstools.f_standardize.base_rule_framework.AbstractRule.collect_description">collect_description</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.base_rule_framework.AbstractRule.get_description" href="#secfsdstools.f_standardize.base_rule_framework.RuleEntity.get_description">get_description</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.base_rule_framework.AbstractRule.get_input_tags" href="#secfsdstools.f_standardize.base_rule_framework.RuleEntity.get_input_tags">get_input_tags</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.base_rule_framework.AbstractRule.mask" href="#secfsdstools.f_standardize.base_rule_framework.AbstractRule.mask">mask</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.base_rule_framework.AbstractRule.set_id" href="#secfsdstools.f_standardize.base_rule_framework.RuleEntity.set_id">set_id</a></code></li>
 </ul>
 </li>
 </ul>
@@ -717,7 +932,7 @@ the rule is applied to is added to the log_df.</p>
 </ul>
 <h3>Subclasses</h3>
 <ul class="hlist">
-<li><a title="secfsdstools.f_standardize.base_rule_framework.Rule" href="#secfsdstools.f_standardize.base_rule_framework.Rule">Rule</a></li>
+<li><a title="secfsdstools.f_standardize.base_rule_framework.AbstractRule" href="#secfsdstools.f_standardize.base_rule_framework.AbstractRule">AbstractRule</a></li>
 <li><a title="secfsdstools.f_standardize.base_rule_framework.RuleGroup" href="#secfsdstools.f_standardize.base_rule_framework.RuleGroup">RuleGroup</a></li>
 </ul>
 <h3>Class variables</h3>
@@ -1127,6 +1342,15 @@ If a log_df is provided, the rows on which the rule is applied to is added to th
 <li><h3><a href="#header-classes">Classes</a></h3>
 <ul>
 <li>
+<h4><code><a title="secfsdstools.f_standardize.base_rule_framework.AbstractRule" href="#secfsdstools.f_standardize.base_rule_framework.AbstractRule">AbstractRule</a></code></h4>
+<ul class="">
+<li><code><a title="secfsdstools.f_standardize.base_rule_framework.AbstractRule.apply" href="#secfsdstools.f_standardize.base_rule_framework.AbstractRule.apply">apply</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.base_rule_framework.AbstractRule.collect_description" href="#secfsdstools.f_standardize.base_rule_framework.AbstractRule.collect_description">collect_description</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.base_rule_framework.AbstractRule.identifier" href="#secfsdstools.f_standardize.base_rule_framework.AbstractRule.identifier">identifier</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.base_rule_framework.AbstractRule.mask" href="#secfsdstools.f_standardize.base_rule_framework.AbstractRule.mask">mask</a></code></li>
+</ul>
+</li>
+<li>
 <h4><code><a title="secfsdstools.f_standardize.base_rule_framework.DescriptionEntry" href="#secfsdstools.f_standardize.base_rule_framework.DescriptionEntry">DescriptionEntry</a></code></h4>
 <ul class="">
 <li><code><a title="secfsdstools.f_standardize.base_rule_framework.DescriptionEntry.description" href="#secfsdstools.f_standardize.base_rule_framework.DescriptionEntry.description">description</a></code></li>
@@ -1137,14 +1361,19 @@ If a log_df is provided, the rows on which the rule is applied to is added to th
 </ul>
 </li>
 <li>
+<h4><code><a title="secfsdstools.f_standardize.base_rule_framework.PrePivotRule" href="#secfsdstools.f_standardize.base_rule_framework.PrePivotRule">PrePivotRule</a></code></h4>
+<ul class="">
+<li><code><a title="secfsdstools.f_standardize.base_rule_framework.PrePivotRule.identifier" href="#secfsdstools.f_standardize.base_rule_framework.PrePivotRule.identifier">identifier</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.base_rule_framework.PrePivotRule.index_cols" href="#secfsdstools.f_standardize.base_rule_framework.PrePivotRule.index_cols">index_cols</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.base_rule_framework.PrePivotRule.process" href="#secfsdstools.f_standardize.base_rule_framework.PrePivotRule.process">process</a></code></li>
+</ul>
+</li>
+<li>
 <h4><code><a title="secfsdstools.f_standardize.base_rule_framework.Rule" href="#secfsdstools.f_standardize.base_rule_framework.Rule">Rule</a></code></h4>
-<ul class="two-column">
-<li><code><a title="secfsdstools.f_standardize.base_rule_framework.Rule.apply" href="#secfsdstools.f_standardize.base_rule_framework.Rule.apply">apply</a></code></li>
-<li><code><a title="secfsdstools.f_standardize.base_rule_framework.Rule.collect_description" href="#secfsdstools.f_standardize.base_rule_framework.Rule.collect_description">collect_description</a></code></li>
+<ul class="">
 <li><code><a title="secfsdstools.f_standardize.base_rule_framework.Rule.get_target_tags" href="#secfsdstools.f_standardize.base_rule_framework.Rule.get_target_tags">get_target_tags</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.base_rule_framework.Rule.get_target_tags_str" href="#secfsdstools.f_standardize.base_rule_framework.Rule.get_target_tags_str">get_target_tags_str</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.base_rule_framework.Rule.identifier" href="#secfsdstools.f_standardize.base_rule_framework.Rule.identifier">identifier</a></code></li>
-<li><code><a title="secfsdstools.f_standardize.base_rule_framework.Rule.mask" href="#secfsdstools.f_standardize.base_rule_framework.Rule.mask">mask</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.base_rule_framework.Rule.process" href="#secfsdstools.f_standardize.base_rule_framework.Rule.process">process</a></code></li>
 </ul>
 </li>

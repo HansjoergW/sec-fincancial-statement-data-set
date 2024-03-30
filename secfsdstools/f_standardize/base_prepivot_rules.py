@@ -1,6 +1,8 @@
 """
 Contains PrePivotRules Definitions.
 """
+from typing import List
+
 import pandas as pd
 import pandera as pa
 
@@ -56,16 +58,19 @@ class PrePivotDeduplicate(PrePivotRule):
 
 class PrePivotCorrectSign(PrePivotRule):
     """
-    Certain tags are expected to be either positive or negative when present.
-    (e.g. assets in the BS are always shown as a positive number).
+    Certain tags are expected to be either positive or negative when present, resp. should
+    in all reports be displayed the same way:
+    (e.g. Assets in the BS is always shown as a positive number)
 
-    However, sometimes these values are mixed up, also when the "negating" flag is taken into
-    consideration.
+    However, sometimes these values are mixed up, also when considering the "negating" flag.
+
+    E.g. CostOfGoodAndServices is displayed positive in 95% of the cases and
+     in 5% of the cases it is displayed "positive" but with the negating flag set.
 
     This rules ensures, that the provided tags have the expected sign.
     """
 
-    def __init__(self, rule_id:str, tag_list: List[str], is_positive: bool):
+    def __init__(self, tag_list: List[str], is_positive: bool):
         """
         ensure that the values of the tags in the tag_list are positive (if is_positive is true),
         or are negative (if is_positive is false).
@@ -74,7 +79,7 @@ class PrePivotCorrectSign(PrePivotRule):
             tag_list: list with the names of tag that have to be checked
             is_positive: flag that indicates whether positive or negative values are expected
         """
-        super().__init__(rule_id)
+        super().__init__("CorSign")
         self.tag_list = tag_list
         self.is_positive = is_positive
 
@@ -88,9 +93,7 @@ class PrePivotCorrectSign(PrePivotRule):
         Returns:
             pa.typing.Series[bool]: a boolean Series that marks which rows have to be calculated
         """
-        return (data_df[self.mixed_up_summand] ==
-                data_df[self.sum_tag] + data_df[self.other_summand]) \
-            & (data_df[self.other_summand] > 0)
+        return data_df.tag.isin(self.tag_list) & ((data_df.value < 0) == self.is_positive)
 
     def apply(self, data_df: pd.DataFrame, mask: pa.typing.Series[bool]):
         """
@@ -103,10 +106,7 @@ class PrePivotCorrectSign(PrePivotRule):
             df: dataframe on which the rule has to be applied
             mask: a Series marking the rows in the dataframe on which the rule has to be applied
         """
-
-        mixed_up_values = data_df[self.mixed_up_summand].copy()
-        data_df.loc[mask, self.mixed_up_summand] = data_df[self.sum_tag]
-        data_df.loc[mask, self.sum_tag] = mixed_up_values
+        data_df.loc[mask, 'value'] = data_df.value * -1
 
     def get_description(self) -> str:
         """

@@ -74,7 +74,7 @@ Todos:
   negating 1 / positive  3032
 
 - Generell muss jeder Tag geprüft und korrigiert werden, für welchen klar ist, ob
-  er einen positiven oder negativen Wert darstellt.
+  er einen positiven oder negativen Wert darstellt. Bzw. diese Tags müssen immer gleich behandelt werden
   auch im BS
 
 - CostOfRevenue

@@ -96,7 +96,6 @@ class StandardStatementPresenter(Presenter[JoinedDataBag]):
         )
 
         # some cleanup and ordering
-        #num_pre_pivot_df.rename_axis(None, axis=1, inplace=True)
         num_pre_pivot_df.sort_values([&#39;adsh&#39;, &#39;coreg&#39;, &#39;stmt&#39;, &#39;report&#39;, &#39;line&#39;, &#39;inpth&#39;],
                                      inplace=True)
 
@@ -105,7 +104,8 @@ class StandardStatementPresenter(Presenter[JoinedDataBag]):
         num_pre_pivot_df = num_pre_pivot_df[col_order]
 
         # the columns have a multi index (by qtrs and ddate) so we flatten the names of the columns
-        num_pre_pivot_df.columns = [f&#34;qrtrs {qtrs} / {ddate}&#34; for qtrs, ddate in num_pre_pivot_df.columns.values]
+        num_pre_pivot_df.columns = [f&#34;qrtrs_{qtrs}/{ddate}&#34;
+                                    for qtrs, ddate in num_pre_pivot_df.columns.values]
 
         if self.flatten_index:
             num_pre_pivot_df.reset_index(drop=False, inplace=True)
@@ -218,7 +218,6 @@ be negative.</dd>
         )
 
         # some cleanup and ordering
-        #num_pre_pivot_df.rename_axis(None, axis=1, inplace=True)
         num_pre_pivot_df.sort_values([&#39;adsh&#39;, &#39;coreg&#39;, &#39;stmt&#39;, &#39;report&#39;, &#39;line&#39;, &#39;inpth&#39;],
                                      inplace=True)
 
@@ -227,7 +226,8 @@ be negative.</dd>
         num_pre_pivot_df = num_pre_pivot_df[col_order]
 
         # the columns have a multi index (by qtrs and ddate) so we flatten the names of the columns
-        num_pre_pivot_df.columns = [f&#34;qrtrs {qtrs} / {ddate}&#34; for qtrs, ddate in num_pre_pivot_df.columns.values]
+        num_pre_pivot_df.columns = [f&#34;qrtrs_{qtrs}/{ddate}&#34;
+                                    for qtrs, ddate in num_pre_pivot_df.columns.values]
 
         if self.flatten_index:
             num_pre_pivot_df.reset_index(drop=False, inplace=True)
@@ -299,7 +299,6 @@ Cash Flow).
     )
 
     # some cleanup and ordering
-    #num_pre_pivot_df.rename_axis(None, axis=1, inplace=True)
     num_pre_pivot_df.sort_values([&#39;adsh&#39;, &#39;coreg&#39;, &#39;stmt&#39;, &#39;report&#39;, &#39;line&#39;, &#39;inpth&#39;],
                                  inplace=True)
 
@@ -308,7 +307,8 @@ Cash Flow).
     num_pre_pivot_df = num_pre_pivot_df[col_order]
 
     # the columns have a multi index (by qtrs and ddate) so we flatten the names of the columns
-    num_pre_pivot_df.columns = [f&#34;qrtrs {qtrs} / {ddate}&#34; for qtrs, ddate in num_pre_pivot_df.columns.values]
+    num_pre_pivot_df.columns = [f&#34;qrtrs_{qtrs}/{ddate}&#34;
+                                for qtrs, ddate in num_pre_pivot_df.columns.values]
 
     if self.flatten_index:
         num_pre_pivot_df.reset_index(drop=False, inplace=True)

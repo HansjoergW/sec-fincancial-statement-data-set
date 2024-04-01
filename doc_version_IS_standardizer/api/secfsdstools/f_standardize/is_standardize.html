@@ -30,6 +30,7 @@
 <pre><code class="python">&#34;&#34;&#34;Contains the definitions to standardize incaome statements.&#34;&#34;&#34;
 from typing import List
 
+from secfsdstools.f_standardize.base_prepivot_rules import PrePivotDeduplicate, PrePivotCorrectSign
 from secfsdstools.f_standardize.base_rule_framework import RuleGroup
 from secfsdstools.f_standardize.base_rules import CopyTagRule, SumUpRule
 from secfsdstools.f_standardize.base_validation_rules import ValidationRule
@@ -44,12 +45,36 @@ class IncomeStatementStandardizer(Standardizer):
     At the end, the standardized IS contains the following columns
 
     Position    Relation
-    Revenues / SalesRevenueNet
-      RevenueFromContractWithCustomerExcludingAssessedTax
-      OtherSalesRevenueNet
 
+    Revenues
+           + SalesRevenueGoodsNet
+           + SalesRevenueServicesNet
+           + OtherSalesRevenueNet
+           --------------
+        or SalesRevenueNet
 
-    Cost of Goods and Services Sold
+        or RevenuesSum
+              RevenueFromContractWithCustomerExcludingAssessedTax
+              RevenueFromContractWithCustomerIncludingAssessedTax
+              RevenuesExcludingInterestAndDividends
+              RegulatedAndUnregulatedOperatingRevenue
+              ...
+
+        or InterestAndDividendIncomeOperating
+        --------
+        Revenues
+        ========
+
+    CostOfRevenue
+          &#39;CostOfGoodsSold&#39;,
+        + &#39;CostOfServices&#39;
+        ---------------
+          &#39;CostOfGoodsAndServicesSold&#39;,
+        + &#39;LicenseCost&#39;,
+        ----------------
+          &#39;CostOfRevenue&#39;,
+        ================
+
 
     Gross Profit                        Revenues - Cost of Goods and Services Sold
     Operating Expenses
@@ -62,20 +87,26 @@ class IncomeStatementStandardizer(Standardizer):
 
     Net Income (Loss)               Income Before Tax - Income Tax Expense
     &#34;&#34;&#34;
-
-    is_basic_sumup_rg = RuleGroup(
-        prefix=&#34;&#34;,
-        rules=[]
+    prepivot_rule_tree = RuleGroup(
+        prefix=&#34;IS_PREPIV&#34;,
+        rules=[PrePivotDeduplicate(),
+               PrePivotCorrectSign(
+                   tag_list=[&#39;CostOfGoodsSold&#39;, &#39;CostOfServices&#39;,
+                             &#39;CostOfGoodsAndServicesSold&#39;, &#39;LicenseCost&#39;,
+                             &#39;CostOfRevenue&#39;],
+                   is_positive=True
+               )]
     )
 
-    #     Problem: OtherSalesRevenueNet kann mit SalesREvneues.. auftauchen
-    #      aber auch mit RevenueFromContractWithCustomerExcludingAssessedTax
-    #      Other dürfte nicht alleine summiert werden
-    #
-    #     in der sumup rule müsste eine zweite Liste vorhanden sein, can be present :)
-    #
-    #     OtherSalesRevenue darf nur addiert werden, wenn SalesRevenueGoods/Service vorhanden sind
-    # oder mit RevenueFromContractWithCustomerExcludingAssessedTax
+    is_cogs_sumup_rg = RuleGroup(
+        prefix=&#34;IS_COGSUMUP&#34;,
+        rules=[
+            SumUpRule(sum_tag=&#39;CostOfGoodsAndServicesSold&#39;,
+                      potential_summands=[&#39;CostOfGoodsSold&#39;, &#39;CostOfServices&#39;]),
+            SumUpRule(sum_tag=&#39;CostOfRevenue&#39;,
+                      potential_summands=[&#39;CostOfGoodsAndServicesSold&#39;, &#39;LicenseCost&#39;])
+        ]
+    )
 
     is_revenue_rg = RuleGroup(
         prefix=&#34;Rev&#34;,
@@ -115,9 +146,7 @@ class IncomeStatementStandardizer(Standardizer):
                           &#39;UnregulatedOperatingRevenue&#39;, &#39;ElectricUtilityRevenue&#39;, &#39;CargoAndFreightRevenue&#39;, &#39;OtherHotelOperatingRevenue&#39;,
                           &#39;CasinoRevenue&#39;, &#39;RefiningAndMarketingRevenue&#39;, &#39;PrincipalTransactionsRevenue&#39;, &#39;InterestRevenueExpenseNet&#39;,
                           &#39;HomeBuildingRevenue&#39;, &#39;OtherRevenueExpenseFromRealEstateOperations&#39;, &#39;GasDomesticRegulatedRevenue&#39;, &#39;LicenseAndMaintenanceRevenue&#39;,
-                          &#39;RegulatedOperatingRevenue&#39;, &#39;AdmissionsRevenue&#39;,&#39;PassengerRevenue&#39;,
-                           # specials
-                          &#39;IncomeLossFromContinuingOperations&#39;
+                          &#39;RegulatedOperatingRevenue&#39;, &#39;AdmissionsRevenue&#39;,&#39;PassengerRevenue&#39;
                       ],
                       optional_summands=[
                           &#39;OtherSalesRevenueNet&#39;
@@ -146,8 +175,7 @@ class IncomeStatementStandardizer(Standardizer):
 
     # these are the columns that finally are returned after the standardization
     final_tags: List[str] = [&#39;Revenues&#39;,
-                             &#39;RevenuesSum&#39;,
-                             &#39;CostOfGoodsAndServicesSold&#39;,
+                             &#39;CostOfRevenue&#39;,
                              &#39;GrossProfit&#39;,
                              &#39;OperatingIncomeLoss&#39;,
                              &#39;IncomeLossBeforeIncomeTaxExpenseBenefit&#39;,
@@ -181,6 +209,7 @@ class IncomeStatementStandardizer(Standardizer):
 
     def __init__(self, filter_for_main_statement: bool = True, iterations: int = 3):
         super().__init__(
+            prepivot_rule_tree=self.prepivot_rule_tree,
             pre_rule_tree=self.preprocess_rule_tree,
             main_rule_tree=self.main_rule_tree,
             post_rule_tree=self.post_rule_tree,
@@ -209,11 +238,34 @@ class IncomeStatementStandardizer(Standardizer):
 meaning that they have the same tags.</p>
 <p>At the end, the standardized IS contains the following columns</p>
 <p>Position
-Relation
-Revenues / SalesRevenueNet
-RevenueFromContractWithCustomerExcludingAssessedTax
-OtherSalesRevenueNet</p>
-<p>Cost of Goods and Services Sold</p>
+Relation</p>
+<p>Revenues
++ SalesRevenueGoodsNet
++ SalesRevenueServicesNet
++ OtherSalesRevenueNet
+--------------
+or SalesRevenueNet</p>
+<pre><code>or RevenuesSum
+      RevenueFromContractWithCustomerExcludingAssessedTax
+      RevenueFromContractWithCustomerIncludingAssessedTax
+      RevenuesExcludingInterestAndDividends
+      RegulatedAndUnregulatedOperatingRevenue
+      ...
+
+or InterestAndDividendIncomeOperating
+--------
+Revenues
+========
+</code></pre>
+<p>CostOfRevenue
+'CostOfGoodsSold',
++ 'CostOfServices'
+---------------
+'CostOfGoodsAndServicesSold',
++ 'LicenseCost',
+----------------
+'CostOfRevenue',
+================</p>
 <p>Gross Profit
 Revenues - Cost of Goods and Services Sold
 Operating Expenses</p>
@@ -275,12 +327,36 @@ as negated.</dd>
     At the end, the standardized IS contains the following columns
 
     Position    Relation
-    Revenues / SalesRevenueNet
-      RevenueFromContractWithCustomerExcludingAssessedTax
-      OtherSalesRevenueNet
 
+    Revenues
+           + SalesRevenueGoodsNet
+           + SalesRevenueServicesNet
+           + OtherSalesRevenueNet
+           --------------
+        or SalesRevenueNet
 
-    Cost of Goods and Services Sold
+        or RevenuesSum
+              RevenueFromContractWithCustomerExcludingAssessedTax
+              RevenueFromContractWithCustomerIncludingAssessedTax
+              RevenuesExcludingInterestAndDividends
+              RegulatedAndUnregulatedOperatingRevenue
+              ...
+
+        or InterestAndDividendIncomeOperating
+        --------
+        Revenues
+        ========
+
+    CostOfRevenue
+          &#39;CostOfGoodsSold&#39;,
+        + &#39;CostOfServices&#39;
+        ---------------
+          &#39;CostOfGoodsAndServicesSold&#39;,
+        + &#39;LicenseCost&#39;,
+        ----------------
+          &#39;CostOfRevenue&#39;,
+        ================
+
 
     Gross Profit                        Revenues - Cost of Goods and Services Sold
     Operating Expenses
@@ -293,20 +369,26 @@ as negated.</dd>
 
     Net Income (Loss)               Income Before Tax - Income Tax Expense
     &#34;&#34;&#34;
-
-    is_basic_sumup_rg = RuleGroup(
-        prefix=&#34;&#34;,
-        rules=[]
+    prepivot_rule_tree = RuleGroup(
+        prefix=&#34;IS_PREPIV&#34;,
+        rules=[PrePivotDeduplicate(),
+               PrePivotCorrectSign(
+                   tag_list=[&#39;CostOfGoodsSold&#39;, &#39;CostOfServices&#39;,
+                             &#39;CostOfGoodsAndServicesSold&#39;, &#39;LicenseCost&#39;,
+                             &#39;CostOfRevenue&#39;],
+                   is_positive=True
+               )]
     )
 
-    #     Problem: OtherSalesRevenueNet kann mit SalesREvneues.. auftauchen
-    #      aber auch mit RevenueFromContractWithCustomerExcludingAssessedTax
-    #      Other dürfte nicht alleine summiert werden
-    #
-    #     in der sumup rule müsste eine zweite Liste vorhanden sein, can be present :)
-    #
-    #     OtherSalesRevenue darf nur addiert werden, wenn SalesRevenueGoods/Service vorhanden sind
-    # oder mit RevenueFromContractWithCustomerExcludingAssessedTax
+    is_cogs_sumup_rg = RuleGroup(
+        prefix=&#34;IS_COGSUMUP&#34;,
+        rules=[
+            SumUpRule(sum_tag=&#39;CostOfGoodsAndServicesSold&#39;,
+                      potential_summands=[&#39;CostOfGoodsSold&#39;, &#39;CostOfServices&#39;]),
+            SumUpRule(sum_tag=&#39;CostOfRevenue&#39;,
+                      potential_summands=[&#39;CostOfGoodsAndServicesSold&#39;, &#39;LicenseCost&#39;])
+        ]
+    )
 
     is_revenue_rg = RuleGroup(
         prefix=&#34;Rev&#34;,
@@ -346,9 +428,7 @@ as negated.</dd>
                           &#39;UnregulatedOperatingRevenue&#39;, &#39;ElectricUtilityRevenue&#39;, &#39;CargoAndFreightRevenue&#39;, &#39;OtherHotelOperatingRevenue&#39;,
                           &#39;CasinoRevenue&#39;, &#39;RefiningAndMarketingRevenue&#39;, &#39;PrincipalTransactionsRevenue&#39;, &#39;InterestRevenueExpenseNet&#39;,
                           &#39;HomeBuildingRevenue&#39;, &#39;OtherRevenueExpenseFromRealEstateOperations&#39;, &#39;GasDomesticRegulatedRevenue&#39;, &#39;LicenseAndMaintenanceRevenue&#39;,
-                          &#39;RegulatedOperatingRevenue&#39;, &#39;AdmissionsRevenue&#39;,&#39;PassengerRevenue&#39;,
-                           # specials
-                          &#39;IncomeLossFromContinuingOperations&#39;
+                          &#39;RegulatedOperatingRevenue&#39;, &#39;AdmissionsRevenue&#39;,&#39;PassengerRevenue&#39;
                       ],
                       optional_summands=[
                           &#39;OtherSalesRevenueNet&#39;
@@ -377,8 +457,7 @@ as negated.</dd>
 
     # these are the columns that finally are returned after the standardization
     final_tags: List[str] = [&#39;Revenues&#39;,
-                             &#39;RevenuesSum&#39;,
-                             &#39;CostOfGoodsAndServicesSold&#39;,
+                             &#39;CostOfRevenue&#39;,
                              &#39;GrossProfit&#39;,
                              &#39;OperatingIncomeLoss&#39;,
                              &#39;IncomeLossBeforeIncomeTaxExpenseBenefit&#39;,
@@ -412,6 +491,7 @@ as negated.</dd>
 
     def __init__(self, filter_for_main_statement: bool = True, iterations: int = 3):
         super().__init__(
+            prepivot_rule_tree=self.prepivot_rule_tree,
             pre_rule_tree=self.preprocess_rule_tree,
             main_rule_tree=self.main_rule_tree,
             post_rule_tree=self.post_rule_tree,
@@ -433,7 +513,7 @@ as negated.</dd>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="secfsdstools.f_standardize.is_standardize.IncomeStatementStandardizer.is_basic_sumup_rg"><code class="name">var <span class="ident">is_basic_sumup_rg</span></code></dt>
+<dt id="secfsdstools.f_standardize.is_standardize.IncomeStatementStandardizer.is_cogs_sumup_rg"><code class="name">var <span class="ident">is_cogs_sumup_rg</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -450,6 +530,10 @@ as negated.</dd>
 <div class="desc"></div>
 </dd>
 <dt id="secfsdstools.f_standardize.is_standardize.IncomeStatementStandardizer.post_rule_tree"><code class="name">var <span class="ident">post_rule_tree</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="secfsdstools.f_standardize.is_standardize.IncomeStatementStandardizer.prepivot_rule_tree"><code class="name">var <span class="ident">prepivot_rule_tree</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -494,11 +578,12 @@ as negated.</dd>
 <h4><code><a title="secfsdstools.f_standardize.is_standardize.IncomeStatementStandardizer" href="#secfsdstools.f_standardize.is_standardize.IncomeStatementStandardizer">IncomeStatementStandardizer</a></code></h4>
 <ul class="">
 <li><code><a title="secfsdstools.f_standardize.is_standardize.IncomeStatementStandardizer.final_tags" href="#secfsdstools.f_standardize.is_standardize.IncomeStatementStandardizer.final_tags">final_tags</a></code></li>
-<li><code><a title="secfsdstools.f_standardize.is_standardize.IncomeStatementStandardizer.is_basic_sumup_rg" href="#secfsdstools.f_standardize.is_standardize.IncomeStatementStandardizer.is_basic_sumup_rg">is_basic_sumup_rg</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.is_standardize.IncomeStatementStandardizer.is_cogs_sumup_rg" href="#secfsdstools.f_standardize.is_standardize.IncomeStatementStandardizer.is_cogs_sumup_rg">is_cogs_sumup_rg</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.is_standardize.IncomeStatementStandardizer.is_revenue_rg" href="#secfsdstools.f_standardize.is_standardize.IncomeStatementStandardizer.is_revenue_rg">is_revenue_rg</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.is_standardize.IncomeStatementStandardizer.main_rule_tree" href="#secfsdstools.f_standardize.is_standardize.IncomeStatementStandardizer.main_rule_tree">main_rule_tree</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.is_standardize.IncomeStatementStandardizer.main_statement_tags" href="#secfsdstools.f_standardize.is_standardize.IncomeStatementStandardizer.main_statement_tags">main_statement_tags</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.is_standardize.IncomeStatementStandardizer.post_rule_tree" href="#secfsdstools.f_standardize.is_standardize.IncomeStatementStandardizer.post_rule_tree">post_rule_tree</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.is_standardize.IncomeStatementStandardizer.prepivot_rule_tree" href="#secfsdstools.f_standardize.is_standardize.IncomeStatementStandardizer.prepivot_rule_tree">prepivot_rule_tree</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.is_standardize.IncomeStatementStandardizer.preprocess_rule_tree" href="#secfsdstools.f_standardize.is_standardize.IncomeStatementStandardizer.preprocess_rule_tree">preprocess_rule_tree</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.is_standardize.IncomeStatementStandardizer.validation_rules" href="#secfsdstools.f_standardize.is_standardize.IncomeStatementStandardizer.validation_rules">validation_rules</a></code></li>
 </ul>

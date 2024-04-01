@@ -5,7 +5,7 @@ import pandas as pd
 
 from secfsdstools.d_container.databagmodel import JoinedDataBag
 from secfsdstools.e_collector.companycollecting import CompanyReportCollector
-from secfsdstools.e_filter.joinedfiltering import FilterBase
+from secfsdstools.e_filter.joinedfiltering import FilterBase, AdshJoinedFilter
 from secfsdstools.e_filter.rawfiltering import ReportPeriodRawFilter, MainCoregRawFilter, \
     OfficialTagsOnlyRawFilter, USDOnlyRawFilter
 from secfsdstools.f_standardize.is_standardize import IncomeStatementStandardizer
@@ -104,21 +104,23 @@ if __name__ == '__main__':
     # prepare_all_data_set()
 
     is_joined_bag: JoinedDataBag = load_joined_IS_set()
-    print(check_signed_values(is_joined_bag, tag_list=['LicenseCost',
-                                                 'CostOfRevenue',
-                                                 'CostOfGoodsAndServicesSold',
-                                                 'CostOfGoodsSold',
-                                                 'CostOfServices']))
+    # print(check_signed_values(is_joined_bag, tag_list=['LicenseCost',
+    #                                              'CostOfRevenue',
+    #                                              'CostOfGoodsAndServicesSold',
+    #                                              'CostOfGoodsSold',
+    #                                              'CostOfServices']))
+
+    # is_joined_bag = is_joined_bag.filter(AdshJoinedFilter(adshs=['0001193125-16-481920']))
 
     #is_joined_bag = load_smaller_sample_IS_set()
-
-    print(find_entries_with_all_tags(bag=is_joined_bag,
-                               tag_list=[
-                                'LicenseCost',
-                               'CostOfRevenue',
-                              'CostOfGoodsAndServicesSold',
-                              'CostOfGoodsSold',
-                              'CostOfServices']))
+    #
+    # print(find_entries_with_all_tags(bag=is_joined_bag,
+    #                            tag_list=[
+    #                             'LicenseCost',
+    #                            'CostOfRevenue',
+    #                           'CostOfGoodsAndServicesSold',
+    #                           'CostOfGoodsSold',
+    #                           'CostOfServices']))
     # print(filter_tags(is_joined_bag.pre_num_df, tag_like="SalesRevenue"))
     #
     # # check the loaded data

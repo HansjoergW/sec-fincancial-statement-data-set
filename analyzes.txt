@@ -3,6 +3,7 @@ IS
 main positions to calculate:
 
 Revenues (Umsatzerlöse): us-gaap:Revenues
+    Revenue kann negativ sein
 
 Cost of Goods Sold (Kosten der verkauften Waren): us-gaap:CostOfGoodsAndServicesSold
 
@@ -66,31 +67,33 @@ NetIncomeLoss -> netincome loss
 
 
 Todos:
-- CostOfGoodAndServices Solds -> Es gibt sowohl positive, wie auch negative Beträge,
-  was keinen Sinn macht.
-  negating 0 / negativ    107
-  negating 0 / positiv  53867 -> absolute
-  negating 1 / negative    27
-  negating 1 / positive  3032
+- es gibt diverse negative Revenue values
 
 - Generell muss jeder Tag geprüft und korrigiert werden, für welchen klar ist, ob
   er einen positiven oder negativen Wert darstellt. Bzw. diese Tags müssen immer gleich behandelt werden
   auch im BS
 
-- CostOfRevenue
-  example with all Tags: '0000950123-10-074310', '0000950123-10-102399', '0000950123-11-020527', '0000950123-11-047538', '0000950123-11-074507',
-
-     'CostOfGoodsSold',
-   + 'CostOfServices'
-   ---------------
-     'CostOfGoodsAndServicesSold',
-   + 'LicenseCost',
-   ----------------
-     'CostOfRevenue',
-   ================
 
 - das CI müsste man eigentlich auch beachten.
 
+
+     + SalesRevenueGoodsNet
+     + SalesRevenueServicesNet
+     + OtherSalesRevenueNet
+     --------------
+  or SalesRevenueNet
+
+  or RevenuesSum
+        RevenueFromContractWithCustomerExcludingAssessedTax
+        RevenueFromContractWithCustomerIncludingAssessedTax
+        RevenuesExcludingInterestAndDividends
+        RegulatedAndUnregulatedOperatingRevenue
+        ...
+
+  or InterestAndDividendIncomeOperating
+  --------
+  Revenues
+  ========
 
 Sonstiges
 ---------

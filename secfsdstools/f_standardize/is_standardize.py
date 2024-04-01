@@ -1,6 +1,7 @@
 """Contains the definitions to standardize incaome statements."""
 from typing import List
 
+from secfsdstools.f_standardize.base_prepivot_rules import PrePivotDeduplicate, PrePivotCorrectSign
 from secfsdstools.f_standardize.base_rule_framework import RuleGroup
 from secfsdstools.f_standardize.base_rules import CopyTagRule, SumUpRule
 from secfsdstools.f_standardize.base_validation_rules import ValidationRule
@@ -15,12 +16,36 @@ class IncomeStatementStandardizer(Standardizer):
     At the end, the standardized IS contains the following columns
 
     Position	Relation
-    Revenues / SalesRevenueNet
-      RevenueFromContractWithCustomerExcludingAssessedTax
-      OtherSalesRevenueNet
 
+    Revenues
+           + SalesRevenueGoodsNet
+           + SalesRevenueServicesNet
+           + OtherSalesRevenueNet
+           --------------
+        or SalesRevenueNet
 
-    Cost of Goods and Services Sold
+        or RevenuesSum
+              RevenueFromContractWithCustomerExcludingAssessedTax
+              RevenueFromContractWithCustomerIncludingAssessedTax
+              RevenuesExcludingInterestAndDividends
+              RegulatedAndUnregulatedOperatingRevenue
+              ...
+
+        or InterestAndDividendIncomeOperating
+        --------
+        Revenues
+        ========
+
+    CostOfRevenue
+          'CostOfGoodsSold',
+        + 'CostOfServices'
+        ---------------
+          'CostOfGoodsAndServicesSold',
+        + 'LicenseCost',
+        ----------------
+          'CostOfRevenue',
+        ================
+
 
     Gross Profit	                Revenues - Cost of Goods and Services Sold
     Operating Expenses
@@ -33,20 +58,26 @@ class IncomeStatementStandardizer(Standardizer):
 
     Net Income (Loss)               Income Before Tax - Income Tax Expense
     """
-
-    is_basic_sumup_rg = RuleGroup(
-        prefix="",
-        rules=[]
+    prepivot_rule_tree = RuleGroup(
+        prefix="IS_PREPIV",
+        rules=[PrePivotDeduplicate(),
+               PrePivotCorrectSign(
+                   tag_list=['CostOfGoodsSold', 'CostOfServices',
+                             'CostOfGoodsAndServicesSold', 'LicenseCost',
+                             'CostOfRevenue'],
+                   is_positive=True
+               )]
     )
 
-    #     Problem: OtherSalesRevenueNet kann mit SalesREvneues.. auftauchen
-    #      aber auch mit RevenueFromContractWithCustomerExcludingAssessedTax
-    #      Other dürfte nicht alleine summiert werden
-    #
-    #     in der sumup rule müsste eine zweite Liste vorhanden sein, can be present :)
-    #
-    #     OtherSalesRevenue darf nur addiert werden, wenn SalesRevenueGoods/Service vorhanden sind
-    # oder mit RevenueFromContractWithCustomerExcludingAssessedTax
+    is_cogs_sumup_rg = RuleGroup(
+        prefix="IS_COGSUMUP",
+        rules=[
+            SumUpRule(sum_tag='CostOfGoodsAndServicesSold',
+                      potential_summands=['CostOfGoodsSold', 'CostOfServices']),
+            SumUpRule(sum_tag='CostOfRevenue',
+                      potential_summands=['CostOfGoodsAndServicesSold', 'LicenseCost'])
+        ]
+    )
 
     is_revenue_rg = RuleGroup(
         prefix="Rev",
@@ -86,9 +117,7 @@ class IncomeStatementStandardizer(Standardizer):
                           'UnregulatedOperatingRevenue', 'ElectricUtilityRevenue', 'CargoAndFreightRevenue', 'OtherHotelOperatingRevenue',
                           'CasinoRevenue', 'RefiningAndMarketingRevenue', 'PrincipalTransactionsRevenue', 'InterestRevenueExpenseNet',
                           'HomeBuildingRevenue', 'OtherRevenueExpenseFromRealEstateOperations', 'GasDomesticRegulatedRevenue', 'LicenseAndMaintenanceRevenue',
-                          'RegulatedOperatingRevenue', 'AdmissionsRevenue','PassengerRevenue',
-                           # specials
-                          'IncomeLossFromContinuingOperations'
+                          'RegulatedOperatingRevenue', 'AdmissionsRevenue','PassengerRevenue'
                       ],
                       optional_summands=[
                           'OtherSalesRevenueNet'
@@ -117,8 +146,7 @@ class IncomeStatementStandardizer(Standardizer):
 
     # these are the columns that finally are returned after the standardization
     final_tags: List[str] = ['Revenues',
-                             'RevenuesSum',
-                             'CostOfGoodsAndServicesSold',
+                             'CostOfRevenue',
                              'GrossProfit',
                              'OperatingIncomeLoss',
                              'IncomeLossBeforeIncomeTaxExpenseBenefit',
@@ -152,6 +180,7 @@ class IncomeStatementStandardizer(Standardizer):
 
     def __init__(self, filter_for_main_statement: bool = True, iterations: int = 3):
         super().__init__(
+            prepivot_rule_tree=self.prepivot_rule_tree,
             pre_rule_tree=self.preprocess_rule_tree,
             main_rule_tree=self.main_rule_tree,
             post_rule_tree=self.post_rule_tree,

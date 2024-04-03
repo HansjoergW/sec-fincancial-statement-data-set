@@ -90,10 +90,18 @@ class IncomeStatementStandardizer(Standardizer):
                           'OtherSalesRevenueNet'
                       ]),
             CopyTagRule(original='SalesRevenueNet', target='Revenues'),
+            SubtractFromRule(subtract_from_tag='RevenueFromContractWithCustomerIncludingAssessedTax',
+                             subtract_tags=['ExciseAndSalesTaxes'],
+                     target_tag='RevenueFromContractWithCustomerExcludingAssessedTax'),
+
+            CopyTagRule(original='RevenueFromContractWithCustomerExcludingAssessedTax',
+                        target='Revenues'),
+            CopyTagRule(original='RevenueFromContractWithCustomerIncludingAssessedTax',
+                        target='Revenues'),
+
+
             SumUpRule(sum_tag='RevenuesSum',
                       potential_summands=[
-                          'RevenueFromContractWithCustomerExcludingAssessedTax',
-                          'RevenueFromContractWithCustomerIncludingAssessedTax',
                           'RevenuesExcludingInterestAndDividends',
                           'RegulatedAndUnregulatedOperatingRevenue',
                           'HealthCareOrganizationPatientServiceRevenue',
@@ -107,17 +115,30 @@ class IncomeStatementStandardizer(Standardizer):
                           'InterestAndDividendIncomeOperating',
                           'InterestIncomeExpenseNet',
                           'NoninterestIncome',
-                          'OtherSalesRevenueNet', 'OperatingLeasesIncomeStatementLeaseRevenue', 'LicensesRevenue', 'RevenueFromRelatedParties',
-                          'BrokerageCommissionsRevenue', 'RoyaltyRevenue', 'OilAndGasSalesRevenue', 'OilAndGasRevenue', 'OtherRealEstateRevenue',
-                          'TechnologyServicesRevenue', 'ManagementFeesRevenue', 'ReimbursementRevenue', 'OperatingLeasesIncomeStatementMinimumLeaseRevenue',
-                          'FoodAndBeverageRevenue', 'MaintenanceRevenue', 'LicenseAndServicesRevenue', 'FranchiseRevenue', 'SubscriptionRevenue', 'FinancialServicesRevenue',
-                          'RevenueFromGrants', 'GasGatheringTransportationMarketingAndProcessingRevenue', 'OccupancyRevenue', 'NaturalGasProductionRevenue',
-                          'SalesRevenueServicesGross', 'InvestmentBankingRevenue', 'AdvertisingRevenue', 'RevenueOtherFinancialServices',
-                          'OilAndCondensateRevenue', 'RevenueFromLeasedAndOwnedHotels', 'RevenuesNetOfInterestExpense', 'RegulatedAndUnregulatedOperatingRevenue',
-                          'UnregulatedOperatingRevenue', 'ElectricUtilityRevenue', 'CargoAndFreightRevenue', 'OtherHotelOperatingRevenue',
-                          'CasinoRevenue', 'RefiningAndMarketingRevenue', 'PrincipalTransactionsRevenue', 'InterestRevenueExpenseNet',
-                          'HomeBuildingRevenue', 'OtherRevenueExpenseFromRealEstateOperations', 'GasDomesticRegulatedRevenue', 'LicenseAndMaintenanceRevenue',
-                          'RegulatedOperatingRevenue', 'AdmissionsRevenue','PassengerRevenue'
+                          'OtherSalesRevenueNet', 'OperatingLeasesIncomeStatementLeaseRevenue',
+                          'LicensesRevenue', 'RevenueFromRelatedParties',
+                          'BrokerageCommissionsRevenue', 'RoyaltyRevenue', 'OilAndGasSalesRevenue',
+                          'OilAndGasRevenue', 'OtherRealEstateRevenue',
+                          'TechnologyServicesRevenue', 'ManagementFeesRevenue',
+                          'ReimbursementRevenue',
+                          'OperatingLeasesIncomeStatementMinimumLeaseRevenue',
+                          'FoodAndBeverageRevenue', 'MaintenanceRevenue',
+                          'LicenseAndServicesRevenue', 'FranchiseRevenue', 'SubscriptionRevenue',
+                          'FinancialServicesRevenue',
+                          'RevenueFromGrants',
+                          'GasGatheringTransportationMarketingAndProcessingRevenue',
+                          'OccupancyRevenue', 'NaturalGasProductionRevenue',
+                          'SalesRevenueServicesGross', 'InvestmentBankingRevenue',
+                          'AdvertisingRevenue', 'RevenueOtherFinancialServices',
+                          'OilAndCondensateRevenue', 'RevenueFromLeasedAndOwnedHotels',
+                          'RevenuesNetOfInterestExpense', 'RegulatedAndUnregulatedOperatingRevenue',
+                          'UnregulatedOperatingRevenue', 'ElectricUtilityRevenue',
+                          'CargoAndFreightRevenue', 'OtherHotelOperatingRevenue',
+                          'CasinoRevenue', 'RefiningAndMarketingRevenue',
+                          'PrincipalTransactionsRevenue', 'InterestRevenueExpenseNet',
+                          'HomeBuildingRevenue', 'OtherRevenueExpenseFromRealEstateOperations',
+                          'GasDomesticRegulatedRevenue', 'LicenseAndMaintenanceRevenue',
+                          'RegulatedOperatingRevenue', 'AdmissionsRevenue', 'PassengerRevenue'
                       ],
                       optional_summands=[
                           'OtherSalesRevenueNet'
@@ -128,9 +149,22 @@ class IncomeStatementStandardizer(Standardizer):
         ]
     )
 
+    is_netincome_rg = RuleGroup(
+        prefix="netincome",
+        rules=[
+            CopyTagRule(original='NetIncomeLossAvailableToCommonStockholdersBasic', target='NetIncomeLoss'),
+            CopyTagRule(original='NetIncomeLossAllocatedToLimitedPartners', target='NetIncomeLoss'),
+            CopyTagRule(original='ProfitLoss', target='NetIncomeLoss'),
+            CopyTagRule(original='OtherComprehensiveIncomeLossNetOfTax', target='NetIncomeLoss'),
+            CopyTagRule(original='ComprehensiveIncomeNetOfTax', target='NetIncomeLoss'),
+            CopyTagRule(original='IncomeLossFromContinuingOperationsIncludingPortionAttributableToNoncontrollingInterest', target='NetIncomeLoss'),
+        ]
+    )
+
     main_rule_tree = RuleGroup(prefix="IS",
                                rules=[
-                                   is_revenue_rg
+                                   is_revenue_rg,
+                                   is_netincome_rg
                                ])
 
     preprocess_rule_tree = RuleGroup(prefix="IS_PRE",

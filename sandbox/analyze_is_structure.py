@@ -57,6 +57,10 @@ def filter_tags(pre_num_df: pd.DataFrame, tag_like: str) -> List[str]:
 def find_entries_with_all_tags(bag: JoinedDataBag, tag_list: List[str]):
     filtered_df = bag.pre_num_df[bag.pre_num_df.tag.isin(tag_list)][['adsh', 'tag']]
     counted_df = filtered_df.groupby(['adsh']).count()
+    no_index = counted_df.reset_index()
+    single_entry = no_index[no_index.tag==1].adsh.tolist()
+    single_tags = filtered_df[filtered_df.adsh.isin(single_entry)]
+
     return counted_df[counted_df.tag == len(tag_list)].index.tolist()
 
 
@@ -114,13 +118,13 @@ if __name__ == '__main__':
 
     #is_joined_bag = load_smaller_sample_IS_set()
     #
-    # print(find_entries_with_all_tags(bag=is_joined_bag,
-    #                            tag_list=[
-    #                             'LicenseCost',
-    #                            'CostOfRevenue',
-    #                           'CostOfGoodsAndServicesSold',
-    #                           'CostOfGoodsSold',
-    #                           'CostOfServices']))
+    print(find_entries_with_all_tags(bag=is_joined_bag,
+                               tag_list=[
+                              'RevenueFromContractWithCustomerExcludingAssessedTax',
+                              #  'CostOfRevenue',
+                              # 'CostOfGoodsAndServicesSold',
+                              # 'CostOfGoodsSold',
+                              'RevenueFromContractWithCustomerIncludingAssessedTax']))
     # print(filter_tags(is_joined_bag.pre_num_df, tag_like="SalesRevenue"))
     #
     # # check the loaded data

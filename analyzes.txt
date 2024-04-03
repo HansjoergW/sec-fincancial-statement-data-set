@@ -5,6 +5,11 @@ main positions to calculate:
 Revenues (Umsatzerlöse): us-gaap:Revenues
     Revenue kann negativ sein
 
+    RevenueFromContractWithCustomerIncludingAssessedTax
+    - ExciseAndSalesTaxes
+    = RevenueFromContractWithCustomerExcludingAssessedTax
+
+
 Cost of Goods Sold (Kosten der verkauften Waren): us-gaap:CostOfGoodsAndServicesSold
 
 Gross Profit (Bruttogewinn): us-gaap:GrossProfit
@@ -67,7 +72,14 @@ NetIncomeLoss -> netincome loss
 
 
 Todos:
-- es gibt diverse negative Revenue values
+- 0001558370-23-014929 -> hier ist der Wert für NetIncomeLoss nicht getagged.
+  könnte aus
+
+  IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest und
+  IncomeTaxBenefitExpense berechnet werden:
+   -> https://www.sec.gov/ix?doc=/Archives/edgar/data/1872356/000155837023014929/mkul-20230630x10q.htm
+
+
 
 - Generell muss jeder Tag geprüft und korrigiert werden, für welchen klar ist, ob
   er einen positiven oder negativen Wert darstellt. Bzw. diese Tags müssen immer gleich behandelt werden

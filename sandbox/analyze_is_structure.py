@@ -55,7 +55,8 @@ def filter_tags(pre_num_df: pd.DataFrame, tag_like: str) -> List[str]:
 
 
 def find_entries_with_all_tags(bag: JoinedDataBag, tag_list: List[str]):
-    filtered_df = bag.pre_num_df[bag.pre_num_df.tag.isin(tag_list)][['adsh', 'tag']]
+    filtered_tags_df = bag.pre_num_df[bag.pre_num_df.tag.isin(tag_list)]
+    filtered_df = filtered_tags_df[['adsh', 'tag']]
     counted_df = filtered_df.groupby(['adsh']).count()
     no_index = counted_df.reset_index()
     single_entry = no_index[no_index.tag==1].adsh.tolist()
@@ -120,11 +121,43 @@ if __name__ == '__main__':
     #
     print(find_entries_with_all_tags(bag=is_joined_bag,
                                tag_list=[
-                              'RevenueFromContractWithCustomerExcludingAssessedTax',
-                              #  'CostOfRevenue',
-                              # 'CostOfGoodsAndServicesSold',
-                              # 'CostOfGoodsSold',
-                              'RevenueFromContractWithCustomerIncludingAssessedTax']))
+                                   'RegulatedAndUnregulatedOperatingRevenue',
+                                   'HealthCareOrganizationPatientServiceRevenue',
+                                   'SalesRevenueGoodsGross',
+                                   'ContractsRevenue',
+                                   'RevenueOilAndGasServices',
+                                   'HealthCareOrganizationRevenue',
+                                   'RevenueMineralSales',
+                                   'SalesRevenueEnergyServices',
+                                   'RealEstateRevenueNet',
+                                   'InterestAndDividendIncomeOperating',
+                                   'InterestIncomeExpenseNet',
+                                   'NoninterestIncome',
+                                   'OperatingLeasesIncomeStatementLeaseRevenue',
+                                   'LicensesRevenue', 'RevenueFromRelatedParties',
+                                   'BrokerageCommissionsRevenue', 'RoyaltyRevenue', 'OilAndGasSalesRevenue',
+                                   'OilAndGasRevenue', 'OtherRealEstateRevenue',
+                                   'TechnologyServicesRevenue', 'ManagementFeesRevenue',
+                                   'ReimbursementRevenue',
+                                   'OperatingLeasesIncomeStatementMinimumLeaseRevenue',
+                                   'FoodAndBeverageRevenue', 'MaintenanceRevenue',
+                                   'LicenseAndServicesRevenue', 'FranchiseRevenue', 'SubscriptionRevenue',
+                                   'FinancialServicesRevenue',
+                                   'RevenueFromGrants',
+                                   'GasGatheringTransportationMarketingAndProcessingRevenue',
+                                   'OccupancyRevenue', 'NaturalGasProductionRevenue',
+                                   'SalesRevenueServicesGross', 'InvestmentBankingRevenue',
+                                   'AdvertisingRevenue', 'RevenueOtherFinancialServices',
+                                   'OilAndCondensateRevenue', 'RevenueFromLeasedAndOwnedHotels',
+                                   'RevenuesNetOfInterestExpense', 'RegulatedAndUnregulatedOperatingRevenue',
+                                   'UnregulatedOperatingRevenue', 'ElectricUtilityRevenue',
+                                   'CargoAndFreightRevenue', 'OtherHotelOperatingRevenue',
+                                   'CasinoRevenue', 'RefiningAndMarketingRevenue',
+                                   'PrincipalTransactionsRevenue', 'InterestRevenueExpenseNet',
+                                   'HomeBuildingRevenue', 'OtherRevenueExpenseFromRealEstateOperations',
+                                   'GasDomesticRegulatedRevenue', 'LicenseAndMaintenanceRevenue',
+                                   'RegulatedOperatingRevenue', 'AdmissionsRevenue', 'PassengerRevenue'
+                               ]))
     # print(filter_tags(is_joined_bag.pre_num_df, tag_like="SalesRevenue"))
     #
     # # check the loaded data

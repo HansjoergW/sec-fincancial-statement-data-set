@@ -3,7 +3,7 @@ import pandas as pd
 
 from secfsdstools.f_standardize.base_rules import CopyTagRule, MissingSumRule, MissingSummandRule, \
     SumUpRule, SetSumIfOnlyOneSummand, PostCopyToFirstSummand, PreSumUpCorrection, \
-    missingsumparts_rules_creator, setsumifonlyonesummand_rules_creator
+    missingsumparts_rules_creator, setsumifonlyonesummand_rules_creator, SubtractFromRule
 
 
 def test_missingsumparts_rules_creator():
@@ -310,3 +310,42 @@ def test_postupcopytofirstsummandrule():
 
     assert log_df['R_firstsummand/othersummand1/othersummand2'].tolist() == \
            [False, True, False, False, False, False]
+
+
+def test_do_not_subtract_values_and_store_result():
+    # Arrange
+    target_tag = "target"
+    subtract_from_tag = "subtract_from"
+    potential_subtract_tags = ["potential1", "potential2"]
+    data_df = pd.DataFrame({
+        "target": [5, 10, 15],
+        "subtract_from": [10, 20, None],
+        "potential1": [5, None, None],
+        "potential2": [None, 3, None]
+    })
+    rule = SubtractFromRule(target_tag, subtract_from_tag, potential_subtract_tags)
+
+    # Act
+    rule.process(data_df)
+
+    # Assert
+    assert data_df["target"].tolist() == [5, 10, 15]
+
+def test_subtract_values_and_store_result():
+    # Arrange
+    target_tag = "target"
+    subtract_from_tag = "subtract_from"
+    potential_subtract_tags = ["potential1", "potential2"]
+    data_df = pd.DataFrame({
+        "target": [None, None, None],
+        "subtract_from": [10, 20, None],
+        "potential1": [5, None, None],
+        "potential2": [None, 3, None]
+    })
+    rule = SubtractFromRule(target_tag, subtract_from_tag, potential_subtract_tags)
+
+    # Act
+    rule.process(data_df)
+
+    # Assert
+    assert data_df["target"].tolist() == [5, 17, None]

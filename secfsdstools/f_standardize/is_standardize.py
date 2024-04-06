@@ -3,7 +3,7 @@ from typing import List
 
 from secfsdstools.f_standardize.base_prepivot_rules import PrePivotDeduplicate, PrePivotCorrectSign
 from secfsdstools.f_standardize.base_rule_framework import RuleGroup
-from secfsdstools.f_standardize.base_rules import CopyTagRule, SumUpRule
+from secfsdstools.f_standardize.base_rules import CopyTagRule, SumUpRule, SubtractFromRule
 from secfsdstools.f_standardize.base_validation_rules import ValidationRule
 from secfsdstools.f_standardize.standardizing import Standardizer
 
@@ -90,19 +90,23 @@ class IncomeStatementStandardizer(Standardizer):
                           'OtherSalesRevenueNet'
                       ]),
             CopyTagRule(original='SalesRevenueNet', target='Revenues'),
-            SubtractFromRule(subtract_from_tag='RevenueFromContractWithCustomerIncludingAssessedTax',
-                             subtract_tags=['ExciseAndSalesTaxes'],
-                     target_tag='RevenueFromContractWithCustomerExcludingAssessedTax'),
+
+            SubtractFromRule(
+                subtract_from_tag='RevenueFromContractWithCustomerIncludingAssessedTax',
+                potential_subtract_tags=['ExciseAndSalesTaxes'],
+                target_tag='RevenueFromContractWithCustomerExcludingAssessedTax'),
 
             CopyTagRule(original='RevenueFromContractWithCustomerExcludingAssessedTax',
                         target='Revenues'),
             CopyTagRule(original='RevenueFromContractWithCustomerIncludingAssessedTax',
                         target='Revenues'),
+            CopyTagRule(original='RevenuesExcludingInterestAndDividends',
+                        target='Revenues'),
 
+            CopyTagRule(original='InterestAndDividendIncomeOperating', target='Revenues'),
 
             SumUpRule(sum_tag='RevenuesSum',
                       potential_summands=[
-                          'RevenuesExcludingInterestAndDividends',
                           'RegulatedAndUnregulatedOperatingRevenue',
                           'HealthCareOrganizationPatientServiceRevenue',
                           'SalesRevenueGoodsGross',
@@ -112,10 +116,9 @@ class IncomeStatementStandardizer(Standardizer):
                           'RevenueMineralSales',
                           'SalesRevenueEnergyServices',
                           'RealEstateRevenueNet',
-                          'InterestAndDividendIncomeOperating',
                           'InterestIncomeExpenseNet',
                           'NoninterestIncome',
-                          'OtherSalesRevenueNet', 'OperatingLeasesIncomeStatementLeaseRevenue',
+                          'OperatingLeasesIncomeStatementLeaseRevenue',
                           'LicensesRevenue', 'RevenueFromRelatedParties',
                           'BrokerageCommissionsRevenue', 'RoyaltyRevenue', 'OilAndGasSalesRevenue',
                           'OilAndGasRevenue', 'OtherRealEstateRevenue',
@@ -145,19 +148,21 @@ class IncomeStatementStandardizer(Standardizer):
                       ]),
 
             CopyTagRule(original='RevenuesSum', target='Revenues'),
-            CopyTagRule(original='InterestAndDividendIncomeOperating', target='Revenues')
         ]
     )
 
     is_netincome_rg = RuleGroup(
         prefix="netincome",
         rules=[
-            CopyTagRule(original='NetIncomeLossAvailableToCommonStockholdersBasic', target='NetIncomeLoss'),
+            CopyTagRule(original='NetIncomeLossAvailableToCommonStockholdersBasic',
+                        target='NetIncomeLoss'),
             CopyTagRule(original='NetIncomeLossAllocatedToLimitedPartners', target='NetIncomeLoss'),
             CopyTagRule(original='ProfitLoss', target='NetIncomeLoss'),
             CopyTagRule(original='OtherComprehensiveIncomeLossNetOfTax', target='NetIncomeLoss'),
             CopyTagRule(original='ComprehensiveIncomeNetOfTax', target='NetIncomeLoss'),
-            CopyTagRule(original='IncomeLossFromContinuingOperationsIncludingPortionAttributableToNoncontrollingInterest', target='NetIncomeLoss'),
+            CopyTagRule(
+                original='IncomeLossFromContinuingOperationsIncludingPortionAttributableToNoncontrollingInterest',
+                target='NetIncomeLoss'),
         ]
     )
 

@@ -15,19 +15,12 @@ New Release
 
 v.1.5.0
 - SumUpRule: additional parameter optional_summands
-- Standardizer: new PrePivotRules are possible
-    -> deduplication is added to PrePivotRule
-    -> deduplication-log is part of the PrePivotRule log
-
-v.1.4.2 ?
-- fix für StandardStatementPresenter
- + Notebook visualisation
-- consider qtrs in Standardizer
- + Doku und Notebooks
+- SubtractFrom Rule
+- Standardizer:
 
 Todo:
-- Introduce PrePivotRules with logging
-
+- in interaktive könnte man bei der suche nach companies auch gleich die standardisierten reports anzeigen
+- Test für Subtract Rule
 - Es werden PrePivotRules benötigt
   Logs werden immer erweitert
 

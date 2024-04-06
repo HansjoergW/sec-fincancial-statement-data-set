@@ -315,7 +315,7 @@ class MissingSummandRule(Rule):
 
 
 class SumUpRule(Rule):
-    """Sums app the available Summands to a target column if the target colum is not set"""
+    """Sums up the available Summands to a target column if the target colum is not set"""
 
     def __init__(self, sum_tag: str, potential_summands: List[str],
                  optional_summands=None):
@@ -406,6 +406,94 @@ class SumUpRule(Rule):
         else:
             return f"Sums up the availalbe values in the columns {self.potential_summands} into" \
                    f" the column '{self.sum_tag}', if the column '{self.sum_tag}' is nan"
+
+
+class SubtractFromRule(Rule):
+    """Subtracts any of the available subtract tags from the a tag and stores the value in the
+     target tag if column if the target colum is not set"""
+
+    def __init__(self, target_tag: str,
+                 subtract_from_tag: str,
+                 potential_subtract_tags: List[str]):
+        """
+        Args:
+            target_tag: the tag to store the results in
+            subtract_from_tag: the tag from which values have to be subtracted
+            potential_subtract_tags: tags to subtract
+        """
+        self.target_tag = target_tag
+        self.subtract_from_tag = subtract_from_tag
+        self.potential_subtract_tags = potential_subtract_tags
+
+    def get_target_tags(self) -> List[str]:
+        """
+        returns a list of tags that could be affected/changed by this rule
+
+        Returns:
+            List[str]: list with affected tags/columns
+
+        """
+        return [self.target_tag]
+
+    def get_input_tags(self) -> Set[str]:
+        """
+        return all tags that the rules within this group need.
+
+        Returns:
+            Set[str]: set of all input tags that are used by rules in this group
+        """
+        result = {self.target_tag, self.subtract_from_tag}
+        result.update(self.potential_subtract_tags)
+        return result
+
+    def mask(self, data_df: pd.DataFrame) -> pa.typing.Series[bool]:
+        """
+            returns a Series[bool] which defines the rows to which this rule has to be applied.
+
+        Args:
+            data_df dataframe on which the rules should be applied
+
+        Returns:
+            pa.typing.Series[bool]: a boolean Series that marks which rows have to be calculated
+        """
+
+        # mask if the target was not set and the subtract_from_tag is set and
+        # at least one of the potential subtracts is present.
+        mask_subtract_tags = (~data_df[self.potential_subtract_tags].isna()).any(axis=1)
+
+        return (data_df[self.target_tag].isna() & ~data_df[self.subtract_from_tag].isna()
+                & mask_subtract_tags)
+
+    def apply(self, data_df: pd.DataFrame, mask: pa.typing.Series[bool]):
+        """
+        apply the rule on the provided dataframe. the rows, on which the rule has to be applied
+        is defined by the provide mask Series.
+
+        Important, the rules have to be applied "in-place", so no new dataframe is produced.
+
+        Args:
+            data_df dataframe on which the rule has to be applied
+            mask: a Series marking the rows in the dataframe on which the rule has to be applied
+        """
+        data_df.loc[mask, self.target_tag] = data_df[self.subtract_from_tag]  # initialize
+
+        for subtract in self.potential_subtract_tags:
+            subtract_mask = mask & ~data_df[subtract].isna()
+            data_df.loc[subtract_mask, self.target_tag] = (data_df[self.target_tag] -
+                                                           data_df[subtract])
+
+    def get_description(self) -> str:
+        """
+        Returns the description String
+        Returns:
+            str: description
+        """
+
+        return f"Subtracts the available values in the columns {self.potential_subtract_tags} from" \
+               f" the value in '{self.subtract_from_tag}' and stores the result in " \
+               f" '{self.target_tag}', if '{self.target_tag}' is not set and " \
+               f" '{self.subtract_from_tag}' has a value and at least one value in " \
+               f" {self.potential_subtract_tags} is present."
 
 
 class SetSumIfOnlyOneSummand(Rule):

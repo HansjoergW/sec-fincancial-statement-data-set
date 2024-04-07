@@ -57,13 +57,20 @@ def filter_tags(pre_num_df: pd.DataFrame, tag_like: str) -> List[str]:
 def find_entries_with_all_tags(bag: JoinedDataBag, tag_list: List[str]):
     filtered_tags_df = bag.pre_num_df[bag.pre_num_df.tag.isin(tag_list)]
     filtered_df = filtered_tags_df[['adsh', 'tag']]
-    counted_df = filtered_df.groupby(['adsh']).count()
-    no_index = counted_df.reset_index()
-    single_entry = no_index[no_index.tag==1].adsh.tolist()
+    counted_df = filtered_df.groupby(['adsh']).count().reset_index()
+    single_entry = counted_df[counted_df.tag==1].adsh.tolist()
     single_tags = filtered_df[filtered_df.adsh.isin(single_entry)]
 
     return counted_df[counted_df.tag == len(tag_list)].index.tolist()
 
+def find_entries_with_must_and_others(bag: JoinedDataBag, must_tag: str, others: List[str]):
+    prenum_df = bag.pre_num_df
+    all_tags = others + [must_tag]
+    filtered_must_adshs = prenum_df[prenum_df.tag==must_tag].adsh.tolist()
+    filtered_tags_df = prenum_df[prenum_df.adsh.isin(filtered_must_adshs) & prenum_df.tag.isin(all_tags)]
+    filtered_df = filtered_tags_df[['adsh', 'tag']]
+    counted_df = filtered_df.groupby(['adsh']).count().reset_index()
+    return counted_df[counted_df.tag > 1].index.tolist()
 
 @timing
 def standardize(is_joined_bag: JoinedDataBag) -> StandardizedBag:
@@ -119,45 +126,19 @@ if __name__ == '__main__':
 
     #is_joined_bag = load_smaller_sample_IS_set()
     #
-    print(find_entries_with_all_tags(bag=is_joined_bag,
-                               tag_list=[
-                                   'RegulatedAndUnregulatedOperatingRevenue',
-                                   'HealthCareOrganizationPatientServiceRevenue',
-                                   'SalesRevenueGoodsGross',
-                                   'ContractsRevenue',
-                                   'RevenueOilAndGasServices',
-                                   'HealthCareOrganizationRevenue',
-                                   'RevenueMineralSales',
-                                   'SalesRevenueEnergyServices',
-                                   'RealEstateRevenueNet',
-                                   'InterestAndDividendIncomeOperating',
-                                   'InterestIncomeExpenseNet',
-                                   'NoninterestIncome',
-                                   'OperatingLeasesIncomeStatementLeaseRevenue',
-                                   'LicensesRevenue', 'RevenueFromRelatedParties',
-                                   'BrokerageCommissionsRevenue', 'RoyaltyRevenue', 'OilAndGasSalesRevenue',
-                                   'OilAndGasRevenue', 'OtherRealEstateRevenue',
-                                   'TechnologyServicesRevenue', 'ManagementFeesRevenue',
-                                   'ReimbursementRevenue',
-                                   'OperatingLeasesIncomeStatementMinimumLeaseRevenue',
-                                   'FoodAndBeverageRevenue', 'MaintenanceRevenue',
-                                   'LicenseAndServicesRevenue', 'FranchiseRevenue', 'SubscriptionRevenue',
-                                   'FinancialServicesRevenue',
-                                   'RevenueFromGrants',
-                                   'GasGatheringTransportationMarketingAndProcessingRevenue',
-                                   'OccupancyRevenue', 'NaturalGasProductionRevenue',
-                                   'SalesRevenueServicesGross', 'InvestmentBankingRevenue',
-                                   'AdvertisingRevenue', 'RevenueOtherFinancialServices',
-                                   'OilAndCondensateRevenue', 'RevenueFromLeasedAndOwnedHotels',
-                                   'RevenuesNetOfInterestExpense', 'RegulatedAndUnregulatedOperatingRevenue',
-                                   'UnregulatedOperatingRevenue', 'ElectricUtilityRevenue',
-                                   'CargoAndFreightRevenue', 'OtherHotelOperatingRevenue',
-                                   'CasinoRevenue', 'RefiningAndMarketingRevenue',
-                                   'PrincipalTransactionsRevenue', 'InterestRevenueExpenseNet',
-                                   'HomeBuildingRevenue', 'OtherRevenueExpenseFromRealEstateOperations',
-                                   'GasDomesticRegulatedRevenue', 'LicenseAndMaintenanceRevenue',
-                                   'RegulatedOperatingRevenue', 'AdmissionsRevenue', 'PassengerRevenue'
-                               ]))
+    # print(find_entries_with_all_tags(bag=is_joined_bag,
+    #                            tag_list=[
+    #                                'SalesRevenueServicesGross',
+    #                                'SalesRevenueServicesNet'
+    #                            ]))
+    #
+    # print(find_entries_with_must_and_others(
+    #     bag=is_joined_bag,
+    #     must_tag='SalesRevenueGoodsGross',
+    #     others=['SalesRevenueGoodsNet',
+    #             'SalesRevenueServicesNet']
+    # ))
+
     # print(filter_tags(is_joined_bag.pre_num_df, tag_like="SalesRevenue"))
     #
     # # check the loaded data

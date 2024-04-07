@@ -42,6 +42,15 @@ us-gaap:Revenues
     us-gaap:ProductSalesRevenue
     us-gaap:ServiceRevenue
 
+Revenue:
+- major Tags sind klar
+- aber es gibt diverse andere Tags, die auf Revenue hindeuten, wenn
+  kein major gefunden wurde.
+  -> Idee zur Analyse:
+     diejenigen anschauen, die nach major kein Revenue haben.
+     bei denen versuchen das "den letzten" Revenue Eintrag zu finden.
+
+
 
 Achtung:
 - wir haben oft daten in IS und CI (comprehensive Income)

@@ -82,6 +82,17 @@ class IncomeStatementStandardizer(Standardizer):
     is_revenue_rg = RuleGroup(
         prefix="Rev",
         rules=[
+            # normally, (Goods and Services) Gross and Net appear together, resp. Net has priority.
+            # so if net is not present, we copy the gross value in the net value
+            # and then sum the nets up to the SalesRevenue
+            CopyTagRule(
+                original='SalesRevenueGoodsGross',
+                target='SalesRevenueGoodsNet'),
+
+            CopyTagRule(
+                original='SalesRevenueServicesGross',
+                target='SalesRevenueServicesNet'),
+
             SumUpRule(sum_tag='SalesRevenueNet',
                       potential_summands=[
                           'SalesRevenueGoodsNet',
@@ -89,35 +100,46 @@ class IncomeStatementStandardizer(Standardizer):
                       optional_summands=[
                           'OtherSalesRevenueNet'
                       ]),
+            # if the Revenues is not set, we copy SalesRevenuesNet into Revenues
             CopyTagRule(original='SalesRevenueNet', target='Revenues'),
 
+            # RevenueFromContractWithCustomer-tags are also often used to report the
+            # total Revenue. so the following rules take care of these cases.
+            # the order of the rules also defines the precedence.
+            # first: if RevenueFromContractWithCustomerExcludingAssessedTax is not set
+            #    we calculate it from RevenueFromContractWithCustomerIncludingAssessedTax
+            #          and ExciseAndSalesTaxes (if present)
             SubtractFromRule(
                 subtract_from_tag='RevenueFromContractWithCustomerIncludingAssessedTax',
                 potential_subtract_tags=['ExciseAndSalesTaxes'],
                 target_tag='RevenueFromContractWithCustomerExcludingAssessedTax'),
 
+            # second Excluding has the higher precedence than Including
             CopyTagRule(original='RevenueFromContractWithCustomerExcludingAssessedTax',
                         target='Revenues'),
             CopyTagRule(original='RevenueFromContractWithCustomerIncludingAssessedTax',
                         target='Revenues'),
+
+            # if Revenues couldn't be defined so far, RevenuesExcludingInterestAndDividends
+            # is also a tag that is commonly used to define the total Revenue
             CopyTagRule(original='RevenuesExcludingInterestAndDividends',
                         target='Revenues'),
-
+            # same is true for InterestAndDividendIncomeOperating
             CopyTagRule(original='InterestAndDividendIncomeOperating', target='Revenues'),
 
+            # if we were not able to define the Revenue so far, there are
+            # a couple of other tags which define Revenue, so we count them together
+            # and set the total as Revenue
             SumUpRule(sum_tag='RevenuesSum',
                       potential_summands=[
                           'RegulatedAndUnregulatedOperatingRevenue',
                           'HealthCareOrganizationPatientServiceRevenue',
-                          'SalesRevenueGoodsGross',
                           'ContractsRevenue',
                           'RevenueOilAndGasServices',
                           'HealthCareOrganizationRevenue',
                           'RevenueMineralSales',
                           'SalesRevenueEnergyServices',
                           'RealEstateRevenueNet',
-                          'InterestIncomeExpenseNet',
-                          'NoninterestIncome',
                           'OperatingLeasesIncomeStatementLeaseRevenue',
                           'LicensesRevenue', 'RevenueFromRelatedParties',
                           'BrokerageCommissionsRevenue', 'RoyaltyRevenue', 'OilAndGasSalesRevenue',

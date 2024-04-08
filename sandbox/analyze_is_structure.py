@@ -145,6 +145,9 @@ if __name__ == '__main__':
     print("sub_df", is_joined_bag.sub_df.shape)
     print("pre_num_df", is_joined_bag.pre_num_df.shape)
 
+    #cost_of_lst = is_joined_bag.pre_num_df[is_joined_bag.pre_num_df.tag.str.contains('CostOf')].tag.unique().tolist()
+
+
     standardized_bag = standardize(is_joined_bag)
 
     print(standardized_bag.result_df.shape)

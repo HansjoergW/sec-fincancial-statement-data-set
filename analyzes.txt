@@ -51,6 +51,10 @@ Revenue:
      bei denen versuchen das "den letzten" Revenue Eintrag zu finden.
 
 
+Cost of Revenue
+----------------
+- hint: wenn Revenue und GrossProfit vorhanden
+  standardized_bag.result_df[standardized_bag.result_df.CostOfRevenue.isna() & ~standardized_bag.result_df.GrossProfit.isna() ]
 
 Achtung:
 - wir haben oft daten in IS und CI (comprehensive Income)
@@ -81,6 +85,8 @@ NetIncomeLoss -> netincome loss
 
 
 Todos:
+es gibt negative costOfRevenue Einträge
+
 - 0001558370-23-014929 -> hier ist der Wert für NetIncomeLoss nicht getagged.
   könnte aus
 

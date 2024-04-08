@@ -32,7 +32,8 @@ from typing import List
 
 from secfsdstools.f_standardize.base_prepivot_rules import PrePivotDeduplicate, PrePivotCorrectSign
 from secfsdstools.f_standardize.base_rule_framework import RuleGroup
-from secfsdstools.f_standardize.base_rules import CopyTagRule, SumUpRule, SubtractFromRule
+from secfsdstools.f_standardize.base_rules import CopyTagRule, SumUpRule, SubtractFromRule, \
+    MissingSummandRule, missingsumparts_rules_creator
 from secfsdstools.f_standardize.base_validation_rules import ValidationRule
 from secfsdstools.f_standardize.standardizing import Standardizer
 
@@ -202,6 +203,73 @@ class IncomeStatementStandardizer(Standardizer):
         ]
     )
 
+    is_costofrevenue_rg = RuleGroup(
+        prefix=&#34;costrevenue&#34;,
+        rules=[
+            SumUpRule(sum_tag=&#39;CostOfGoodsSold&#39;,
+                      potential_summands=[
+                          &#39;CostOfGoodsSoldExcludingDepreciationDepletionAndAmortization&#39;,
+                          &#39;CostOfGoodsSoldDepreciationDepletionAndAmortization&#39;,
+                          &#39;CostOfGoodsSoldDepletion&#39;,
+                          &#39;CostOfGoodsSoldDepreciation&#39;,
+                          &#39;CostOfGoodsSoldAmortization&#39;,
+                          &#39;CostOfGoodsSoldDepreciationAndAmortization&#39;,
+                          &#39;CostOfGoodsSoldDirectFinancingLease&#39;,
+                          &#39;CostOfGoodsSoldElectric&#39;,
+                          &#39;CostOfGoodsSoldDirectMaterials&#39;,
+                          &#39;CostOfGoodsSoldDirectLabor&#39;,
+                          &#39;CostOfGoodsSoldOverhead&#39;,
+                          &#39;CostOfGoodsSoldOilAndGas&#39;,
+                          &#39;CostOfGoodsSoldSubscription&#39;,
+                          &#39;CostOfGoodsSoldDirectTaxesAndLicensesCosts&#39;,
+                          &#39;CostOfGoodsSoldMaintenanceCosts&#39;,
+                          &#39;CostOfGoodsSoldSalesTypeLease&#39;]),
+
+            SumUpRule(sum_tag=&#39;CostOfServices&#39;,
+                      potential_summands=[
+                          &#39;CostOfServicesExcludingDepreciationDepletionAndAmortization&#39;,
+                          &#39;CostOfServicesDepreciation&#39;,
+                          &#39;CostOfServicesDepreciationAndAmortization&#39;,
+                          &#39;CostOfServicesCatering&#39;,
+                          &#39;CostOfServicesAmortization&#39;,
+                          &#39;CostOfServicesOilAndGas&#39;,
+                          &#39;CostOfServicesDirectTaxesAndLicensesCosts&#39;,
+                          &#39;CostOfServicesMaintenanceCosts&#39;,
+                          &#39;CostOfServicesLicensesAndServices&#39;,
+                          &#39;CostOfServicesDirectLabor&#39;,
+                          &#39;CostOfServicesLicensesAndMaintenanceAgreements&#39;,
+                          &#39;CostOfServicesEnergyServices&#39;,
+                          &#39;CostOfServicesDirectMaterials&#39;,
+                          &#39;CostOfServicesEnvironmentalRemediation&#39;,
+                          &#39;CostOfServicesOverhead&#39;
+                      ]),
+
+            SumUpRule(sum_tag=&#39;CostOfGoodsAndServicesSold&#39;,
+                      potential_summands=[
+                          &#39;CostOfGoodsSold&#39;,
+                          &#39;CostOfServices&#39;]),
+
+            SumUpRule(sum_tag=&#39;CostOfGoodsAndServicesSold&#39;,
+                      potential_summands=[
+                          &#39;CostOfGoodsAndServicesSoldDepreciationAndAmortization&#39;,
+                          &#39;CostOfGoodsAndServicesSoldAmortization&#39;,
+                          &#39;CostOfGoodsAndServicesSoldOverhead&#39;,
+                          &#39;CostOfGoodsAndServicesSoldDepreciation&#39;,
+                          &#39;CostOfGoodsAndServicesEnergyCommoditiesAndServices&#39;,
+                          &#39;CostOfGoodsAndServiceExcludingDepreciationDepletionAndAmortization&#39;]
+                      ),
+            CopyTagRule(original=&#39;CostOfGoodsAndServicesSold&#39;, target=&#39;CostOfRevenue&#39;),
+        ]
+    )
+
+    # GrossProfit is the only tag used to indicate GrossProfit
+
+    is_missing_rev_cost_gross = RuleGroup(
+        prefix=&#34;RevCostGross&#34;,
+        rules= missingsumparts_rules_creator(sum_tag=&#39;Revenues&#39;,
+                                             summand_tags=[&#39;CostOfRevenue&#39;, &#39;GrossProfit&#39;])
+    )
+
     is_netincome_rg = RuleGroup(
         prefix=&#34;netincome&#34;,
         rules=[
@@ -220,6 +288,8 @@ class IncomeStatementStandardizer(Standardizer):
     main_rule_tree = RuleGroup(prefix=&#34;IS&#34;,
                                rules=[
                                    is_revenue_rg,
+                                   is_costofrevenue_rg,
+                                   is_missing_rev_cost_gross,
                                    is_netincome_rg
                                ])
 
@@ -545,6 +615,73 @@ as negated.</dd>
         ]
     )
 
+    is_costofrevenue_rg = RuleGroup(
+        prefix=&#34;costrevenue&#34;,
+        rules=[
+            SumUpRule(sum_tag=&#39;CostOfGoodsSold&#39;,
+                      potential_summands=[
+                          &#39;CostOfGoodsSoldExcludingDepreciationDepletionAndAmortization&#39;,
+                          &#39;CostOfGoodsSoldDepreciationDepletionAndAmortization&#39;,
+                          &#39;CostOfGoodsSoldDepletion&#39;,
+                          &#39;CostOfGoodsSoldDepreciation&#39;,
+                          &#39;CostOfGoodsSoldAmortization&#39;,
+                          &#39;CostOfGoodsSoldDepreciationAndAmortization&#39;,
+                          &#39;CostOfGoodsSoldDirectFinancingLease&#39;,
+                          &#39;CostOfGoodsSoldElectric&#39;,
+                          &#39;CostOfGoodsSoldDirectMaterials&#39;,
+                          &#39;CostOfGoodsSoldDirectLabor&#39;,
+                          &#39;CostOfGoodsSoldOverhead&#39;,
+                          &#39;CostOfGoodsSoldOilAndGas&#39;,
+                          &#39;CostOfGoodsSoldSubscription&#39;,
+                          &#39;CostOfGoodsSoldDirectTaxesAndLicensesCosts&#39;,
+                          &#39;CostOfGoodsSoldMaintenanceCosts&#39;,
+                          &#39;CostOfGoodsSoldSalesTypeLease&#39;]),
+
+            SumUpRule(sum_tag=&#39;CostOfServices&#39;,
+                      potential_summands=[
+                          &#39;CostOfServicesExcludingDepreciationDepletionAndAmortization&#39;,
+                          &#39;CostOfServicesDepreciation&#39;,
+                          &#39;CostOfServicesDepreciationAndAmortization&#39;,
+                          &#39;CostOfServicesCatering&#39;,
+                          &#39;CostOfServicesAmortization&#39;,
+                          &#39;CostOfServicesOilAndGas&#39;,
+                          &#39;CostOfServicesDirectTaxesAndLicensesCosts&#39;,
+                          &#39;CostOfServicesMaintenanceCosts&#39;,
+                          &#39;CostOfServicesLicensesAndServices&#39;,
+                          &#39;CostOfServicesDirectLabor&#39;,
+                          &#39;CostOfServicesLicensesAndMaintenanceAgreements&#39;,
+                          &#39;CostOfServicesEnergyServices&#39;,
+                          &#39;CostOfServicesDirectMaterials&#39;,
+                          &#39;CostOfServicesEnvironmentalRemediation&#39;,
+                          &#39;CostOfServicesOverhead&#39;
+                      ]),
+
+            SumUpRule(sum_tag=&#39;CostOfGoodsAndServicesSold&#39;,
+                      potential_summands=[
+                          &#39;CostOfGoodsSold&#39;,
+                          &#39;CostOfServices&#39;]),
+
+            SumUpRule(sum_tag=&#39;CostOfGoodsAndServicesSold&#39;,
+                      potential_summands=[
+                          &#39;CostOfGoodsAndServicesSoldDepreciationAndAmortization&#39;,
+                          &#39;CostOfGoodsAndServicesSoldAmortization&#39;,
+                          &#39;CostOfGoodsAndServicesSoldOverhead&#39;,
+                          &#39;CostOfGoodsAndServicesSoldDepreciation&#39;,
+                          &#39;CostOfGoodsAndServicesEnergyCommoditiesAndServices&#39;,
+                          &#39;CostOfGoodsAndServiceExcludingDepreciationDepletionAndAmortization&#39;]
+                      ),
+            CopyTagRule(original=&#39;CostOfGoodsAndServicesSold&#39;, target=&#39;CostOfRevenue&#39;),
+        ]
+    )
+
+    # GrossProfit is the only tag used to indicate GrossProfit
+
+    is_missing_rev_cost_gross = RuleGroup(
+        prefix=&#34;RevCostGross&#34;,
+        rules= missingsumparts_rules_creator(sum_tag=&#39;Revenues&#39;,
+                                             summand_tags=[&#39;CostOfRevenue&#39;, &#39;GrossProfit&#39;])
+    )
+
     is_netincome_rg = RuleGroup(
         prefix=&#34;netincome&#34;,
         rules=[
@@ -563,6 +700,8 @@ as negated.</dd>
     main_rule_tree = RuleGroup(prefix=&#34;IS&#34;,
                                rules=[
                                    is_revenue_rg,
+                                   is_costofrevenue_rg,
+                                   is_missing_rev_cost_gross,
                                    is_netincome_rg
                                ])
 
@@ -639,6 +778,14 @@ as negated.</dd>
 <dd>
 <div class="desc"></div>
 </dd>
+<dt id="secfsdstools.f_standardize.is_standardize.IncomeStatementStandardizer.is_costofrevenue_rg"><code class="name">var <span class="ident">is_costofrevenue_rg</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="secfsdstools.f_standardize.is_standardize.IncomeStatementStandardizer.is_missing_rev_cost_gross"><code class="name">var <span class="ident">is_missing_rev_cost_gross</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
 <dt id="secfsdstools.f_standardize.is_standardize.IncomeStatementStandardizer.is_netincome_rg"><code class="name">var <span class="ident">is_netincome_rg</span></code></dt>
 <dd>
 <div class="desc"></div>
@@ -705,6 +852,8 @@ as negated.</dd>
 <ul class="">
 <li><code><a title="secfsdstools.f_standardize.is_standardize.IncomeStatementStandardizer.final_tags" href="#secfsdstools.f_standardize.is_standardize.IncomeStatementStandardizer.final_tags">final_tags</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.is_standardize.IncomeStatementStandardizer.is_cogs_sumup_rg" href="#secfsdstools.f_standardize.is_standardize.IncomeStatementStandardizer.is_cogs_sumup_rg">is_cogs_sumup_rg</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.is_standardize.IncomeStatementStandardizer.is_costofrevenue_rg" href="#secfsdstools.f_standardize.is_standardize.IncomeStatementStandardizer.is_costofrevenue_rg">is_costofrevenue_rg</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.is_standardize.IncomeStatementStandardizer.is_missing_rev_cost_gross" href="#secfsdstools.f_standardize.is_standardize.IncomeStatementStandardizer.is_missing_rev_cost_gross">is_missing_rev_cost_gross</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.is_standardize.IncomeStatementStandardizer.is_netincome_rg" href="#secfsdstools.f_standardize.is_standardize.IncomeStatementStandardizer.is_netincome_rg">is_netincome_rg</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.is_standardize.IncomeStatementStandardizer.is_revenue_rg" href="#secfsdstools.f_standardize.is_standardize.IncomeStatementStandardizer.is_revenue_rg">is_revenue_rg</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.is_standardize.IncomeStatementStandardizer.main_rule_tree" href="#secfsdstools.f_standardize.is_standardize.IncomeStatementStandardizer.main_rule_tree">main_rule_tree</a></code></li>

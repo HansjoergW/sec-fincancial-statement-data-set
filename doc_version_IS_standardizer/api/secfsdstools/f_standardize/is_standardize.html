@@ -33,10 +33,112 @@ from typing import List
 from secfsdstools.f_standardize.base_prepivot_rules import PrePivotDeduplicate, PrePivotCorrectSign
 from secfsdstools.f_standardize.base_rule_framework import RuleGroup
 from secfsdstools.f_standardize.base_rules import CopyTagRule, SumUpRule, SubtractFromRule, \
-    MissingSummandRule, missingsumparts_rules_creator
+    missingsumparts_rules_creator
 from secfsdstools.f_standardize.base_validation_rules import ValidationRule
 from secfsdstools.f_standardize.standardizing import Standardizer
 
+
+top_100_operating_costs = [
+    &#39;SellingGeneralAndAdministrativeExpense&#39;,
+    &#39;GeneralAndAdministrativeExpense&#39;,
+    &#39;ResearchAndDevelopmentExpense&#39;,
+    &#39;SellingAndMarketingExpense&#39;,
+    &#39;AmortizationOfIntangibleAssets&#39;,
+    &#39;DepreciationAndAmortization&#39;,
+    &#39;RestructuringCharges&#39;,
+    &#39;ProfessionalFees&#39;,
+    &#39;SellingExpense&#39;,
+    &#39;AssetImpairmentCharges&#39;,
+    &#39;OtherOperatingIncomeExpenseNet&#39;,
+    &#39;DepreciationDepletionAndAmortization&#39;,
+    &#39;LaborAndRelatedExpense&#39;,
+    &#39;BusinessCombinationAcquisitionRelatedCosts&#39;,
+    &#39;GoodwillImpairmentLoss&#39;,
+    &#39;Depreciation&#39;,
+    &#39;OtherCostAndExpenseOperating&#39;,
+    &#39;MarketingAndAdvertisingExpense&#39;,
+    &#39;RestructuringSettlementAndImpairmentProvisions&#39;,
+    &#39;SalariesAndWages&#39;,
+    &#39;ShareBasedCompensation&#39;,
+    &#39;ProvisionForDoubtfulAccounts&#39;,
+    &#39;GainLossOnDispositionOfAssets&#39;,
+    &#39;CostsAndExpenses&#39;,
+    &#39;OperatingCostsAndExpenses&#39;,
+    &#39;OtherGeneralAndAdministrativeExpense&#39;,
+    &#39;ResearchAndDevelopmentExpenseExcludingAcquiredInProcessCost&#39;,
+    &#39;GainLossOnSaleOfPropertyPlantEquipment&#39;,
+    &#39;GoodwillAndIntangibleAssetImpairment&#39;,
+    &#39;MarketingExpense&#39;,
+    &#39;GainLossOnDispositionOfAssets1&#39;,
+    &#39;AdvertisingExpense&#39;,
+    &#39;BusinessCombinationContingentConsiderationArrangementsChangeInAmountOfContingentConsiderationLiability1&#39;,
+    &#39;LeaseAndRentalExpense&#39;,
+    &#39;LegalFees&#39;,
+    &#39;OtherSellingGeneralAndAdministrativeExpense&#39;,
+    &#39;GainLossRelatedToLitigationSettlement&#39;,
+    &#39;IncomeLossFromEquityMethodInvestments&#39;,
+    &#39;DepreciationNonproduction&#39;,
+    &#39;AllocatedShareBasedCompensationExpense&#39;,
+    &#39;SalariesWagesAndOfficersCompensation&#39;,
+    &#39;TravelAndEntertainmentExpense&#39;,
+    &#39;ImpairmentOfLongLivedAssetsHeldForUse&#39;,
+    &#39;ResearchAndDevelopmentExpenseSoftwareExcludingAcquiredInProcessCost&#39;,
+    &#39;OfficersCompensation&#39;,
+    &#39;OtherGeneralExpense&#39;,
+    &#39;ImpairmentOfIntangibleAssetsExcludingGoodwill&#39;,
+    &#39;OtherOperatingIncome&#39;,
+    &#39;ProfessionalAndContractServicesExpense&#39;,
+    &#39;LitigationSettlementExpense&#39;,
+    &#39;GainLossOnSaleOfBusiness&#39;,
+    &#39;ImpairmentOfIntangibleAssetsFinitelived&#39;,
+    &#39;RestructuringCostsAndAssetImpairmentCharges&#39;,
+    &#39;ForeignCurrencyTransactionGainLossBeforeTax&#39;,
+    &#39;OtherDepreciationAndAmortization&#39;,
+    &#39;OtherExpenses&#39;,
+    &#39;RestructuringCosts&#39;,
+    &#39;SalesCommissionsAndFees&#39;,
+    &#39;BusinessCombinationIntegrationRelatedCosts&#39;,
+    &#39;AdjustmentForAmortization&#39;,
+    &#39;InterestExpense&#39;,
+    &#39;ImpairmentOfIntangibleAssetsIndefinitelivedExcludingGoodwill&#39;,
+    &#39;CommunicationsAndInformationTechnology&#39;,
+    &#39;PreOpeningCosts&#39;,
+    &#39;OtherNonrecurringIncomeExpense&#39;,
+    &#39;GainLossOnSalesOfAssetsAndAssetImpairmentCharges&#39;,
+    &#39;OtherAssetImpairmentCharges&#39;,
+    &#39;ImpairmentOfLongLivedAssetsToBeDisposedOf&#39;,
+    &#39;DisposalGroupNotDiscontinuedOperationGainLossOnDisposal&#39;,
+    &#39;GainLossOnSaleOfOtherAssets&#39;,
+    &#39;ShippingHandlingAndTransportationCosts&#39;,
+    &#39;RoyaltyExpense&#39;,
+    &#39;GeneralInsuranceExpense&#39;,
+    &#39;ManagementFeeExpense&#39;,
+    &#39;GainsLossesOnSalesOfAssets&#39;,
+    &#39;OccupancyNet&#39;,
+    &#39;TaxesExcludingIncomeAndExciseTaxes&#39;,
+    &#39;TechnologyServicesCosts&#39;,
+    &#39;OtherIncome&#39;,
+    &#39;RestructuringAndRelatedCostIncurredCost&#39;,
+    &#39;OtherLaborRelatedExpenses&#39;,
+    &#39;SeveranceCosts1&#39;,
+    &#39;UtilitiesOperatingExpenseMaintenanceAndOperations&#39;,
+    &#39;EmployeeBenefitsAndShareBasedCompensation&#39;,
+    &#39;BusinessDevelopment&#39;,
+    &#39;CostsAndExpensesRelatedParty&#39;,
+    &#39;ExplorationExpenseMining&#39;,
+    &#39;DepreciationAmortizationAndAccretionNet&#39;,
+    &#39;GainLossOnDispositionOfProperty&#39;,
+    &#39;InventoryWriteDown&#39;,
+    &#39;AssetRetirementObligationAccretionExpense&#39;,
+    &#39;InsuranceRecoveries&#39;,
+    &#39;AmortizationOfAcquiredIntangibleAssets&#39;,
+    &#39;GainsLossesOnExtinguishmentOfDebt&#39;,
+    &#39;AmortizationOfAcquisitionCosts&#39;,
+    &#39;TangibleAssetImpairmentCharges&#39;,
+    &#39;ResearchAndDevelopmentInProcess&#39;,
+    &#39;OperatingLeasesRentExpenseNet&#39;,
+    &#39;OperatingLeaseExpense&#39;,
+]
 
 class IncomeStatementStandardizer(Standardizer):
     &#34;&#34;&#34;
@@ -266,9 +368,22 @@ class IncomeStatementStandardizer(Standardizer):
 
     is_missing_rev_cost_gross = RuleGroup(
         prefix=&#34;RevCostGross&#34;,
-        rules= missingsumparts_rules_creator(sum_tag=&#39;Revenues&#39;,
-                                             summand_tags=[&#39;CostOfRevenue&#39;, &#39;GrossProfit&#39;])
+        rules=missingsumparts_rules_creator(sum_tag=&#39;Revenues&#39;,
+                                            summand_tags=[&#39;CostOfRevenue&#39;, &#39;GrossProfit&#39;])
     )
+
+    is_operating = RuleGroup(
+        prefix=&#34;operating&#34;,
+        rules=[
+            SumUpRule(sum_tag=&#39;OperatingExpensesSum&#39;,
+                      potential_summands=top_100_operating_costs),
+            RuleGroup(
+                prefix=&#34;GrossOperating&#34;,
+                rules=missingsumparts_rules_creator(sum_tag=&#39;GrossProfit&#39;,
+                                                    summand_tags=[&#39;OperatingExpenses&#39;,
+                                                                  &#39;OperatingIncomeLoss&#39;])),
+            CopyTagRule(original=&#39;OperatingExpensesSum&#39;, target=&#39;OperatingExpenses&#39;)
+            ])
 
     is_netincome_rg = RuleGroup(
         prefix=&#34;netincome&#34;,
@@ -290,6 +405,7 @@ class IncomeStatementStandardizer(Standardizer):
                                    is_revenue_rg,
                                    is_costofrevenue_rg,
                                    is_missing_rev_cost_gross,
+                                   is_operating,
                                    is_netincome_rg
                                ])
 
@@ -308,6 +424,8 @@ class IncomeStatementStandardizer(Standardizer):
     final_tags: List[str] = [&#39;Revenues&#39;,
                              &#39;CostOfRevenue&#39;,
                              &#39;GrossProfit&#39;,
+                             &#39;OperatingExpenses&#39;,
+                             &#39;OperatingExpensesSum&#39;,
                              &#39;OperatingIncomeLoss&#39;,
                              &#39;IncomeLossBeforeIncomeTaxExpenseBenefit&#39;,
                              &#39;IncomeTaxExpenseBenefit&#39;,
@@ -678,9 +796,22 @@ as negated.</dd>
 
     is_missing_rev_cost_gross = RuleGroup(
         prefix=&#34;RevCostGross&#34;,
-        rules= missingsumparts_rules_creator(sum_tag=&#39;Revenues&#39;,
-                                             summand_tags=[&#39;CostOfRevenue&#39;, &#39;GrossProfit&#39;])
+        rules=missingsumparts_rules_creator(sum_tag=&#39;Revenues&#39;,
+                                            summand_tags=[&#39;CostOfRevenue&#39;, &#39;GrossProfit&#39;])
     )
+
+    is_operating = RuleGroup(
+        prefix=&#34;operating&#34;,
+        rules=[
+            SumUpRule(sum_tag=&#39;OperatingExpensesSum&#39;,
+                      potential_summands=top_100_operating_costs),
+            RuleGroup(
+                prefix=&#34;GrossOperating&#34;,
+                rules=missingsumparts_rules_creator(sum_tag=&#39;GrossProfit&#39;,
+                                                    summand_tags=[&#39;OperatingExpenses&#39;,
+                                                                  &#39;OperatingIncomeLoss&#39;])),
+            CopyTagRule(original=&#39;OperatingExpensesSum&#39;, target=&#39;OperatingExpenses&#39;)
+            ])
 
     is_netincome_rg = RuleGroup(
         prefix=&#34;netincome&#34;,
@@ -702,6 +833,7 @@ as negated.</dd>
                                    is_revenue_rg,
                                    is_costofrevenue_rg,
                                    is_missing_rev_cost_gross,
+                                   is_operating,
                                    is_netincome_rg
                                ])
 
@@ -720,6 +852,8 @@ as negated.</dd>
     final_tags: List[str] = [&#39;Revenues&#39;,
                              &#39;CostOfRevenue&#39;,
                              &#39;GrossProfit&#39;,
+                             &#39;OperatingExpenses&#39;,
+                             &#39;OperatingExpensesSum&#39;,
                              &#39;OperatingIncomeLoss&#39;,
                              &#39;IncomeLossBeforeIncomeTaxExpenseBenefit&#39;,
                              &#39;IncomeTaxExpenseBenefit&#39;,
@@ -790,6 +924,10 @@ as negated.</dd>
 <dd>
 <div class="desc"></div>
 </dd>
+<dt id="secfsdstools.f_standardize.is_standardize.IncomeStatementStandardizer.is_operating"><code class="name">var <span class="ident">is_operating</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
 <dt id="secfsdstools.f_standardize.is_standardize.IncomeStatementStandardizer.is_revenue_rg"><code class="name">var <span class="ident">is_revenue_rg</span></code></dt>
 <dd>
 <div class="desc"></div>
@@ -855,6 +993,7 @@ as negated.</dd>
 <li><code><a title="secfsdstools.f_standardize.is_standardize.IncomeStatementStandardizer.is_costofrevenue_rg" href="#secfsdstools.f_standardize.is_standardize.IncomeStatementStandardizer.is_costofrevenue_rg">is_costofrevenue_rg</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.is_standardize.IncomeStatementStandardizer.is_missing_rev_cost_gross" href="#secfsdstools.f_standardize.is_standardize.IncomeStatementStandardizer.is_missing_rev_cost_gross">is_missing_rev_cost_gross</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.is_standardize.IncomeStatementStandardizer.is_netincome_rg" href="#secfsdstools.f_standardize.is_standardize.IncomeStatementStandardizer.is_netincome_rg">is_netincome_rg</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.is_standardize.IncomeStatementStandardizer.is_operating" href="#secfsdstools.f_standardize.is_standardize.IncomeStatementStandardizer.is_operating">is_operating</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.is_standardize.IncomeStatementStandardizer.is_revenue_rg" href="#secfsdstools.f_standardize.is_standardize.IncomeStatementStandardizer.is_revenue_rg">is_revenue_rg</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.is_standardize.IncomeStatementStandardizer.main_rule_tree" href="#secfsdstools.f_standardize.is_standardize.IncomeStatementStandardizer.main_rule_tree">main_rule_tree</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.is_standardize.IncomeStatementStandardizer.main_statement_tags" href="#secfsdstools.f_standardize.is_standardize.IncomeStatementStandardizer.main_statement_tags">main_statement_tags</a></code></li>

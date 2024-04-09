@@ -54,14 +54,14 @@ def filter_tags(pre_num_df: pd.DataFrame, tag_like: str) -> List[str]:
     return [x for x in pre_num_df.tag.unique().tolist() if tag_like in x]
 
 
-def find_entries_with_all_tags(bag: JoinedDataBag, tag_list: List[str]):
+def find_entries_with_all_tags(bag: JoinedDataBag, tag_list: List[str]) -> List[str]:
     filtered_tags_df = bag.pre_num_df[bag.pre_num_df.tag.isin(tag_list)]
     filtered_df = filtered_tags_df[['adsh', 'tag']]
     counted_df = filtered_df.groupby(['adsh']).count().reset_index()
     single_entry = counted_df[counted_df.tag==1].adsh.tolist()
     single_tags = filtered_df[filtered_df.adsh.isin(single_entry)]
 
-    return counted_df[counted_df.tag == len(tag_list)].index.tolist()
+    return counted_df[counted_df.tag == len(tag_list)].adsh.tolist()
 
 def find_entries_with_must_and_others(bag: JoinedDataBag, must_tag: str, others: List[str]):
     prenum_df = bag.pre_num_df
@@ -111,11 +111,40 @@ def check_signed_values(is_joined_bag: JoinedDataBag, tag_list: List[str]):
     return just_cost.groupby(['negating', 'value_neg']).count()
 
 
+
+def find_operating_expense_tags(joined_bag: JoinedDataBag):
+    adshs = find_entries_with_all_tags(joined_bag, tag_list=['GrossProfit', 'OperatingIncomeLoss'])
+    print(len(adshs))
+    relevant = joined_bag.pre_num_df[joined_bag.pre_num_df.adsh.isin(adshs)][['adsh','tag','line']]
+
+    tag_counts = pd.Series(dtype=int)
+
+    for adsh, group in relevant.groupby('adsh'):
+        line_gp_lst = group[group.tag=='GrossProfit'].line.tolist()
+        if len(line_gp_lst) == 0:
+            continue
+
+        line_gp = line_gp_lst[0]
+
+        line_oil_list = group[group.tag=='OperatingIncomeLoss'].line.tolist()
+        if len(line_oil_list) == 0:
+            continue
+
+        line_oil = line_oil_list[0]
+        relevant_tags = group[(group.line > line_gp) & (group.line<line_oil)].tag
+        # Aktualisieren der Tag-Zählungen für jede Gruppe
+        tag_counts = tag_counts.add(relevant_tags.value_counts(), fill_value=0)
+
+    print(tag_counts)
+
+
+
 if __name__ == '__main__':
     # create_smaller_sample_IS_set()
     # prepare_all_data_set()
 
     is_joined_bag: JoinedDataBag = load_joined_IS_set()
+    #find_operating_expense_tags(is_joined_bag)
     # print(check_signed_values(is_joined_bag, tag_list=['LicenseCost',
     #                                              'CostOfRevenue',
     #                                              'CostOfGoodsAndServicesSold',

@@ -56,10 +56,23 @@ Cost of Revenue
 - hint: wenn Revenue und GrossProfit vorhanden
   standardized_bag.result_df[standardized_bag.result_df.CostOfRevenue.isna() & ~standardized_bag.result_df.GrossProfit.isna() ]
 
+
+Cost of Operating
+----------------
+- standardized_bag.result_df[standardized_bag.result_df.OperatingExpenses.isna() & ~standardized_bag.result_df.OperatingIncomeLoss.isna() ]
+- idee:
+   filter for reports with GrossProfit and OperatingIncomeLoss
+   get all tags with line > GrossProfit.line and line < OperatingIncomeLoss.line
+   -> sollte eine gute Liste ergeben, mit allem was Operating Cost sein kann.
+
+
+
+
+
+
 Achtung:
 - wir haben oft daten in IS und CI (comprehensive Income)
 - prüfen, ob 10-Q immer Q? Einträge in fp hat und ob 10-K immer ein FY hat
-
 
 
 Banks

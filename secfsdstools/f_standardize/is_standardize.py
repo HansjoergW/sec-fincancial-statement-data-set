@@ -4,10 +4,112 @@ from typing import List
 from secfsdstools.f_standardize.base_prepivot_rules import PrePivotDeduplicate, PrePivotCorrectSign
 from secfsdstools.f_standardize.base_rule_framework import RuleGroup
 from secfsdstools.f_standardize.base_rules import CopyTagRule, SumUpRule, SubtractFromRule, \
-    MissingSummandRule, missingsumparts_rules_creator
+    missingsumparts_rules_creator
 from secfsdstools.f_standardize.base_validation_rules import ValidationRule
 from secfsdstools.f_standardize.standardizing import Standardizer
 
+
+top_100_operating_costs = [
+    'SellingGeneralAndAdministrativeExpense',
+    'GeneralAndAdministrativeExpense',
+    'ResearchAndDevelopmentExpense',
+    'SellingAndMarketingExpense',
+    'AmortizationOfIntangibleAssets',
+    'DepreciationAndAmortization',
+    'RestructuringCharges',
+    'ProfessionalFees',
+    'SellingExpense',
+    'AssetImpairmentCharges',
+    'OtherOperatingIncomeExpenseNet',
+    'DepreciationDepletionAndAmortization',
+    'LaborAndRelatedExpense',
+    'BusinessCombinationAcquisitionRelatedCosts',
+    'GoodwillImpairmentLoss',
+    'Depreciation',
+    'OtherCostAndExpenseOperating',
+    'MarketingAndAdvertisingExpense',
+    'RestructuringSettlementAndImpairmentProvisions',
+    'SalariesAndWages',
+    'ShareBasedCompensation',
+    'ProvisionForDoubtfulAccounts',
+    'GainLossOnDispositionOfAssets',
+    'CostsAndExpenses',
+    'OperatingCostsAndExpenses',
+    'OtherGeneralAndAdministrativeExpense',
+    'ResearchAndDevelopmentExpenseExcludingAcquiredInProcessCost',
+    'GainLossOnSaleOfPropertyPlantEquipment',
+    'GoodwillAndIntangibleAssetImpairment',
+    'MarketingExpense',
+    'GainLossOnDispositionOfAssets1',
+    'AdvertisingExpense',
+    'BusinessCombinationContingentConsiderationArrangementsChangeInAmountOfContingentConsiderationLiability1',
+    'LeaseAndRentalExpense',
+    'LegalFees',
+    'OtherSellingGeneralAndAdministrativeExpense',
+    'GainLossRelatedToLitigationSettlement',
+    'IncomeLossFromEquityMethodInvestments',
+    'DepreciationNonproduction',
+    'AllocatedShareBasedCompensationExpense',
+    'SalariesWagesAndOfficersCompensation',
+    'TravelAndEntertainmentExpense',
+    'ImpairmentOfLongLivedAssetsHeldForUse',
+    'ResearchAndDevelopmentExpenseSoftwareExcludingAcquiredInProcessCost',
+    'OfficersCompensation',
+    'OtherGeneralExpense',
+    'ImpairmentOfIntangibleAssetsExcludingGoodwill',
+    'OtherOperatingIncome',
+    'ProfessionalAndContractServicesExpense',
+    'LitigationSettlementExpense',
+    'GainLossOnSaleOfBusiness',
+    'ImpairmentOfIntangibleAssetsFinitelived',
+    'RestructuringCostsAndAssetImpairmentCharges',
+    'ForeignCurrencyTransactionGainLossBeforeTax',
+    'OtherDepreciationAndAmortization',
+    'OtherExpenses',
+    'RestructuringCosts',
+    'SalesCommissionsAndFees',
+    'BusinessCombinationIntegrationRelatedCosts',
+    'AdjustmentForAmortization',
+    'InterestExpense',
+    'ImpairmentOfIntangibleAssetsIndefinitelivedExcludingGoodwill',
+    'CommunicationsAndInformationTechnology',
+    'PreOpeningCosts',
+    'OtherNonrecurringIncomeExpense',
+    'GainLossOnSalesOfAssetsAndAssetImpairmentCharges',
+    'OtherAssetImpairmentCharges',
+    'ImpairmentOfLongLivedAssetsToBeDisposedOf',
+    'DisposalGroupNotDiscontinuedOperationGainLossOnDisposal',
+    'GainLossOnSaleOfOtherAssets',
+    'ShippingHandlingAndTransportationCosts',
+    'RoyaltyExpense',
+    'GeneralInsuranceExpense',
+    'ManagementFeeExpense',
+    'GainsLossesOnSalesOfAssets',
+    'OccupancyNet',
+    'TaxesExcludingIncomeAndExciseTaxes',
+    'TechnologyServicesCosts',
+    'OtherIncome',
+    'RestructuringAndRelatedCostIncurredCost',
+    'OtherLaborRelatedExpenses',
+    'SeveranceCosts1',
+    'UtilitiesOperatingExpenseMaintenanceAndOperations',
+    'EmployeeBenefitsAndShareBasedCompensation',
+    'BusinessDevelopment',
+    'CostsAndExpensesRelatedParty',
+    'ExplorationExpenseMining',
+    'DepreciationAmortizationAndAccretionNet',
+    'GainLossOnDispositionOfProperty',
+    'InventoryWriteDown',
+    'AssetRetirementObligationAccretionExpense',
+    'InsuranceRecoveries',
+    'AmortizationOfAcquiredIntangibleAssets',
+    'GainsLossesOnExtinguishmentOfDebt',
+    'AmortizationOfAcquisitionCosts',
+    'TangibleAssetImpairmentCharges',
+    'ResearchAndDevelopmentInProcess',
+    'OperatingLeasesRentExpenseNet',
+    'OperatingLeaseExpense',
+]
 
 class IncomeStatementStandardizer(Standardizer):
     """
@@ -237,9 +339,22 @@ class IncomeStatementStandardizer(Standardizer):
 
     is_missing_rev_cost_gross = RuleGroup(
         prefix="RevCostGross",
-        rules= missingsumparts_rules_creator(sum_tag='Revenues',
-                                             summand_tags=['CostOfRevenue', 'GrossProfit'])
+        rules=missingsumparts_rules_creator(sum_tag='Revenues',
+                                            summand_tags=['CostOfRevenue', 'GrossProfit'])
     )
+
+    is_operating = RuleGroup(
+        prefix="operating",
+        rules=[
+            SumUpRule(sum_tag='OperatingExpensesSum',
+                      potential_summands=top_100_operating_costs),
+            RuleGroup(
+                prefix="GrossOperating",
+                rules=missingsumparts_rules_creator(sum_tag='GrossProfit',
+                                                    summand_tags=['OperatingExpenses',
+                                                                  'OperatingIncomeLoss'])),
+            CopyTagRule(original='OperatingExpensesSum', target='OperatingExpenses')
+            ])
 
     is_netincome_rg = RuleGroup(
         prefix="netincome",
@@ -261,6 +376,7 @@ class IncomeStatementStandardizer(Standardizer):
                                    is_revenue_rg,
                                    is_costofrevenue_rg,
                                    is_missing_rev_cost_gross,
+                                   is_operating,
                                    is_netincome_rg
                                ])
 
@@ -279,6 +395,8 @@ class IncomeStatementStandardizer(Standardizer):
     final_tags: List[str] = ['Revenues',
                              'CostOfRevenue',
                              'GrossProfit',
+                             'OperatingExpenses',
+                             'OperatingExpensesSum',
                              'OperatingIncomeLoss',
                              'IncomeLossBeforeIncomeTaxExpenseBenefit',
                              'IncomeTaxExpenseBenefit',

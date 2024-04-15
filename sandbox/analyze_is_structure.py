@@ -155,12 +155,15 @@ if __name__ == '__main__':
 
     #is_joined_bag = load_smaller_sample_IS_set()
     #
+
+
     # print(find_entries_with_all_tags(bag=is_joined_bag,
     #                            tag_list=[
-    #                                'SalesRevenueServicesGross',
-    #                                'SalesRevenueServicesNet'
+    #                                'IncomeLossFromContinuingOperationsBeforeIncomeTaxesMinorityInterestAndIncomeLossFromEquityMethodInvestments',
+    #                                'IncomeTaxExpenseBenefit',
+    #                                'NetIncomeLoss'
     #                            ]))
-    #
+
     # print(find_entries_with_must_and_others(
     #     bag=is_joined_bag,
     #     must_tag='SalesRevenueGoodsGross',

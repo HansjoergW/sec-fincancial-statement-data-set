@@ -30,9 +30,41 @@ Income Tax Expense (Ertragsteueraufwand):us-gaap:IncomeTaxExpenseBenefit
 
 Net Income (Nettogewinn): us-gaap:NetIncomeLoss
 
+
 Earnings Per Share (Gewinn je Aktie): us-gaap:EarningsPerShareBasicAndDiluted
 
 Comprehensive Income (Gesamtergebnis): us-gaap:ComprehensiveIncomeNetOfTax
+
+
+ToDos
+-----
+- Frage: wenn nur Grossprofit vorhanden ist, aber kein Revenue ausgewiesen,
+  sollte dann Revenue denselben Wert wie Grossprofit haben? weil Revenue - CostOfRevenue = Grossprofit ergeben sollte?
+- Investement companies
+   (ca 260: GrossInvestmentIncomeOperating + NetInvestmentIncome
+   (ca 60'000 mit InvestmentIncomeInterest
+    -> wenn sonst nichts = Revenue
+
+- Prüfen der Vorzeichen, passt alles?
+- definieren der Validation Rules
+- EarningsPerShare?
+
+
+Investement Incomes examples:
+0001580345-23-000008
+ InvestmentIncomeInterest
+ +/- diverses
+ = GrossInvestmentIncomeOperating
+ - OperatingExpenses
+ = NetInvestmentIncome
+
+0001193125-23-053980
+
+ GrossInvestmentIncomeOperating
+ - InvestmentIncomeInvestmentExpense
+ - Other expenses
+ = NetInvestmentIncome
+
 
 
 Revenue
@@ -66,13 +98,24 @@ Cost of Operating
    -> sollte eine gute Liste ergeben, mit allem was Operating Cost sein kann.
 
 
-
-
-
-
 Achtung:
 - wir haben oft daten in IS und CI (comprehensive Income)
 - prüfen, ob 10-Q immer Q? Einträge in fp hat und ob 10-K immer ein FY hat
+
+
+Net Income
+
+      IncomeLossFromContinuingOperationsBeforeIncomeTaxesMinorityInterestAndIncomeLossFromEquityMethodInvestments
+    + IncomeLossFromEquityMethodInvestments
+    = IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest
+
+      IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest
+    - IncomeTaxExpenseBenefit
+    = IncomeLossFromContinuingOperationsIncludingPortionAttributableToNoncontrollingInterest
+
+
+
+
 
 
 Banks

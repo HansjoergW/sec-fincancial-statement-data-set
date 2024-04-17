@@ -33,7 +33,7 @@ from typing import List
 from secfsdstools.f_standardize.base_prepivot_rules import PrePivotDeduplicate, PrePivotCorrectSign
 from secfsdstools.f_standardize.base_rule_framework import RuleGroup
 from secfsdstools.f_standardize.base_rules import CopyTagRule, SumUpRule, SubtractFromRule, \
-    missingsumparts_rules_creator
+    missingsumparts_rules_creator, MissingSummandRule
 from secfsdstools.f_standardize.base_validation_rules import ValidationRule
 from secfsdstools.f_standardize.standardizing import Standardizer
 
@@ -256,8 +256,6 @@ class IncomeStatementStandardizer(Standardizer):
             # is also a tag that is commonly used to define the total Revenue
             CopyTagRule(original=&#39;RevenuesExcludingInterestAndDividends&#39;,
                         target=&#39;Revenues&#39;),
-            # same is true for InterestAndDividendIncomeOperating
-            CopyTagRule(original=&#39;InterestAndDividendIncomeOperating&#39;, target=&#39;Revenues&#39;),
 
             # if we were not able to define the Revenue so far, there are
             # a couple of other tags which define Revenue, so we count them together
@@ -377,7 +375,9 @@ class IncomeStatementStandardizer(Standardizer):
     is_grossProfit = RuleGroup(
         prefix=&#39;grossprofit&#39;,
         rules=[
-            CopyTagRule(original=&#39;GrossInvestmentIncomeOperating&#39;, target=&#39;GrossProfit&#39;)
+            # for investment companies
+            CopyTagRule(original=&#39;GrossInvestmentIncomeOperating&#39;, target=&#39;GrossProfit&#39;),
+            CopyTagRule(original=&#39;InterestAndDividendIncomeOperating&#39;, target=&#39;GrossProfit&#39;)
         ]
     )
 
@@ -421,6 +421,8 @@ class IncomeStatementStandardizer(Standardizer):
                 original=&#39;IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest&#39;,
                 target=&#39;IncomeLossBeforeIncomeTaxExpenseBenefit&#39;),
 
+            # the following rules set the NetIncomeLoss, if not already set.
+            # the order of the rules is the precedence
             CopyTagRule(original=&#39;NetIncomeLossAvailableToCommonStockholdersBasic&#39;,
                         target=&#39;NetIncomeLoss&#39;),
             CopyTagRule(original=&#39;NetIncomeLossAllocatedToLimitedPartners&#39;, target=&#39;NetIncomeLoss&#39;),
@@ -428,16 +430,20 @@ class IncomeStatementStandardizer(Standardizer):
             CopyTagRule(original=&#39;OtherComprehensiveIncomeLossNetOfTax&#39;, target=&#39;NetIncomeLoss&#39;),
             CopyTagRule(original=&#39;ComprehensiveIncomeNetOfTax&#39;, target=&#39;NetIncomeLoss&#39;),
             CopyTagRule(original=&#39;NetIncomeLossParts&#39;, target=&#39;NetIncomeLoss&#39;),
+            # for investment companies
+            CopyTagRule(original=&#39;NetInvestmentIncome&#39;, target=&#39;NetIncomeLoss&#39;),
         ]
     )
 
     is_missing_net_tax_income = RuleGroup(
-        prefix=&#34;RevCostGross&#34;,
+        prefix=&#34;NetTaxIncome&#34;,
         rules=missingsumparts_rules_creator(
             sum_tag=&#39;NetIncomeLoss&#39;,
             summand_tags=[&#39;IncomeLossBeforeIncomeTaxExpenseBenefit&#39;,
                           &#39;IncomeTaxExpenseBenefit&#39;])
     )
+
+
 
     main_rule_tree = RuleGroup(prefix=&#34;IS&#34;,
                                rules=[
@@ -456,6 +462,14 @@ class IncomeStatementStandardizer(Standardizer):
 
     post_rule_tree = RuleGroup(prefix=&#34;IS_POST&#34;,
                                rules=[
+                                   # if there is no value for Revenues, but GrossProfit
+                                   # we set Revenues to GrossProfit
+                                   # and set CostOfRevenue to zero with the following
+                                   # MissingSummandRule.
+                                   CopyTagRule(original=&#39;GrossProfit&#39;, target=&#39;Revenues&#39;),
+                                   MissingSummandRule(sum_tag=&#39;Revenues&#39;,
+                                                      existing_summands_tags=[&#39;GrossProfit&#39;],
+                                                      missing_summand_tag=&#39;CostOfRevenue&#39;)
                                ])
 
     validation_rules: List[ValidationRule] = [
@@ -724,8 +738,6 @@ as negated.</dd>
             # is also a tag that is commonly used to define the total Revenue
             CopyTagRule(original=&#39;RevenuesExcludingInterestAndDividends&#39;,
                         target=&#39;Revenues&#39;),
-            # same is true for InterestAndDividendIncomeOperating
-            CopyTagRule(original=&#39;InterestAndDividendIncomeOperating&#39;, target=&#39;Revenues&#39;),
 
             # if we were not able to define the Revenue so far, there are
             # a couple of other tags which define Revenue, so we count them together
@@ -845,7 +857,9 @@ as negated.</dd>
     is_grossProfit = RuleGroup(
         prefix=&#39;grossprofit&#39;,
         rules=[
-            CopyTagRule(original=&#39;GrossInvestmentIncomeOperating&#39;, target=&#39;GrossProfit&#39;)
+            # for investment companies
+            CopyTagRule(original=&#39;GrossInvestmentIncomeOperating&#39;, target=&#39;GrossProfit&#39;),
+            CopyTagRule(original=&#39;InterestAndDividendIncomeOperating&#39;, target=&#39;GrossProfit&#39;)
         ]
     )
 
@@ -889,6 +903,8 @@ as negated.</dd>
                 original=&#39;IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest&#39;,
                 target=&#39;IncomeLossBeforeIncomeTaxExpenseBenefit&#39;),
 
+            # the following rules set the NetIncomeLoss, if not already set.
+            # the order of the rules is the precedence
             CopyTagRule(original=&#39;NetIncomeLossAvailableToCommonStockholdersBasic&#39;,
                         target=&#39;NetIncomeLoss&#39;),
             CopyTagRule(original=&#39;NetIncomeLossAllocatedToLimitedPartners&#39;, target=&#39;NetIncomeLoss&#39;),
@@ -896,16 +912,20 @@ as negated.</dd>
             CopyTagRule(original=&#39;OtherComprehensiveIncomeLossNetOfTax&#39;, target=&#39;NetIncomeLoss&#39;),
             CopyTagRule(original=&#39;ComprehensiveIncomeNetOfTax&#39;, target=&#39;NetIncomeLoss&#39;),
             CopyTagRule(original=&#39;NetIncomeLossParts&#39;, target=&#39;NetIncomeLoss&#39;),
+            # for investment companies
+            CopyTagRule(original=&#39;NetInvestmentIncome&#39;, target=&#39;NetIncomeLoss&#39;),
         ]
     )
 
     is_missing_net_tax_income = RuleGroup(
-        prefix=&#34;RevCostGross&#34;,
+        prefix=&#34;NetTaxIncome&#34;,
         rules=missingsumparts_rules_creator(
             sum_tag=&#39;NetIncomeLoss&#39;,
             summand_tags=[&#39;IncomeLossBeforeIncomeTaxExpenseBenefit&#39;,
                           &#39;IncomeTaxExpenseBenefit&#39;])
     )
+
+
 
     main_rule_tree = RuleGroup(prefix=&#34;IS&#34;,
                                rules=[
@@ -924,6 +944,14 @@ as negated.</dd>
 
     post_rule_tree = RuleGroup(prefix=&#34;IS_POST&#34;,
                                rules=[
+                                   # if there is no value for Revenues, but GrossProfit
+                                   # we set Revenues to GrossProfit
+                                   # and set CostOfRevenue to zero with the following
+                                   # MissingSummandRule.
+                                   CopyTagRule(original=&#39;GrossProfit&#39;, target=&#39;Revenues&#39;),
+                                   MissingSummandRule(sum_tag=&#39;Revenues&#39;,
+                                                      existing_summands_tags=[&#39;GrossProfit&#39;],
+                                                      missing_summand_tag=&#39;CostOfRevenue&#39;)
                                ])
 
     validation_rules: List[ValidationRule] = [

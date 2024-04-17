@@ -40,10 +40,6 @@ ToDos
 -----
 - Frage: wenn nur Grossprofit vorhanden ist, aber kein Revenue ausgewiesen,
   sollte dann Revenue denselben Wert wie Grossprofit haben? weil Revenue - CostOfRevenue = Grossprofit ergeben sollte?
-- Investement companies
-   (ca 260: GrossInvestmentIncomeOperating + NetInvestmentIncome
-   (ca 60'000 mit InvestmentIncomeInterest
-    -> wenn sonst nichts = Revenue
 
 - Prüfen der Vorzeichen, passt alles?
 - definieren der Validation Rules
@@ -73,14 +69,6 @@ us-gaap:Revenues
   us-gaap:SalesRevenueNet
     us-gaap:ProductSalesRevenue
     us-gaap:ServiceRevenue
-
-Revenue:
-- major Tags sind klar
-- aber es gibt diverse andere Tags, die auf Revenue hindeuten, wenn
-  kein major gefunden wurde.
-  -> Idee zur Analyse:
-     diejenigen anschauen, die nach major kein Revenue haben.
-     bei denen versuchen das "den letzten" Revenue Eintrag zu finden.
 
 
 Cost of Revenue

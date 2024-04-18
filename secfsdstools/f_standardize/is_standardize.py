@@ -433,14 +433,23 @@ class IncomeStatementStandardizer(Standardizer):
 
     post_rule_tree = RuleGroup(prefix="IS_POST",
                                rules=[
-                                   # if there is no value for Revenues, but GrossProfit
+                                   # 1. if there is no value for Revenues, but GrossProfit
                                    # we set Revenues to GrossProfit
-                                   # and set CostOfRevenue to zero with the following
+                                   # 2. if there is no value for  GrossProfit, but Revenues
+                                   # we set GrossProfit to Revenues
+                                   # 3. in both cases, CostOfRevenue is set to zero with the following
                                    # MissingSummandRule.
                                    CopyTagRule(original='GrossProfit', target='Revenues'),
+                                   CopyTagRule(original='Revenues', target='GrossProfit'),
                                    MissingSummandRule(sum_tag='Revenues',
                                                       existing_summands_tags=['GrossProfit'],
-                                                      missing_summand_tag='CostOfRevenue')
+                                                      missing_summand_tag='CostOfRevenue'),
+                                   # Next, we finalize OperatingIncomeLoss, by subtracting
+                                   # a last time the OperatingExpenses from the GrossProfit,
+                                   # if OperatingIncomeLoss is not set
+                                   SubtractFromRule(subtract_from_tag='GrossProfit',
+                                                    potential_subtract_tags=['OperatingExpenses'],
+                                                    target_tag='OperatingIncomeLoss')
                                ])
 
     validation_rules: List[ValidationRule] = [

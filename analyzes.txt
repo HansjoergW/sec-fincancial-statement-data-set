@@ -38,8 +38,15 @@ Comprehensive Income (Gesamtergebnis): us-gaap:ComprehensiveIncomeNetOfTax
 
 ToDos
 -----
-- Frage: wenn nur Grossprofit vorhanden ist, aber kein Revenue ausgewiesen,
-  sollte dann Revenue denselben Wert wie Grossprofit haben? weil Revenue - CostOfRevenue = Grossprofit ergeben sollte?
+- We mit missing IncomeTaxExpenseBenefit, bzw EBITDA umgeehen?
+  standardized_bag.result_df[standardized_bag.result_df.IncomeLossBeforeIncomeTaxExpenseBenefit.isna() & standardized_bag.result_df.IncomeTaxExpenseBenefit.isna()]
+
+  0001410578-21-000392 hat folgendes -> das könnte so ein zwischending sein, das auch auf
+     IncomeLossBeforeIncomeTaxExpenseBenefit hindeutet
+
+  ProfitLossIncludingRedeemableNonControllingInterest
+  - NetIncomeLossAttributableToNonredeemableNoncontrollingInterest
+  = NetIncomeLoss
 
 - Prüfen der Vorzeichen, passt alles?
 - definieren der Validation Rules
@@ -60,7 +67,6 @@ Investement Incomes examples:
  - InvestmentIncomeInvestmentExpense
  - Other expenses
  = NetInvestmentIncome
-
 
 
 Revenue

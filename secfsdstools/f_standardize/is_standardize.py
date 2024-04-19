@@ -5,7 +5,7 @@ from secfsdstools.f_standardize.base_prepivot_rules import PrePivotDeduplicate, 
 from secfsdstools.f_standardize.base_rule_framework import RuleGroup
 from secfsdstools.f_standardize.base_rules import CopyTagRule, SumUpRule, SubtractFromRule, \
     missingsumparts_rules_creator, MissingSummandRule
-from secfsdstools.f_standardize.base_validation_rules import ValidationRule
+from secfsdstools.f_standardize.base_validation_rules import ValidationRule, SumValidationRule
 from secfsdstools.f_standardize.standardizing import Standardizer
 
 top_100_operating_costs = [
@@ -165,21 +165,51 @@ class IncomeStatementStandardizer(Standardizer):
         prefix="IS_PREPIV",
         rules=[PrePivotDeduplicate(),
                PrePivotCorrectSign(
-                   tag_list=['CostOfGoodsSold', 'CostOfServices',
-                             'CostOfGoodsAndServicesSold', 'LicenseCost',
-                             'CostOfRevenue'],
+                   # all these tags are costOf and therefore should appear as positive
+                   tag_list=['CostOfGoodsSold',
+                             'CostOfServices',
+                             'CostOfGoodsAndServicesSold',
+                             'CostOfRevenue',
+                             'CostOfGoodsSoldExcludingDepreciationDepletionAndAmortization',
+                             'CostOfGoodsSoldDepreciationDepletionAndAmortization',
+                             'CostOfGoodsSoldDepletion',
+                             'CostOfGoodsSoldDepreciation',
+                             'CostOfGoodsSoldAmortization',
+                             'CostOfGoodsSoldDepreciationAndAmortization',
+                             'CostOfGoodsSoldDirectFinancingLease',
+                             'CostOfGoodsSoldElectric',
+                             'CostOfGoodsSoldDirectMaterials',
+                             'CostOfGoodsSoldDirectLabor',
+                             'CostOfGoodsSoldOverhead',
+                             'CostOfGoodsSoldOilAndGas',
+                             'CostOfGoodsSoldSubscription',
+                             'CostOfGoodsSoldDirectTaxesAndLicensesCosts',
+                             'CostOfGoodsSoldMaintenanceCosts',
+                             'CostOfGoodsSoldSalesTypeLease',
+                             'CostOfServicesExcludingDepreciationDepletionAndAmortization',
+                             'CostOfServicesDepreciation',
+                             'CostOfServicesDepreciationAndAmortization',
+                             'CostOfServicesCatering',
+                             'CostOfServicesAmortization',
+                             'CostOfServicesOilAndGas',
+                             'CostOfServicesDirectTaxesAndLicensesCosts',
+                             'CostOfServicesMaintenanceCosts',
+                             'CostOfServicesLicensesAndServices',
+                             'CostOfServicesDirectLabor',
+                             'CostOfServicesLicensesAndMaintenanceAgreements',
+                             'CostOfServicesEnergyServices',
+                             'CostOfServicesDirectMaterials',
+                             'CostOfServicesEnvironmentalRemediation',
+                             'CostOfServicesOverhead',
+                             'CostOfGoodsAndServicesSoldDepreciationAndAmortization',
+                             'CostOfGoodsAndServicesSoldAmortization',
+                             'CostOfGoodsAndServicesSoldOverhead',
+                             'CostOfGoodsAndServicesSoldDepreciation',
+                             'CostOfGoodsAndServicesEnergyCommoditiesAndServices',
+                             'CostOfGoodsAndServiceExcludingDepreciationDepletionAndAmortization'
+                             ],
                    is_positive=True
                )]
-    )
-
-    is_cogs_sumup_rg = RuleGroup(
-        prefix="IS_COGSUMUP",
-        rules=[
-            SumUpRule(sum_tag='CostOfGoodsAndServicesSold',
-                      potential_summands=['CostOfGoodsSold', 'CostOfServices']),
-            SumUpRule(sum_tag='CostOfRevenue',
-                      potential_summands=['CostOfGoodsAndServicesSold', 'LicenseCost'])
-        ]
     )
 
     is_revenue_rg = RuleGroup(
@@ -379,7 +409,7 @@ class IncomeStatementStandardizer(Standardizer):
                 target_tag='IncomeLossFromContinuingOperationsIncludingPortionAttributableToNoncontrollingInterest',
                 subtract_from_tag='IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest',
                 potential_subtract_tags=['IncomeTaxExpenseBenefit']
-                ),
+            ),
 
             SumUpRule(sum_tag='NetIncomeLossParts',
                       potential_summands=[
@@ -398,6 +428,8 @@ class IncomeStatementStandardizer(Standardizer):
                         target='NetIncomeLoss'),
             CopyTagRule(original='NetIncomeLossAllocatedToLimitedPartners', target='NetIncomeLoss'),
             CopyTagRule(original='ProfitLoss', target='NetIncomeLoss'),
+            CopyTagRule(original='ProfitLossIncludingRedeemableNonControllingInterest',
+                        target='NetIncomeLoss'),
             CopyTagRule(original='OtherComprehensiveIncomeLossNetOfTax', target='NetIncomeLoss'),
             CopyTagRule(original='ComprehensiveIncomeNetOfTax', target='NetIncomeLoss'),
             CopyTagRule(original='NetIncomeLossParts', target='NetIncomeLoss'),
@@ -414,8 +446,6 @@ class IncomeStatementStandardizer(Standardizer):
                           'IncomeTaxExpenseBenefit'])
     )
 
-
-
     main_rule_tree = RuleGroup(prefix="IS",
                                rules=[
                                    is_revenue_rg,
@@ -431,28 +461,46 @@ class IncomeStatementStandardizer(Standardizer):
                                      rules=[
                                      ])
 
-    post_rule_tree = RuleGroup(prefix="IS_POST",
-                               rules=[
-                                   # 1. if there is no value for Revenues, but GrossProfit
-                                   # we set Revenues to GrossProfit
-                                   # 2. if there is no value for  GrossProfit, but Revenues
-                                   # we set GrossProfit to Revenues
-                                   # 3. in both cases, CostOfRevenue is set to zero with the following
-                                   # MissingSummandRule.
-                                   CopyTagRule(original='GrossProfit', target='Revenues'),
-                                   CopyTagRule(original='Revenues', target='GrossProfit'),
-                                   MissingSummandRule(sum_tag='Revenues',
-                                                      existing_summands_tags=['GrossProfit'],
-                                                      missing_summand_tag='CostOfRevenue'),
-                                   # Next, we finalize OperatingIncomeLoss, by subtracting
-                                   # a last time the OperatingExpenses from the GrossProfit,
-                                   # if OperatingIncomeLoss is not set
-                                   SubtractFromRule(subtract_from_tag='GrossProfit',
-                                                    potential_subtract_tags=['OperatingExpenses'],
-                                                    target_tag='OperatingIncomeLoss')
-                               ])
+    post_rule_tree = RuleGroup(
+        prefix="IS_POST",
+        rules=[
+            # 1. if there is no value for Revenues, but GrossProfit
+            # we set Revenues to GrossProfit
+            # 2. if there is no value for  GrossProfit, but Revenues
+            # we set GrossProfit to Revenues
+            # 3. in both cases, CostOfRevenue is set to zero with the following
+            # MissingSummandRule.
+            CopyTagRule(original='GrossProfit', target='Revenues'),
+            CopyTagRule(original='Revenues', target='GrossProfit'),
+            MissingSummandRule(sum_tag='Revenues',
+                               existing_summands_tags=['GrossProfit'],
+                               missing_summand_tag='CostOfRevenue'),
+            # Next, we finalize OperatingIncomeLoss, by subtracting
+            # a last time the OperatingExpenses from the GrossProfit,
+            # if OperatingIncomeLoss is not set
+            SubtractFromRule(subtract_from_tag='GrossProfit',
+                             potential_subtract_tags=['OperatingExpenses'],
+                             target_tag='OperatingIncomeLoss'),
+
+            # 1. if there is no value for IncomeLossBeforeIncomeTaxExpenseBenefit,
+            # but for NetIncomeLoss, we set it to the same value
+            # 2. afterwards, we set IncomeTaxExpenseBenefit to zero with the following rule
+            CopyTagRule(original='NetIncomeLoss', target='IncomeLossBeforeIncomeTaxExpenseBenefit'),
+            MissingSummandRule(sum_tag='IncomeLossBeforeIncomeTaxExpenseBenefit',
+                               existing_summands_tags=['NetIncomeLoss'],
+                               missing_summand_tag='IncomeTaxExpenseBenefit'),
+        ])
 
     validation_rules: List[ValidationRule] = [
+        SumValidationRule(identifier="RevCogGrossCheck",
+                          sum_tag='Revenues',
+                          summands=['CostOfRevenue', 'GrossProfit']),
+        SumValidationRule(identifier="GrossCstopOpinc",
+                          sum_tag='GrossProfit',
+                          summands=['OperatingExpenses', 'OperatingIncomeLoss']),
+        SumValidationRule(identifier="NetIncome",
+                          sum_tag='IncomeLossBeforeIncomeTaxExpenseBenefit',
+                          summands=['IncomeTaxExpenseBenefit', 'NetIncomeLoss']),
     ]
 
     # these are the columns that finally are returned after the standardization

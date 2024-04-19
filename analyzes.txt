@@ -97,41 +97,9 @@ Achtung:
 - prüfen, ob 10-Q immer Q? Einträge in fp hat und ob 10-K immer ein FY hat
 
 
-Net Income
-
-      IncomeLossFromContinuingOperationsBeforeIncomeTaxesMinorityInterestAndIncomeLossFromEquityMethodInvestments
-    + IncomeLossFromEquityMethodInvestments
-    = IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest
-
-      IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest
-    - IncomeTaxExpenseBenefit
-    = IncomeLossFromContinuingOperationsIncludingPortionAttributableToNoncontrollingInterest
-
-
-
-
-
 
 Banks
 ----
-
-Revenue: InterestAndDividendIncomeOperating
-
-"costOfRevenue": InterestIncomeExpenseNet -> total interest expense
-
-Gross Profit
-
-Frage: ist das folgende Betriebsaufwand, oder "other income expensis"
-NoninterestIncome -> other income
-NoninterestExpense -> other expense
-
-
-IncomeLossFromContinuingOperationsBeforeIncomeTaxesMinorityInterestAndIncomeLossFromEquityMethodInvestments -> Income before income taxes
-
-IncomeTaxExpenseBenefit -> income tax benefit
-
-NetIncomeLoss -> netincome loss
-
 
 
 Todos:

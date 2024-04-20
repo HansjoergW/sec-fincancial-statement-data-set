@@ -151,7 +151,7 @@ if __name__ == '__main__':
     #                                              'CostOfGoodsSold',
     #                                              'CostOfServices']))
 
-    # is_joined_bag = is_joined_bag.filter(AdshJoinedFilter(adshs=['0001193125-16-481920']))
+    #is_joined_bag = is_joined_bag.filter(AdshJoinedFilter(adshs=['0001213900-20-036940']))
 
     #is_joined_bag = load_smaller_sample_IS_set()
     #

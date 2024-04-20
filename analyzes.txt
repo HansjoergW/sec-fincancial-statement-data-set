@@ -53,20 +53,34 @@ ToDos
 - EarningsPerShare?
 
 
-Investement Incomes examples:
-0001580345-23-000008
- InvestmentIncomeInterest
- +/- diverses
- = GrossInvestmentIncomeOperating
- - OperatingExpenses
- = NetInvestmentIncome
+- validation for income, ebitbefore taxes, taxes is only 62.4 percent
 
-0001193125-23-053980
+    0001007587-22-000019
+    IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest
+    - IncomeTaxExpenseBenefit
+    = IncomeLossFromContinuingOperations
+    + IncomeLossFromDiscontinuedOperationsNetOfTaxAttributableToReportingEntity
+    = NetIncomeLoss
 
- GrossInvestmentIncomeOperating
- - InvestmentIncomeInvestmentExpense
- - Other expenses
- = NetInvestmentIncome
+    Problem: IncomeTaxExpenseBenefit bezieht sich nur auf continuingOperations
+             Wenn aber noch Discontinued vorhanden, passt das nicht mehr mit NetIncomeLoss zusammen
+
+             Entsprechend muss die Validierung anders sein.
+
+             Continuing und Discontinued splitten
+
+
+    mann müsste also Continuing und Discontinued trennen.
+
+
+    0001140361-20-002341
+    IncomeLossFromContinuingOperationsBeforeIncomeTaxesMinorityInterestAndIncomeLossFromEquityMethodInvestments
+    + IncomeTaxExpenseBenefit
+    = ProfitLoss
+    + NetIncomeLossAttributableToNoncontrollingInterest
+    = NetIncomeLoss
+
+
 
 
 Revenue

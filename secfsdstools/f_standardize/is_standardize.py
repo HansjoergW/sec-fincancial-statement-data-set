@@ -4,7 +4,7 @@ from typing import List
 from secfsdstools.f_standardize.base_prepivot_rules import PrePivotDeduplicate, PrePivotCorrectSign
 from secfsdstools.f_standardize.base_rule_framework import RuleGroup
 from secfsdstools.f_standardize.base_rules import CopyTagRule, SumUpRule, SubtractFromRule, \
-    missingsumparts_rules_creator, MissingSummandRule
+    missingsumparts_rules_creator, MissingSummandRule, PostSetToZero
 from secfsdstools.f_standardize.base_validation_rules import ValidationRule, SumValidationRule
 from secfsdstools.f_standardize.standardizing import Standardizer
 
@@ -398,29 +398,39 @@ class IncomeStatementStandardizer(Standardizer):
     is_netincome_rg = RuleGroup(
         prefix="netincome",
         rules=[
-            SumUpRule(
-                sum_tag='IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest',
-                potential_summands=[
-                    'IncomeLossFromContinuingOperationsBeforeIncomeTaxesMinorityInterestAndIncomeLossFromEquityMethodInvestments',
-                    'IncomeLossFromEquityMethodInvestments'
-                ]),
-
-            SubtractFromRule(
-                target_tag='IncomeLossFromContinuingOperationsIncludingPortionAttributableToNoncontrollingInterest',
-                subtract_from_tag='IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest',
-                potential_subtract_tags=['IncomeTaxExpenseBenefit']
-            ),
-
-            SumUpRule(sum_tag='NetIncomeLossParts',
-                      potential_summands=[
-                          'IncomeLossFromContinuingOperationsIncludingPortionAttributableToNoncontrollingInterest',
-                          'IncomeLossFromDiscontinuedOperationsNetOfTax'
-                      ]),
-
             # Renaming
             CopyTagRule(
                 original='IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest',
-                target='IncomeLossBeforeIncomeTaxExpenseBenefit'),
+                target='IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit'),
+
+            SumUpRule(
+                sum_tag='IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit',
+                potential_summands=[
+                    'IncomeLossFromContinuingOperationsBeforeIncomeTaxesMinorityInterestAndIncomeLossFromEquityMethodInvestments',
+                ], optional_summands=['IncomeLossFromEquityMethodInvestments']),
+
+            CopyTagRule(
+                original='IncomeLossFromContinuingOperationsIncludingPortionAttributableToNoncontrollingInterest',
+                target='IncomeLossFromContinuingOperations'),
+
+            SubtractFromRule(
+                target_tag='IncomeLossFromContinuingOperations',
+                subtract_from_tag='IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit',
+                potential_subtract_tags=['IncomeTaxExpenseBenefit',
+                                         'NetIncomeLossAttributableToNoncontrollingInterest']
+            ),
+
+            CopyTagRule(
+                original='IncomeLossFromDiscontinuedOperationsNetOfTaxAttributableToReportingEntity',
+                target='IncomeLossFromDiscontinuedOperationsNetOfTax'),
+
+            SumUpRule(sum_tag='NetIncomeLossParts',
+                      potential_summands=[
+                          'IncomeLossFromContinuingOperations',
+                          'IncomeLossFromDiscontinuedOperationsNetOfTax'
+                      ]),
+
+            Wahrscheinlich müsste man jetzt die meisten folgenen Copy Tags zuerst nach IncomeLossFromContinuingOperations kopieren
 
             # the following rules set the NetIncomeLoss, if not already set.
             # the order of the rules is the precedence
@@ -439,10 +449,10 @@ class IncomeStatementStandardizer(Standardizer):
     )
 
     is_missing_net_tax_income = RuleGroup(
-        prefix="NetTaxIncome",
+        prefix="ContIncTax",
         rules=missingsumparts_rules_creator(
-            sum_tag='NetIncomeLoss',
-            summand_tags=['IncomeLossBeforeIncomeTaxExpenseBenefit',
+            sum_tag='IncomeLossBeforeIncomeTaxExpenseBenefit',
+            summand_tags=['IncomeLossFromContinuingOperations',
                           'IncomeTaxExpenseBenefit'])
     )
 
@@ -464,6 +474,7 @@ class IncomeStatementStandardizer(Standardizer):
     post_rule_tree = RuleGroup(
         prefix="IS_POST",
         rules=[
+
             # 1. if there is no value for Revenues, but GrossProfit
             # we set Revenues to GrossProfit
             # 2. if there is no value for  GrossProfit, but Revenues
@@ -489,6 +500,9 @@ class IncomeStatementStandardizer(Standardizer):
             MissingSummandRule(sum_tag='IncomeLossBeforeIncomeTaxExpenseBenefit',
                                existing_summands_tags=['NetIncomeLoss'],
                                missing_summand_tag='IncomeTaxExpenseBenefit'),
+
+            PostSetToZero(tags=['IncomeLossFromDiscontinuedOperationsNetOfTax'])
+
         ])
 
     validation_rules: List[ValidationRule] = [
@@ -498,9 +512,16 @@ class IncomeStatementStandardizer(Standardizer):
         SumValidationRule(identifier="GrossCstopOpinc",
                           sum_tag='GrossProfit',
                           summands=['OperatingExpenses', 'OperatingIncomeLoss']),
-        SumValidationRule(identifier="NetIncome",
+        SumValidationRule(identifier="ContIncTax",
                           sum_tag='IncomeLossBeforeIncomeTaxExpenseBenefit',
-                          summands=['IncomeTaxExpenseBenefit', 'NetIncomeLoss']),
+                          summands=['IncomeTaxExpenseBenefit',
+                                    'IncomeLossFromContinuingOperations']),
+        SumValidationRule(identifier='NetIncomeLossParts',
+                          sum_tag='NetIncomeLoss',
+                          summands=[
+                              'IncomeLossFromContinuingOperations',
+                              'IncomeLossFromDiscontinuedOperationsNetOfTax'
+                          ]),
     ]
 
     # these are the columns that finally are returned after the standardization
@@ -511,6 +532,8 @@ class IncomeStatementStandardizer(Standardizer):
                              'OperatingIncomeLoss',
                              'IncomeLossBeforeIncomeTaxExpenseBenefit',
                              'IncomeTaxExpenseBenefit',
+                             'IncomeLossFromContinuingOperations',
+                             'IncomeLossFromDiscontinuedOperationsNetOfTax',
                              'NetIncomeLoss'
                              ]
 

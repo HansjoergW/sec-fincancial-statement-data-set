@@ -151,7 +151,7 @@ if __name__ == '__main__':
     #                                              'CostOfGoodsSold',
     #                                              'CostOfServices']))
 
-    #is_joined_bag = is_joined_bag.filter(AdshJoinedFilter(adshs=['0001213900-20-036940']))
+    is_joined_bag = is_joined_bag.filter(AdshJoinedFilter(adshs=['0001213900-21-032506']))
 
     #is_joined_bag = load_smaller_sample_IS_set()
     #
@@ -159,9 +159,8 @@ if __name__ == '__main__':
 
     # print(find_entries_with_all_tags(bag=is_joined_bag,
     #                            tag_list=[
-    #                                'IncomeLossFromContinuingOperationsBeforeIncomeTaxesMinorityInterestAndIncomeLossFromEquityMethodInvestments',
-    #                                'IncomeTaxExpenseBenefit',
-    #                                'NetIncomeLoss'
+    #                                'IncomeLossFromDiscontinuedOperationsNetOfTaxAttributableToNoncontrollingInterest',
+    #                                'IncomeLossFromDiscontinuedOperationsNetOfTaxAttributableToReportingEntity',
     #                            ]))
 
     # print(find_entries_with_must_and_others(
@@ -171,7 +170,7 @@ if __name__ == '__main__':
     #             'SalesRevenueServicesNet']
     # ))
 
-    # print(filter_tags(is_joined_bag.pre_num_df, tag_like="SalesRevenue"))
+    print(filter_tags(is_joined_bag.pre_num_df, tag_like="IncomeLossFromDiscontinuedOperations"))
     #
     # # check the loaded data
     print("sub_df", is_joined_bag.sub_df.shape)

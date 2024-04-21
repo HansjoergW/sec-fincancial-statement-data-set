@@ -38,6 +38,24 @@ Comprehensive Income (Gesamtergebnis): us-gaap:ComprehensiveIncomeNetOfTax
 
 ToDos
 -----
+- Vorzeichen von IncomeTaxExpenseBenefit scheint nicht konsistent zu sein.
+  IncomeLossFromContinuingOperationsBeforeIncomeTaxesMinorityInterestAndIncomeLossFromEquityMethodInvestments
+  - IncomeTaxExpenseBenefit
+  = NetIncomeLoss  (bzw. IncomeLossFromContinuingOperations)
+  Bsp: 0001213900-21-032506 (Vorzeichen von ExpenseBenefit verkehrt)
+
+  Dadurch schlägt die Validierung fehl, auch
+  wenn das Result richtig ist (NetIncomeLoss), falls vorhanden
+
+  Problem, wann und wie korrigieren?
+  oder zuerste eine Regel, die IncomeLossFromContinuingOperations setzt,
+  => falls NetIncomeLoss bekannt, und kein discontinued? also before Tax berechnet wird?
+  und dann eine Korrektur des Tax Vorzeichens?, falls in bestimmter Toleranz
+
+  Zuerst Analyse machen:
+  kann man fitlern, wieviel das betrifft? also z.b. EBITDA + IncomeTax.. = NetIncomeLoss
+  Vergleichen mit EBITDA - IncomeTax = NetIncomeLoss
+
 - We mit missing IncomeTaxExpenseBenefit, bzw EBITDA umgeehen?
   standardized_bag.result_df[standardized_bag.result_df.IncomeLossBeforeIncomeTaxExpenseBenefit.isna() & standardized_bag.result_df.IncomeTaxExpenseBenefit.isna()]
 
@@ -153,6 +171,34 @@ es gibt negative costOfRevenue Einträge
   --------
   Revenues
   ========
+
+
+IncomeLossFromDiscontinuedOperationsNetOfTax
+IncomeLossFromDiscontinuedOperationsNetOfTaxAttributableToNoncontrollingInterest
+IncomeLossFromDiscontinuedOperationsNetOfTaxAttributableToReportingEntity
+
+IncomeLossFromDiscontinuedOperationsNetOfTaxPerOutstandingGeneralPartnershipUnit1
+
+IncomeLossFromDiscontinuedOperationsNetOfTaxPerOutstandingLimitedPartnershipAndGeneralPartnershipUnitBasic
+IncomeLossFromDiscontinuedOperationsNetOfTaxPerOutstandingLimitedPartnershipAndGeneralPartnershipUnitBasicAndDiluted'
+IncomeLossFromDiscontinuedOperationsNetOfTaxPerOutstandingLimitedPartnershipUnit
+IncomeLossFromDiscontinuedOperationsNetOfTaxPerOutstandingLimitedPartnershipUnitDiluted
+IncomeLossFromDiscontinuedOperationsNetOfTaxPerOutstandingLimitedPartnershipUnitBasic
+IncomeLossFromDiscontinuedOperationsNetOfTaxPerOutstandingLimitedPartnershipUnitDiluted1
+
+IncomeLossFromDiscontinuedOperationsNetOfTaxPerBasicShare
+IncomeLossFromDiscontinuedOperationsNetOfTaxPerDilutedShare
+IncomeLossFromDiscontinuedOperationsNetOfTaxPerBasicAndDilutedShare
+
+
+NetIncomeLossFromDiscontinuedOperationsAvailableToCommonShareholdersBasic
+NetIncomeLossFromDiscontinuedOperationsAvailableToCommonShareholdersDiluted
+
+
+
+
+
+
 
 Sonstiges
 ---------

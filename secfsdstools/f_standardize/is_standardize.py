@@ -430,8 +430,6 @@ class IncomeStatementStandardizer(Standardizer):
                           'IncomeLossFromDiscontinuedOperationsNetOfTax'
                       ]),
 
-            Wahrscheinlich müsste man jetzt die meisten folgenen Copy Tags zuerst nach IncomeLossFromContinuingOperations kopieren
-
             # the following rules set the NetIncomeLoss, if not already set.
             # the order of the rules is the precedence
             CopyTagRule(original='NetIncomeLossAvailableToCommonStockholdersBasic',
@@ -445,6 +443,11 @@ class IncomeStatementStandardizer(Standardizer):
             CopyTagRule(original='NetIncomeLossParts', target='NetIncomeLoss'),
             # for investment companies
             CopyTagRule(original='NetInvestmentIncome', target='NetIncomeLoss'),
+
+            # since IncomeLossFromContinuingOperations is part of a validation rule,
+            # and if it was not set, we assume that there is only IncomeLossFromContinuingOperations
+            # copy the value from NetIncomeLoss
+            CopyTagRule(original='NetIncomeLoss', target='IncomeLossFromContinuingOperations'),
         ]
     )
 

@@ -33,7 +33,7 @@ from typing import List
 from secfsdstools.f_standardize.base_prepivot_rules import PrePivotDeduplicate, PrePivotCorrectSign
 from secfsdstools.f_standardize.base_rule_framework import RuleGroup
 from secfsdstools.f_standardize.base_rules import CopyTagRule, SumUpRule, SubtractFromRule, \
-    missingsumparts_rules_creator, MissingSummandRule
+    missingsumparts_rules_creator, MissingSummandRule, PostSetToZero
 from secfsdstools.f_standardize.base_validation_rules import ValidationRule, SumValidationRule
 from secfsdstools.f_standardize.standardizing import Standardizer
 
@@ -427,29 +427,37 @@ class IncomeStatementStandardizer(Standardizer):
     is_netincome_rg = RuleGroup(
         prefix=&#34;netincome&#34;,
         rules=[
-            SumUpRule(
-                sum_tag=&#39;IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest&#39;,
-                potential_summands=[
-                    &#39;IncomeLossFromContinuingOperationsBeforeIncomeTaxesMinorityInterestAndIncomeLossFromEquityMethodInvestments&#39;,
-                    &#39;IncomeLossFromEquityMethodInvestments&#39;
-                ]),
-
-            SubtractFromRule(
-                target_tag=&#39;IncomeLossFromContinuingOperationsIncludingPortionAttributableToNoncontrollingInterest&#39;,
-                subtract_from_tag=&#39;IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest&#39;,
-                potential_subtract_tags=[&#39;IncomeTaxExpenseBenefit&#39;]
-            ),
-
-            SumUpRule(sum_tag=&#39;NetIncomeLossParts&#39;,
-                      potential_summands=[
-                          &#39;IncomeLossFromContinuingOperationsIncludingPortionAttributableToNoncontrollingInterest&#39;,
-                          &#39;IncomeLossFromDiscontinuedOperationsNetOfTax&#39;
-                      ]),
-
             # Renaming
             CopyTagRule(
                 original=&#39;IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest&#39;,
-                target=&#39;IncomeLossBeforeIncomeTaxExpenseBenefit&#39;),
+                target=&#39;IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit&#39;),
+
+            SumUpRule(
+                sum_tag=&#39;IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit&#39;,
+                potential_summands=[
+                    &#39;IncomeLossFromContinuingOperationsBeforeIncomeTaxesMinorityInterestAndIncomeLossFromEquityMethodInvestments&#39;,
+                ], optional_summands=[&#39;IncomeLossFromEquityMethodInvestments&#39;]),
+
+            CopyTagRule(
+                original=&#39;IncomeLossFromContinuingOperationsIncludingPortionAttributableToNoncontrollingInterest&#39;,
+                target=&#39;IncomeLossFromContinuingOperations&#39;),
+
+            SubtractFromRule(
+                target_tag=&#39;IncomeLossFromContinuingOperations&#39;,
+                subtract_from_tag=&#39;IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit&#39;,
+                potential_subtract_tags=[&#39;IncomeTaxExpenseBenefit&#39;,
+                                         &#39;NetIncomeLossAttributableToNoncontrollingInterest&#39;]
+            ),
+
+            CopyTagRule(
+                original=&#39;IncomeLossFromDiscontinuedOperationsNetOfTaxAttributableToReportingEntity&#39;,
+                target=&#39;IncomeLossFromDiscontinuedOperationsNetOfTax&#39;),
+
+            SumUpRule(sum_tag=&#39;NetIncomeLossParts&#39;,
+                      potential_summands=[
+                          &#39;IncomeLossFromContinuingOperations&#39;,
+                          &#39;IncomeLossFromDiscontinuedOperationsNetOfTax&#39;
+                      ]),
 
             # the following rules set the NetIncomeLoss, if not already set.
             # the order of the rules is the precedence
@@ -464,14 +472,19 @@ class IncomeStatementStandardizer(Standardizer):
             CopyTagRule(original=&#39;NetIncomeLossParts&#39;, target=&#39;NetIncomeLoss&#39;),
             # for investment companies
             CopyTagRule(original=&#39;NetInvestmentIncome&#39;, target=&#39;NetIncomeLoss&#39;),
+
+            # since IncomeLossFromContinuingOperations is part of a validation rule,
+            # and if it was not set, we assume that there is only IncomeLossFromContinuingOperations
+            # copy the value from NetIncomeLoss
+            CopyTagRule(original=&#39;NetIncomeLoss&#39;, target=&#39;IncomeLossFromContinuingOperations&#39;),
         ]
     )
 
     is_missing_net_tax_income = RuleGroup(
-        prefix=&#34;NetTaxIncome&#34;,
+        prefix=&#34;ContIncTax&#34;,
         rules=missingsumparts_rules_creator(
-            sum_tag=&#39;NetIncomeLoss&#39;,
-            summand_tags=[&#39;IncomeLossBeforeIncomeTaxExpenseBenefit&#39;,
+            sum_tag=&#39;IncomeLossBeforeIncomeTaxExpenseBenefit&#39;,
+            summand_tags=[&#39;IncomeLossFromContinuingOperations&#39;,
                           &#39;IncomeTaxExpenseBenefit&#39;])
     )
 
@@ -493,6 +506,7 @@ class IncomeStatementStandardizer(Standardizer):
     post_rule_tree = RuleGroup(
         prefix=&#34;IS_POST&#34;,
         rules=[
+
             # 1. if there is no value for Revenues, but GrossProfit
             # we set Revenues to GrossProfit
             # 2. if there is no value for  GrossProfit, but Revenues
@@ -518,6 +532,9 @@ class IncomeStatementStandardizer(Standardizer):
             MissingSummandRule(sum_tag=&#39;IncomeLossBeforeIncomeTaxExpenseBenefit&#39;,
                                existing_summands_tags=[&#39;NetIncomeLoss&#39;],
                                missing_summand_tag=&#39;IncomeTaxExpenseBenefit&#39;),
+
+            PostSetToZero(tags=[&#39;IncomeLossFromDiscontinuedOperationsNetOfTax&#39;])
+
         ])
 
     validation_rules: List[ValidationRule] = [
@@ -527,9 +544,16 @@ class IncomeStatementStandardizer(Standardizer):
         SumValidationRule(identifier=&#34;GrossCstopOpinc&#34;,
                           sum_tag=&#39;GrossProfit&#39;,
                           summands=[&#39;OperatingExpenses&#39;, &#39;OperatingIncomeLoss&#39;]),
-        SumValidationRule(identifier=&#34;NetIncome&#34;,
+        SumValidationRule(identifier=&#34;ContIncTax&#34;,
                           sum_tag=&#39;IncomeLossBeforeIncomeTaxExpenseBenefit&#39;,
-                          summands=[&#39;IncomeTaxExpenseBenefit&#39;, &#39;NetIncomeLoss&#39;]),
+                          summands=[&#39;IncomeTaxExpenseBenefit&#39;,
+                                    &#39;IncomeLossFromContinuingOperations&#39;]),
+        SumValidationRule(identifier=&#39;NetIncomeLossParts&#39;,
+                          sum_tag=&#39;NetIncomeLoss&#39;,
+                          summands=[
+                              &#39;IncomeLossFromContinuingOperations&#39;,
+                              &#39;IncomeLossFromDiscontinuedOperationsNetOfTax&#39;
+                          ]),
     ]
 
     # these are the columns that finally are returned after the standardization
@@ -540,6 +564,8 @@ class IncomeStatementStandardizer(Standardizer):
                              &#39;OperatingIncomeLoss&#39;,
                              &#39;IncomeLossBeforeIncomeTaxExpenseBenefit&#39;,
                              &#39;IncomeTaxExpenseBenefit&#39;,
+                             &#39;IncomeLossFromContinuingOperations&#39;,
+                             &#39;IncomeLossFromDiscontinuedOperationsNetOfTax&#39;,
                              &#39;NetIncomeLoss&#39;
                              ]
 
@@ -966,29 +992,37 @@ as negated.</dd>
     is_netincome_rg = RuleGroup(
         prefix=&#34;netincome&#34;,
         rules=[
-            SumUpRule(
-                sum_tag=&#39;IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest&#39;,
-                potential_summands=[
-                    &#39;IncomeLossFromContinuingOperationsBeforeIncomeTaxesMinorityInterestAndIncomeLossFromEquityMethodInvestments&#39;,
-                    &#39;IncomeLossFromEquityMethodInvestments&#39;
-                ]),
-
-            SubtractFromRule(
-                target_tag=&#39;IncomeLossFromContinuingOperationsIncludingPortionAttributableToNoncontrollingInterest&#39;,
-                subtract_from_tag=&#39;IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest&#39;,
-                potential_subtract_tags=[&#39;IncomeTaxExpenseBenefit&#39;]
-            ),
-
-            SumUpRule(sum_tag=&#39;NetIncomeLossParts&#39;,
-                      potential_summands=[
-                          &#39;IncomeLossFromContinuingOperationsIncludingPortionAttributableToNoncontrollingInterest&#39;,
-                          &#39;IncomeLossFromDiscontinuedOperationsNetOfTax&#39;
-                      ]),
-
             # Renaming
             CopyTagRule(
                 original=&#39;IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest&#39;,
-                target=&#39;IncomeLossBeforeIncomeTaxExpenseBenefit&#39;),
+                target=&#39;IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit&#39;),
+
+            SumUpRule(
+                sum_tag=&#39;IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit&#39;,
+                potential_summands=[
+                    &#39;IncomeLossFromContinuingOperationsBeforeIncomeTaxesMinorityInterestAndIncomeLossFromEquityMethodInvestments&#39;,
+                ], optional_summands=[&#39;IncomeLossFromEquityMethodInvestments&#39;]),
+
+            CopyTagRule(
+                original=&#39;IncomeLossFromContinuingOperationsIncludingPortionAttributableToNoncontrollingInterest&#39;,
+                target=&#39;IncomeLossFromContinuingOperations&#39;),
+
+            SubtractFromRule(
+                target_tag=&#39;IncomeLossFromContinuingOperations&#39;,
+                subtract_from_tag=&#39;IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit&#39;,
+                potential_subtract_tags=[&#39;IncomeTaxExpenseBenefit&#39;,
+                                         &#39;NetIncomeLossAttributableToNoncontrollingInterest&#39;]
+            ),
+
+            CopyTagRule(
+                original=&#39;IncomeLossFromDiscontinuedOperationsNetOfTaxAttributableToReportingEntity&#39;,
+                target=&#39;IncomeLossFromDiscontinuedOperationsNetOfTax&#39;),
+
+            SumUpRule(sum_tag=&#39;NetIncomeLossParts&#39;,
+                      potential_summands=[
+                          &#39;IncomeLossFromContinuingOperations&#39;,
+                          &#39;IncomeLossFromDiscontinuedOperationsNetOfTax&#39;
+                      ]),
 
             # the following rules set the NetIncomeLoss, if not already set.
             # the order of the rules is the precedence
@@ -1003,14 +1037,19 @@ as negated.</dd>
             CopyTagRule(original=&#39;NetIncomeLossParts&#39;, target=&#39;NetIncomeLoss&#39;),
             # for investment companies
             CopyTagRule(original=&#39;NetInvestmentIncome&#39;, target=&#39;NetIncomeLoss&#39;),
+
+            # since IncomeLossFromContinuingOperations is part of a validation rule,
+            # and if it was not set, we assume that there is only IncomeLossFromContinuingOperations
+            # copy the value from NetIncomeLoss
+            CopyTagRule(original=&#39;NetIncomeLoss&#39;, target=&#39;IncomeLossFromContinuingOperations&#39;),
         ]
     )
 
     is_missing_net_tax_income = RuleGroup(
-        prefix=&#34;NetTaxIncome&#34;,
+        prefix=&#34;ContIncTax&#34;,
         rules=missingsumparts_rules_creator(
-            sum_tag=&#39;NetIncomeLoss&#39;,
-            summand_tags=[&#39;IncomeLossBeforeIncomeTaxExpenseBenefit&#39;,
+            sum_tag=&#39;IncomeLossBeforeIncomeTaxExpenseBenefit&#39;,
+            summand_tags=[&#39;IncomeLossFromContinuingOperations&#39;,
                           &#39;IncomeTaxExpenseBenefit&#39;])
     )
 
@@ -1032,6 +1071,7 @@ as negated.</dd>
     post_rule_tree = RuleGroup(
         prefix=&#34;IS_POST&#34;,
         rules=[
+
             # 1. if there is no value for Revenues, but GrossProfit
             # we set Revenues to GrossProfit
             # 2. if there is no value for  GrossProfit, but Revenues
@@ -1057,6 +1097,9 @@ as negated.</dd>
             MissingSummandRule(sum_tag=&#39;IncomeLossBeforeIncomeTaxExpenseBenefit&#39;,
                                existing_summands_tags=[&#39;NetIncomeLoss&#39;],
                                missing_summand_tag=&#39;IncomeTaxExpenseBenefit&#39;),
+
+            PostSetToZero(tags=[&#39;IncomeLossFromDiscontinuedOperationsNetOfTax&#39;])
+
         ])
 
     validation_rules: List[ValidationRule] = [
@@ -1066,9 +1109,16 @@ as negated.</dd>
         SumValidationRule(identifier=&#34;GrossCstopOpinc&#34;,
                           sum_tag=&#39;GrossProfit&#39;,
                           summands=[&#39;OperatingExpenses&#39;, &#39;OperatingIncomeLoss&#39;]),
-        SumValidationRule(identifier=&#34;NetIncome&#34;,
+        SumValidationRule(identifier=&#34;ContIncTax&#34;,
                           sum_tag=&#39;IncomeLossBeforeIncomeTaxExpenseBenefit&#39;,
-                          summands=[&#39;IncomeTaxExpenseBenefit&#39;, &#39;NetIncomeLoss&#39;]),
+                          summands=[&#39;IncomeTaxExpenseBenefit&#39;,
+                                    &#39;IncomeLossFromContinuingOperations&#39;]),
+        SumValidationRule(identifier=&#39;NetIncomeLossParts&#39;,
+                          sum_tag=&#39;NetIncomeLoss&#39;,
+                          summands=[
+                              &#39;IncomeLossFromContinuingOperations&#39;,
+                              &#39;IncomeLossFromDiscontinuedOperationsNetOfTax&#39;
+                          ]),
     ]
 
     # these are the columns that finally are returned after the standardization
@@ -1079,6 +1129,8 @@ as negated.</dd>
                              &#39;OperatingIncomeLoss&#39;,
                              &#39;IncomeLossBeforeIncomeTaxExpenseBenefit&#39;,
                              &#39;IncomeTaxExpenseBenefit&#39;,
+                             &#39;IncomeLossFromContinuingOperations&#39;,
+                             &#39;IncomeLossFromDiscontinuedOperationsNetOfTax&#39;,
                              &#39;NetIncomeLoss&#39;
                              ]
 

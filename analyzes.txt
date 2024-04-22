@@ -55,6 +55,8 @@ ToDos
   Zuerst Analyse machen:
   kann man fitlern, wieviel das betrifft? also z.b. EBITDA + IncomeTax.. = NetIncomeLoss
   Vergleichen mit EBITDA - IncomeTax = NetIncomeLoss
+  -> ca 28000 mit exact match
+  abs(NetIncomeLoss-IncomContOperations) ~ 2*abs(IncomeTaxExpenseBenefit)
 
 - We mit missing IncomeTaxExpenseBenefit, bzw EBITDA umgeehen?
   standardized_bag.result_df[standardized_bag.result_df.IncomeLossBeforeIncomeTaxExpenseBenefit.isna() & standardized_bag.result_df.IncomeTaxExpenseBenefit.isna()]

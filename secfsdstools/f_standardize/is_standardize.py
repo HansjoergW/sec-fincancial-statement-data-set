@@ -1,8 +1,11 @@
 """Contains the definitions to standardize incaome statements."""
-from typing import List
+from typing import List, Set
+
+import pandas as pd
+import pandera as pa
 
 from secfsdstools.f_standardize.base_prepivot_rules import PrePivotDeduplicate, PrePivotCorrectSign
-from secfsdstools.f_standardize.base_rule_framework import RuleGroup
+from secfsdstools.f_standardize.base_rule_framework import RuleGroup, Rule
 from secfsdstools.f_standardize.base_rules import CopyTagRule, SumUpRule, SubtractFromRule, \
     missingsumparts_rules_creator, MissingSummandRule, PostSetToZero
 from secfsdstools.f_standardize.base_validation_rules import ValidationRule, SumValidationRule
@@ -109,6 +112,108 @@ top_100_operating_costs = [
     'OperatingLeasesRentExpenseNet',
     'OperatingLeaseExpense',
 ]
+
+
+class PostFixSignOfIncomeTaxExpenseBenefit(Rule):
+    """
+    Usually, when TaxExpenseBenefit is a positive number, meaning that this amount
+    of taxes were paid by the company. Therefore, the equation
+
+    IncomeLossBeforeTaxes - TaxExpenseBenefit = NetIncomeLoss
+
+    However, there  is a quite significant number of reports, which us a negative
+    number to display paid Taxes and therefore, the following equations would be
+    used:
+
+    IncomeLossBeforeTaxes + TaxExpenseBenefit = NetIncomeLoss
+
+    This rule select these entries and tries to fix that, whenever possible.
+
+    Since the rules calculate IncomeLossFromContinuingOperations as follows
+
+    IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit
+    - IncomeTaxExpenseBenefit
+    = IncomeLossFromContinuingOperations
+
+    we mask the entries, where
+
+    abs(NetIncomeLoss - IncomeLossFromContinuingOperations) = 2*abs(IncomeTaxExpenseBenefit)
+    if IncomeTaxExpenseBenefit > 0
+
+    The rule also uses some Threshold.
+
+    Of course, this is not perfect and does not consider the cases with DiscontinuedOperations,
+    However, it is able to fix a significant number of cases.
+
+    For the masked entries, it changes the sign of TaxExpenseBenefit
+    and recalculates IncomeLossFromContinuingOperations
+
+    """
+
+    def get_target_tags(self) -> List[str]:
+        """
+        returns a list of tags that could be affected/changed by this rule
+
+        Returns:
+            List[str]: list with affected tags/columns
+        """
+        return ['IncomeLossFromContinuingOperations', 'IncomeTaxExpenseBenefit']
+
+    def get_input_tags(self) -> Set[str]:
+        """
+        return all tags that the rules within this group need.
+
+        Returns:
+            Set[str]: set of all input tags that are used by rules in this group
+        """
+        return {'IncomeLossFromContinuingOperations', 'IncomeTaxExpenseBenefit', 'NetIncomeLoss'}
+
+    def mask(self, data_df: pd.DataFrame) -> pa.typing.Series[bool]:
+        """
+            returns a Series[bool] which defines the rows to which this rule has to be applied.
+
+        Args:
+            data_df dataframe on which the rules should be applied
+
+        Returns:
+            pa.typing.Series[bool]: a boolean Series that marks which rows have to be calculated
+        """
+        check -> können wir abs so benützen? oder muss das ein spezielles pandas absolut sein?
+
+        mask = (data_df.IncomeTaxExpenseBenefit > 0) & \
+               (abs(data_df.NetIncomeLoss - data_df.IncomeLossFromContinuingOperations) >=
+                1.8 * abs(data_df.IncomeTaxExpenseBenefit))
+
+        return mask
+
+    def apply(self, data_df: pd.DataFrame, mask: pa.typing.Series[bool]):
+        """
+        apply the rule on the provided dataframe. the rows, on which the rule has to be applied
+        is defined by the provide mask Series.
+
+        Important, the rules have to be applied "in-place", so no new dataframe is produced.
+
+        Args:
+            df: dataframe on which the rule has to be applied
+            mask: a Series marking the rows in the dataframe on which the rule has to be applied
+        """
+        vorzeichen IncomeTaxExpenseBenefit drehen
+
+        IncomeLossFromContinuingOperations neu berechnen, gemäss
+
+        SubtractFromRule(
+            target_tag='IncomeLossFromContinuingOperations',
+            subtract_from_tag='IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit',
+            potential_subtract_tags=['IncomeTaxExpenseBenefit',
+                                     'NetIncomeLossAttributableToNoncontrollingInterest']
+        ),
+
+        mixed_up_values = data_df[self.mixed_up_summand].copy()
+        data_df.loc[mask, self.mixed_up_summand] = data_df[self.sum_tag]
+        data_df.loc[mask, self.sum_tag] = mixed_up_values
+
+
+    Todo
 
 
 class IncomeStatementStandardizer(Standardizer):
@@ -430,6 +535,8 @@ class IncomeStatementStandardizer(Standardizer):
                           'IncomeLossFromDiscontinuedOperationsNetOfTax'
                       ]),
 
+            # TODO: create an own group, or maybe special rule for this
+
             # the following rules set the NetIncomeLoss, if not already set.
             # the order of the rules is the precedence
             CopyTagRule(original='NetIncomeLossAvailableToCommonStockholdersBasic',
@@ -525,6 +632,11 @@ class IncomeStatementStandardizer(Standardizer):
                               'IncomeLossFromContinuingOperations',
                               'IncomeLossFromDiscontinuedOperationsNetOfTax'
                           ]),
+        # Temp Rule -> mark entries in which IncomeTaxExpenseBenefit has the wrong sign
+        SumValidationRule(identifier="NetIncomeLoss2",
+                          sum_tag='NetIncomeLoss',
+                          summands=['IncomeTaxExpenseBenefit',
+                                    'IncomeLossBeforeIncomeTaxExpenseBenefit']),
     ]
 
     # these are the columns that finally are returned after the standardization

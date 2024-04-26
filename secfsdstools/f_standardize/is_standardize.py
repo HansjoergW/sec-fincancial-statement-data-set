@@ -114,7 +114,7 @@ top_100_operating_costs = [
 ]
 
 
-class PostFixSignOfIncomeTaxExpenseBenefit(Rule):
+class PostFixIncomeLossFromContinuingOperationsAndSignOfIncomeTaxExpenseBenefit(Rule):
     """
     Usually, when TaxExpenseBenefit is a positive number, meaning that this amount
     of taxes were paid by the company. Therefore, the equation
@@ -135,12 +135,17 @@ class PostFixSignOfIncomeTaxExpenseBenefit(Rule):
     - IncomeTaxExpenseBenefit
     = IncomeLossFromContinuingOperations
 
-    we mask the entries, where
+    We might end up having a wrong value for IncomeLossFromContinuingOperation.
+
+    Therefore, we mask the entries, where
 
     abs(NetIncomeLoss - IncomeLossFromContinuingOperations) = 2*abs(IncomeTaxExpenseBenefit)
     if IncomeTaxExpenseBenefit > 0
 
-    The rule also uses some Threshold.
+    in order to fix the sign for IncomeTaxExpenseBenefit and to correct
+    IncomeLossFromContinuingOperations
+
+    The rule also uses some threshold.
 
     Of course, this is not perfect and does not consider the cases with DiscontinuedOperations,
     However, it is able to fix a significant number of cases.
@@ -157,7 +162,7 @@ class PostFixSignOfIncomeTaxExpenseBenefit(Rule):
         Returns:
             List[str]: list with affected tags/columns
         """
-        return ['IncomeLossFromContinuingOperations', 'IncomeTaxExpenseBenefit']
+        return ['IncomeLossFromContinuingOperations', 'AllIncomeTaxExpenseBenefit']
 
     def get_input_tags(self) -> Set[str]:
         """
@@ -166,7 +171,8 @@ class PostFixSignOfIncomeTaxExpenseBenefit(Rule):
         Returns:
             Set[str]: set of all input tags that are used by rules in this group
         """
-        return {'IncomeLossFromContinuingOperations', 'IncomeTaxExpenseBenefit', 'NetIncomeLoss'}
+        return {'IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit',
+                'AllIncomeTaxExpenseBenefit', 'IncomeLossFromContinuingOperations', 'ProfitLoss'}
 
     def mask(self, data_df: pd.DataFrame) -> pa.typing.Series[bool]:
         """
@@ -178,13 +184,9 @@ class PostFixSignOfIncomeTaxExpenseBenefit(Rule):
         Returns:
             pa.typing.Series[bool]: a boolean Series that marks which rows have to be calculated
         """
-        check -> können wir abs so benützen? oder muss das ein spezielles pandas absolut sein?
-
-        mask = (data_df.IncomeTaxExpenseBenefit > 0) & \
-               (abs(data_df.NetIncomeLoss - data_df.IncomeLossFromContinuingOperations) >=
-                1.8 * abs(data_df.IncomeTaxExpenseBenefit))
-
-        return mask
+        return (data_df.AllIncomeTaxExpenseBenefit != 0) & \
+            ((data_df.ProfitLoss - data_df.IncomeLossFromContinuingOperations).abs() >=
+             1.8 * data_df.AllIncomeTaxExpenseBenefit.abs())
 
     def apply(self, data_df: pd.DataFrame, mask: pa.typing.Series[bool]):
         """
@@ -197,24 +199,95 @@ class PostFixSignOfIncomeTaxExpenseBenefit(Rule):
             df: dataframe on which the rule has to be applied
             mask: a Series marking the rows in the dataframe on which the rule has to be applied
         """
-        vorzeichen IncomeTaxExpenseBenefit drehen
 
-        IncomeLossFromContinuingOperations neu berechnen, gemäss
+        data_df.loc[mask, 'AllIncomeTaxExpenseBenefit'] = -data_df.AllIncomeTaxExpenseBenefit
 
-        SubtractFromRule(
-            target_tag='IncomeLossFromContinuingOperations',
-            subtract_from_tag='IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit',
-            potential_subtract_tags=['IncomeTaxExpenseBenefit',
-                                     'NetIncomeLossAttributableToNoncontrollingInterest']
-        ),
+        # recalculate IncomeLossFromContinuingOperations
+        data_df.loc[mask, 'IncomeLossFromContinuingOperations'] = \
+            data_df['IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit']
+        subtract_mask = mask & ~data_df.AllIncomeTaxExpenseBenefit.isna()
+        data_df.loc[subtract_mask, 'IncomeLossFromContinuingOperations'] = (
+                    data_df['IncomeLossFromContinuingOperations'] -
+                    data_df.AllIncomeTaxExpenseBenefit)
 
-        mixed_up_values = data_df[self.mixed_up_summand].copy()
-        data_df.loc[mask, self.mixed_up_summand] = data_df[self.sum_tag]
-        data_df.loc[mask, self.sum_tag] = mixed_up_values
+    def get_description(self) -> str:
+        return "Corrects the sign of 'IncomeTaxExpenseBenefits' if it seems to be wrong. Checks" \
+               "if the difference between 'NetIncomeLoss' and 'IncomeLossFromContinuingOperations'" \
+               "is about 2. Which is a clear indication, that the sign was wrong."
 
 
-    Todo
+class PostFixSignOfIncomeTaxExpenseBenefit(Rule):
+    """
+    Usually, when TaxExpenseBenefit is a positive number, meaning that this amount
+    of taxes were paid by the company. Therefore, the equation
 
+    IncomeLossBeforeTaxes - TaxExpenseBenefit = NetIncomeLoss
+
+    However, there  are of reports, which us a negative
+    number to display paid Taxes and therefore, the following equations would be
+    used:
+
+    IncomeLossBeforeTaxes + TaxExpenseBenefit = NetIncomeLoss
+
+    This rule selects the entries where this equation is true
+
+    IncomeLossBeforeTaxes + TaxExpenseBenefit = NetIncomeLoss
+
+    """
+
+    def get_target_tags(self) -> List[str]:
+        """
+        returns a list of tags that could be affected/changed by this rule
+
+        Returns:
+            List[str]: list with affected tags/columns
+        """
+        return ['AllIncomeTaxExpenseBenefit']
+
+    def get_input_tags(self) -> Set[str]:
+        """
+        return all tags that the rules within this group need.
+
+        Returns:
+            Set[str]: set of all input tags that are used by rules in this group
+        """
+        return {'IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit',
+                'AllIncomeTaxExpenseBenefit', 'ProfitLoss'}
+
+    def mask(self, data_df: pd.DataFrame) -> pa.typing.Series[bool]:
+        """
+            returns a Series[bool] which defines the rows to which this rule has to be applied.
+
+        Args:
+            data_df dataframe on which the rules should be applied
+
+        Returns:
+            pa.typing.Series[bool]: a boolean Series that marks which rows have to be calculated
+        """
+        return (data_df.AllIncomeTaxExpenseBenefit != 0) & \
+            ((data_df.IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit +
+              data_df.AllIncomeTaxExpenseBenefit) == data_df.ProfitLoss)
+
+    def apply(self, data_df: pd.DataFrame, mask: pa.typing.Series[bool]):
+        """
+        apply the rule on the provided dataframe. the rows, on which the rule has to be applied
+        is defined by the provide mask Series.
+
+        Important, the rules have to be applied "in-place", so no new dataframe is produced.
+
+        Args:
+            df: dataframe on which the rule has to be applied
+            mask: a Series marking the rows in the dataframe on which the rule has to be applied
+        """
+        # simply invert the sign
+        data_df.loc[mask, 'AllIncomeTaxExpenseBenefit'] = -data_df.AllIncomeTaxExpenseBenefit
+
+    def get_description(self) -> str:
+        return "Corrects the sign of 'IncomeTaxExpenseBenefits' if it seems to be wrong." \
+                "Checks if IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit + " \
+                " IncomeTaxExpenseBenefit = ProfitLoss. If yes, it inverts the sign of " \
+                "IncomeTaxExpenseBenefits so that IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit" \
+                " - IncomeTaxExpenseBenefit = ProfitLoss is true."
 
 class IncomeStatementStandardizer(Standardizer):
     """
@@ -518,22 +591,36 @@ class IncomeStatementStandardizer(Standardizer):
                 original='IncomeLossFromContinuingOperationsIncludingPortionAttributableToNoncontrollingInterest',
                 target='IncomeLossFromContinuingOperations'),
 
+            SumUpRule(
+                sum_tag='AllIncomeTaxExpenseBenefit',
+                potential_summands=[
+                    'IncomeTaxExpenseBenefit', 'DeferredIncomeTaxExpenseBenefit'
+                ], optional_summands=['IncomeLossFromEquityMethodInvestments']),
+
             SubtractFromRule(
                 target_tag='IncomeLossFromContinuingOperations',
                 subtract_from_tag='IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit',
-                potential_subtract_tags=['IncomeTaxExpenseBenefit',
-                                         'NetIncomeLossAttributableToNoncontrollingInterest']
+                potential_subtract_tags=['AllIncomeTaxExpenseBenefit']
             ),
 
             CopyTagRule(
                 original='IncomeLossFromDiscontinuedOperationsNetOfTaxAttributableToReportingEntity',
                 target='IncomeLossFromDiscontinuedOperationsNetOfTax'),
 
-            SumUpRule(sum_tag='NetIncomeLossParts',
+            SumUpRule(sum_tag='ProfitLossParts',
                       potential_summands=[
                           'IncomeLossFromContinuingOperations',
                           'IncomeLossFromDiscontinuedOperationsNetOfTax'
                       ]),
+
+            CopyTagRule(original='NetIncomeLossParts', target='ProfitLoss'),
+            # if there is no value for ProfitLoss, we set it to NetIncomeLoss
+            CopyTagRule(original='NetIncomeLoss', target='ProfitLoss'),
+
+            # since IncomeLossFromContinuingOperations is part of a validation rule,
+            # and if it was not set, we assume that there is only IncomeLossFromContinuingOperations
+            # copy the value from ProfitLoss
+            CopyTagRule(original='ProfitLoss', target='IncomeLossFromContinuingOperations'),
 
             # TODO: create an own group, or maybe special rule for this
 
@@ -547,23 +634,18 @@ class IncomeStatementStandardizer(Standardizer):
                         target='NetIncomeLoss'),
             CopyTagRule(original='OtherComprehensiveIncomeLossNetOfTax', target='NetIncomeLoss'),
             CopyTagRule(original='ComprehensiveIncomeNetOfTax', target='NetIncomeLoss'),
-            CopyTagRule(original='NetIncomeLossParts', target='NetIncomeLoss'),
+
             # for investment companies
             CopyTagRule(original='NetInvestmentIncome', target='NetIncomeLoss'),
-
-            # since IncomeLossFromContinuingOperations is part of a validation rule,
-            # and if it was not set, we assume that there is only IncomeLossFromContinuingOperations
-            # copy the value from NetIncomeLoss
-            CopyTagRule(original='NetIncomeLoss', target='IncomeLossFromContinuingOperations'),
         ]
     )
 
     is_missing_net_tax_income = RuleGroup(
         prefix="ContIncTax",
         rules=missingsumparts_rules_creator(
-            sum_tag='IncomeLossBeforeIncomeTaxExpenseBenefit',
+            sum_tag='IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit',
             summand_tags=['IncomeLossFromContinuingOperations',
-                          'IncomeTaxExpenseBenefit'])
+                          'AllIncomeTaxExpenseBenefit'])
     )
 
     main_rule_tree = RuleGroup(prefix="IS",
@@ -585,6 +667,16 @@ class IncomeStatementStandardizer(Standardizer):
         prefix="IS_POST",
         rules=[
 
+            PostFixIncomeLossFromContinuingOperationsAndSignOfIncomeTaxExpenseBenefit(),
+            PostFixSignOfIncomeTaxExpenseBenefit(),
+
+            # hier noch 2. Rule machen, die nur IncomeTaxExpenseBenefit korrigiert
+            #
+            # benötigt eine Regel, welche nur IncomeTaxExpenseBenefit korrigiert,
+            # falls BeforeTax - AfterTex == 2*incomeTaxExpenseBenefit,
+            # bzw. falls BeforeTax + IncomeTaxExpenseBenefit == After Tax
+
+
             # 1. if there is no value for Revenues, but GrossProfit
             # we set Revenues to GrossProfit
             # 2. if there is no value for  GrossProfit, but Revenues
@@ -603,13 +695,13 @@ class IncomeStatementStandardizer(Standardizer):
                              potential_subtract_tags=['OperatingExpenses'],
                              target_tag='OperatingIncomeLoss'),
 
-            # 1. if there is no value for IncomeLossBeforeIncomeTaxExpenseBenefit,
-            # but for NetIncomeLoss, we set it to the same value
+            # 1. if there is no value for IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit,
+            # but for ProfitLoss, we set it to the same value
             # 2. afterwards, we set IncomeTaxExpenseBenefit to zero with the following rule
-            CopyTagRule(original='NetIncomeLoss', target='IncomeLossBeforeIncomeTaxExpenseBenefit'),
-            MissingSummandRule(sum_tag='IncomeLossBeforeIncomeTaxExpenseBenefit',
-                               existing_summands_tags=['NetIncomeLoss'],
-                               missing_summand_tag='IncomeTaxExpenseBenefit'),
+            CopyTagRule(original='ProfitLoss', target='IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit'),
+            MissingSummandRule(sum_tag='IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit',
+                               existing_summands_tags=['ProfitLoss'],
+                               missing_summand_tag='AllIncomeTaxExpenseBenefit'),
 
             PostSetToZero(tags=['IncomeLossFromDiscontinuedOperationsNetOfTax'])
 
@@ -623,21 +715,16 @@ class IncomeStatementStandardizer(Standardizer):
                           sum_tag='GrossProfit',
                           summands=['OperatingExpenses', 'OperatingIncomeLoss']),
         SumValidationRule(identifier="ContIncTax",
-                          sum_tag='IncomeLossBeforeIncomeTaxExpenseBenefit',
-                          summands=['IncomeTaxExpenseBenefit',
+                          sum_tag='IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit',
+                          summands=['AllIncomeTaxExpenseBenefit',
                                     'IncomeLossFromContinuingOperations']),
-        SumValidationRule(identifier='NetIncomeLossParts',
-                          sum_tag='NetIncomeLoss',
+        SumValidationRule(identifier='ProfitLossParts',
+                          sum_tag='ProfitLoss',
                           summands=[
                               'IncomeLossFromContinuingOperations',
                               'IncomeLossFromDiscontinuedOperationsNetOfTax'
                           ]),
-        # Temp Rule -> mark entries in which IncomeTaxExpenseBenefit has the wrong sign
-        SumValidationRule(identifier="NetIncomeLoss2",
-                          sum_tag='NetIncomeLoss',
-                          summands=['IncomeTaxExpenseBenefit',
-                                    'IncomeLossBeforeIncomeTaxExpenseBenefit']),
-    ]
+     ]
 
     # these are the columns that finally are returned after the standardization
     final_tags: List[str] = ['Revenues',
@@ -645,10 +732,12 @@ class IncomeStatementStandardizer(Standardizer):
                              'GrossProfit',
                              'OperatingExpenses',
                              'OperatingIncomeLoss',
-                             'IncomeLossBeforeIncomeTaxExpenseBenefit',
-                             'IncomeTaxExpenseBenefit',
+                             'IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit',
+                             'AllIncomeTaxExpenseBenefit',
                              'IncomeLossFromContinuingOperations',
                              'IncomeLossFromDiscontinuedOperationsNetOfTax',
+                             'ProfitLoss',
+                             'NetIncomeLossAttributableToNoncontrollingInterest',
                              'NetIncomeLoss'
                              ]
 
@@ -672,6 +761,7 @@ class IncomeStatementStandardizer(Standardizer):
                            'IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest',
                            'IncomeLossBeforeIncomeTaxExpenseBenefit',
                            'IncomeTaxExpenseBenefit',
+                           'DeferredIncomeTaxExpenseBenefit',
                            'NetIncomeLoss',
                            'ProfitLoss'
                            ]

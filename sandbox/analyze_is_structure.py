@@ -144,6 +144,10 @@ if __name__ == '__main__':
     # prepare_all_data_set()
 
     is_joined_bag: JoinedDataBag = load_joined_IS_set()
+    from secfsdstools.u_usecases.analyzes import find_tags_containing
+    # with_profitloss = find_tags_containing(is_joined_bag, 'ProfitLoss')
+    # print(with_profitloss)
+
     #find_operating_expense_tags(is_joined_bag)
     # print(check_signed_values(is_joined_bag, tag_list=['LicenseCost',
     #                                              'CostOfRevenue',
@@ -151,7 +155,7 @@ if __name__ == '__main__':
     #                                              'CostOfGoodsSold',
     #                                              'CostOfServices']))
 
-    is_joined_bag = is_joined_bag.filter(AdshJoinedFilter(adshs=['0001213900-21-032506']))
+    #is_joined_bag = is_joined_bag.filter(AdshJoinedFilter(adshs=['0001140361-15-018544']))
 
     #is_joined_bag = load_smaller_sample_IS_set()
     #
@@ -159,8 +163,8 @@ if __name__ == '__main__':
 
     # print(find_entries_with_all_tags(bag=is_joined_bag,
     #                            tag_list=[
-    #                                'IncomeLossFromDiscontinuedOperationsNetOfTaxAttributableToNoncontrollingInterest',
-    #                                'IncomeLossFromDiscontinuedOperationsNetOfTaxAttributableToReportingEntity',
+    #                                'IncomeLossBeforeIncomeTaxExpenseBenefit',
+    #                                'IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit',
     #                            ]))
 
     # print(find_entries_with_must_and_others(
@@ -170,7 +174,7 @@ if __name__ == '__main__':
     #             'SalesRevenueServicesNet']
     # ))
 
-    print(filter_tags(is_joined_bag.pre_num_df, tag_like="IncomeLossFromDiscontinuedOperations"))
+    #print(filter_tags(is_joined_bag.pre_num_df, tag_like="IncomeLossFromDiscontinuedOperations"))
     #
     # # check the loaded data
     print("sub_df", is_joined_bag.sub_df.shape)

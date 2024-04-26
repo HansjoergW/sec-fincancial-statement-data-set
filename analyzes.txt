@@ -38,25 +38,35 @@ Comprehensive Income (Gesamtergebnis): us-gaap:ComprehensiveIncomeNetOfTax
 
 ToDos
 -----
-- Vorzeichen von IncomeTaxExpenseBenefit scheint nicht konsistent zu sein.
-  IncomeLossFromContinuingOperationsBeforeIncomeTaxesMinorityInterestAndIncomeLossFromEquityMethodInvestments
-  - IncomeTaxExpenseBenefit
-  = NetIncomeLoss  (bzw. IncomeLossFromContinuingOperations)
-  Bsp: 0001213900-21-032506 (Vorzeichen von ExpenseBenefit verkehrt)
+- neben IncomeTaxExpenseBenefit gibt es auch  DeferredIncomeTaxExpenseBenefit.
+  Eigentlich müsste man diese zusammennehmen und dese dann als "All weiterführen"
 
-  Dadurch schlägt die Validierung fehl, auch
-  wenn das Result richtig ist (NetIncomeLoss), falls vorhanden
+- NetIncomeLossAttributableToNoncontrollingInterest müsste eher zu
+  IncomeLossFromContinuingOperations addiert subtrahiert werden, um NetIncomeLoss zu erhalten
 
-  Problem, wann und wie korrigieren?
-  oder zuerste eine Regel, die IncomeLossFromContinuingOperations setzt,
-  => falls NetIncomeLoss bekannt, und kein discontinued? also before Tax berechnet wird?
-  und dann eine Korrektur des Tax Vorzeichens?, falls in bestimmter Toleranz
+  Zumindestens müsste man NetIncomeLossAttributableToNoncontrollingInterest auch beachten, wenn
+  versucht wird das Vorzeichen von AllIncomeTaxExpenseBenefit zu korrigieren.
 
-  Zuerst Analyse machen:
-  kann man fitlern, wieviel das betrifft? also z.b. EBITDA + IncomeTax.. = NetIncomeLoss
-  Vergleichen mit EBITDA - IncomeTax = NetIncomeLoss
-  -> ca 28000 mit exact match
-  abs(NetIncomeLoss-IncomContOperations) ~ 2*abs(IncomeTaxExpenseBenefit)
+  0001140361-15-018544
+
+  IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest
+  - DeferredIncomeTaxExpenseBenefit
+  = ProfitLoss
+  - NetIncomeLossAttributableToNoncontrollingInterest
+  = NetIncomeLoss(tocommonstockholders)
+
+  => Vorzeichen wird fälschlicherweise gedreht ! sollte aber nicht Regel schlägt zu...
+     IncomeLossFromContinuingOperation ist falsch berechnet
+
+    sieht aus, als würde NetIncomeLossAttributableToNoncontrollingInterest nicht korrekt verwendet
+    -> müsste eigentlich von IncomeLossFromContinuingOperation addiert werden, nicht abgezogen,
+
+    Fage: wäre es nicht besser, über profitLoss zu rechnen ?
+    und zu schauenm, wiviele haben profitloss und  ein NetIncomeLossAvailableToCommonStockholdersBasic/NetIncLoss
+    und was sind da für Tags dazwischen?
+
+
+  Filtern wenn IncomLossBefore == NetIncomeLoss != ProfitLoss
 
 - We mit missing IncomeTaxExpenseBenefit, bzw EBITDA umgeehen?
   standardized_bag.result_df[standardized_bag.result_df.IncomeLossBeforeIncomeTaxExpenseBenefit.isna() & standardized_bag.result_df.IncomeTaxExpenseBenefit.isna()]

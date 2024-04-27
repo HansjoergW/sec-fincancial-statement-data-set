@@ -642,10 +642,13 @@ class IncomeStatementStandardizer(Standardizer):
             # but for ProfitLoss, we set it to the same value
             # 2. afterward, we set IncomeTaxExpenseBenefit to zero with the following rule
             CopyTagRule(original='ProfitLoss',
+                        target='IncomeLossFromContinuingOperations'),
+            CopyTagRule(original='IncomeLossFromContinuingOperations',
                         target='IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit'),
+
             MissingSummandRule(
                 sum_tag='IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit',
-                existing_summands_tags=['ProfitLoss'],
+                existing_summands_tags=['IncomeLossFromContinuingOperations'],
                 missing_summand_tag='AllIncomeTaxExpenseBenefit'),
 
             PostSetToZero(tags=['IncomeLossFromDiscontinuedOperationsNetOfTax']),

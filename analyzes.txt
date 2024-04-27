@@ -1,5 +1,6 @@
 IS
 --
+  Main Rules
     Revenues:
 
         1. Prio: Revenues
@@ -31,6 +32,7 @@ IS
 
         6. Prio: RevenuesSum
         7. Prio: InvestmentIncomeInterest
+        8. Prio: CostOfRevenue + GrossProfit
 
 
     CostOfRevenue
@@ -71,6 +73,7 @@ IS
             = CostOfGoodsAndServicesSold (if not set)
 
         2. Prio CostOfGoodsAndServicesSold
+        3. Prio Revenues - GrossProfit
 
     GrossProfit
 
@@ -96,53 +99,104 @@ IS
 
 
     OperatingIncomeLoss
+
         1. Prio OperatingIncomeLoss
         2. Prio GrossProfit - OperatingExpenses
 
 
+    IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit
+
+        1. Prio IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit <- (rename) IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest
+        2. Prio
+            + IncomeLossFromContinuingOperationsBeforeIncomeTaxesMinorityInterestAndIncomeLossFromEquityMethodInvestments
+            + (optional) IncomeLossFromEquityMethodInvestments
+            --------------------
+            = IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit
+        3. Prio IncomeLossFromContinuingOperations + AllIncomeTaxExpenseBenefit
+
+    ProfitLoss
+
+        1. Prio ProfitLoss
+        2. Prio
+            IncomeLossFromContinuingOperations
+
+                1. Prio IncomeLossFromContinuingOperations <- (rename) IncomeLossFromContinuingOperationsIncludingPortionAttributableToNoncontrollingInterest
+
+                    + IncomeTaxExpenseBenefit
+                    + DeferredIncomeTaxExpenseBenefit
+                    + (optional) IncomeLossFromEquityMethodInvestments
+                    ---------------------------------
+                    = AllIncomeTaxExpenseBenefit
+
+                2. Prio IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit - AllIncomeTaxExpenseBenefit
 
 
+            IncomeLossFromDiscontinuedOperationsNetOfTax
+
+                1. Prio IncomeLossFromDiscontinuedOperationsNetOfTax <- IncomeLossFromDiscontinuedOperationsNetOfTaxAttributableToReportingEntity
 
 
+            ProfitLoss = IncomeLossFromContinuingOperations + IncomeLossFromDiscontinuedOperationsNetOfTax
 
-main positions to calculate:
-
-Revenues (Umsatzerlöse): us-gaap:Revenues
-    Revenue kann negativ sein
-
-    RevenueFromContractWithCustomerIncludingAssessedTax
-    - ExciseAndSalesTaxes
-    = RevenueFromContractWithCustomerExcludingAssessedTax
+        3. Prio NetIncomeLoss
 
 
-Cost of Goods Sold (Kosten der verkauften Waren): us-gaap:CostOfGoodsAndServicesSold
+    NetIncomeLossAttributableToNoncontrollingInterest
+        1. Prio NetIncomeLossAttributableToNoncontrollingInterest
+        2. Prio ProfitLoss - NetIncomeLoss
 
-Gross Profit (Bruttogewinn): us-gaap:GrossProfit
+    NetIncomeLoss
 
-Operating Expenses (Betriebsaufwendungen): us-gaap:OperatingExpenses
+        1. Prio NetIncomeLoss
+        2. Prio NetIncomeLossAvailableToCommonStockholdersBasic
+        3. Prio NetIncomeLossAllocatedToLimitedPartners
+        3. Prio ProfitLoss
+        4. Prio ProfitLossIncludingRedeemableNonControllingInterest
+        5. Prio OtherComprehensiveIncomeLossNetOfTax
+        6. Prio ComprehensiveIncomeNetOfTax
+        7. Prio NetInvestmentIncome
 
-  Hierzu gehören verschiedene Unterkategorien wie:
-    us-gaap:ResearchAndDevelopmentExpense
-    us-gaap:SellingGeneralAndAdministrativeExpense
+  Post Rule (Cleanup)
+    Fix Sign of AllIncomeTaxExpenseBenefit (should be positive if taxed were paid)
+        expected equation to be true:
+           IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit - AllIncomeTaxExpenseBenefit = ProfitLoss
 
-Operating Income (Betriebsergebnis): us-gaap:OperatingIncomeLoss
+        invert sign of AllIncomeTaxExpenseBenefit if the following equation is true:
+           IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit + AllIncomeTaxExpenseBenefit = ProfitLoss
 
-Other Income and Expenses (Sonstige Erträge und Aufwendungen): us-gaap:NonoperatingIncomeExpense
+    Fix sign of NetIncomeLossAttributableToNoncontrollingInterest
+        expected equation to be true:
+           ProfitLoss - NetIncomeLossAttributableToNoncontrollingInterest = NetIncomeLoss
 
-Income Before Tax (Ergebnis vor Steuern):us-gaap:IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest
+        invert sign of NetIncomeLossAttributableToNoncontrollingInterest if the following equation is true:
+           ProfitLoss + NetIncomeLossAttributableToNoncontrollingInterest = NetIncomeLoss
 
-Income Tax Expense (Ertragsteueraufwand):us-gaap:IncomeTaxExpenseBenefit
+    If Revenues was not set, but there is a GrossProfit, set it to GrossProfit,
+          since was no CostOfRevenue found
 
-Net Income (Nettogewinn): us-gaap:NetIncomeLoss
+    If GrossProfit couldn't be set, but there is Revenues, set it to Revenues
+          since was no CostOfRevenue found
+
+    if CostORevenues couldn't be set, but Revenues and GrossProfit are present, set it to Revenues - Grossprofit
+
+    if OperatingIncomeLoss is not set yet, and GrossProfit (available now) and OperatingExpenses are present,
+         set it to GrossProfit - OperatingExpenses
+
+    If there is no IncomeLossFromContinuingOperations, set it to ProfitLoss
+    if there is no IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit, set it to IncomeLossFromContinuingOperations
+    if there is no AllIncomeTaxExpenseBenefit, set it to IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit - AllIncomeTaxExpenseBenefit
+
+    set IncomeLossFromDiscontinuedOperationsNetOfTax to 0.0 if not present
 
 
-Earnings Per Share (Gewinn je Aktie): us-gaap:EarningsPerShareBasicAndDiluted
-
-Comprehensive Income (Gesamtergebnis): us-gaap:ComprehensiveIncomeNetOfTax
-
-
-ToDos
+Todos
 -----
+- es scheint etliche Reports zu geben, welche bei
+     IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit aufhören
+
+     Hier müsste man noch nach unter vervollständigen
+
+
 - EarningsPerShare
 
 

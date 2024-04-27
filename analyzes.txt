@@ -38,77 +38,10 @@ Comprehensive Income (Gesamtergebnis): us-gaap:ComprehensiveIncomeNetOfTax
 
 ToDos
 -----
-- neben IncomeTaxExpenseBenefit gibt es auch  DeferredIncomeTaxExpenseBenefit.
-  Eigentlich müsste man diese zusammennehmen und dese dann als "All weiterführen"
-
-- NetIncomeLossAttributableToNoncontrollingInterest müsste eher zu
-  IncomeLossFromContinuingOperations addiert subtrahiert werden, um NetIncomeLoss zu erhalten
-
-  Zumindestens müsste man NetIncomeLossAttributableToNoncontrollingInterest auch beachten, wenn
-  versucht wird das Vorzeichen von AllIncomeTaxExpenseBenefit zu korrigieren.
-
-  0001140361-15-018544
-
-  IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest
-  - DeferredIncomeTaxExpenseBenefit
-  = ProfitLoss
-  - NetIncomeLossAttributableToNoncontrollingInterest
-  = NetIncomeLoss(tocommonstockholders)
-
-  => Vorzeichen wird fälschlicherweise gedreht ! sollte aber nicht Regel schlägt zu...
-     IncomeLossFromContinuingOperation ist falsch berechnet
-
-    sieht aus, als würde NetIncomeLossAttributableToNoncontrollingInterest nicht korrekt verwendet
-    -> müsste eigentlich von IncomeLossFromContinuingOperation addiert werden, nicht abgezogen,
-
-    Fage: wäre es nicht besser, über profitLoss zu rechnen ?
-    und zu schauenm, wiviele haben profitloss und  ein NetIncomeLossAvailableToCommonStockholdersBasic/NetIncLoss
-    und was sind da für Tags dazwischen?
 
 
-  Filtern wenn IncomLossBefore == NetIncomeLoss != ProfitLoss
+- EarningsPerShare
 
-- We mit missing IncomeTaxExpenseBenefit, bzw EBITDA umgeehen?
-  standardized_bag.result_df[standardized_bag.result_df.IncomeLossBeforeIncomeTaxExpenseBenefit.isna() & standardized_bag.result_df.IncomeTaxExpenseBenefit.isna()]
-
-  0001410578-21-000392 hat folgendes -> das könnte so ein zwischending sein, das auch auf
-     IncomeLossBeforeIncomeTaxExpenseBenefit hindeutet
-
-  ProfitLossIncludingRedeemableNonControllingInterest
-  - NetIncomeLossAttributableToNonredeemableNoncontrollingInterest
-  = NetIncomeLoss
-
-- Prüfen der Vorzeichen, passt alles?
-- definieren der Validation Rules
-- EarningsPerShare?
-
-
-- validation for income, ebitbefore taxes, taxes is only 62.4 percent
-
-    0001007587-22-000019
-    IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest
-    - IncomeTaxExpenseBenefit
-    = IncomeLossFromContinuingOperations
-    + IncomeLossFromDiscontinuedOperationsNetOfTaxAttributableToReportingEntity
-    = NetIncomeLoss
-
-    Problem: IncomeTaxExpenseBenefit bezieht sich nur auf continuingOperations
-             Wenn aber noch Discontinued vorhanden, passt das nicht mehr mit NetIncomeLoss zusammen
-
-             Entsprechend muss die Validierung anders sein.
-
-             Continuing und Discontinued splitten
-
-
-    mann müsste also Continuing und Discontinued trennen.
-
-
-    0001140361-20-002341
-    IncomeLossFromContinuingOperationsBeforeIncomeTaxesMinorityInterestAndIncomeLossFromEquityMethodInvestments
-    + IncomeTaxExpenseBenefit
-    = ProfitLoss
-    + NetIncomeLossAttributableToNoncontrollingInterest
-    = NetIncomeLoss
 
 
 

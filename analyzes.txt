@@ -1,5 +1,110 @@
 IS
 --
+    Revenues:
+
+        1. Prio: Revenues
+
+                + SalesRevenueGoodsNet     <- SalesRevenueGoodsGross
+                + SalesRevenueServicesNet  <- SalesRevenueServicesGross
+                + OtherSalesRevenueNet
+                --------------
+                = SalesRevenueNet (if not set)
+
+        2. Prio: SalesRevenueNet
+
+                RevenueFromContractWithCustomerIncludingAssessedTax
+                - ExciseAndSalesTaxes
+                ---------------------
+                = RevenueFromContractWithCustomerExcludingAssessedTax (if not set)
+
+        3. Prio: RevenueFromContractWithCustomerExcludingAssessedTax
+        4. Prio: RevenueFromContractWithCustomerIncludingAssessedTax
+        5. Prio: RevenuesExcludingInterestAndDividends
+
+                + RegulatedAndUnregulatedOperatingRevenue
+                + HealthCareOrganizationPatientServiceRevenue
+                + ContractsRevenue
+                + RevenueOilAndGasServices
+                  ...
+                ------------------
+                = RevenuesSum
+
+        6. Prio: RevenuesSum
+        7. Prio: InvestmentIncomeInterest
+
+
+    CostOfRevenue
+
+        1. Prio CostOfRevenue
+
+                + CostOfGoodsSoldExcludingDepreciationDepletionAndAmortization
+                + CostOfGoodsSoldDepreciationDepletionAndAmortization
+                + CostOfGoodsSoldDepletion
+                + CostOfGoodsSoldDepreciation
+                + ...
+                ------------
+                = CostOfGoodsSold (if not set)
+
+
+                + CostOfServicesExcludingDepreciationDepletionAndAmortization
+                + CostOfServicesDepreciation
+                + CostOfServicesDepreciationAndAmortization
+                + CostOfServicesCatering
+                + ...
+                ------------
+                = CostOfServices (if not set)
+
+
+                + CostOfGoodsAndServicesSoldDepreciationAndAmortization
+                + CostOfGoodsAndServicesSoldAmortization
+                + CostOfGoodsAndServicesSoldOverhead
+                + CostOfGoodsAndServicesSoldDepreciation
+                + CostOfGoodsAndServicesEnergyCommoditiesAndServices
+                + CostOfGoodsAndServiceExcludingDepreciationDepletionAndAmortizatio
+                ------------
+                = CostOfGoodsAndServicesSold (if not set)
+
+
+              CostOfGoodsSold
+            + CostOfServices
+            ---------------
+            = CostOfGoodsAndServicesSold (if not set)
+
+        2. Prio CostOfGoodsAndServicesSold
+
+    GrossProfit
+
+        1. Prio GrossProfit
+        2. Prio Revenues - CostOfRevenue
+        3. Prio GrossInvestmentIncomeOperating
+        4. Prio InterestAndDividendIncomeOperating
+
+    OperatingExpenses
+
+        1. Prio OperatingExpenses
+        2. Prio GrossProfit - OperatingIncomeLoss
+
+            + SellingGeneralAndAdministrativeExpense
+            + GeneralAndAdministrativeExpense
+            + ResearchAndDevelopmentExpense
+            + SellingAndMarketingExpense
+            + ... (96 most expense tags)
+            ----------------------------
+            = OperatingExpensesSum
+
+        3. Prio OperatingExpensesSum
+
+
+    OperatingIncomeLoss
+        1. Prio OperatingIncomeLoss
+        2. Prio GrossProfit - OperatingExpenses
+
+
+
+
+
+
+
 main positions to calculate:
 
 Revenues (Umsatzerlöse): us-gaap:Revenues
@@ -38,8 +143,6 @@ Comprehensive Income (Gesamtergebnis): us-gaap:ComprehensiveIncomeNetOfTax
 
 ToDos
 -----
-
-
 - EarningsPerShare
 
 

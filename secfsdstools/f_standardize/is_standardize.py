@@ -7,10 +7,11 @@ import pandera as pa
 from secfsdstools.f_standardize.base_prepivot_rules import PrePivotDeduplicate, PrePivotCorrectSign
 from secfsdstools.f_standardize.base_rule_framework import RuleGroup, Rule
 from secfsdstools.f_standardize.base_rules import CopyTagRule, SumUpRule, SubtractFromRule, \
-    missingsumparts_rules_creator, MissingSummandRule, PostSetToZero
+    missingsumparts_rules_creator, MissingSummandRule, PostSetToZero, PostFixSign
 from secfsdstools.f_standardize.base_validation_rules import ValidationRule, SumValidationRule
 from secfsdstools.f_standardize.standardizing import Standardizer
 
+# The 100 most common tags which appear between GrossProfit and OperatingIncomeLoss
 top_100_operating_costs = [
     'SellingGeneralAndAdministrativeExpense',
     'GeneralAndAdministrativeExpense',
@@ -216,77 +217,6 @@ class PostFixIncomeLossFromContinuingOperationsAndSignOfIncomeTaxExpenseBenefit(
                "is about 2. Which is a clear indication, that the sign was wrong."
 
 
-class PostFixSign(Rule):
-    """
-    Fixes the sign of an Addition, if the Summand has the wrong sign.
-
-    For instance, the following equation should be true:
-    ProfitLoss + AllIncomeTaxExpenseBenefit = IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit
-
-    However, there are cases when
-    ProfitLoss - AllIncomeTaxExpenseBenefit = IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit
-
-    is true, so obviously AllIncomTaxExpenseBenefit has the wrong sign.
-
-    """
-
-    def __init__(self, start_tag: str, summand_tag: str, result_tag: str):
-        self.start_tag = start_tag
-        self.summand_tag = summand_tag
-        self.result_tag = result_tag
-
-    def get_target_tags(self) -> List[str]:
-        """
-        returns a list of tags that could be affected/changed by this rule
-
-        Returns:
-            List[str]: list with affected tags/columns
-        """
-        return [self.summand_tag]
-
-    def get_input_tags(self) -> Set[str]:
-        """
-        return all tags that the rules within this group need.
-
-        Returns:
-            Set[str]: set of all input tags that are used by rules in this group
-        """
-        return {self.start_tag, self.summand_tag, self.result_tag}
-
-    def mask(self, data_df: pd.DataFrame) -> pa.typing.Series[bool]:
-        """
-            returns a Series[bool] which defines the rows to which this rule has to be applied.
-
-        Args:
-            data_df dataframe on which the rules should be applied
-
-        Returns:
-            pa.typing.Series[bool]: a boolean Series that marks which rows have to be calculated
-        """
-        return (data_df[self.summand_tag] != 0) & \
-            ((data_df[self.start_tag] - data_df[self.summand_tag]) == data_df[self.result_tag])
-
-    def apply(self, data_df: pd.DataFrame, mask: pa.typing.Series[bool]):
-        """
-        apply the rule on the provided dataframe. the rows, on which the rule has to be applied
-        is defined by the provide mask Series.
-
-        Important, the rules have to be applied "in-place", so no new dataframe is produced.
-
-        Args:
-            df: dataframe on which the rule has to be applied
-            mask: a Series marking the rows in the dataframe on which the rule has to be applied
-        """
-        # simply invert the sign
-        data_df.loc[mask, self.summand_tag] = -data_df[self.summand_tag]
-
-    def get_description(self) -> str:
-        return f"Corrects the sign of '{self.summand_tag}' if it seems to be wrong." \
-               f"Checks if '{self.start_tag} - {self.summand_tag} = {self.result_tag}'." \
-               f" If that equation holds true, the sign of '{self.summand_tag}' is inversed, " \
-               f" so that '{self.start_tag} - {self.summand_tag} = {self.result_tag}' becomes true"
-
-
 class IncomeStatementStandardizer(Standardizer):
     """
     The goal of this Standardizer is to create IncomeStatements that are comparable,
@@ -341,7 +271,8 @@ class IncomeStatementStandardizer(Standardizer):
         prefix="IS_PREPIV",
         rules=[PrePivotDeduplicate(),
                PrePivotCorrectSign(
-                   # all these tags are costOf and therefore should appear as positive
+                   # all these tags are costOf and therefore should appear as a positive number
+                   # since costs are subtracted from the Revenue to get the GrossProfit
                    tag_list=['CostOfGoodsSold',
                              'CostOfServices',
                              'CostOfGoodsAndServicesSold',
@@ -561,13 +492,13 @@ class IncomeStatementStandardizer(Standardizer):
     is_operating = RuleGroup(
         prefix="operating",
         rules=[
-            SumUpRule(sum_tag='OperatingExpensesSum',
-                      potential_summands=top_100_operating_costs),
             RuleGroup(
                 prefix="GrossOperating",
                 rules=missingsumparts_rules_creator(sum_tag='GrossProfit',
                                                     summand_tags=['OperatingExpenses',
                                                                   'OperatingIncomeLoss'])),
+            SumUpRule(sum_tag='OperatingExpensesSum',
+                      potential_summands=top_100_operating_costs),
             CopyTagRule(original='OperatingExpensesSum', target='OperatingExpenses')
         ])
 

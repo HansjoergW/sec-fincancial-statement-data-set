@@ -568,6 +568,10 @@ class IncomeStatementStandardizer(Standardizer):
                           CopyTagRule(original='ComprehensiveIncomeNetOfTax',
                                       target='NetIncomeLoss'),
 
+                          # ***** NEW
+                          CopyTagRule(original='IncomeLossAttributableToParent',
+                                      target='NetIncomeLoss'),
+
                           # for investment companies
                           CopyTagRule(original='NetInvestmentIncome', target='NetIncomeLoss'),
                       ])
@@ -652,6 +656,30 @@ class IncomeStatementStandardizer(Standardizer):
                 missing_summand_tag='AllIncomeTaxExpenseBenefit'),
 
             PostSetToZero(tags=['IncomeLossFromDiscontinuedOperationsNetOfTax']),
+
+            # if IncomeLossFromContinuingOperations is not set, but IL..BeforeIncomeTaxExpenseBenefit is set
+            # set it to IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit
+            CopyTagRule(original='IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit',
+                        target='IncomeLossFromContinuingOperations'),
+
+            # since new IncomeLossFromContinuingOperations values could have been set,
+            # calculate missing ProfitLoss entries
+            SumUpRule(sum_tag='ProfitLoss',
+                      potential_summands=[
+                          'IncomeLossFromContinuingOperations',
+                          'IncomeLossFromDiscontinuedOperationsNetOfTax'
+                      ]),
+
+            # since new ProfitLoss could have been set, use it to set still missing NetIncomeLoss
+            CopyTagRule(original='ProfitLoss',
+                        target='NetIncomeLoss'),
+
+            # calculate missing NetIncomeLossAttributableToNoncontrollingInterest
+            MissingSummandRule(
+                sum_tag='ProfitLoss',
+                existing_summands_tags=['NetIncomeLoss'],
+                missing_summand_tag='NetIncomeLossAttributableToNoncontrollingInterest'),
+
 
         ])
 

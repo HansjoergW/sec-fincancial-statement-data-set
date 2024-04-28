@@ -597,6 +597,10 @@ class IncomeStatementStandardizer(Standardizer):
                           CopyTagRule(original=&#39;ComprehensiveIncomeNetOfTax&#39;,
                                       target=&#39;NetIncomeLoss&#39;),
 
+                          # ***** NEW
+                          CopyTagRule(original=&#39;IncomeLossAttributableToParent&#39;,
+                                      target=&#39;NetIncomeLoss&#39;),
+
                           # for investment companies
                           CopyTagRule(original=&#39;NetInvestmentIncome&#39;, target=&#39;NetIncomeLoss&#39;),
                       ])
@@ -681,6 +685,30 @@ class IncomeStatementStandardizer(Standardizer):
                 missing_summand_tag=&#39;AllIncomeTaxExpenseBenefit&#39;),
 
             PostSetToZero(tags=[&#39;IncomeLossFromDiscontinuedOperationsNetOfTax&#39;]),
+
+            # if IncomeLossFromContinuingOperations is not set, but IL..BeforeIncomeTaxExpenseBenefit is set
+            # set it to IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit
+            CopyTagRule(original=&#39;IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit&#39;,
+                        target=&#39;IncomeLossFromContinuingOperations&#39;),
+
+            # since new IncomeLossFromContinuingOperations values could have been set,
+            # calculate missing ProfitLoss entries
+            SumUpRule(sum_tag=&#39;ProfitLoss&#39;,
+                      potential_summands=[
+                          &#39;IncomeLossFromContinuingOperations&#39;,
+                          &#39;IncomeLossFromDiscontinuedOperationsNetOfTax&#39;
+                      ]),
+
+            # since new ProfitLoss could have been set, use it to set still missing NetIncomeLoss
+            CopyTagRule(original=&#39;ProfitLoss&#39;,
+                        target=&#39;NetIncomeLoss&#39;),
+
+            # calculate missing NetIncomeLossAttributableToNoncontrollingInterest
+            MissingSummandRule(
+                sum_tag=&#39;ProfitLoss&#39;,
+                existing_summands_tags=[&#39;NetIncomeLoss&#39;],
+                missing_summand_tag=&#39;NetIncomeLossAttributableToNoncontrollingInterest&#39;),
+
 
         ])
 
@@ -1213,6 +1241,10 @@ as negated.</dd>
                           CopyTagRule(original=&#39;ComprehensiveIncomeNetOfTax&#39;,
                                       target=&#39;NetIncomeLoss&#39;),
 
+                          # ***** NEW
+                          CopyTagRule(original=&#39;IncomeLossAttributableToParent&#39;,
+                                      target=&#39;NetIncomeLoss&#39;),
+
                           # for investment companies
                           CopyTagRule(original=&#39;NetInvestmentIncome&#39;, target=&#39;NetIncomeLoss&#39;),
                       ])
@@ -1297,6 +1329,30 @@ as negated.</dd>
                 missing_summand_tag=&#39;AllIncomeTaxExpenseBenefit&#39;),
 
             PostSetToZero(tags=[&#39;IncomeLossFromDiscontinuedOperationsNetOfTax&#39;]),
+
+            # if IncomeLossFromContinuingOperations is not set, but IL..BeforeIncomeTaxExpenseBenefit is set
+            # set it to IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit
+            CopyTagRule(original=&#39;IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit&#39;,
+                        target=&#39;IncomeLossFromContinuingOperations&#39;),
+
+            # since new IncomeLossFromContinuingOperations values could have been set,
+            # calculate missing ProfitLoss entries
+            SumUpRule(sum_tag=&#39;ProfitLoss&#39;,
+                      potential_summands=[
+                          &#39;IncomeLossFromContinuingOperations&#39;,
+                          &#39;IncomeLossFromDiscontinuedOperationsNetOfTax&#39;
+                      ]),
+
+            # since new ProfitLoss could have been set, use it to set still missing NetIncomeLoss
+            CopyTagRule(original=&#39;ProfitLoss&#39;,
+                        target=&#39;NetIncomeLoss&#39;),
+
+            # calculate missing NetIncomeLossAttributableToNoncontrollingInterest
+            MissingSummandRule(
+                sum_tag=&#39;ProfitLoss&#39;,
+                existing_summands_tags=[&#39;NetIncomeLoss&#39;],
+                missing_summand_tag=&#39;NetIncomeLossAttributableToNoncontrollingInterest&#39;),
+
 
         ])
 

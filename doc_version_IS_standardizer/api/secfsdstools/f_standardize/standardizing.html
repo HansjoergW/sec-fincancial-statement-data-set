@@ -360,7 +360,10 @@ class Standardizer(Presenter[JoinedDataBag]):
         for i in range(self.main_iterations):
             # apply the main rule tree
             self.main_rule_tree.set_id(prefix=f&#34;MAIN_{i + 1}&#34;)
+            # todo: applied rules nicht mehr teil vom Aufruf
             self.main_rule_tree.process(data_df=data_df, log_df=self.applied_rules_log_df)
+
+            self.applied_rules_log_df = self.main_rule_tree.append_log(self.applied_rules_log_df)
 
             # calculate stats and add them to the stats log
             self.stats.add_stats_entry(data_df=data_df, process_step_name=f&#39;MAIN_{i + 1}&#39;)
@@ -369,6 +372,8 @@ class Standardizer(Presenter[JoinedDataBag]):
         # apply the post rule tree
         self.post_rule_tree.set_id(prefix=&#34;POST&#34;)
         self.post_rule_tree.process(data_df=data_df, log_df=self.applied_rules_log_df)
+
+        self.applied_rules_log_df = self.post_rule_tree.append_log(self.applied_rules_log_df)
 
         # calculate stats and add them to the stats log
         self.stats.add_stats_entry(data_df=data_df, process_step_name=&#39;POST&#39;)
@@ -926,7 +931,10 @@ as negated.</dd>
         for i in range(self.main_iterations):
             # apply the main rule tree
             self.main_rule_tree.set_id(prefix=f&#34;MAIN_{i + 1}&#34;)
+            # todo: applied rules nicht mehr teil vom Aufruf
             self.main_rule_tree.process(data_df=data_df, log_df=self.applied_rules_log_df)
+
+            self.applied_rules_log_df = self.main_rule_tree.append_log(self.applied_rules_log_df)
 
             # calculate stats and add them to the stats log
             self.stats.add_stats_entry(data_df=data_df, process_step_name=f&#39;MAIN_{i + 1}&#39;)
@@ -935,6 +943,8 @@ as negated.</dd>
         # apply the post rule tree
         self.post_rule_tree.set_id(prefix=&#34;POST&#34;)
         self.post_rule_tree.process(data_df=data_df, log_df=self.applied_rules_log_df)
+
+        self.applied_rules_log_df = self.post_rule_tree.append_log(self.applied_rules_log_df)
 
         # calculate stats and add them to the stats log
         self.stats.add_stats_entry(data_df=data_df, process_step_name=&#39;POST&#39;)

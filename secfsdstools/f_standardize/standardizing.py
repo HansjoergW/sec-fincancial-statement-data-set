@@ -331,7 +331,10 @@ class Standardizer(Presenter[JoinedDataBag]):
         for i in range(self.main_iterations):
             # apply the main rule tree
             self.main_rule_tree.set_id(prefix=f"MAIN_{i + 1}")
+            # todo: applied rules nicht mehr teil vom Aufruf
             self.main_rule_tree.process(data_df=data_df, log_df=self.applied_rules_log_df)
+
+            self.applied_rules_log_df = self.main_rule_tree.append_log(self.applied_rules_log_df)
 
             # calculate stats and add them to the stats log
             self.stats.add_stats_entry(data_df=data_df, process_step_name=f'MAIN_{i + 1}')
@@ -340,6 +343,8 @@ class Standardizer(Presenter[JoinedDataBag]):
         # apply the post rule tree
         self.post_rule_tree.set_id(prefix="POST")
         self.post_rule_tree.process(data_df=data_df, log_df=self.applied_rules_log_df)
+
+        self.applied_rules_log_df = self.post_rule_tree.append_log(self.applied_rules_log_df)
 
         # calculate stats and add them to the stats log
         self.stats.add_stats_entry(data_df=data_df, process_step_name='POST')

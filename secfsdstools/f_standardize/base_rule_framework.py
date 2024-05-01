@@ -129,7 +129,6 @@ class PrePivotRule(AbstractRule):
 
     index_cols = ['adsh', 'coreg', 'report', 'ddate', 'uom', 'qtrs', 'tag', 'version']
 
-
     def __init__(self, rule_id: str):
         self.rule_id = rule_id
         self.log_df: pd.DataFrame = pd.DataFrame(columns=self.index_cols + ['id'])
@@ -166,6 +165,7 @@ class PrePivotRule(AbstractRule):
 
 class Rule(AbstractRule):
     """Base class to define a single rule that is used after the dataframe was pivoted"""
+    masked: pd.Series
 
     @abstractmethod
     def get_target_tags(self) -> List[str]:
@@ -203,12 +203,16 @@ class Rule(AbstractRule):
         """
         mask = self.mask(data_df)
         self.apply(data_df, mask)
+        self.masked = mask
 
-        # if a log_df is provided, create a new column for this role and mark the rows that were
-        # affected by the rule
-        if (log_df is not None) and (len(log_df) == len(mask)):
-            log_df[self.identifier] = False
-            log_df.loc[mask, self.identifier] = True
+        # remove
+        # # if a log_df is provided, create a new column for this role and mark the rows that were
+        # # affected by the rule
+        # if (log_df is not None) and (len(log_df) == len(mask)):
+        #     log_df[self.identifier] = mask
+
+    def get_mask(self):
+        return self.masked
 
 
 class RuleGroup(RuleEntity):
@@ -292,3 +296,20 @@ class RuleGroup(RuleEntity):
             entries.extend(rule.collect_description(part))
 
         return entries
+
+    def _collect_masked_entries(self, ids:List[str], masks:List[pd.Series]):
+
+        for rule in self.rules:
+            if isinstance(rule, RuleGroup):
+                rule._collect_masked_entries(ids, masks)
+            elif isinstance(rule, Rule):
+                ids.append(rule.identifier)
+                masks.append(rule.get_mask())
+
+    def append_log(self, log_df: pd.DataFrame) -> pd.DataFrame:
+        ids: List[str] = []
+        masks: List[pd.Series] = []
+        self._collect_masked_entries(ids, masks)
+        return pd.concat([log_df] + [s.rename(col_name) for col_name, s in zip(ids, masks)], axis=1)
+
+

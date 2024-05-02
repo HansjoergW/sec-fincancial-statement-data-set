@@ -200,22 +200,7 @@ Todos
 - IncomeLossAttributableToParent is available
   ex. 0001104659-12-077666
 
-
-- es scheint etliche Reports zu geben, welche bei
-     IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit aufhören
-
-     Hier müsste man noch nach unten vervollständigen, schliesslich vervollständigen wir auch nach oben
-
-     Das ist vor allem Federal Home Loan Bank
-      -> Analyse, wieviele solche Fälle es wirklich gibt
-
-      standardized_bag.result_df[~standardized_bag.result_df.IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit.isna() & standardized_bag.result_df.IncomeLossFromContinuingOperations.isna()]
-      -> 582
-
 - EarningsPerShare
-
-
-
 
 
 Revenue

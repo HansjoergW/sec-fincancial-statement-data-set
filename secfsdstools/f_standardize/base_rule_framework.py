@@ -36,15 +36,12 @@ class RuleEntity(ABC):
             Set[str] : a set of strings
         """
 
-    def process(self, data_df: pd.DataFrame, log_df: Optional[pd.DataFrame] = None):
+    def process(self, data_df: pd.DataFrame):
         """
         Applies the rules on the provided dataframe.
-        If a log_df is provided, the affected roles by every rule are logged into the
-        log_df.
 
         Args:
             data_df (pd.DataFrame): the dataframe on which the rules will be applied
-            log_df (pd.DataFrame, optional, None): the logs-dataframe
 
         """
 
@@ -131,6 +128,8 @@ class PrePivotRule(AbstractRule):
 
     def __init__(self, rule_id: str):
         self.rule_id = rule_id
+
+        # pre pivot rules keep the applied log within the class to concat it later
         self.log_df: pd.DataFrame = pd.DataFrame(columns=self.index_cols + ['id'])
 
     def set_id(self, prefix: str):
@@ -141,14 +140,12 @@ class PrePivotRule(AbstractRule):
         """
         self.identifier = f'{prefix}_{self.rule_id}'
 
-    def process(self, data_df: pd.DataFrame, log_df: Optional[pd.DataFrame] = None):
+    def process(self, data_df: pd.DataFrame):
         """
-        process the dataframe and apply the rule. If a log_df is provided, the rows on which
-        the rule is applied to is added to the log_df.
+        process the dataframe and apply the rule.
 
         Args:
             data_df (pd.DataFrame) : dataframe on which the rule has to be applied
-            log_df (pd.DataFrame, optional, None): the log dataframe
         """
         mask = self.mask(data_df)
 
@@ -192,24 +189,16 @@ class Rule(AbstractRule):
         """
         self.identifier = f'{prefix}_{self.get_target_tags_str()}'
 
-    def process(self, data_df: pd.DataFrame, log_df: Optional[pd.DataFrame] = None):
+    def process(self, data_df: pd.DataFrame):
         """
-        process the dataframe and apply the rule. If a log_df is provided, the rows on which
-        the rule is applied to is added to the log_df.
+        process the dataframe and apply the rule.
 
         Args:
             data_df (pd.DataFrame) : dataframe on which the rule has to be applied
-            log_df (pd.DataFrame, optional, None): the log dataframe
         """
         mask = self.mask(data_df)
         self.apply(data_df, mask)
         self.masked = mask
-
-        # remove
-        # # if a log_df is provided, create a new column for this role and mark the rows that were
-        # # affected by the rule
-        # if (log_df is not None) and (len(log_df) == len(mask)):
-        #     log_df[self.identifier] = mask
 
     def get_mask(self):
         return self.masked
@@ -241,17 +230,15 @@ class RuleGroup(RuleEntity):
             rule.set_id(f'{self.identifier}_#{idx}')
             idx = idx + 1
 
-    def process(self, data_df: pd.DataFrame, log_df: Optional[pd.DataFrame] = None):
+    def process(self, data_df: pd.DataFrame):
         """
         process the dataframe and apply the rules of this group.
-        If a log_df is provided, the rows on which the rule is applied to is added to the log_df.
 
         Args:
             df (pd.DataFrame) : dataframe on which the rule has to be applied
-            log_df (pd.DataFrame, optional, None): the log dataframe
         """
         for rule in self.rules:
-            rule.process(data_df=data_df, log_df=log_df)
+            rule.process(data_df=data_df)
 
     def get_input_tags(self) -> Set[str]:
         """
@@ -298,7 +285,14 @@ class RuleGroup(RuleEntity):
         return entries
 
     def _collect_masked_entries(self, ids:List[str], masks:List[pd.Series]):
+        """
+        internal helper method which helps to recursively traverse down the rule group structure
+        and to collect the applied rules together with their ids
+        Args:
+            ids: list with ids
+            masks: list with the applied masks
 
+        """
         for rule in self.rules:
             if isinstance(rule, RuleGroup):
                 rule._collect_masked_entries(ids, masks)
@@ -307,9 +301,22 @@ class RuleGroup(RuleEntity):
                 masks.append(rule.get_mask())
 
     def append_log(self, log_df: pd.DataFrame) -> pd.DataFrame:
+        """
+        append the rules that were applied within this group to the provided log_df and returns
+        the extended version of the log dataframe.
+
+        Args:
+            log_df: log dataframe to which the information should be added
+
+        Returns:
+            pd.DataFrame: the extended dataframe
+
+        """
         ids: List[str] = []
         masks: List[pd.Series] = []
+
         self._collect_masked_entries(ids, masks)
+
         return pd.concat([log_df] + [s.rename(col_name) for col_name, s in zip(ids, masks)], axis=1)
 
 

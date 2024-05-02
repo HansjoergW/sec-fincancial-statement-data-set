@@ -300,8 +300,8 @@ class Standardizer(Presenter[JoinedDataBag]):
         # apply prepivot_rule_tree
         self.prepivot_rule_tree.set_id("PREPIVOT")
         self.prepivot_rule_tree.process(data_df=relevant_df)
-        # we cannot directly add rows than existing dataframe, therefore prepivot rules
-        # so every prepivot rules stores the log within and in the end, we concat it together
+        # we cannot directly add rows to an existing dataframe,
+        # so every prepivot rules stores the log within itself and in the end, we concat it together
         prepivot_logs = [x.log_df for x in self.prepivot_rule_tree.rules]
         if len(prepivot_logs) > 0:
             self.applied_prepivot_rules_log_df = pd.concat(prepivot_logs)
@@ -320,7 +320,8 @@ class Standardizer(Presenter[JoinedDataBag]):
 
         # finally apply the pre-rules
         self.pre_rule_tree.set_id("PRE")
-        self.pre_rule_tree.process(pivot_df, log_df=self.applied_rules_log_df)
+        self.pre_rule_tree.process(pivot_df)
+        self.applied_rules_log_df = self.pre_rule_tree.append_log(self.applied_rules_log_df)
 
         # prepare the stats dataframe and calculate the stats after preprocessing
         self.stats.initialize(data_df=pivot_df, process_step_name="pre")
@@ -331,8 +332,7 @@ class Standardizer(Presenter[JoinedDataBag]):
         for i in range(self.main_iterations):
             # apply the main rule tree
             self.main_rule_tree.set_id(prefix=f"MAIN_{i + 1}")
-            # todo: applied rules nicht mehr teil vom Aufruf
-            self.main_rule_tree.process(data_df=data_df, log_df=self.applied_rules_log_df)
+            self.main_rule_tree.process(data_df=data_df)
 
             self.applied_rules_log_df = self.main_rule_tree.append_log(self.applied_rules_log_df)
 
@@ -342,7 +342,7 @@ class Standardizer(Presenter[JoinedDataBag]):
     def _post_processing(self, data_df: pd.DataFrame):
         # apply the post rule tree
         self.post_rule_tree.set_id(prefix="POST")
-        self.post_rule_tree.process(data_df=data_df, log_df=self.applied_rules_log_df)
+        self.post_rule_tree.process(data_df=data_df)
 
         self.applied_rules_log_df = self.post_rule_tree.append_log(self.applied_rules_log_df)
 

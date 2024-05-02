@@ -67,15 +67,12 @@ class RuleEntity(ABC):
             Set[str] : a set of strings
         &#34;&#34;&#34;
 
-    def process(self, data_df: pd.DataFrame, log_df: Optional[pd.DataFrame] = None):
+    def process(self, data_df: pd.DataFrame):
         &#34;&#34;&#34;
         Applies the rules on the provided dataframe.
-        If a log_df is provided, the affected roles by every rule are logged into the
-        log_df.
 
         Args:
             data_df (pd.DataFrame): the dataframe on which the rules will be applied
-            log_df (pd.DataFrame, optional, None): the logs-dataframe
 
         &#34;&#34;&#34;
 
@@ -162,6 +159,8 @@ class PrePivotRule(AbstractRule):
 
     def __init__(self, rule_id: str):
         self.rule_id = rule_id
+
+        # pre pivot rules keep the applied log within the class to concat it later
         self.log_df: pd.DataFrame = pd.DataFrame(columns=self.index_cols + [&#39;id&#39;])
 
     def set_id(self, prefix: str):
@@ -172,14 +171,12 @@ class PrePivotRule(AbstractRule):
         &#34;&#34;&#34;
         self.identifier = f&#39;{prefix}_{self.rule_id}&#39;
 
-    def process(self, data_df: pd.DataFrame, log_df: Optional[pd.DataFrame] = None):
+    def process(self, data_df: pd.DataFrame):
         &#34;&#34;&#34;
-        process the dataframe and apply the rule. If a log_df is provided, the rows on which
-        the rule is applied to is added to the log_df.
+        process the dataframe and apply the rule.
 
         Args:
             data_df (pd.DataFrame) : dataframe on which the rule has to be applied
-            log_df (pd.DataFrame, optional, None): the log dataframe
         &#34;&#34;&#34;
         mask = self.mask(data_df)
 
@@ -223,24 +220,16 @@ class Rule(AbstractRule):
         &#34;&#34;&#34;
         self.identifier = f&#39;{prefix}_{self.get_target_tags_str()}&#39;
 
-    def process(self, data_df: pd.DataFrame, log_df: Optional[pd.DataFrame] = None):
+    def process(self, data_df: pd.DataFrame):
         &#34;&#34;&#34;
-        process the dataframe and apply the rule. If a log_df is provided, the rows on which
-        the rule is applied to is added to the log_df.
+        process the dataframe and apply the rule.
 
         Args:
             data_df (pd.DataFrame) : dataframe on which the rule has to be applied
-            log_df (pd.DataFrame, optional, None): the log dataframe
         &#34;&#34;&#34;
         mask = self.mask(data_df)
         self.apply(data_df, mask)
         self.masked = mask
-
-        # remove
-        # # if a log_df is provided, create a new column for this role and mark the rows that were
-        # # affected by the rule
-        # if (log_df is not None) and (len(log_df) == len(mask)):
-        #     log_df[self.identifier] = mask
 
     def get_mask(self):
         return self.masked
@@ -272,17 +261,15 @@ class RuleGroup(RuleEntity):
             rule.set_id(f&#39;{self.identifier}_#{idx}&#39;)
             idx = idx + 1
 
-    def process(self, data_df: pd.DataFrame, log_df: Optional[pd.DataFrame] = None):
+    def process(self, data_df: pd.DataFrame):
         &#34;&#34;&#34;
         process the dataframe and apply the rules of this group.
-        If a log_df is provided, the rows on which the rule is applied to is added to the log_df.
 
         Args:
             df (pd.DataFrame) : dataframe on which the rule has to be applied
-            log_df (pd.DataFrame, optional, None): the log dataframe
         &#34;&#34;&#34;
         for rule in self.rules:
-            rule.process(data_df=data_df, log_df=log_df)
+            rule.process(data_df=data_df)
 
     def get_input_tags(self) -&gt; Set[str]:
         &#34;&#34;&#34;
@@ -329,7 +316,14 @@ class RuleGroup(RuleEntity):
         return entries
 
     def _collect_masked_entries(self, ids:List[str], masks:List[pd.Series]):
+        &#34;&#34;&#34;
+        internal helper method which helps to recursively traverse down the rule group structure
+        and to collect the applied rules together with their ids
+        Args:
+            ids: list with ids
+            masks: list with the applied masks
 
+        &#34;&#34;&#34;
         for rule in self.rules:
             if isinstance(rule, RuleGroup):
                 rule._collect_masked_entries(ids, masks)
@@ -338,9 +332,22 @@ class RuleGroup(RuleEntity):
                 masks.append(rule.get_mask())
 
     def append_log(self, log_df: pd.DataFrame) -&gt; pd.DataFrame:
+        &#34;&#34;&#34;
+        append the rules that were applied within this group to the provided log_df and returns
+        the extended version of the log dataframe.
+
+        Args:
+            log_df: log dataframe to which the information should be added
+
+        Returns:
+            pd.DataFrame: the extended dataframe
+
+        &#34;&#34;&#34;
         ids: List[str] = []
         masks: List[pd.Series] = []
+
         self._collect_masked_entries(ids, masks)
+
         return pd.concat([log_df] + [s.rename(col_name) for col_name, s in zip(ids, masks)], axis=1)</code></pre>
 </details>
 </section>
@@ -600,6 +607,8 @@ process descrption table.</p></div>
 
     def __init__(self, rule_id: str):
         self.rule_id = rule_id
+
+        # pre pivot rules keep the applied log within the class to concat it later
         self.log_df: pd.DataFrame = pd.DataFrame(columns=self.index_cols + [&#39;id&#39;])
 
     def set_id(self, prefix: str):
@@ -610,14 +619,12 @@ process descrption table.</p></div>
         &#34;&#34;&#34;
         self.identifier = f&#39;{prefix}_{self.rule_id}&#39;
 
-    def process(self, data_df: pd.DataFrame, log_df: Optional[pd.DataFrame] = None):
+    def process(self, data_df: pd.DataFrame):
         &#34;&#34;&#34;
-        process the dataframe and apply the rule. If a log_df is provided, the rows on which
-        the rule is applied to is added to the log_df.
+        process the dataframe and apply the rule.
 
         Args:
             data_df (pd.DataFrame) : dataframe on which the rule has to be applied
-            log_df (pd.DataFrame, optional, None): the log dataframe
         &#34;&#34;&#34;
         mask = self.mask(data_df)
 
@@ -656,29 +663,22 @@ process descrption table.</p></div>
 <h3>Methods</h3>
 <dl>
 <dt id="secfsdstools.f_standardize.base_rule_framework.PrePivotRule.process"><code class="name flex">
-<span>def <span class="ident">process</span></span>(<span>self, data_df: pandas.core.frame.DataFrame, log_df: Optional[pandas.core.frame.DataFrame] = None)</span>
+<span>def <span class="ident">process</span></span>(<span>self, data_df: pandas.core.frame.DataFrame)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>process the dataframe and apply the rule. If a log_df is provided, the rows on which
-the rule is applied to is added to the log_df.</p>
+<div class="desc"><p>process the dataframe and apply the rule.</p>
 <h2 id="args">Args</h2>
-<dl>
-<dt>data_df (pd.DataFrame) : dataframe on which the rule has to be applied</dt>
-<dt><strong><code>log_df</code></strong> :&ensp;<code>pd.DataFrame</code>, optional<code>, None</code></dt>
-<dd>the log dataframe</dd>
-</dl></div>
+<p>data_df (pd.DataFrame) : dataframe on which the rule has to be applied</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def process(self, data_df: pd.DataFrame, log_df: Optional[pd.DataFrame] = None):
+<pre><code class="python">def process(self, data_df: pd.DataFrame):
     &#34;&#34;&#34;
-    process the dataframe and apply the rule. If a log_df is provided, the rows on which
-    the rule is applied to is added to the log_df.
+    process the dataframe and apply the rule.
 
     Args:
         data_df (pd.DataFrame) : dataframe on which the rule has to be applied
-        log_df (pd.DataFrame, optional, None): the log dataframe
     &#34;&#34;&#34;
     mask = self.mask(data_df)
 
@@ -743,24 +743,16 @@ the rule is applied to is added to the log_df.</p>
         &#34;&#34;&#34;
         self.identifier = f&#39;{prefix}_{self.get_target_tags_str()}&#39;
 
-    def process(self, data_df: pd.DataFrame, log_df: Optional[pd.DataFrame] = None):
+    def process(self, data_df: pd.DataFrame):
         &#34;&#34;&#34;
-        process the dataframe and apply the rule. If a log_df is provided, the rows on which
-        the rule is applied to is added to the log_df.
+        process the dataframe and apply the rule.
 
         Args:
             data_df (pd.DataFrame) : dataframe on which the rule has to be applied
-            log_df (pd.DataFrame, optional, None): the log dataframe
         &#34;&#34;&#34;
         mask = self.mask(data_df)
         self.apply(data_df, mask)
         self.masked = mask
-
-        # remove
-        # # if a log_df is provided, create a new column for this role and mark the rows that were
-        # # affected by the rule
-        # if (log_df is not None) and (len(log_df) == len(mask)):
-        #     log_df[self.identifier] = mask
 
     def get_mask(self):
         return self.masked</code></pre>
@@ -855,39 +847,26 @@ def get_target_tags(self) -&gt; List[str]:
 </details>
 </dd>
 <dt id="secfsdstools.f_standardize.base_rule_framework.Rule.process"><code class="name flex">
-<span>def <span class="ident">process</span></span>(<span>self, data_df: pandas.core.frame.DataFrame, log_df: Optional[pandas.core.frame.DataFrame] = None)</span>
+<span>def <span class="ident">process</span></span>(<span>self, data_df: pandas.core.frame.DataFrame)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>process the dataframe and apply the rule. If a log_df is provided, the rows on which
-the rule is applied to is added to the log_df.</p>
+<div class="desc"><p>process the dataframe and apply the rule.</p>
 <h2 id="args">Args</h2>
-<dl>
-<dt>data_df (pd.DataFrame) : dataframe on which the rule has to be applied</dt>
-<dt><strong><code>log_df</code></strong> :&ensp;<code>pd.DataFrame</code>, optional<code>, None</code></dt>
-<dd>the log dataframe</dd>
-</dl></div>
+<p>data_df (pd.DataFrame) : dataframe on which the rule has to be applied</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def process(self, data_df: pd.DataFrame, log_df: Optional[pd.DataFrame] = None):
+<pre><code class="python">def process(self, data_df: pd.DataFrame):
     &#34;&#34;&#34;
-    process the dataframe and apply the rule. If a log_df is provided, the rows on which
-    the rule is applied to is added to the log_df.
+    process the dataframe and apply the rule.
 
     Args:
         data_df (pd.DataFrame) : dataframe on which the rule has to be applied
-        log_df (pd.DataFrame, optional, None): the log dataframe
     &#34;&#34;&#34;
     mask = self.mask(data_df)
     self.apply(data_df, mask)
-    self.masked = mask
-
-    # remove
-    # # if a log_df is provided, create a new column for this role and mark the rows that were
-    # # affected by the rule
-    # if (log_df is not None) and (len(log_df) == len(mask)):
-    #     log_df[self.identifier] = mask</code></pre>
+    self.masked = mask</code></pre>
 </details>
 </dd>
 </dl>
@@ -928,15 +907,12 @@ the rule is applied to is added to the log_df.</p>
             Set[str] : a set of strings
         &#34;&#34;&#34;
 
-    def process(self, data_df: pd.DataFrame, log_df: Optional[pd.DataFrame] = None):
+    def process(self, data_df: pd.DataFrame):
         &#34;&#34;&#34;
         Applies the rules on the provided dataframe.
-        If a log_df is provided, the affected roles by every rule are logged into the
-        log_df.
 
         Args:
             data_df (pd.DataFrame): the dataframe on which the rules will be applied
-            log_df (pd.DataFrame, optional, None): the logs-dataframe
 
         &#34;&#34;&#34;
 
@@ -1063,32 +1039,25 @@ def get_input_tags(self) -&gt; Set[str]:
 </details>
 </dd>
 <dt id="secfsdstools.f_standardize.base_rule_framework.RuleEntity.process"><code class="name flex">
-<span>def <span class="ident">process</span></span>(<span>self, data_df: pandas.core.frame.DataFrame, log_df: Optional[pandas.core.frame.DataFrame] = None)</span>
+<span>def <span class="ident">process</span></span>(<span>self, data_df: pandas.core.frame.DataFrame)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Applies the rules on the provided dataframe.
-If a log_df is provided, the affected roles by every rule are logged into the
-log_df.</p>
+<div class="desc"><p>Applies the rules on the provided dataframe.</p>
 <h2 id="args">Args</h2>
 <dl>
 <dt><strong><code>data_df</code></strong> :&ensp;<code>pd.DataFrame</code></dt>
 <dd>the dataframe on which the rules will be applied</dd>
-<dt><strong><code>log_df</code></strong> :&ensp;<code>pd.DataFrame</code>, optional<code>, None</code></dt>
-<dd>the logs-dataframe</dd>
 </dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def process(self, data_df: pd.DataFrame, log_df: Optional[pd.DataFrame] = None):
+<pre><code class="python">def process(self, data_df: pd.DataFrame):
     &#34;&#34;&#34;
     Applies the rules on the provided dataframe.
-    If a log_df is provided, the affected roles by every rule are logged into the
-    log_df.
 
     Args:
         data_df (pd.DataFrame): the dataframe on which the rules will be applied
-        log_df (pd.DataFrame, optional, None): the logs-dataframe
 
     &#34;&#34;&#34;</code></pre>
 </details>
@@ -1163,17 +1132,15 @@ def set_id(self, prefix: str):
             rule.set_id(f&#39;{self.identifier}_#{idx}&#39;)
             idx = idx + 1
 
-    def process(self, data_df: pd.DataFrame, log_df: Optional[pd.DataFrame] = None):
+    def process(self, data_df: pd.DataFrame):
         &#34;&#34;&#34;
         process the dataframe and apply the rules of this group.
-        If a log_df is provided, the rows on which the rule is applied to is added to the log_df.
 
         Args:
             df (pd.DataFrame) : dataframe on which the rule has to be applied
-            log_df (pd.DataFrame, optional, None): the log dataframe
         &#34;&#34;&#34;
         for rule in self.rules:
-            rule.process(data_df=data_df, log_df=log_df)
+            rule.process(data_df=data_df)
 
     def get_input_tags(self) -&gt; Set[str]:
         &#34;&#34;&#34;
@@ -1220,7 +1187,14 @@ def set_id(self, prefix: str):
         return entries
 
     def _collect_masked_entries(self, ids:List[str], masks:List[pd.Series]):
+        &#34;&#34;&#34;
+        internal helper method which helps to recursively traverse down the rule group structure
+        and to collect the applied rules together with their ids
+        Args:
+            ids: list with ids
+            masks: list with the applied masks
 
+        &#34;&#34;&#34;
         for rule in self.rules:
             if isinstance(rule, RuleGroup):
                 rule._collect_masked_entries(ids, masks)
@@ -1229,9 +1203,22 @@ def set_id(self, prefix: str):
                 masks.append(rule.get_mask())
 
     def append_log(self, log_df: pd.DataFrame) -&gt; pd.DataFrame:
+        &#34;&#34;&#34;
+        append the rules that were applied within this group to the provided log_df and returns
+        the extended version of the log dataframe.
+
+        Args:
+            log_df: log dataframe to which the information should be added
+
+        Returns:
+            pd.DataFrame: the extended dataframe
+
+        &#34;&#34;&#34;
         ids: List[str] = []
         masks: List[pd.Series] = []
+
         self._collect_masked_entries(ids, masks)
+
         return pd.concat([log_df] + [s.rename(col_name) for col_name, s in zip(ids, masks)], axis=1)</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -1252,15 +1239,39 @@ def set_id(self, prefix: str):
 <span>def <span class="ident">append_log</span></span>(<span>self, log_df: pandas.core.frame.DataFrame) ‑> pandas.core.frame.DataFrame</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>append the rules that were applied within this group to the provided log_df and returns
+the extended version of the log dataframe.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>log_df</code></strong></dt>
+<dd>log dataframe to which the information should be added</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>pd.DataFrame</code></dt>
+<dd>the extended dataframe</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def append_log(self, log_df: pd.DataFrame) -&gt; pd.DataFrame:
+    &#34;&#34;&#34;
+    append the rules that were applied within this group to the provided log_df and returns
+    the extended version of the log dataframe.
+
+    Args:
+        log_df: log dataframe to which the information should be added
+
+    Returns:
+        pd.DataFrame: the extended dataframe
+
+    &#34;&#34;&#34;
     ids: List[str] = []
     masks: List[pd.Series] = []
+
     self._collect_masked_entries(ids, masks)
+
     return pd.concat([log_df] + [s.rename(col_name) for col_name, s in zip(ids, masks)], axis=1)</code></pre>
 </details>
 </dd>
@@ -1332,32 +1343,25 @@ def set_id(self, prefix: str):
 </details>
 </dd>
 <dt id="secfsdstools.f_standardize.base_rule_framework.RuleGroup.process"><code class="name flex">
-<span>def <span class="ident">process</span></span>(<span>self, data_df: pandas.core.frame.DataFrame, log_df: Optional[pandas.core.frame.DataFrame] = None)</span>
+<span>def <span class="ident">process</span></span>(<span>self, data_df: pandas.core.frame.DataFrame)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>process the dataframe and apply the rules of this group.
-If a log_df is provided, the rows on which the rule is applied to is added to the log_df.</p>
+<div class="desc"><p>process the dataframe and apply the rules of this group.</p>
 <h2 id="args">Args</h2>
-<dl>
-<dt>df (pd.DataFrame) : dataframe on which the rule has to be applied</dt>
-<dt><strong><code>log_df</code></strong> :&ensp;<code>pd.DataFrame</code>, optional<code>, None</code></dt>
-<dd>the log dataframe</dd>
-</dl></div>
+<p>df (pd.DataFrame) : dataframe on which the rule has to be applied</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def process(self, data_df: pd.DataFrame, log_df: Optional[pd.DataFrame] = None):
+<pre><code class="python">def process(self, data_df: pd.DataFrame):
     &#34;&#34;&#34;
     process the dataframe and apply the rules of this group.
-    If a log_df is provided, the rows on which the rule is applied to is added to the log_df.
 
     Args:
         df (pd.DataFrame) : dataframe on which the rule has to be applied
-        log_df (pd.DataFrame, optional, None): the log dataframe
     &#34;&#34;&#34;
     for rule in self.rules:
-        rule.process(data_df=data_df, log_df=log_df)</code></pre>
+        rule.process(data_df=data_df)</code></pre>
 </details>
 </dd>
 <dt id="secfsdstools.f_standardize.base_rule_framework.RuleGroup.set_id"><code class="name flex">

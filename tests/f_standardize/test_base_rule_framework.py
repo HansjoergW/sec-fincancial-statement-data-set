@@ -66,14 +66,6 @@ def test_simple_rule():
     # call process without a log -> simply expect no problems
     rule.process(data_df=df)
 
-    log_df = df.copy()
-    # call rule with log.df
-    rule.process(data_df=df, log_df=log_df)
-
-    # we expect a colum with the rule.id as columname
-    # the sum of that column has to be the length of the dataframe
-    assert log_df[rule.identifier].sum() == len(df)
-
 
 def test_multitag_rule():
     rule = Rule2(tag1='Tag1', tag2='Tag2')
@@ -101,10 +93,9 @@ def test_simple_group_rule():
 
     # call process without a log -> simply expect no problems
     rulegroup.process(data_df=df)
-
     log_df = df.copy()
-    # call rule with log.df
-    rulegroup.process(data_df=df, log_df=log_df)
+
+    log_df = rulegroup.append_log(log_df)
 
     # we expect colums named with the id of both rules.
     # the sum of these column has to be the length of the dataframe

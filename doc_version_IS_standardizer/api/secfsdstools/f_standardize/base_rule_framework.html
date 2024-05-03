@@ -36,7 +36,7 @@ a rule hierarchy that then is used in the standardizer.
 from abc import ABC
 from abc import abstractmethod
 from dataclasses import dataclass
-from typing import Optional, Set, List
+from typing import Set, List
 
 import pandas as pd
 import pandera as pa
@@ -231,7 +231,11 @@ class Rule(AbstractRule):
         self.apply(data_df, mask)
         self.masked = mask
 
-    def get_mask(self):
+    def get_mask(self) -&gt; pd.Series:
+        &#34;&#34;&#34;
+        returns the a pandas.Series object that marks the masked
+        entries.
+        &#34;&#34;&#34;
         return self.masked
 
 
@@ -315,7 +319,7 @@ class RuleGroup(RuleEntity):
 
         return entries
 
-    def _collect_masked_entries(self, ids:List[str], masks:List[pd.Series]):
+    def collect_masked_entries(self, ids: List[str], masks: List[pd.Series]):
         &#34;&#34;&#34;
         internal helper method which helps to recursively traverse down the rule group structure
         and to collect the applied rules together with their ids
@@ -326,7 +330,7 @@ class RuleGroup(RuleEntity):
         &#34;&#34;&#34;
         for rule in self.rules:
             if isinstance(rule, RuleGroup):
-                rule._collect_masked_entries(ids, masks)
+                rule.collect_masked_entries(ids, masks)
             elif isinstance(rule, Rule):
                 ids.append(rule.identifier)
                 masks.append(rule.get_mask())
@@ -346,7 +350,7 @@ class RuleGroup(RuleEntity):
         ids: List[str] = []
         masks: List[pd.Series] = []
 
-        self._collect_masked_entries(ids, masks)
+        self.collect_masked_entries(ids, masks)
 
         return pd.concat([log_df] + [s.rename(col_name) for col_name, s in zip(ids, masks)], axis=1)</code></pre>
 </details>
@@ -754,7 +758,11 @@ process descrption table.</p></div>
         self.apply(data_df, mask)
         self.masked = mask
 
-    def get_mask(self):
+    def get_mask(self) -&gt; pd.Series:
+        &#34;&#34;&#34;
+        returns the a pandas.Series object that marks the masked
+        entries.
+        &#34;&#34;&#34;
         return self.masked</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -787,15 +795,20 @@ process descrption table.</p></div>
 <h3>Methods</h3>
 <dl>
 <dt id="secfsdstools.f_standardize.base_rule_framework.Rule.get_mask"><code class="name flex">
-<span>def <span class="ident">get_mask</span></span>(<span>self)</span>
+<span>def <span class="ident">get_mask</span></span>(<span>self) ‑> pandas.core.series.Series</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>returns the a pandas.Series object that marks the masked
+entries.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def get_mask(self):
+<pre><code class="python">def get_mask(self) -&gt; pd.Series:
+    &#34;&#34;&#34;
+    returns the a pandas.Series object that marks the masked
+    entries.
+    &#34;&#34;&#34;
     return self.masked</code></pre>
 </details>
 </dd>
@@ -1186,7 +1199,7 @@ def set_id(self, prefix: str):
 
         return entries
 
-    def _collect_masked_entries(self, ids:List[str], masks:List[pd.Series]):
+    def collect_masked_entries(self, ids: List[str], masks: List[pd.Series]):
         &#34;&#34;&#34;
         internal helper method which helps to recursively traverse down the rule group structure
         and to collect the applied rules together with their ids
@@ -1197,7 +1210,7 @@ def set_id(self, prefix: str):
         &#34;&#34;&#34;
         for rule in self.rules:
             if isinstance(rule, RuleGroup):
-                rule._collect_masked_entries(ids, masks)
+                rule.collect_masked_entries(ids, masks)
             elif isinstance(rule, Rule):
                 ids.append(rule.identifier)
                 masks.append(rule.get_mask())
@@ -1217,7 +1230,7 @@ def set_id(self, prefix: str):
         ids: List[str] = []
         masks: List[pd.Series] = []
 
-        self._collect_masked_entries(ids, masks)
+        self.collect_masked_entries(ids, masks)
 
         return pd.concat([log_df] + [s.rename(col_name) for col_name, s in zip(ids, masks)], axis=1)</code></pre>
 </details>
@@ -1270,7 +1283,7 @@ the extended version of the log dataframe.</p>
     ids: List[str] = []
     masks: List[pd.Series] = []
 
-    self._collect_masked_entries(ids, masks)
+    self.collect_masked_entries(ids, masks)
 
     return pd.concat([log_df] + [s.rename(col_name) for col_name, s in zip(ids, masks)], axis=1)</code></pre>
 </details>
@@ -1313,6 +1326,40 @@ the extended version of the log dataframe.</p>
         entries.extend(rule.collect_description(part))
 
     return entries</code></pre>
+</details>
+</dd>
+<dt id="secfsdstools.f_standardize.base_rule_framework.RuleGroup.collect_masked_entries"><code class="name flex">
+<span>def <span class="ident">collect_masked_entries</span></span>(<span>self, ids: List[str], masks: List[pandas.core.series.Series])</span>
+</code></dt>
+<dd>
+<div class="desc"><p>internal helper method which helps to recursively traverse down the rule group structure
+and to collect the applied rules together with their ids</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>ids</code></strong></dt>
+<dd>list with ids</dd>
+<dt><strong><code>masks</code></strong></dt>
+<dd>list with the applied masks</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def collect_masked_entries(self, ids: List[str], masks: List[pd.Series]):
+    &#34;&#34;&#34;
+    internal helper method which helps to recursively traverse down the rule group structure
+    and to collect the applied rules together with their ids
+    Args:
+        ids: list with ids
+        masks: list with the applied masks
+
+    &#34;&#34;&#34;
+    for rule in self.rules:
+        if isinstance(rule, RuleGroup):
+            rule.collect_masked_entries(ids, masks)
+        elif isinstance(rule, Rule):
+            ids.append(rule.identifier)
+            masks.append(rule.get_mask())</code></pre>
 </details>
 </dd>
 <dt id="secfsdstools.f_standardize.base_rule_framework.RuleGroup.get_input_tags"><code class="name flex">
@@ -1467,9 +1514,10 @@ the extended version of the log dataframe.</p>
 </li>
 <li>
 <h4><code><a title="secfsdstools.f_standardize.base_rule_framework.RuleGroup" href="#secfsdstools.f_standardize.base_rule_framework.RuleGroup">RuleGroup</a></code></h4>
-<ul class="two-column">
+<ul class="">
 <li><code><a title="secfsdstools.f_standardize.base_rule_framework.RuleGroup.append_log" href="#secfsdstools.f_standardize.base_rule_framework.RuleGroup.append_log">append_log</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.base_rule_framework.RuleGroup.collect_description" href="#secfsdstools.f_standardize.base_rule_framework.RuleGroup.collect_description">collect_description</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.base_rule_framework.RuleGroup.collect_masked_entries" href="#secfsdstools.f_standardize.base_rule_framework.RuleGroup.collect_masked_entries">collect_masked_entries</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.base_rule_framework.RuleGroup.get_input_tags" href="#secfsdstools.f_standardize.base_rule_framework.RuleGroup.get_input_tags">get_input_tags</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.base_rule_framework.RuleGroup.identifier" href="#secfsdstools.f_standardize.base_rule_framework.RuleGroup.identifier">identifier</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.base_rule_framework.RuleGroup.process" href="#secfsdstools.f_standardize.base_rule_framework.RuleGroup.process">process</a></code></li>

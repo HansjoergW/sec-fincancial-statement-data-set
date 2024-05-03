@@ -432,9 +432,9 @@ class SumUpRule(Rule):
                    f&#34; {self.optional_summands} into the column &#39;{self.sum_tag}&#39;. Values from &#34; \
                    f&#34;{self.optional_summands} are only added, if at least one value in &#34; \
                    f&#34; {self.potential_summands} is present. &#39;{self.sum_tag}&#39; must be nan.&#34;
-        else:
-            return f&#34;Sums up the availalbe values in the columns {self.potential_summands} into&#34; \
-                   f&#34; the column &#39;{self.sum_tag}&#39;, if the column &#39;{self.sum_tag}&#39; is nan&#34;
+
+        return f&#34;Sums up the availalbe values in the columns {self.potential_summands} into&#34; \
+               f&#34; the column &#39;{self.sum_tag}&#39;, if the column &#39;{self.sum_tag}&#39; is nan&#34;
 
 
 class SubtractFromRule(Rule):
@@ -518,8 +518,8 @@ class SubtractFromRule(Rule):
             str: description
         &#34;&#34;&#34;
 
-        return f&#34;Subtracts the available values in the columns {self.potential_subtract_tags} from&#34; \
-               f&#34; the value in &#39;{self.subtract_from_tag}&#39; and stores the result in &#34; \
+        return f&#34;Subtracts the available values in the columns {self.potential_subtract_tags}&#34; \
+               f&#34; from the value in &#39;{self.subtract_from_tag}&#39; and stores the result in &#34; \
                f&#34; &#39;{self.target_tag}&#39;, if &#39;{self.target_tag}&#39; is not set and &#34; \
                f&#34; &#39;{self.subtract_from_tag}&#39; has a value and at least one value in &#34; \
                f&#34; {self.potential_subtract_tags} is present.&#34;
@@ -758,10 +758,12 @@ class PostFixSign(Rule):
     Fixes the sign of an Addition, if the Summand has the wrong sign.
 
     For instance, the following equation should be true:
-    ProfitLoss + AllIncomeTaxExpenseBenefit = IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit
+    ProfitLoss + AllIncomeTaxExpenseBenefit =
+         IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit
 
     However, there are cases when
-    ProfitLoss - AllIncomeTaxExpenseBenefit = IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit
+    ProfitLoss - AllIncomeTaxExpenseBenefit =
+        IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit
 
     is true, so obviously AllIncomTaxExpenseBenefit has the wrong sign.
 
@@ -1155,6 +1157,7 @@ is defined by the provide mask Series.</p>
 <ul class="hlist">
 <li><code><a title="secfsdstools.f_standardize.base_rule_framework.Rule.collect_description" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.AbstractRule.collect_description">collect_description</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.base_rule_framework.Rule.get_description" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.RuleEntity.get_description">get_description</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.base_rule_framework.Rule.get_mask" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.Rule.get_mask">get_mask</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.base_rule_framework.Rule.get_target_tags" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.Rule.get_target_tags">get_target_tags</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.base_rule_framework.Rule.get_target_tags_str" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.Rule.get_target_tags_str">get_target_tags_str</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.base_rule_framework.Rule.mask" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.AbstractRule.mask">mask</a></code></li>
@@ -1367,6 +1370,7 @@ is defined by the provide mask Series.</p>
 <ul class="hlist">
 <li><code><a title="secfsdstools.f_standardize.base_rule_framework.Rule.collect_description" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.AbstractRule.collect_description">collect_description</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.base_rule_framework.Rule.get_description" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.RuleEntity.get_description">get_description</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.base_rule_framework.Rule.get_mask" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.Rule.get_mask">get_mask</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.base_rule_framework.Rule.get_target_tags" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.Rule.get_target_tags">get_target_tags</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.base_rule_framework.Rule.get_target_tags_str" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.Rule.get_target_tags_str">get_target_tags_str</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.base_rule_framework.Rule.process" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.Rule.process">process</a></code></li>
@@ -1591,6 +1595,7 @@ is defined by the provide mask Series.</p>
 <ul class="hlist">
 <li><code><a title="secfsdstools.f_standardize.base_rule_framework.Rule.collect_description" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.AbstractRule.collect_description">collect_description</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.base_rule_framework.Rule.get_description" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.RuleEntity.get_description">get_description</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.base_rule_framework.Rule.get_mask" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.Rule.get_mask">get_mask</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.base_rule_framework.Rule.get_target_tags" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.Rule.get_target_tags">get_target_tags</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.base_rule_framework.Rule.get_target_tags_str" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.Rule.get_target_tags_str">get_target_tags_str</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.base_rule_framework.Rule.process" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.Rule.process">process</a></code></li>
@@ -1816,6 +1821,7 @@ is defined by the provide mask Series.</p>
 <ul class="hlist">
 <li><code><a title="secfsdstools.f_standardize.base_rule_framework.Rule.collect_description" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.AbstractRule.collect_description">collect_description</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.base_rule_framework.Rule.get_description" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.RuleEntity.get_description">get_description</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.base_rule_framework.Rule.get_mask" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.Rule.get_mask">get_mask</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.base_rule_framework.Rule.get_target_tags" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.Rule.get_target_tags">get_target_tags</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.base_rule_framework.Rule.get_target_tags_str" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.Rule.get_target_tags_str">get_target_tags_str</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.base_rule_framework.Rule.process" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.Rule.process">process</a></code></li>
@@ -1831,9 +1837,11 @@ is defined by the provide mask Series.</p>
 <dd>
 <div class="desc"><p>Fixes the sign of an Addition, if the Summand has the wrong sign.</p>
 <p>For instance, the following equation should be true:
-ProfitLoss + AllIncomeTaxExpenseBenefit = IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit</p>
+ProfitLoss + AllIncomeTaxExpenseBenefit =
+IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit</p>
 <p>However, there are cases when
-ProfitLoss - AllIncomeTaxExpenseBenefit = IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit</p>
+ProfitLoss - AllIncomeTaxExpenseBenefit =
+IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit</p>
 <p>is true, so obviously AllIncomTaxExpenseBenefit has the wrong sign.</p></div>
 <details class="source">
 <summary>
@@ -1844,10 +1852,12 @@ ProfitLoss - AllIncomeTaxExpenseBenefit = IncomeLossFromContinuingOperationsBefo
     Fixes the sign of an Addition, if the Summand has the wrong sign.
 
     For instance, the following equation should be true:
-    ProfitLoss + AllIncomeTaxExpenseBenefit = IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit
+    ProfitLoss + AllIncomeTaxExpenseBenefit =
+         IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit
 
     However, there are cases when
-    ProfitLoss - AllIncomeTaxExpenseBenefit = IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit
+    ProfitLoss - AllIncomeTaxExpenseBenefit =
+        IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit
 
     is true, so obviously AllIncomTaxExpenseBenefit has the wrong sign.
 
@@ -2019,6 +2029,7 @@ is defined by the provide mask Series.</p>
 <ul class="hlist">
 <li><code><a title="secfsdstools.f_standardize.base_rule_framework.Rule.collect_description" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.AbstractRule.collect_description">collect_description</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.base_rule_framework.Rule.get_description" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.RuleEntity.get_description">get_description</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.base_rule_framework.Rule.get_mask" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.Rule.get_mask">get_mask</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.base_rule_framework.Rule.get_target_tags" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.Rule.get_target_tags">get_target_tags</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.base_rule_framework.Rule.get_target_tags_str" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.Rule.get_target_tags_str">get_target_tags_str</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.base_rule_framework.Rule.process" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.Rule.process">process</a></code></li>
@@ -2216,6 +2227,7 @@ is defined by the provide mask Series.</p>
 <ul class="hlist">
 <li><code><a title="secfsdstools.f_standardize.base_rule_framework.Rule.collect_description" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.AbstractRule.collect_description">collect_description</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.base_rule_framework.Rule.get_description" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.RuleEntity.get_description">get_description</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.base_rule_framework.Rule.get_mask" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.Rule.get_mask">get_mask</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.base_rule_framework.Rule.get_target_tags" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.Rule.get_target_tags">get_target_tags</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.base_rule_framework.Rule.get_target_tags_str" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.Rule.get_target_tags_str">get_target_tags_str</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.base_rule_framework.Rule.process" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.Rule.process">process</a></code></li>
@@ -2415,6 +2427,7 @@ is defined by the provide mask Series.</p>
 <ul class="hlist">
 <li><code><a title="secfsdstools.f_standardize.base_rule_framework.Rule.collect_description" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.AbstractRule.collect_description">collect_description</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.base_rule_framework.Rule.get_description" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.RuleEntity.get_description">get_description</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.base_rule_framework.Rule.get_mask" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.Rule.get_mask">get_mask</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.base_rule_framework.Rule.get_target_tags" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.Rule.get_target_tags">get_target_tags</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.base_rule_framework.Rule.get_target_tags_str" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.Rule.get_target_tags_str">get_target_tags_str</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.base_rule_framework.Rule.mask" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.AbstractRule.mask">mask</a></code></li>
@@ -2638,6 +2651,7 @@ is defined by the provide mask Series.</p>
 <ul class="hlist">
 <li><code><a title="secfsdstools.f_standardize.base_rule_framework.Rule.collect_description" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.AbstractRule.collect_description">collect_description</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.base_rule_framework.Rule.get_description" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.RuleEntity.get_description">get_description</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.base_rule_framework.Rule.get_mask" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.Rule.get_mask">get_mask</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.base_rule_framework.Rule.get_target_tags" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.Rule.get_target_tags">get_target_tags</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.base_rule_framework.Rule.get_target_tags_str" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.Rule.get_target_tags_str">get_target_tags_str</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.base_rule_framework.Rule.process" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.Rule.process">process</a></code></li>
@@ -2747,8 +2761,8 @@ target tag if column if the target colum is not set</p>
             str: description
         &#34;&#34;&#34;
 
-        return f&#34;Subtracts the available values in the columns {self.potential_subtract_tags} from&#34; \
-               f&#34; the value in &#39;{self.subtract_from_tag}&#39; and stores the result in &#34; \
+        return f&#34;Subtracts the available values in the columns {self.potential_subtract_tags}&#34; \
+               f&#34; from the value in &#39;{self.subtract_from_tag}&#39; and stores the result in &#34; \
                f&#34; &#39;{self.target_tag}&#39;, if &#39;{self.target_tag}&#39; is not set and &#34; \
                f&#34; &#39;{self.subtract_from_tag}&#39; has a value and at least one value in &#34; \
                f&#34; {self.potential_subtract_tags} is present.&#34;</code></pre>
@@ -2873,6 +2887,7 @@ is defined by the provide mask Series.</p>
 <ul class="hlist">
 <li><code><a title="secfsdstools.f_standardize.base_rule_framework.Rule.collect_description" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.AbstractRule.collect_description">collect_description</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.base_rule_framework.Rule.get_description" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.RuleEntity.get_description">get_description</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.base_rule_framework.Rule.get_mask" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.Rule.get_mask">get_mask</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.base_rule_framework.Rule.get_target_tags" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.Rule.get_target_tags">get_target_tags</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.base_rule_framework.Rule.get_target_tags_str" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.Rule.get_target_tags_str">get_target_tags_str</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.base_rule_framework.Rule.process" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.Rule.process">process</a></code></li>
@@ -2990,9 +3005,9 @@ is present</dd>
                    f&#34; {self.optional_summands} into the column &#39;{self.sum_tag}&#39;. Values from &#34; \
                    f&#34;{self.optional_summands} are only added, if at least one value in &#34; \
                    f&#34; {self.potential_summands} is present. &#39;{self.sum_tag}&#39; must be nan.&#34;
-        else:
-            return f&#34;Sums up the availalbe values in the columns {self.potential_summands} into&#34; \
-                   f&#34; the column &#39;{self.sum_tag}&#39;, if the column &#39;{self.sum_tag}&#39; is nan&#34;</code></pre>
+
+        return f&#34;Sums up the availalbe values in the columns {self.potential_summands} into&#34; \
+               f&#34; the column &#39;{self.sum_tag}&#39;, if the column &#39;{self.sum_tag}&#39; is nan&#34;</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -3114,6 +3129,7 @@ is defined by the provide mask Series.</p>
 <ul class="hlist">
 <li><code><a title="secfsdstools.f_standardize.base_rule_framework.Rule.collect_description" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.AbstractRule.collect_description">collect_description</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.base_rule_framework.Rule.get_description" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.RuleEntity.get_description">get_description</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.base_rule_framework.Rule.get_mask" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.Rule.get_mask">get_mask</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.base_rule_framework.Rule.get_target_tags" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.Rule.get_target_tags">get_target_tags</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.base_rule_framework.Rule.get_target_tags_str" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.Rule.get_target_tags_str">get_target_tags_str</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.base_rule_framework.Rule.process" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.Rule.process">process</a></code></li>

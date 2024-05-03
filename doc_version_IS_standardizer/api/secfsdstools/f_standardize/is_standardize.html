@@ -41,6 +41,7 @@ from secfsdstools.f_standardize.base_validation_rules import ValidationRule, Sum
 from secfsdstools.f_standardize.standardizing import Standardizer
 
 # The 100 most common tags which appear between GrossProfit and OperatingIncomeLoss
+# pylint: disable=C0301
 top_100_operating_costs = [
     &#39;SellingGeneralAndAdministrativeExpense&#39;,
     &#39;GeneralAndAdministrativeExpense&#39;,
@@ -242,10 +243,12 @@ class PostFixIncomeLossFromContinuingOperationsAndSignOfIncomeTaxExpenseBenefit(
 
     def get_description(self) -&gt; str:
         return &#34;Corrects the sign of &#39;IncomeTaxExpenseBenefits&#39; if it seems to be wrong. Checks&#34; \
-               &#34;if the difference between &#39;NetIncomeLoss&#39; and &#39;IncomeLossFromContinuingOperations&#39;&#34; \
+               &#34;if the difference between &#39;NetIncomeLoss&#39; and &#34; \
+               &#34;&#39;IncomeLossFromContinuingOperations&#39;&#34; \
                &#34;is about 2. Which is a clear indication, that the sign was wrong.&#34;
 
 
+# pylint: disable=C0301
 class IncomeStatementStandardizer(Standardizer):
     &#34;&#34;&#34;
     The goal of this Standardizer is to create IncomeStatements that are comparable,
@@ -708,7 +711,6 @@ class IncomeStatementStandardizer(Standardizer):
                 sum_tag=&#39;ProfitLoss&#39;,
                 existing_summands_tags=[&#39;NetIncomeLoss&#39;],
                 missing_summand_tag=&#39;NetIncomeLossAttributableToNoncontrollingInterest&#39;),
-
 
         ])
 
@@ -1353,7 +1355,6 @@ as negated.</dd>
                 existing_summands_tags=[&#39;NetIncomeLoss&#39;],
                 missing_summand_tag=&#39;NetIncomeLossAttributableToNoncontrollingInterest&#39;),
 
-
         ])
 
     validation_rules: List[ValidationRule] = [
@@ -1641,7 +1642,8 @@ and recalculates IncomeLossFromContinuingOperations</p></div>
 
     def get_description(self) -&gt; str:
         return &#34;Corrects the sign of &#39;IncomeTaxExpenseBenefits&#39; if it seems to be wrong. Checks&#34; \
-               &#34;if the difference between &#39;NetIncomeLoss&#39; and &#39;IncomeLossFromContinuingOperations&#39;&#34; \
+               &#34;if the difference between &#39;NetIncomeLoss&#39; and &#34; \
+               &#34;&#39;IncomeLossFromContinuingOperations&#39;&#34; \
                &#34;is about 2. Which is a clear indication, that the sign was wrong.&#34;</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -1764,6 +1766,7 @@ is defined by the provide mask Series.</p>
 <ul class="hlist">
 <li><code><a title="secfsdstools.f_standardize.base_rule_framework.Rule.collect_description" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.AbstractRule.collect_description">collect_description</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.base_rule_framework.Rule.get_description" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.RuleEntity.get_description">get_description</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.base_rule_framework.Rule.get_mask" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.Rule.get_mask">get_mask</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.base_rule_framework.Rule.get_target_tags" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.Rule.get_target_tags">get_target_tags</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.base_rule_framework.Rule.get_target_tags_str" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.Rule.get_target_tags_str">get_target_tags_str</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.base_rule_framework.Rule.process" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.Rule.process">process</a></code></li>

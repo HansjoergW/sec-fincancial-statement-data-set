@@ -403,9 +403,9 @@ class SumUpRule(Rule):
                    f" {self.optional_summands} into the column '{self.sum_tag}'. Values from " \
                    f"{self.optional_summands} are only added, if at least one value in " \
                    f" {self.potential_summands} is present. '{self.sum_tag}' must be nan."
-        else:
-            return f"Sums up the availalbe values in the columns {self.potential_summands} into" \
-                   f" the column '{self.sum_tag}', if the column '{self.sum_tag}' is nan"
+
+        return f"Sums up the availalbe values in the columns {self.potential_summands} into" \
+               f" the column '{self.sum_tag}', if the column '{self.sum_tag}' is nan"
 
 
 class SubtractFromRule(Rule):
@@ -489,8 +489,8 @@ class SubtractFromRule(Rule):
             str: description
         """
 
-        return f"Subtracts the available values in the columns {self.potential_subtract_tags} from" \
-               f" the value in '{self.subtract_from_tag}' and stores the result in " \
+        return f"Subtracts the available values in the columns {self.potential_subtract_tags}" \
+               f" from the value in '{self.subtract_from_tag}' and stores the result in " \
                f" '{self.target_tag}', if '{self.target_tag}' is not set and " \
                f" '{self.subtract_from_tag}' has a value and at least one value in " \
                f" {self.potential_subtract_tags} is present."
@@ -729,10 +729,12 @@ class PostFixSign(Rule):
     Fixes the sign of an Addition, if the Summand has the wrong sign.
 
     For instance, the following equation should be true:
-    ProfitLoss + AllIncomeTaxExpenseBenefit = IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit
+    ProfitLoss + AllIncomeTaxExpenseBenefit =
+         IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit
 
     However, there are cases when
-    ProfitLoss - AllIncomeTaxExpenseBenefit = IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit
+    ProfitLoss - AllIncomeTaxExpenseBenefit =
+        IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit
 
     is true, so obviously AllIncomTaxExpenseBenefit has the wrong sign.
 

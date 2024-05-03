@@ -1,3 +1,6 @@
+"""
+Provices some helper method to analyze data in the bags.
+"""
 from typing import List
 
 import pandas as pd
@@ -23,5 +26,16 @@ def find_adshs_with_all_tags(bag: JoinedDataBag, tag_list: List[str]) -> List[st
 
 
 def find_tags_containing(bag: JoinedDataBag, contains: str) -> pd.DataFrame:
+    """
+    returns a value counts of all tags that are present in the bag.
+
+    Args:
+        bag: the bag to check
+        contains: text that should be contained in the tag name
+
+    Returns:
+        pd.DataFrame: a Dataframe with the tagname and the value_counts as columns
+
+    """
     filtered_df = bag.pre_num_df[bag.pre_num_df.tag.str.contains(contains)]
     return filtered_df.tag.value_counts()

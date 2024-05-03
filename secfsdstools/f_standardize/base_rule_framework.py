@@ -5,7 +5,7 @@ a rule hierarchy that then is used in the standardizer.
 from abc import ABC
 from abc import abstractmethod
 from dataclasses import dataclass
-from typing import Optional, Set, List
+from typing import Set, List
 
 import pandas as pd
 import pandera as pa
@@ -200,7 +200,11 @@ class Rule(AbstractRule):
         self.apply(data_df, mask)
         self.masked = mask
 
-    def get_mask(self):
+    def get_mask(self) -> pd.Series:
+        """
+        returns the a pandas.Series object that marks the masked
+        entries.
+        """
         return self.masked
 
 
@@ -284,7 +288,7 @@ class RuleGroup(RuleEntity):
 
         return entries
 
-    def _collect_masked_entries(self, ids:List[str], masks:List[pd.Series]):
+    def collect_masked_entries(self, ids: List[str], masks: List[pd.Series]):
         """
         internal helper method which helps to recursively traverse down the rule group structure
         and to collect the applied rules together with their ids
@@ -295,7 +299,7 @@ class RuleGroup(RuleEntity):
         """
         for rule in self.rules:
             if isinstance(rule, RuleGroup):
-                rule._collect_masked_entries(ids, masks)
+                rule.collect_masked_entries(ids, masks)
             elif isinstance(rule, Rule):
                 ids.append(rule.identifier)
                 masks.append(rule.get_mask())
@@ -315,8 +319,6 @@ class RuleGroup(RuleEntity):
         ids: List[str] = []
         masks: List[pd.Series] = []
 
-        self._collect_masked_entries(ids, masks)
+        self.collect_masked_entries(ids, masks)
 
         return pd.concat([log_df] + [s.rename(col_name) for col_name, s in zip(ids, masks)], axis=1)
-
-

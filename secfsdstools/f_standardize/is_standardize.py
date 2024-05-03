@@ -12,6 +12,7 @@ from secfsdstools.f_standardize.base_validation_rules import ValidationRule, Sum
 from secfsdstools.f_standardize.standardizing import Standardizer
 
 # The 100 most common tags which appear between GrossProfit and OperatingIncomeLoss
+# pylint: disable=C0301
 top_100_operating_costs = [
     'SellingGeneralAndAdministrativeExpense',
     'GeneralAndAdministrativeExpense',
@@ -213,10 +214,12 @@ class PostFixIncomeLossFromContinuingOperationsAndSignOfIncomeTaxExpenseBenefit(
 
     def get_description(self) -> str:
         return "Corrects the sign of 'IncomeTaxExpenseBenefits' if it seems to be wrong. Checks" \
-               "if the difference between 'NetIncomeLoss' and 'IncomeLossFromContinuingOperations'" \
+               "if the difference between 'NetIncomeLoss' and " \
+               "'IncomeLossFromContinuingOperations'" \
                "is about 2. Which is a clear indication, that the sign was wrong."
 
 
+# pylint: disable=C0301
 class IncomeStatementStandardizer(Standardizer):
     """
     The goal of this Standardizer is to create IncomeStatements that are comparable,
@@ -679,7 +682,6 @@ class IncomeStatementStandardizer(Standardizer):
                 sum_tag='ProfitLoss',
                 existing_summands_tags=['NetIncomeLoss'],
                 missing_summand_tag='NetIncomeLossAttributableToNoncontrollingInterest'),
-
 
         ])
 

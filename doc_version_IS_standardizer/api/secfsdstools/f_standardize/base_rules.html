@@ -179,6 +179,14 @@ class CopyTagRule(Rule):
         &#34;&#34;&#34;
         return [self.target]
 
+    def set_id(self, prefix: str):
+        &#34;&#34;&#34;
+        sets the identifier of this rule entity
+        Args:
+            prefix: the prefix from the parent in the rule-tree which has to be part of the id
+        &#34;&#34;&#34;
+        self.identifier = f&#39;{prefix}_{self.target}&lt;-{self.original}&#39;
+
     def get_description(self) -&gt; str:
         &#34;&#34;&#34;
         Returns the description String
@@ -1069,6 +1077,14 @@ and the original tag is set</p>
 
         &#34;&#34;&#34;
         return [self.target]
+
+    def set_id(self, prefix: str):
+        &#34;&#34;&#34;
+        sets the identifier of this rule entity
+        Args:
+            prefix: the prefix from the parent in the rule-tree which has to be part of the id
+        &#34;&#34;&#34;
+        self.identifier = f&#39;{prefix}_{self.target}&lt;-{self.original}&#39;
 
     def get_description(self) -&gt; str:
         &#34;&#34;&#34;

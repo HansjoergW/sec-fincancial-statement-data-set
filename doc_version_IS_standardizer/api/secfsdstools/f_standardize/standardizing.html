@@ -31,6 +31,7 @@
 import os
 from typing import List, Optional, Set, TypeVar
 
+import logging
 import numpy as np
 import pandas as pd
 
@@ -41,6 +42,7 @@ from secfsdstools.f_standardize.base_validation_rules import ValidationRule
 
 STANDARDIZED = TypeVar(&#39;STANDARDIZED&#39;, bound=&#39;StandardizedBag&#39;)
 
+LOGGER = logging.getLogger(__name__)
 
 class StandardizedBag:
     &#34;&#34;&#34;
@@ -112,7 +114,7 @@ class StandardizedBag:
         stats_df = pd.read_parquet(os.path.join(target_path, &#39;stats.parquet&#39;))
         applied_rules_sum_s = pd.read_csv(
             os.path.join(target_path, &#39;applied_rules_sum.csv&#39;),
-            header=None, index_col=0, squeeze=True)
+            header=None, index_col=0).squeeze(&#39;columns&#39;)
         validation_overview_df = pd.read_parquet(
             os.path.join(target_path, &#39;validation_overview.parquet&#39;))
         process_description_df = pd.read_parquet(
@@ -403,7 +405,10 @@ class Standardizer(Presenter[JoinedDataBag]):
         # filter for rule columns but making sure the order stays the same
         rule_columns = [x for x in self.applied_rules_log_df.columns if
                         x not in self.identifier_cols]
-        self.applied_rules_sum_s = self.applied_rules_log_df[rule_columns].sum()
+        main_post_applied_rules_sum_s = self.applied_rules_log_df[rule_columns].sum()
+
+        prepivot_applied_rules_sum_s = self.applied_prepivot_rules_log_df.id.value_counts()
+        self.applied_rules_sum_s = pd.concat([prepivot_applied_rules_sum_s, main_post_applied_rules_sum_s])
 
         # finalize the stats table, adding the rel and the gain columns
         self.stats.finalize_stats(len(data_df))
@@ -420,10 +425,14 @@ class Standardizer(Presenter[JoinedDataBag]):
             pd.DataFrame: the standardized results
 
         &#34;&#34;&#34;
+        LOGGER.info(&#34;start PRE processing ...&#34;)
         ready_df = self._preprocess(data_df)
+        LOGGER.info(&#34;start MAIN processing ...&#34;)
         self._main_processing(ready_df)
+        LOGGER.info(&#34;start POST processing ...&#34;)
         self._post_processing(ready_df)
 
+        LOGGER.info(&#34;start FINAlIZE ...&#34;)
         self.result = self._finalize(ready_df)
         return self.result
 
@@ -599,7 +608,7 @@ class Standardizer(Presenter[JoinedDataBag]):
         stats_df = pd.read_parquet(os.path.join(target_path, &#39;stats.parquet&#39;))
         applied_rules_sum_s = pd.read_csv(
             os.path.join(target_path, &#39;applied_rules_sum.csv&#39;),
-            header=None, index_col=0, squeeze=True)
+            header=None, index_col=0).squeeze(&#39;columns&#39;)
         validation_overview_df = pd.read_parquet(
             os.path.join(target_path, &#39;validation_overview.parquet&#39;))
         process_description_df = pd.read_parquet(
@@ -653,7 +662,7 @@ def load(target_path: str) -&gt; STANDARDIZED:
     stats_df = pd.read_parquet(os.path.join(target_path, &#39;stats.parquet&#39;))
     applied_rules_sum_s = pd.read_csv(
         os.path.join(target_path, &#39;applied_rules_sum.csv&#39;),
-        header=None, index_col=0, squeeze=True)
+        header=None, index_col=0).squeeze(&#39;columns&#39;)
     validation_overview_df = pd.read_parquet(
         os.path.join(target_path, &#39;validation_overview.parquet&#39;))
     process_description_df = pd.read_parquet(
@@ -974,7 +983,10 @@ as negated.</dd>
         # filter for rule columns but making sure the order stays the same
         rule_columns = [x for x in self.applied_rules_log_df.columns if
                         x not in self.identifier_cols]
-        self.applied_rules_sum_s = self.applied_rules_log_df[rule_columns].sum()
+        main_post_applied_rules_sum_s = self.applied_rules_log_df[rule_columns].sum()
+
+        prepivot_applied_rules_sum_s = self.applied_prepivot_rules_log_df.id.value_counts()
+        self.applied_rules_sum_s = pd.concat([prepivot_applied_rules_sum_s, main_post_applied_rules_sum_s])
 
         # finalize the stats table, adding the rel and the gain columns
         self.stats.finalize_stats(len(data_df))
@@ -991,10 +1003,14 @@ as negated.</dd>
             pd.DataFrame: the standardized results
 
         &#34;&#34;&#34;
+        LOGGER.info(&#34;start PRE processing ...&#34;)
         ready_df = self._preprocess(data_df)
+        LOGGER.info(&#34;start MAIN processing ...&#34;)
         self._main_processing(ready_df)
+        LOGGER.info(&#34;start POST processing ...&#34;)
         self._post_processing(ready_df)
 
+        LOGGER.info(&#34;start FINAlIZE ...&#34;)
         self.result = self._finalize(ready_df)
         return self.result
 
@@ -1261,10 +1277,14 @@ creates a date column based on the ddated value.</p>
         pd.DataFrame: the standardized results
 
     &#34;&#34;&#34;
+    LOGGER.info(&#34;start PRE processing ...&#34;)
     ready_df = self._preprocess(data_df)
+    LOGGER.info(&#34;start MAIN processing ...&#34;)
     self._main_processing(ready_df)
+    LOGGER.info(&#34;start POST processing ...&#34;)
     self._post_processing(ready_df)
 
+    LOGGER.info(&#34;start FINAlIZE ...&#34;)
     self.result = self._finalize(ready_df)
     return self.result</code></pre>
 </details>

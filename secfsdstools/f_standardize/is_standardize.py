@@ -11,9 +11,91 @@ from secfsdstools.f_standardize.base_rules import CopyTagRule, SumUpRule, Subtra
 from secfsdstools.f_standardize.base_validation_rules import ValidationRule, SumValidationRule
 from secfsdstools.f_standardize.standardizing import Standardizer
 
+# All tags that are used for costs of goods and services
+# pylint: disable=C0301
+cost_of_GaS_tags = ['CostOfGoodsSold',
+                    'CostOfServices',
+                    'CostOfGoodsAndServicesSold',
+                    'CostOfRevenue',
+                    'CostOfGoodsSoldExcludingDepreciationDepletionAndAmortization',
+                    'CostOfGoodsSoldDepreciationDepletionAndAmortization',
+                    'CostOfGoodsSoldDepletion',
+                    'CostOfGoodsSoldDepreciation',
+                    'CostOfGoodsSoldAmortization',
+                    'CostOfGoodsSoldDepreciationAndAmortization',
+                    'CostOfGoodsSoldDirectFinancingLease',
+                    'CostOfGoodsSoldElectric',
+                    'CostOfGoodsSoldDirectMaterials',
+                    'CostOfGoodsSoldDirectLabor',
+                    'CostOfGoodsSoldOverhead',
+                    'CostOfGoodsSoldOilAndGas',
+                    'CostOfGoodsSoldSubscription',
+                    'CostOfGoodsSoldDirectTaxesAndLicensesCosts',
+                    'CostOfGoodsSoldMaintenanceCosts',
+                    'CostOfGoodsSoldSalesTypeLease',
+                    'CostOfServicesExcludingDepreciationDepletionAndAmortization',
+                    'CostOfServicesDepreciation',
+                    'CostOfServicesDepreciationAndAmortization',
+                    'CostOfServicesCatering',
+                    'CostOfServicesAmortization',
+                    'CostOfServicesOilAndGas',
+                    'CostOfServicesDirectTaxesAndLicensesCosts',
+                    'CostOfServicesMaintenanceCosts',
+                    'CostOfServicesLicensesAndServices',
+                    'CostOfServicesDirectLabor',
+                    'CostOfServicesLicensesAndMaintenanceAgreements',
+                    'CostOfServicesEnergyServices',
+                    'CostOfServicesDirectMaterials',
+                    'CostOfServicesEnvironmentalRemediation',
+                    'CostOfServicesOverhead',
+                    'CostOfGoodsAndServicesSoldDepreciationAndAmortization',
+                    'CostOfGoodsAndServicesSoldAmortization',
+                    'CostOfGoodsAndServicesSoldOverhead',
+                    'CostOfGoodsAndServicesSoldDepreciation',
+                    'CostOfGoodsAndServicesEnergyCommoditiesAndServices',
+                    'CostOfGoodsAndServiceExcludingDepreciationDepletionAndAmortization'
+                    ]
+
+# All tags containing detailled revenue values
+# pylint: disable=C0301
+detailled_revenue_tags = [
+    'RegulatedAndUnregulatedOperatingRevenue',
+    'HealthCareOrganizationPatientServiceRevenue',
+    'ContractsRevenue',
+    'RevenueOilAndGasServices',
+    'HealthCareOrganizationRevenue',
+    'RevenueMineralSales',
+    'SalesRevenueEnergyServices',
+    'RealEstateRevenueNet',
+    'OperatingLeasesIncomeStatementLeaseRevenue',
+    'LicensesRevenue', 'RevenueFromRelatedParties',
+    'BrokerageCommissionsRevenue', 'RoyaltyRevenue', 'OilAndGasSalesRevenue',
+    'OilAndGasRevenue', 'OtherRealEstateRevenue',
+    'TechnologyServicesRevenue', 'ManagementFeesRevenue',
+    'ReimbursementRevenue',
+    'OperatingLeasesIncomeStatementMinimumLeaseRevenue',
+    'FoodAndBeverageRevenue', 'MaintenanceRevenue',
+    'LicenseAndServicesRevenue', 'FranchiseRevenue', 'SubscriptionRevenue',
+    'FinancialServicesRevenue',
+    'RevenueFromGrants',
+    'GasGatheringTransportationMarketingAndProcessingRevenue',
+    'OccupancyRevenue', 'NaturalGasProductionRevenue',
+    'SalesRevenueServicesGross', 'InvestmentBankingRevenue',
+    'AdvertisingRevenue', 'RevenueOtherFinancialServices',
+    'OilAndCondensateRevenue', 'RevenueFromLeasedAndOwnedHotels',
+    'RevenuesNetOfInterestExpense', 'RegulatedAndUnregulatedOperatingRevenue',
+    'UnregulatedOperatingRevenue', 'ElectricUtilityRevenue',
+    'CargoAndFreightRevenue', 'OtherHotelOperatingRevenue',
+    'CasinoRevenue', 'RefiningAndMarketingRevenue',
+    'PrincipalTransactionsRevenue', 'InterestRevenueExpenseNet',
+    'HomeBuildingRevenue', 'OtherRevenueExpenseFromRealEstateOperations',
+    'GasDomesticRegulatedRevenue', 'LicenseAndMaintenanceRevenue',
+    'RegulatedOperatingRevenue', 'AdmissionsRevenue', 'PassengerRevenue'
+]
+
 # The 100 most common tags which appear between GrossProfit and OperatingIncomeLoss
 # pylint: disable=C0301
-top_100_operating_costs = [
+top_100_operating_costs_tags = [
     'SellingGeneralAndAdministrativeExpense',
     'GeneralAndAdministrativeExpense',
     'ResearchAndDevelopmentExpense',
@@ -227,48 +309,26 @@ class IncomeStatementStandardizer(Standardizer):
 
     At the end, the standardized IS contains the following columns
 
-    Position	Relation
-
-    Revenues
-           + SalesRevenueGoodsNet
-           + SalesRevenueServicesNet
-           + OtherSalesRevenueNet
-           --------------
-        or SalesRevenueNet
-
-        or RevenuesSum
-              RevenueFromContractWithCustomerExcludingAssessedTax
-              RevenueFromContractWithCustomerIncludingAssessedTax
-              RevenuesExcludingInterestAndDividends
-              RegulatedAndUnregulatedOperatingRevenue
-              ...
-
-        or InterestAndDividendIncomeOperating
-        --------
-        Revenues
-        ========
-
-    CostOfRevenue
-          'CostOfGoodsSold',
-        + 'CostOfServices'
+    <pre>
+          Revenues
+        - CostOfRevenue
         ---------------
-          'CostOfGoodsAndServicesSold',
-        + 'LicenseCost',
-        ----------------
-          'CostOfRevenue',
-        ================
+        = GrossProfit
+        - OperatingExpenses
+        -------------------
+        = OperatingIncomeLoss
 
-
-    Gross Profit	                Revenues - Cost of Goods and Services Sold
-    Operating Expenses
-
-    Operating Income (Loss)	        Gross Profit - Operating Expenses
-    Other Income and Expenses
-
-    Income Before Tax               Operating Income + Other Income and Expenses
-    Income Tax Expense (Benefit)
-
-    Net Income (Loss)               Income Before Tax - Income Tax Expense
+          IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit
+        - AllIncomeTaxExpenseBenefit
+        ----------------------------
+        = IncomeLossFromContinuingOperations
+        + IncomeLossFromDiscontinuedOperationsNetOfTax
+        -----------------------------------------------
+        = ProfitLoss
+        - NetIncomeLossAttributableToNoncontrollingInterest
+        ---------------------------------------------------
+        = NetIncomeLoss
+    </pre>
     """
     prepivot_rule_tree = RuleGroup(
         prefix="IS_PREPIV",
@@ -276,48 +336,7 @@ class IncomeStatementStandardizer(Standardizer):
                PrePivotCorrectSign(
                    # all these tags are costOf and therefore should appear as a positive number
                    # since costs are subtracted from the Revenue to get the GrossProfit
-                   tag_list=['CostOfGoodsSold',
-                             'CostOfServices',
-                             'CostOfGoodsAndServicesSold',
-                             'CostOfRevenue',
-                             'CostOfGoodsSoldExcludingDepreciationDepletionAndAmortization',
-                             'CostOfGoodsSoldDepreciationDepletionAndAmortization',
-                             'CostOfGoodsSoldDepletion',
-                             'CostOfGoodsSoldDepreciation',
-                             'CostOfGoodsSoldAmortization',
-                             'CostOfGoodsSoldDepreciationAndAmortization',
-                             'CostOfGoodsSoldDirectFinancingLease',
-                             'CostOfGoodsSoldElectric',
-                             'CostOfGoodsSoldDirectMaterials',
-                             'CostOfGoodsSoldDirectLabor',
-                             'CostOfGoodsSoldOverhead',
-                             'CostOfGoodsSoldOilAndGas',
-                             'CostOfGoodsSoldSubscription',
-                             'CostOfGoodsSoldDirectTaxesAndLicensesCosts',
-                             'CostOfGoodsSoldMaintenanceCosts',
-                             'CostOfGoodsSoldSalesTypeLease',
-                             'CostOfServicesExcludingDepreciationDepletionAndAmortization',
-                             'CostOfServicesDepreciation',
-                             'CostOfServicesDepreciationAndAmortization',
-                             'CostOfServicesCatering',
-                             'CostOfServicesAmortization',
-                             'CostOfServicesOilAndGas',
-                             'CostOfServicesDirectTaxesAndLicensesCosts',
-                             'CostOfServicesMaintenanceCosts',
-                             'CostOfServicesLicensesAndServices',
-                             'CostOfServicesDirectLabor',
-                             'CostOfServicesLicensesAndMaintenanceAgreements',
-                             'CostOfServicesEnergyServices',
-                             'CostOfServicesDirectMaterials',
-                             'CostOfServicesEnvironmentalRemediation',
-                             'CostOfServicesOverhead',
-                             'CostOfGoodsAndServicesSoldDepreciationAndAmortization',
-                             'CostOfGoodsAndServicesSoldAmortization',
-                             'CostOfGoodsAndServicesSoldOverhead',
-                             'CostOfGoodsAndServicesSoldDepreciation',
-                             'CostOfGoodsAndServicesEnergyCommoditiesAndServices',
-                             'CostOfGoodsAndServiceExcludingDepreciationDepletionAndAmortization'
-                             ],
+                   tag_list=cost_of_GaS_tags,
                    is_positive=True
                )]
     )
@@ -325,238 +344,266 @@ class IncomeStatementStandardizer(Standardizer):
     is_revenue_rg = RuleGroup(
         prefix="Rev",
         rules=[
-            # normally, (Goods and Services) Gross and Net appear together, resp. Net has priority.
-            # so if net is not present, we copy the gross value in the net value
-            # and then sum the nets up to the SalesRevenue
-            CopyTagRule(
-                original='SalesRevenueGoodsGross',
-                target='SalesRevenueGoodsNet'),
+            RuleGroup(prefix="Pre",
+                      description="Preparation rules which might be usable to estimate the revenue",
+                      rules=[
+                          # normally, (Goods and Services) Gross and Net appear together, resp. Net has priority.
+                          # so if net is not present, we copy the gross value in the net value
+                          # and then sum the nets up to the SalesRevenue
+                          CopyTagRule(
+                              original='SalesRevenueGoodsGross',
+                              target='SalesRevenueGoodsNet'),
 
-            CopyTagRule(
-                original='SalesRevenueServicesGross',
-                target='SalesRevenueServicesNet'),
+                          CopyTagRule(
+                              original='SalesRevenueServicesGross',
+                              target='SalesRevenueServicesNet'),
 
-            SumUpRule(sum_tag='SalesRevenueNet',
-                      potential_summands=[
-                          'SalesRevenueGoodsNet',
-                          'SalesRevenueServicesNet'],
-                      optional_summands=[
-                          'OtherSalesRevenueNet'
-                      ]),
-            # if the Revenues is not set, we copy SalesRevenuesNet into Revenues
-            CopyTagRule(original='SalesRevenueNet', target='Revenues'),
+                          SumUpRule(sum_tag='SalesRevenueNet',
+                                    potential_summands=[
+                                        'SalesRevenueGoodsNet',
+                                        'SalesRevenueServicesNet'],
+                                    optional_summands=[
+                                        'OtherSalesRevenueNet'
+                                    ]),
 
-            # RevenueFromContractWithCustomer-tags are also often used to report the
-            # total Revenue. so the following rules take care of these cases.
-            # the order of the rules also defines the precedence.
-            # first: if RevenueFromContractWithCustomerExcludingAssessedTax is not set
-            #    we calculate it from RevenueFromContractWithCustomerIncludingAssessedTax
-            #          and ExciseAndSalesTaxes (if present)
-            SubtractFromRule(
-                subtract_from_tag='RevenueFromContractWithCustomerIncludingAssessedTax',
-                potential_subtract_tags=['ExciseAndSalesTaxes'],
-                target_tag='RevenueFromContractWithCustomerExcludingAssessedTax'),
+                          # RevenueFromContractWithCustomer-tags are also often used to report the
+                          # total Revenue. so the following rules take care of these cases.
+                          # the order of the rules also defines the precedence.
+                          # first: if RevenueFromContractWithCustomerExcludingAssessedTax is not set
+                          #    we calculate it from RevenueFromContractWithCustomerIncludingAssessedTax
+                          #          and ExciseAndSalesTaxes (if present)
+                          SubtractFromRule(
+                              subtract_from_tag='RevenueFromContractWithCustomerIncludingAssessedTax',
+                              potential_subtract_tags=['ExciseAndSalesTaxes'],
+                              target_tag='RevenueFromContractWithCustomerExcludingAssessedTax'),
 
-            # second Excluding has the higher precedence than Including
-            CopyTagRule(original='RevenueFromContractWithCustomerExcludingAssessedTax',
-                        target='Revenues'),
-            CopyTagRule(original='RevenueFromContractWithCustomerIncludingAssessedTax',
-                        target='Revenues'),
-
-            # if Revenues couldn't be defined so far, RevenuesExcludingInterestAndDividends
-            # is also a tag that is commonly used to define the total Revenue
-            CopyTagRule(original='RevenuesExcludingInterestAndDividends',
-                        target='Revenues'),
-
-            # if we were not able to define the Revenue so far, there are
-            # a couple of other tags which define Revenue, so we count them together
-            # and set the total as Revenue
-            SumUpRule(sum_tag='RevenuesSum',
-                      potential_summands=[
-                          'RegulatedAndUnregulatedOperatingRevenue',
-                          'HealthCareOrganizationPatientServiceRevenue',
-                          'ContractsRevenue',
-                          'RevenueOilAndGasServices',
-                          'HealthCareOrganizationRevenue',
-                          'RevenueMineralSales',
-                          'SalesRevenueEnergyServices',
-                          'RealEstateRevenueNet',
-                          'OperatingLeasesIncomeStatementLeaseRevenue',
-                          'LicensesRevenue', 'RevenueFromRelatedParties',
-                          'BrokerageCommissionsRevenue', 'RoyaltyRevenue', 'OilAndGasSalesRevenue',
-                          'OilAndGasRevenue', 'OtherRealEstateRevenue',
-                          'TechnologyServicesRevenue', 'ManagementFeesRevenue',
-                          'ReimbursementRevenue',
-                          'OperatingLeasesIncomeStatementMinimumLeaseRevenue',
-                          'FoodAndBeverageRevenue', 'MaintenanceRevenue',
-                          'LicenseAndServicesRevenue', 'FranchiseRevenue', 'SubscriptionRevenue',
-                          'FinancialServicesRevenue',
-                          'RevenueFromGrants',
-                          'GasGatheringTransportationMarketingAndProcessingRevenue',
-                          'OccupancyRevenue', 'NaturalGasProductionRevenue',
-                          'SalesRevenueServicesGross', 'InvestmentBankingRevenue',
-                          'AdvertisingRevenue', 'RevenueOtherFinancialServices',
-                          'OilAndCondensateRevenue', 'RevenueFromLeasedAndOwnedHotels',
-                          'RevenuesNetOfInterestExpense', 'RegulatedAndUnregulatedOperatingRevenue',
-                          'UnregulatedOperatingRevenue', 'ElectricUtilityRevenue',
-                          'CargoAndFreightRevenue', 'OtherHotelOperatingRevenue',
-                          'CasinoRevenue', 'RefiningAndMarketingRevenue',
-                          'PrincipalTransactionsRevenue', 'InterestRevenueExpenseNet',
-                          'HomeBuildingRevenue', 'OtherRevenueExpenseFromRealEstateOperations',
-                          'GasDomesticRegulatedRevenue', 'LicenseAndMaintenanceRevenue',
-                          'RegulatedOperatingRevenue', 'AdmissionsRevenue', 'PassengerRevenue'
-                      ],
-                      optional_summands=[
-                          'OtherSalesRevenueNet'
+                          # if we were not able to define the Revenue so far, there are
+                          # a couple of other tags which define Revenue, so we count them together
+                          # and set the total as Revenue
+                          SumUpRule(sum_tag='RevenuesSum',
+                                    potential_summands=detailled_revenue_tags,
+                                    optional_summands=[
+                                        'OtherSalesRevenueNet'
+                                    ]),
                       ]),
 
-            CopyTagRule(original='RevenuesSum', target='Revenues'),
-            # if there is nothing else
-            CopyTagRule(original='InvestmentIncomeInterest', target='Revenues')
+            RuleGroup(prefix="Set",
+                      description="Rules that might set the Revenue tag."
+                                  "the order is the precedence.",
+                      rules=[
+                          # if Revenues is not set, we use the following precedence:
+                          # - SalesRevenueNet
+                          # - RevenueFromContractWithCustomerExcludingAssessedTax
+                          # - RevenueFromContractWithCustomerIncludingAssessedTax
+                          # - RevenuesExcludingInterestAndDividends
+                          # - RevenuesSum
+                          # - InvestmentIncomeInterest
+
+                          CopyTagRule(original='SalesRevenueNet', target='Revenues'),
+                          CopyTagRule(
+                              original='RevenueFromContractWithCustomerExcludingAssessedTax',
+                              target='Revenues'),
+                          CopyTagRule(
+                              original='RevenueFromContractWithCustomerIncludingAssessedTax',
+                              target='Revenues'),
+                          CopyTagRule(original='RevenuesExcludingInterestAndDividends',
+                                      target='Revenues'),
+                          CopyTagRule(original='RevenuesSum', target='Revenues'),
+                          CopyTagRule(original='InvestmentIncomeInterest', target='Revenues')])
         ]
     )
 
     is_costofrevenue_rg = RuleGroup(
-        prefix="costrevenue",
+        prefix="CostOfRevenues",
         rules=[
-            SumUpRule(sum_tag='CostOfGoodsSold',
-                      potential_summands=[
-                          'CostOfGoodsSoldExcludingDepreciationDepletionAndAmortization',
-                          'CostOfGoodsSoldDepreciationDepletionAndAmortization',
-                          'CostOfGoodsSoldDepletion',
-                          'CostOfGoodsSoldDepreciation',
-                          'CostOfGoodsSoldAmortization',
-                          'CostOfGoodsSoldDepreciationAndAmortization',
-                          'CostOfGoodsSoldDirectFinancingLease',
-                          'CostOfGoodsSoldElectric',
-                          'CostOfGoodsSoldDirectMaterials',
-                          'CostOfGoodsSoldDirectLabor',
-                          'CostOfGoodsSoldOverhead',
-                          'CostOfGoodsSoldOilAndGas',
-                          'CostOfGoodsSoldSubscription',
-                          'CostOfGoodsSoldDirectTaxesAndLicensesCosts',
-                          'CostOfGoodsSoldMaintenanceCosts',
-                          'CostOfGoodsSoldSalesTypeLease']),
+            RuleGroup(prefix="Pre",
+                      description="Preparation rules which might be usable to estimate "
+                                  "the cost of revenue",
+                      rules=[
+                          SumUpRule(sum_tag='CostOfGoodsSold',
+                                    potential_summands=[
+                                        'CostOfGoodsSoldExcludingDepreciationDepletionAndAmortization',
+                                        'CostOfGoodsSoldDepreciationDepletionAndAmortization',
+                                        'CostOfGoodsSoldDepletion',
+                                        'CostOfGoodsSoldDepreciation',
+                                        'CostOfGoodsSoldAmortization',
+                                        'CostOfGoodsSoldDepreciationAndAmortization',
+                                        'CostOfGoodsSoldDirectFinancingLease',
+                                        'CostOfGoodsSoldElectric',
+                                        'CostOfGoodsSoldDirectMaterials',
+                                        'CostOfGoodsSoldDirectLabor',
+                                        'CostOfGoodsSoldOverhead',
+                                        'CostOfGoodsSoldOilAndGas',
+                                        'CostOfGoodsSoldSubscription',
+                                        'CostOfGoodsSoldDirectTaxesAndLicensesCosts',
+                                        'CostOfGoodsSoldMaintenanceCosts',
+                                        'CostOfGoodsSoldSalesTypeLease']),
 
-            SumUpRule(sum_tag='CostOfServices',
-                      potential_summands=[
-                          'CostOfServicesExcludingDepreciationDepletionAndAmortization',
-                          'CostOfServicesDepreciation',
-                          'CostOfServicesDepreciationAndAmortization',
-                          'CostOfServicesCatering',
-                          'CostOfServicesAmortization',
-                          'CostOfServicesOilAndGas',
-                          'CostOfServicesDirectTaxesAndLicensesCosts',
-                          'CostOfServicesMaintenanceCosts',
-                          'CostOfServicesLicensesAndServices',
-                          'CostOfServicesDirectLabor',
-                          'CostOfServicesLicensesAndMaintenanceAgreements',
-                          'CostOfServicesEnergyServices',
-                          'CostOfServicesDirectMaterials',
-                          'CostOfServicesEnvironmentalRemediation',
-                          'CostOfServicesOverhead'
-                      ]),
+                          SumUpRule(sum_tag='CostOfServices',
+                                    potential_summands=[
+                                        'CostOfServicesExcludingDepreciationDepletionAndAmortization',
+                                        'CostOfServicesDepreciation',
+                                        'CostOfServicesDepreciationAndAmortization',
+                                        'CostOfServicesCatering',
+                                        'CostOfServicesAmortization',
+                                        'CostOfServicesOilAndGas',
+                                        'CostOfServicesDirectTaxesAndLicensesCosts',
+                                        'CostOfServicesMaintenanceCosts',
+                                        'CostOfServicesLicensesAndServices',
+                                        'CostOfServicesDirectLabor',
+                                        'CostOfServicesLicensesAndMaintenanceAgreements',
+                                        'CostOfServicesEnergyServices',
+                                        'CostOfServicesDirectMaterials',
+                                        'CostOfServicesEnvironmentalRemediation',
+                                        'CostOfServicesOverhead'
+                                    ]),
 
-            SumUpRule(sum_tag='CostOfGoodsAndServicesSold',
-                      potential_summands=[
-                          'CostOfGoodsSold',
-                          'CostOfServices']),
+                          SumUpRule(sum_tag='CostOfGoodsAndServicesSold',
+                                    potential_summands=[
+                                        'CostOfGoodsSold',
+                                        'CostOfServices']),
 
-            SumUpRule(sum_tag='CostOfGoodsAndServicesSold',
-                      potential_summands=[
-                          'CostOfGoodsAndServicesSoldDepreciationAndAmortization',
-                          'CostOfGoodsAndServicesSoldAmortization',
-                          'CostOfGoodsAndServicesSoldOverhead',
-                          'CostOfGoodsAndServicesSoldDepreciation',
-                          'CostOfGoodsAndServicesEnergyCommoditiesAndServices',
-                          'CostOfGoodsAndServiceExcludingDepreciationDepletionAndAmortization']
-                      ),
-            CopyTagRule(original='CostOfGoodsAndServicesSold', target='CostOfRevenue'),
+                          SumUpRule(sum_tag='CostOfGoodsAndServicesSold',
+                                    potential_summands=[
+                                        'CostOfGoodsAndServicesSoldDepreciationAndAmortization',
+                                        'CostOfGoodsAndServicesSoldAmortization',
+                                        'CostOfGoodsAndServicesSoldOverhead',
+                                        'CostOfGoodsAndServicesSoldDepreciation',
+                                        'CostOfGoodsAndServicesEnergyCommoditiesAndServices',
+                                        'CostOfGoodsAndServiceExcludingDepreciationDepletionAndAmortization']
+                                    )]),
+            RuleGroup(prefix="Set",
+                      description="Rules that might set the CostOfRevenue tag."
+                                  "the order is the precedence.",
+                      rules=[
+                          CopyTagRule(original='CostOfGoodsAndServicesSold',
+                                      target='CostOfRevenue')])
         ]
     )
 
-    # GrossProfit is the only tag used to indicate GrossProfit
 
+    # GrossProfit is the only tag used to indicate GrossProfit
     is_missing_rev_cost_gross = RuleGroup(
-        prefix="RevCostGross",
+        prefix="RevCostGross_missing",
+        description="Calculates the third tag, if two of Revenues, CostOfRevenues, "
+                    "and GrossProfit are present",
         rules=missingsumparts_rules_creator(sum_tag='Revenues',
                                             summand_tags=['CostOfRevenue', 'GrossProfit'])
     )
 
-    is_grossProfit = RuleGroup(
-        prefix='grossprofit',
+    is_grossprofit_rg = RuleGroup(
+        prefix='GrossProfit',
         rules=[
-            # for investment companies
-            CopyTagRule(original='GrossInvestmentIncomeOperating', target='GrossProfit'),
-            CopyTagRule(original='InterestAndDividendIncomeOperating', target='GrossProfit')
+            RuleGroup(prefix="Set",
+                      description="Rules that might set the GrossProfit tag."
+                                  "The order is the precedence.",
+                      rules=[
+                          # for investment companies
+                          CopyTagRule(original='GrossInvestmentIncomeOperating',
+                                      target='GrossProfit'),
+                          CopyTagRule(original='InterestAndDividendIncomeOperating',
+                                      target='GrossProfit')])
         ]
     )
 
-    is_operating = RuleGroup(
-        prefix="operating",
+    is_missing_gross_opil_opexp = RuleGroup(
+        prefix="GrossOpILOpExp_missing",
+        description="Calculates the third tag, if two of GrossProfit, OperatingExpenses, "
+                    "and OperatingIncomeLoss are present",
+        rules=missingsumparts_rules_creator(sum_tag='GrossProfit',
+                                            summand_tags=['OperatingExpenses',
+                                                          'OperatingIncomeLoss']))
+
+    # this rule has to follow after the previous rule:
+    # first prio is to try to calc OperatingExpenses from GrossProfit-OperatingIncomeLoss
+    # second, we try to calculat OperatingExpenses from the 100 top used operating costs
+    # and then maybe use it in the next iteration to calculate GrossProfit or OpIncLoss
+    # with the previous rule
+    is_operating_expenses_rg = RuleGroup(
+        prefix="OperatingExpenses",
         rules=[
-            RuleGroup(
-                prefix="GrossOperating",
-                rules=missingsumparts_rules_creator(sum_tag='GrossProfit',
-                                                    summand_tags=['OperatingExpenses',
-                                                                  'OperatingIncomeLoss'])),
-            SumUpRule(sum_tag='OperatingExpensesSum',
-                      potential_summands=top_100_operating_costs),
-            CopyTagRule(original='OperatingExpensesSum', target='OperatingExpenses')
+            RuleGroup(prefix="Pre",
+                      description="Preparation rules which might be usable to estimate "
+                                  "OperatingExpenses",
+                      rules=[
+                          SumUpRule(sum_tag='OperatingExpensesSum',
+                                    potential_summands=top_100_operating_costs_tags)]),
+            RuleGroup(prefix="Set",
+                      description="Rules that might set the OperatingExpenses tag."
+                                  "The order is the precedence",
+                      rules=[
+                          CopyTagRule(original='OperatingExpensesSum', target='OperatingExpenses')])
         ])
 
     is_netincome_rg = RuleGroup(
         prefix="netincome",
         rules=[
-            # Renaming
-            CopyTagRule(
-                original='IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest',
-                target='IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit'),
+            RuleGroup(prefix="Pre",
+                      description="Preparation rules which might be usable to estimate "
+                                  "NetIncomeLoss, ProfitLoss, and IncomeLossFromContinuingOperations",
+                      rules=[
+                          # Renaming
+                          CopyTagRule(
+                              original='IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest',
+                              target='IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit'),
 
-            SumUpRule(
-                sum_tag='IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit',
-                potential_summands=[
-                    'IncomeLossFromContinuingOperationsBeforeIncomeTaxesMinorityInterestAndIncomeLossFromEquityMethodInvestments',
-                ], optional_summands=['IncomeLossFromEquityMethodInvestments']),
+                          SumUpRule(
+                              sum_tag='IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit',
+                              potential_summands=[
+                                  'IncomeLossFromContinuingOperationsBeforeIncomeTaxesMinorityInterestAndIncomeLossFromEquityMethodInvestments',
+                              ], optional_summands=['IncomeLossFromEquityMethodInvestments']),
 
-            CopyTagRule(
-                original='IncomeLossFromContinuingOperationsIncludingPortionAttributableToNoncontrollingInterest',
-                target='IncomeLossFromContinuingOperations'),
+                          CopyTagRule(
+                              original='IncomeLossFromContinuingOperationsIncludingPortionAttributableToNoncontrollingInterest',
+                              target='IncomeLossFromContinuingOperations'),
 
-            SumUpRule(
-                sum_tag='AllIncomeTaxExpenseBenefit',
-                potential_summands=[
-                    'IncomeTaxExpenseBenefit', 'DeferredIncomeTaxExpenseBenefit'
-                ], optional_summands=['IncomeLossFromEquityMethodInvestments']),
+                          SumUpRule(
+                              sum_tag='AllIncomeTaxExpenseBenefit',
+                              potential_summands=[
+                                  'IncomeTaxExpenseBenefit', 'DeferredIncomeTaxExpenseBenefit'
+                              ], optional_summands=['IncomeLossFromEquityMethodInvestments']),
 
-            SubtractFromRule(
-                target_tag='IncomeLossFromContinuingOperations',
-                subtract_from_tag='IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit',
-                potential_subtract_tags=['AllIncomeTaxExpenseBenefit']
-            ),
+                          SubtractFromRule(
+                              target_tag='IncomeLossFromContinuingOperations',
+                              subtract_from_tag='IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit',
+                              potential_subtract_tags=['AllIncomeTaxExpenseBenefit']
+                          ),
 
-            CopyTagRule(
-                original='IncomeLossFromDiscontinuedOperationsNetOfTaxAttributableToReportingEntity',
-                target='IncomeLossFromDiscontinuedOperationsNetOfTax'),
+                          CopyTagRule(
+                              original='IncomeLossFromDiscontinuedOperationsNetOfTaxAttributableToReportingEntity',
+                              target='IncomeLossFromDiscontinuedOperationsNetOfTax'),
 
-            SumUpRule(sum_tag='ProfitLossParts',
-                      potential_summands=[
-                          'IncomeLossFromContinuingOperations',
-                          'IncomeLossFromDiscontinuedOperationsNetOfTax'
+                          SumUpRule(sum_tag='ProfitLossParts',
+                                    potential_summands=[
+                                        'IncomeLossFromContinuingOperations',
+                                        'IncomeLossFromDiscontinuedOperationsNetOfTax'
+                                    ])
                       ]),
+            RuleGroup(prefix="SetPL",
+                      description="Rules that might set the ProfitLoss tag."
+                                  "The order is the precedence",
+                      rules=[
+                          CopyTagRule(original='NetIncomeLossParts', target='ProfitLoss'),
+                          # if there is no value for ProfitLoss, we set it to NetIncomeLoss
+                          CopyTagRule(original='NetIncomeLoss', target='ProfitLoss')]),
 
-            CopyTagRule(original='NetIncomeLossParts', target='ProfitLoss'),
-            # if there is no value for ProfitLoss, we set it to NetIncomeLoss
-            CopyTagRule(original='NetIncomeLoss', target='ProfitLoss'),
-
-            # since IncomeLossFromContinuingOperations is part of a validation rule,
-            # and if it was not set, we assume that there is only IncomeLossFromContinuingOperations
-            # copy the value from ProfitLoss
-            CopyTagRule(original='ProfitLoss', target='IncomeLossFromContinuingOperations'),
+            RuleGroup(prefix="SetILContOp",
+                      description="Rules that might set the IncomeLossFromContinuingOperations tag."
+                                  "The order is the precedence",
+                      rules=[
+                          # since IncomeLossFromContinuingOperations is part of a validation rule,
+                          # and if it was not set, we assume that there is only
+                          # IncomeLossFromContinuingOperations and
+                          # copy the value from ProfitLoss
+                          CopyTagRule(original='ProfitLoss',
+                                      target='IncomeLossFromContinuingOperations')
+                      ]),
 
             # the following rules set the NetIncomeLoss, if not already set.
             # the order of the rules is the precedence
-            RuleGroup(prefix="fill_NIL",
+            RuleGroup(prefix="SetNIL",
+                      description="Rules that might set the NetIncomeLoss tag."
+                                  "The order is the precedence",
                       rules=[
                           CopyTagRule(original='NetIncomeLossAvailableToCommonStockholdersBasic',
                                       target='NetIncomeLoss'),
@@ -570,40 +617,43 @@ class IncomeStatementStandardizer(Standardizer):
                                       target='NetIncomeLoss'),
                           CopyTagRule(original='ComprehensiveIncomeNetOfTax',
                                       target='NetIncomeLoss'),
-
-                          # ***** NEW
                           CopyTagRule(original='IncomeLossAttributableToParent',
                                       target='NetIncomeLoss'),
-
                           # for investment companies
                           CopyTagRule(original='NetInvestmentIncome', target='NetIncomeLoss'),
                       ])
         ]
     )
 
-    is_missing_NTI_PL = RuleGroup(
-        prefix="MissingNTI_PL",
+    is_missing_ilbefore_tax_ilcontop = RuleGroup(
+        prefix="inclossbefore_tax_inclossop_missing",
+        description="Calculates the third tag, if two of AllIncomeTaxExpenseBenefit,"
+                    " IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit, "
+                    "and IncomeLossFromContinuingOperations are present",
         rules=missingsumparts_rules_creator(
             sum_tag='IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit',
             summand_tags=['IncomeLossFromContinuingOperations',
-                          'AllIncomeTaxExpenseBenefit']) +
-              [
-                  MissingSummandRule(sum_tag='ProfitLoss',
-                                     existing_summands_tags=['NetIncomeLoss'],
-                                     missing_summand_tag='NetIncomeLossAttributableToNoncontrollingInterest'
-                                     )
-              ]
+                          'AllIncomeTaxExpenseBenefit'])
     )
+
+    is_missing_nilattnoncnt = MissingSummandRule(
+        sum_tag='ProfitLoss',
+        existing_summands_tags=['NetIncomeLoss'],
+        missing_summand_tag='NetIncomeLossAttributableToNoncontrollingInterest'
+    )
+
 
     main_rule_tree = RuleGroup(prefix="IS",
                                rules=[
                                    is_revenue_rg,
                                    is_costofrevenue_rg,
                                    is_missing_rev_cost_gross,
-                                   is_grossProfit,
-                                   is_operating,
+                                   is_grossprofit_rg,
+                                   is_missing_gross_opil_opexp,
+                                   is_operating_expenses_rg,
                                    is_netincome_rg,
-                                   is_missing_NTI_PL
+                                   is_missing_ilbefore_tax_ilcontop,
+                                   is_missing_nilattnoncnt
                                ])
 
     preprocess_rule_tree = RuleGroup(prefix="IS_PRE",
@@ -611,7 +661,7 @@ class IncomeStatementStandardizer(Standardizer):
                                      ])
 
     post_rule_tree = RuleGroup(
-        prefix="IS_POST",
+        prefix="IS",
         rules=[
             PostFixIncomeLossFromContinuingOperationsAndSignOfIncomeTaxExpenseBenefit(),
             PostFixSign(start_tag='ProfitLoss',
@@ -689,7 +739,7 @@ class IncomeStatementStandardizer(Standardizer):
         SumValidationRule(identifier="RevCogGrossCheck",
                           sum_tag='Revenues',
                           summands=['CostOfRevenue', 'GrossProfit']),
-        SumValidationRule(identifier="GrossCstopOpinc",
+        SumValidationRule(identifier="GrossOpexpOpil",
                           sum_tag='GrossProfit',
                           summands=['OperatingExpenses', 'OperatingIncomeLoss']),
         SumValidationRule(identifier="ContIncTax",

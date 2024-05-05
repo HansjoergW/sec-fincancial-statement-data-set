@@ -18,7 +18,12 @@ v.1.5.0
 - SubtractFrom Rule
 - Standardizer:
 
+
+
 Todo:
+- in IS Analyse verwende ich spezial filter für 10-Q mit qtrs==1 ...
+
+
 - in interaktive könnte man bei der suche nach companies auch gleich die standardisierten reports anzeigen
 - Test für Subtract Rule
 - Es werden PrePivotRules benötigt

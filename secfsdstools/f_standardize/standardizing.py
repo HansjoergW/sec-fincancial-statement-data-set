@@ -2,6 +2,7 @@
 import os
 from typing import List, Optional, Set, TypeVar
 
+import logging
 import numpy as np
 import pandas as pd
 
@@ -12,6 +13,7 @@ from secfsdstools.f_standardize.base_validation_rules import ValidationRule
 
 STANDARDIZED = TypeVar('STANDARDIZED', bound='StandardizedBag')
 
+LOGGER = logging.getLogger(__name__)
 
 class StandardizedBag:
     """
@@ -83,7 +85,7 @@ class StandardizedBag:
         stats_df = pd.read_parquet(os.path.join(target_path, 'stats.parquet'))
         applied_rules_sum_s = pd.read_csv(
             os.path.join(target_path, 'applied_rules_sum.csv'),
-            header=None, index_col=0, squeeze=True)
+            header=None, index_col=0).squeeze('columns')
         validation_overview_df = pd.read_parquet(
             os.path.join(target_path, 'validation_overview.parquet'))
         process_description_df = pd.read_parquet(
@@ -374,7 +376,10 @@ class Standardizer(Presenter[JoinedDataBag]):
         # filter for rule columns but making sure the order stays the same
         rule_columns = [x for x in self.applied_rules_log_df.columns if
                         x not in self.identifier_cols]
-        self.applied_rules_sum_s = self.applied_rules_log_df[rule_columns].sum()
+        main_post_applied_rules_sum_s = self.applied_rules_log_df[rule_columns].sum()
+
+        prepivot_applied_rules_sum_s = self.applied_prepivot_rules_log_df.id.value_counts()
+        self.applied_rules_sum_s = pd.concat([prepivot_applied_rules_sum_s, main_post_applied_rules_sum_s])
 
         # finalize the stats table, adding the rel and the gain columns
         self.stats.finalize_stats(len(data_df))
@@ -391,10 +396,14 @@ class Standardizer(Presenter[JoinedDataBag]):
             pd.DataFrame: the standardized results
 
         """
+        LOGGER.info("start PRE processing ...")
         ready_df = self._preprocess(data_df)
+        LOGGER.info("start MAIN processing ...")
         self._main_processing(ready_df)
+        LOGGER.info("start POST processing ...")
         self._post_processing(ready_df)
 
+        LOGGER.info("start FINAlIZE ...")
         self.result = self._finalize(ready_df)
         return self.result
 

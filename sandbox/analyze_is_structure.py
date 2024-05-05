@@ -27,13 +27,15 @@ def timing(f):
 def prepare_all_data_set():
     bag = JoinedDataBag.load("../notebooks/set/parallel/IS/joined")
     bag = bag[ISQrtrsFilter()]
-    bag.save("../notebooks/set/filtered/IS/joined")
+    bag.save("../notebooks/set/filtered/IS/joinedMultiQtrs")
 
 
 @timing
 def load_joined_IS_set() -> JoinedDataBag:
     return JoinedDataBag.load("../notebooks/set/filtered/IS/joined")
 
+def load_joined_MultiQtrs_IS_set() -> JoinedDataBag:
+    return JoinedDataBag.load("../notebooks/set/filtered/IS/joinedMultiQtrs")
 
 @timing
 def create_smaller_sample_IS_set():
@@ -93,7 +95,7 @@ class ISQrtrsFilter(FilterBase):
         # Filterkriterien
         criteria = (
                 ((temp_pre_num_df['form'] == '10-K') & (temp_pre_num_df['qtrs'] == 4)) |
-                ((temp_pre_num_df['form'] == '10-Q') & (temp_pre_num_df['qtrs'] == 1))
+                ((temp_pre_num_df['form'] == '10-Q') & (temp_pre_num_df['qtrs'] < 4))
         )
 
         # Ergebnis DataFrame B filtern
@@ -143,7 +145,7 @@ if __name__ == '__main__':
     # create_smaller_sample_IS_set()
     # prepare_all_data_set()
 
-    is_joined_bag: JoinedDataBag = load_joined_IS_set()
+    is_joined_bag: JoinedDataBag = load_joined_MultiQtrs_IS_set()
     from secfsdstools.u_usecases.analyzes import find_tags_containing
     # with_profitloss = find_tags_containing(is_joined_bag, 'ProfitLoss')
     # print(with_profitloss)
@@ -155,7 +157,7 @@ if __name__ == '__main__':
     #                                              'CostOfGoodsSold',
     #                                              'CostOfServices']))
 
-    # is_joined_bag = is_joined_bag.filter(AdshJoinedFilter(adshs=['0000355019-22-000042']))
+    #is_joined_bag = is_joined_bag.filter(AdshJoinedFilter(adshs=['0000355019-22-000042']))
 
     #is_joined_bag = load_smaller_sample_IS_set()
     #

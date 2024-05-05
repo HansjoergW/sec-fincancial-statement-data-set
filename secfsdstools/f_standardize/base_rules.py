@@ -150,6 +150,14 @@ class CopyTagRule(Rule):
         """
         return [self.target]
 
+    def set_id(self, prefix: str):
+        """
+        sets the identifier of this rule entity
+        Args:
+            prefix: the prefix from the parent in the rule-tree which has to be part of the id
+        """
+        self.identifier = f'{prefix}_{self.target}<-{self.original}'
+
     def get_description(self) -> str:
         """
         Returns the description String

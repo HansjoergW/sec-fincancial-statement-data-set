@@ -700,12 +700,6 @@ class IncomeStatementStandardizer(Standardizer):
                         summand_tag=&#39;NetIncomeLossAttributableToNoncontrollingInterest&#39;,
                         result_tag=&#39;ProfitLoss&#39;),
 
-            # hier noch 2. Rule machen, die nur IncomeTaxExpenseBenefit korrigiert
-            #
-            # benötigt eine Regel, welche nur IncomeTaxExpenseBenefit korrigiert,
-            # falls BeforeTax - AfterTex == 2*incomeTaxExpenseBenefit,
-            # bzw. falls BeforeTax + IncomeTaxExpenseBenefit == After Tax
-
             # 1. if there is no value for Revenues, but GrossProfit
             # we set Revenues to GrossProfit
             # 2. if there is no value for  GrossProfit, but Revenues
@@ -717,16 +711,19 @@ class IncomeStatementStandardizer(Standardizer):
             MissingSummandRule(sum_tag=&#39;Revenues&#39;,
                                existing_summands_tags=[&#39;GrossProfit&#39;],
                                missing_summand_tag=&#39;CostOfRevenue&#39;),
+
             # Next, we finalize OperatingIncomeLoss, by subtracting
             # a last time the OperatingExpenses from the GrossProfit,
-            # if OperatingIncomeLoss is not set
+            # if OperatingIncomeLoss is not yet set
             SubtractFromRule(subtract_from_tag=&#39;GrossProfit&#39;,
                              potential_subtract_tags=[&#39;OperatingExpenses&#39;],
                              target_tag=&#39;OperatingIncomeLoss&#39;),
 
-            # 1. if there is no value for IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit,
+            # 1. if there is no value for IncomeLossFromContinuingOperations,
             # but for ProfitLoss, we set it to the same value
-            # 2. afterward, we set IncomeTaxExpenseBenefit to zero with the following rule
+            # 2. if there is no value for IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit,
+            # but for IncomeLossFromContinuingOperations, we set it to the same value
+            # 3. afterward, we set IncomeTaxExpenseBenefit to zero with the following rule
             CopyTagRule(original=&#39;ProfitLoss&#39;,
                         target=&#39;IncomeLossFromContinuingOperations&#39;),
             CopyTagRule(original=&#39;IncomeLossFromContinuingOperations&#39;,
@@ -737,6 +734,7 @@ class IncomeStatementStandardizer(Standardizer):
                 existing_summands_tags=[&#39;IncomeLossFromContinuingOperations&#39;],
                 missing_summand_tag=&#39;AllIncomeTaxExpenseBenefit&#39;),
 
+            # if there is no &#34;IncomeLossFromDiscontinuedOperationsNetOfTax&#34;, set it to 0
             PostSetToZero(tags=[&#39;IncomeLossFromDiscontinuedOperationsNetOfTax&#39;]),
 
             # if IncomeLossFromContinuingOperations is not set, but IL..BeforeIncomeTaxExpenseBenefit is set
@@ -745,7 +743,7 @@ class IncomeStatementStandardizer(Standardizer):
                         target=&#39;IncomeLossFromContinuingOperations&#39;),
 
             # since new IncomeLossFromContinuingOperations values could have been set,
-            # calculate missing ProfitLoss entries
+            # calculate missing ProfitLoss entries, if possible
             SumUpRule(sum_tag=&#39;ProfitLoss&#39;,
                       potential_summands=[
                           &#39;IncomeLossFromContinuingOperations&#39;,
@@ -757,6 +755,7 @@ class IncomeStatementStandardizer(Standardizer):
                         target=&#39;NetIncomeLoss&#39;),
 
             # calculate missing NetIncomeLossAttributableToNoncontrollingInterest
+            # which at this point will mean to set it to 0.
             MissingSummandRule(
                 sum_tag=&#39;ProfitLoss&#39;,
                 existing_summands_tags=[&#39;NetIncomeLoss&#39;],
@@ -1291,12 +1290,6 @@ as negated.</dd>
                         summand_tag=&#39;NetIncomeLossAttributableToNoncontrollingInterest&#39;,
                         result_tag=&#39;ProfitLoss&#39;),
 
-            # hier noch 2. Rule machen, die nur IncomeTaxExpenseBenefit korrigiert
-            #
-            # benötigt eine Regel, welche nur IncomeTaxExpenseBenefit korrigiert,
-            # falls BeforeTax - AfterTex == 2*incomeTaxExpenseBenefit,
-            # bzw. falls BeforeTax + IncomeTaxExpenseBenefit == After Tax
-
             # 1. if there is no value for Revenues, but GrossProfit
             # we set Revenues to GrossProfit
             # 2. if there is no value for  GrossProfit, but Revenues
@@ -1308,16 +1301,19 @@ as negated.</dd>
             MissingSummandRule(sum_tag=&#39;Revenues&#39;,
                                existing_summands_tags=[&#39;GrossProfit&#39;],
                                missing_summand_tag=&#39;CostOfRevenue&#39;),
+
             # Next, we finalize OperatingIncomeLoss, by subtracting
             # a last time the OperatingExpenses from the GrossProfit,
-            # if OperatingIncomeLoss is not set
+            # if OperatingIncomeLoss is not yet set
             SubtractFromRule(subtract_from_tag=&#39;GrossProfit&#39;,
                              potential_subtract_tags=[&#39;OperatingExpenses&#39;],
                              target_tag=&#39;OperatingIncomeLoss&#39;),
 
-            # 1. if there is no value for IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit,
+            # 1. if there is no value for IncomeLossFromContinuingOperations,
             # but for ProfitLoss, we set it to the same value
-            # 2. afterward, we set IncomeTaxExpenseBenefit to zero with the following rule
+            # 2. if there is no value for IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit,
+            # but for IncomeLossFromContinuingOperations, we set it to the same value
+            # 3. afterward, we set IncomeTaxExpenseBenefit to zero with the following rule
             CopyTagRule(original=&#39;ProfitLoss&#39;,
                         target=&#39;IncomeLossFromContinuingOperations&#39;),
             CopyTagRule(original=&#39;IncomeLossFromContinuingOperations&#39;,
@@ -1328,6 +1324,7 @@ as negated.</dd>
                 existing_summands_tags=[&#39;IncomeLossFromContinuingOperations&#39;],
                 missing_summand_tag=&#39;AllIncomeTaxExpenseBenefit&#39;),
 
+            # if there is no &#34;IncomeLossFromDiscontinuedOperationsNetOfTax&#34;, set it to 0
             PostSetToZero(tags=[&#39;IncomeLossFromDiscontinuedOperationsNetOfTax&#39;]),
 
             # if IncomeLossFromContinuingOperations is not set, but IL..BeforeIncomeTaxExpenseBenefit is set
@@ -1336,7 +1333,7 @@ as negated.</dd>
                         target=&#39;IncomeLossFromContinuingOperations&#39;),
 
             # since new IncomeLossFromContinuingOperations values could have been set,
-            # calculate missing ProfitLoss entries
+            # calculate missing ProfitLoss entries, if possible
             SumUpRule(sum_tag=&#39;ProfitLoss&#39;,
                       potential_summands=[
                           &#39;IncomeLossFromContinuingOperations&#39;,
@@ -1348,6 +1345,7 @@ as negated.</dd>
                         target=&#39;NetIncomeLoss&#39;),
 
             # calculate missing NetIncomeLossAttributableToNoncontrollingInterest
+            # which at this point will mean to set it to 0.
             MissingSummandRule(
                 sum_tag=&#39;ProfitLoss&#39;,
                 existing_summands_tags=[&#39;NetIncomeLoss&#39;],

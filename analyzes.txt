@@ -9,14 +9,14 @@ IS
                 + SalesRevenueServicesNet  <- SalesRevenueServicesGross
                 + OtherSalesRevenueNet
                 --------------
-                = SalesRevenueNet (if not set)
+                = SalesRevenueNet
 
         2. Prio: SalesRevenueNet
 
                 RevenueFromContractWithCustomerIncludingAssessedTax
                 - ExciseAndSalesTaxes
                 ---------------------
-                = RevenueFromContractWithCustomerExcludingAssessedTax (if not set)
+                = RevenueFromContractWithCustomerExcludingAssessedTax
 
         3. Prio: RevenueFromContractWithCustomerExcludingAssessedTax
         4. Prio: RevenueFromContractWithCustomerIncludingAssessedTax

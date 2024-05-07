@@ -329,6 +329,204 @@ class IncomeStatementStandardizer(Standardizer):
         ---------------------------------------------------
         = NetIncomeLoss
     </pre>
+
+    Detailled View:
+    <pre>
+  Main Rules
+    Revenues:
+
+        1. Prio: Revenues
+
+                + SalesRevenueGoodsNet     <- SalesRevenueGoodsGross
+                + SalesRevenueServicesNet  <- SalesRevenueServicesGross
+                + OtherSalesRevenueNet
+                --------------
+                = SalesRevenueNet
+
+        2. Prio: SalesRevenueNet
+
+                RevenueFromContractWithCustomerIncludingAssessedTax
+                - ExciseAndSalesTaxes
+                ---------------------
+                = RevenueFromContractWithCustomerExcludingAssessedTax
+
+        3. Prio: RevenueFromContractWithCustomerExcludingAssessedTax
+        4. Prio: RevenueFromContractWithCustomerIncludingAssessedTax
+        5. Prio: RevenuesExcludingInterestAndDividends
+
+                + RegulatedAndUnregulatedOperatingRevenue
+                + HealthCareOrganizationPatientServiceRevenue
+                + ContractsRevenue
+                + RevenueOilAndGasServices
+                  ...
+                ------------------
+                = RevenuesSum
+
+        6. Prio: RevenuesSum
+        7. Prio: InvestmentIncomeInterest
+        8. Prio: CostOfRevenue + GrossProfit
+
+
+    CostOfRevenue
+
+        1. Prio CostOfRevenue
+
+                + CostOfGoodsSoldExcludingDepreciationDepletionAndAmortization
+                + CostOfGoodsSoldDepreciationDepletionAndAmortization
+                + CostOfGoodsSoldDepletion
+                + CostOfGoodsSoldDepreciation
+                + ...
+                ------------
+                = CostOfGoodsSold (if not set)
+
+
+                + CostOfServicesExcludingDepreciationDepletionAndAmortization
+                + CostOfServicesDepreciation
+                + CostOfServicesDepreciationAndAmortization
+                + CostOfServicesCatering
+                + ...
+                ------------
+                = CostOfServices (if not set)
+
+
+                + CostOfGoodsAndServicesSoldDepreciationAndAmortization
+                + CostOfGoodsAndServicesSoldAmortization
+                + CostOfGoodsAndServicesSoldOverhead
+                + CostOfGoodsAndServicesSoldDepreciation
+                + CostOfGoodsAndServicesEnergyCommoditiesAndServices
+                + CostOfGoodsAndServiceExcludingDepreciationDepletionAndAmortizatio
+                ------------
+                = CostOfGoodsAndServicesSold (if not set)
+
+
+              CostOfGoodsSold
+            + CostOfServices
+            ---------------
+            = CostOfGoodsAndServicesSold (if not set)
+
+        2. Prio CostOfGoodsAndServicesSold
+        3. Prio Revenues - GrossProfit
+
+    GrossProfit
+
+        1. Prio GrossProfit
+        2. Prio Revenues - CostOfRevenue
+        3. Prio GrossInvestmentIncomeOperating
+        4. Prio InterestAndDividendIncomeOperating
+
+    OperatingExpenses
+
+        1. Prio OperatingExpenses
+        2. Prio GrossProfit - OperatingIncomeLoss
+
+            + SellingGeneralAndAdministrativeExpense
+            + GeneralAndAdministrativeExpense
+            + ResearchAndDevelopmentExpense
+            + SellingAndMarketingExpense
+            + ... (96 most expense tags)
+            ----------------------------
+            = OperatingExpensesSum
+
+        3. Prio OperatingExpensesSum
+
+
+    OperatingIncomeLoss
+
+        1. Prio OperatingIncomeLoss
+        2. Prio GrossProfit - OperatingExpenses
+
+
+    IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit
+
+        1. Prio IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit <- (rename) IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest
+        2. Prio
+            + IncomeLossFromContinuingOperationsBeforeIncomeTaxesMinorityInterestAndIncomeLossFromEquityMethodInvestments
+            + (optional) IncomeLossFromEquityMethodInvestments
+            --------------------
+            = IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit
+        3. Prio IncomeLossFromContinuingOperations + AllIncomeTaxExpenseBenefit
+
+    ProfitLoss
+
+        1. Prio ProfitLoss
+        2. Prio
+            IncomeLossFromContinuingOperations
+
+                1. Prio IncomeLossFromContinuingOperations <- (rename) IncomeLossFromContinuingOperationsIncludingPortionAttributableToNoncontrollingInterest
+
+                    + IncomeTaxExpenseBenefit
+                    + DeferredIncomeTaxExpenseBenefit
+                    + (optional) IncomeLossFromEquityMethodInvestments
+                    ---------------------------------
+                    = AllIncomeTaxExpenseBenefit
+
+                2. Prio IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit - AllIncomeTaxExpenseBenefit
+
+
+            IncomeLossFromDiscontinuedOperationsNetOfTax
+
+                1. Prio IncomeLossFromDiscontinuedOperationsNetOfTax <- IncomeLossFromDiscontinuedOperationsNetOfTaxAttributableToReportingEntity
+
+
+            ProfitLoss = IncomeLossFromContinuingOperations + IncomeLossFromDiscontinuedOperationsNetOfTax
+
+        3. Prio NetIncomeLoss
+
+
+    NetIncomeLossAttributableToNoncontrollingInterest
+        1. Prio NetIncomeLossAttributableToNoncontrollingInterest
+        2. Prio ProfitLoss - NetIncomeLoss
+
+    NetIncomeLoss
+
+        1. Prio NetIncomeLoss
+        2. Prio NetIncomeLossAvailableToCommonStockholdersBasic
+        3. Prio NetIncomeLossAllocatedToLimitedPartners
+        3. Prio ProfitLoss
+        4. Prio ProfitLossIncludingRedeemableNonControllingInterest
+        5. Prio OtherComprehensiveIncomeLossNetOfTax
+        6. Prio ComprehensiveIncomeNetOfTax
+        7. Prio IncomeLossAttributableToParent
+        8. Prio NetInvestmentIncome
+
+  Post Rule (Cleanup)
+    Fix Sign of AllIncomeTaxExpenseBenefit (should be positive if taxed were paid)
+        expected equation to be true:
+           IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit - AllIncomeTaxExpenseBenefit = ProfitLoss
+
+        invert sign of AllIncomeTaxExpenseBenefit if the following equation is true:
+           IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit + AllIncomeTaxExpenseBenefit = ProfitLoss
+
+    Fix sign of NetIncomeLossAttributableToNoncontrollingInterest
+        expected equation to be true:
+           ProfitLoss - NetIncomeLossAttributableToNoncontrollingInterest = NetIncomeLoss
+
+        invert sign of NetIncomeLossAttributableToNoncontrollingInterest if the following equation is true:
+           ProfitLoss + NetIncomeLossAttributableToNoncontrollingInterest = NetIncomeLoss
+
+    If Revenues was not set, but there is a GrossProfit, set it to GrossProfit,
+          since was no CostOfRevenue found
+
+    If GrossProfit couldn't be set, but there is Revenues, set it to Revenues
+          since was no CostOfRevenue found
+
+    if CostORevenues couldn't be set, but Revenues and GrossProfit are present, set it to Revenues - Grossprofit
+
+    if OperatingIncomeLoss is not set yet, and GrossProfit (available now) and OperatingExpenses are present,
+         set it to GrossProfit - OperatingExpenses
+
+    If there is no IncomeLossFromContinuingOperations, set it to ProfitLoss
+    if there is no IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit, set it to IncomeLossFromContinuingOperations
+    if there is no AllIncomeTaxExpenseBenefit, set it to IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit - AllIncomeTaxExpenseBenefit
+
+    set IncomeLossFromDiscontinuedOperationsNetOfTax to 0.0 if not present
+
+    If there is no IncomeLossFromContinuingOperations, set it to IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit
+    If there is no ProfitLoss, set it to IncomeLossFromContinuingOperations + IncomeLossFromDiscontinuedOperationsNetOfTax
+    If there is no NetIncomeLoss, set it to ProfitLoss
+    If there is no NetIncomeLossAttributableToNoncontrollingInterest, set it to ProfitLoss - NetIncomeLoss
+
+    </pre>
     """
     prepivot_rule_tree = RuleGroup(
         prefix="IS_PREPIV",

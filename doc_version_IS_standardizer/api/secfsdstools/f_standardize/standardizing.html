@@ -308,9 +308,9 @@ class Standardizer(Presenter[JoinedDataBag]):
             list(set(cpy_pivot_df.columns.tolist()).intersection(set(self.main_statement_tags)))
         cpy_pivot_df[&#39;nan_count&#39;] = cpy_pivot_df[available_main_statements].isna().sum(axis=1)
 
-        cpy_pivot_df.sort_values([&#39;adsh&#39;, &#39;coreg&#39;, &#39;nan_count&#39;], inplace=True)
+        cpy_pivot_df.sort_values([&#39;adsh&#39;, &#39;coreg&#39;, &#39;qtrs&#39;, &#39;nan_count&#39;], inplace=True)
 
-        filtered_pivot_df = cpy_pivot_df.groupby([&#39;adsh&#39;, &#39;coreg&#39;]).first()
+        filtered_pivot_df = cpy_pivot_df.groupby([&#39;adsh&#39;, &#39;coreg&#39;, &#39;qtrs&#39;]).first()
         filtered_pivot_df.reset_index(inplace=True)
         return filtered_pivot_df
 
@@ -886,9 +886,9 @@ as negated.</dd>
             list(set(cpy_pivot_df.columns.tolist()).intersection(set(self.main_statement_tags)))
         cpy_pivot_df[&#39;nan_count&#39;] = cpy_pivot_df[available_main_statements].isna().sum(axis=1)
 
-        cpy_pivot_df.sort_values([&#39;adsh&#39;, &#39;coreg&#39;, &#39;nan_count&#39;], inplace=True)
+        cpy_pivot_df.sort_values([&#39;adsh&#39;, &#39;coreg&#39;, &#39;qtrs&#39;, &#39;nan_count&#39;], inplace=True)
 
-        filtered_pivot_df = cpy_pivot_df.groupby([&#39;adsh&#39;, &#39;coreg&#39;]).first()
+        filtered_pivot_df = cpy_pivot_df.groupby([&#39;adsh&#39;, &#39;coreg&#39;, &#39;qtrs&#39;]).first()
         filtered_pivot_df.reset_index(inplace=True)
         return filtered_pivot_df
 

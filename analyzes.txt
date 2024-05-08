@@ -196,10 +196,6 @@ IS
 
 Todos
 -----
-- sicherstellen, ob wirklich Q3 und Q2 mit mehreren qtrs für selbe Firma vorhanden ist.
-
-- IncomeLossAttributableToParent is available
-  ex. 0001104659-12-077666
 
 - EarningsPerShare
 

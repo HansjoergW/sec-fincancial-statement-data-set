@@ -781,7 +781,7 @@ class IncomeStatementStandardizer(Standardizer):
                       description="Rules that might set the ProfitLoss tag."
                                   "The order is the precedence",
                       rules=[
-                          CopyTagRule(original='NetIncomeLossParts', target='ProfitLoss'),
+                          CopyTagRule(original='ProfitLossParts', target='ProfitLoss'),
                           # if there is no value for ProfitLoss, we set it to NetIncomeLoss
                           CopyTagRule(original='NetIncomeLoss', target='ProfitLoss')]),
 

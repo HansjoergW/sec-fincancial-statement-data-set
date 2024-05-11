@@ -679,8 +679,6 @@ class IncomeStatementStandardizer(Standardizer):
         ]
     )
 
-
-    # GrossProfit is the only tag used to indicate GrossProfit
     is_missing_rev_cost_gross = RuleGroup(
         prefix="RevCostGross_missing",
         description="Calculates the third tag, if two of Revenues, CostOfRevenues, "
@@ -733,6 +731,34 @@ class IncomeStatementStandardizer(Standardizer):
                           CopyTagRule(original='OperatingExpensesSum', target='OperatingExpenses')])
         ])
 
+    is_inclossbeforetax = RuleGroup(
+        prefix="inclossbeforetax",
+        rules=[
+            RuleGroup(prefix="Pre",
+                      description="Preparation rules which might be usable to estimate "
+                                  "IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit",
+                      rules=[
+                          SumUpRule(
+                              sum_tag='IncomeLossFromContinuingOperationsFromEquityMethodInvestements',
+                              potential_summands=[
+                                  'IncomeLossFromContinuingOperationsBeforeIncomeTaxesMinorityInterestAndIncomeLossFromEquityMethodInvestments',
+                              ], optional_summands=['IncomeLossFromEquityMethodInvestments']),
+                      ]),
+            RuleGroup(prefix="Set",
+                      description="Rules that might set the "
+                                  "IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit"
+                                  " tag. The order is the precedence",
+                      rules=[
+                          # Renaming
+                          CopyTagRule(
+                              original='IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest',
+                              target='IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit'),
+                          CopyTagRule(
+                              original='IncomeLossFromContinuingOperationsFromEquityMethodInvestements',
+                              target='IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit'),
+                      ])
+        ])
+
     is_netincome_rg = RuleGroup(
         prefix="netincome",
         rules=[
@@ -740,26 +766,15 @@ class IncomeStatementStandardizer(Standardizer):
                       description="Preparation rules which might be usable to estimate "
                                   "NetIncomeLoss, ProfitLoss, and IncomeLossFromContinuingOperations",
                       rules=[
-                          # Renaming
-                          CopyTagRule(
-                              original='IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest',
-                              target='IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit'),
-
-                          SumUpRule(
-                              sum_tag='IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit',
-                              potential_summands=[
-                                  'IncomeLossFromContinuingOperationsBeforeIncomeTaxesMinorityInterestAndIncomeLossFromEquityMethodInvestments',
-                              ], optional_summands=['IncomeLossFromEquityMethodInvestments']),
-
-                          CopyTagRule(
-                              original='IncomeLossFromContinuingOperationsIncludingPortionAttributableToNoncontrollingInterest',
-                              target='IncomeLossFromContinuingOperations'),
-
                           SumUpRule(
                               sum_tag='AllIncomeTaxExpenseBenefit',
                               potential_summands=[
                                   'IncomeTaxExpenseBenefit', 'DeferredIncomeTaxExpenseBenefit'
                               ], optional_summands=['IncomeLossFromEquityMethodInvestments']),
+
+                          CopyTagRule(
+                              original='IncomeLossFromContinuingOperationsIncludingPortionAttributableToNoncontrollingInterest',
+                              target='IncomeLossFromContinuingOperations'),
 
                           SubtractFromRule(
                               target_tag='IncomeLossFromContinuingOperations',
@@ -840,7 +855,6 @@ class IncomeStatementStandardizer(Standardizer):
         missing_summand_tag='NetIncomeLossAttributableToNoncontrollingInterest'
     )
 
-
     main_rule_tree = RuleGroup(prefix="IS",
                                rules=[
                                    is_revenue_rg,
@@ -849,6 +863,7 @@ class IncomeStatementStandardizer(Standardizer):
                                    is_grossprofit_rg,
                                    is_missing_gross_opil_opexp,
                                    is_operating_expenses_rg,
+                                   is_inclossbeforetax,
                                    is_netincome_rg,
                                    is_missing_ilbefore_tax_ilcontop,
                                    is_missing_nilattnoncnt

@@ -24,8 +24,8 @@ Todo:
 
 - at top of README in TLDR
   main features with examples, resp. description
+- update diagramm + description
 - in interaktive könnte man bei der Suche nach companies auch gleich die standardisierten reports anzeigen
-- Test für Subtract Rule
 - sollte homepage nicht auf https://hansjoergw.github.io/sec-fincancial-statement-data-set/ zeigen?
 
 - Discord Channel?

@@ -21,19 +21,45 @@ The SEC releases quarterly zip files, each containing four CSV files with numeri
 filed within that quarter.
 
 However, accessing data from the past 12 years can be time-consuming due to the large amount
-of data - over 120 million data points in over 2GB of zip files.
+of data - over 120 million data points in over 2GB of zip files by 2023.
 
 This library simplifies the process of working with this data and provides a
 convenient way to extract information from the primary financial statements - the balance sheet, income statement, and
 statement of cash flows.
 
-It also provides an integration with
-the https://rapidapi.com/hansjoerg.wingeier/api/daily-sec-financial-statement-dataset API
-and therefore providing a possibility to receive the latest filings on a daily basis and not just every three months.
+The main features include:
+- all data is on your local hard drive, no need for numerous API calls
+- data is loaded as pandas files
+- fast an efficient reading of a single report, all reports of one or multiple companies, or even all available reports
+```python
+single_collector: SingleReportCollector = SingleReportCollector.get_report_by_adsh(adsh="0000320193-22-000108")
+company_collector = CompanyReportCollector.get_company_collector(ciks=[320193, 789019]) # Apple, Microsoft
+all_2022_collector: ZipCollector = ZipCollector.get_zip_by_names(names=["2022q1.zip", "2022q2.zip", "2022q3.zip", "2022q4.zip"])
+```
+- filter framework with predefined filters, easy to extend, supports easy way of saving, loading, and combining filtered data
+```python
+(collector.collect().filter(USDOnlyRawFilter()) # only data in USD
+                   .filter(StmtRawFilter(['BS']) # only data for balance sheets
+                   .filter(...) #  
+                   .save("./preparedset")) # save the filtered data 
+```
+- standardize the data for balance sheets and income statements (cash flow statements coming soon) to make reports easily comparable
+```python
+company_collector = CompanyReportCollector.get_company_collector(ciks=[320193, 789019], # Apple, Microsoft
+                                                                 post_load_filter=default_postloadfilter) # use predefined filter
+joined_bag = company_collector.collect().join() # load the sub_df, pre_df, and num_df from the zipfiles and join num and pre
+is_standardizer = IncomeStatementStandardizer()
+result_df = joined_bag.present(is_standardizer) # 
+```
 
 
 # Latest news / most important changes from previous versions
 See the [Release Notes](https://hansjoergw.github.io/sec-fincancial-statement-data-set/releasenotes/) for details.
+## 1.4.2 -> 1.5
+* Introducing **Income Statement Standardizer**<br>
+  The Income Statement Standardizer makes the income statements easily comparable.<br>
+  [07_02_IS_standardizer](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/07_02_IS_standardizer.ipynb) <br>
+* 
 ## 1.4 -> 1.4.2
 * Fix in `StandardStatementPresenter`: <br>
   The `StandardStatementPresenter` also considers `qtrs` when displaying the information.
@@ -56,14 +82,6 @@ See the [Release Notes](https://hansjoergw.github.io/sec-fincancial-statement-da
 * New package `u_usecases` introduced. This package is a place to provide concrete examples what you can do
   with the `secfsdstools` library. As a first usecase, the logic shown and explained in the `06_bulk_data_processing_deep_dive`
   is provided as logic within the modul `bulk_loading`.
-
-
-## 1.1 -> 1.2
-* `secfsdstools.e_filter.rawfiltering.USDOnlyRawFilter` is new and removes none USD currency datapoints
-* `MainCoregFilter` was renamed to `MainCoregRawFilter`
-* `OfficialTagsOnlyFilter` was renamed to `OfficialTagsOnlyRawFilter`
-* All filters have been implemented for the JoinedDataBag as well: `secfsdstools.e_filter.joinedfiltering`
-* New notebook [05_filter_deep_dive](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/05_filter_deep_dive.ipynb).
 
 
 # Principles
@@ -96,6 +114,7 @@ report into pandas dataframe tables.
 * [bulk_data_processing_deep_dive Notebook](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/06_bulk_data_processing_deep_dive.ipynb)
 * [standardizer_basics](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/07_00_standardizer_basics.ipynb)
 * [BS_standardizer](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/07_01_BS_standardizer.ipynb)
+* [IS_standardizer](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/07_02_IS_standardizer.ipynb)
 
 
 # Installation
@@ -737,7 +756,7 @@ implementations (module `secfsdstools.e_presenter.presenting`):
     - LiabilitiesAndEquity
 
   With just a few lines of code, you'll get a comparable dataset with the main positions of a balance sheet for Microsoft, Alphabet, and Amazon:
-  (see the [stanardize the balance sheets and make them comparable](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/07_01_BS_standardizer.ipynb) for details)
+  (see the [stanardize the balance sheets and make them comparable notebook](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/07_01_BS_standardizer.ipynb) for details)
    ````python
    from secfsdstools.e_collector.companycollecting import CompanyReportCollector
    from secfsdstools.e_filter.rawfiltering import ReportPeriodRawFilter, MainCoregRawFilter, OfficialTagsOnlyRawFilter, USDOnlyRawFilter
@@ -766,6 +785,44 @@ implementations (module `secfsdstools.e_presenter.presenting`):
    plt.legend()
    ````
    ![Equity Compare](https://github.com/HansjoergW/sec-fincancial-statement-data-set/raw/main/docs/images/equity_compare.png)
+
+  * `IncomeStatementStandardizer` <br>
+    The `IncomeStatementStandardizer` collects and/or calculates the following positions of balance sheets:
+
+  ---- TODO
+
+
+  With just a few lines of code, you'll get a comparable dataset with the main positions of an income statement for Microsoft, Alphabet, and Amazon:
+  (see the [stanardize the income statement and make them comparable notebook](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/07_02_IS_standardizer.ipynb) for details)
+   ````python
+   from secfsdstools.e_collector.companycollecting import CompanyReportCollector
+   from secfsdstools.e_filter.rawfiltering import ReportPeriodRawFilter, MainCoregRawFilter, OfficialTagsOnlyRawFilter, USDOnlyRawFilter
+   from secfsdstools.f_standardize.bs_standardize import IncomeStatementStandardizer
+   
+   bag = CompanyReportCollector.get_company_collector(ciks=[789019, 1652044,1018724]).collect() #Microsoft, Alphabet, Amazon
+   filtered_bag = bag[ReportPeriodRawFilter()][MainCoregRawFilter()][OfficialTagsOnlyRawFilter()][USDOnlyRawFilter()]
+   joined_bag = filtered_bag.join()
+   
+   standardizer = IncomeStatementStandardizer()
+   
+   standardized_is_df = joined_bag.present(standardizer)
+   
+   import matplotlib.pyplot as plt
+   # Group by 'name' and plot equity for each group
+   # Note: using the `present` method ensured that the same cik has always the same name even if the company name did change in the past
+   for name, group in standardized_is_df.groupby('name'):
+     plt.plot(group['date'], group['GrossProfit'], label=name, linestyle='-')
+   
+   # Add labels and title
+   plt.xlabel('Date')
+   plt.ylabel('GrossProfit')
+   plt.title('GrossProfit Over Time for Different Companies (CIKs)')
+   
+   # Display legend
+   plt.legend()
+   ````
+  ![GrossProfit Compare](https://github.com/HansjoergW/sec-fincancial-statement-data-set/raw/main/docs/images/grossprofit_compare.png)
+
 
 
 # What to explore further

@@ -3,7 +3,8 @@ import pandas as pd
 
 from secfsdstools.f_standardize.base_rules import CopyTagRule, MissingSumRule, MissingSummandRule, \
     SumUpRule, SetSumIfOnlyOneSummand, PostCopyToFirstSummand, PreSumUpCorrection, \
-    missingsumparts_rules_creator, setsumifonlyonesummand_rules_creator, SubtractFromRule
+    missingsumparts_rules_creator, setsumifonlyonesummand_rules_creator, SubtractFromRule, \
+    PostFixSign
 
 
 def test_missingsumparts_rules_creator():
@@ -340,3 +341,22 @@ def test_subtract_values_and_store_result():
 
     # Assert
     assert data_df["target"].tolist() == [5, 17, None]
+
+
+def test_postfixsign_rule():
+    # Arrange
+    start_tag = "ProfitLoss"
+    summand_tag = "AllIncomeTaxExpenseBenefit"
+    result_tag = "IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit"
+    data_df = pd.DataFrame({
+        start_tag: [100, 200, 300],
+        summand_tag: [-50, 50, -100],
+        result_tag: [50, 150, 200]
+    })
+    postfix_sign = PostFixSign(start_tag, summand_tag, result_tag)
+
+    # Act
+    postfix_sign.process(data_df)
+
+    # Assert
+    assert data_df[summand_tag].tolist() == [-50, -50, -100]

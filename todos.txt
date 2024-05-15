@@ -17,16 +17,13 @@ v.1.5.0
 - SumUpRule: additional parameter optional_summands
 - SubtractFrom Rule
 - Standardizer:
+- interactive notebooks -> loads standardize details for single report and all reports
 
 
 
 Todo:
 
-- at top of README in TLDR
-  main features with examples, resp. description
-- update diagramm + description
 - in interaktive könnte man bei der Suche nach companies auch gleich die standardisierten reports anzeigen
-- sollte homepage nicht auf https://hansjoergw.github.io/sec-fincancial-statement-data-set/ zeigen?
 
 - Discord Channel?
 

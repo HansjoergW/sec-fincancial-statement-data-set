@@ -52,8 +52,9 @@ keywords=[
 ]
 
 [project.urls]
-"Homepage" = "https://github.com/HansjoergW/sec-fincancial-statement-data-set"
+"Homepage" = "https://hansjoergw.github.io/sec-fincancial-statement-data-set/"
 "Bug Tracker" = "https://github.com/HansjoergW/sec-fincancial-statement-data-set/issues"
+"Github" = "https://github.com/HansjoergW/sec-fincancial-statement-data-set"
 
 [project.optional-dependencies]
 test = [

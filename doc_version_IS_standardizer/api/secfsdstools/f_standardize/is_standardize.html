@@ -361,27 +361,21 @@ class IncomeStatementStandardizer(Standardizer):
 
     Detailled View:
     &lt;pre&gt;
-  Main Rules
-    Revenues:
-
-        1. Prio: Revenues
-
+      Main Rules
+        Revenues:
+            Pre
                 + SalesRevenueGoodsNet     &lt;- SalesRevenueGoodsGross
                 + SalesRevenueServicesNet  &lt;- SalesRevenueServicesGross
                 + OtherSalesRevenueNet
                 --------------
                 = SalesRevenueNet
 
-        2. Prio: SalesRevenueNet
 
                 RevenueFromContractWithCustomerIncludingAssessedTax
                 - ExciseAndSalesTaxes
                 ---------------------
                 = RevenueFromContractWithCustomerExcludingAssessedTax
 
-        3. Prio: RevenueFromContractWithCustomerExcludingAssessedTax
-        4. Prio: RevenueFromContractWithCustomerIncludingAssessedTax
-        5. Prio: RevenuesExcludingInterestAndDividends
 
                 + RegulatedAndUnregulatedOperatingRevenue
                 + HealthCareOrganizationPatientServiceRevenue
@@ -391,169 +385,180 @@ class IncomeStatementStandardizer(Standardizer):
                 ------------------
                 = RevenuesSum
 
-        6. Prio: RevenuesSum
-        7. Prio: InvestmentIncomeInterest
-        8. Prio: CostOfRevenue + GrossProfit
+            Set
+                1. Prio: Revenues
+                2. Prio: SalesRevenueNet
+                3. Prio: RevenueFromContractWithCustomerExcludingAssessedTax
+                4. Prio: RevenueFromContractWithCustomerIncludingAssessedTax
+                5. Prio: RevenuesExcludingInterestAndDividends
+                6. Prio: RevenuesSum
+                7. Prio: InvestmentIncomeInterest
+                8. Prio: CostOfRevenue + GrossProfit
 
 
-    CostOfRevenue
+        CostOfRevenue
 
-        1. Prio CostOfRevenue
-
-                + CostOfGoodsSoldExcludingDepreciationDepletionAndAmortization
-                + CostOfGoodsSoldDepreciationDepletionAndAmortization
-                + CostOfGoodsSoldDepletion
-                + CostOfGoodsSoldDepreciation
-                + ...
-                ------------
-                = CostOfGoodsSold (if not set)
-
-
-                + CostOfServicesExcludingDepreciationDepletionAndAmortization
-                + CostOfServicesDepreciation
-                + CostOfServicesDepreciationAndAmortization
-                + CostOfServicesCatering
-                + ...
-                ------------
-                = CostOfServices (if not set)
+            Pre
+                    + CostOfGoodsSoldExcludingDepreciationDepletionAndAmortization
+                    + CostOfGoodsSoldDepreciationDepletionAndAmortization
+                    + CostOfGoodsSoldDepletion
+                    + CostOfGoodsSoldDepreciation
+                    + ...
+                    ------------
+                    = CostOfGoodsSold (if not set)
 
 
-                + CostOfGoodsAndServicesSoldDepreciationAndAmortization
-                + CostOfGoodsAndServicesSoldAmortization
-                + CostOfGoodsAndServicesSoldOverhead
-                + CostOfGoodsAndServicesSoldDepreciation
-                + CostOfGoodsAndServicesEnergyCommoditiesAndServices
-                + CostOfGoodsAndServiceExcludingDepreciationDepletionAndAmortizatio
-                ------------
-                = CostOfGoodsAndServicesSold (if not set)
+                    + CostOfServicesExcludingDepreciationDepletionAndAmortization
+                    + CostOfServicesDepreciation
+                    + CostOfServicesDepreciationAndAmortization
+                    + CostOfServicesCatering
+                    + ...
+                    ------------
+                    = CostOfServices (if not set)
 
 
-              CostOfGoodsSold
-            + CostOfServices
-            ---------------
-            = CostOfGoodsAndServicesSold (if not set)
-
-        2. Prio CostOfGoodsAndServicesSold
-        3. Prio Revenues - GrossProfit
-
-    GrossProfit
-
-        1. Prio GrossProfit
-        2. Prio Revenues - CostOfRevenue
-        3. Prio GrossInvestmentIncomeOperating
-        4. Prio InterestAndDividendIncomeOperating
-
-    OperatingExpenses
-
-        1. Prio OperatingExpenses
-        2. Prio GrossProfit - OperatingIncomeLoss
-
-            + SellingGeneralAndAdministrativeExpense
-            + GeneralAndAdministrativeExpense
-            + ResearchAndDevelopmentExpense
-            + SellingAndMarketingExpense
-            + ... (96 most expense tags)
-            ----------------------------
-            = OperatingExpensesSum
-
-        3. Prio OperatingExpensesSum
+                    + CostOfGoodsAndServicesSoldDepreciationAndAmortization
+                    + CostOfGoodsAndServicesSoldAmortization
+                    + CostOfGoodsAndServicesSoldOverhead
+                    + CostOfGoodsAndServicesSoldDepreciation
+                    + CostOfGoodsAndServicesEnergyCommoditiesAndServices
+                    + CostOfGoodsAndServiceExcludingDepreciationDepletionAndAmortizatio
+                    ------------
+                    = CostOfGoodsAndServicesSold (if not set)
 
 
-    OperatingIncomeLoss
+                      CostOfGoodsSold
+                    + CostOfServices
+                    ---------------
+                    = CostOfGoodsAndServicesSold (if not set)
 
-        1. Prio OperatingIncomeLoss
-        2. Prio GrossProfit - OperatingExpenses
+            Set
+                1. Prio CostOfRevenue
+                2. Prio CostOfGoodsAndServicesSold
+                3. Prio Revenues - GrossProfit
 
+        GrossProfit
 
-    IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit
+            1. Prio GrossProfit
+            2. Prio Revenues - CostOfRevenue
+            3. Prio GrossInvestmentIncomeOperating
+            4. Prio InterestAndDividendIncomeOperating
 
-        1. Prio IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit &lt;- (rename) IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest
-        2. Prio
-            + IncomeLossFromContinuingOperationsBeforeIncomeTaxesMinorityInterestAndIncomeLossFromEquityMethodInvestments
-            + (optional) IncomeLossFromEquityMethodInvestments
-            --------------------
-            = IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit
-        3. Prio IncomeLossFromContinuingOperations + AllIncomeTaxExpenseBenefit
+        OperatingExpenses
 
-    ProfitLoss
+            Pre
+                + SellingGeneralAndAdministrativeExpense
+                + GeneralAndAdministrativeExpense
+                + ResearchAndDevelopmentExpense
+                + SellingAndMarketingExpense
+                + ... (96 most expense tags)
+                ----------------------------
+                = OperatingExpensesSum
 
-        1. Prio ProfitLoss
-        2. Prio
-            IncomeLossFromContinuingOperations
-
-                1. Prio IncomeLossFromContinuingOperations &lt;- (rename) IncomeLossFromContinuingOperationsIncludingPortionAttributableToNoncontrollingInterest
-
-                    + IncomeTaxExpenseBenefit
-                    + DeferredIncomeTaxExpenseBenefit
-                    + (optional) IncomeLossFromEquityMethodInvestments
-                    ---------------------------------
-                    = AllIncomeTaxExpenseBenefit
-
-                2. Prio IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit - AllIncomeTaxExpenseBenefit
-
-
-            IncomeLossFromDiscontinuedOperationsNetOfTax
-
-                1. Prio IncomeLossFromDiscontinuedOperationsNetOfTax &lt;- IncomeLossFromDiscontinuedOperationsNetOfTaxAttributableToReportingEntity
+            Set
+                1. Prio OperatingExpenses
+                2. Prio GrossProfit - OperatingIncomeLoss
+                3. Prio OperatingExpensesSum
 
 
-            ProfitLoss = IncomeLossFromContinuingOperations + IncomeLossFromDiscontinuedOperationsNetOfTax
+        OperatingIncomeLoss
+            Set
+            1. Prio OperatingIncomeLoss
+            2. Prio GrossProfit - OperatingExpenses
 
-        3. Prio NetIncomeLoss
+
+        IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit
+          Pre
+              + IncomeLossFromContinuingOperationsBeforeIncomeTaxesMinorityInterestAndIncomeLossFromEquityMethodInvestments
+              + (Optional) IncomeLossFromEquityMethodInvestments
+              --------------------------------------------------
+              = IncomeLossFromContinuingOperationsFromEquityMethodInvestements
+          Set
+              1. Prio IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest rename
+              2. Prio IncomeLossFromContinuingOperationsFromEquityMethodInvestements
+              3. Prio IncomeLossFromContinuingOperations + AllIncomeTaxExpenseBenefit
 
 
-    NetIncomeLossAttributableToNoncontrollingInterest
-        1. Prio NetIncomeLossAttributableToNoncontrollingInterest
-        2. Prio ProfitLoss - NetIncomeLoss
+        NetIncome
+           Pre
+                + IncomeTaxExpenseBenefit
+                + DeferredIncomeTaxExpenseBenefit
+                + (optional) IncomeLossFromEquityMethodInvestments
+                ---------------------------------
+                = AllIncomeTaxExpenseBenefit
 
-    NetIncomeLoss
 
-        1. Prio NetIncomeLoss
-        2. Prio NetIncomeLossAvailableToCommonStockholdersBasic
-        3. Prio NetIncomeLossAllocatedToLimitedPartners
-        3. Prio ProfitLoss
-        4. Prio ProfitLossIncludingRedeemableNonControllingInterest
-        5. Prio OtherComprehensiveIncomeLossNetOfTax
-        6. Prio ComprehensiveIncomeNetOfTax
-        7. Prio IncomeLossAttributableToParent
-        8. Prio NetInvestmentIncome
+                IncomeLossFromContinuingOperations &lt;- (rename) IncomeLossFromContinuingOperationsIncludingPortionAttributableToNoncontrollingInterest
+                IncomeLossFromDiscontinuedOperationsNetOfTax &lt;- (rename) IncomeLossFromDiscontinuedOperationsNetOfTaxAttributableToReportingEntity
 
-  Post Rule (Cleanup)
-    Fix Sign of AllIncomeTaxExpenseBenefit (should be positive if taxed were paid)
-        expected equation to be true:
-           IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit - AllIncomeTaxExpenseBenefit = ProfitLoss
+                + IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit
+                - AllIncomeTaxExpenseBenefit
+                ---------------------------------
+                = IncomeLossFromContinuingOperations
 
-        invert sign of AllIncomeTaxExpenseBenefit if the following equation is true:
-           IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit + AllIncomeTaxExpenseBenefit = ProfitLoss
 
-    Fix sign of NetIncomeLossAttributableToNoncontrollingInterest
-        expected equation to be true:
-           ProfitLoss - NetIncomeLossAttributableToNoncontrollingInterest = NetIncomeLoss
+                + IncomeLossFromContinuingOperations
+                + IncomeLossFromDiscontinuedOperationsNetOfTax
+                -------------------------
+                = ProfitLossParts
 
-        invert sign of NetIncomeLossAttributableToNoncontrollingInterest if the following equation is true:
-           ProfitLoss + NetIncomeLossAttributableToNoncontrollingInterest = NetIncomeLoss
 
-    If Revenues was not set, but there is a GrossProfit, set it to GrossProfit,
-          since was no CostOfRevenue found
+           SetProfitLoss
+                1. Prio ProfitLoss
+                2. Prio ProfitLossParts
+                3. Prio NetIncomeLoss
 
-    If GrossProfit couldn&#39;t be set, but there is Revenues, set it to Revenues
-          since was no CostOfRevenue found
+           SetIncomeLossContinuingOperations
+                3. Prio ProfitLoss
 
-    if CostORevenues couldn&#39;t be set, but Revenues and GrossProfit are present, set it to Revenues - Grossprofit
+           SetNetIncomeLoss
+                1. Prio NetIncomeLoss
+                2. Prio NetIncomeLossAvailableToCommonStockholdersBasic
+                3. Prio NetIncomeLossAllocatedToLimitedPartners
+                3. Prio ProfitLoss
+                4. Prio ProfitLossIncludingRedeemableNonControllingInterest
+                5. Prio OtherComprehensiveIncomeLossNetOfTax
+                6. Prio ComprehensiveIncomeNetOfTax
+                7. Prio IncomeLossAttributableToParent
+                8. Prio NetInvestmentIncome
 
-    if OperatingIncomeLoss is not set yet, and GrossProfit (available now) and OperatingExpenses are present,
-         set it to GrossProfit - OperatingExpenses
 
-    If there is no IncomeLossFromContinuingOperations, set it to ProfitLoss
-    if there is no IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit, set it to IncomeLossFromContinuingOperations
-    if there is no AllIncomeTaxExpenseBenefit, set it to IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit - AllIncomeTaxExpenseBenefit
+      Post Rule (Cleanup)
+        Fix Sign of AllIncomeTaxExpenseBenefit (should be positive if taxed were paid)
+            expected equation to be true:
+               IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit - AllIncomeTaxExpenseBenefit = ProfitLoss
 
-    set IncomeLossFromDiscontinuedOperationsNetOfTax to 0.0 if not present
+            invert sign of AllIncomeTaxExpenseBenefit if the following equation is true:
+               IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit + AllIncomeTaxExpenseBenefit = ProfitLoss
 
-    If there is no IncomeLossFromContinuingOperations, set it to IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit
-    If there is no ProfitLoss, set it to IncomeLossFromContinuingOperations + IncomeLossFromDiscontinuedOperationsNetOfTax
-    If there is no NetIncomeLoss, set it to ProfitLoss
-    If there is no NetIncomeLossAttributableToNoncontrollingInterest, set it to ProfitLoss - NetIncomeLoss
+        Fix sign of NetIncomeLossAttributableToNoncontrollingInterest
+            expected equation to be true:
+               ProfitLoss - NetIncomeLossAttributableToNoncontrollingInterest = NetIncomeLoss
+
+            invert sign of NetIncomeLossAttributableToNoncontrollingInterest if the following equation is true:
+               ProfitLoss + NetIncomeLossAttributableToNoncontrollingInterest = NetIncomeLoss
+
+        If Revenues was not set, but there is a GrossProfit, set it to GrossProfit,
+              since was no CostOfRevenue found
+
+        If GrossProfit couldn&#39;t be set, but there is Revenues, set it to Revenues
+              since was no CostOfRevenue found
+
+        if CostORevenues couldn&#39;t be set, but Revenues and GrossProfit are present, set it to Revenues - Grossprofit
+
+        if OperatingIncomeLoss is not set yet, and GrossProfit (available now) and OperatingExpenses are present,
+             set it to GrossProfit - OperatingExpenses
+
+        If there is no IncomeLossFromContinuingOperations, set it to ProfitLoss
+        if there is no IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit, set it to IncomeLossFromContinuingOperations
+        if there is no AllIncomeTaxExpenseBenefit, set it to IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit - AllIncomeTaxExpenseBenefit
+
+        set IncomeLossFromDiscontinuedOperationsNetOfTax to 0.0 if not present
+
+        If there is no IncomeLossFromContinuingOperations, set it to IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit
+        If there is no ProfitLoss, set it to IncomeLossFromContinuingOperations + IncomeLossFromDiscontinuedOperationsNetOfTax
+        If there is no NetIncomeLoss, set it to ProfitLoss
+        If there is no NetIncomeLossAttributableToNoncontrollingInterest, set it to ProfitLoss - NetIncomeLoss
 
     &lt;/pre&gt;
     &#34;&#34;&#34;
@@ -1073,224 +1078,227 @@ class IncomeStatementStandardizer(Standardizer):
 meaning that they have the same tags.</p>
 <p>At the end, the standardized IS contains the following columns</p>
 <pre>
-        Revenues
-      - CostOfRevenue
-      ---------------
-      = GrossProfit
-      - OperatingExpenses
-      -------------------
-      = OperatingIncomeLoss
+      Revenues
+    - CostOfRevenue
+    ---------------
+    = GrossProfit
+    - OperatingExpenses
+    -------------------
+    = OperatingIncomeLoss
 
-        IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit
-      - AllIncomeTaxExpenseBenefit
-      ----------------------------
-      = IncomeLossFromContinuingOperations
-      + IncomeLossFromDiscontinuedOperationsNetOfTax
-      -----------------------------------------------
-      = ProfitLoss
-      - NetIncomeLossAttributableToNoncontrollingInterest
-      ---------------------------------------------------
-      = NetIncomeLoss
-  </pre>
-<p>Detailled View:
-<br>
+      IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit
+    - AllIncomeTaxExpenseBenefit
+    ----------------------------
+    = IncomeLossFromContinuingOperations
+    + IncomeLossFromDiscontinuedOperationsNetOfTax
+    -----------------------------------------------
+    = ProfitLoss
+    - NetIncomeLossAttributableToNoncontrollingInterest
+    ---------------------------------------------------
+    = NetIncomeLoss
+</pre>
+<p>Detailled View:</p>
 <pre>
-Main Rules
-  Revenues:
-
-      1. Prio: Revenues
-
-              + SalesRevenueGoodsNet     <- SalesRevenueGoodsGross
-              + SalesRevenueServicesNet  <- SalesRevenueServicesGross
-              + OtherSalesRevenueNet
-              --------------
-              = SalesRevenueNet
-
-      2. Prio: SalesRevenueNet
-
-              RevenueFromContractWithCustomerIncludingAssessedTax
-              - ExciseAndSalesTaxes
-              ---------------------
-              = RevenueFromContractWithCustomerExcludingAssessedTax
-
-      3. Prio: RevenueFromContractWithCustomerExcludingAssessedTax
-      4. Prio: RevenueFromContractWithCustomerIncludingAssessedTax
-      5. Prio: RevenuesExcludingInterestAndDividends
-
-              + RegulatedAndUnregulatedOperatingRevenue
-              + HealthCareOrganizationPatientServiceRevenue
-              + ContractsRevenue
-              + RevenueOilAndGasServices
-                ...
-              ------------------
-              = RevenuesSum
-
-      6. Prio: RevenuesSum
-      7. Prio: InvestmentIncomeInterest
-      8. Prio: CostOfRevenue + GrossProfit
+  Main Rules
+    Revenues:
+        Pre
+            + SalesRevenueGoodsNet     <- SalesRevenueGoodsGross
+            + SalesRevenueServicesNet  <- SalesRevenueServicesGross
+            + OtherSalesRevenueNet
+            --------------
+            = SalesRevenueNet
 
 
-  CostOfRevenue
-
-      1. Prio CostOfRevenue
-
-              + CostOfGoodsSoldExcludingDepreciationDepletionAndAmortization
-              + CostOfGoodsSoldDepreciationDepletionAndAmortization
-              + CostOfGoodsSoldDepletion
-              + CostOfGoodsSoldDepreciation
-              + ...
-              ------------
-              = CostOfGoodsSold (if not set)
+            RevenueFromContractWithCustomerIncludingAssessedTax
+            - ExciseAndSalesTaxes
+            ---------------------
+            = RevenueFromContractWithCustomerExcludingAssessedTax
 
 
-              + CostOfServicesExcludingDepreciationDepletionAndAmortization
-              + CostOfServicesDepreciation
-              + CostOfServicesDepreciationAndAmortization
-              + CostOfServicesCatering
-              + ...
-              ------------
-              = CostOfServices (if not set)
+            + RegulatedAndUnregulatedOperatingRevenue
+            + HealthCareOrganizationPatientServiceRevenue
+            + ContractsRevenue
+            + RevenueOilAndGasServices
+              ...
+            ------------------
+            = RevenuesSum
+
+        Set
+            1. Prio: Revenues
+            2. Prio: SalesRevenueNet
+            3. Prio: RevenueFromContractWithCustomerExcludingAssessedTax
+            4. Prio: RevenueFromContractWithCustomerIncludingAssessedTax
+            5. Prio: RevenuesExcludingInterestAndDividends
+            6. Prio: RevenuesSum
+            7. Prio: InvestmentIncomeInterest
+            8. Prio: CostOfRevenue + GrossProfit
 
 
-              + CostOfGoodsAndServicesSoldDepreciationAndAmortization
-              + CostOfGoodsAndServicesSoldAmortization
-              + CostOfGoodsAndServicesSoldOverhead
-              + CostOfGoodsAndServicesSoldDepreciation
-              + CostOfGoodsAndServicesEnergyCommoditiesAndServices
-              + CostOfGoodsAndServiceExcludingDepreciationDepletionAndAmortizatio
-              ------------
-              = CostOfGoodsAndServicesSold (if not set)
+    CostOfRevenue
+
+        Pre
+                + CostOfGoodsSoldExcludingDepreciationDepletionAndAmortization
+                + CostOfGoodsSoldDepreciationDepletionAndAmortization
+                + CostOfGoodsSoldDepletion
+                + CostOfGoodsSoldDepreciation
+                + ...
+                ------------
+                = CostOfGoodsSold (if not set)
 
 
-            CostOfGoodsSold
-          + CostOfServices
-          ---------------
-          = CostOfGoodsAndServicesSold (if not set)
-
-      2. Prio CostOfGoodsAndServicesSold
-      3. Prio Revenues - GrossProfit
-
-  GrossProfit
-
-      1. Prio GrossProfit
-      2. Prio Revenues - CostOfRevenue
-      3. Prio GrossInvestmentIncomeOperating
-      4. Prio InterestAndDividendIncomeOperating
-
-  OperatingExpenses
-
-      1. Prio OperatingExpenses
-      2. Prio GrossProfit - OperatingIncomeLoss
-
-          + SellingGeneralAndAdministrativeExpense
-          + GeneralAndAdministrativeExpense
-          + ResearchAndDevelopmentExpense
-          + SellingAndMarketingExpense
-          + ... (96 most expense tags)
-          ----------------------------
-          = OperatingExpensesSum
-
-      3. Prio OperatingExpensesSum
+                + CostOfServicesExcludingDepreciationDepletionAndAmortization
+                + CostOfServicesDepreciation
+                + CostOfServicesDepreciationAndAmortization
+                + CostOfServicesCatering
+                + ...
+                ------------
+                = CostOfServices (if not set)
 
 
-  OperatingIncomeLoss
+                + CostOfGoodsAndServicesSoldDepreciationAndAmortization
+                + CostOfGoodsAndServicesSoldAmortization
+                + CostOfGoodsAndServicesSoldOverhead
+                + CostOfGoodsAndServicesSoldDepreciation
+                + CostOfGoodsAndServicesEnergyCommoditiesAndServices
+                + CostOfGoodsAndServiceExcludingDepreciationDepletionAndAmortizatio
+                ------------
+                = CostOfGoodsAndServicesSold (if not set)
 
-      1. Prio OperatingIncomeLoss
-      2. Prio GrossProfit - OperatingExpenses
+
+                  CostOfGoodsSold
+                + CostOfServices
+                ---------------
+                = CostOfGoodsAndServicesSold (if not set)
+
+        Set
+            1. Prio CostOfRevenue
+            2. Prio CostOfGoodsAndServicesSold
+            3. Prio Revenues - GrossProfit
+
+    GrossProfit
+
+        1. Prio GrossProfit
+        2. Prio Revenues - CostOfRevenue
+        3. Prio GrossInvestmentIncomeOperating
+        4. Prio InterestAndDividendIncomeOperating
+
+    OperatingExpenses
+
+        Pre
+            + SellingGeneralAndAdministrativeExpense
+            + GeneralAndAdministrativeExpense
+            + ResearchAndDevelopmentExpense
+            + SellingAndMarketingExpense
+            + ... (96 most expense tags)
+            ----------------------------
+            = OperatingExpensesSum
+
+        Set
+            1. Prio OperatingExpenses
+            2. Prio GrossProfit - OperatingIncomeLoss
+            3. Prio OperatingExpensesSum
 
 
-  IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit
+    OperatingIncomeLoss
+        Set
+        1. Prio OperatingIncomeLoss
+        2. Prio GrossProfit - OperatingExpenses
 
-      1. Prio IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit <- (rename) IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest
-      2. Prio
+
+    IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit
+      Pre
           + IncomeLossFromContinuingOperationsBeforeIncomeTaxesMinorityInterestAndIncomeLossFromEquityMethodInvestments
-          + (optional) IncomeLossFromEquityMethodInvestments
-          --------------------
-          = IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit
-      3. Prio IncomeLossFromContinuingOperations + AllIncomeTaxExpenseBenefit
-
-  ProfitLoss
-
-      1. Prio ProfitLoss
-      2. Prio
-          IncomeLossFromContinuingOperations
-
-              1. Prio IncomeLossFromContinuingOperations <- (rename) IncomeLossFromContinuingOperationsIncludingPortionAttributableToNoncontrollingInterest
-
-                  + IncomeTaxExpenseBenefit
-                  + DeferredIncomeTaxExpenseBenefit
-                  + (optional) IncomeLossFromEquityMethodInvestments
-                  ---------------------------------
-                  = AllIncomeTaxExpenseBenefit
-
-              2. Prio IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit - AllIncomeTaxExpenseBenefit
+          + (Optional) IncomeLossFromEquityMethodInvestments
+          --------------------------------------------------
+          = IncomeLossFromContinuingOperationsFromEquityMethodInvestements
+      Set
+          1. Prio IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest rename
+          2. Prio IncomeLossFromContinuingOperationsFromEquityMethodInvestements
+          3. Prio IncomeLossFromContinuingOperations + AllIncomeTaxExpenseBenefit
 
 
-          IncomeLossFromDiscontinuedOperationsNetOfTax
+    NetIncome
+       Pre
+            + IncomeTaxExpenseBenefit
+            + DeferredIncomeTaxExpenseBenefit
+            + (optional) IncomeLossFromEquityMethodInvestments
+            ---------------------------------
+            = AllIncomeTaxExpenseBenefit
 
-              1. Prio IncomeLossFromDiscontinuedOperationsNetOfTax <- IncomeLossFromDiscontinuedOperationsNetOfTaxAttributableToReportingEntity
+
+            IncomeLossFromContinuingOperations <- (rename) IncomeLossFromContinuingOperationsIncludingPortionAttributableToNoncontrollingInterest
+            IncomeLossFromDiscontinuedOperationsNetOfTax <- (rename) IncomeLossFromDiscontinuedOperationsNetOfTaxAttributableToReportingEntity
+
+            + IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit
+            - AllIncomeTaxExpenseBenefit
+            ---------------------------------
+            = IncomeLossFromContinuingOperations
 
 
-          ProfitLoss = IncomeLossFromContinuingOperations + IncomeLossFromDiscontinuedOperationsNetOfTax
+            + IncomeLossFromContinuingOperations
+            + IncomeLossFromDiscontinuedOperationsNetOfTax
+            -------------------------
+            = ProfitLossParts
 
-      3. Prio NetIncomeLoss
+
+       SetProfitLoss
+            1. Prio ProfitLoss
+            2. Prio ProfitLossParts
+            3. Prio NetIncomeLoss
+
+       SetIncomeLossContinuingOperations
+            3. Prio ProfitLoss
+
+       SetNetIncomeLoss
+            1. Prio NetIncomeLoss
+            2. Prio NetIncomeLossAvailableToCommonStockholdersBasic
+            3. Prio NetIncomeLossAllocatedToLimitedPartners
+            3. Prio ProfitLoss
+            4. Prio ProfitLossIncludingRedeemableNonControllingInterest
+            5. Prio OtherComprehensiveIncomeLossNetOfTax
+            6. Prio ComprehensiveIncomeNetOfTax
+            7. Prio IncomeLossAttributableToParent
+            8. Prio NetInvestmentIncome
 
 
-  NetIncomeLossAttributableToNoncontrollingInterest
-      1. Prio NetIncomeLossAttributableToNoncontrollingInterest
-      2. Prio ProfitLoss - NetIncomeLoss
+  Post Rule (Cleanup)
+    Fix Sign of AllIncomeTaxExpenseBenefit (should be positive if taxed were paid)
+        expected equation to be true:
+           IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit - AllIncomeTaxExpenseBenefit = ProfitLoss
 
-  NetIncomeLoss
+        invert sign of AllIncomeTaxExpenseBenefit if the following equation is true:
+           IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit + AllIncomeTaxExpenseBenefit = ProfitLoss
 
-      1. Prio NetIncomeLoss
-      2. Prio NetIncomeLossAvailableToCommonStockholdersBasic
-      3. Prio NetIncomeLossAllocatedToLimitedPartners
-      3. Prio ProfitLoss
-      4. Prio ProfitLossIncludingRedeemableNonControllingInterest
-      5. Prio OtherComprehensiveIncomeLossNetOfTax
-      6. Prio ComprehensiveIncomeNetOfTax
-      7. Prio IncomeLossAttributableToParent
-      8. Prio NetInvestmentIncome
+    Fix sign of NetIncomeLossAttributableToNoncontrollingInterest
+        expected equation to be true:
+           ProfitLoss - NetIncomeLossAttributableToNoncontrollingInterest = NetIncomeLoss
 
-Post Rule (Cleanup)
-  Fix Sign of AllIncomeTaxExpenseBenefit (should be positive if taxed were paid)
-      expected equation to be true:
-         IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit - AllIncomeTaxExpenseBenefit = ProfitLoss
+        invert sign of NetIncomeLossAttributableToNoncontrollingInterest if the following equation is true:
+           ProfitLoss + NetIncomeLossAttributableToNoncontrollingInterest = NetIncomeLoss
 
-      invert sign of AllIncomeTaxExpenseBenefit if the following equation is true:
-         IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit + AllIncomeTaxExpenseBenefit = ProfitLoss
+    If Revenues was not set, but there is a GrossProfit, set it to GrossProfit,
+          since was no CostOfRevenue found
 
-  Fix sign of NetIncomeLossAttributableToNoncontrollingInterest
-      expected equation to be true:
-         ProfitLoss - NetIncomeLossAttributableToNoncontrollingInterest = NetIncomeLoss
+    If GrossProfit couldn't be set, but there is Revenues, set it to Revenues
+          since was no CostOfRevenue found
 
-      invert sign of NetIncomeLossAttributableToNoncontrollingInterest if the following equation is true:
-         ProfitLoss + NetIncomeLossAttributableToNoncontrollingInterest = NetIncomeLoss
+    if CostORevenues couldn't be set, but Revenues and GrossProfit are present, set it to Revenues - Grossprofit
 
-  If Revenues was not set, but there is a GrossProfit, set it to GrossProfit,
-        since was no CostOfRevenue found
+    if OperatingIncomeLoss is not set yet, and GrossProfit (available now) and OperatingExpenses are present,
+         set it to GrossProfit - OperatingExpenses
 
-  If GrossProfit couldn't be set, but there is Revenues, set it to Revenues
-        since was no CostOfRevenue found
+    If there is no IncomeLossFromContinuingOperations, set it to ProfitLoss
+    if there is no IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit, set it to IncomeLossFromContinuingOperations
+    if there is no AllIncomeTaxExpenseBenefit, set it to IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit - AllIncomeTaxExpenseBenefit
 
-  if CostORevenues couldn't be set, but Revenues and GrossProfit are present, set it to Revenues - Grossprofit
+    set IncomeLossFromDiscontinuedOperationsNetOfTax to 0.0 if not present
 
-  if OperatingIncomeLoss is not set yet, and GrossProfit (available now) and OperatingExpenses are present,
-       set it to GrossProfit - OperatingExpenses
+    If there is no IncomeLossFromContinuingOperations, set it to IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit
+    If there is no ProfitLoss, set it to IncomeLossFromContinuingOperations + IncomeLossFromDiscontinuedOperationsNetOfTax
+    If there is no NetIncomeLoss, set it to ProfitLoss
+    If there is no NetIncomeLossAttributableToNoncontrollingInterest, set it to ProfitLoss - NetIncomeLoss
 
-  If there is no IncomeLossFromContinuingOperations, set it to ProfitLoss
-  if there is no IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit, set it to IncomeLossFromContinuingOperations
-  if there is no AllIncomeTaxExpenseBenefit, set it to IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit - AllIncomeTaxExpenseBenefit
-
-  set IncomeLossFromDiscontinuedOperationsNetOfTax to 0.0 if not present
-
-  If there is no IncomeLossFromContinuingOperations, set it to IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit
-  If there is no ProfitLoss, set it to IncomeLossFromContinuingOperations + IncomeLossFromDiscontinuedOperationsNetOfTax
-  If there is no NetIncomeLoss, set it to ProfitLoss
-  If there is no NetIncomeLossAttributableToNoncontrollingInterest, set it to ProfitLoss - NetIncomeLoss
-
-  </pre>
-</p>
+</pre>
 <h2 id="args">Args</h2>
 <dl>
 <dt><strong><code>prepivot_rule_tree</code></strong></dt>
@@ -1363,27 +1371,21 @@ as negated.</dd>
 
     Detailled View:
     &lt;pre&gt;
-  Main Rules
-    Revenues:
-
-        1. Prio: Revenues
-
+      Main Rules
+        Revenues:
+            Pre
                 + SalesRevenueGoodsNet     &lt;- SalesRevenueGoodsGross
                 + SalesRevenueServicesNet  &lt;- SalesRevenueServicesGross
                 + OtherSalesRevenueNet
                 --------------
                 = SalesRevenueNet
 
-        2. Prio: SalesRevenueNet
 
                 RevenueFromContractWithCustomerIncludingAssessedTax
                 - ExciseAndSalesTaxes
                 ---------------------
                 = RevenueFromContractWithCustomerExcludingAssessedTax
 
-        3. Prio: RevenueFromContractWithCustomerExcludingAssessedTax
-        4. Prio: RevenueFromContractWithCustomerIncludingAssessedTax
-        5. Prio: RevenuesExcludingInterestAndDividends
 
                 + RegulatedAndUnregulatedOperatingRevenue
                 + HealthCareOrganizationPatientServiceRevenue
@@ -1393,169 +1395,180 @@ as negated.</dd>
                 ------------------
                 = RevenuesSum
 
-        6. Prio: RevenuesSum
-        7. Prio: InvestmentIncomeInterest
-        8. Prio: CostOfRevenue + GrossProfit
+            Set
+                1. Prio: Revenues
+                2. Prio: SalesRevenueNet
+                3. Prio: RevenueFromContractWithCustomerExcludingAssessedTax
+                4. Prio: RevenueFromContractWithCustomerIncludingAssessedTax
+                5. Prio: RevenuesExcludingInterestAndDividends
+                6. Prio: RevenuesSum
+                7. Prio: InvestmentIncomeInterest
+                8. Prio: CostOfRevenue + GrossProfit
 
 
-    CostOfRevenue
+        CostOfRevenue
 
-        1. Prio CostOfRevenue
-
-                + CostOfGoodsSoldExcludingDepreciationDepletionAndAmortization
-                + CostOfGoodsSoldDepreciationDepletionAndAmortization
-                + CostOfGoodsSoldDepletion
-                + CostOfGoodsSoldDepreciation
-                + ...
-                ------------
-                = CostOfGoodsSold (if not set)
-
-
-                + CostOfServicesExcludingDepreciationDepletionAndAmortization
-                + CostOfServicesDepreciation
-                + CostOfServicesDepreciationAndAmortization
-                + CostOfServicesCatering
-                + ...
-                ------------
-                = CostOfServices (if not set)
+            Pre
+                    + CostOfGoodsSoldExcludingDepreciationDepletionAndAmortization
+                    + CostOfGoodsSoldDepreciationDepletionAndAmortization
+                    + CostOfGoodsSoldDepletion
+                    + CostOfGoodsSoldDepreciation
+                    + ...
+                    ------------
+                    = CostOfGoodsSold (if not set)
 
 
-                + CostOfGoodsAndServicesSoldDepreciationAndAmortization
-                + CostOfGoodsAndServicesSoldAmortization
-                + CostOfGoodsAndServicesSoldOverhead
-                + CostOfGoodsAndServicesSoldDepreciation
-                + CostOfGoodsAndServicesEnergyCommoditiesAndServices
-                + CostOfGoodsAndServiceExcludingDepreciationDepletionAndAmortizatio
-                ------------
-                = CostOfGoodsAndServicesSold (if not set)
+                    + CostOfServicesExcludingDepreciationDepletionAndAmortization
+                    + CostOfServicesDepreciation
+                    + CostOfServicesDepreciationAndAmortization
+                    + CostOfServicesCatering
+                    + ...
+                    ------------
+                    = CostOfServices (if not set)
 
 
-              CostOfGoodsSold
-            + CostOfServices
-            ---------------
-            = CostOfGoodsAndServicesSold (if not set)
-
-        2. Prio CostOfGoodsAndServicesSold
-        3. Prio Revenues - GrossProfit
-
-    GrossProfit
-
-        1. Prio GrossProfit
-        2. Prio Revenues - CostOfRevenue
-        3. Prio GrossInvestmentIncomeOperating
-        4. Prio InterestAndDividendIncomeOperating
-
-    OperatingExpenses
-
-        1. Prio OperatingExpenses
-        2. Prio GrossProfit - OperatingIncomeLoss
-
-            + SellingGeneralAndAdministrativeExpense
-            + GeneralAndAdministrativeExpense
-            + ResearchAndDevelopmentExpense
-            + SellingAndMarketingExpense
-            + ... (96 most expense tags)
-            ----------------------------
-            = OperatingExpensesSum
-
-        3. Prio OperatingExpensesSum
+                    + CostOfGoodsAndServicesSoldDepreciationAndAmortization
+                    + CostOfGoodsAndServicesSoldAmortization
+                    + CostOfGoodsAndServicesSoldOverhead
+                    + CostOfGoodsAndServicesSoldDepreciation
+                    + CostOfGoodsAndServicesEnergyCommoditiesAndServices
+                    + CostOfGoodsAndServiceExcludingDepreciationDepletionAndAmortizatio
+                    ------------
+                    = CostOfGoodsAndServicesSold (if not set)
 
 
-    OperatingIncomeLoss
+                      CostOfGoodsSold
+                    + CostOfServices
+                    ---------------
+                    = CostOfGoodsAndServicesSold (if not set)
 
-        1. Prio OperatingIncomeLoss
-        2. Prio GrossProfit - OperatingExpenses
+            Set
+                1. Prio CostOfRevenue
+                2. Prio CostOfGoodsAndServicesSold
+                3. Prio Revenues - GrossProfit
 
+        GrossProfit
 
-    IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit
+            1. Prio GrossProfit
+            2. Prio Revenues - CostOfRevenue
+            3. Prio GrossInvestmentIncomeOperating
+            4. Prio InterestAndDividendIncomeOperating
 
-        1. Prio IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit &lt;- (rename) IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest
-        2. Prio
-            + IncomeLossFromContinuingOperationsBeforeIncomeTaxesMinorityInterestAndIncomeLossFromEquityMethodInvestments
-            + (optional) IncomeLossFromEquityMethodInvestments
-            --------------------
-            = IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit
-        3. Prio IncomeLossFromContinuingOperations + AllIncomeTaxExpenseBenefit
+        OperatingExpenses
 
-    ProfitLoss
+            Pre
+                + SellingGeneralAndAdministrativeExpense
+                + GeneralAndAdministrativeExpense
+                + ResearchAndDevelopmentExpense
+                + SellingAndMarketingExpense
+                + ... (96 most expense tags)
+                ----------------------------
+                = OperatingExpensesSum
 
-        1. Prio ProfitLoss
-        2. Prio
-            IncomeLossFromContinuingOperations
-
-                1. Prio IncomeLossFromContinuingOperations &lt;- (rename) IncomeLossFromContinuingOperationsIncludingPortionAttributableToNoncontrollingInterest
-
-                    + IncomeTaxExpenseBenefit
-                    + DeferredIncomeTaxExpenseBenefit
-                    + (optional) IncomeLossFromEquityMethodInvestments
-                    ---------------------------------
-                    = AllIncomeTaxExpenseBenefit
-
-                2. Prio IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit - AllIncomeTaxExpenseBenefit
-
-
-            IncomeLossFromDiscontinuedOperationsNetOfTax
-
-                1. Prio IncomeLossFromDiscontinuedOperationsNetOfTax &lt;- IncomeLossFromDiscontinuedOperationsNetOfTaxAttributableToReportingEntity
+            Set
+                1. Prio OperatingExpenses
+                2. Prio GrossProfit - OperatingIncomeLoss
+                3. Prio OperatingExpensesSum
 
 
-            ProfitLoss = IncomeLossFromContinuingOperations + IncomeLossFromDiscontinuedOperationsNetOfTax
+        OperatingIncomeLoss
+            Set
+            1. Prio OperatingIncomeLoss
+            2. Prio GrossProfit - OperatingExpenses
 
-        3. Prio NetIncomeLoss
+
+        IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit
+          Pre
+              + IncomeLossFromContinuingOperationsBeforeIncomeTaxesMinorityInterestAndIncomeLossFromEquityMethodInvestments
+              + (Optional) IncomeLossFromEquityMethodInvestments
+              --------------------------------------------------
+              = IncomeLossFromContinuingOperationsFromEquityMethodInvestements
+          Set
+              1. Prio IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest rename
+              2. Prio IncomeLossFromContinuingOperationsFromEquityMethodInvestements
+              3. Prio IncomeLossFromContinuingOperations + AllIncomeTaxExpenseBenefit
 
 
-    NetIncomeLossAttributableToNoncontrollingInterest
-        1. Prio NetIncomeLossAttributableToNoncontrollingInterest
-        2. Prio ProfitLoss - NetIncomeLoss
+        NetIncome
+           Pre
+                + IncomeTaxExpenseBenefit
+                + DeferredIncomeTaxExpenseBenefit
+                + (optional) IncomeLossFromEquityMethodInvestments
+                ---------------------------------
+                = AllIncomeTaxExpenseBenefit
 
-    NetIncomeLoss
 
-        1. Prio NetIncomeLoss
-        2. Prio NetIncomeLossAvailableToCommonStockholdersBasic
-        3. Prio NetIncomeLossAllocatedToLimitedPartners
-        3. Prio ProfitLoss
-        4. Prio ProfitLossIncludingRedeemableNonControllingInterest
-        5. Prio OtherComprehensiveIncomeLossNetOfTax
-        6. Prio ComprehensiveIncomeNetOfTax
-        7. Prio IncomeLossAttributableToParent
-        8. Prio NetInvestmentIncome
+                IncomeLossFromContinuingOperations &lt;- (rename) IncomeLossFromContinuingOperationsIncludingPortionAttributableToNoncontrollingInterest
+                IncomeLossFromDiscontinuedOperationsNetOfTax &lt;- (rename) IncomeLossFromDiscontinuedOperationsNetOfTaxAttributableToReportingEntity
 
-  Post Rule (Cleanup)
-    Fix Sign of AllIncomeTaxExpenseBenefit (should be positive if taxed were paid)
-        expected equation to be true:
-           IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit - AllIncomeTaxExpenseBenefit = ProfitLoss
+                + IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit
+                - AllIncomeTaxExpenseBenefit
+                ---------------------------------
+                = IncomeLossFromContinuingOperations
 
-        invert sign of AllIncomeTaxExpenseBenefit if the following equation is true:
-           IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit + AllIncomeTaxExpenseBenefit = ProfitLoss
 
-    Fix sign of NetIncomeLossAttributableToNoncontrollingInterest
-        expected equation to be true:
-           ProfitLoss - NetIncomeLossAttributableToNoncontrollingInterest = NetIncomeLoss
+                + IncomeLossFromContinuingOperations
+                + IncomeLossFromDiscontinuedOperationsNetOfTax
+                -------------------------
+                = ProfitLossParts
 
-        invert sign of NetIncomeLossAttributableToNoncontrollingInterest if the following equation is true:
-           ProfitLoss + NetIncomeLossAttributableToNoncontrollingInterest = NetIncomeLoss
 
-    If Revenues was not set, but there is a GrossProfit, set it to GrossProfit,
-          since was no CostOfRevenue found
+           SetProfitLoss
+                1. Prio ProfitLoss
+                2. Prio ProfitLossParts
+                3. Prio NetIncomeLoss
 
-    If GrossProfit couldn&#39;t be set, but there is Revenues, set it to Revenues
-          since was no CostOfRevenue found
+           SetIncomeLossContinuingOperations
+                3. Prio ProfitLoss
 
-    if CostORevenues couldn&#39;t be set, but Revenues and GrossProfit are present, set it to Revenues - Grossprofit
+           SetNetIncomeLoss
+                1. Prio NetIncomeLoss
+                2. Prio NetIncomeLossAvailableToCommonStockholdersBasic
+                3. Prio NetIncomeLossAllocatedToLimitedPartners
+                3. Prio ProfitLoss
+                4. Prio ProfitLossIncludingRedeemableNonControllingInterest
+                5. Prio OtherComprehensiveIncomeLossNetOfTax
+                6. Prio ComprehensiveIncomeNetOfTax
+                7. Prio IncomeLossAttributableToParent
+                8. Prio NetInvestmentIncome
 
-    if OperatingIncomeLoss is not set yet, and GrossProfit (available now) and OperatingExpenses are present,
-         set it to GrossProfit - OperatingExpenses
 
-    If there is no IncomeLossFromContinuingOperations, set it to ProfitLoss
-    if there is no IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit, set it to IncomeLossFromContinuingOperations
-    if there is no AllIncomeTaxExpenseBenefit, set it to IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit - AllIncomeTaxExpenseBenefit
+      Post Rule (Cleanup)
+        Fix Sign of AllIncomeTaxExpenseBenefit (should be positive if taxed were paid)
+            expected equation to be true:
+               IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit - AllIncomeTaxExpenseBenefit = ProfitLoss
 
-    set IncomeLossFromDiscontinuedOperationsNetOfTax to 0.0 if not present
+            invert sign of AllIncomeTaxExpenseBenefit if the following equation is true:
+               IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit + AllIncomeTaxExpenseBenefit = ProfitLoss
 
-    If there is no IncomeLossFromContinuingOperations, set it to IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit
-    If there is no ProfitLoss, set it to IncomeLossFromContinuingOperations + IncomeLossFromDiscontinuedOperationsNetOfTax
-    If there is no NetIncomeLoss, set it to ProfitLoss
-    If there is no NetIncomeLossAttributableToNoncontrollingInterest, set it to ProfitLoss - NetIncomeLoss
+        Fix sign of NetIncomeLossAttributableToNoncontrollingInterest
+            expected equation to be true:
+               ProfitLoss - NetIncomeLossAttributableToNoncontrollingInterest = NetIncomeLoss
+
+            invert sign of NetIncomeLossAttributableToNoncontrollingInterest if the following equation is true:
+               ProfitLoss + NetIncomeLossAttributableToNoncontrollingInterest = NetIncomeLoss
+
+        If Revenues was not set, but there is a GrossProfit, set it to GrossProfit,
+              since was no CostOfRevenue found
+
+        If GrossProfit couldn&#39;t be set, but there is Revenues, set it to Revenues
+              since was no CostOfRevenue found
+
+        if CostORevenues couldn&#39;t be set, but Revenues and GrossProfit are present, set it to Revenues - Grossprofit
+
+        if OperatingIncomeLoss is not set yet, and GrossProfit (available now) and OperatingExpenses are present,
+             set it to GrossProfit - OperatingExpenses
+
+        If there is no IncomeLossFromContinuingOperations, set it to ProfitLoss
+        if there is no IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit, set it to IncomeLossFromContinuingOperations
+        if there is no AllIncomeTaxExpenseBenefit, set it to IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit - AllIncomeTaxExpenseBenefit
+
+        set IncomeLossFromDiscontinuedOperationsNetOfTax to 0.0 if not present
+
+        If there is no IncomeLossFromContinuingOperations, set it to IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit
+        If there is no ProfitLoss, set it to IncomeLossFromContinuingOperations + IncomeLossFromDiscontinuedOperationsNetOfTax
+        If there is no NetIncomeLoss, set it to ProfitLoss
+        If there is no NetIncomeLossAttributableToNoncontrollingInterest, set it to ProfitLoss - NetIncomeLoss
 
     &lt;/pre&gt;
     &#34;&#34;&#34;

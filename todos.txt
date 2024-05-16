@@ -23,6 +23,11 @@ v.1.5.0
 
 Todo:
 
+- in interactive: IS output: für FY nur Qtrs = 4 zeigen, bzw. flag für show single quarter results for Q2, Q3, und FY
+
+
+
+
 - in interaktive könnte man bei der Suche nach companies auch gleich die standardisierten reports anzeigen
 
 - Discord Channel?

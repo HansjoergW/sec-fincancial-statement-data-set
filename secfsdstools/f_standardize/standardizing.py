@@ -261,10 +261,11 @@ class Standardizer(Presenter[JoinedDataBag]):
         pivot_df.reset_index(inplace=True)
 
         missing_cols = set(expected_tags) - set(pivot_df.columns)
-        for missing_col in missing_cols:
-            pivot_df[missing_col] = np.nan
+        if len(missing_cols) == 0:
+            return pivot_df
 
-        return pivot_df
+        missing_df = pd.DataFrame(np.nan, index=pivot_df.index, columns=list(missing_cols))
+        return pd.concat([pivot_df, missing_df], axis=1)
 
     def _preprocess_filter_pivot_for_main_statement(self, pivot_df: pd.DataFrame) -> pd.DataFrame:
         """ Some reports have more than one 'report number' (column report) for a

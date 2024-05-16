@@ -274,14 +274,15 @@ class BalanceSheetStandardizer(Standardizer):
     ]
 
     # these are the columns that finally are returned after the standardization
-    final_tags: List[str] = ['Assets', 'AssetsCurrent', 'AssetsNoncurrent',
+    final_tags: List[str] = ['Assets', 'Cash', 'AssetsCurrent', 'AssetsNoncurrent',
                              'Liabilities', 'LiabilitiesCurrent', 'LiabilitiesNoncurrent',
-                             'HolderEquity', 'TemporaryEquity', 'RedeemableEquity', 'Equity',
-                             'LiabilitiesAndEquity',
-                             'Cash',
+                             'Equity',
+                             'HolderEquity',
                              'RetainedEarnings',
                              'AdditionalPaidInCapital',
-                             'TreasuryStockValue'
+                             'TreasuryStockValue',
+                             'TemporaryEquity', 'RedeemableEquity',
+                             'LiabilitiesAndEquity',
                              ]
 
     # used to evaluate if a report is the main balancesheet report

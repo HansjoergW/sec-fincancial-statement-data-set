@@ -59,7 +59,7 @@ def test_rename_rule():
 
     assert rule.get_input_tags() == {'original', 'target'}
     assert rule.get_target_tags() == ['target']
-    assert rule.identifier == 'R_target'
+    assert rule.identifier == 'R_target<-original'
 
     # data for the original column, last index is nan -> no action should be taken
     data = [1, 2, 3, 4, 5, np.nan]

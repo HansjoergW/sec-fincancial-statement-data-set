@@ -1,3 +1,4 @@
+# pylint: disable=C0302
 """Contains the definitions to standardize incaome statements."""
 from typing import List, Set
 

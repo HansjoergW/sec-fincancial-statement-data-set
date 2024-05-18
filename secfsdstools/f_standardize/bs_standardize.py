@@ -274,7 +274,7 @@ class BalanceSheetStandardizer(Standardizer):
     ]
 
     # these are the columns that finally are returned after the standardization
-    final_tags: List[str] = ['Assets', 'Cash', 'AssetsCurrent', 'AssetsNoncurrent',
+    final_tags: List[str] = ['Assets', 'AssetsCurrent', 'Cash', 'AssetsNoncurrent',
                              'Liabilities', 'LiabilitiesCurrent', 'LiabilitiesNoncurrent',
                              'Equity',
                              'HolderEquity',

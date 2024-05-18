@@ -380,7 +380,8 @@ class Standardizer(Presenter[JoinedDataBag]):
         main_post_applied_rules_sum_s = self.applied_rules_log_df[rule_columns].sum()
 
         prepivot_applied_rules_sum_s = self.applied_prepivot_rules_log_df.id.value_counts()
-        self.applied_rules_sum_s = pd.concat([prepivot_applied_rules_sum_s, main_post_applied_rules_sum_s])
+        self.applied_rules_sum_s = pd.concat([prepivot_applied_rules_sum_s,
+                                              main_post_applied_rules_sum_s])
 
         # finalize the stats table, adding the rel and the gain columns
         self.stats.finalize_stats(len(data_df))

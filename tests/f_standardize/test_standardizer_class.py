@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from secfsdstools.f_standardize.base_rule_framework import RuleGroup
+from secfsdstools.f_standardize.base_rule_framework import RuleGroup, PrePivotRule
 from secfsdstools.f_standardize.base_validation_rules import SumValidationRule
 from secfsdstools.f_standardize.standardizing import Standardizer
 
@@ -93,6 +93,7 @@ def sample_dataframe_filter():
         'adsh': ['A1', 'A1', 'A1', 'A2', 'A2', 'A3', 'A3', 'A3'],
         'coreg': ['C1', 'C1', 'C1', 'C2', 'C2', 'C3', 'C3', 'C3'],
         'report': ['1', '2', '3', '1', '2', '1', '2', '3'],
+        'qtrs': [1, 1, 1, 1, 1, 1, 1 ,1],
         'T1': [10, np.nan, 30, 40, 50, 60, 70, 80],
         'T2': [20, np.nan, 35, np.nan, 55, 65, 75, 85],
         'T3': [30, 35, np.nan, 50, 60, np.nan, 80, 90],
@@ -182,6 +183,8 @@ def test_finalize():
     # configure log dataframes and stats
     rules_log_df = data_df[instance.identifier_cols].copy()
     instance.applied_rules_log_df = rules_log_df
+    instance.applied_prepivot_rules_log_df = pd.DataFrame(
+                    columns=PrePivotRule.index_cols + ['id'])
 
     # add pseudo rule
     instance.applied_rules_log_df['RULE1'] = False

@@ -19,17 +19,7 @@ v.1.5.0
 - Standardizer:
 - interactive notebooks -> loads standardize details for single report and all reports
 
-
-
 Todo:
-
-- in interactive: IS output: für FY nur Qtrs = 4 zeigen, bzw. flag für show single quarter results for Q2, Q3, und FY
-
-
-
-
-- in interaktive könnte man bei der Suche nach companies auch gleich die standardisierten reports anzeigen
-
 - Discord Channel?
 
 - evtl. sollte jede Regel noch eine "Explanation" bekommen. Ein Text, der die Regel spezifisch erklärt,

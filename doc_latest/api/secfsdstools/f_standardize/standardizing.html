@@ -31,6 +31,7 @@
 import os
 from typing import List, Optional, Set, TypeVar
 
+import logging
 import numpy as np
 import pandas as pd
 
@@ -41,6 +42,7 @@ from secfsdstools.f_standardize.base_validation_rules import ValidationRule
 
 STANDARDIZED = TypeVar(&#39;STANDARDIZED&#39;, bound=&#39;StandardizedBag&#39;)
 
+LOGGER = logging.getLogger(__name__)
 
 class StandardizedBag:
     &#34;&#34;&#34;
@@ -112,7 +114,7 @@ class StandardizedBag:
         stats_df = pd.read_parquet(os.path.join(target_path, &#39;stats.parquet&#39;))
         applied_rules_sum_s = pd.read_csv(
             os.path.join(target_path, &#39;applied_rules_sum.csv&#39;),
-            header=None, index_col=0, squeeze=True)
+            header=None, index_col=0).squeeze(&#39;columns&#39;)
         validation_overview_df = pd.read_parquet(
             os.path.join(target_path, &#39;validation_overview.parquet&#39;))
         process_description_df = pd.read_parquet(
@@ -288,10 +290,11 @@ class Standardizer(Presenter[JoinedDataBag]):
         pivot_df.reset_index(inplace=True)
 
         missing_cols = set(expected_tags) - set(pivot_df.columns)
-        for missing_col in missing_cols:
-            pivot_df[missing_col] = np.nan
+        if len(missing_cols) == 0:
+            return pivot_df
 
-        return pivot_df
+        missing_df = pd.DataFrame(np.nan, index=pivot_df.index, columns=list(missing_cols))
+        return pd.concat([pivot_df, missing_df], axis=1)
 
     def _preprocess_filter_pivot_for_main_statement(self, pivot_df: pd.DataFrame) -&gt; pd.DataFrame:
         &#34;&#34;&#34; Some reports have more than one &#39;report number&#39; (column report) for a
@@ -306,9 +309,9 @@ class Standardizer(Presenter[JoinedDataBag]):
             list(set(cpy_pivot_df.columns.tolist()).intersection(set(self.main_statement_tags)))
         cpy_pivot_df[&#39;nan_count&#39;] = cpy_pivot_df[available_main_statements].isna().sum(axis=1)
 
-        cpy_pivot_df.sort_values([&#39;adsh&#39;, &#39;coreg&#39;, &#39;nan_count&#39;], inplace=True)
+        cpy_pivot_df.sort_values([&#39;adsh&#39;, &#39;coreg&#39;, &#39;qtrs&#39;, &#39;nan_count&#39;], inplace=True)
 
-        filtered_pivot_df = cpy_pivot_df.groupby([&#39;adsh&#39;, &#39;coreg&#39;]).first()
+        filtered_pivot_df = cpy_pivot_df.groupby([&#39;adsh&#39;, &#39;coreg&#39;, &#39;qtrs&#39;]).first()
         filtered_pivot_df.reset_index(inplace=True)
         return filtered_pivot_df
 
@@ -329,8 +332,8 @@ class Standardizer(Presenter[JoinedDataBag]):
         # apply prepivot_rule_tree
         self.prepivot_rule_tree.set_id(&#34;PREPIVOT&#34;)
         self.prepivot_rule_tree.process(data_df=relevant_df)
-        # we cannot directly add rows than existing dataframe, therefore prepivot rules
-        # so every prepivot rules stores the log within and in the end, we concat it together
+        # we cannot directly add rows to an existing dataframe,
+        # so every prepivot rules stores the log within itself and in the end, we concat it together
         prepivot_logs = [x.log_df for x in self.prepivot_rule_tree.rules]
         if len(prepivot_logs) &gt; 0:
             self.applied_prepivot_rules_log_df = pd.concat(prepivot_logs)
@@ -349,7 +352,8 @@ class Standardizer(Presenter[JoinedDataBag]):
 
         # finally apply the pre-rules
         self.pre_rule_tree.set_id(&#34;PRE&#34;)
-        self.pre_rule_tree.process(pivot_df, log_df=self.applied_rules_log_df)
+        self.pre_rule_tree.process(pivot_df)
+        self.applied_rules_log_df = self.pre_rule_tree.append_log(self.applied_rules_log_df)
 
         # prepare the stats dataframe and calculate the stats after preprocessing
         self.stats.initialize(data_df=pivot_df, process_step_name=&#34;pre&#34;)
@@ -360,7 +364,9 @@ class Standardizer(Presenter[JoinedDataBag]):
         for i in range(self.main_iterations):
             # apply the main rule tree
             self.main_rule_tree.set_id(prefix=f&#34;MAIN_{i + 1}&#34;)
-            self.main_rule_tree.process(data_df=data_df, log_df=self.applied_rules_log_df)
+            self.main_rule_tree.process(data_df=data_df)
+
+            self.applied_rules_log_df = self.main_rule_tree.append_log(self.applied_rules_log_df)
 
             # calculate stats and add them to the stats log
             self.stats.add_stats_entry(data_df=data_df, process_step_name=f&#39;MAIN_{i + 1}&#39;)
@@ -368,7 +374,9 @@ class Standardizer(Presenter[JoinedDataBag]):
     def _post_processing(self, data_df: pd.DataFrame):
         # apply the post rule tree
         self.post_rule_tree.set_id(prefix=&#34;POST&#34;)
-        self.post_rule_tree.process(data_df=data_df, log_df=self.applied_rules_log_df)
+        self.post_rule_tree.process(data_df=data_df)
+
+        self.applied_rules_log_df = self.post_rule_tree.append_log(self.applied_rules_log_df)
 
         # calculate stats and add them to the stats log
         self.stats.add_stats_entry(data_df=data_df, process_step_name=&#39;POST&#39;)
@@ -398,7 +406,11 @@ class Standardizer(Presenter[JoinedDataBag]):
         # filter for rule columns but making sure the order stays the same
         rule_columns = [x for x in self.applied_rules_log_df.columns if
                         x not in self.identifier_cols]
-        self.applied_rules_sum_s = self.applied_rules_log_df[rule_columns].sum()
+        main_post_applied_rules_sum_s = self.applied_rules_log_df[rule_columns].sum()
+
+        prepivot_applied_rules_sum_s = self.applied_prepivot_rules_log_df.id.value_counts()
+        self.applied_rules_sum_s = pd.concat([prepivot_applied_rules_sum_s,
+                                              main_post_applied_rules_sum_s])
 
         # finalize the stats table, adding the rel and the gain columns
         self.stats.finalize_stats(len(data_df))
@@ -415,10 +427,14 @@ class Standardizer(Presenter[JoinedDataBag]):
             pd.DataFrame: the standardized results
 
         &#34;&#34;&#34;
+        LOGGER.info(&#34;start PRE processing ...&#34;)
         ready_df = self._preprocess(data_df)
+        LOGGER.info(&#34;start MAIN processing ...&#34;)
         self._main_processing(ready_df)
+        LOGGER.info(&#34;start POST processing ...&#34;)
         self._post_processing(ready_df)
 
+        LOGGER.info(&#34;start FINAlIZE ...&#34;)
         self.result = self._finalize(ready_df)
         return self.result
 
@@ -594,7 +610,7 @@ class Standardizer(Presenter[JoinedDataBag]):
         stats_df = pd.read_parquet(os.path.join(target_path, &#39;stats.parquet&#39;))
         applied_rules_sum_s = pd.read_csv(
             os.path.join(target_path, &#39;applied_rules_sum.csv&#39;),
-            header=None, index_col=0, squeeze=True)
+            header=None, index_col=0).squeeze(&#39;columns&#39;)
         validation_overview_df = pd.read_parquet(
             os.path.join(target_path, &#39;validation_overview.parquet&#39;))
         process_description_df = pd.read_parquet(
@@ -648,7 +664,7 @@ def load(target_path: str) -&gt; STANDARDIZED:
     stats_df = pd.read_parquet(os.path.join(target_path, &#39;stats.parquet&#39;))
     applied_rules_sum_s = pd.read_csv(
         os.path.join(target_path, &#39;applied_rules_sum.csv&#39;),
-        header=None, index_col=0, squeeze=True)
+        header=None, index_col=0).squeeze(&#39;columns&#39;)
     validation_overview_df = pd.read_parquet(
         os.path.join(target_path, &#39;validation_overview.parquet&#39;))
     process_description_df = pd.read_parquet(
@@ -854,10 +870,11 @@ as negated.</dd>
         pivot_df.reset_index(inplace=True)
 
         missing_cols = set(expected_tags) - set(pivot_df.columns)
-        for missing_col in missing_cols:
-            pivot_df[missing_col] = np.nan
+        if len(missing_cols) == 0:
+            return pivot_df
 
-        return pivot_df
+        missing_df = pd.DataFrame(np.nan, index=pivot_df.index, columns=list(missing_cols))
+        return pd.concat([pivot_df, missing_df], axis=1)
 
     def _preprocess_filter_pivot_for_main_statement(self, pivot_df: pd.DataFrame) -&gt; pd.DataFrame:
         &#34;&#34;&#34; Some reports have more than one &#39;report number&#39; (column report) for a
@@ -872,9 +889,9 @@ as negated.</dd>
             list(set(cpy_pivot_df.columns.tolist()).intersection(set(self.main_statement_tags)))
         cpy_pivot_df[&#39;nan_count&#39;] = cpy_pivot_df[available_main_statements].isna().sum(axis=1)
 
-        cpy_pivot_df.sort_values([&#39;adsh&#39;, &#39;coreg&#39;, &#39;nan_count&#39;], inplace=True)
+        cpy_pivot_df.sort_values([&#39;adsh&#39;, &#39;coreg&#39;, &#39;qtrs&#39;, &#39;nan_count&#39;], inplace=True)
 
-        filtered_pivot_df = cpy_pivot_df.groupby([&#39;adsh&#39;, &#39;coreg&#39;]).first()
+        filtered_pivot_df = cpy_pivot_df.groupby([&#39;adsh&#39;, &#39;coreg&#39;, &#39;qtrs&#39;]).first()
         filtered_pivot_df.reset_index(inplace=True)
         return filtered_pivot_df
 
@@ -895,8 +912,8 @@ as negated.</dd>
         # apply prepivot_rule_tree
         self.prepivot_rule_tree.set_id(&#34;PREPIVOT&#34;)
         self.prepivot_rule_tree.process(data_df=relevant_df)
-        # we cannot directly add rows than existing dataframe, therefore prepivot rules
-        # so every prepivot rules stores the log within and in the end, we concat it together
+        # we cannot directly add rows to an existing dataframe,
+        # so every prepivot rules stores the log within itself and in the end, we concat it together
         prepivot_logs = [x.log_df for x in self.prepivot_rule_tree.rules]
         if len(prepivot_logs) &gt; 0:
             self.applied_prepivot_rules_log_df = pd.concat(prepivot_logs)
@@ -915,7 +932,8 @@ as negated.</dd>
 
         # finally apply the pre-rules
         self.pre_rule_tree.set_id(&#34;PRE&#34;)
-        self.pre_rule_tree.process(pivot_df, log_df=self.applied_rules_log_df)
+        self.pre_rule_tree.process(pivot_df)
+        self.applied_rules_log_df = self.pre_rule_tree.append_log(self.applied_rules_log_df)
 
         # prepare the stats dataframe and calculate the stats after preprocessing
         self.stats.initialize(data_df=pivot_df, process_step_name=&#34;pre&#34;)
@@ -926,7 +944,9 @@ as negated.</dd>
         for i in range(self.main_iterations):
             # apply the main rule tree
             self.main_rule_tree.set_id(prefix=f&#34;MAIN_{i + 1}&#34;)
-            self.main_rule_tree.process(data_df=data_df, log_df=self.applied_rules_log_df)
+            self.main_rule_tree.process(data_df=data_df)
+
+            self.applied_rules_log_df = self.main_rule_tree.append_log(self.applied_rules_log_df)
 
             # calculate stats and add them to the stats log
             self.stats.add_stats_entry(data_df=data_df, process_step_name=f&#39;MAIN_{i + 1}&#39;)
@@ -934,7 +954,9 @@ as negated.</dd>
     def _post_processing(self, data_df: pd.DataFrame):
         # apply the post rule tree
         self.post_rule_tree.set_id(prefix=&#34;POST&#34;)
-        self.post_rule_tree.process(data_df=data_df, log_df=self.applied_rules_log_df)
+        self.post_rule_tree.process(data_df=data_df)
+
+        self.applied_rules_log_df = self.post_rule_tree.append_log(self.applied_rules_log_df)
 
         # calculate stats and add them to the stats log
         self.stats.add_stats_entry(data_df=data_df, process_step_name=&#39;POST&#39;)
@@ -964,7 +986,11 @@ as negated.</dd>
         # filter for rule columns but making sure the order stays the same
         rule_columns = [x for x in self.applied_rules_log_df.columns if
                         x not in self.identifier_cols]
-        self.applied_rules_sum_s = self.applied_rules_log_df[rule_columns].sum()
+        main_post_applied_rules_sum_s = self.applied_rules_log_df[rule_columns].sum()
+
+        prepivot_applied_rules_sum_s = self.applied_prepivot_rules_log_df.id.value_counts()
+        self.applied_rules_sum_s = pd.concat([prepivot_applied_rules_sum_s,
+                                              main_post_applied_rules_sum_s])
 
         # finalize the stats table, adding the rel and the gain columns
         self.stats.finalize_stats(len(data_df))
@@ -981,10 +1007,14 @@ as negated.</dd>
             pd.DataFrame: the standardized results
 
         &#34;&#34;&#34;
+        LOGGER.info(&#34;start PRE processing ...&#34;)
         ready_df = self._preprocess(data_df)
+        LOGGER.info(&#34;start MAIN processing ...&#34;)
         self._main_processing(ready_df)
+        LOGGER.info(&#34;start POST processing ...&#34;)
         self._post_processing(ready_df)
 
+        LOGGER.info(&#34;start FINAlIZE ...&#34;)
         self.result = self._finalize(ready_df)
         return self.result
 
@@ -1078,6 +1108,7 @@ as negated.</dd>
 <h3>Subclasses</h3>
 <ul class="hlist">
 <li><a title="secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizer" href="bs_standardize.html#secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizer">BalanceSheetStandardizer</a></li>
+<li><a title="secfsdstools.f_standardize.is_standardize.IncomeStatementStandardizer" href="is_standardize.html#secfsdstools.f_standardize.is_standardize.IncomeStatementStandardizer">IncomeStatementStandardizer</a></li>
 </ul>
 <h3>Class variables</h3>
 <dl>
@@ -1250,10 +1281,14 @@ creates a date column based on the ddated value.</p>
         pd.DataFrame: the standardized results
 
     &#34;&#34;&#34;
+    LOGGER.info(&#34;start PRE processing ...&#34;)
     ready_df = self._preprocess(data_df)
+    LOGGER.info(&#34;start MAIN processing ...&#34;)
     self._main_processing(ready_df)
+    LOGGER.info(&#34;start POST processing ...&#34;)
     self._post_processing(ready_df)
 
+    LOGGER.info(&#34;start FINAlIZE ...&#34;)
     self.result = self._finalize(ready_df)
     return self.result</code></pre>
 </details>

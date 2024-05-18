@@ -30,6 +30,8 @@
 <pre><code class="python">&#34;&#34;&#34;
 Contains PrePivotRules Definitions.
 &#34;&#34;&#34;
+from typing import List
+
 import pandas as pd
 import pandera as pa
 
@@ -80,7 +82,71 @@ class PrePivotDeduplicate(PrePivotRule):
         Returns:
             str: description
         &#34;&#34;&#34;
-        return f&#34;Deduplicates the dataframe based on the columns {self.index_cols + [&#39;value&#39;]}&#34;</code></pre>
+        return f&#34;Deduplicates the dataframe based on the columns {self.index_cols + [&#39;value&#39;]}&#34;
+
+
+class PrePivotCorrectSign(PrePivotRule):
+    &#34;&#34;&#34;
+    Certain tags are expected to be either positive or negative when present, resp. should
+    in all reports be displayed the same way:
+    (e.g. Assets in the BS is always shown as a positive number)
+
+    However, sometimes these values are mixed up, also when considering the &#34;negating&#34; flag.
+
+    E.g. CostOfGoodAndServices is displayed positive in 95% of the cases and
+     in 5% of the cases it is displayed &#34;positive&#34; but with the negating flag set.
+
+    This rules ensures, that the provided tags have the expected sign.
+    &#34;&#34;&#34;
+
+    def __init__(self, tag_list: List[str], is_positive: bool):
+        &#34;&#34;&#34;
+        ensure that the values of the tags in the tag_list are positive (if is_positive is true),
+        or are negative (if is_positive is false).
+
+        Args:
+            tag_list: list with the names of tag that have to be checked
+            is_positive: flag that indicates whether positive or negative values are expected
+        &#34;&#34;&#34;
+        super().__init__(&#34;CorSign&#34;)
+        self.tag_list = tag_list
+        self.is_positive = is_positive
+
+    def mask(self, data_df: pd.DataFrame) -&gt; pa.typing.Series[bool]:
+        &#34;&#34;&#34;
+            returns a Series[bool] which defines the rows to which this rule has to be applied.
+
+        Args:
+            data_df: dataframe on which the rules should be applied
+
+        Returns:
+            pa.typing.Series[bool]: a boolean Series that marks which rows have to be calculated
+        &#34;&#34;&#34;
+        return data_df.tag.isin(self.tag_list) &amp; ((data_df.value &lt; 0) == self.is_positive)
+
+    def apply(self, data_df: pd.DataFrame, mask: pa.typing.Series[bool]):
+        &#34;&#34;&#34;
+        apply the rule on the provided dataframe. the rows, on which the rule has to be applied
+        is defined by the provide mask Series.
+
+        Important, the rules have to be applied &#34;in-place&#34;, so no new dataframe is produced.
+
+        Args:
+            df: dataframe on which the rule has to be applied
+            mask: a Series marking the rows in the dataframe on which the rule has to be applied
+        &#34;&#34;&#34;
+        data_df.loc[mask, &#39;value&#39;] = data_df.value * -1
+
+    def get_description(self) -&gt; str:
+        &#34;&#34;&#34;
+        Returns the description String
+        Returns:
+            str: description
+        &#34;&#34;&#34;
+        pos_neg_text = &#34;positive&#34; if self.is_positive else &#34;negative&#34;
+
+        return f&#34;Ensures that the tags {self.tag_list} have a {pos_neg_text} value. Applied when &#34; \
+               f&#34;the expectation of having a negative or positive value is not met&#34;</code></pre>
 </details>
 </section>
 <section>
@@ -92,6 +158,157 @@ class PrePivotDeduplicate(PrePivotRule):
 <section>
 <h2 class="section-title" id="header-classes">Classes</h2>
 <dl>
+<dt id="secfsdstools.f_standardize.base_prepivot_rules.PrePivotCorrectSign"><code class="flex name class">
+<span>class <span class="ident">PrePivotCorrectSign</span></span>
+<span>(</span><span>tag_list: List[str], is_positive: bool)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Certain tags are expected to be either positive or negative when present, resp. should
+in all reports be displayed the same way:
+(e.g. Assets in the BS is always shown as a positive number)</p>
+<p>However, sometimes these values are mixed up, also when considering the "negating" flag.</p>
+<p>E.g. CostOfGoodAndServices is displayed positive in 95% of the cases and
+in 5% of the cases it is displayed "positive" but with the negating flag set.</p>
+<p>This rules ensures, that the provided tags have the expected sign.</p>
+<p>ensure that the values of the tags in the tag_list are positive (if is_positive is true),
+or are negative (if is_positive is false).</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>tag_list</code></strong></dt>
+<dd>list with the names of tag that have to be checked</dd>
+<dt><strong><code>is_positive</code></strong></dt>
+<dd>flag that indicates whether positive or negative values are expected</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class PrePivotCorrectSign(PrePivotRule):
+    &#34;&#34;&#34;
+    Certain tags are expected to be either positive or negative when present, resp. should
+    in all reports be displayed the same way:
+    (e.g. Assets in the BS is always shown as a positive number)
+
+    However, sometimes these values are mixed up, also when considering the &#34;negating&#34; flag.
+
+    E.g. CostOfGoodAndServices is displayed positive in 95% of the cases and
+     in 5% of the cases it is displayed &#34;positive&#34; but with the negating flag set.
+
+    This rules ensures, that the provided tags have the expected sign.
+    &#34;&#34;&#34;
+
+    def __init__(self, tag_list: List[str], is_positive: bool):
+        &#34;&#34;&#34;
+        ensure that the values of the tags in the tag_list are positive (if is_positive is true),
+        or are negative (if is_positive is false).
+
+        Args:
+            tag_list: list with the names of tag that have to be checked
+            is_positive: flag that indicates whether positive or negative values are expected
+        &#34;&#34;&#34;
+        super().__init__(&#34;CorSign&#34;)
+        self.tag_list = tag_list
+        self.is_positive = is_positive
+
+    def mask(self, data_df: pd.DataFrame) -&gt; pa.typing.Series[bool]:
+        &#34;&#34;&#34;
+            returns a Series[bool] which defines the rows to which this rule has to be applied.
+
+        Args:
+            data_df: dataframe on which the rules should be applied
+
+        Returns:
+            pa.typing.Series[bool]: a boolean Series that marks which rows have to be calculated
+        &#34;&#34;&#34;
+        return data_df.tag.isin(self.tag_list) &amp; ((data_df.value &lt; 0) == self.is_positive)
+
+    def apply(self, data_df: pd.DataFrame, mask: pa.typing.Series[bool]):
+        &#34;&#34;&#34;
+        apply the rule on the provided dataframe. the rows, on which the rule has to be applied
+        is defined by the provide mask Series.
+
+        Important, the rules have to be applied &#34;in-place&#34;, so no new dataframe is produced.
+
+        Args:
+            df: dataframe on which the rule has to be applied
+            mask: a Series marking the rows in the dataframe on which the rule has to be applied
+        &#34;&#34;&#34;
+        data_df.loc[mask, &#39;value&#39;] = data_df.value * -1
+
+    def get_description(self) -&gt; str:
+        &#34;&#34;&#34;
+        Returns the description String
+        Returns:
+            str: description
+        &#34;&#34;&#34;
+        pos_neg_text = &#34;positive&#34; if self.is_positive else &#34;negative&#34;
+
+        return f&#34;Ensures that the tags {self.tag_list} have a {pos_neg_text} value. Applied when &#34; \
+               f&#34;the expectation of having a negative or positive value is not met&#34;</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="secfsdstools.f_standardize.base_rule_framework.PrePivotRule" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.PrePivotRule">PrePivotRule</a></li>
+<li><a title="secfsdstools.f_standardize.base_rule_framework.AbstractRule" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.AbstractRule">AbstractRule</a></li>
+<li><a title="secfsdstools.f_standardize.base_rule_framework.RuleEntity" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.RuleEntity">RuleEntity</a></li>
+<li>abc.ABC</li>
+</ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="secfsdstools.f_standardize.base_prepivot_rules.PrePivotCorrectSign.identifier"><code class="name">var <span class="ident">identifier</span> : str</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="secfsdstools.f_standardize.base_prepivot_rules.PrePivotCorrectSign.apply"><code class="name flex">
+<span>def <span class="ident">apply</span></span>(<span>self, data_df: pandas.core.frame.DataFrame, mask: pandera.typing.pandas.Series[bool])</span>
+</code></dt>
+<dd>
+<div class="desc"><p>apply the rule on the provided dataframe. the rows, on which the rule has to be applied
+is defined by the provide mask Series.</p>
+<p>Important, the rules have to be applied "in-place", so no new dataframe is produced.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>df</code></strong></dt>
+<dd>dataframe on which the rule has to be applied</dd>
+<dt><strong><code>mask</code></strong></dt>
+<dd>a Series marking the rows in the dataframe on which the rule has to be applied</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def apply(self, data_df: pd.DataFrame, mask: pa.typing.Series[bool]):
+    &#34;&#34;&#34;
+    apply the rule on the provided dataframe. the rows, on which the rule has to be applied
+    is defined by the provide mask Series.
+
+    Important, the rules have to be applied &#34;in-place&#34;, so no new dataframe is produced.
+
+    Args:
+        df: dataframe on which the rule has to be applied
+        mask: a Series marking the rows in the dataframe on which the rule has to be applied
+    &#34;&#34;&#34;
+    data_df.loc[mask, &#39;value&#39;] = data_df.value * -1</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="secfsdstools.f_standardize.base_rule_framework.PrePivotRule" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.PrePivotRule">PrePivotRule</a></b></code>:
+<ul class="hlist">
+<li><code><a title="secfsdstools.f_standardize.base_rule_framework.PrePivotRule.collect_description" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.AbstractRule.collect_description">collect_description</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.base_rule_framework.PrePivotRule.get_description" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.RuleEntity.get_description">get_description</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.base_rule_framework.PrePivotRule.get_input_tags" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.RuleEntity.get_input_tags">get_input_tags</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.base_rule_framework.PrePivotRule.mask" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.AbstractRule.mask">mask</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.base_rule_framework.PrePivotRule.process" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.PrePivotRule.process">process</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.base_rule_framework.PrePivotRule.set_id" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.RuleEntity.set_id">set_id</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
 <dt id="secfsdstools.f_standardize.base_prepivot_rules.PrePivotDeduplicate"><code class="flex name class">
 <span>class <span class="ident">PrePivotDeduplicate</span></span>
 </code></dt>
@@ -229,6 +446,13 @@ is defined by the provide mask Series.</p>
 </li>
 <li><h3><a href="#header-classes">Classes</a></h3>
 <ul>
+<li>
+<h4><code><a title="secfsdstools.f_standardize.base_prepivot_rules.PrePivotCorrectSign" href="#secfsdstools.f_standardize.base_prepivot_rules.PrePivotCorrectSign">PrePivotCorrectSign</a></code></h4>
+<ul class="">
+<li><code><a title="secfsdstools.f_standardize.base_prepivot_rules.PrePivotCorrectSign.apply" href="#secfsdstools.f_standardize.base_prepivot_rules.PrePivotCorrectSign.apply">apply</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.base_prepivot_rules.PrePivotCorrectSign.identifier" href="#secfsdstools.f_standardize.base_prepivot_rules.PrePivotCorrectSign.identifier">identifier</a></code></li>
+</ul>
+</li>
 <li>
 <h4><code><a title="secfsdstools.f_standardize.base_prepivot_rules.PrePivotDeduplicate" href="#secfsdstools.f_standardize.base_prepivot_rules.PrePivotDeduplicate">PrePivotDeduplicate</a></code></h4>
 <ul class="">

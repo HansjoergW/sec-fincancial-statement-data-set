@@ -96,7 +96,6 @@ class StandardStatementPresenter(Presenter[JoinedDataBag]):
         )
 
         # some cleanup and ordering
-        #num_pre_pivot_df.rename_axis(None, axis=1, inplace=True)
         num_pre_pivot_df.sort_values([&#39;adsh&#39;, &#39;coreg&#39;, &#39;stmt&#39;, &#39;report&#39;, &#39;line&#39;, &#39;inpth&#39;],
                                      inplace=True)
 
@@ -219,7 +218,6 @@ be negative.</dd>
         )
 
         # some cleanup and ordering
-        #num_pre_pivot_df.rename_axis(None, axis=1, inplace=True)
         num_pre_pivot_df.sort_values([&#39;adsh&#39;, &#39;coreg&#39;, &#39;stmt&#39;, &#39;report&#39;, &#39;line&#39;, &#39;inpth&#39;],
                                      inplace=True)
 
@@ -301,7 +299,6 @@ Cash Flow).
     )
 
     # some cleanup and ordering
-    #num_pre_pivot_df.rename_axis(None, axis=1, inplace=True)
     num_pre_pivot_df.sort_values([&#39;adsh&#39;, &#39;coreg&#39;, &#39;stmt&#39;, &#39;report&#39;, &#39;line&#39;, &#39;inpth&#39;],
                                  inplace=True)
 

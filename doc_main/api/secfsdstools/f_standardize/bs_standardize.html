@@ -303,14 +303,15 @@ class BalanceSheetStandardizer(Standardizer):
     ]
 
     # these are the columns that finally are returned after the standardization
-    final_tags: List[str] = [&#39;Assets&#39;, &#39;AssetsCurrent&#39;, &#39;AssetsNoncurrent&#39;,
+    final_tags: List[str] = [&#39;Assets&#39;, &#39;AssetsCurrent&#39;, &#39;Cash&#39;, &#39;AssetsNoncurrent&#39;,
                              &#39;Liabilities&#39;, &#39;LiabilitiesCurrent&#39;, &#39;LiabilitiesNoncurrent&#39;,
-                             &#39;HolderEquity&#39;, &#39;TemporaryEquity&#39;, &#39;RedeemableEquity&#39;, &#39;Equity&#39;,
-                             &#39;LiabilitiesAndEquity&#39;,
-                             &#39;Cash&#39;,
+                             &#39;Equity&#39;,
+                             &#39;HolderEquity&#39;,
                              &#39;RetainedEarnings&#39;,
                              &#39;AdditionalPaidInCapital&#39;,
-                             &#39;TreasuryStockValue&#39;
+                             &#39;TreasuryStockValue&#39;,
+                             &#39;TemporaryEquity&#39;, &#39;RedeemableEquity&#39;,
+                             &#39;LiabilitiesAndEquity&#39;,
                              ]
 
     # used to evaluate if a report is the main balancesheet report
@@ -672,14 +673,15 @@ as negated.</dd>
     ]
 
     # these are the columns that finally are returned after the standardization
-    final_tags: List[str] = [&#39;Assets&#39;, &#39;AssetsCurrent&#39;, &#39;AssetsNoncurrent&#39;,
+    final_tags: List[str] = [&#39;Assets&#39;, &#39;AssetsCurrent&#39;, &#39;Cash&#39;, &#39;AssetsNoncurrent&#39;,
                              &#39;Liabilities&#39;, &#39;LiabilitiesCurrent&#39;, &#39;LiabilitiesNoncurrent&#39;,
-                             &#39;HolderEquity&#39;, &#39;TemporaryEquity&#39;, &#39;RedeemableEquity&#39;, &#39;Equity&#39;,
-                             &#39;LiabilitiesAndEquity&#39;,
-                             &#39;Cash&#39;,
+                             &#39;Equity&#39;,
+                             &#39;HolderEquity&#39;,
                              &#39;RetainedEarnings&#39;,
                              &#39;AdditionalPaidInCapital&#39;,
-                             &#39;TreasuryStockValue&#39;
+                             &#39;TreasuryStockValue&#39;,
+                             &#39;TemporaryEquity&#39;, &#39;RedeemableEquity&#39;,
+                             &#39;LiabilitiesAndEquity&#39;,
                              ]
 
     # used to evaluate if a report is the main balancesheet report

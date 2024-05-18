@@ -59,7 +59,7 @@ See the [Release Notes](https://hansjoergw.github.io/sec-fincancial-statement-da
 * Introducing **Income Statement Standardizer**<br>
   The Income Statement Standardizer makes the income statements easily comparable.<br>
   [07_02_IS_standardizer](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/07_02_IS_standardizer.ipynb) <br>
-* 
+* Small improvements in the Standardizer framework and rules
 ## 1.4 -> 1.4.2
 * Fix in `StandardStatementPresenter`: <br>
   The `StandardStatementPresenter` also considers `qtrs` when displaying the information.

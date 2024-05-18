@@ -8,6 +8,15 @@ permalink: /releasenotes/
 ## Upcoming
 * 
 
+## 1.5.0 2024-May-18
+* New
+  - Introducing **Income Statement Standardizer**<br>
+    The Income Statement Standardizer makes the income statements easily comparable.<br>
+    [07_02_IS_standardizer](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/07_02_IS_standardizer.ipynb) <br>
+* Improvements
+  - Small improvements in the Standardizer framework and rules
+
+
 ## 1.4.2 2024-Mar-29
 * Fix
   - The StandardStatementPresenter didn't consider `qtrs` when displaying the data. This was a problem for the 

@@ -281,7 +281,7 @@ class PostFixIncomeLossFromContinuingOperationsAndSignOfIncomeTaxExpenseBenefit(
         Important, the rules have to be applied "in-place", so no new dataframe is produced.
 
         Args:
-            df: dataframe on which the rule has to be applied
+            data_df: dataframe on which the rule has to be applied
             mask: a Series marking the rows in the dataframe on which the rule has to be applied
         """
 
@@ -994,10 +994,10 @@ class IncomeStatementStandardizer(Standardizer):
                              'NetIncomeLoss'
                              ]
 
-    # used to evaluate if a report is the main balancesheet report
+    # used to evaluate if a report is the main income statement report
     # inside a report, there can be several tables (different report nr)
-    # which stmt value is BS.
-    # however, we might be only interested in the "major" BS report. Usually this is the
+    # which stmt value is IS.
+    # however, we might be only interested in the "major" IS report. Usually this is the
     # one which has the least nan in the following columns
     main_statement_tags = ['Revenues',
                            'SalesRevenueNet',

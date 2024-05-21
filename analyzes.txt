@@ -1,3 +1,84 @@
+CF
+--
+CashAtBeginning
+
+    Problem 1:
+    -> cash at beginning and end bestimmen
+       Frage: sind/können die beiden Werte überhaupt vorhanden sein
+       Cash and Cash Equi haben entsprechend andere ddate felder.
+
+       Vor dem Filtern müsste man diese also neu setzen und benennen
+       Bei den FY ist das noch gut möglich, etwas mühsammer vermutlich bei den Quartalen, je nach Periodenlänge...
+
+       Es stellt sich die Frage, ob man Cash Vor und ende Periode nicht am besten in einem komplett eigenem Prozess kalkuliert
+       und bereitstellt und dann dazu mischt.. (bzw. nur Cash vor der Periode, Ende der Periode ist ja mit korrektem ddate.
+
+
+                            also used
+                            CashAndCashEquivalentsAtCarryingValue
+                            CashAndCashEquivalentsAtCarryingValueIncludingDiscontinuedOperations
+
+    0000320193-23-000106	CashCashEquivalentsRestrictedCashAndRestrictedCashEquivalents	us-gaap/2023		20200930	0	USD	39789000000.0000
+    0000320193-23-000106	CashCashEquivalentsRestrictedCashAndRestrictedCashEquivalents	us-gaap/2023		20210930	0	USD	35929000000.0000
+    0000320193-23-000106	CashCashEquivalentsRestrictedCashAndRestrictedCashEquivalents	us-gaap/2023		20220930	0	USD	24977000000.0000
+    0000320193-23-000106	CashCashEquivalentsRestrictedCashAndRestrictedCashEquivalents	us-gaap/2023		20230930	0	USD	30737000000.0000
+
+
+
+
+Main positions
+
+NetCashProvided
+        NetCashProvidedByUsedInOperatingActivities,                     278874
+        NetCashProvidedByUsedInFinancingActivities,                     271168
+        NetCashProvidedByUsedInInvestingActivities,                     250200
+        NetCashProvidedByUsedInOperatingActivitiesContinuingOperations, 64783
+        NetCashProvidedByUsedInInvestingActivitiesContinuingOperations, 56634
+        NetCashProvidedByUsedInFinancingActivitiesContinuingOperations, 56414
+        NetCashProvidedByUsedInContinuingOperations,                    13525
+        NetCashProvidedByUsedInDiscontinuedOperations,                  4967
+
+
+
+
+        + NetCashProvidedByUsedInOperatingActivities /...ContinuingOperations
+        + NetCashProvidedByUsedInFinancingActivities /...ContinuingOperations
+        + NetCashProvidedByUsedInInvestingActivities /...ContinuingOperations
+        + EffectOfExchangeRateOnCashAndCashEquivalentsContinuingOperations
+---------------------
++       = NetCashProvidedByUsedInContinuingOperations
+
+        + CashProvidedByUsedInOperatingActivitiesDiscontinuedOperations
+        + CashProvidedByUsedInInvestingActivitiesDiscontinuedOperations
+        + CashProvidedByUsedInFinancingActivitiesDiscontinuedOperations
+---------------------------------------------
++       = NetCashProvidedByUsedInDiscontinuedOperations
++ EffectOfExchangeRateOnCashAndCashEquivalents
+----------------------------------------------
+= CashAndCashEquivalentsPeriodIncreaseDecrease
+
+
+EffectOfExchangeRateOnCashAndCashEquivalents,69372
+EffectOfExchangeRateOnCashCashEquivalentsRestrictedCashAndRestrictedCashEquivalents,23639
+EffectOfExchangeRateOnCash,1530
+
+
+EffectOfExchangeRateOnCashContinuingOperations,273
+EffectOfExchangeRateOnCashAndCashEquivalentsContinuingOperations,9026
+
+
+EffectOfExchangeRateOnCashAndCashEquivalentsDiscontinuedOperations,447
+EffectOfExchangeRateOnCashDiscontinuedOperations,14
+
+
+EffectOfExchangeRateOnCashCashEquivalentsRestrictedCashAndRestrictedCashEquivalentsIncludingDisposalGroupAndDiscontinuedOperations,8477
+EffectOfExchangeRateOnCashCashEquivalentsRestrictedCashAndRestrictedCashEquivalentsDisposalGroupIncludingDiscontinuedOperations,328
+
+
+
+
+
+
 IS
 --
   Main Rules

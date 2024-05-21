@@ -10,6 +10,88 @@ from secfsdstools.e_filter.rawfiltering import ReportPeriodRawFilter, MainCoregR
 from secfsdstools.f_standardize.cf_standardize import CashFlowStandardizer
 from secfsdstools.f_standardize.standardizing import StandardizedBag
 
+all_tags = [
+    'NetCashProvidedByUsedInOperatingActivities',
+    'AdjustmentsToReconcileNetIncomeLossToCashProvidedByUsedInOperatingActivities',
+    'DepreciationDepletionAndAmortization',
+    'DeferredIncomeTaxExpenseBenefit',
+    'ShareBasedCompensation',
+    'IncreaseDecreaseInAccountsReceivable',
+    'IncreaseDecreaseInInventories',
+    'IncreaseDecreaseInPrepaidDeferredExpenseAndOtherAssets',
+    'IncreaseDecreaseInAccountsPayable',
+    'IncreaseDecreaseInAccruedLiabilities',
+    'IncreaseDecreaseInOtherOperatingActivities',
+    'OtherNoncashIncomeExpense',
+    'OtherAdjustmentsToCashProvidedByUsedInOperatingActivities',
+    'NetIncomeLoss',
+    'InterestPaidNet',
+    'IncomeTaxesPaidNet',
+    'DividendsReceived',
+    'InterestReceived',
+    'IncreaseDecreaseInOperatingCapital',
+    'PaymentsForAssetRetirementObligations',
+    'PaymentsForProvisions',
+    'PaymentsForRestructuring',
+    'NetCashProvidedByUsedInInvestingActivities',
+    'InvestmentsinProperty,Plant,andEquipment',
+    'PaymentsToAcquirePropertyPlantAndEquipment',
+    'ProceedsFromSaleOfPropertyPlantAndEquipment',
+    'InvestmentsinSecurities',
+    'PaymentsToAcquireInvestments',
+    'ProceedsFromSaleOfInvestments',
+    'PaymentsToAcquireHeldToMaturitySecurities',
+    'ProceedsFromMaturitiesPrepaymentsAndCallsOfHeldToMaturitySecurities',
+    'PaymentsToAcquireAvailableForSaleSecurities',
+    'ProceedsFromSaleOfAvailableForSaleSecurities',
+    'PaymentsToAcquireTradingSecurities',
+    'ProceedsFromSaleOfTradingSecurities',
+    'BusinessAcquisitionsandDivestitures',
+    'PaymentsToAcquireBusinessesNetOfCashAcquired',
+    'ProceedsFromDivestitureOfBusinessesNetOfCashDivested',
+    'PaymentsMadeInConnectionWithBusinessAcquisitions',
+    'ProceedsFromBusinessAcquisitionsNetOfCashAcquired',
+    'OtherCashProvidedByUsedInInvestingActivities',
+    'InvestmentsinIntangibleAssets',
+    'PaymentsToAcquireIntangibleAssets',
+    'ProceedsFromSaleOfIntangibleAssets',
+    'LoansandAdvances',
+    'ProceedsFromRepaymentsOfLoansAndAdvancesToOtherEntities',
+    'PaymentsForLoansAndAdvancesToOtherEntities',
+    'JointVentures',
+    'PaymentsToAcquireJointVenture',
+    'NetCashProvidedByUsedInFinancingActivities',
+    'EquityTransactions',
+    'ProceedsFromIssuanceOfCommonStock',
+    'ProceedsFromIssuanceOfPreferredStock',
+    'ProceedsFromStockOptionsExercised',
+    'PaymentsForRepurchaseOfCommonStock',
+    'PaymentsForRepurchaseOfPreferredStock',
+    'ProceedsFromIssuanceOfOtherEquityInstruments',
+    'PaymentsForRepurchaseOfOtherEquityInstruments',
+    'ProceedsFromSaleOfTreasuryStock',
+    'PaymentsToAcquireTreasuryStock',
+    'DebtTransactions',
+    'ProceedsFromIssuanceOfDebt',
+    'RepaymentsOfDebt',
+    'ProceedsFromBorrowings',
+    'RepaymentsOfBorrowings',
+    'Dividends',
+    'DividendsPaid',
+    'DividendsPaidToNoncontrollingInterest',
+    'DividendsPaidToControllingInterest',
+    'Leases',
+    'PaymentsOfFinanceLeaseObligations',
+    'PaymentsOfOperatingLeaseLiabilities',
+    'GrantsandOtherFinancingSources',
+    'ProceedsFromGovernmentGrants',
+    'NetIncreaseDecreaseInCashAndCashEquivalents',
+    'CashAndCashEquivalentsPeriodIncreaseDecrease',
+    'EffectOfExchangeRateOnCashAndCashEquivalents',
+    'CashAndCashEquivalentsAtCarryingValue',
+    'CashAndCashEquivalentsBeginningOfPeriod'
+]
+
 
 def timing(f):
     def wrap(*args, **kwargs):
@@ -88,15 +170,31 @@ def check_signed_values(is_joined_bag: JoinedDataBag, tag_list: List[str]):
     return just_cost.groupby(['negating', 'value_neg']).count()
 
 
+def check_relevant_tags(cf_joined_bag: JoinedDataBag):
+    df_all_tags = pd.DataFrame(all_tags, columns=['tag'])
+    from secfsdstools.u_usecases.analyzes import count_tags
+    df = count_tags(cf_joined_bag)
+    merged = pd.merge(df_all_tags, df, how="left", on="tag")
+
+    return merged
+
+
+def find_reports_with_all(cf_joined_bag: JoinedDataBag, used_tags: List[str]) -> List[str]:
+    from secfsdstools.u_usecases.analyzes import reports_using_all
+
+    return reports_using_all(cf_joined_bag, used_tags=used_tags)
+
+
 if __name__ == '__main__':
     # create_smaller_sample_CF_set()
     # prepare_all_data_set()
 
     cf_joined_bag: JoinedDataBag = load_joined_CF_set()
-
     # cf_joined_bag = is_joined_bag.filter(AdshJoinedFilter(adshs=['0001070235-23-000131'])) # expect 2 entries
-    # cf_joined_bag = load_smaller_sample_IS_set()
 
+    # cf_joined_bag = load_smaller_sample_IS_set()
+    print(check_relevant_tags(cf_joined_bag))
+    # print(find_reports_with_all(cf_joined_bag, ['NetCashProvidedByUsedInDiscontinuedOperations']))
     print("sub_df", cf_joined_bag.sub_df.shape)
     print("pre_num_df", cf_joined_bag.pre_num_df.shape)
 

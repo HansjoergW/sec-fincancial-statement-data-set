@@ -56,7 +56,7 @@ def find_adshs_with_all_tags(bag: JoinedDataBag, tag_list: List[str]) -&gt; List
 
 def find_tags_containing(bag: JoinedDataBag, contains: str) -&gt; pd.DataFrame:
     &#34;&#34;&#34;
-    returns a value counts of all tags that are present in the bag.
+    returns a value counts of all tags that contain the provides string.
 
     Args:
         bag: the bag to check
@@ -67,7 +67,38 @@ def find_tags_containing(bag: JoinedDataBag, contains: str) -&gt; pd.DataFrame:
 
     &#34;&#34;&#34;
     filtered_df = bag.pre_num_df[bag.pre_num_df.tag.str.contains(contains)]
-    return filtered_df.tag.value_counts()</code></pre>
+    return filtered_df.tag.value_counts()
+
+def count_tags(bag: JoinedDataBag) -&gt; pd.DataFrame:
+    &#34;&#34;&#34;
+    returns a value counts of all tags that are present in the bag.
+    gives also a relative number to the number of unique statements in the bag
+    (unique combinations of [&#39;adsh&#39;, &#39;stmt&#39;, &#39;coreg&#39;, &#39;report&#39;, &#39;ddate&#39;, &#39;uom&#39;, &#39;qtrs&#39;]).
+
+    Args:
+        bag: the bag to check
+
+    Returns:
+        pd.DataFrame: a Dataframe with the tagname and the value_counts as columns
+
+    &#34;&#34;&#34;
+
+    count_df = bag.pre_num_df.tag.value_counts().reset_index()
+    count_df.columns = [&#39;tag&#39;, &#39;count&#39;]
+    unique_stmts = bag.pre_num_df[[&#39;adsh&#39;, &#39;stmt&#39;, &#39;coreg&#39;, &#39;report&#39;, &#39;ddate&#39;, &#39;uom&#39;, &#39;qtrs&#39;]].drop_duplicates().shape[0]
+
+    count_df[&#39;rel&#39;] = count_df[&#39;count&#39;] / unique_stmts
+    return count_df
+
+
+def reports_using_all(bag: JoinedDataBag, used_tags: List[str]) -&gt; List[str]:
+    relevant_cols = bag.pre_num_df[[&#39;adsh&#39;, &#39;tag&#39;]]
+    relevant_tags = relevant_cols[relevant_cols.tag.isin(used_tags)]
+    unique_df = relevant_tags.drop_duplicates()
+    counted_df = unique_df.groupby(&#39;adsh&#39;).count()
+    filterd_df = counted_df[counted_df.tag == len(used_tags)]
+
+    return filterd_df.index.to_list()</code></pre>
 </details>
 </section>
 <section>
@@ -77,6 +108,49 @@ def find_tags_containing(bag: JoinedDataBag, contains: str) -&gt; pd.DataFrame:
 <section>
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
+<dt id="secfsdstools.u_usecases.analyzes.count_tags"><code class="name flex">
+<span>def <span class="ident">count_tags</span></span>(<span>bag: <a title="secfsdstools.d_container.databagmodel.JoinedDataBag" href="../d_container/databagmodel.html#secfsdstools.d_container.databagmodel.JoinedDataBag">JoinedDataBag</a>) ‑> pandas.core.frame.DataFrame</span>
+</code></dt>
+<dd>
+<div class="desc"><p>returns a value counts of all tags that are present in the bag.
+gives also a relative number to the number of unique statements in the bag
+(unique combinations of ['adsh', 'stmt', 'coreg', 'report', 'ddate', 'uom', 'qtrs']).</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>bag</code></strong></dt>
+<dd>the bag to check</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>pd.DataFrame</code></dt>
+<dd>a Dataframe with the tagname and the value_counts as columns</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def count_tags(bag: JoinedDataBag) -&gt; pd.DataFrame:
+    &#34;&#34;&#34;
+    returns a value counts of all tags that are present in the bag.
+    gives also a relative number to the number of unique statements in the bag
+    (unique combinations of [&#39;adsh&#39;, &#39;stmt&#39;, &#39;coreg&#39;, &#39;report&#39;, &#39;ddate&#39;, &#39;uom&#39;, &#39;qtrs&#39;]).
+
+    Args:
+        bag: the bag to check
+
+    Returns:
+        pd.DataFrame: a Dataframe with the tagname and the value_counts as columns
+
+    &#34;&#34;&#34;
+
+    count_df = bag.pre_num_df.tag.value_counts().reset_index()
+    count_df.columns = [&#39;tag&#39;, &#39;count&#39;]
+    unique_stmts = bag.pre_num_df[[&#39;adsh&#39;, &#39;stmt&#39;, &#39;coreg&#39;, &#39;report&#39;, &#39;ddate&#39;, &#39;uom&#39;, &#39;qtrs&#39;]].drop_duplicates().shape[0]
+
+    count_df[&#39;rel&#39;] = count_df[&#39;count&#39;] / unique_stmts
+    return count_df</code></pre>
+</details>
+</dd>
 <dt id="secfsdstools.u_usecases.analyzes.find_adshs_with_all_tags"><code class="name flex">
 <span>def <span class="ident">find_adshs_with_all_tags</span></span>(<span>bag: <a title="secfsdstools.d_container.databagmodel.JoinedDataBag" href="../d_container/databagmodel.html#secfsdstools.d_container.databagmodel.JoinedDataBag">JoinedDataBag</a>, tag_list: List[str]) ‑> List[str]</span>
 </code></dt>
@@ -112,7 +186,7 @@ tag_list:</p>
 <span>def <span class="ident">find_tags_containing</span></span>(<span>bag: <a title="secfsdstools.d_container.databagmodel.JoinedDataBag" href="../d_container/databagmodel.html#secfsdstools.d_container.databagmodel.JoinedDataBag">JoinedDataBag</a>, contains: str) ‑> pandas.core.frame.DataFrame</span>
 </code></dt>
 <dd>
-<div class="desc"><p>returns a value counts of all tags that are present in the bag.</p>
+<div class="desc"><p>returns a value counts of all tags that contain the provides string.</p>
 <h2 id="args">Args</h2>
 <dl>
 <dt><strong><code>bag</code></strong></dt>
@@ -131,7 +205,7 @@ tag_list:</p>
 </summary>
 <pre><code class="python">def find_tags_containing(bag: JoinedDataBag, contains: str) -&gt; pd.DataFrame:
     &#34;&#34;&#34;
-    returns a value counts of all tags that are present in the bag.
+    returns a value counts of all tags that contain the provides string.
 
     Args:
         bag: the bag to check
@@ -143,6 +217,25 @@ tag_list:</p>
     &#34;&#34;&#34;
     filtered_df = bag.pre_num_df[bag.pre_num_df.tag.str.contains(contains)]
     return filtered_df.tag.value_counts()</code></pre>
+</details>
+</dd>
+<dt id="secfsdstools.u_usecases.analyzes.reports_using_all"><code class="name flex">
+<span>def <span class="ident">reports_using_all</span></span>(<span>bag: <a title="secfsdstools.d_container.databagmodel.JoinedDataBag" href="../d_container/databagmodel.html#secfsdstools.d_container.databagmodel.JoinedDataBag">JoinedDataBag</a>, used_tags: List[str]) ‑> List[str]</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def reports_using_all(bag: JoinedDataBag, used_tags: List[str]) -&gt; List[str]:
+    relevant_cols = bag.pre_num_df[[&#39;adsh&#39;, &#39;tag&#39;]]
+    relevant_tags = relevant_cols[relevant_cols.tag.isin(used_tags)]
+    unique_df = relevant_tags.drop_duplicates()
+    counted_df = unique_df.groupby(&#39;adsh&#39;).count()
+    filterd_df = counted_df[counted_df.tag == len(used_tags)]
+
+    return filterd_df.index.to_list()</code></pre>
 </details>
 </dd>
 </dl>
@@ -163,8 +256,10 @@ tag_list:</p>
 </li>
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
+<li><code><a title="secfsdstools.u_usecases.analyzes.count_tags" href="#secfsdstools.u_usecases.analyzes.count_tags">count_tags</a></code></li>
 <li><code><a title="secfsdstools.u_usecases.analyzes.find_adshs_with_all_tags" href="#secfsdstools.u_usecases.analyzes.find_adshs_with_all_tags">find_adshs_with_all_tags</a></code></li>
 <li><code><a title="secfsdstools.u_usecases.analyzes.find_tags_containing" href="#secfsdstools.u_usecases.analyzes.find_tags_containing">find_tags_containing</a></code></li>
+<li><code><a title="secfsdstools.u_usecases.analyzes.reports_using_all" href="#secfsdstools.u_usecases.analyzes.reports_using_all">reports_using_all</a></code></li>
 </ul>
 </li>
 </ul>

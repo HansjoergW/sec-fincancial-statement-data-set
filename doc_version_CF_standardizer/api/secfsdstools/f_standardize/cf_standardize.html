@@ -31,6 +31,7 @@
 from typing import List
 
 from secfsdstools.f_standardize.base_rule_framework import RuleGroup
+from secfsdstools.f_standardize.base_rules import CopyTagRule, SumUpRule
 from secfsdstools.f_standardize.base_validation_rules import ValidationRule
 from secfsdstools.f_standardize.standardizing import Standardizer
 
@@ -192,8 +193,55 @@ class CashFlowStandardizer(Standardizer):
         rules=[]
     )
 
+    cf_netcash = RuleGroup(
+        prefix=&#34;NETCASH&#34;,
+        rules=[
+            CopyTagRule(original=&#39;NetCashProvidedByUsedInOperatingActivitiesContinuingOperations&#39;,
+                        target=&#39;NetCashProvidedByUsedInOperatingActivities&#39;),
+            CopyTagRule(original=&#39;NetCashProvidedByUsedInInvestingActivitiesContinuingOperations&#39;,
+                        target=&#39;NetCashProvidedByUsedInInvestingActivities&#39;),
+            CopyTagRule(original=&#39;NetCashProvidedByUsedInFinancingActivitiesContinuingOperations&#39;,
+                        target=&#39;NetCashProvidedByUsedInFinancingActivities&#39;),
+            CopyTagRule(original=&#39;EffectOfExchangeRateOnCashContinuingOperations&#39;,
+                        target=&#39;EffectOfExchangeRateOnCashAndCashEquivalentsContinuingOperations&#39;),
+            SumUpRule(sum_tag=&#39;NetCashProvidedByUsedInContinuingOperations&#39;,
+                      potential_summands=[
+                          &#39;NetCashProvidedByUsedInOperatingActivities&#39;,
+                          &#39;NetCashProvidedByUsedInInvestingActivities&#39;,
+                          &#39;NetCashProvidedByUsedInFinancingActivities&#39;,
+                          &#39;EffectOfExchangeRateOnCashAndCashEquivalentsContinuingOperations&#39;
+                      ]),
+
+            CopyTagRule(original=&#39;EffectOfExchangeRateOnCashDiscontinuedOperations&#39;,
+                        target=&#39;EffectOfExchangeRateOnCashAndCashEquivalentsDiscontinuedOperations&#39;),
+
+            SumUpRule(sum_tag=&#39;NetCashProvidedByUsedInDiscontinuedOperations&#39;,
+                      potential_summands=[
+                          &#39;CashProvidedByUsedInOperatingActivitiesDiscontinuedOperations&#39;,
+                          &#39;CashProvidedByUsedInInvestingActivitiesDiscontinuedOperations&#39;,
+                          &#39;CashProvidedByUsedInFinancingActivitiesDiscontinuedOperations&#39;,
+                      ]),
+
+            CopyTagRule(original=&#39;EffectOfExchangeRateOnCash&#39;,
+                        target=&#39;EffectOfExchangeRateOnCashAndCashEquivalents&#39;),
+            CopyTagRule(original=&#39;EffectOfExchangeRateOnCashAndCashEquivalents&#39;,
+                        target=&#39;EffectOfExchangeRateOnCashCashEquivalentsRestrictedCashAndRestrictedCashEquivalents&#39;),
+            SumUpRule(sum_tag=&#39;EffectOfExchangeRateOnCashCashEquivalentsRestrictedCashAndRestrictedCashEquivalentsIncludingDisposalGroupAndDiscontinuedOperations&#39;,
+                      potential_summands=[
+                          &#39;EffectOfExchangeRateOnCashCashEquivalentsRestrictedCashAndRestrictedCashEquivalents&#39;,
+                          &#39;EffectOfExchangeRateOnCashCashEquivalentsRestrictedCashAndRestrictedCashEquivalentsDisposalGroupIncludingDiscontinuedOperations&#39;
+                      ]),
+
+            # Simplify name
+            CopyTagRule(original=&#39;EffectOfExchangeRateOnCashCashEquivalentsRestrictedCashAndRestrictedCashEquivalentsIncludingDisposalGroupAndDiscontinuedOperations&#39;,
+                        target=&#39;EffectOfExchangeRateTotal&#39;)
+
+        ]
+    )
+
     main_rule_tree = RuleGroup(prefix=&#34;CF&#34;,
                                rules=[
+                                   cf_netcash,
                                ])
 
     preprocess_rule_tree = RuleGroup(prefix=&#34;CF_PRE&#34;,
@@ -203,6 +251,8 @@ class CashFlowStandardizer(Standardizer):
     post_rule_tree = RuleGroup(
         prefix=&#34;CF&#34;,
         rules=[
+            CopyTagRule(original=&#39;EffectOfExchangeRateOnCashCashEquivalentsRestrictedCashAndRestrictedCashEquivalentsIncludingDisposalGroupAndDiscontinuedOperations&#39;,
+                        target=&#39;EffectOfExchangeRateTotal&#39;)
         ])
 
     validation_rules: List[ValidationRule] = [
@@ -218,6 +268,14 @@ class CashFlowStandardizer(Standardizer):
     # however, we might be only interested in the &#34;major&#34; CF report. Usually this is the
     # one which has the least nan in the following columns
     main_statement_tags = [
+        &#39;NetCashProvidedByUsedInOperatingActivities&#39;,
+        &#39;NetCashProvidedByUsedInFinancingActivities&#39;,
+        &#39;NetCashProvidedByUsedInInvestingActivities&#39;,
+        &#39;NetCashProvidedByUsedInOperatingActivitiesContinuingOperations&#39;,
+        &#39;NetCashProvidedByUsedInInvestingActivitiesContinuingOperations&#39;,
+        &#39;NetCashProvidedByUsedInFinancingActivitiesContinuingOperations&#39;,
+        &#39;NetCashProvidedByUsedInContinuingOperations&#39;,
+        &#39;NetCashProvidedByUsedInDiscontinuedOperations&#39;,
     ]
 
     def __init__(self, filter_for_main_statement: bool = True, iterations: int = 3):
@@ -589,8 +647,55 @@ as negated.</dd>
         rules=[]
     )
 
+    cf_netcash = RuleGroup(
+        prefix=&#34;NETCASH&#34;,
+        rules=[
+            CopyTagRule(original=&#39;NetCashProvidedByUsedInOperatingActivitiesContinuingOperations&#39;,
+                        target=&#39;NetCashProvidedByUsedInOperatingActivities&#39;),
+            CopyTagRule(original=&#39;NetCashProvidedByUsedInInvestingActivitiesContinuingOperations&#39;,
+                        target=&#39;NetCashProvidedByUsedInInvestingActivities&#39;),
+            CopyTagRule(original=&#39;NetCashProvidedByUsedInFinancingActivitiesContinuingOperations&#39;,
+                        target=&#39;NetCashProvidedByUsedInFinancingActivities&#39;),
+            CopyTagRule(original=&#39;EffectOfExchangeRateOnCashContinuingOperations&#39;,
+                        target=&#39;EffectOfExchangeRateOnCashAndCashEquivalentsContinuingOperations&#39;),
+            SumUpRule(sum_tag=&#39;NetCashProvidedByUsedInContinuingOperations&#39;,
+                      potential_summands=[
+                          &#39;NetCashProvidedByUsedInOperatingActivities&#39;,
+                          &#39;NetCashProvidedByUsedInInvestingActivities&#39;,
+                          &#39;NetCashProvidedByUsedInFinancingActivities&#39;,
+                          &#39;EffectOfExchangeRateOnCashAndCashEquivalentsContinuingOperations&#39;
+                      ]),
+
+            CopyTagRule(original=&#39;EffectOfExchangeRateOnCashDiscontinuedOperations&#39;,
+                        target=&#39;EffectOfExchangeRateOnCashAndCashEquivalentsDiscontinuedOperations&#39;),
+
+            SumUpRule(sum_tag=&#39;NetCashProvidedByUsedInDiscontinuedOperations&#39;,
+                      potential_summands=[
+                          &#39;CashProvidedByUsedInOperatingActivitiesDiscontinuedOperations&#39;,
+                          &#39;CashProvidedByUsedInInvestingActivitiesDiscontinuedOperations&#39;,
+                          &#39;CashProvidedByUsedInFinancingActivitiesDiscontinuedOperations&#39;,
+                      ]),
+
+            CopyTagRule(original=&#39;EffectOfExchangeRateOnCash&#39;,
+                        target=&#39;EffectOfExchangeRateOnCashAndCashEquivalents&#39;),
+            CopyTagRule(original=&#39;EffectOfExchangeRateOnCashAndCashEquivalents&#39;,
+                        target=&#39;EffectOfExchangeRateOnCashCashEquivalentsRestrictedCashAndRestrictedCashEquivalents&#39;),
+            SumUpRule(sum_tag=&#39;EffectOfExchangeRateOnCashCashEquivalentsRestrictedCashAndRestrictedCashEquivalentsIncludingDisposalGroupAndDiscontinuedOperations&#39;,
+                      potential_summands=[
+                          &#39;EffectOfExchangeRateOnCashCashEquivalentsRestrictedCashAndRestrictedCashEquivalents&#39;,
+                          &#39;EffectOfExchangeRateOnCashCashEquivalentsRestrictedCashAndRestrictedCashEquivalentsDisposalGroupIncludingDiscontinuedOperations&#39;
+                      ]),
+
+            # Simplify name
+            CopyTagRule(original=&#39;EffectOfExchangeRateOnCashCashEquivalentsRestrictedCashAndRestrictedCashEquivalentsIncludingDisposalGroupAndDiscontinuedOperations&#39;,
+                        target=&#39;EffectOfExchangeRateTotal&#39;)
+
+        ]
+    )
+
     main_rule_tree = RuleGroup(prefix=&#34;CF&#34;,
                                rules=[
+                                   cf_netcash,
                                ])
 
     preprocess_rule_tree = RuleGroup(prefix=&#34;CF_PRE&#34;,
@@ -600,6 +705,8 @@ as negated.</dd>
     post_rule_tree = RuleGroup(
         prefix=&#34;CF&#34;,
         rules=[
+            CopyTagRule(original=&#39;EffectOfExchangeRateOnCashCashEquivalentsRestrictedCashAndRestrictedCashEquivalentsIncludingDisposalGroupAndDiscontinuedOperations&#39;,
+                        target=&#39;EffectOfExchangeRateTotal&#39;)
         ])
 
     validation_rules: List[ValidationRule] = [
@@ -615,6 +722,14 @@ as negated.</dd>
     # however, we might be only interested in the &#34;major&#34; CF report. Usually this is the
     # one which has the least nan in the following columns
     main_statement_tags = [
+        &#39;NetCashProvidedByUsedInOperatingActivities&#39;,
+        &#39;NetCashProvidedByUsedInFinancingActivities&#39;,
+        &#39;NetCashProvidedByUsedInInvestingActivities&#39;,
+        &#39;NetCashProvidedByUsedInOperatingActivitiesContinuingOperations&#39;,
+        &#39;NetCashProvidedByUsedInInvestingActivitiesContinuingOperations&#39;,
+        &#39;NetCashProvidedByUsedInFinancingActivitiesContinuingOperations&#39;,
+        &#39;NetCashProvidedByUsedInContinuingOperations&#39;,
+        &#39;NetCashProvidedByUsedInDiscontinuedOperations&#39;,
     ]
 
     def __init__(self, filter_for_main_statement: bool = True, iterations: int = 3):
@@ -637,6 +752,10 @@ as negated.</dd>
 </ul>
 <h3>Class variables</h3>
 <dl>
+<dt id="secfsdstools.f_standardize.cf_standardize.CashFlowStandardizer.cf_netcash"><code class="name">var <span class="ident">cf_netcash</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
 <dt id="secfsdstools.f_standardize.cf_standardize.CashFlowStandardizer.final_tags"><code class="name">var <span class="ident">final_tags</span> : List[str]</code></dt>
 <dd>
 <div class="desc"></div>
@@ -697,6 +816,7 @@ as negated.</dd>
 <li>
 <h4><code><a title="secfsdstools.f_standardize.cf_standardize.CashFlowStandardizer" href="#secfsdstools.f_standardize.cf_standardize.CashFlowStandardizer">CashFlowStandardizer</a></code></h4>
 <ul class="">
+<li><code><a title="secfsdstools.f_standardize.cf_standardize.CashFlowStandardizer.cf_netcash" href="#secfsdstools.f_standardize.cf_standardize.CashFlowStandardizer.cf_netcash">cf_netcash</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.cf_standardize.CashFlowStandardizer.final_tags" href="#secfsdstools.f_standardize.cf_standardize.CashFlowStandardizer.final_tags">final_tags</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.cf_standardize.CashFlowStandardizer.main_rule_tree" href="#secfsdstools.f_standardize.cf_standardize.CashFlowStandardizer.main_rule_tree">main_rule_tree</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.cf_standardize.CashFlowStandardizer.main_statement_tags" href="#secfsdstools.f_standardize.cf_standardize.CashFlowStandardizer.main_statement_tags">main_statement_tags</a></code></li>

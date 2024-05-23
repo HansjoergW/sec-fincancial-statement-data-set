@@ -69,6 +69,7 @@ def find_tags_containing(bag: JoinedDataBag, contains: str) -&gt; pd.DataFrame:
     filtered_df = bag.pre_num_df[bag.pre_num_df.tag.str.contains(contains)]
     return filtered_df.tag.value_counts()
 
+
 def count_tags(bag: JoinedDataBag) -&gt; pd.DataFrame:
     &#34;&#34;&#34;
     returns a value counts of all tags that are present in the bag.
@@ -85,17 +86,40 @@ def count_tags(bag: JoinedDataBag) -&gt; pd.DataFrame:
 
     count_df = bag.pre_num_df.tag.value_counts().reset_index()
     count_df.columns = [&#39;tag&#39;, &#39;count&#39;]
-    unique_stmts = bag.pre_num_df[[&#39;adsh&#39;, &#39;stmt&#39;, &#39;coreg&#39;, &#39;report&#39;, &#39;ddate&#39;, &#39;uom&#39;, &#39;qtrs&#39;]].drop_duplicates().shape[0]
+    unique_stmts = bag.pre_num_df[
+        [&#39;adsh&#39;, &#39;stmt&#39;, &#39;coreg&#39;, &#39;report&#39;, &#39;ddate&#39;, &#39;uom&#39;, &#39;qtrs&#39;]].drop_duplicates().shape[0]
 
     count_df[&#39;rel&#39;] = count_df[&#39;count&#39;] / unique_stmts
     return count_df
 
 
-def reports_using_all(bag: JoinedDataBag, used_tags: List[str]) -&gt; List[str]:
+def reports_using_tags_count(bag: JoinedDataBag, used_tags: List[str]) -&gt; pd.DataFrame:
+    &#34;&#34;&#34;
+    Returns a dataframe that counts the number of used tags within a report.
+    Args:
+        bag:
+        used_tags:
+
+    Returns:
+
+    &#34;&#34;&#34;
     relevant_cols = bag.pre_num_df[[&#39;adsh&#39;, &#39;tag&#39;]]
     relevant_tags = relevant_cols[relevant_cols.tag.isin(used_tags)]
     unique_df = relevant_tags.drop_duplicates()
-    counted_df = unique_df.groupby(&#39;adsh&#39;).count()
+    return unique_df.groupby(&#39;adsh&#39;).count()
+
+
+def reports_using_all(bag: JoinedDataBag, used_tags: List[str]) -&gt; List[str]:
+    &#34;&#34;&#34;
+    returns a list with adsh numbers that use all the provided tags.
+    Args:
+        bag:
+        used_tags:
+
+    Returns:
+
+    &#34;&#34;&#34;
+    counted_df = reports_using_tags_count(bag=bag, used_tags=used_tags)
     filterd_df = counted_df[counted_df.tag == len(used_tags)]
 
     return filterd_df.index.to_list()</code></pre>
@@ -145,7 +169,8 @@ gives also a relative number to the number of unique statements in the bag
 
     count_df = bag.pre_num_df.tag.value_counts().reset_index()
     count_df.columns = [&#39;tag&#39;, &#39;count&#39;]
-    unique_stmts = bag.pre_num_df[[&#39;adsh&#39;, &#39;stmt&#39;, &#39;coreg&#39;, &#39;report&#39;, &#39;ddate&#39;, &#39;uom&#39;, &#39;qtrs&#39;]].drop_duplicates().shape[0]
+    unique_stmts = bag.pre_num_df[
+        [&#39;adsh&#39;, &#39;stmt&#39;, &#39;coreg&#39;, &#39;report&#39;, &#39;ddate&#39;, &#39;uom&#39;, &#39;qtrs&#39;]].drop_duplicates().shape[0]
 
     count_df[&#39;rel&#39;] = count_df[&#39;count&#39;] / unique_stmts
     return count_df</code></pre>
@@ -223,19 +248,58 @@ tag_list:</p>
 <span>def <span class="ident">reports_using_all</span></span>(<span>bag: <a title="secfsdstools.d_container.databagmodel.JoinedDataBag" href="../d_container/databagmodel.html#secfsdstools.d_container.databagmodel.JoinedDataBag">JoinedDataBag</a>, used_tags: List[str]) ‑> List[str]</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>returns a list with adsh numbers that use all the provided tags.</p>
+<h2 id="args">Args</h2>
+<p>bag:
+used_tags:
+Returns:</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def reports_using_all(bag: JoinedDataBag, used_tags: List[str]) -&gt; List[str]:
-    relevant_cols = bag.pre_num_df[[&#39;adsh&#39;, &#39;tag&#39;]]
-    relevant_tags = relevant_cols[relevant_cols.tag.isin(used_tags)]
-    unique_df = relevant_tags.drop_duplicates()
-    counted_df = unique_df.groupby(&#39;adsh&#39;).count()
+    &#34;&#34;&#34;
+    returns a list with adsh numbers that use all the provided tags.
+    Args:
+        bag:
+        used_tags:
+
+    Returns:
+
+    &#34;&#34;&#34;
+    counted_df = reports_using_tags_count(bag=bag, used_tags=used_tags)
     filterd_df = counted_df[counted_df.tag == len(used_tags)]
 
     return filterd_df.index.to_list()</code></pre>
+</details>
+</dd>
+<dt id="secfsdstools.u_usecases.analyzes.reports_using_tags_count"><code class="name flex">
+<span>def <span class="ident">reports_using_tags_count</span></span>(<span>bag: <a title="secfsdstools.d_container.databagmodel.JoinedDataBag" href="../d_container/databagmodel.html#secfsdstools.d_container.databagmodel.JoinedDataBag">JoinedDataBag</a>, used_tags: List[str]) ‑> pandas.core.frame.DataFrame</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Returns a dataframe that counts the number of used tags within a report.</p>
+<h2 id="args">Args</h2>
+<p>bag:
+used_tags:
+Returns:</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def reports_using_tags_count(bag: JoinedDataBag, used_tags: List[str]) -&gt; pd.DataFrame:
+    &#34;&#34;&#34;
+    Returns a dataframe that counts the number of used tags within a report.
+    Args:
+        bag:
+        used_tags:
+
+    Returns:
+
+    &#34;&#34;&#34;
+    relevant_cols = bag.pre_num_df[[&#39;adsh&#39;, &#39;tag&#39;]]
+    relevant_tags = relevant_cols[relevant_cols.tag.isin(used_tags)]
+    unique_df = relevant_tags.drop_duplicates()
+    return unique_df.groupby(&#39;adsh&#39;).count()</code></pre>
 </details>
 </dd>
 </dl>
@@ -260,6 +324,7 @@ tag_list:</p>
 <li><code><a title="secfsdstools.u_usecases.analyzes.find_adshs_with_all_tags" href="#secfsdstools.u_usecases.analyzes.find_adshs_with_all_tags">find_adshs_with_all_tags</a></code></li>
 <li><code><a title="secfsdstools.u_usecases.analyzes.find_tags_containing" href="#secfsdstools.u_usecases.analyzes.find_tags_containing">find_tags_containing</a></code></li>
 <li><code><a title="secfsdstools.u_usecases.analyzes.reports_using_all" href="#secfsdstools.u_usecases.analyzes.reports_using_all">reports_using_all</a></code></li>
+<li><code><a title="secfsdstools.u_usecases.analyzes.reports_using_tags_count" href="#secfsdstools.u_usecases.analyzes.reports_using_tags_count">reports_using_tags_count</a></code></li>
 </ul>
 </li>
 </ul>

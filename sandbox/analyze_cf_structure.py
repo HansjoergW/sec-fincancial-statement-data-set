@@ -181,8 +181,13 @@ def check_relevant_tags(cf_joined_bag: JoinedDataBag):
 
 def find_reports_with_all(cf_joined_bag: JoinedDataBag, used_tags: List[str]) -> List[str]:
     from secfsdstools.u_usecases.analyzes import reports_using_all
-
     return reports_using_all(cf_joined_bag, used_tags=used_tags)
+
+
+def count_used_tags(cf_joined_bag: JoinedDataBag, used_tags: List[str]):
+    from secfsdstools.u_usecases.analyzes import reports_using_tags_count
+    result =  reports_using_tags_count(bag=cf_joined_bag, used_tags=used_tags)
+    return result
 
 
 if __name__ == '__main__':
@@ -193,7 +198,15 @@ if __name__ == '__main__':
     # cf_joined_bag = is_joined_bag.filter(AdshJoinedFilter(adshs=['0001070235-23-000131'])) # expect 2 entries
 
     # cf_joined_bag = load_smaller_sample_IS_set()
-    print(check_relevant_tags(cf_joined_bag))
+    print(count_used_tags(cf_joined_bag, [
+        'EffectOfExchangeRateOnCashAndCashEquivalents',
+        'EffectOfExchangeRateOnCashCashEquivalentsRestrictedCashAndRestrictedCashEquivalents',
+        'EffectOfExchangeRateOnCash',
+        'EffectOfExchangeRateOnCashCashEquivalentsRestrictedCashAndRestrictedCashEquivalentsIncludingDisposalGroupAndDiscontinuedOperations',
+        'EffectOfExchangeRateOnCashCashEquivalentsRestrictedCashAndRestrictedCashEquivalentsDisposalGroupIncludingDiscontinuedOperations'
+    ]))
+
+    # print(check_relevant_tags(cf_joined_bag))
     # print(find_reports_with_all(cf_joined_bag, ['NetCashProvidedByUsedInDiscontinuedOperations']))
     print("sub_df", cf_joined_bag.sub_df.shape)
     print("pre_num_df", cf_joined_bag.pre_num_df.shape)

@@ -2,6 +2,7 @@
 from typing import List
 
 from secfsdstools.f_standardize.base_rule_framework import RuleGroup
+from secfsdstools.f_standardize.base_rules import CopyTagRule, SumUpRule
 from secfsdstools.f_standardize.base_validation_rules import ValidationRule
 from secfsdstools.f_standardize.standardizing import Standardizer
 
@@ -163,8 +164,55 @@ class CashFlowStandardizer(Standardizer):
         rules=[]
     )
 
+    cf_netcash = RuleGroup(
+        prefix="NETCASH",
+        rules=[
+            CopyTagRule(original='NetCashProvidedByUsedInOperatingActivitiesContinuingOperations',
+                        target='NetCashProvidedByUsedInOperatingActivities'),
+            CopyTagRule(original='NetCashProvidedByUsedInInvestingActivitiesContinuingOperations',
+                        target='NetCashProvidedByUsedInInvestingActivities'),
+            CopyTagRule(original='NetCashProvidedByUsedInFinancingActivitiesContinuingOperations',
+                        target='NetCashProvidedByUsedInFinancingActivities'),
+            CopyTagRule(original='EffectOfExchangeRateOnCashContinuingOperations',
+                        target='EffectOfExchangeRateOnCashAndCashEquivalentsContinuingOperations'),
+            SumUpRule(sum_tag='NetCashProvidedByUsedInContinuingOperations',
+                      potential_summands=[
+                          'NetCashProvidedByUsedInOperatingActivities',
+                          'NetCashProvidedByUsedInInvestingActivities',
+                          'NetCashProvidedByUsedInFinancingActivities',
+                          'EffectOfExchangeRateOnCashAndCashEquivalentsContinuingOperations'
+                      ]),
+
+            CopyTagRule(original='EffectOfExchangeRateOnCashDiscontinuedOperations',
+                        target='EffectOfExchangeRateOnCashAndCashEquivalentsDiscontinuedOperations'),
+
+            SumUpRule(sum_tag='NetCashProvidedByUsedInDiscontinuedOperations',
+                      potential_summands=[
+                          'CashProvidedByUsedInOperatingActivitiesDiscontinuedOperations',
+                          'CashProvidedByUsedInInvestingActivitiesDiscontinuedOperations',
+                          'CashProvidedByUsedInFinancingActivitiesDiscontinuedOperations',
+                      ]),
+
+            CopyTagRule(original='EffectOfExchangeRateOnCash',
+                        target='EffectOfExchangeRateOnCashAndCashEquivalents'),
+            CopyTagRule(original='EffectOfExchangeRateOnCashAndCashEquivalents',
+                        target='EffectOfExchangeRateOnCashCashEquivalentsRestrictedCashAndRestrictedCashEquivalents'),
+            SumUpRule(sum_tag='EffectOfExchangeRateOnCashCashEquivalentsRestrictedCashAndRestrictedCashEquivalentsIncludingDisposalGroupAndDiscontinuedOperations',
+                      potential_summands=[
+                          'EffectOfExchangeRateOnCashCashEquivalentsRestrictedCashAndRestrictedCashEquivalents',
+                          'EffectOfExchangeRateOnCashCashEquivalentsRestrictedCashAndRestrictedCashEquivalentsDisposalGroupIncludingDiscontinuedOperations'
+                      ]),
+
+            # Simplify name
+            CopyTagRule(original='EffectOfExchangeRateOnCashCashEquivalentsRestrictedCashAndRestrictedCashEquivalentsIncludingDisposalGroupAndDiscontinuedOperations',
+                        target='EffectOfExchangeRateTotal')
+
+        ]
+    )
+
     main_rule_tree = RuleGroup(prefix="CF",
                                rules=[
+                                   cf_netcash,
                                ])
 
     preprocess_rule_tree = RuleGroup(prefix="CF_PRE",
@@ -174,6 +222,8 @@ class CashFlowStandardizer(Standardizer):
     post_rule_tree = RuleGroup(
         prefix="CF",
         rules=[
+            CopyTagRule(original='EffectOfExchangeRateOnCashCashEquivalentsRestrictedCashAndRestrictedCashEquivalentsIncludingDisposalGroupAndDiscontinuedOperations',
+                        target='EffectOfExchangeRateTotal')
         ])
 
     validation_rules: List[ValidationRule] = [
@@ -189,6 +239,14 @@ class CashFlowStandardizer(Standardizer):
     # however, we might be only interested in the "major" CF report. Usually this is the
     # one which has the least nan in the following columns
     main_statement_tags = [
+        'NetCashProvidedByUsedInOperatingActivities',
+        'NetCashProvidedByUsedInFinancingActivities',
+        'NetCashProvidedByUsedInInvestingActivities',
+        'NetCashProvidedByUsedInOperatingActivitiesContinuingOperations',
+        'NetCashProvidedByUsedInInvestingActivitiesContinuingOperations',
+        'NetCashProvidedByUsedInFinancingActivitiesContinuingOperations',
+        'NetCashProvidedByUsedInContinuingOperations',
+        'NetCashProvidedByUsedInDiscontinuedOperations',
     ]
 
     def __init__(self, filter_for_main_statement: bool = True, iterations: int = 3):

@@ -40,6 +40,7 @@ def find_tags_containing(bag: JoinedDataBag, contains: str) -> pd.DataFrame:
     filtered_df = bag.pre_num_df[bag.pre_num_df.tag.str.contains(contains)]
     return filtered_df.tag.value_counts()
 
+
 def count_tags(bag: JoinedDataBag) -> pd.DataFrame:
     """
     returns a value counts of all tags that are present in the bag.
@@ -56,17 +57,40 @@ def count_tags(bag: JoinedDataBag) -> pd.DataFrame:
 
     count_df = bag.pre_num_df.tag.value_counts().reset_index()
     count_df.columns = ['tag', 'count']
-    unique_stmts = bag.pre_num_df[['adsh', 'stmt', 'coreg', 'report', 'ddate', 'uom', 'qtrs']].drop_duplicates().shape[0]
+    unique_stmts = bag.pre_num_df[
+        ['adsh', 'stmt', 'coreg', 'report', 'ddate', 'uom', 'qtrs']].drop_duplicates().shape[0]
 
     count_df['rel'] = count_df['count'] / unique_stmts
     return count_df
 
 
-def reports_using_all(bag: JoinedDataBag, used_tags: List[str]) -> List[str]:
+def reports_using_tags_count(bag: JoinedDataBag, used_tags: List[str]) -> pd.DataFrame:
+    """
+    Returns a dataframe that counts the number of used tags within a report.
+    Args:
+        bag:
+        used_tags:
+
+    Returns:
+
+    """
     relevant_cols = bag.pre_num_df[['adsh', 'tag']]
     relevant_tags = relevant_cols[relevant_cols.tag.isin(used_tags)]
     unique_df = relevant_tags.drop_duplicates()
-    counted_df = unique_df.groupby('adsh').count()
+    return unique_df.groupby('adsh').count()
+
+
+def reports_using_all(bag: JoinedDataBag, used_tags: List[str]) -> List[str]:
+    """
+    returns a list with adsh numbers that use all the provided tags.
+    Args:
+        bag:
+        used_tags:
+
+    Returns:
+
+    """
+    counted_df = reports_using_tags_count(bag=bag, used_tags=used_tags)
     filterd_df = counted_df[counted_df.tag == len(used_tags)]
 
     return filterd_df.index.to_list()

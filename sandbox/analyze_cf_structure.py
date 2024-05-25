@@ -186,8 +186,13 @@ def find_reports_with_all(cf_joined_bag: JoinedDataBag, used_tags: List[str]) ->
 
 def count_used_tags(cf_joined_bag: JoinedDataBag, used_tags: List[str]):
     from secfsdstools.u_usecases.analyzes import reports_using_tags_count
-    result =  reports_using_tags_count(bag=cf_joined_bag, used_tags=used_tags)
+    result = reports_using_tags_count(bag=cf_joined_bag, used_tags=used_tags)
     return result
+
+
+def find_tags_containing(cf_joined_bag: JoinedDataBag, contains: str) -> pd.DataFrame:
+    from secfsdstools.u_usecases.analyzes import find_tags_containing
+    return find_tags_containing(bag=cf_joined_bag, contains=contains)
 
 
 if __name__ == '__main__':
@@ -196,15 +201,16 @@ if __name__ == '__main__':
 
     cf_joined_bag: JoinedDataBag = load_joined_CF_set()
     # cf_joined_bag = is_joined_bag.filter(AdshJoinedFilter(adshs=['0001070235-23-000131'])) # expect 2 entries
-
     # cf_joined_bag = load_smaller_sample_IS_set()
-    print(count_used_tags(cf_joined_bag, [
-        'EffectOfExchangeRateOnCashAndCashEquivalents',
-        'EffectOfExchangeRateOnCashCashEquivalentsRestrictedCashAndRestrictedCashEquivalents',
-        'EffectOfExchangeRateOnCash',
-        'EffectOfExchangeRateOnCashCashEquivalentsRestrictedCashAndRestrictedCashEquivalentsIncludingDisposalGroupAndDiscontinuedOperations',
-        'EffectOfExchangeRateOnCashCashEquivalentsRestrictedCashAndRestrictedCashEquivalentsDisposalGroupIncludingDiscontinuedOperations'
-    ]))
+
+    #print(find_tags_containing(cf_joined_bag, contains="PeriodIncreaseDecrease"))
+    # print(count_used_tags(cf_joined_bag, [
+    #     'EffectOfExchangeRateOnCashAndCashEquivalents',
+    #     'EffectOfExchangeRateOnCashCashEquivalentsRestrictedCashAndRestrictedCashEquivalents',
+    #     'EffectOfExchangeRateOnCash',
+    #     'EffectOfExchangeRateOnCashCashEquivalentsRestrictedCashAndRestrictedCashEquivalentsIncludingDisposalGroupAndDiscontinuedOperations',
+    #     'EffectOfExchangeRateOnCashCashEquivalentsRestrictedCashAndRestrictedCashEquivalentsDisposalGroupIncludingDiscontinuedOperations'
+    # ]))
 
     # print(check_relevant_tags(cf_joined_bag))
     # print(find_reports_with_all(cf_joined_bag, ['NetCashProvidedByUsedInDiscontinuedOperations']))

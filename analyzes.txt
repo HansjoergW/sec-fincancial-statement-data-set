@@ -28,50 +28,89 @@ CashAtBeginning
 
 Main positions
 
-NetCashProvided
-        NetCashProvidedByUsedInOperatingActivities,                     278874
-        NetCashProvidedByUsedInFinancingActivities,                     271168
-        NetCashProvidedByUsedInInvestingActivities,                     250200
-        NetCashProvidedByUsedInOperatingActivitiesContinuingOperations, 64783
-        NetCashProvidedByUsedInInvestingActivitiesContinuingOperations, 56634
-        NetCashProvidedByUsedInFinancingActivitiesContinuingOperations, 56414
-        NetCashProvidedByUsedInContinuingOperations,                    13525
-        NetCashProvidedByUsedInDiscontinuedOperations,                  4967
+NetCashProvided, EffectOnExRate, CashIncDec
+
+    Counts NetCashProvided
+            NetCashProvidedByUsedInOperatingActivities,                     278874
+            NetCashProvidedByUsedInFinancingActivities,                     271168
+            NetCashProvidedByUsedInInvestingActivities,                     250200
+            NetCashProvidedByUsedInOperatingActivitiesContinuingOperations, 64783
+            NetCashProvidedByUsedInInvestingActivitiesContinuingOperations, 56634
+            NetCashProvidedByUsedInFinancingActivitiesContinuingOperations, 56414
+            NetCashProvidedByUsedInContinuingOperations,                    13525
+            NetCashProvidedByUsedInDiscontinuedOperations,                  4967
+
+    Counts EffectsOnExRate
+
+            EffectOfExchangeRateOnCashCashEquivalentsRestrictedCashAndRestrictedCashEquivalentsIncludingDisposalGroupAndDiscontinuedOperations,8477
+            EffectOfExchangeRateOnCashCashEquivalentsRestrictedCashAndRestrictedCashEquivalentsDisposalGroupIncludingDiscontinuedOperations,328
+            EffectOfExchangeRateOnCashCashEquivalentsRestrictedCashAndRestrictedCashEquivalents,23639
+            EffectOfExchangeRateOnCashAndCashEquivalents,69372
+            EffectOfExchangeRateOnCash,1530
+
+            EffectOfExchangeRateOnCashAndCashEquivalentsContinuingOperations,9026
+            EffectOfExchangeRateOnCashContinuingOperations,273
+
+            EffectOfExchangeRateOnCashAndCashEquivalentsDiscontinuedOperations,447
+            EffectOfExchangeRateOnCashDiscontinuedOperations,14
+
+
+    Counts  Cash..PeriodIncreaseDecrease
+            CashCashEquivalentsRestrictedCashAndRestrictedCashEquivalentsPeriodIncreaseDecreaseIncludingExchangeRateEffect, 82384
+            CashAndCashEquivalentsPeriodIncreaseDecrease,                                                                   197572
+            CashPeriodIncreaseDecrease,                                                                                     16450
+
+            CashCashEquivalentsRestrictedCashAndRestrictedCashEquivalentsPeriodIncreaseDecreaseExcludingExchangeRateEffect, 19982
+            CashAndCashEquivalentsPeriodIncreaseDecreaseExcludingExchangeRateEffect,                                        2596
+            CashPeriodIncreaseDecreaseExcludingExchangeRateEffect,                                                          176
 
 
 
+            + NetCashProvidedByUsedInOperatingActivities /...ContinuingOperations
+            + NetCashProvidedByUsedInFinancingActivities /...ContinuingOperations
+            + NetCashProvidedByUsedInInvestingActivities /...ContinuingOperations
+            + EffectOfExchangeRateOnCashAndCashEquivalentsContinuingOperations   <- EffectOfExchangeRateOnCashContinuingOperations
+    ---------------------
+    +       = NetCashProvidedByUsedInContinuingOperations
 
-        + NetCashProvidedByUsedInOperatingActivities /...ContinuingOperations
-        + NetCashProvidedByUsedInFinancingActivities /...ContinuingOperations
-        + NetCashProvidedByUsedInInvestingActivities /...ContinuingOperations
-        + EffectOfExchangeRateOnCashAndCashEquivalentsContinuingOperations
-        + EffectOfExchangeRateOnCashContinuingOperations
----------------------
-+       = NetCashProvidedByUsedInContinuingOperations
-
-        + CashProvidedByUsedInOperatingActivitiesDiscontinuedOperations
-        + CashProvidedByUsedInInvestingActivitiesDiscontinuedOperations
-        + CashProvidedByUsedInFinancingActivitiesDiscontinuedOperations
-        + EffectOfExchangeRateOnCashAndCashEquivalentsDiscontinuedOperations
-        + EffectOfExchangeRateOnCashDiscontinuedOperations
----------------------------------------------
-+       = NetCashProvidedByUsedInDiscontinuedOperations
-+ EffectOfExchangeRateTotal
-----------------------------------------------
-= CashAndCashEquivalentsPeriodIncreaseDecrease
+            + CashProvidedByUsedInOperatingActivitiesDiscontinuedOperations
+            + CashProvidedByUsedInInvestingActivitiesDiscontinuedOperations
+            + CashProvidedByUsedInFinancingActivitiesDiscontinuedOperations
+            + EffectOfExchangeRateOnCashAndCashEquivalentsDiscontinuedOperations <- EffectOfExchangeRateOnCashDiscontinuedOperations
+    ---------------------------------------------
+    +       = NetCashProvidedByUsedInDiscontinuedOperations
+    --------------------------------------------------------
+               + CashPeriodIncreaseDecreaseExcludingExchangeRateEffect
+               -------
+            +  = CashAndCashEquivalentsPeriodIncreaseDecreaseExcludingExchangeRateEffect
+            ------------------------------------
+            = CashCashEquivalentsRestrictedCashAndRestrictedCashEquivalentsPeriodIncreaseDecreaseExcludingExchangeRateEffect
+    =       = CashTotalPeriodIncreaseDecreaseExcludingExRateEffect (Rename)
 
 
 
-       + EffectOfExchangeRateOnCash,1530
-    ----------------
-    +  = EffectOfExchangeRateOnCashAndCashEquivalents,69372
------------------
-+   = EffectOfExchangeRateOnCashCashEquivalentsRestrictedCashAndRestrictedCashEquivalents,23639
-+ EffectOfExchangeRateOnCashCashEquivalentsRestrictedCashAndRestrictedCashEquivalentsDisposalGroupIncludingDiscontinuedOperations,328
------------------------------------------------
-= EffectOfExchangeRateOnCashCashEquivalentsRestrictedCashAndRestrictedCashEquivalentsIncludingDisposalGroupAndDiscontinuedOperations,8477
-(= EffectOfExchangeRateTotal)
+                   + EffectOfExchangeRateOnCash,1530
+                ----------------
+                +  = EffectOfExchangeRateOnCashAndCashEquivalents,69372
+            -----------------
+            +   = EffectOfExchangeRateOnCashCashEquivalentsRestrictedCashAndRestrictedCashEquivalents,23639
+            + EffectOfExchangeRateOnCashCashEquivalentsRestrictedCashAndRestrictedCashEquivalentsDisposalGroupIncludingDiscontinuedOperations,328
+            -----------------------------------------------
+            = EffectOfExchangeRateOnCashCashEquivalentsRestrictedCashAndRestrictedCashEquivalentsIncludingDisposalGroupAndDiscontinuedOperations,8477
+    +       = EffectOfExchangeRateFinal (Rename)
+    ----------------------------------------------
+                 +  CashPeriodIncreaseDecrease
+                 ------
+            +    =  CashAndCashEquivalentsPeriodIncreaseDecrease
+            ----------
+            = CashCashEquivalentsRestrictedCashAndRestrictedCashEquivalentsPeriodIncreaseDecreaseIncludingExchangeRateEffect
+    =       = CashTotalPeriodIncreaseDecreaseIncludingExRateEffect (Rename)
 
+
+Next:
+- why Investement not always set -> 13.5%
+- why No value for cashincdec total -> 12.5%
+- Validation Rules definieren
 
 
 

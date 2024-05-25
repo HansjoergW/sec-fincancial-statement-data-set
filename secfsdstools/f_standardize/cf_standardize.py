@@ -1,6 +1,7 @@
 """Contains the definitions to standardize incaome statements."""
 from typing import List
 
+from secfsdstools.f_standardize.base_prepivot_rules import PrePivotDeduplicate
 from secfsdstools.f_standardize.base_rule_framework import RuleGroup
 from secfsdstools.f_standardize.base_rules import CopyTagRule, SumUpRule
 from secfsdstools.f_standardize.base_validation_rules import ValidationRule
@@ -161,20 +162,26 @@ class CashFlowStandardizer(Standardizer):
     """
     prepivot_rule_tree = RuleGroup(
         prefix="CF_PREPIV",
-        rules=[]
+        rules=[PrePivotDeduplicate(),]
     )
 
-    cf_netcash = RuleGroup(
-        prefix="NETCASH",
+    cf_netcash_exrate = RuleGroup(
+        prefix="NETCASH_ExRATE",
         rules=[
+            # Continuing Op
+            # -------------
             CopyTagRule(original='NetCashProvidedByUsedInOperatingActivitiesContinuingOperations',
                         target='NetCashProvidedByUsedInOperatingActivities'),
             CopyTagRule(original='NetCashProvidedByUsedInInvestingActivitiesContinuingOperations',
                         target='NetCashProvidedByUsedInInvestingActivities'),
             CopyTagRule(original='NetCashProvidedByUsedInFinancingActivitiesContinuingOperations',
                         target='NetCashProvidedByUsedInFinancingActivities'),
+
+            # Continuing Op EffectsOnExRate
             CopyTagRule(original='EffectOfExchangeRateOnCashContinuingOperations',
                         target='EffectOfExchangeRateOnCashAndCashEquivalentsContinuingOperations'),
+
+            # Continuing Op NetCashProvided
             SumUpRule(sum_tag='NetCashProvidedByUsedInContinuingOperations',
                       potential_summands=[
                           'NetCashProvidedByUsedInOperatingActivities',
@@ -183,16 +190,23 @@ class CashFlowStandardizer(Standardizer):
                           'EffectOfExchangeRateOnCashAndCashEquivalentsContinuingOperations'
                       ]),
 
+            # Discontinued Op
+            # -------------
+            # Discontinued Op EffectsOnExRate
             CopyTagRule(original='EffectOfExchangeRateOnCashDiscontinuedOperations',
                         target='EffectOfExchangeRateOnCashAndCashEquivalentsDiscontinuedOperations'),
 
+            # Discontinued Op NetCashProvided
             SumUpRule(sum_tag='NetCashProvidedByUsedInDiscontinuedOperations',
                       potential_summands=[
                           'CashProvidedByUsedInOperatingActivitiesDiscontinuedOperations',
                           'CashProvidedByUsedInInvestingActivitiesDiscontinuedOperations',
                           'CashProvidedByUsedInFinancingActivitiesDiscontinuedOperations',
+                          'EffectOfExchangeRateOnCashAndCashEquivalentsDiscontinuedOperations'
                       ]),
 
+            # ExRateEffect
+            # ----------------------
             CopyTagRule(original='EffectOfExchangeRateOnCash',
                         target='EffectOfExchangeRateOnCashAndCashEquivalents'),
             CopyTagRule(original='EffectOfExchangeRateOnCashAndCashEquivalents',
@@ -203,16 +217,44 @@ class CashFlowStandardizer(Standardizer):
                           'EffectOfExchangeRateOnCashCashEquivalentsRestrictedCashAndRestrictedCashEquivalentsDisposalGroupIncludingDiscontinuedOperations'
                       ]),
 
-            # Simplify name
+            # Simplify name to EffectOfExchangeRateFinal
             CopyTagRule(original='EffectOfExchangeRateOnCashCashEquivalentsRestrictedCashAndRestrictedCashEquivalentsIncludingDisposalGroupAndDiscontinuedOperations',
-                        target='EffectOfExchangeRateTotal')
+                        target='EffectOfExchangeRateFinal')
 
         ]
     )
 
+    cf_increase_decrease = RuleGroup(
+        prefix="INC_DEC",
+        rules=[
+            # Cash increase decrease Including ExRate Effect
+            # ----------------------------------------------
+            CopyTagRule(original='CashPeriodIncreaseDecrease',
+                        target='CashAndCashEquivalentsPeriodIncreaseDecrease'),
+            CopyTagRule(original='CashAndCashEquivalentsPeriodIncreaseDecrease',
+                        target='CashCashEquivalentsRestrictedCashAndRestrictedCashEquivalentsPeriodIncreaseDecreaseIncludingExchangeRateEffect'),
+
+            # Simplify name to CashTotalPeriodIncreaseDecreaseIncludingExRateEffect
+            CopyTagRule(original='CashCashEquivalentsRestrictedCashAndRestrictedCashEquivalentsPeriodIncreaseDecreaseIncludingExchangeRateEffect',
+                        target='CashTotalPeriodIncreaseDecreaseIncludingExRateEffect'),
+
+            # Cash increase decrease Excluding ExRate Effect
+            # ----------------------------------------------
+            CopyTagRule(original='CashPeriodIncreaseDecreaseExcludingExchangeRateEffect',
+                        target='CashAndCashEquivalentsPeriodIncreaseDecreaseExcludingExchangeRateEffect'),
+            CopyTagRule(original='CashAndCashEquivalentsPeriodIncreaseDecreaseExcludingExchangeRateEffect',
+                        target='CashCashEquivalentsRestrictedCashAndRestrictedCashEquivalentsPeriodIncreaseDecreaseExcludingExchangeRateEffect'),
+
+            # Simplify name to CashTotalPeriodIncreaseDecreaseExcludingExRateEffect
+            CopyTagRule(original='CashCashEquivalentsRestrictedCashAndRestrictedCashEquivalentsPeriodIncreaseDecreaseExcludingExchangeRateEffect',
+                        target='CashTotalPeriodIncreaseDecreaseExcludingExRateEffect'),
+
+        ])
+
     main_rule_tree = RuleGroup(prefix="CF",
                                rules=[
-                                   cf_netcash,
+                                   cf_netcash_exrate,
+                                   cf_increase_decrease,
                                ])
 
     preprocess_rule_tree = RuleGroup(prefix="CF_PRE",
@@ -222,8 +264,6 @@ class CashFlowStandardizer(Standardizer):
     post_rule_tree = RuleGroup(
         prefix="CF",
         rules=[
-            CopyTagRule(original='EffectOfExchangeRateOnCashCashEquivalentsRestrictedCashAndRestrictedCashEquivalentsIncludingDisposalGroupAndDiscontinuedOperations',
-                        target='EffectOfExchangeRateTotal')
         ])
 
     validation_rules: List[ValidationRule] = [
@@ -231,6 +271,19 @@ class CashFlowStandardizer(Standardizer):
 
     # these are the columns that finally are returned after the standardization
     final_tags: List[str] = [
+        'NetCashProvidedByUsedInOperatingActivities',
+        'NetCashProvidedByUsedInFinancingActivities',
+        'NetCashProvidedByUsedInInvestingActivities',
+        'EffectOfExchangeRateOnCashAndCashEquivalentsContinuingOperations',
+        'NetCashProvidedByUsedInContinuingOperations',
+        'CashProvidedByUsedInOperatingActivitiesDiscontinuedOperations',
+        'CashProvidedByUsedInInvestingActivitiesDiscontinuedOperations',
+        'CashProvidedByUsedInFinancingActivitiesDiscontinuedOperations',
+        'EffectOfExchangeRateOnCashAndCashEquivalentsDiscontinuedOperations',
+        'NetCashProvidedByUsedInDiscontinuedOperations',
+        'CashTotalPeriodIncreaseDecreaseExcludingExRateEffect',
+        'EffectOfExchangeRateFinal',
+        'CashTotalPeriodIncreaseDecreaseIncludingExRateEffect'
     ]
 
     # used to evaluate if a report is the main cashflow report
@@ -247,6 +300,9 @@ class CashFlowStandardizer(Standardizer):
         'NetCashProvidedByUsedInFinancingActivitiesContinuingOperations',
         'NetCashProvidedByUsedInContinuingOperations',
         'NetCashProvidedByUsedInDiscontinuedOperations',
+        'CashCashEquivalentsRestrictedCashAndRestrictedCashEquivalentsPeriodIncreaseDecreaseIncludingExchangeRateEffect',
+        'CashAndCashEquivalentsPeriodIncreaseDecrease',
+        'CashPeriodIncreaseDecrease',
     ]
 
     def __init__(self, filter_for_main_statement: bool = True, iterations: int = 3):

@@ -107,10 +107,9 @@ NetCashProvided, EffectOnExRate, CashIncDec
     =       = CashTotalPeriodIncreaseDecreaseIncludingExRateEffect (Rename)
 
 
-Next:
-- why Investement not always set -> 13.5%
-- why No value for cashincdec total -> 12.5%
-- Validation Rules definieren
+
+- Final Cash Validation has 3.3% > 10%
+- Validation Rules definieren/verbessern
 
 
 

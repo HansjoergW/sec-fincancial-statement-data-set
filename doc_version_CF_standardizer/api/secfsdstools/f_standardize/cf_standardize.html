@@ -32,8 +32,9 @@ from typing import List
 
 from secfsdstools.f_standardize.base_prepivot_rules import PrePivotDeduplicate
 from secfsdstools.f_standardize.base_rule_framework import RuleGroup
-from secfsdstools.f_standardize.base_rules import CopyTagRule, SumUpRule
-from secfsdstools.f_standardize.base_validation_rules import ValidationRule
+from secfsdstools.f_standardize.base_rules import CopyTagRule, SumUpRule, PostSetToZero, \
+    MissingSumRule
+from secfsdstools.f_standardize.base_validation_rules import ValidationRule, SumValidationRule
 from secfsdstools.f_standardize.standardizing import Standardizer
 
 
@@ -278,7 +279,16 @@ class CashFlowStandardizer(Standardizer):
             CopyTagRule(original=&#39;CashCashEquivalentsRestrictedCashAndRestrictedCashEquivalentsPeriodIncreaseDecreaseExcludingExchangeRateEffect&#39;,
                         target=&#39;CashTotalPeriodIncreaseDecreaseExcludingExRateEffect&#39;),
 
+
         ])
+
+
+
+
+        # todo: hier könnten noch missing summand/total rules definiert werden
+        # für operating und discontinued
+        # auch für CashTotalPeriodIncreaseDecreaseExcludingExRateEffect
+
 
     main_rule_tree = RuleGroup(prefix=&#34;CF&#34;,
                                rules=[
@@ -293,9 +303,65 @@ class CashFlowStandardizer(Standardizer):
     post_rule_tree = RuleGroup(
         prefix=&#34;CF&#34;,
         rules=[
+            PostSetToZero(tags=[&#39;NetCashProvidedByUsedInOperatingActivities&#39;, ]),
+            PostSetToZero(tags=[&#39;NetCashProvidedByUsedInInvestingActivities&#39;, ]),
+            PostSetToZero(tags=[&#39;NetCashProvidedByUsedInFinancingActivities&#39;, ]),
+            PostSetToZero(tags=[&#39;EffectOfExchangeRateOnCashAndCashEquivalentsContinuingOperations&#39;, ]),
+            PostSetToZero(tags=[&#39;CashProvidedByUsedInOperatingActivitiesDiscontinuedOperations&#39;, ]),
+            PostSetToZero(tags=[&#39;CashProvidedByUsedInInvestingActivitiesDiscontinuedOperations&#39;, ]),
+            PostSetToZero(tags=[&#39;CashProvidedByUsedInFinancingActivitiesDiscontinuedOperations&#39;, ]),
+            PostSetToZero(tags=[&#39;EffectOfExchangeRateOnCashAndCashEquivalentsDiscontinuedOperations&#39;]),
+            PostSetToZero(tags=[&#39;NetCashProvidedByUsedInDiscontinuedOperations&#39;]),
+            PostSetToZero(tags=[&#39;EffectOfExchangeRateFinal&#39;]),
+
+            MissingSumRule(sum_tag=&#39;NetCashProvidedByUsedInContinuingOperations&#39;,
+                           summand_tags=[&#39;NetCashProvidedByUsedInOperatingActivities&#39;,
+                                         &#39;NetCashProvidedByUsedInInvestingActivities&#39;,
+                                         &#39;NetCashProvidedByUsedInFinancingActivities&#39;,
+                                         &#39;EffectOfExchangeRateOnCashAndCashEquivalentsContinuingOperations&#39;]),
+
+            MissingSumRule(sum_tag=&#39;NetCashProvidedByUsedInDiscontinuedOperations&#39;,
+                           summand_tags=[&#39;CashProvidedByUsedInOperatingActivitiesDiscontinuedOperations&#39;,
+                                         &#39;CashProvidedByUsedInInvestingActivitiesDiscontinuedOperations&#39;,
+                                         &#39;CashProvidedByUsedInFinancingActivitiesDiscontinuedOperations&#39;,
+                                         &#39;EffectOfExchangeRateOnCashAndCashEquivalentsDiscontinuedOperations&#39;]),
+
+            MissingSumRule(sum_tag=&#39;CashTotalPeriodIncreaseDecreaseIncludingExRateEffect&#39;,
+                           summand_tags=[&#39;CashTotalPeriodIncreaseDecreaseExcludingExRateEffect&#39;,
+                                         &#39;EffectOfExchangeRateFinal&#39;]),
+
+            MissingSumRule(sum_tag=&#39;CashTotalPeriodIncreaseDecreaseIncludingExRateEffect&#39;,
+                           summand_tags=[&#39;NetCashProvidedByUsedInContinuingOperations&#39;,
+                                         &#39;NetCashProvidedByUsedInDiscontinuedOperations&#39;,
+                                         &#39;EffectOfExchangeRateFinal&#39;]),
+
+
+
+
+            # todo: hier werden noch final SUM up benötigt, für
+            #  NetCashProvidedByUsedInContinuingOperations und NetCashProvidedByUsedInDiscontinuedOperations
+
+
         ])
 
     validation_rules: List[ValidationRule] = [
+        SumValidationRule(identifier=&#34;NetCashContOp&#34;,
+                          sum_tag=&#39;NetCashProvidedByUsedInContinuingOperations&#39;,
+                          summands=[&#39;NetCashProvidedByUsedInOperatingActivities&#39;,
+                                    &#39;NetCashProvidedByUsedInFinancingActivities&#39;,
+                                    &#39;NetCashProvidedByUsedInInvestingActivities&#39;,
+                                    &#39;EffectOfExchangeRateOnCashAndCashEquivalentsContinuingOperations&#39;]),
+        SumValidationRule(identifier=&#34;NetCashDiscontOp&#34;,
+                          sum_tag=&#39;NetCashProvidedByUsedInDiscontinuedOperations&#39;,
+                          summands=[&#39;CashProvidedByUsedInOperatingActivitiesDiscontinuedOperations&#39;,
+                                    &#39;CashProvidedByUsedInInvestingActivitiesDiscontinuedOperations&#39;,
+                                    &#39;CashProvidedByUsedInFinancingActivitiesDiscontinuedOperations&#39;,
+                                    &#39;EffectOfExchangeRateOnCashAndCashEquivalentsDiscontinuedOperations&#39;]),
+        SumValidationRule(identifier=&#34;CashIncDecTotal&#34;,
+                          sum_tag=&#39;CashTotalPeriodIncreaseDecreaseIncludingExRateEffect&#39;,
+                          summands=[&#39;NetCashProvidedByUsedInContinuingOperations&#39;,
+                                    &#39;NetCashProvidedByUsedInDiscontinuedOperations&#39;,
+                                    &#39;EffectOfExchangeRateFinal&#39;]),
     ]
 
     # these are the columns that finally are returned after the standardization
@@ -787,7 +853,16 @@ as negated.</dd>
             CopyTagRule(original=&#39;CashCashEquivalentsRestrictedCashAndRestrictedCashEquivalentsPeriodIncreaseDecreaseExcludingExchangeRateEffect&#39;,
                         target=&#39;CashTotalPeriodIncreaseDecreaseExcludingExRateEffect&#39;),
 
+
         ])
+
+
+
+
+        # todo: hier könnten noch missing summand/total rules definiert werden
+        # für operating und discontinued
+        # auch für CashTotalPeriodIncreaseDecreaseExcludingExRateEffect
+
 
     main_rule_tree = RuleGroup(prefix=&#34;CF&#34;,
                                rules=[
@@ -802,9 +877,65 @@ as negated.</dd>
     post_rule_tree = RuleGroup(
         prefix=&#34;CF&#34;,
         rules=[
+            PostSetToZero(tags=[&#39;NetCashProvidedByUsedInOperatingActivities&#39;, ]),
+            PostSetToZero(tags=[&#39;NetCashProvidedByUsedInInvestingActivities&#39;, ]),
+            PostSetToZero(tags=[&#39;NetCashProvidedByUsedInFinancingActivities&#39;, ]),
+            PostSetToZero(tags=[&#39;EffectOfExchangeRateOnCashAndCashEquivalentsContinuingOperations&#39;, ]),
+            PostSetToZero(tags=[&#39;CashProvidedByUsedInOperatingActivitiesDiscontinuedOperations&#39;, ]),
+            PostSetToZero(tags=[&#39;CashProvidedByUsedInInvestingActivitiesDiscontinuedOperations&#39;, ]),
+            PostSetToZero(tags=[&#39;CashProvidedByUsedInFinancingActivitiesDiscontinuedOperations&#39;, ]),
+            PostSetToZero(tags=[&#39;EffectOfExchangeRateOnCashAndCashEquivalentsDiscontinuedOperations&#39;]),
+            PostSetToZero(tags=[&#39;NetCashProvidedByUsedInDiscontinuedOperations&#39;]),
+            PostSetToZero(tags=[&#39;EffectOfExchangeRateFinal&#39;]),
+
+            MissingSumRule(sum_tag=&#39;NetCashProvidedByUsedInContinuingOperations&#39;,
+                           summand_tags=[&#39;NetCashProvidedByUsedInOperatingActivities&#39;,
+                                         &#39;NetCashProvidedByUsedInInvestingActivities&#39;,
+                                         &#39;NetCashProvidedByUsedInFinancingActivities&#39;,
+                                         &#39;EffectOfExchangeRateOnCashAndCashEquivalentsContinuingOperations&#39;]),
+
+            MissingSumRule(sum_tag=&#39;NetCashProvidedByUsedInDiscontinuedOperations&#39;,
+                           summand_tags=[&#39;CashProvidedByUsedInOperatingActivitiesDiscontinuedOperations&#39;,
+                                         &#39;CashProvidedByUsedInInvestingActivitiesDiscontinuedOperations&#39;,
+                                         &#39;CashProvidedByUsedInFinancingActivitiesDiscontinuedOperations&#39;,
+                                         &#39;EffectOfExchangeRateOnCashAndCashEquivalentsDiscontinuedOperations&#39;]),
+
+            MissingSumRule(sum_tag=&#39;CashTotalPeriodIncreaseDecreaseIncludingExRateEffect&#39;,
+                           summand_tags=[&#39;CashTotalPeriodIncreaseDecreaseExcludingExRateEffect&#39;,
+                                         &#39;EffectOfExchangeRateFinal&#39;]),
+
+            MissingSumRule(sum_tag=&#39;CashTotalPeriodIncreaseDecreaseIncludingExRateEffect&#39;,
+                           summand_tags=[&#39;NetCashProvidedByUsedInContinuingOperations&#39;,
+                                         &#39;NetCashProvidedByUsedInDiscontinuedOperations&#39;,
+                                         &#39;EffectOfExchangeRateFinal&#39;]),
+
+
+
+
+            # todo: hier werden noch final SUM up benötigt, für
+            #  NetCashProvidedByUsedInContinuingOperations und NetCashProvidedByUsedInDiscontinuedOperations
+
+
         ])
 
     validation_rules: List[ValidationRule] = [
+        SumValidationRule(identifier=&#34;NetCashContOp&#34;,
+                          sum_tag=&#39;NetCashProvidedByUsedInContinuingOperations&#39;,
+                          summands=[&#39;NetCashProvidedByUsedInOperatingActivities&#39;,
+                                    &#39;NetCashProvidedByUsedInFinancingActivities&#39;,
+                                    &#39;NetCashProvidedByUsedInInvestingActivities&#39;,
+                                    &#39;EffectOfExchangeRateOnCashAndCashEquivalentsContinuingOperations&#39;]),
+        SumValidationRule(identifier=&#34;NetCashDiscontOp&#34;,
+                          sum_tag=&#39;NetCashProvidedByUsedInDiscontinuedOperations&#39;,
+                          summands=[&#39;CashProvidedByUsedInOperatingActivitiesDiscontinuedOperations&#39;,
+                                    &#39;CashProvidedByUsedInInvestingActivitiesDiscontinuedOperations&#39;,
+                                    &#39;CashProvidedByUsedInFinancingActivitiesDiscontinuedOperations&#39;,
+                                    &#39;EffectOfExchangeRateOnCashAndCashEquivalentsDiscontinuedOperations&#39;]),
+        SumValidationRule(identifier=&#34;CashIncDecTotal&#34;,
+                          sum_tag=&#39;CashTotalPeriodIncreaseDecreaseIncludingExRateEffect&#39;,
+                          summands=[&#39;NetCashProvidedByUsedInContinuingOperations&#39;,
+                                    &#39;NetCashProvidedByUsedInDiscontinuedOperations&#39;,
+                                    &#39;EffectOfExchangeRateFinal&#39;]),
     ]
 
     # these are the columns that finally are returned after the standardization

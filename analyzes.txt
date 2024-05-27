@@ -40,6 +40,12 @@ NetCashProvided, EffectOnExRate, CashIncDec
             NetCashProvidedByUsedInContinuingOperations,                    13525
             NetCashProvidedByUsedInDiscontinuedOperations,                  4967
 
+            CashProvidedByUsedInOperatingActivitiesDiscontinuedOperations,  14961
+            CashProvidedByUsedInInvestingActivitiesDiscontinuedOperations,  10128
+            CashProvidedByUsedInFinancingActivitiesDiscontinuedOperations,  6420
+
+
+
     Counts EffectsOnExRate
 
             EffectOfExchangeRateOnCashCashEquivalentsRestrictedCashAndRestrictedCashEquivalentsIncludingDisposalGroupAndDiscontinuedOperations,8477
@@ -109,6 +115,38 @@ NetCashProvided, EffectOnExRate, CashIncDec
 
 
 - Final Cash Validation has 3.3% > 10%
+ 1. Fall 0001353499-18-000050
+    NetCashProvidedByUsedInContinuingOperations is used instead of NetCashProvidedByUsedInOperatingActivities
+
+    find mit
+    find_reports_using_and_excluding(cf_joined_bag=cf_joined_bag,
+                                     all_included_tags=[
+                                         'NetCashProvidedByUsedInContinuingOperations',
+                                         'NetCashProvidedByUsedInFinancingActivities'],
+                                     excluded_tags=['NetCashProvidedByUsedInOperatingActivities'])
+ 2, Fall 0001510295-21-000114
+      NetCashProvidedByUsedInOperatingActivitiesContinuingOperations
+    + NetCashProvidedByUsedInDiscontinuedOperations -> falsch
+    ---
+    = NetCashProvidedByUsedInOperatingActivities
+
+
+      NetCashProvidedByUsedInInvestingActivitiesContinuingOperations
+    + CashProvidedByUsedInInvestingActivitiesDiscontinuedOperations
+    ---
+    = NetCashProvidedByUsedInInvestingActivities
+
+    NetCashProvidedByUsedInFinancingActivities
+
+
+   Eigentlich müsste NetCashProvidedByUsedInXXXActivities immer aus continuing und discontinued zusammengesetzt werden.
+
+
+   Ich muss aber prüfen, ob das überall Sinn macht, bzw. wirklich so angedacht ist.
+
+
+
+
 - Validation Rules definieren/verbessern
 
 

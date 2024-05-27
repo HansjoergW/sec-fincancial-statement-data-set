@@ -1,12 +1,102 @@
 """Contains the definitions to standardize incaome statements."""
-from typing import List
+from typing import List, Set
+
+import pandas as pd
+import pandera as pa
 
 from secfsdstools.f_standardize.base_prepivot_rules import PrePivotDeduplicate
-from secfsdstools.f_standardize.base_rule_framework import RuleGroup
+from secfsdstools.f_standardize.base_rule_framework import RuleGroup, Rule
 from secfsdstools.f_standardize.base_rules import CopyTagRule, SumUpRule, PostSetToZero, \
     MissingSumRule
 from secfsdstools.f_standardize.base_validation_rules import ValidationRule, SumValidationRule
 from secfsdstools.f_standardize.standardizing import Standardizer
+
+
+class PreCorrectMixUpContinuingOperations(Rule):
+    """
+    Normally,
+    NetCashProvidedByUsedInFinancingActivities,
+    NetCashProvidedByUsedInOperatingActivities, and
+    NetCashProvidedByUsedInInvestingActivities
+
+    Sum up in NetCashProvidedByUsedInContinuingOperations.
+
+    However, there are reports which use NetCashProvidedByUsedInContinuingOperations to reflect
+    NetCashProvidedByUsedInOperatingActivities.
+
+    This rules correct such cases by looking for reports where
+    NetCashProvidedByUsedInContinuingOperations and NetCashProvidedByUsedInFinancingActivities are
+    set, but not NetCashProvidedByUsedInOperatingActivities.
+    """
+
+    def __init__(self):
+        """
+
+        Args:
+            sum_tag: the tag that should contain the sum
+            mixed_up_summand: the summand that actually does contain the sum
+            other_summand: the other summand
+        """
+        self.opcont = 'NetCashProvidedByUsedInContinuingOperations'
+        self.opact = 'NetCashProvidedByUsedInOperatingActivities'
+        self.finact = 'NetCashProvidedByUsedInFinancingActivities'
+
+    def get_target_tags(self) -> List[str]:
+        """
+        returns a list of tags that could be affected/changed by this rule
+
+        Returns:
+            List[str]: list with affected tags/columns
+        """
+        return [self.opact]
+
+    def get_input_tags(self) -> Set[str]:
+        """
+        return all tags that the rules within this group need.
+
+        Returns:
+            Set[str]: set of all input tags that are used by rules in this group
+        """
+        return {self.opcont, self.opact, self.finact}
+
+    def mask(self, data_df: pd.DataFrame) -> pa.typing.Series[bool]:
+        """
+            returns a Series[bool] which defines the rows to which this rule has to be applied.
+
+        Args:
+            data_df: dataframe on which the rules should be applied
+
+        Returns:
+            pa.typing.Series[bool]: a boolean Series that marks which rows have to be calculated
+        """
+        return ~data_df[self.opcont].isnull() & ~data_df[self.finact].isnull() \
+                & data_df[self.opact].isnull()
+
+    def apply(self, data_df: pd.DataFrame, mask: pa.typing.Series[bool]):
+        """
+        apply the rule on the provided dataframe. the rows, on which the rule has to be applied
+        is defined by the provide mask Series.
+
+        Important, the rules have to be applied "in-place", so no new dataframe is produced.
+
+        Args:
+            df: dataframe on which the rule has to be applied
+            mask: a Series marking the rows in the dataframe on which the rule has to be applied
+        """
+
+        data_df.loc[mask, self.opact] = data_df[self.opcont]
+        data_df.loc[mask, self.opcont] = None
+
+    def get_description(self) -> str:
+        """
+        Returns the description String
+        Returns:
+            str: description
+        """
+        return (f"Checks for reports where '{self.opcont}' was used instead of {self.opact}."
+               f"Looks where {self.opcont} and {self.finact} were set, but ${self.opact} is nan."
+               f"In this cases, the value from {self.opcont} is copied to {self.opact} "
+               f"and {self.opcont} is set to nan afterwards.")
 
 
 class CashFlowStandardizer(Standardizer):
@@ -166,6 +256,10 @@ class CashFlowStandardizer(Standardizer):
         rules=[PrePivotDeduplicate(),]
     )
 
+    preprocess_rule_tree = RuleGroup(prefix="CF_PRE",
+                                     rules=[PreCorrectMixUpContinuingOperations()
+                                     ])
+
     cf_netcash_exrate = RuleGroup(
         prefix="NETCASH_ExRATE",
         rules=[
@@ -267,9 +361,6 @@ class CashFlowStandardizer(Standardizer):
                                    cf_increase_decrease,
                                ])
 
-    preprocess_rule_tree = RuleGroup(prefix="CF_PRE",
-                                     rules=[
-                                     ])
 
     post_rule_tree = RuleGroup(
         prefix="CF",

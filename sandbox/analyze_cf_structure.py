@@ -9,6 +9,7 @@ from secfsdstools.e_filter.rawfiltering import ReportPeriodRawFilter, MainCoregR
     OfficialTagsOnlyRawFilter, USDOnlyRawFilter
 from secfsdstools.f_standardize.cf_standardize import CashFlowStandardizer
 from secfsdstools.f_standardize.standardizing import StandardizedBag
+from secfsdstools.u_usecases.analyzes import count_tags
 
 all_tags = [
     'NetCashProvidedByUsedInOperatingActivities',
@@ -195,6 +196,29 @@ def find_tags_containing(cf_joined_bag: JoinedDataBag, contains: str) -> pd.Data
     return find_tags_containing(bag=cf_joined_bag, contains=contains)
 
 
+def find_reports_using_and_excluding(cf_joined_bag: JoinedDataBag, all_included_tags: List[str],
+                                     excluded_tags: List[str]) -> List[str]:
+    """
+    finds the reports, which use all the all_included_tags, but misses at least one of the
+    excluded_tags.
+    """
+    rel_cols_df = cf_joined_bag.pre_num_df[['adsh', 'tag']].drop_duplicates()
+    adsh_excl_useof = rel_cols_df[rel_cols_df.tag.isin(excluded_tags)].adsh.tolist()
+
+    all_incl_df = rel_cols_df[rel_cols_df.tag.isin(all_included_tags)]
+    all_incl_counted_df = all_incl_df.groupby('adsh').count().reset_index()
+    adsh_incl_useof = all_incl_counted_df[
+        all_incl_counted_df.tag == len(all_included_tags)].adsh.tolist()
+
+    result = list(set(adsh_incl_useof) - set(adsh_excl_useof))
+    return result
+
+
+def count_selected_tags(cf_joined_bag: JoinedDataBag, selected_tags: List[str]) -> pd.DataFrame:
+    count_all_df = count_tags(cf_joined_bag)
+    return count_all_df[count_all_df.tag.isin(selected_tags)]
+
+
 if __name__ == '__main__':
     # create_smaller_sample_CF_set()
     # prepare_all_data_set()
@@ -203,14 +227,19 @@ if __name__ == '__main__':
     # cf_joined_bag = is_joined_bag.filter(AdshJoinedFilter(adshs=['0001070235-23-000131'])) # expect 2 entries
     # cf_joined_bag = load_smaller_sample_IS_set()
 
-    #print(find_tags_containing(cf_joined_bag, contains="PeriodIncreaseDecrease"))
-    # print(count_used_tags(cf_joined_bag, [
-    #     'EffectOfExchangeRateOnCashAndCashEquivalents',
-    #     'EffectOfExchangeRateOnCashCashEquivalentsRestrictedCashAndRestrictedCashEquivalents',
-    #     'EffectOfExchangeRateOnCash',
-    #     'EffectOfExchangeRateOnCashCashEquivalentsRestrictedCashAndRestrictedCashEquivalentsIncludingDisposalGroupAndDiscontinuedOperations',
-    #     'EffectOfExchangeRateOnCashCashEquivalentsRestrictedCashAndRestrictedCashEquivalentsDisposalGroupIncludingDiscontinuedOperations'
-    # ]))
+    # findet 727 report -> Verdacht auf missusing of NetCashProvidedByUsedInContinuingOperations tag
+    # find_reports_using_and_excluding(cf_joined_bag=cf_joined_bag,
+    #                                  all_included_tags=[
+    #                                      'NetCashProvidedByUsedInContinuingOperations',
+    #                                      'NetCashProvidedByUsedInFinancingActivities'],
+    #                                  excluded_tags=['NetCashProvidedByUsedInOperatingActivities'])
+
+    # print(find_tags_containing(cf_joined_bag, contains="PeriodIncreaseDecrease"))
+    print(count_selected_tags(cf_joined_bag, [
+        'CashProvidedByUsedInOperatingActivitiesDiscontinuedOperations',
+        'CashProvidedByUsedInInvestingActivitiesDiscontinuedOperations',
+        'CashProvidedByUsedInFinancingActivitiesDiscontinuedOperations',
+    ]))
 
     # print(check_relevant_tags(cf_joined_bag))
     # print(find_reports_with_all(cf_joined_bag, ['NetCashProvidedByUsedInDiscontinuedOperations']))

@@ -28,14 +28,104 @@
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">&#34;&#34;&#34;Contains the definitions to standardize incaome statements.&#34;&#34;&#34;
-from typing import List
+from typing import List, Set
+
+import pandas as pd
+import pandera as pa
 
 from secfsdstools.f_standardize.base_prepivot_rules import PrePivotDeduplicate
-from secfsdstools.f_standardize.base_rule_framework import RuleGroup
+from secfsdstools.f_standardize.base_rule_framework import RuleGroup, Rule
 from secfsdstools.f_standardize.base_rules import CopyTagRule, SumUpRule, PostSetToZero, \
     MissingSumRule
 from secfsdstools.f_standardize.base_validation_rules import ValidationRule, SumValidationRule
 from secfsdstools.f_standardize.standardizing import Standardizer
+
+
+class PreCorrectMixUpContinuingOperations(Rule):
+    &#34;&#34;&#34;
+    Normally,
+    NetCashProvidedByUsedInFinancingActivities,
+    NetCashProvidedByUsedInOperatingActivities, and
+    NetCashProvidedByUsedInInvestingActivities
+
+    Sum up in NetCashProvidedByUsedInContinuingOperations.
+
+    However, there are reports which use NetCashProvidedByUsedInContinuingOperations to reflect
+    NetCashProvidedByUsedInOperatingActivities.
+
+    This rules correct such cases by looking for reports where
+    NetCashProvidedByUsedInContinuingOperations and NetCashProvidedByUsedInFinancingActivities are
+    set, but not NetCashProvidedByUsedInOperatingActivities.
+    &#34;&#34;&#34;
+
+    def __init__(self):
+        &#34;&#34;&#34;
+
+        Args:
+            sum_tag: the tag that should contain the sum
+            mixed_up_summand: the summand that actually does contain the sum
+            other_summand: the other summand
+        &#34;&#34;&#34;
+        self.opcont = &#39;NetCashProvidedByUsedInContinuingOperations&#39;
+        self.opact = &#39;NetCashProvidedByUsedInOperatingActivities&#39;
+        self.finact = &#39;NetCashProvidedByUsedInFinancingActivities&#39;
+
+    def get_target_tags(self) -&gt; List[str]:
+        &#34;&#34;&#34;
+        returns a list of tags that could be affected/changed by this rule
+
+        Returns:
+            List[str]: list with affected tags/columns
+        &#34;&#34;&#34;
+        return [self.opact]
+
+    def get_input_tags(self) -&gt; Set[str]:
+        &#34;&#34;&#34;
+        return all tags that the rules within this group need.
+
+        Returns:
+            Set[str]: set of all input tags that are used by rules in this group
+        &#34;&#34;&#34;
+        return {self.opcont, self.opact, self.finact}
+
+    def mask(self, data_df: pd.DataFrame) -&gt; pa.typing.Series[bool]:
+        &#34;&#34;&#34;
+            returns a Series[bool] which defines the rows to which this rule has to be applied.
+
+        Args:
+            data_df: dataframe on which the rules should be applied
+
+        Returns:
+            pa.typing.Series[bool]: a boolean Series that marks which rows have to be calculated
+        &#34;&#34;&#34;
+        return ~data_df[self.opcont].isnull() &amp; ~data_df[self.finact].isnull() \
+                &amp; data_df[self.opact].isnull()
+
+    def apply(self, data_df: pd.DataFrame, mask: pa.typing.Series[bool]):
+        &#34;&#34;&#34;
+        apply the rule on the provided dataframe. the rows, on which the rule has to be applied
+        is defined by the provide mask Series.
+
+        Important, the rules have to be applied &#34;in-place&#34;, so no new dataframe is produced.
+
+        Args:
+            df: dataframe on which the rule has to be applied
+            mask: a Series marking the rows in the dataframe on which the rule has to be applied
+        &#34;&#34;&#34;
+
+        data_df.loc[mask, self.opact] = data_df[self.opcont]
+        data_df.loc[mask, self.opcont] = None
+
+    def get_description(self) -&gt; str:
+        &#34;&#34;&#34;
+        Returns the description String
+        Returns:
+            str: description
+        &#34;&#34;&#34;
+        return (f&#34;Checks for reports where &#39;{self.opcont}&#39; was used instead of {self.opact}.&#34;
+               f&#34;Looks where {self.opcont} and {self.finact} were set, but ${self.opact} is nan.&#34;
+               f&#34;In this cases, the value from {self.opcont} is copied to {self.opact} &#34;
+               f&#34;and {self.opcont} is set to nan afterwards.&#34;)
 
 
 class CashFlowStandardizer(Standardizer):
@@ -195,6 +285,10 @@ class CashFlowStandardizer(Standardizer):
         rules=[PrePivotDeduplicate(),]
     )
 
+    preprocess_rule_tree = RuleGroup(prefix=&#34;CF_PRE&#34;,
+                                     rules=[PreCorrectMixUpContinuingOperations()
+                                     ])
+
     cf_netcash_exrate = RuleGroup(
         prefix=&#34;NETCASH_ExRATE&#34;,
         rules=[
@@ -296,9 +390,6 @@ class CashFlowStandardizer(Standardizer):
                                    cf_increase_decrease,
                                ])
 
-    preprocess_rule_tree = RuleGroup(prefix=&#34;CF_PRE&#34;,
-                                     rules=[
-                                     ])
 
     post_rule_tree = RuleGroup(
         prefix=&#34;CF&#34;,
@@ -769,6 +860,10 @@ as negated.</dd>
         rules=[PrePivotDeduplicate(),]
     )
 
+    preprocess_rule_tree = RuleGroup(prefix=&#34;CF_PRE&#34;,
+                                     rules=[PreCorrectMixUpContinuingOperations()
+                                     ])
+
     cf_netcash_exrate = RuleGroup(
         prefix=&#34;NETCASH_ExRATE&#34;,
         rules=[
@@ -870,9 +965,6 @@ as negated.</dd>
                                    cf_increase_decrease,
                                ])
 
-    preprocess_rule_tree = RuleGroup(prefix=&#34;CF_PRE&#34;,
-                                     rules=[
-                                     ])
 
     post_rule_tree = RuleGroup(
         prefix=&#34;CF&#34;,
@@ -1043,6 +1135,210 @@ as negated.</dd>
 </li>
 </ul>
 </dd>
+<dt id="secfsdstools.f_standardize.cf_standardize.PreCorrectMixUpContinuingOperations"><code class="flex name class">
+<span>class <span class="ident">PreCorrectMixUpContinuingOperations</span></span>
+</code></dt>
+<dd>
+<div class="desc"><p>Normally,
+NetCashProvidedByUsedInFinancingActivities,
+NetCashProvidedByUsedInOperatingActivities, and
+NetCashProvidedByUsedInInvestingActivities</p>
+<p>Sum up in NetCashProvidedByUsedInContinuingOperations.</p>
+<p>However, there are reports which use NetCashProvidedByUsedInContinuingOperations to reflect
+NetCashProvidedByUsedInOperatingActivities.</p>
+<p>This rules correct such cases by looking for reports where
+NetCashProvidedByUsedInContinuingOperations and NetCashProvidedByUsedInFinancingActivities are
+set, but not NetCashProvidedByUsedInOperatingActivities.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>sum_tag</code></strong></dt>
+<dd>the tag that should contain the sum</dd>
+<dt><strong><code>mixed_up_summand</code></strong></dt>
+<dd>the summand that actually does contain the sum</dd>
+<dt><strong><code>other_summand</code></strong></dt>
+<dd>the other summand</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class PreCorrectMixUpContinuingOperations(Rule):
+    &#34;&#34;&#34;
+    Normally,
+    NetCashProvidedByUsedInFinancingActivities,
+    NetCashProvidedByUsedInOperatingActivities, and
+    NetCashProvidedByUsedInInvestingActivities
+
+    Sum up in NetCashProvidedByUsedInContinuingOperations.
+
+    However, there are reports which use NetCashProvidedByUsedInContinuingOperations to reflect
+    NetCashProvidedByUsedInOperatingActivities.
+
+    This rules correct such cases by looking for reports where
+    NetCashProvidedByUsedInContinuingOperations and NetCashProvidedByUsedInFinancingActivities are
+    set, but not NetCashProvidedByUsedInOperatingActivities.
+    &#34;&#34;&#34;
+
+    def __init__(self):
+        &#34;&#34;&#34;
+
+        Args:
+            sum_tag: the tag that should contain the sum
+            mixed_up_summand: the summand that actually does contain the sum
+            other_summand: the other summand
+        &#34;&#34;&#34;
+        self.opcont = &#39;NetCashProvidedByUsedInContinuingOperations&#39;
+        self.opact = &#39;NetCashProvidedByUsedInOperatingActivities&#39;
+        self.finact = &#39;NetCashProvidedByUsedInFinancingActivities&#39;
+
+    def get_target_tags(self) -&gt; List[str]:
+        &#34;&#34;&#34;
+        returns a list of tags that could be affected/changed by this rule
+
+        Returns:
+            List[str]: list with affected tags/columns
+        &#34;&#34;&#34;
+        return [self.opact]
+
+    def get_input_tags(self) -&gt; Set[str]:
+        &#34;&#34;&#34;
+        return all tags that the rules within this group need.
+
+        Returns:
+            Set[str]: set of all input tags that are used by rules in this group
+        &#34;&#34;&#34;
+        return {self.opcont, self.opact, self.finact}
+
+    def mask(self, data_df: pd.DataFrame) -&gt; pa.typing.Series[bool]:
+        &#34;&#34;&#34;
+            returns a Series[bool] which defines the rows to which this rule has to be applied.
+
+        Args:
+            data_df: dataframe on which the rules should be applied
+
+        Returns:
+            pa.typing.Series[bool]: a boolean Series that marks which rows have to be calculated
+        &#34;&#34;&#34;
+        return ~data_df[self.opcont].isnull() &amp; ~data_df[self.finact].isnull() \
+                &amp; data_df[self.opact].isnull()
+
+    def apply(self, data_df: pd.DataFrame, mask: pa.typing.Series[bool]):
+        &#34;&#34;&#34;
+        apply the rule on the provided dataframe. the rows, on which the rule has to be applied
+        is defined by the provide mask Series.
+
+        Important, the rules have to be applied &#34;in-place&#34;, so no new dataframe is produced.
+
+        Args:
+            df: dataframe on which the rule has to be applied
+            mask: a Series marking the rows in the dataframe on which the rule has to be applied
+        &#34;&#34;&#34;
+
+        data_df.loc[mask, self.opact] = data_df[self.opcont]
+        data_df.loc[mask, self.opcont] = None
+
+    def get_description(self) -&gt; str:
+        &#34;&#34;&#34;
+        Returns the description String
+        Returns:
+            str: description
+        &#34;&#34;&#34;
+        return (f&#34;Checks for reports where &#39;{self.opcont}&#39; was used instead of {self.opact}.&#34;
+               f&#34;Looks where {self.opcont} and {self.finact} were set, but ${self.opact} is nan.&#34;
+               f&#34;In this cases, the value from {self.opcont} is copied to {self.opact} &#34;
+               f&#34;and {self.opcont} is set to nan afterwards.&#34;)</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="secfsdstools.f_standardize.base_rule_framework.Rule" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.Rule">Rule</a></li>
+<li><a title="secfsdstools.f_standardize.base_rule_framework.AbstractRule" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.AbstractRule">AbstractRule</a></li>
+<li><a title="secfsdstools.f_standardize.base_rule_framework.RuleEntity" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.RuleEntity">RuleEntity</a></li>
+<li>abc.ABC</li>
+</ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="secfsdstools.f_standardize.cf_standardize.PreCorrectMixUpContinuingOperations.masked"><code class="name">var <span class="ident">masked</span> : pandas.core.series.Series</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="secfsdstools.f_standardize.cf_standardize.PreCorrectMixUpContinuingOperations.apply"><code class="name flex">
+<span>def <span class="ident">apply</span></span>(<span>self, data_df: pandas.core.frame.DataFrame, mask: pandera.typing.pandas.Series[bool])</span>
+</code></dt>
+<dd>
+<div class="desc"><p>apply the rule on the provided dataframe. the rows, on which the rule has to be applied
+is defined by the provide mask Series.</p>
+<p>Important, the rules have to be applied "in-place", so no new dataframe is produced.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>df</code></strong></dt>
+<dd>dataframe on which the rule has to be applied</dd>
+<dt><strong><code>mask</code></strong></dt>
+<dd>a Series marking the rows in the dataframe on which the rule has to be applied</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def apply(self, data_df: pd.DataFrame, mask: pa.typing.Series[bool]):
+    &#34;&#34;&#34;
+    apply the rule on the provided dataframe. the rows, on which the rule has to be applied
+    is defined by the provide mask Series.
+
+    Important, the rules have to be applied &#34;in-place&#34;, so no new dataframe is produced.
+
+    Args:
+        df: dataframe on which the rule has to be applied
+        mask: a Series marking the rows in the dataframe on which the rule has to be applied
+    &#34;&#34;&#34;
+
+    data_df.loc[mask, self.opact] = data_df[self.opcont]
+    data_df.loc[mask, self.opcont] = None</code></pre>
+</details>
+</dd>
+<dt id="secfsdstools.f_standardize.cf_standardize.PreCorrectMixUpContinuingOperations.get_input_tags"><code class="name flex">
+<span>def <span class="ident">get_input_tags</span></span>(<span>self) ‑> Set[str]</span>
+</code></dt>
+<dd>
+<div class="desc"><p>return all tags that the rules within this group need.</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>Set[str]</code></dt>
+<dd>set of all input tags that are used by rules in this group</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_input_tags(self) -&gt; Set[str]:
+    &#34;&#34;&#34;
+    return all tags that the rules within this group need.
+
+    Returns:
+        Set[str]: set of all input tags that are used by rules in this group
+    &#34;&#34;&#34;
+    return {self.opcont, self.opact, self.finact}</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="secfsdstools.f_standardize.base_rule_framework.Rule" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.Rule">Rule</a></b></code>:
+<ul class="hlist">
+<li><code><a title="secfsdstools.f_standardize.base_rule_framework.Rule.collect_description" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.AbstractRule.collect_description">collect_description</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.base_rule_framework.Rule.get_description" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.RuleEntity.get_description">get_description</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.base_rule_framework.Rule.get_mask" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.Rule.get_mask">get_mask</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.base_rule_framework.Rule.get_target_tags" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.Rule.get_target_tags">get_target_tags</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.base_rule_framework.Rule.get_target_tags_str" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.Rule.get_target_tags_str">get_target_tags_str</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.base_rule_framework.Rule.mask" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.AbstractRule.mask">mask</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.base_rule_framework.Rule.process" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.Rule.process">process</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.base_rule_framework.Rule.set_id" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.RuleEntity.set_id">set_id</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
 </dl>
 </section>
 </article>
@@ -1071,6 +1367,14 @@ as negated.</dd>
 <li><code><a title="secfsdstools.f_standardize.cf_standardize.CashFlowStandardizer.prepivot_rule_tree" href="#secfsdstools.f_standardize.cf_standardize.CashFlowStandardizer.prepivot_rule_tree">prepivot_rule_tree</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.cf_standardize.CashFlowStandardizer.preprocess_rule_tree" href="#secfsdstools.f_standardize.cf_standardize.CashFlowStandardizer.preprocess_rule_tree">preprocess_rule_tree</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.cf_standardize.CashFlowStandardizer.validation_rules" href="#secfsdstools.f_standardize.cf_standardize.CashFlowStandardizer.validation_rules">validation_rules</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="secfsdstools.f_standardize.cf_standardize.PreCorrectMixUpContinuingOperations" href="#secfsdstools.f_standardize.cf_standardize.PreCorrectMixUpContinuingOperations">PreCorrectMixUpContinuingOperations</a></code></h4>
+<ul class="">
+<li><code><a title="secfsdstools.f_standardize.cf_standardize.PreCorrectMixUpContinuingOperations.apply" href="#secfsdstools.f_standardize.cf_standardize.PreCorrectMixUpContinuingOperations.apply">apply</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.cf_standardize.PreCorrectMixUpContinuingOperations.get_input_tags" href="#secfsdstools.f_standardize.cf_standardize.PreCorrectMixUpContinuingOperations.get_input_tags">get_input_tags</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.cf_standardize.PreCorrectMixUpContinuingOperations.masked" href="#secfsdstools.f_standardize.cf_standardize.PreCorrectMixUpContinuingOperations.masked">masked</a></code></li>
 </ul>
 </li>
 </ul>

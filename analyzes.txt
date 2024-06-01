@@ -34,9 +34,11 @@ NetCashProvided, EffectOnExRate, CashIncDec
             NetCashProvidedByUsedInOperatingActivities,                     278874
             NetCashProvidedByUsedInFinancingActivities,                     271168
             NetCashProvidedByUsedInInvestingActivities,                     250200
+
             NetCashProvidedByUsedInOperatingActivitiesContinuingOperations, 64783
             NetCashProvidedByUsedInInvestingActivitiesContinuingOperations, 56634
             NetCashProvidedByUsedInFinancingActivitiesContinuingOperations, 56414
+
             NetCashProvidedByUsedInContinuingOperations,                    13525
             NetCashProvidedByUsedInDiscontinuedOperations,                  4967
 
@@ -50,6 +52,7 @@ NetCashProvided, EffectOnExRate, CashIncDec
 
             EffectOfExchangeRateOnCashCashEquivalentsRestrictedCashAndRestrictedCashEquivalentsIncludingDisposalGroupAndDiscontinuedOperations,8477
             EffectOfExchangeRateOnCashCashEquivalentsRestrictedCashAndRestrictedCashEquivalentsDisposalGroupIncludingDiscontinuedOperations,328
+
             EffectOfExchangeRateOnCashCashEquivalentsRestrictedCashAndRestrictedCashEquivalents,23639
             EffectOfExchangeRateOnCashAndCashEquivalents,69372
             EffectOfExchangeRateOnCash,1530
@@ -71,6 +74,7 @@ NetCashProvided, EffectOnExRate, CashIncDec
             CashPeriodIncreaseDecreaseExcludingExchangeRateEffect,                                                          176
 
 
+  V1
 
             + NetCashProvidedByUsedInOperatingActivities /...ContinuingOperations
             + NetCashProvidedByUsedInFinancingActivities /...ContinuingOperations
@@ -111,6 +115,112 @@ NetCashProvided, EffectOnExRate, CashIncDec
             ----------
             = CashCashEquivalentsRestrictedCashAndRestrictedCashEquivalentsPeriodIncreaseDecreaseIncludingExchangeRateEffect
     =       = CashTotalPeriodIncreaseDecreaseIncludingExRateEffect (Rename)
+
+
+
+V2
+  Main Path
+            + NetCashProvidedByUsedInOperatingActivitiesContinuingOperations
+            + CashProvidedByUsedInOperatingActivitiesDiscontinuedOperations
+            ---
+    +       = NetCashProvidedByUsedInOperatingActivities
+
+
+            + NetCashProvidedByUsedInFinancingActivitiesContinuingOperations
+            + CashProvidedByUsedInFinancingActivitiesDiscontinuedOperations
+            ---
+    +       = NetCashProvidedByUsedInFinancingActivities
+
+
+            + NetCashProvidedByUsedInInvestingActivitiesContinuingOperations
+            + CashProvidedByUsedInInvestingActivitiesDiscontinuedOperations
+            ---
+    +       = NetCashProvidedByUsedInInvestingActivities
+
+
+               + CashPeriodIncreaseDecreaseExcludingExchangeRateEffect
+               -------
+            +  = CashAndCashEquivalentsPeriodIncreaseDecreaseExcludingExchangeRateEffect
+            ------------------------------------
+            = CashCashEquivalentsRestrictedCashAndRestrictedCashEquivalentsPeriodIncreaseDecreaseExcludingExchangeRateEffect
+    =       = CashTotalPeriodIncreaseDecreaseExcludingExRateEffect (Rename)
+
+                   + EffectOfExchangeRateOnCash,1530
+                ----------------
+                +  = EffectOfExchangeRateOnCashAndCashEquivalents,69372
+            -----------------
+            +   = EffectOfExchangeRateOnCashCashEquivalentsRestrictedCashAndRestrictedCashEquivalents,23639
+            + EffectOfExchangeRateOnCashCashEquivalentsRestrictedCashAndRestrictedCashEquivalentsDisposalGroupIncludingDiscontinuedOperations,328
+            -----------------------------------------------
+            = EffectOfExchangeRateOnCashCashEquivalentsRestrictedCashAndRestrictedCashEquivalentsIncludingDisposalGroupAndDiscontinuedOperations,8477
+    +       = EffectOfExchangeRateFinal (Rename)
+    ---
+                 +  CashPeriodIncreaseDecrease
+                 ------
+            +    =  CashAndCashEquivalentsPeriodIncreaseDecrease
+            ----------
+            = CashCashEquivalentsRestrictedCashAndRestrictedCashEquivalentsPeriodIncreaseDecreaseIncludingExchangeRateEffect
+    =       = CashTotalPeriodIncreaseDecreaseIncludingExRateEffect (Rename)
+
+    ----------------
+    Nur wenige
+
+            + NetCashProvidedByUsedInOperatingActivitiesContinuingOperations
+            + NetCashProvidedByUsedInFinancingActivitiesContinuingOperations
+            + NetCashProvidedByUsedInInvestingActivitiesContinuingOperations
+            + EffectOfExchangeRateOnCashAndCashEquivalentsContinuingOperations   <- EffectOfExchangeRateOnCashContinuingOperations
+            ---
+    +       = NetCashProvidedByUsedInContinuingOperations
+
+
+            + CashProvidedByUsedInOperatingActivitiesDiscontinuedOperations
+            + CashProvidedByUsedInInvestingActivitiesDiscontinuedOperations
+            + CashProvidedByUsedInFinancingActivitiesDiscontinuedOperations
+            + EffectOfExchangeRateOnCashAndCashEquivalentsDiscontinuedOperations <- EffectOfExchangeRateOnCashDiscontinuedOperations
+            ---
+    +       = NetCashProvidedByUsedInDiscontinuedOperations
+
+                 +  CashPeriodIncreaseDecrease
+                 ------
+            +    =  CashAndCashEquivalentsPeriodIncreaseDecrease
+            ----------
+            = CashCashEquivalentsRestrictedCashAndRestrictedCashEquivalentsPeriodIncreaseDecreaseIncludingExchangeRateEffect
+    =       = CashTotalPeriodIncreaseDecreaseIncludingExRateEffect (Rename)
+
+    -> scheint eigentlich korrekt für den 2. Pfad zu sein, aber aufgrund der Mengen sollte ich davon ausgehen,
+       dass in diesem Pfad ebenfalls EffectOfExchange zusammen ausgewiesen wird
+    -> Frage ist, ob aufgrund der Mengen NetCashProvidedByUsedInContinuingOperations und
+       NetCashProvidedByUsedInDiscontinuedOperations nicht einfach ignoriert werden sollten
+    -> es wäre gut, validierungen für Pfad 1 zu haben, wie gut stimmen die ersten 3 gleichungen
+
+            aber es müssten
+            A) die summen gebildet werden ->
+            und B, NetCashProvidedByUsedInOperatingActivitiesContinuingOperations müsste
+            auf NetCashProvidedByUsedInOperatingActivities gesetzt werden, wenn kein
+            CashProvidedByUsedInOperatingActivitiesDiscontinuedOperations vorhanden ist..
+
+            Das müsste dann ein hohe Validierung für die folgenden 3 geben.
+            Mögliche Fehler wären dann noch die falsche Verwendung für NetCashProvidedByUsedInOperatingActivities
+            anstelle von NetCashProvidedByUsedInOperatingActivitiesContinuingOperations (falls discontinued vorhanden)
+
+
+            + NetCashProvidedByUsedInOperatingActivitiesContinuingOperations
+            + CashProvidedByUsedInOperatingActivitiesDiscontinuedOperations
+            ---
+    +       = NetCashProvidedByUsedInOperatingActivities
+
+
+            + NetCashProvidedByUsedInFinancingActivitiesContinuingOperations
+            + CashProvidedByUsedInFinancingActivitiesDiscontinuedOperations
+            ---
+    +       = NetCashProvidedByUsedInFinancingActivities
+
+
+            + NetCashProvidedByUsedInInvestingActivitiesContinuingOperations
+            + CashProvidedByUsedInInvestingActivitiesDiscontinuedOperations
+            ---
+    +       = NetCashProvidedByUsedInInvestingActivities
+
 
 
 

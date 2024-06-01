@@ -7,7 +7,6 @@ from secfsdstools.d_container.databagmodel import JoinedDataBag
 from secfsdstools.e_collector.companycollecting import CompanyReportCollector
 from secfsdstools.e_filter.rawfiltering import ReportPeriodRawFilter, MainCoregRawFilter, \
     OfficialTagsOnlyRawFilter, USDOnlyRawFilter
-from secfsdstools.f_standardize.cf_standardize import CashFlowStandardizer
 from secfsdstools.f_standardize.standardizing import StandardizedBag
 from secfsdstools.u_usecases.analyzes import count_tags
 
@@ -158,6 +157,8 @@ def find_entries_with_must_and_others(bag: JoinedDataBag, must_tag: str, others:
 
 @timing
 def standardize(cf_joined_bag: JoinedDataBag) -> StandardizedBag:
+    #from secfsdstools.f_standardize.cf_standardize import CashFlowStandardizer
+    from secfsdstools.f_standardize.cf_standardize_v2 import CashFlowStandardizer
     cf_standardizer = CashFlowStandardizer()
     cf_joined_bag.present(cf_standardizer)
     return cf_standardizer.get_standardize_bag()

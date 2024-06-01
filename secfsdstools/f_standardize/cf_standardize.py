@@ -424,10 +424,27 @@ class CashFlowStandardizer(Standardizer):
                           summands=['NetCashProvidedByUsedInContinuingOperations',
                                     'NetCashProvidedByUsedInDiscontinuedOperations',
                                     'EffectOfExchangeRateFinal']),
+        SumValidationRule(identifier="BaseOpAct",
+                          sum_tag='NetCashProvidedByUsedInOperatingActivities',
+                          summands=['NetCashProvidedByUsedInOperatingActivitiesContinuingOperations',
+                                    'CashProvidedByUsedInOperatingActivitiesDiscontinuedOperations']),
+
+        SumValidationRule(identifier="BaseFinAct",
+                          sum_tag='NetCashProvidedByUsedInFinancingActivities',
+                          summands=['NetCashProvidedByUsedInFinancingActivitiesContinuingOperations',
+                                    'CashProvidedByUsedInFinancingActivitiesDiscontinuedOperations']),
+
+        SumValidationRule(identifier="BaseInvAct",
+                          sum_tag='NetCashProvidedByUsedInInvestingActivities',
+                          summands=['NetCashProvidedByUsedInInvestingActivitiesContinuingOperations',
+                                    'CashProvidedByUsedInInvestingActivitiesDiscontinuedOperations']),
     ]
 
     # these are the columns that finally are returned after the standardization
     final_tags: List[str] = [
+        'NetCashProvidedByUsedInOperatingActivitiesContinuingOperations',
+        'NetCashProvidedByUsedInFinancingActivitiesContinuingOperations',
+        'NetCashProvidedByUsedInInvestingActivitiesContinuingOperations',
         'NetCashProvidedByUsedInOperatingActivities',
         'NetCashProvidedByUsedInFinancingActivities',
         'NetCashProvidedByUsedInInvestingActivities',

@@ -453,10 +453,27 @@ class CashFlowStandardizer(Standardizer):
                           summands=[&#39;NetCashProvidedByUsedInContinuingOperations&#39;,
                                     &#39;NetCashProvidedByUsedInDiscontinuedOperations&#39;,
                                     &#39;EffectOfExchangeRateFinal&#39;]),
+        SumValidationRule(identifier=&#34;BaseOpAct&#34;,
+                          sum_tag=&#39;NetCashProvidedByUsedInOperatingActivities&#39;,
+                          summands=[&#39;NetCashProvidedByUsedInOperatingActivitiesContinuingOperations&#39;,
+                                    &#39;CashProvidedByUsedInOperatingActivitiesDiscontinuedOperations&#39;]),
+
+        SumValidationRule(identifier=&#34;BaseFinAct&#34;,
+                          sum_tag=&#39;NetCashProvidedByUsedInFinancingActivities&#39;,
+                          summands=[&#39;NetCashProvidedByUsedInFinancingActivitiesContinuingOperations&#39;,
+                                    &#39;CashProvidedByUsedInFinancingActivitiesDiscontinuedOperations&#39;]),
+
+        SumValidationRule(identifier=&#34;BaseInvAct&#34;,
+                          sum_tag=&#39;NetCashProvidedByUsedInInvestingActivities&#39;,
+                          summands=[&#39;NetCashProvidedByUsedInInvestingActivitiesContinuingOperations&#39;,
+                                    &#39;CashProvidedByUsedInInvestingActivitiesDiscontinuedOperations&#39;]),
     ]
 
     # these are the columns that finally are returned after the standardization
     final_tags: List[str] = [
+        &#39;NetCashProvidedByUsedInOperatingActivitiesContinuingOperations&#39;,
+        &#39;NetCashProvidedByUsedInFinancingActivitiesContinuingOperations&#39;,
+        &#39;NetCashProvidedByUsedInInvestingActivitiesContinuingOperations&#39;,
         &#39;NetCashProvidedByUsedInOperatingActivities&#39;,
         &#39;NetCashProvidedByUsedInFinancingActivities&#39;,
         &#39;NetCashProvidedByUsedInInvestingActivities&#39;,
@@ -1028,10 +1045,27 @@ as negated.</dd>
                           summands=[&#39;NetCashProvidedByUsedInContinuingOperations&#39;,
                                     &#39;NetCashProvidedByUsedInDiscontinuedOperations&#39;,
                                     &#39;EffectOfExchangeRateFinal&#39;]),
+        SumValidationRule(identifier=&#34;BaseOpAct&#34;,
+                          sum_tag=&#39;NetCashProvidedByUsedInOperatingActivities&#39;,
+                          summands=[&#39;NetCashProvidedByUsedInOperatingActivitiesContinuingOperations&#39;,
+                                    &#39;CashProvidedByUsedInOperatingActivitiesDiscontinuedOperations&#39;]),
+
+        SumValidationRule(identifier=&#34;BaseFinAct&#34;,
+                          sum_tag=&#39;NetCashProvidedByUsedInFinancingActivities&#39;,
+                          summands=[&#39;NetCashProvidedByUsedInFinancingActivitiesContinuingOperations&#39;,
+                                    &#39;CashProvidedByUsedInFinancingActivitiesDiscontinuedOperations&#39;]),
+
+        SumValidationRule(identifier=&#34;BaseInvAct&#34;,
+                          sum_tag=&#39;NetCashProvidedByUsedInInvestingActivities&#39;,
+                          summands=[&#39;NetCashProvidedByUsedInInvestingActivitiesContinuingOperations&#39;,
+                                    &#39;CashProvidedByUsedInInvestingActivitiesDiscontinuedOperations&#39;]),
     ]
 
     # these are the columns that finally are returned after the standardization
     final_tags: List[str] = [
+        &#39;NetCashProvidedByUsedInOperatingActivitiesContinuingOperations&#39;,
+        &#39;NetCashProvidedByUsedInFinancingActivitiesContinuingOperations&#39;,
+        &#39;NetCashProvidedByUsedInInvestingActivitiesContinuingOperations&#39;,
         &#39;NetCashProvidedByUsedInOperatingActivities&#39;,
         &#39;NetCashProvidedByUsedInFinancingActivities&#39;,
         &#39;NetCashProvidedByUsedInInvestingActivities&#39;,

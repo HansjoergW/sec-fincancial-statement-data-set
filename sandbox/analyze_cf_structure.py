@@ -2,6 +2,7 @@ import time
 from typing import List
 
 import pandas as pd
+from secfsdstools.e_filter.joinedfiltering import AdshJoinedFilter
 
 from secfsdstools.d_container.databagmodel import JoinedDataBag
 from secfsdstools.e_collector.companycollecting import CompanyReportCollector
@@ -156,8 +157,15 @@ def find_entries_with_must_and_others(bag: JoinedDataBag, must_tag: str, others:
 
 
 @timing
-def standardize(cf_joined_bag: JoinedDataBag) -> StandardizedBag:
-    #from secfsdstools.f_standardize.cf_standardize import CashFlowStandardizer
+def standardize_v1(cf_joined_bag: JoinedDataBag) -> StandardizedBag:
+    from secfsdstools.f_standardize.cf_standardize import CashFlowStandardizer
+    cf_standardizer = CashFlowStandardizer()
+    cf_joined_bag.present(cf_standardizer)
+    return cf_standardizer.get_standardize_bag()
+
+
+@timing
+def standardize_v2(cf_joined_bag: JoinedDataBag) -> StandardizedBag:
     from secfsdstools.f_standardize.cf_standardize_v2 import CashFlowStandardizer
     cf_standardizer = CashFlowStandardizer()
     cf_joined_bag.present(cf_standardizer)
@@ -225,7 +233,7 @@ if __name__ == '__main__':
     # prepare_all_data_set()
 
     cf_joined_bag: JoinedDataBag = load_joined_CF_set()
-    # cf_joined_bag = is_joined_bag.filter(AdshJoinedFilter(adshs=['0001070235-23-000131'])) # expect 2 entries
+    #cf_joined_bag = cf_joined_bag.filter(AdshJoinedFilter(adshs=['0001409171-19-000031'])) # expect 2 entries
     # cf_joined_bag = load_smaller_sample_IS_set()
 
     # findet 727 report -> Verdacht auf missusing of NetCashProvidedByUsedInContinuingOperations tag
@@ -247,7 +255,7 @@ if __name__ == '__main__':
     print("sub_df", cf_joined_bag.sub_df.shape)
     print("pre_num_df", cf_joined_bag.pre_num_df.shape)
 
-    standardized_bag = standardize(cf_joined_bag)
+    standardized_bag = standardize_v2(cf_joined_bag)
 
     print(standardized_bag.result_df.shape)
 

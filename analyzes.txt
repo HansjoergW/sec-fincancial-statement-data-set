@@ -137,6 +137,12 @@ V2
             ---
     +       = NetCashProvidedByUsedInInvestingActivities
 
+    ToDos:
+    -> ensure validation is mostly correct for this setup: Done
+    -> These are only available in 80% of the reports -> find out why:
+
+
+
 
                + CashPeriodIncreaseDecreaseExcludingExchangeRateEffect
                -------

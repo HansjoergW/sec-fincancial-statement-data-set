@@ -244,11 +244,11 @@ if __name__ == '__main__':
     #                                  excluded_tags=['NetCashProvidedByUsedInOperatingActivities'])
 
     # print(find_tags_containing(cf_joined_bag, contains="PeriodIncreaseDecrease"))
-    print(count_selected_tags(cf_joined_bag, [
-        'CashProvidedByUsedInOperatingActivitiesDiscontinuedOperations',
-        'CashProvidedByUsedInInvestingActivitiesDiscontinuedOperations',
-        'CashProvidedByUsedInFinancingActivitiesDiscontinuedOperations',
-    ]))
+    # print(count_selected_tags(cf_joined_bag, [
+    #     'CashProvidedByUsedInOperatingActivitiesDiscontinuedOperations',
+    #     'CashProvidedByUsedInInvestingActivitiesDiscontinuedOperations',
+    #     'CashProvidedByUsedInFinancingActivitiesDiscontinuedOperations',
+    # ]))
 
     # print(check_relevant_tags(cf_joined_bag))
     # print(find_reports_with_all(cf_joined_bag, ['NetCashProvidedByUsedInDiscontinuedOperations']))

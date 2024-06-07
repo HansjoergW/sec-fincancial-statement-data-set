@@ -46,6 +46,9 @@ NetCashProvided, EffectOnExRate, CashIncDec
             CashProvidedByUsedInInvestingActivitiesDiscontinuedOperations,  10128
             CashProvidedByUsedInFinancingActivitiesDiscontinuedOperations,  6420
 
+            CashProvidedByUsedInDiscontinuedOperationsOperatingActivities,  104
+            CashProvidedByUsedInDiscontinuedOperationsInvestingActivities,   79
+            CashProvidedByUsedInDiscontinuedOperationsFinancingActivities,   70
 
 
     Counts EffectsOnExRate
@@ -74,50 +77,6 @@ NetCashProvided, EffectOnExRate, CashIncDec
             CashPeriodIncreaseDecreaseExcludingExchangeRateEffect,                                                          176
 
 
-  V1
-
-            + NetCashProvidedByUsedInOperatingActivities /...ContinuingOperations
-            + NetCashProvidedByUsedInFinancingActivities /...ContinuingOperations
-            + NetCashProvidedByUsedInInvestingActivities /...ContinuingOperations
-            + EffectOfExchangeRateOnCashAndCashEquivalentsContinuingOperations   <- EffectOfExchangeRateOnCashContinuingOperations
-    ---------------------
-    +       = NetCashProvidedByUsedInContinuingOperations
-
-            + CashProvidedByUsedInOperatingActivitiesDiscontinuedOperations
-            + CashProvidedByUsedInInvestingActivitiesDiscontinuedOperations
-            + CashProvidedByUsedInFinancingActivitiesDiscontinuedOperations
-            + EffectOfExchangeRateOnCashAndCashEquivalentsDiscontinuedOperations <- EffectOfExchangeRateOnCashDiscontinuedOperations
-    ---------------------------------------------
-    +       = NetCashProvidedByUsedInDiscontinuedOperations
-    --------------------------------------------------------
-               + CashPeriodIncreaseDecreaseExcludingExchangeRateEffect
-               -------
-            +  = CashAndCashEquivalentsPeriodIncreaseDecreaseExcludingExchangeRateEffect
-            ------------------------------------
-            = CashCashEquivalentsRestrictedCashAndRestrictedCashEquivalentsPeriodIncreaseDecreaseExcludingExchangeRateEffect
-    =       = CashTotalPeriodIncreaseDecreaseExcludingExRateEffect (Rename)
-
-
-
-                   + EffectOfExchangeRateOnCash,1530
-                ----------------
-                +  = EffectOfExchangeRateOnCashAndCashEquivalents,69372
-            -----------------
-            +   = EffectOfExchangeRateOnCashCashEquivalentsRestrictedCashAndRestrictedCashEquivalents,23639
-            + EffectOfExchangeRateOnCashCashEquivalentsRestrictedCashAndRestrictedCashEquivalentsDisposalGroupIncludingDiscontinuedOperations,328
-            -----------------------------------------------
-            = EffectOfExchangeRateOnCashCashEquivalentsRestrictedCashAndRestrictedCashEquivalentsIncludingDisposalGroupAndDiscontinuedOperations,8477
-    +       = EffectOfExchangeRateFinal (Rename)
-    ----------------------------------------------
-                 +  CashPeriodIncreaseDecrease
-                 ------
-            +    =  CashAndCashEquivalentsPeriodIncreaseDecrease
-            ----------
-            = CashCashEquivalentsRestrictedCashAndRestrictedCashEquivalentsPeriodIncreaseDecreaseIncludingExchangeRateEffect
-    =       = CashTotalPeriodIncreaseDecreaseIncludingExRateEffect (Rename)
-
-
-
 V2
   Main Path
             + NetCashProvidedByUsedInOperatingActivitiesContinuingOperations
@@ -136,15 +95,7 @@ V2
             + CashProvidedByUsedInInvestingActivitiesDiscontinuedOperations
             ---
     +       = NetCashProvidedByUsedInInvestingActivities
-
-    ToDos:
-    -> ensure validation is mostly correct for this setup: Done
-    -> These are only available in 80% of the reports -> find out why: Done
-    => Those Tags have now a very good validation rate
-
-
-
-               + CashPeriodIncreaseDecreaseExcludingExchangeRateEffect
+          + CashPeriodIncreaseDecreaseExcludingExchangeRateEffect
                -------
             +  = CashAndCashEquivalentsPeriodIncreaseDecreaseExcludingExchangeRateEffect
             ------------------------------------
@@ -168,47 +119,9 @@ V2
             = CashCashEquivalentsRestrictedCashAndRestrictedCashEquivalentsPeriodIncreaseDecreaseIncludingExchangeRateEffect
     =       = CashTotalPeriodIncreaseDecreaseIncludingExRateEffect (Rename)
 
-    ToDos:
-    - over 8000 have error cat 100 for final check -> cashincdec
-      and it looks as if often then cashincdec is set to 0 on there
-      -> it might be ok a rule that calculates/overwrites the final cashincdec, if it is 0
 
-         standardized_bag.result_df[(standardized_bag.result_df.CashPeriodIncreaseDecreaseIncludingExRateEffectFinal==0) & (standardized_bag.result_df.NetCashContOp_cat==100)]
-         -> nur 140 cases
-
-         Fälle in denen casincdec nicht 0 ist
-         standardized_bag.result_df[(standardized_bag.result_df.CashPeriodIncreaseDecreaseIncludingExRateEffectFinal!=0) & (standardized_bag.result_df.NetCashContOp_cat==100)]
-         -> 8000 Fälle
-         -> scheint als wären viele discontinued ops dabei
-
-
-
-    ----------------
-    2. Path: Nur wenige
-
-            + NetCashProvidedByUsedInOperatingActivitiesContinuingOperations
-            + NetCashProvidedByUsedInFinancingActivitiesContinuingOperations
-            + NetCashProvidedByUsedInInvestingActivitiesContinuingOperations
-            + EffectOfExchangeRateOnCashAndCashEquivalentsContinuingOperations   <- EffectOfExchangeRateOnCashContinuingOperations
-            ---
-    +       = NetCashProvidedByUsedInContinuingOperations
-
-
-            + CashProvidedByUsedInOperatingActivitiesDiscontinuedOperations
-            + CashProvidedByUsedInInvestingActivitiesDiscontinuedOperations
-            + CashProvidedByUsedInFinancingActivitiesDiscontinuedOperations
-            + EffectOfExchangeRateOnCashAndCashEquivalentsDiscontinuedOperations <- EffectOfExchangeRateOnCashDiscontinuedOperations
-            ---
-    +       = NetCashProvidedByUsedInDiscontinuedOperations
-
-                 +  CashPeriodIncreaseDecrease
-                 ------
-            +    =  CashAndCashEquivalentsPeriodIncreaseDecrease
-            ----------
-            = CashCashEquivalentsRestrictedCashAndRestrictedCashEquivalentsPeriodIncreaseDecreaseIncludingExchangeRateEffect
-    =       = CashTotalPeriodIncreaseDecreaseIncludingExRateEffect (Rename)
-
-
+Todos Next:
+- Cash At End Of Period
 
 
 IS

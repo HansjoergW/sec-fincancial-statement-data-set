@@ -230,7 +230,7 @@ def count_selected_tags(cf_joined_bag: JoinedDataBag, selected_tags: List[str]) 
 
 if __name__ == '__main__':
     # create_smaller_sample_CF_set()
-    # prepare_all_data_set()
+    #prepare_all_data_set()
 
     cf_joined_bag: JoinedDataBag = load_joined_CF_set()
     #cf_joined_bag = cf_joined_bag.filter(AdshJoinedFilter(adshs=['0000950123-09-024681']))

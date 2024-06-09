@@ -64,7 +64,7 @@ class PreSumUpCorrection(Rule):
                 data_df[self.sum_tag] + data_df[self.other_summand]) \
             & (data_df[self.other_summand] > 0)
 
-    def apply(self, data_df: pd.DataFrame, mask: pa.typing.Series[bool]):
+    def apply(self, data_df: pd.DataFrame, mask: pa.typing.Series[bool]) -> pd.DataFrame:
         """
         apply the rule on the provided dataframe. the rows, on which the rule has to be applied
         is defined by the provide mask Series.
@@ -74,11 +74,14 @@ class PreSumUpCorrection(Rule):
         Args:
             df: dataframe on which the rule has to be applied
             mask: a Series marking the rows in the dataframe on which the rule has to be applied
+        Returns:
+            pd.DataFrame: make the process chainable
         """
 
         mixed_up_values = data_df[self.mixed_up_summand].copy()
         data_df.loc[mask, self.mixed_up_summand] = data_df[self.sum_tag]
         data_df.loc[mask, self.sum_tag] = mixed_up_values
+        return data_df
 
     def get_description(self) -> str:
         """
@@ -118,7 +121,7 @@ class CopyTagRule(Rule):
         return (data_df[self.target].isna() &
                 ~data_df[self.original].isna())
 
-    def apply(self, data_df: pd.DataFrame, mask: pa.typing.Series[bool]):
+    def apply(self, data_df: pd.DataFrame, mask: pa.typing.Series[bool]) -> pd.DataFrame:
         """
         apply the rule on the provided dataframe. the rows, on which the rule has to be applied
         is defined by the provide mask Series.
@@ -128,8 +131,11 @@ class CopyTagRule(Rule):
         Args:
             data_df dataframe on which the rule has to be applied
             mask: a Series marking the rows in the dataframe on which the rule has to be applied
+        Returns:
+            pd.DataFrame: make the process chainable
         """
         data_df.loc[mask, self.target] = data_df[self.original]
+        return data_df
 
     def get_input_tags(self) -> Set[str]:
         """
@@ -217,7 +223,7 @@ class MissingSumRule(Rule):
 
         return mask
 
-    def apply(self, data_df: pd.DataFrame, mask: pa.typing.Series[bool]):
+    def apply(self, data_df: pd.DataFrame, mask: pa.typing.Series[bool]) -> pd.DataFrame:
         """
         apply the rule on the provided dataframe. the rows, on which the rule has to be applied
         is defined by the provide mask Series.
@@ -227,8 +233,11 @@ class MissingSumRule(Rule):
         Args:
             data_df dataframe on which the rule has to be applied
             mask: a Series marking the rows in the dataframe on which the rule has to be applied
+        Returns:
+            pd.DataFrame: make the process chainable
         """
         data_df.loc[mask, self.sum_tag] = data_df[self.summand_tags].sum(axis=1)
+        return data_df
 
     def get_description(self) -> str:
         """
@@ -295,7 +304,7 @@ class MissingSummandRule(Rule):
         mask = mask & data_df[self.missing_summand_tag].isna()
         return mask
 
-    def apply(self, data_df: pd.DataFrame, mask: pa.typing.Series[bool]):
+    def apply(self, data_df: pd.DataFrame, mask: pa.typing.Series[bool]) -> pd.DataFrame:
         """
         apply the rule on the provided dataframe. the rows, on which the rule has to be applied
         is defined by the provide mask Series.
@@ -305,10 +314,13 @@ class MissingSummandRule(Rule):
         Args:
             data_df dataframe on which the rule has to be applied
             mask: a Series marking the rows in the dataframe on which the rule has to be applied
+        Returns:
+            pd.DataFrame: make the process chainable
         """
 
         data_df.loc[mask, self.missing_summand_tag] = \
             data_df[self.sum_tag] - data_df[self.existing_summands_tags].sum(axis=1)
+        return data_df
 
     def get_description(self) -> str:
         """
@@ -381,7 +393,7 @@ class SumUpRule(Rule):
 
         return data_df[self.sum_tag].isna() & mask_summands
 
-    def apply(self, data_df: pd.DataFrame, mask: pa.typing.Series[bool]):
+    def apply(self, data_df: pd.DataFrame, mask: pa.typing.Series[bool]) -> pd.DataFrame:
         """
         apply the rule on the provided dataframe. the rows, on which the rule has to be applied
         is defined by the provide mask Series.
@@ -391,6 +403,8 @@ class SumUpRule(Rule):
         Args:
             data_df dataframe on which the rule has to be applied
             mask: a Series marking the rows in the dataframe on which the rule has to be applied
+        Returns:
+            pd.DataFrame: make the process chainable
         """
         data_df.loc[mask, self.sum_tag] = 0.0  # initialize
 
@@ -398,6 +412,8 @@ class SumUpRule(Rule):
             summand_mask = mask & ~data_df[summand].isna()
             data_df.loc[summand_mask, self.sum_tag] = data_df[self.sum_tag] + data_df[
                 summand]
+
+        return data_df
 
     def get_description(self) -> str:
         """
@@ -472,7 +488,7 @@ class SubtractFromRule(Rule):
         return (data_df[self.target_tag].isna() & ~data_df[self.subtract_from_tag].isna()
                 & mask_subtract_tags)
 
-    def apply(self, data_df: pd.DataFrame, mask: pa.typing.Series[bool]):
+    def apply(self, data_df: pd.DataFrame, mask: pa.typing.Series[bool]) -> pd.DataFrame:
         """
         apply the rule on the provided dataframe. the rows, on which the rule has to be applied
         is defined by the provide mask Series.
@@ -482,6 +498,8 @@ class SubtractFromRule(Rule):
         Args:
             data_df dataframe on which the rule has to be applied
             mask: a Series marking the rows in the dataframe on which the rule has to be applied
+        Returns:
+            pd.DataFrame: make the process chainable
         """
         data_df.loc[mask, self.target_tag] = data_df[self.subtract_from_tag]  # initialize
 
@@ -489,6 +507,7 @@ class SubtractFromRule(Rule):
             subtract_mask = mask & ~data_df[subtract].isna()
             data_df.loc[subtract_mask, self.target_tag] = (data_df[self.target_tag] -
                                                            data_df[subtract])
+        return data_df
 
     def get_description(self) -> str:
         """
@@ -557,7 +576,7 @@ class SetSumIfOnlyOneSummand(Rule):
 
         return mask
 
-    def apply(self, data_df: pd.DataFrame, mask: pa.typing.Series[bool]):
+    def apply(self, data_df: pd.DataFrame, mask: pa.typing.Series[bool]) -> pd.DataFrame:
         """
         apply the rule on the provided dataframe. the rows, on which the rule has to be applied
         is defined by the provide mask Series.
@@ -567,10 +586,13 @@ class SetSumIfOnlyOneSummand(Rule):
         Args:
             data_df dataframe on which the rule has to be applied
             mask: a Series marking the rows in the dataframe on which the rule has to be applied
+        Returns:
+            pd.DataFrame: make the process chainable
         """
         data_df.loc[mask, self.sum_tag] = data_df[self.summand_set]  # initialize
         for summand_nan in self.summands_nan:
             data_df.loc[mask, summand_nan] = 0.0
+        return data_df
 
     def get_description(self) -> str:
         """
@@ -638,7 +660,7 @@ class PostCopyToFirstSummand(Rule):
 
         return mask
 
-    def apply(self, data_df: pd.DataFrame, mask: pa.typing.Series[bool]):
+    def apply(self, data_df: pd.DataFrame, mask: pa.typing.Series[bool]) -> pd.DataFrame:
         """
         apply the rule on the provided dataframe. the rows, on which the rule has to be applied
         is defined by the provide mask Series.
@@ -648,11 +670,14 @@ class PostCopyToFirstSummand(Rule):
         Args:
             data_df dataframe on which the rule has to be applied
             mask: a Series marking the rows in the dataframe on which the rule has to be applied
+        Returns:
+            pd.DataFrame: make the process chainable
         """
 
         data_df.loc[mask, self.first_summand] = data_df[self.sum_tag]  # initialize
         for other_summand in self.other_summands:
             data_df.loc[mask, other_summand] = 0.0
+        return data_df
 
     def get_description(self) -> str:
         """
@@ -707,7 +732,7 @@ class PostSetToZero(Rule):
         """
         return data_df[self.tags].isna().all(axis=1)
 
-    def apply(self, data_df: pd.DataFrame, mask: pa.typing.Series[bool]):
+    def apply(self, data_df: pd.DataFrame, mask: pa.typing.Series[bool]) -> pd.DataFrame:
         """
         apply the rule on the provided dataframe. the rows, on which the rule has to be applied
         is defined by the provide mask Series.
@@ -717,10 +742,13 @@ class PostSetToZero(Rule):
         Args:
             data_df dataframe on which the rule has to be applied
             mask: a Series marking the rows in the dataframe on which the rule has to be applied
+        Returns:
+            pd.DataFrame: make the process chainable
         """
 
         for tag in self.tags:
             data_df.loc[mask, tag] = 0.0
+        return data_df
 
     def get_description(self) -> str:
         """
@@ -784,7 +812,7 @@ class PostFixSign(Rule):
         return (data_df[self.summand_tag] != 0) & \
             ((data_df[self.start_tag] - data_df[self.summand_tag]) == data_df[self.result_tag])
 
-    def apply(self, data_df: pd.DataFrame, mask: pa.typing.Series[bool]):
+    def apply(self, data_df: pd.DataFrame, mask: pa.typing.Series[bool]) -> pd.DataFrame:
         """
         apply the rule on the provided dataframe. the rows, on which the rule has to be applied
         is defined by the provide mask Series.
@@ -794,9 +822,13 @@ class PostFixSign(Rule):
         Args:
             df: dataframe on which the rule has to be applied
             mask: a Series marking the rows in the dataframe on which the rule has to be applied
+        Returns:
+            pd.DataFrame: make the process chainable
         """
         # simply invert the sign
         data_df.loc[mask, self.summand_tag] = -data_df[self.summand_tag]
+
+        return data_df
 
     def get_description(self) -> str:
         return f"Corrects the sign of '{self.summand_tag}' if it seems to be wrong." \

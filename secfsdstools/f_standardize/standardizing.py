@@ -1,8 +1,8 @@
 """Contains the base implementation of the standardizer"""
+import logging
 import os
 from typing import List, Optional, Set, TypeVar
 
-import logging
 import numpy as np
 import pandas as pd
 
@@ -14,6 +14,7 @@ from secfsdstools.f_standardize.base_validation_rules import ValidationRule
 STANDARDIZED = TypeVar('STANDARDIZED', bound='StandardizedBag')
 
 LOGGER = logging.getLogger(__name__)
+
 
 class StandardizedBag:
     """
@@ -228,9 +229,10 @@ class Standardizer(Presenter[JoinedDataBag]):
         self.filter_for_main_statement = filter_for_main_statement
         self.invert_negated = invert_negated
 
-        self.all_input_tags: Set[str] = self.pre_rule_tree.get_input_tags() | \
-                                        self.main_rule_tree.get_input_tags() | \
-                                        set(final_tags)
+        self.all_input_tags: Set[str] = (self.prepivot_rule_tree.get_input_tags() |
+                                         self.pre_rule_tree.get_input_tags() |
+                                         self.main_rule_tree.get_input_tags() |
+                                         set(final_tags))
 
         if filter_for_main_statement and (main_statement_tags is None):
             raise ValueError("if filter_for_main_statement is true, also the "
@@ -302,7 +304,7 @@ class Standardizer(Presenter[JoinedDataBag]):
 
         # apply prepivot_rule_tree
         self.prepivot_rule_tree.set_id("PREPIVOT")
-        self.prepivot_rule_tree.process(data_df=relevant_df)
+        relevant_df = self.prepivot_rule_tree.process(data_df=relevant_df)
         # we cannot directly add rows to an existing dataframe,
         # so every prepivot rules stores the log within itself and in the end, we concat it together
         prepivot_logs = [x.log_df for x in self.prepivot_rule_tree.rules]
@@ -323,7 +325,7 @@ class Standardizer(Presenter[JoinedDataBag]):
 
         # finally apply the pre-rules
         self.pre_rule_tree.set_id("PRE")
-        self.pre_rule_tree.process(pivot_df)
+        pivot_df = self.pre_rule_tree.process(pivot_df)
         self.applied_rules_log_df = self.pre_rule_tree.append_log(self.applied_rules_log_df)
 
         # prepare the stats dataframe and calculate the stats after preprocessing
@@ -331,26 +333,30 @@ class Standardizer(Presenter[JoinedDataBag]):
 
         return pivot_df
 
-    def _main_processing(self, data_df: pd.DataFrame):
+    def _main_processing(self, data_df: pd.DataFrame) -> pd.DataFrame:
+        current_df = data_df
         for i in range(self.main_iterations):
             # apply the main rule tree
             self.main_rule_tree.set_id(prefix=f"MAIN_{i + 1}")
-            self.main_rule_tree.process(data_df=data_df)
+            self.main_rule_tree.process(data_df=current_df)
 
             self.applied_rules_log_df = self.main_rule_tree.append_log(self.applied_rules_log_df)
 
             # calculate stats and add them to the stats log
-            self.stats.add_stats_entry(data_df=data_df, process_step_name=f'MAIN_{i + 1}')
+            self.stats.add_stats_entry(data_df=current_df, process_step_name=f'MAIN_{i + 1}')
+        return current_df
 
-    def _post_processing(self, data_df: pd.DataFrame):
+    def _post_processing(self, data_df: pd.DataFrame) -> pd.DataFrame:
         # apply the post rule tree
         self.post_rule_tree.set_id(prefix="POST")
-        self.post_rule_tree.process(data_df=data_df)
+        current_df = self.post_rule_tree.process(data_df=data_df)
 
         self.applied_rules_log_df = self.post_rule_tree.append_log(self.applied_rules_log_df)
 
         # calculate stats and add them to the stats log
         self.stats.add_stats_entry(data_df=data_df, process_step_name='POST')
+
+        return current_df
 
     def _finalize(self, data_df: pd.DataFrame) -> pd.DataFrame:
         # create a meaningful order
@@ -401,12 +407,12 @@ class Standardizer(Presenter[JoinedDataBag]):
         LOGGER.info("start PRE processing ...")
         ready_df = self._preprocess(data_df)
         LOGGER.info("start MAIN processing ...")
-        self._main_processing(ready_df)
+        main_df = self._main_processing(ready_df)
         LOGGER.info("start POST processing ...")
-        self._post_processing(ready_df)
+        post_df = self._post_processing(main_df)
 
         LOGGER.info("start FINAlIZE ...")
-        self.result = self._finalize(ready_df)
+        self.result = self._finalize(post_df)
         return self.result
 
     def get_process_description(self) -> pd.DataFrame:

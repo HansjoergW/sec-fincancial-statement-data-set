@@ -72,7 +72,7 @@ class PreCorrectMixUpContinuingOperations(Rule):
         return ~data_df[self.opcont].isnull() & ~data_df[self.finact].isnull() \
                 & data_df[self.opact].isnull()
 
-    def apply(self, data_df: pd.DataFrame, mask: pa.typing.Series[bool]):
+    def apply(self, data_df: pd.DataFrame, mask: pa.typing.Series[bool]) -> pd.DataFrame:
         """
         apply the rule on the provided dataframe. the rows, on which the rule has to be applied
         is defined by the provide mask Series.
@@ -82,10 +82,13 @@ class PreCorrectMixUpContinuingOperations(Rule):
         Args:
             df: dataframe on which the rule has to be applied
             mask: a Series marking the rows in the dataframe on which the rule has to be applied
+        Returns:
+            pd.DataFrame: make the process chainable
         """
 
         data_df.loc[mask, self.opact] = data_df[self.opcont]
         data_df.loc[mask, self.opcont] = None
+        return data_df
 
     def get_description(self) -> str:
         """

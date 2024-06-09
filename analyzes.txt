@@ -25,6 +25,17 @@ CashAtBeginning
 
 
 
+CashAtEnd
+   PrePivotRules müssen auch Methoden haben um definieren zu können, welche
+   tags relevant sind, sonst werden die gefiltert!
+
+   ich kann nicht effizient erweitern. Daher bleibt eigentlich nur die Variante,
+   dass apply den Wert zurückgibt.. wodurch aber wieder die baseklasse anders wird..
+
+
+Todos Next:
+- Cash At End Of Period
+
 
 Main positions
 
@@ -118,10 +129,6 @@ V2
             ----------
             = CashCashEquivalentsRestrictedCashAndRestrictedCashEquivalentsPeriodIncreaseDecreaseIncludingExchangeRateEffect
     =       = CashTotalPeriodIncreaseDecreaseIncludingExRateEffect (Rename)
-
-
-Todos Next:
-- Cash At End Of Period
 
 
 IS

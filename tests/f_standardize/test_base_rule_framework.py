@@ -20,9 +20,9 @@ class Rule1(Rule):
     def mask(self, df: pd.DataFrame) -> pa.typing.Series[bool]:
         return df[df.columns[0]] == df[df.columns[0]]
 
-    def apply(self, df: pd.DataFrame, mask: pa.typing.Series[bool]):
+    def apply(self, df: pd.DataFrame, mask: pa.typing.Series[bool]) -> pd.DataFrame:
         # do nothing
-        pass
+        return df
 
     def get_description(self) -> str:
         return ""
@@ -43,9 +43,9 @@ class Rule2(Rule):
     def mask(self, df: pd.DataFrame) -> pa.typing.Series[bool]:
         return df[df.columns[0]] == df[df.columns[0]]
 
-    def apply(self, df: pd.DataFrame, mask: pa.typing.Series[bool]):
+    def apply(self, df: pd.DataFrame, mask: pa.typing.Series[bool]) -> pd.DataFrame:
         # do nothing
-        pass
+        return df
 
     def get_description(self) -> str:
         return ""
@@ -92,12 +92,12 @@ def test_simple_group_rule():
     df = pd.DataFrame(data, columns=['Numbers'])
 
     # call process without a log -> simply expect no problems
-    rulegroup.process(data_df=df)
+    result_df = rulegroup.process(data_df=df)
     log_df = df.copy()
 
     log_df = rulegroup.append_log(log_df)
 
     # we expect colums named with the id of both rules.
     # the sum of these column has to be the length of the dataframe
-    assert log_df[rule1.identifier].sum() == len(df)
-    assert log_df[rule2.identifier].sum() == len(df)
+    assert log_df[rule1.identifier].sum() == len(result_df)
+    assert log_df[rule2.identifier].sum() == len(result_df)

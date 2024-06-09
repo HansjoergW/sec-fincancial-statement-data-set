@@ -36,13 +36,14 @@ class RuleEntity(ABC):
             Set[str] : a set of strings
         """
 
-    def process(self, data_df: pd.DataFrame):
+    def process(self, data_df: pd.DataFrame) -> pd.DataFrame:
         """
         Applies the rules on the provided dataframe.
 
         Args:
             data_df (pd.DataFrame): the dataframe on which the rules will be applied
-
+        Returns:
+            pd.DataFrame: make the process chainable
         """
 
     @abstractmethod
@@ -91,7 +92,7 @@ class AbstractRule(RuleEntity):
         """
 
     @abstractmethod
-    def apply(self, data_df: pd.DataFrame, mask: pa.typing.Series[bool]):
+    def apply(self, data_df: pd.DataFrame, mask: pa.typing.Series[bool]) -> pd.DataFrame:
         """
         apply the rule on the provided dataframe. the rows, on which the rule has to be applied
         is defined by the provide mask Series.
@@ -101,6 +102,8 @@ class AbstractRule(RuleEntity):
         Args:
             data_df: dataframe on which the rule has to be applied
             mask: a Series marking the rows in the dataframe on which the rule has to be applied
+        Returns:
+            pd.DataFrame: make the process chainable
         """
 
     def collect_description(self, part: str) -> List[DescriptionEntry]:
@@ -140,12 +143,14 @@ class PrePivotRule(AbstractRule):
         """
         self.identifier = f'{prefix}_{self.rule_id}'
 
-    def process(self, data_df: pd.DataFrame):
+    def process(self, data_df: pd.DataFrame) -> pd.DataFrame:
         """
         process the dataframe and apply the rule.
 
         Args:
             data_df (pd.DataFrame) : dataframe on which the rule has to be applied
+        Returns:
+            pd.DataFrame: make the process chainable
         """
         mask = self.mask(data_df)
 
@@ -154,10 +159,10 @@ class PrePivotRule(AbstractRule):
         self.log_df = data_df[mask][self.index_cols].copy()
         self.log_df['id'] = self.identifier
 
-        self.apply(data_df, mask)
+        return self.apply(data_df, mask)
 
     def get_input_tags(self) -> Set[str]:
-        return set()  # not relevant for PrePivotRules
+        return set()  # default value for PrePivotRules
 
 
 class Rule(AbstractRule):
@@ -189,16 +194,19 @@ class Rule(AbstractRule):
         """
         self.identifier = f'{prefix}_{self.get_target_tags_str()}'
 
-    def process(self, data_df: pd.DataFrame):
+    def process(self, data_df: pd.DataFrame) -> pd.DataFrame:
         """
         process the dataframe and apply the rule.
 
         Args:
             data_df (pd.DataFrame) : dataframe on which the rule has to be applied
+        Returns:
+            pd.DataFrame: make the process chainable
         """
         mask = self.mask(data_df)
-        self.apply(data_df, mask)
+        result = self.apply(data_df, mask)
         self.masked = mask
+        return result
 
     def get_mask(self) -> pd.Series:
         """
@@ -234,15 +242,19 @@ class RuleGroup(RuleEntity):
             rule.set_id(f'{self.identifier}_#{idx}')
             idx = idx + 1
 
-    def process(self, data_df: pd.DataFrame):
+    def process(self, data_df: pd.DataFrame) -> pd.DataFrame:
         """
         process the dataframe and apply the rules of this group.
 
         Args:
             df (pd.DataFrame) : dataframe on which the rule has to be applied
+        Returns:
+            pd.DataFrame: make the process chainable
         """
+        current_df = data_df
         for rule in self.rules:
-            rule.process(data_df=data_df)
+            current_df = rule.process(data_df=current_df)
+        return current_df
 
     def get_input_tags(self) -> Set[str]:
         """

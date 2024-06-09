@@ -273,7 +273,7 @@ class PostFixIncomeLossFromContinuingOperationsAndSignOfIncomeTaxExpenseBenefit(
             ((data_df.ProfitLoss - data_df.IncomeLossFromContinuingOperations).abs() >=
              1.8 * data_df.AllIncomeTaxExpenseBenefit.abs())
 
-    def apply(self, data_df: pd.DataFrame, mask: pa.typing.Series[bool]):
+    def apply(self, data_df: pd.DataFrame, mask: pa.typing.Series[bool]) -> pd.DataFrame:
         """
         apply the rule on the provided dataframe. the rows, on which the rule has to be applied
         is defined by the provide mask Series.
@@ -283,6 +283,8 @@ class PostFixIncomeLossFromContinuingOperationsAndSignOfIncomeTaxExpenseBenefit(
         Args:
             data_df: dataframe on which the rule has to be applied
             mask: a Series marking the rows in the dataframe on which the rule has to be applied
+        Returns:
+            pd.DataFrame: make the process chainable
         """
 
         data_df.loc[mask, 'AllIncomeTaxExpenseBenefit'] = -data_df.AllIncomeTaxExpenseBenefit
@@ -294,6 +296,7 @@ class PostFixIncomeLossFromContinuingOperationsAndSignOfIncomeTaxExpenseBenefit(
         data_df.loc[subtract_mask, 'IncomeLossFromContinuingOperations'] = (
                 data_df['IncomeLossFromContinuingOperations'] -
                 data_df.AllIncomeTaxExpenseBenefit)
+        return data_df
 
     def get_description(self) -> str:
         return "Corrects the sign of 'IncomeTaxExpenseBenefits' if it seems to be wrong. Checks" \

@@ -34,7 +34,7 @@ class PrePivotDeduplicate(PrePivotRule):
         """
         return data_df.duplicated(self.index_cols)
 
-    def apply(self, data_df: pd.DataFrame, mask: pa.typing.Series[bool]):
+    def apply(self, data_df: pd.DataFrame, mask: pa.typing.Series[bool]) -> pd.DataFrame:
         """
         apply the rule on the provided dataframe. the rows, on which the rule has to be applied
         is defined by the provide mask Series.
@@ -44,8 +44,11 @@ class PrePivotDeduplicate(PrePivotRule):
         Args:
             df: dataframe on which the rule has to be applied
             mask: a Series marking the rows in the dataframe on which the rule has to be applied
+        Returns:
+            pd.DataFrame: make the process chainable
         """
         data_df.drop(data_df[mask].index, inplace=True)
+        return data_df
 
     def get_description(self) -> str:
         """
@@ -95,7 +98,7 @@ class PrePivotCorrectSign(PrePivotRule):
         """
         return data_df.tag.isin(self.tag_list) & ((data_df.value < 0) == self.is_positive)
 
-    def apply(self, data_df: pd.DataFrame, mask: pa.typing.Series[bool]):
+    def apply(self, data_df: pd.DataFrame, mask: pa.typing.Series[bool]) -> pd.DataFrame:
         """
         apply the rule on the provided dataframe. the rows, on which the rule has to be applied
         is defined by the provide mask Series.
@@ -105,8 +108,11 @@ class PrePivotCorrectSign(PrePivotRule):
         Args:
             df: dataframe on which the rule has to be applied
             mask: a Series marking the rows in the dataframe on which the rule has to be applied
+        Returns:
+            pd.DataFrame: make the process chainable
         """
         data_df.loc[mask, 'value'] = data_df.value * -1
+        return data_df
 
     def get_description(self) -> str:
         """

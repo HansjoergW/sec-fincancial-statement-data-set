@@ -13,11 +13,11 @@ New Release
 - on github -> under code releases: draft new release
 
 
-v.1.5.0
-- SumUpRule: additional parameter optional_summands
-- SubtractFrom Rule
-- Standardizer:
-- interactive notebooks -> loads standardize details for single report and all reports
+
+v.1.6.0
+- Standardizer Rule-Framework
+  process and apply method chainable
+- CF Standardizer
 
 Todo:
 - Discord Channel?

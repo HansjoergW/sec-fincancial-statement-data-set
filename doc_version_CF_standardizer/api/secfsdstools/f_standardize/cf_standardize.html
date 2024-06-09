@@ -101,7 +101,7 @@ class PreCorrectMixUpContinuingOperations(Rule):
         return ~data_df[self.opcont].isnull() &amp; ~data_df[self.finact].isnull() \
                 &amp; data_df[self.opact].isnull()
 
-    def apply(self, data_df: pd.DataFrame, mask: pa.typing.Series[bool]):
+    def apply(self, data_df: pd.DataFrame, mask: pa.typing.Series[bool]) -&gt; pd.DataFrame:
         &#34;&#34;&#34;
         apply the rule on the provided dataframe. the rows, on which the rule has to be applied
         is defined by the provide mask Series.
@@ -111,10 +111,13 @@ class PreCorrectMixUpContinuingOperations(Rule):
         Args:
             df: dataframe on which the rule has to be applied
             mask: a Series marking the rows in the dataframe on which the rule has to be applied
+        Returns:
+            pd.DataFrame: make the process chainable
         &#34;&#34;&#34;
 
         data_df.loc[mask, self.opact] = data_df[self.opcont]
         data_df.loc[mask, self.opcont] = None
+        return data_df
 
     def get_description(self) -&gt; str:
         &#34;&#34;&#34;
@@ -1256,7 +1259,7 @@ set, but not NetCashProvidedByUsedInOperatingActivities.</p>
         return ~data_df[self.opcont].isnull() &amp; ~data_df[self.finact].isnull() \
                 &amp; data_df[self.opact].isnull()
 
-    def apply(self, data_df: pd.DataFrame, mask: pa.typing.Series[bool]):
+    def apply(self, data_df: pd.DataFrame, mask: pa.typing.Series[bool]) -&gt; pd.DataFrame:
         &#34;&#34;&#34;
         apply the rule on the provided dataframe. the rows, on which the rule has to be applied
         is defined by the provide mask Series.
@@ -1266,10 +1269,13 @@ set, but not NetCashProvidedByUsedInOperatingActivities.</p>
         Args:
             df: dataframe on which the rule has to be applied
             mask: a Series marking the rows in the dataframe on which the rule has to be applied
+        Returns:
+            pd.DataFrame: make the process chainable
         &#34;&#34;&#34;
 
         data_df.loc[mask, self.opact] = data_df[self.opcont]
         data_df.loc[mask, self.opcont] = None
+        return data_df
 
     def get_description(self) -&gt; str:
         &#34;&#34;&#34;
@@ -1299,7 +1305,7 @@ set, but not NetCashProvidedByUsedInOperatingActivities.</p>
 <h3>Methods</h3>
 <dl>
 <dt id="secfsdstools.f_standardize.cf_standardize.PreCorrectMixUpContinuingOperations.apply"><code class="name flex">
-<span>def <span class="ident">apply</span></span>(<span>self, data_df: pandas.core.frame.DataFrame, mask: pandera.typing.pandas.Series[bool])</span>
+<span>def <span class="ident">apply</span></span>(<span>self, data_df: pandas.core.frame.DataFrame, mask: pandera.typing.pandas.Series[bool]) ‑> pandas.core.frame.DataFrame</span>
 </code></dt>
 <dd>
 <div class="desc"><p>apply the rule on the provided dataframe. the rows, on which the rule has to be applied
@@ -1311,12 +1317,17 @@ is defined by the provide mask Series.</p>
 <dd>dataframe on which the rule has to be applied</dd>
 <dt><strong><code>mask</code></strong></dt>
 <dd>a Series marking the rows in the dataframe on which the rule has to be applied</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>pd.DataFrame</code></dt>
+<dd>make the process chainable</dd>
 </dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def apply(self, data_df: pd.DataFrame, mask: pa.typing.Series[bool]):
+<pre><code class="python">def apply(self, data_df: pd.DataFrame, mask: pa.typing.Series[bool]) -&gt; pd.DataFrame:
     &#34;&#34;&#34;
     apply the rule on the provided dataframe. the rows, on which the rule has to be applied
     is defined by the provide mask Series.
@@ -1326,10 +1337,13 @@ is defined by the provide mask Series.</p>
     Args:
         df: dataframe on which the rule has to be applied
         mask: a Series marking the rows in the dataframe on which the rule has to be applied
+    Returns:
+        pd.DataFrame: make the process chainable
     &#34;&#34;&#34;
 
     data_df.loc[mask, self.opact] = data_df[self.opcont]
-    data_df.loc[mask, self.opcont] = None</code></pre>
+    data_df.loc[mask, self.opcont] = None
+    return data_df</code></pre>
 </details>
 </dd>
 <dt id="secfsdstools.f_standardize.cf_standardize.PreCorrectMixUpContinuingOperations.get_input_tags"><code class="name flex">

@@ -67,13 +67,14 @@ class RuleEntity(ABC):
             Set[str] : a set of strings
         &#34;&#34;&#34;
 
-    def process(self, data_df: pd.DataFrame):
+    def process(self, data_df: pd.DataFrame) -&gt; pd.DataFrame:
         &#34;&#34;&#34;
         Applies the rules on the provided dataframe.
 
         Args:
             data_df (pd.DataFrame): the dataframe on which the rules will be applied
-
+        Returns:
+            pd.DataFrame: make the process chainable
         &#34;&#34;&#34;
 
     @abstractmethod
@@ -122,7 +123,7 @@ class AbstractRule(RuleEntity):
         &#34;&#34;&#34;
 
     @abstractmethod
-    def apply(self, data_df: pd.DataFrame, mask: pa.typing.Series[bool]):
+    def apply(self, data_df: pd.DataFrame, mask: pa.typing.Series[bool]) -&gt; pd.DataFrame:
         &#34;&#34;&#34;
         apply the rule on the provided dataframe. the rows, on which the rule has to be applied
         is defined by the provide mask Series.
@@ -132,6 +133,8 @@ class AbstractRule(RuleEntity):
         Args:
             data_df: dataframe on which the rule has to be applied
             mask: a Series marking the rows in the dataframe on which the rule has to be applied
+        Returns:
+            pd.DataFrame: make the process chainable
         &#34;&#34;&#34;
 
     def collect_description(self, part: str) -&gt; List[DescriptionEntry]:
@@ -171,12 +174,14 @@ class PrePivotRule(AbstractRule):
         &#34;&#34;&#34;
         self.identifier = f&#39;{prefix}_{self.rule_id}&#39;
 
-    def process(self, data_df: pd.DataFrame):
+    def process(self, data_df: pd.DataFrame) -&gt; pd.DataFrame:
         &#34;&#34;&#34;
         process the dataframe and apply the rule.
 
         Args:
             data_df (pd.DataFrame) : dataframe on which the rule has to be applied
+        Returns:
+            pd.DataFrame: make the process chainable
         &#34;&#34;&#34;
         mask = self.mask(data_df)
 
@@ -185,10 +190,10 @@ class PrePivotRule(AbstractRule):
         self.log_df = data_df[mask][self.index_cols].copy()
         self.log_df[&#39;id&#39;] = self.identifier
 
-        self.apply(data_df, mask)
+        return self.apply(data_df, mask)
 
     def get_input_tags(self) -&gt; Set[str]:
-        return set()  # not relevant for PrePivotRules
+        return set()  # default value for PrePivotRules
 
 
 class Rule(AbstractRule):
@@ -220,16 +225,19 @@ class Rule(AbstractRule):
         &#34;&#34;&#34;
         self.identifier = f&#39;{prefix}_{self.get_target_tags_str()}&#39;
 
-    def process(self, data_df: pd.DataFrame):
+    def process(self, data_df: pd.DataFrame) -&gt; pd.DataFrame:
         &#34;&#34;&#34;
         process the dataframe and apply the rule.
 
         Args:
             data_df (pd.DataFrame) : dataframe on which the rule has to be applied
+        Returns:
+            pd.DataFrame: make the process chainable
         &#34;&#34;&#34;
         mask = self.mask(data_df)
-        self.apply(data_df, mask)
+        result = self.apply(data_df, mask)
         self.masked = mask
+        return result
 
     def get_mask(self) -&gt; pd.Series:
         &#34;&#34;&#34;
@@ -265,15 +273,19 @@ class RuleGroup(RuleEntity):
             rule.set_id(f&#39;{self.identifier}_#{idx}&#39;)
             idx = idx + 1
 
-    def process(self, data_df: pd.DataFrame):
+    def process(self, data_df: pd.DataFrame) -&gt; pd.DataFrame:
         &#34;&#34;&#34;
         process the dataframe and apply the rules of this group.
 
         Args:
             df (pd.DataFrame) : dataframe on which the rule has to be applied
+        Returns:
+            pd.DataFrame: make the process chainable
         &#34;&#34;&#34;
+        current_df = data_df
         for rule in self.rules:
-            rule.process(data_df=data_df)
+            current_df = rule.process(data_df=current_df)
+        return current_df
 
     def get_input_tags(self) -&gt; Set[str]:
         &#34;&#34;&#34;
@@ -391,7 +403,7 @@ class RuleGroup(RuleEntity):
         &#34;&#34;&#34;
 
     @abstractmethod
-    def apply(self, data_df: pd.DataFrame, mask: pa.typing.Series[bool]):
+    def apply(self, data_df: pd.DataFrame, mask: pa.typing.Series[bool]) -&gt; pd.DataFrame:
         &#34;&#34;&#34;
         apply the rule on the provided dataframe. the rows, on which the rule has to be applied
         is defined by the provide mask Series.
@@ -401,6 +413,8 @@ class RuleGroup(RuleEntity):
         Args:
             data_df: dataframe on which the rule has to be applied
             mask: a Series marking the rows in the dataframe on which the rule has to be applied
+        Returns:
+            pd.DataFrame: make the process chainable
         &#34;&#34;&#34;
 
     def collect_description(self, part: str) -&gt; List[DescriptionEntry]:
@@ -440,7 +454,7 @@ class RuleGroup(RuleEntity):
 <h3>Methods</h3>
 <dl>
 <dt id="secfsdstools.f_standardize.base_rule_framework.AbstractRule.apply"><code class="name flex">
-<span>def <span class="ident">apply</span></span>(<span>self, data_df: pandas.core.frame.DataFrame, mask: pandera.typing.pandas.Series[bool])</span>
+<span>def <span class="ident">apply</span></span>(<span>self, data_df: pandas.core.frame.DataFrame, mask: pandera.typing.pandas.Series[bool]) ‑> pandas.core.frame.DataFrame</span>
 </code></dt>
 <dd>
 <div class="desc"><p>apply the rule on the provided dataframe. the rows, on which the rule has to be applied
@@ -452,13 +466,18 @@ is defined by the provide mask Series.</p>
 <dd>dataframe on which the rule has to be applied</dd>
 <dt><strong><code>mask</code></strong></dt>
 <dd>a Series marking the rows in the dataframe on which the rule has to be applied</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>pd.DataFrame</code></dt>
+<dd>make the process chainable</dd>
 </dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@abstractmethod
-def apply(self, data_df: pd.DataFrame, mask: pa.typing.Series[bool]):
+def apply(self, data_df: pd.DataFrame, mask: pa.typing.Series[bool]) -&gt; pd.DataFrame:
     &#34;&#34;&#34;
     apply the rule on the provided dataframe. the rows, on which the rule has to be applied
     is defined by the provide mask Series.
@@ -468,6 +487,8 @@ def apply(self, data_df: pd.DataFrame, mask: pa.typing.Series[bool]):
     Args:
         data_df: dataframe on which the rule has to be applied
         mask: a Series marking the rows in the dataframe on which the rule has to be applied
+    Returns:
+        pd.DataFrame: make the process chainable
     &#34;&#34;&#34;</code></pre>
 </details>
 </dd>
@@ -623,12 +644,14 @@ process descrption table.</p></div>
         &#34;&#34;&#34;
         self.identifier = f&#39;{prefix}_{self.rule_id}&#39;
 
-    def process(self, data_df: pd.DataFrame):
+    def process(self, data_df: pd.DataFrame) -&gt; pd.DataFrame:
         &#34;&#34;&#34;
         process the dataframe and apply the rule.
 
         Args:
             data_df (pd.DataFrame) : dataframe on which the rule has to be applied
+        Returns:
+            pd.DataFrame: make the process chainable
         &#34;&#34;&#34;
         mask = self.mask(data_df)
 
@@ -637,10 +660,10 @@ process descrption table.</p></div>
         self.log_df = data_df[mask][self.index_cols].copy()
         self.log_df[&#39;id&#39;] = self.identifier
 
-        self.apply(data_df, mask)
+        return self.apply(data_df, mask)
 
     def get_input_tags(self) -&gt; Set[str]:
-        return set()  # not relevant for PrePivotRules</code></pre>
+        return set()  # default value for PrePivotRules</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -667,22 +690,29 @@ process descrption table.</p></div>
 <h3>Methods</h3>
 <dl>
 <dt id="secfsdstools.f_standardize.base_rule_framework.PrePivotRule.process"><code class="name flex">
-<span>def <span class="ident">process</span></span>(<span>self, data_df: pandas.core.frame.DataFrame)</span>
+<span>def <span class="ident">process</span></span>(<span>self, data_df: pandas.core.frame.DataFrame) ‑> pandas.core.frame.DataFrame</span>
 </code></dt>
 <dd>
 <div class="desc"><p>process the dataframe and apply the rule.</p>
 <h2 id="args">Args</h2>
-<p>data_df (pd.DataFrame) : dataframe on which the rule has to be applied</p></div>
+<p>data_df (pd.DataFrame) : dataframe on which the rule has to be applied</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>pd.DataFrame</code></dt>
+<dd>make the process chainable</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def process(self, data_df: pd.DataFrame):
+<pre><code class="python">def process(self, data_df: pd.DataFrame) -&gt; pd.DataFrame:
     &#34;&#34;&#34;
     process the dataframe and apply the rule.
 
     Args:
         data_df (pd.DataFrame) : dataframe on which the rule has to be applied
+    Returns:
+        pd.DataFrame: make the process chainable
     &#34;&#34;&#34;
     mask = self.mask(data_df)
 
@@ -691,7 +721,7 @@ process descrption table.</p></div>
     self.log_df = data_df[mask][self.index_cols].copy()
     self.log_df[&#39;id&#39;] = self.identifier
 
-    self.apply(data_df, mask)</code></pre>
+    return self.apply(data_df, mask)</code></pre>
 </details>
 </dd>
 </dl>
@@ -747,16 +777,19 @@ process descrption table.</p></div>
         &#34;&#34;&#34;
         self.identifier = f&#39;{prefix}_{self.get_target_tags_str()}&#39;
 
-    def process(self, data_df: pd.DataFrame):
+    def process(self, data_df: pd.DataFrame) -&gt; pd.DataFrame:
         &#34;&#34;&#34;
         process the dataframe and apply the rule.
 
         Args:
             data_df (pd.DataFrame) : dataframe on which the rule has to be applied
+        Returns:
+            pd.DataFrame: make the process chainable
         &#34;&#34;&#34;
         mask = self.mask(data_df)
-        self.apply(data_df, mask)
+        result = self.apply(data_df, mask)
         self.masked = mask
+        return result
 
     def get_mask(self) -&gt; pd.Series:
         &#34;&#34;&#34;
@@ -861,26 +894,34 @@ def get_target_tags(self) -&gt; List[str]:
 </details>
 </dd>
 <dt id="secfsdstools.f_standardize.base_rule_framework.Rule.process"><code class="name flex">
-<span>def <span class="ident">process</span></span>(<span>self, data_df: pandas.core.frame.DataFrame)</span>
+<span>def <span class="ident">process</span></span>(<span>self, data_df: pandas.core.frame.DataFrame) ‑> pandas.core.frame.DataFrame</span>
 </code></dt>
 <dd>
 <div class="desc"><p>process the dataframe and apply the rule.</p>
 <h2 id="args">Args</h2>
-<p>data_df (pd.DataFrame) : dataframe on which the rule has to be applied</p></div>
+<p>data_df (pd.DataFrame) : dataframe on which the rule has to be applied</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>pd.DataFrame</code></dt>
+<dd>make the process chainable</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def process(self, data_df: pd.DataFrame):
+<pre><code class="python">def process(self, data_df: pd.DataFrame) -&gt; pd.DataFrame:
     &#34;&#34;&#34;
     process the dataframe and apply the rule.
 
     Args:
         data_df (pd.DataFrame) : dataframe on which the rule has to be applied
+    Returns:
+        pd.DataFrame: make the process chainable
     &#34;&#34;&#34;
     mask = self.mask(data_df)
-    self.apply(data_df, mask)
-    self.masked = mask</code></pre>
+    result = self.apply(data_df, mask)
+    self.masked = mask
+    return result</code></pre>
 </details>
 </dd>
 </dl>
@@ -921,13 +962,14 @@ def get_target_tags(self) -&gt; List[str]:
             Set[str] : a set of strings
         &#34;&#34;&#34;
 
-    def process(self, data_df: pd.DataFrame):
+    def process(self, data_df: pd.DataFrame) -&gt; pd.DataFrame:
         &#34;&#34;&#34;
         Applies the rules on the provided dataframe.
 
         Args:
             data_df (pd.DataFrame): the dataframe on which the rules will be applied
-
+        Returns:
+            pd.DataFrame: make the process chainable
         &#34;&#34;&#34;
 
     @abstractmethod
@@ -1053,7 +1095,7 @@ def get_input_tags(self) -&gt; Set[str]:
 </details>
 </dd>
 <dt id="secfsdstools.f_standardize.base_rule_framework.RuleEntity.process"><code class="name flex">
-<span>def <span class="ident">process</span></span>(<span>self, data_df: pandas.core.frame.DataFrame)</span>
+<span>def <span class="ident">process</span></span>(<span>self, data_df: pandas.core.frame.DataFrame) ‑> pandas.core.frame.DataFrame</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Applies the rules on the provided dataframe.</p>
@@ -1061,18 +1103,24 @@ def get_input_tags(self) -&gt; Set[str]:
 <dl>
 <dt><strong><code>data_df</code></strong> :&ensp;<code>pd.DataFrame</code></dt>
 <dd>the dataframe on which the rules will be applied</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>pd.DataFrame</code></dt>
+<dd>make the process chainable</dd>
 </dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def process(self, data_df: pd.DataFrame):
+<pre><code class="python">def process(self, data_df: pd.DataFrame) -&gt; pd.DataFrame:
     &#34;&#34;&#34;
     Applies the rules on the provided dataframe.
 
     Args:
         data_df (pd.DataFrame): the dataframe on which the rules will be applied
-
+    Returns:
+        pd.DataFrame: make the process chainable
     &#34;&#34;&#34;</code></pre>
 </details>
 </dd>
@@ -1146,15 +1194,19 @@ def set_id(self, prefix: str):
             rule.set_id(f&#39;{self.identifier}_#{idx}&#39;)
             idx = idx + 1
 
-    def process(self, data_df: pd.DataFrame):
+    def process(self, data_df: pd.DataFrame) -&gt; pd.DataFrame:
         &#34;&#34;&#34;
         process the dataframe and apply the rules of this group.
 
         Args:
             df (pd.DataFrame) : dataframe on which the rule has to be applied
+        Returns:
+            pd.DataFrame: make the process chainable
         &#34;&#34;&#34;
+        current_df = data_df
         for rule in self.rules:
-            rule.process(data_df=data_df)
+            current_df = rule.process(data_df=current_df)
+        return current_df
 
     def get_input_tags(self) -&gt; Set[str]:
         &#34;&#34;&#34;
@@ -1391,25 +1443,34 @@ and to collect the applied rules together with their ids</p>
 </details>
 </dd>
 <dt id="secfsdstools.f_standardize.base_rule_framework.RuleGroup.process"><code class="name flex">
-<span>def <span class="ident">process</span></span>(<span>self, data_df: pandas.core.frame.DataFrame)</span>
+<span>def <span class="ident">process</span></span>(<span>self, data_df: pandas.core.frame.DataFrame) ‑> pandas.core.frame.DataFrame</span>
 </code></dt>
 <dd>
 <div class="desc"><p>process the dataframe and apply the rules of this group.</p>
 <h2 id="args">Args</h2>
-<p>df (pd.DataFrame) : dataframe on which the rule has to be applied</p></div>
+<p>df (pd.DataFrame) : dataframe on which the rule has to be applied</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>pd.DataFrame</code></dt>
+<dd>make the process chainable</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def process(self, data_df: pd.DataFrame):
+<pre><code class="python">def process(self, data_df: pd.DataFrame) -&gt; pd.DataFrame:
     &#34;&#34;&#34;
     process the dataframe and apply the rules of this group.
 
     Args:
         df (pd.DataFrame) : dataframe on which the rule has to be applied
+    Returns:
+        pd.DataFrame: make the process chainable
     &#34;&#34;&#34;
+    current_df = data_df
     for rule in self.rules:
-        rule.process(data_df=data_df)</code></pre>
+        current_df = rule.process(data_df=current_df)
+    return current_df</code></pre>
 </details>
 </dd>
 <dt id="secfsdstools.f_standardize.base_rule_framework.RuleGroup.set_id"><code class="name flex">

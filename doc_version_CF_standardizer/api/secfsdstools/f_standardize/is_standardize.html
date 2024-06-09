@@ -302,7 +302,7 @@ class PostFixIncomeLossFromContinuingOperationsAndSignOfIncomeTaxExpenseBenefit(
             ((data_df.ProfitLoss - data_df.IncomeLossFromContinuingOperations).abs() &gt;=
              1.8 * data_df.AllIncomeTaxExpenseBenefit.abs())
 
-    def apply(self, data_df: pd.DataFrame, mask: pa.typing.Series[bool]):
+    def apply(self, data_df: pd.DataFrame, mask: pa.typing.Series[bool]) -&gt; pd.DataFrame:
         &#34;&#34;&#34;
         apply the rule on the provided dataframe. the rows, on which the rule has to be applied
         is defined by the provide mask Series.
@@ -312,6 +312,8 @@ class PostFixIncomeLossFromContinuingOperationsAndSignOfIncomeTaxExpenseBenefit(
         Args:
             data_df: dataframe on which the rule has to be applied
             mask: a Series marking the rows in the dataframe on which the rule has to be applied
+        Returns:
+            pd.DataFrame: make the process chainable
         &#34;&#34;&#34;
 
         data_df.loc[mask, &#39;AllIncomeTaxExpenseBenefit&#39;] = -data_df.AllIncomeTaxExpenseBenefit
@@ -323,6 +325,7 @@ class PostFixIncomeLossFromContinuingOperationsAndSignOfIncomeTaxExpenseBenefit(
         data_df.loc[subtract_mask, &#39;IncomeLossFromContinuingOperations&#39;] = (
                 data_df[&#39;IncomeLossFromContinuingOperations&#39;] -
                 data_df.AllIncomeTaxExpenseBenefit)
+        return data_df
 
     def get_description(self) -&gt; str:
         return &#34;Corrects the sign of &#39;IncomeTaxExpenseBenefits&#39; if it seems to be wrong. Checks&#34; \
@@ -2265,7 +2268,7 @@ and recalculates IncomeLossFromContinuingOperations</p></div>
             ((data_df.ProfitLoss - data_df.IncomeLossFromContinuingOperations).abs() &gt;=
              1.8 * data_df.AllIncomeTaxExpenseBenefit.abs())
 
-    def apply(self, data_df: pd.DataFrame, mask: pa.typing.Series[bool]):
+    def apply(self, data_df: pd.DataFrame, mask: pa.typing.Series[bool]) -&gt; pd.DataFrame:
         &#34;&#34;&#34;
         apply the rule on the provided dataframe. the rows, on which the rule has to be applied
         is defined by the provide mask Series.
@@ -2275,6 +2278,8 @@ and recalculates IncomeLossFromContinuingOperations</p></div>
         Args:
             data_df: dataframe on which the rule has to be applied
             mask: a Series marking the rows in the dataframe on which the rule has to be applied
+        Returns:
+            pd.DataFrame: make the process chainable
         &#34;&#34;&#34;
 
         data_df.loc[mask, &#39;AllIncomeTaxExpenseBenefit&#39;] = -data_df.AllIncomeTaxExpenseBenefit
@@ -2286,6 +2291,7 @@ and recalculates IncomeLossFromContinuingOperations</p></div>
         data_df.loc[subtract_mask, &#39;IncomeLossFromContinuingOperations&#39;] = (
                 data_df[&#39;IncomeLossFromContinuingOperations&#39;] -
                 data_df.AllIncomeTaxExpenseBenefit)
+        return data_df
 
     def get_description(self) -&gt; str:
         return &#34;Corrects the sign of &#39;IncomeTaxExpenseBenefits&#39; if it seems to be wrong. Checks&#34; \
@@ -2310,7 +2316,7 @@ and recalculates IncomeLossFromContinuingOperations</p></div>
 <h3>Methods</h3>
 <dl>
 <dt id="secfsdstools.f_standardize.is_standardize.PostFixIncomeLossFromContinuingOperationsAndSignOfIncomeTaxExpenseBenefit.apply"><code class="name flex">
-<span>def <span class="ident">apply</span></span>(<span>self, data_df: pandas.core.frame.DataFrame, mask: pandera.typing.pandas.Series[bool])</span>
+<span>def <span class="ident">apply</span></span>(<span>self, data_df: pandas.core.frame.DataFrame, mask: pandera.typing.pandas.Series[bool]) ‑> pandas.core.frame.DataFrame</span>
 </code></dt>
 <dd>
 <div class="desc"><p>apply the rule on the provided dataframe. the rows, on which the rule has to be applied
@@ -2322,12 +2328,17 @@ is defined by the provide mask Series.</p>
 <dd>dataframe on which the rule has to be applied</dd>
 <dt><strong><code>mask</code></strong></dt>
 <dd>a Series marking the rows in the dataframe on which the rule has to be applied</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>pd.DataFrame</code></dt>
+<dd>make the process chainable</dd>
 </dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def apply(self, data_df: pd.DataFrame, mask: pa.typing.Series[bool]):
+<pre><code class="python">def apply(self, data_df: pd.DataFrame, mask: pa.typing.Series[bool]) -&gt; pd.DataFrame:
     &#34;&#34;&#34;
     apply the rule on the provided dataframe. the rows, on which the rule has to be applied
     is defined by the provide mask Series.
@@ -2337,6 +2348,8 @@ is defined by the provide mask Series.</p>
     Args:
         data_df: dataframe on which the rule has to be applied
         mask: a Series marking the rows in the dataframe on which the rule has to be applied
+    Returns:
+        pd.DataFrame: make the process chainable
     &#34;&#34;&#34;
 
     data_df.loc[mask, &#39;AllIncomeTaxExpenseBenefit&#39;] = -data_df.AllIncomeTaxExpenseBenefit
@@ -2347,7 +2360,8 @@ is defined by the provide mask Series.</p>
     subtract_mask = mask &amp; ~data_df.AllIncomeTaxExpenseBenefit.isna()
     data_df.loc[subtract_mask, &#39;IncomeLossFromContinuingOperations&#39;] = (
             data_df[&#39;IncomeLossFromContinuingOperations&#39;] -
-            data_df.AllIncomeTaxExpenseBenefit)</code></pre>
+            data_df.AllIncomeTaxExpenseBenefit)
+    return data_df</code></pre>
 </details>
 </dd>
 <dt id="secfsdstools.f_standardize.is_standardize.PostFixIncomeLossFromContinuingOperationsAndSignOfIncomeTaxExpenseBenefit.get_input_tags"><code class="name flex">

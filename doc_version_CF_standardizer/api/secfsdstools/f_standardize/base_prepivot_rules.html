@@ -63,7 +63,7 @@ class PrePivotDeduplicate(PrePivotRule):
         &#34;&#34;&#34;
         return data_df.duplicated(self.index_cols)
 
-    def apply(self, data_df: pd.DataFrame, mask: pa.typing.Series[bool]):
+    def apply(self, data_df: pd.DataFrame, mask: pa.typing.Series[bool]) -&gt; pd.DataFrame:
         &#34;&#34;&#34;
         apply the rule on the provided dataframe. the rows, on which the rule has to be applied
         is defined by the provide mask Series.
@@ -73,8 +73,11 @@ class PrePivotDeduplicate(PrePivotRule):
         Args:
             df: dataframe on which the rule has to be applied
             mask: a Series marking the rows in the dataframe on which the rule has to be applied
+        Returns:
+            pd.DataFrame: make the process chainable
         &#34;&#34;&#34;
         data_df.drop(data_df[mask].index, inplace=True)
+        return data_df
 
     def get_description(self) -&gt; str:
         &#34;&#34;&#34;
@@ -124,7 +127,7 @@ class PrePivotCorrectSign(PrePivotRule):
         &#34;&#34;&#34;
         return data_df.tag.isin(self.tag_list) &amp; ((data_df.value &lt; 0) == self.is_positive)
 
-    def apply(self, data_df: pd.DataFrame, mask: pa.typing.Series[bool]):
+    def apply(self, data_df: pd.DataFrame, mask: pa.typing.Series[bool]) -&gt; pd.DataFrame:
         &#34;&#34;&#34;
         apply the rule on the provided dataframe. the rows, on which the rule has to be applied
         is defined by the provide mask Series.
@@ -134,8 +137,11 @@ class PrePivotCorrectSign(PrePivotRule):
         Args:
             df: dataframe on which the rule has to be applied
             mask: a Series marking the rows in the dataframe on which the rule has to be applied
+        Returns:
+            pd.DataFrame: make the process chainable
         &#34;&#34;&#34;
         data_df.loc[mask, &#39;value&#39;] = data_df.value * -1
+        return data_df
 
     def get_description(self) -&gt; str:
         &#34;&#34;&#34;
@@ -222,7 +228,7 @@ or are negative (if is_positive is false).</p>
         &#34;&#34;&#34;
         return data_df.tag.isin(self.tag_list) &amp; ((data_df.value &lt; 0) == self.is_positive)
 
-    def apply(self, data_df: pd.DataFrame, mask: pa.typing.Series[bool]):
+    def apply(self, data_df: pd.DataFrame, mask: pa.typing.Series[bool]) -&gt; pd.DataFrame:
         &#34;&#34;&#34;
         apply the rule on the provided dataframe. the rows, on which the rule has to be applied
         is defined by the provide mask Series.
@@ -232,8 +238,11 @@ or are negative (if is_positive is false).</p>
         Args:
             df: dataframe on which the rule has to be applied
             mask: a Series marking the rows in the dataframe on which the rule has to be applied
+        Returns:
+            pd.DataFrame: make the process chainable
         &#34;&#34;&#34;
         data_df.loc[mask, &#39;value&#39;] = data_df.value * -1
+        return data_df
 
     def get_description(self) -&gt; str:
         &#34;&#34;&#34;
@@ -263,7 +272,7 @@ or are negative (if is_positive is false).</p>
 <h3>Methods</h3>
 <dl>
 <dt id="secfsdstools.f_standardize.base_prepivot_rules.PrePivotCorrectSign.apply"><code class="name flex">
-<span>def <span class="ident">apply</span></span>(<span>self, data_df: pandas.core.frame.DataFrame, mask: pandera.typing.pandas.Series[bool])</span>
+<span>def <span class="ident">apply</span></span>(<span>self, data_df: pandas.core.frame.DataFrame, mask: pandera.typing.pandas.Series[bool]) ‑> pandas.core.frame.DataFrame</span>
 </code></dt>
 <dd>
 <div class="desc"><p>apply the rule on the provided dataframe. the rows, on which the rule has to be applied
@@ -275,12 +284,17 @@ is defined by the provide mask Series.</p>
 <dd>dataframe on which the rule has to be applied</dd>
 <dt><strong><code>mask</code></strong></dt>
 <dd>a Series marking the rows in the dataframe on which the rule has to be applied</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>pd.DataFrame</code></dt>
+<dd>make the process chainable</dd>
 </dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def apply(self, data_df: pd.DataFrame, mask: pa.typing.Series[bool]):
+<pre><code class="python">def apply(self, data_df: pd.DataFrame, mask: pa.typing.Series[bool]) -&gt; pd.DataFrame:
     &#34;&#34;&#34;
     apply the rule on the provided dataframe. the rows, on which the rule has to be applied
     is defined by the provide mask Series.
@@ -290,8 +304,11 @@ is defined by the provide mask Series.</p>
     Args:
         df: dataframe on which the rule has to be applied
         mask: a Series marking the rows in the dataframe on which the rule has to be applied
+    Returns:
+        pd.DataFrame: make the process chainable
     &#34;&#34;&#34;
-    data_df.loc[mask, &#39;value&#39;] = data_df.value * -1</code></pre>
+    data_df.loc[mask, &#39;value&#39;] = data_df.value * -1
+    return data_df</code></pre>
 </details>
 </dd>
 </dl>
@@ -346,7 +363,7 @@ where all tags of a report are duplicated.</p>
         &#34;&#34;&#34;
         return data_df.duplicated(self.index_cols)
 
-    def apply(self, data_df: pd.DataFrame, mask: pa.typing.Series[bool]):
+    def apply(self, data_df: pd.DataFrame, mask: pa.typing.Series[bool]) -&gt; pd.DataFrame:
         &#34;&#34;&#34;
         apply the rule on the provided dataframe. the rows, on which the rule has to be applied
         is defined by the provide mask Series.
@@ -356,8 +373,11 @@ where all tags of a report are duplicated.</p>
         Args:
             df: dataframe on which the rule has to be applied
             mask: a Series marking the rows in the dataframe on which the rule has to be applied
+        Returns:
+            pd.DataFrame: make the process chainable
         &#34;&#34;&#34;
         data_df.drop(data_df[mask].index, inplace=True)
+        return data_df
 
     def get_description(self) -&gt; str:
         &#34;&#34;&#34;
@@ -384,7 +404,7 @@ where all tags of a report are duplicated.</p>
 <h3>Methods</h3>
 <dl>
 <dt id="secfsdstools.f_standardize.base_prepivot_rules.PrePivotDeduplicate.apply"><code class="name flex">
-<span>def <span class="ident">apply</span></span>(<span>self, data_df: pandas.core.frame.DataFrame, mask: pandera.typing.pandas.Series[bool])</span>
+<span>def <span class="ident">apply</span></span>(<span>self, data_df: pandas.core.frame.DataFrame, mask: pandera.typing.pandas.Series[bool]) ‑> pandas.core.frame.DataFrame</span>
 </code></dt>
 <dd>
 <div class="desc"><p>apply the rule on the provided dataframe. the rows, on which the rule has to be applied
@@ -396,12 +416,17 @@ is defined by the provide mask Series.</p>
 <dd>dataframe on which the rule has to be applied</dd>
 <dt><strong><code>mask</code></strong></dt>
 <dd>a Series marking the rows in the dataframe on which the rule has to be applied</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>pd.DataFrame</code></dt>
+<dd>make the process chainable</dd>
 </dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def apply(self, data_df: pd.DataFrame, mask: pa.typing.Series[bool]):
+<pre><code class="python">def apply(self, data_df: pd.DataFrame, mask: pa.typing.Series[bool]) -&gt; pd.DataFrame:
     &#34;&#34;&#34;
     apply the rule on the provided dataframe. the rows, on which the rule has to be applied
     is defined by the provide mask Series.
@@ -411,8 +436,11 @@ is defined by the provide mask Series.</p>
     Args:
         df: dataframe on which the rule has to be applied
         mask: a Series marking the rows in the dataframe on which the rule has to be applied
+    Returns:
+        pd.DataFrame: make the process chainable
     &#34;&#34;&#34;
-    data_df.drop(data_df[mask].index, inplace=True)</code></pre>
+    data_df.drop(data_df[mask].index, inplace=True)
+    return data_df</code></pre>
 </details>
 </dd>
 </dl>

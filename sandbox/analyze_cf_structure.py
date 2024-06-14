@@ -233,7 +233,7 @@ if __name__ == '__main__':
     #prepare_all_data_set()
 
     cf_joined_bag: JoinedDataBag = load_joined_CF_set()
-    #cf_joined_bag = cf_joined_bag.filter(AdshJoinedFilter(adshs=['0000950123-09-024681']))
+    #cf_joined_bag = cf_joined_bag.filter(AdshJoinedFilter(adshs=['0000885725-20-000036']))
     # cf_joined_bag = load_smaller_sample_IS_set()
 
     # findet 727 report -> Verdacht auf missusing of NetCashProvidedByUsedInContinuingOperations tag

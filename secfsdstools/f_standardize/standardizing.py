@@ -282,6 +282,8 @@ class Standardizer(Presenter[JoinedDataBag]):
             list(set(cpy_pivot_df.columns.tolist()).intersection(set(self.main_statement_tags)))
         cpy_pivot_df['nan_count'] = cpy_pivot_df[available_main_statements].isna().sum(axis=1)
 
+        # filter out the entries with no main tags
+        cpy_pivot_df = cpy_pivot_df[cpy_pivot_df.nan_count < len(available_main_statements)]
         cpy_pivot_df.sort_values(['adsh', 'coreg', 'qtrs', 'nan_count'], inplace=True)
 
         filtered_pivot_df = cpy_pivot_df.groupby(['adsh', 'coreg', 'qtrs']).first()

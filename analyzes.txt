@@ -23,7 +23,7 @@ CashAtBeginning
     0000320193-23-000106	CashCashEquivalentsRestrictedCashAndRestrictedCashEquivalents	us-gaap/2023		20220930	0	USD	24977000000.0000
     0000320193-23-000106	CashCashEquivalentsRestrictedCashAndRestrictedCashEquivalents	us-gaap/2023		20230930	0	USD	30737000000.0000
 
-
+                            CashCashEquivalentsRestrictedCashAndRestrictedCashEquivalents
 
 CashAtEnd
    PrePivotRules müssen auch Methoden haben um definieren zu können, welche
@@ -34,7 +34,22 @@ CashAtEnd
 
 
 Todos Next:
-- Cash At End Of Period
+- Cash At End Of Period.
+  -> bei rund eime drittel wird cashAtEnd nicht gesetzt
+   0001554757-12-000037 -> using inoffical Tag 'CashEndOfPeriod'
+
+   0001548123-12-000188 -> müsste gesetzt sein, warum nicht?
+                           hat daten für qtrs=2 (ok) und qtrs=24 (CashEnd fehlt..)
+                           wir fügen cashEndOf nur für qtrs 1 bis 4 hinzu
+                           -> müsste eigentlich allgemeiner sein..
+
+                           oder man filtert die daten für grössere raus..
+
+
+
+
+
+- There are entries where all final tags have values of 0.0
 
 
 Main positions

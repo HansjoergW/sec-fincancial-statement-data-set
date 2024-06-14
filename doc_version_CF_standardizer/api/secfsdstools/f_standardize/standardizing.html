@@ -311,6 +311,8 @@ class Standardizer(Presenter[JoinedDataBag]):
             list(set(cpy_pivot_df.columns.tolist()).intersection(set(self.main_statement_tags)))
         cpy_pivot_df[&#39;nan_count&#39;] = cpy_pivot_df[available_main_statements].isna().sum(axis=1)
 
+        # filter out the entries with no main tags
+        cpy_pivot_df = cpy_pivot_df[cpy_pivot_df.nan_count &lt; len(available_main_statements)]
         cpy_pivot_df.sort_values([&#39;adsh&#39;, &#39;coreg&#39;, &#39;qtrs&#39;, &#39;nan_count&#39;], inplace=True)
 
         filtered_pivot_df = cpy_pivot_df.groupby([&#39;adsh&#39;, &#39;coreg&#39;, &#39;qtrs&#39;]).first()
@@ -896,6 +898,8 @@ as negated.</dd>
             list(set(cpy_pivot_df.columns.tolist()).intersection(set(self.main_statement_tags)))
         cpy_pivot_df[&#39;nan_count&#39;] = cpy_pivot_df[available_main_statements].isna().sum(axis=1)
 
+        # filter out the entries with no main tags
+        cpy_pivot_df = cpy_pivot_df[cpy_pivot_df.nan_count &lt; len(available_main_statements)]
         cpy_pivot_df.sort_values([&#39;adsh&#39;, &#39;coreg&#39;, &#39;qtrs&#39;, &#39;nan_count&#39;], inplace=True)
 
         filtered_pivot_df = cpy_pivot_df.groupby([&#39;adsh&#39;, &#39;coreg&#39;, &#39;qtrs&#39;]).first()
@@ -1120,6 +1124,7 @@ as negated.</dd>
 <ul class="hlist">
 <li><a title="secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizer" href="bs_standardize.html#secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizer">BalanceSheetStandardizer</a></li>
 <li><a title="secfsdstools.f_standardize.cf_standardize.CashFlowStandardizer" href="cf_standardize.html#secfsdstools.f_standardize.cf_standardize.CashFlowStandardizer">CashFlowStandardizer</a></li>
+<li><a title="secfsdstools.f_standardize.cf_standardize_v2.CashFlowStandardizer" href="cf_standardize_v2.html#secfsdstools.f_standardize.cf_standardize_v2.CashFlowStandardizer">CashFlowStandardizer</a></li>
 <li><a title="secfsdstools.f_standardize.is_standardize.IncomeStatementStandardizer" href="is_standardize.html#secfsdstools.f_standardize.is_standardize.IncomeStatementStandardizer">IncomeStatementStandardizer</a></li>
 </ul>
 <h3>Class variables</h3>

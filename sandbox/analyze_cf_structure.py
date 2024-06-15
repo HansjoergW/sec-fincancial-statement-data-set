@@ -166,7 +166,7 @@ def standardize_v1(cf_joined_bag: JoinedDataBag) -> StandardizedBag:
 
 @timing
 def standardize_v2(cf_joined_bag: JoinedDataBag) -> StandardizedBag:
-    from secfsdstools.f_standardize.cf_standardize_v2 import CashFlowStandardizer
+    from secfsdstools.f_standardize.cf_standardize import CashFlowStandardizer
     cf_standardizer = CashFlowStandardizer()
     cf_joined_bag.present(cf_standardizer)
     return cf_standardizer.get_standardize_bag()
@@ -236,7 +236,6 @@ if __name__ == '__main__':
     #cf_joined_bag = cf_joined_bag.filter(AdshJoinedFilter(adshs=['0000885725-20-000036']))
     # cf_joined_bag = load_smaller_sample_IS_set()
 
-    # findet 727 report -> Verdacht auf missusing of NetCashProvidedByUsedInContinuingOperations tag
     # find_reports_using_and_excluding(cf_joined_bag=cf_joined_bag,
     #                                  all_included_tags=[
     #                                      'NetCashProvidedByUsedInContinuingOperations',
@@ -245,12 +244,6 @@ if __name__ == '__main__':
 
     # print(find_tags_containing(cf_joined_bag, contains="PeriodIncreaseDecrease"))
     # print(count_selected_tags(cf_joined_bag, [
-    #     'CashProvidedByUsedInOperatingActivitiesDiscontinuedOperations',
-    #     'CashProvidedByUsedInInvestingActivitiesDiscontinuedOperations',
-    #     'CashProvidedByUsedInFinancingActivitiesDiscontinuedOperations',
-    #     'CashProvidedByUsedInDiscontinuedOperationsOperatingActivities',
-    #     'CashProvidedByUsedInDiscontinuedOperationsInvestingActivities',
-    #     'CashProvidedByUsedInDiscontinuedOperationsFinancingActivities',
     # ]))
 
     # print(check_relevant_tags(cf_joined_bag))
@@ -260,9 +253,6 @@ if __name__ == '__main__':
 
     standardized_bag = standardize_v2(cf_joined_bag)
 
-    #
-    # hier suchen nach angewendeter Regel und Abweichung in cat 100
-    # sonst muss man wirklich über "Fehlerkorrektur" am Ende gehen
 
     print(standardized_bag.result_df.shape)
 

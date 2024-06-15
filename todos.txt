@@ -20,7 +20,7 @@ v.1.6.0
 - CF Standardizer
 
 Todo:
-- in CF haben wir oft auch das Tag 'Cash' -> benötigen wir das im BS auch?
+- in CF haben wir oft auch zusätzliche 'Cash' Tags -> benötigen wir diese im BS auch?
 - Discord Channel?
 - evtl. sollte jede Regel noch eine "Explanation" bekommen. Ein Text, der die Regel spezifisch erklärt,
   nicht allgemein wie in description.

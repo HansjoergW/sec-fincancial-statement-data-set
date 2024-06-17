@@ -3,7 +3,8 @@ import pandas as pd
 import pandera as pa
 import pytest
 
-from secfsdstools.f_standardize.base_validation_rules import SumValidationRule, ValidationRule
+from secfsdstools.f_standardize.base_validation_rules import SumValidationRule, ValidationRule, \
+    IsSetValidationRule
 
 
 # Test the basic framework
@@ -127,3 +128,28 @@ def test_with_zero_sum(sum_validation_rule):
     assert data_df['test_sum_rule_cat'].equals(pd.Series([0.0]))
     assert data_df['test_sum_rule_error'].round(decimals=1).equals(pd.Series([0.0]))
 
+
+# ----------------------------------------------------------------------------------
+# Tests for the IsSetValidationRule
+
+@pytest.fixture
+def sample_dataframe_isset():
+    # Create a sample DataFrame for testing
+    data = {
+        'Assets': [100, 50, 70, None],
+    }
+    return pd.DataFrame(data)
+
+
+@pytest.fixture
+def isset_validation_rule():
+    return IsSetValidationRule(identifier='test_isset_rule',tag='Assets')
+
+
+def test_correct_categories(isset_validation_rule, sample_dataframe_isset):
+
+    isset_validation_rule.validate(sample_dataframe_isset)
+
+    assert sample_dataframe_isset['test_isset_rule_cat'].equals(pd.Series([0.0, 0.0, 0.0, 100.0]))
+    assert sample_dataframe_isset['test_isset_rule_error'].round(decimals=1).equals(
+        pd.Series([0.0, 0.0, 0.0, 1.0]))

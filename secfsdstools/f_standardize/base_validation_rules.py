@@ -178,3 +178,62 @@ class SumValidationRule(ValidationRule):
             str: description
         """
         return f"Checks whether the sum of {self.summands} equals the value in '{self.sum_tag}'"
+
+
+class IsSetValidationRule(ValidationRule):
+    """
+    Checks whether a certain tag has a value and is not nan.
+    """
+
+    def __init__(self, identifier: str, tag: str):
+        """
+
+        Args:
+            identifier: the identifier of the rule
+            tag: the tag to check if it has a value
+        """
+        super().__init__(identifier=identifier)
+        self.tag = tag
+
+    def mask(self, data_df: pd.DataFrame) -> pa.typing.Series[bool]:
+        """
+            returns a Series[bool] which defines the rows to which this rule has to be applied.
+            For validation rules this means to select the rows for which all necessary tags
+            are available.
+
+        Args:
+            df: dataframe on which the rules should be applied
+
+        Returns:
+            pa.typing.Series[bool]: a boolean Series that marks which rows have to be calculated
+        """
+        # we have to mask all rows
+        return pd.Series([True] * len(data_df), index=data_df.index)
+
+    def calculate_error(self, data_df: pd.DataFrame, mask: pa.typing.Series[bool]) -> \
+            pa.typing.Series[np.float64]:
+        """
+        implements the calculation logic.
+        Args:
+            data_df: the dataset to validate
+            mask: the mask masking the rows to which the calculation should be applied to.
+
+        Returns:
+            pa.typing.Series[np.float64]: containing the relative error
+        """
+
+        # create Series with same length as dataframe and use same index
+        result = pd.Series([0.0] * len(data_df), index=data_df.index)
+
+        # mask the entries which don't have a value and set them as error = 1
+        # this will lead to only two categories: 0 and 100
+        result.loc[data_df[self.tag].isna()] = 1.0
+        return result
+
+    def get_description(self) -> str:
+        """
+        Returns the description String
+        Returns:
+            str: description
+        """
+        return f"Checks whether the {self.tag} is set."

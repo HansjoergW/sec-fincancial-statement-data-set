@@ -37,7 +37,8 @@ from secfsdstools.f_standardize.base_prepivot_rules import PrePivotDeduplicate
 from secfsdstools.f_standardize.base_rule_framework import RuleGroup, Rule, PrePivotRule
 from secfsdstools.f_standardize.base_rules import CopyTagRule, SumUpRule, PostSetToZero, \
     MissingSummandRule, PostCopyToFirstSummand, MissingSumRule
-from secfsdstools.f_standardize.base_validation_rules import ValidationRule, SumValidationRule
+from secfsdstools.f_standardize.base_validation_rules import ValidationRule, SumValidationRule, \
+    IsSetValidationRule
 from secfsdstools.f_standardize.standardizing import Standardizer
 
 
@@ -776,6 +777,9 @@ class CashFlowStandardizer(Standardizer):
                                     &#39;NetCashProvidedByUsedInFinancingActivities&#39;,
                                     &#39;NetCashProvidedByUsedInInvestingActivities&#39;,
                                     &#39;EffectOfExchangeRateFinal&#39;]),
+
+        IsSetValidationRule(identifier=&#34;CashEoP&#34;,
+                            tag=&#39;CashAndCashEquivalentsEndOfPeriod&#39;)
     ]
 
     # these are the columns that finally are returned after the standardization
@@ -1438,6 +1442,9 @@ as negated.</dd>
                                     &#39;NetCashProvidedByUsedInFinancingActivities&#39;,
                                     &#39;NetCashProvidedByUsedInInvestingActivities&#39;,
                                     &#39;EffectOfExchangeRateFinal&#39;]),
+
+        IsSetValidationRule(identifier=&#34;CashEoP&#34;,
+                            tag=&#39;CashAndCashEquivalentsEndOfPeriod&#39;)
     ]
 
     # these are the columns that finally are returned after the standardization

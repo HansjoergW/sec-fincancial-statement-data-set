@@ -150,7 +150,8 @@ class PrePivotCashAtEndOfPeriod(PrePivotRule):
         relevant_entries_df = data_df[mask]
 
         added_dfs: List[pd.DataFrame] = []
-        for qtrs in range(0, 5):
+        # copy entries for qtrs 0...4
+        for qtrs in range(5):
             # define which adshs have entries with the current qtrs loop-variable
             adshs_with_qtrs = adsh_qtrs_df[adsh_qtrs_df.qtrs == qtrs].adsh.tolist()
 
@@ -369,44 +370,41 @@ class CashFlowStandardizer(Standardizer):
 
     Final Tags
         NetCashProvidedByUsedInOperatingActivities
-        1.1. AdjustmentsToReconcileNetIncomeLossToCashProvidedByUsedInOperatingActivities
-        1.1.1. DepreciationDepletionAndAmortization
-        1.1.2. DeferredIncomeTaxExpenseBenefit
-        1.1.3. ShareBasedCompensation
-        1.1.7. IncreaseDecreaseInAccountsPayable
-        1.1.8. IncreaseDecreaseInAccruedLiabilities
-        1.2. OtherAdjustmentsToCashProvidedByUsedInOperatingActivities
-        1.2.2. InterestPaidNet
-        1.2.3. IncomeTaxesPaidNet
+        1.1. AdjustmentsToReconcileNetIncomeLossToCashProvidedByUsedInOperatingActivities &lt;- (not copied)
+        1.1.1. DepreciationDepletionAndAmortization             ok Hierarchy
+        1.1.2. DeferredIncomeTaxExpenseBenefit                  ok direct
+        1.1.3. ShareBasedCompensation                           ok direct
+        1.1.7. IncreaseDecreaseInAccountsPayable                ok direct
+        1.1.8. IncreaseDecreaseInAccruedLiabilities             ok direct
+        1.2. OtherAdjustmentsToCashProvidedByUsedInOperatingActivities &lt;- not present
+        1.2.2. InterestPaidNet                                  ok direct
+        1.2.3. IncomeTaxesPaidNet                               ok direct
 
         NetCashProvidedByUsedInInvestingActivities
         2.1. Investments in Property, Plant, and Equipment
-        2.1.1. PaymentsToAcquirePropertyPlantAndEquipment
-        2.1.2. ProceedsFromSaleOfPropertyPlantAndEquipment
+        2.1.1. PaymentsToAcquirePropertyPlantAndEquipment       ok direct
+        2.1.2. ProceedsFromSaleOfPropertyPlantAndEquipment      ok direct
         2.2. Investments in Securities
-        2.2.1. PaymentsToAcquireInvestments
-        2.2.2. ProceedsFromSaleOfInvestments
+        2.2.1. PaymentsToAcquireInvestments                     ok direct
+        2.2.2. ProceedsFromSaleOfInvestments                    ok hierarchy
         2.3. Business Acquisitions and Divestitures
-        2.3.1. PaymentsToAcquireBusinessesNetOfCashAcquired
-        2.3.2. ProceedsFromDivestitureOfBusinessesNetOfCashDivested
+        2.3.1. PaymentsToAcquireBusinessesNetOfCashAcquired     ok direct
+        2.3.2. ProceedsFromDivestitureOfBusinessesNetOfCashDivested ok direct
         2.4. OtherCashProvidedByUsedInInvestingActivities
         2.4.1. Investments in Intangible Assets
-        2.4.1.1. PaymentsToAcquireIntangibleAssets
-        2.4.1.2. ProceedsFromSaleOfIntangibleAssets
+        2.4.1.1. PaymentsToAcquireIntangibleAssets              ok direct
+        2.4.1.2. ProceedsFromSaleOfIntangibleAssets             ok direct
 
         NetCashProvidedByUsedInFinancingActivities
         3.1. Equity Transactions
-        3.1.1. ProceedsFromIssuanceOfCommonStock
-        3.1.4. PaymentsForRepurchaseOfCommonStock
+        3.1.1. ProceedsFromIssuanceOfCommonStock                ok direct
+        3.1.3. ProceedsFromStockOptionsExercised                ok direct
+        3.1.4. PaymentsForRepurchaseOfCommonStock               ok direct
         3.2. Debt Transactions
-        3.2.1. ProceedsFromIssuanceOfDebt
-        3.2.2. RepaymentsOfDebt
-        3.3. Dividends
-        3.3.1. DividendsPaid
-        3.4. Leases
-        3.4.1. PaymentsOfFinanceLeaseObligations
-        3.5. Grants and Other Financing Sources
-        3.5.1. ProceedsFromGovernmentGrants
+        3.2.1. ProceedsFromIssuanceOfDebt                       ok direct
+        3.2.2. RepaymentsOfDebt                                 ok direct
+        3.3. PaymentsOfDividends                                ok Hierarchy
+
 
         NetIncreaseDecreaseInCashAndCashEquivalents
         4.1. CashAndCashEquivalentsPeriodIncreaseDecrease
@@ -663,8 +661,38 @@ class CashFlowStandardizer(Standardizer):
         ]
     )
 
+    cf_proceeds_sale_invest = RuleGroup(
+        prefix=&#34;ProSalesInvest&#34;,
+        rules=[
+            SumUpRule(
+                sum_tag=&#34;ProceedsFromSaleOfInvestments&#34;,
+                potential_summands=[
+                    &#39;ProceedsFromSaleOfAvailableForSaleSecurities&#39;,
+                    &#39;ProceedsFromSaleOfTradingSecurities&#39;,
+                    &#39;ProceedsFromSaleOfEquitySecurities&#39;,
+                    &#39;ProceedsFromSaleOfDebtSecurities&#39;,
+                    &#39;ProceedsFromSaleAndMaturityOfOtherInvestments&#39;,
+                    &#39;ProceedsFromMaturitiesPrepaymentsAndCallsOfAvailableForSaleSecurities&#39;,
+                    &#39;ProceedsFromSaleOfInvestmentsInAffiliates&#39;,
+                    &#39;ProceedsFromSaleOfHeldToMaturitySecurities&#39;,
+                ]
+            )
+        ]
+    )
 
-
+    cf_payments_dividends = RuleGroup(
+        prefix=&#34;PayDividends&#34;,
+        rules=[
+            SumUpRule(
+                sum_tag=&#34;PaymentsOfDividends&#34;,
+                potential_summands=[
+                    &#39;PaymentsOfDividendsCommonStock&#39;,
+                    &#39;PaymentsOfDividendsPreferredStockAndPreferenceStock&#39;,
+                    &#39;PaymentsOfDividendsMinorityInterest&#39;,
+                ]
+            )
+        ]
+    )
 
     main_rule_tree = RuleGroup(prefix=&#34;CF&#34;,
                                rules=[
@@ -673,7 +701,8 @@ class CashFlowStandardizer(Standardizer):
                                    cf_increase_decrease,
                                    cf_end_of_period,
                                    cf_depr_depl_amort,
-
+                                   cf_proceeds_sale_invest,
+                                   cf_payments_dividends,
                                ])
 
     post_rule_tree = RuleGroup(
@@ -796,7 +825,34 @@ class CashFlowStandardizer(Standardizer):
         &#39;EffectOfExchangeRateFinal&#39;,
         &#39;CashPeriodIncreaseDecreaseIncludingExRateEffectFinal&#39;,
         &#39;CashAndCashEquivalentsEndOfPeriod&#39;,
+
+        # Details in Operating activities
         &#39;DepreciationDepletionAndAmortization&#39;,
+        &#39;DeferredIncomeTaxExpenseBenefit,&#39;
+        &#39;ShareBasedCompensation&#39;,
+        &#39;IncreaseDecreaseInAccountsPayable&#39;,
+        &#39;IncreaseDecreaseInAccruedLiabilities&#39;,
+        &#39;InterestPaidNet&#39;,
+        &#39;IncomeTaxesPaidNet&#39;,
+
+        # Details of Investing activities
+        &#39;PaymentsToAcquirePropertyPlantAndEquipment&#39;,
+        &#39;ProceedsFromSaleOfPropertyPlantAndEquipment&#39;,
+        &#39;PaymentsToAcquireInvestments&#39;,
+        &#39;ProceedsFromSaleOfInvestments&#39;,
+        &#39;PaymentsToAcquireBusinessesNetOfCashAcquired&#39;,
+        &#39;ProceedsFromDivestitureOfBusinessesNetOfCashDivested&#39;,
+        &#39;PaymentsToAcquireIntangibleAssets&#39;,
+        &#39;ProceedsFromSaleOfIntangibleAssets&#39;,
+
+        # Details of Financing activities
+        &#39;ProceedsFromIssuanceOfCommonStock&#39;,
+        &#39;ProceedsFromStockOptionsExercised&#39;,
+        &#39;PaymentsForRepurchaseOfCommonStock&#39;,
+        &#39;ProceedsFromIssuanceOfDebt&#39;,
+        &#39;RepaymentsOfDebt&#39;,
+        &#39;PaymentsOfDividends&#39;,
+
     ]
 
     # used to evaluate if a report is the main cashflow report
@@ -852,44 +908,41 @@ meaning that they have the same tags.</p>
 
 Final Tags
     NetCashProvidedByUsedInOperatingActivities
-    1.1. AdjustmentsToReconcileNetIncomeLossToCashProvidedByUsedInOperatingActivities
-    1.1.1. DepreciationDepletionAndAmortization
-    1.1.2. DeferredIncomeTaxExpenseBenefit
-    1.1.3. ShareBasedCompensation
-    1.1.7. IncreaseDecreaseInAccountsPayable
-    1.1.8. IncreaseDecreaseInAccruedLiabilities
-    1.2. OtherAdjustmentsToCashProvidedByUsedInOperatingActivities
-    1.2.2. InterestPaidNet
-    1.2.3. IncomeTaxesPaidNet
+    1.1. AdjustmentsToReconcileNetIncomeLossToCashProvidedByUsedInOperatingActivities <- (not copied)
+    1.1.1. DepreciationDepletionAndAmortization             ok Hierarchy
+    1.1.2. DeferredIncomeTaxExpenseBenefit                  ok direct
+    1.1.3. ShareBasedCompensation                           ok direct
+    1.1.7. IncreaseDecreaseInAccountsPayable                ok direct
+    1.1.8. IncreaseDecreaseInAccruedLiabilities             ok direct
+    1.2. OtherAdjustmentsToCashProvidedByUsedInOperatingActivities <- not present
+    1.2.2. InterestPaidNet                                  ok direct
+    1.2.3. IncomeTaxesPaidNet                               ok direct
 
     NetCashProvidedByUsedInInvestingActivities
     2.1. Investments in Property, Plant, and Equipment
-    2.1.1. PaymentsToAcquirePropertyPlantAndEquipment
-    2.1.2. ProceedsFromSaleOfPropertyPlantAndEquipment
+    2.1.1. PaymentsToAcquirePropertyPlantAndEquipment       ok direct
+    2.1.2. ProceedsFromSaleOfPropertyPlantAndEquipment      ok direct
     2.2. Investments in Securities
-    2.2.1. PaymentsToAcquireInvestments
-    2.2.2. ProceedsFromSaleOfInvestments
+    2.2.1. PaymentsToAcquireInvestments                     ok direct
+    2.2.2. ProceedsFromSaleOfInvestments                    ok hierarchy
     2.3. Business Acquisitions and Divestitures
-    2.3.1. PaymentsToAcquireBusinessesNetOfCashAcquired
-    2.3.2. ProceedsFromDivestitureOfBusinessesNetOfCashDivested
+    2.3.1. PaymentsToAcquireBusinessesNetOfCashAcquired     ok direct
+    2.3.2. ProceedsFromDivestitureOfBusinessesNetOfCashDivested ok direct
     2.4. OtherCashProvidedByUsedInInvestingActivities
     2.4.1. Investments in Intangible Assets
-    2.4.1.1. PaymentsToAcquireIntangibleAssets
-    2.4.1.2. ProceedsFromSaleOfIntangibleAssets
+    2.4.1.1. PaymentsToAcquireIntangibleAssets              ok direct
+    2.4.1.2. ProceedsFromSaleOfIntangibleAssets             ok direct
 
     NetCashProvidedByUsedInFinancingActivities
     3.1. Equity Transactions
-    3.1.1. ProceedsFromIssuanceOfCommonStock
-    3.1.4. PaymentsForRepurchaseOfCommonStock
+    3.1.1. ProceedsFromIssuanceOfCommonStock                ok direct
+    3.1.3. ProceedsFromStockOptionsExercised                ok direct
+    3.1.4. PaymentsForRepurchaseOfCommonStock               ok direct
     3.2. Debt Transactions
-    3.2.1. ProceedsFromIssuanceOfDebt
-    3.2.2. RepaymentsOfDebt
-    3.3. Dividends
-    3.3.1. DividendsPaid
-    3.4. Leases
-    3.4.1. PaymentsOfFinanceLeaseObligations
-    3.5. Grants and Other Financing Sources
-    3.5.1. ProceedsFromGovernmentGrants
+    3.2.1. ProceedsFromIssuanceOfDebt                       ok direct
+    3.2.2. RepaymentsOfDebt                                 ok direct
+    3.3. PaymentsOfDividends                                ok Hierarchy
+
 
     NetIncreaseDecreaseInCashAndCashEquivalents
     4.1. CashAndCashEquivalentsPeriodIncreaseDecrease
@@ -1034,44 +1087,41 @@ as negated.</dd>
 
     Final Tags
         NetCashProvidedByUsedInOperatingActivities
-        1.1. AdjustmentsToReconcileNetIncomeLossToCashProvidedByUsedInOperatingActivities
-        1.1.1. DepreciationDepletionAndAmortization
-        1.1.2. DeferredIncomeTaxExpenseBenefit
-        1.1.3. ShareBasedCompensation
-        1.1.7. IncreaseDecreaseInAccountsPayable
-        1.1.8. IncreaseDecreaseInAccruedLiabilities
-        1.2. OtherAdjustmentsToCashProvidedByUsedInOperatingActivities
-        1.2.2. InterestPaidNet
-        1.2.3. IncomeTaxesPaidNet
+        1.1. AdjustmentsToReconcileNetIncomeLossToCashProvidedByUsedInOperatingActivities &lt;- (not copied)
+        1.1.1. DepreciationDepletionAndAmortization             ok Hierarchy
+        1.1.2. DeferredIncomeTaxExpenseBenefit                  ok direct
+        1.1.3. ShareBasedCompensation                           ok direct
+        1.1.7. IncreaseDecreaseInAccountsPayable                ok direct
+        1.1.8. IncreaseDecreaseInAccruedLiabilities             ok direct
+        1.2. OtherAdjustmentsToCashProvidedByUsedInOperatingActivities &lt;- not present
+        1.2.2. InterestPaidNet                                  ok direct
+        1.2.3. IncomeTaxesPaidNet                               ok direct
 
         NetCashProvidedByUsedInInvestingActivities
         2.1. Investments in Property, Plant, and Equipment
-        2.1.1. PaymentsToAcquirePropertyPlantAndEquipment
-        2.1.2. ProceedsFromSaleOfPropertyPlantAndEquipment
+        2.1.1. PaymentsToAcquirePropertyPlantAndEquipment       ok direct
+        2.1.2. ProceedsFromSaleOfPropertyPlantAndEquipment      ok direct
         2.2. Investments in Securities
-        2.2.1. PaymentsToAcquireInvestments
-        2.2.2. ProceedsFromSaleOfInvestments
+        2.2.1. PaymentsToAcquireInvestments                     ok direct
+        2.2.2. ProceedsFromSaleOfInvestments                    ok hierarchy
         2.3. Business Acquisitions and Divestitures
-        2.3.1. PaymentsToAcquireBusinessesNetOfCashAcquired
-        2.3.2. ProceedsFromDivestitureOfBusinessesNetOfCashDivested
+        2.3.1. PaymentsToAcquireBusinessesNetOfCashAcquired     ok direct
+        2.3.2. ProceedsFromDivestitureOfBusinessesNetOfCashDivested ok direct
         2.4. OtherCashProvidedByUsedInInvestingActivities
         2.4.1. Investments in Intangible Assets
-        2.4.1.1. PaymentsToAcquireIntangibleAssets
-        2.4.1.2. ProceedsFromSaleOfIntangibleAssets
+        2.4.1.1. PaymentsToAcquireIntangibleAssets              ok direct
+        2.4.1.2. ProceedsFromSaleOfIntangibleAssets             ok direct
 
         NetCashProvidedByUsedInFinancingActivities
         3.1. Equity Transactions
-        3.1.1. ProceedsFromIssuanceOfCommonStock
-        3.1.4. PaymentsForRepurchaseOfCommonStock
+        3.1.1. ProceedsFromIssuanceOfCommonStock                ok direct
+        3.1.3. ProceedsFromStockOptionsExercised                ok direct
+        3.1.4. PaymentsForRepurchaseOfCommonStock               ok direct
         3.2. Debt Transactions
-        3.2.1. ProceedsFromIssuanceOfDebt
-        3.2.2. RepaymentsOfDebt
-        3.3. Dividends
-        3.3.1. DividendsPaid
-        3.4. Leases
-        3.4.1. PaymentsOfFinanceLeaseObligations
-        3.5. Grants and Other Financing Sources
-        3.5.1. ProceedsFromGovernmentGrants
+        3.2.1. ProceedsFromIssuanceOfDebt                       ok direct
+        3.2.2. RepaymentsOfDebt                                 ok direct
+        3.3. PaymentsOfDividends                                ok Hierarchy
+
 
         NetIncreaseDecreaseInCashAndCashEquivalents
         4.1. CashAndCashEquivalentsPeriodIncreaseDecrease
@@ -1328,8 +1378,38 @@ as negated.</dd>
         ]
     )
 
+    cf_proceeds_sale_invest = RuleGroup(
+        prefix=&#34;ProSalesInvest&#34;,
+        rules=[
+            SumUpRule(
+                sum_tag=&#34;ProceedsFromSaleOfInvestments&#34;,
+                potential_summands=[
+                    &#39;ProceedsFromSaleOfAvailableForSaleSecurities&#39;,
+                    &#39;ProceedsFromSaleOfTradingSecurities&#39;,
+                    &#39;ProceedsFromSaleOfEquitySecurities&#39;,
+                    &#39;ProceedsFromSaleOfDebtSecurities&#39;,
+                    &#39;ProceedsFromSaleAndMaturityOfOtherInvestments&#39;,
+                    &#39;ProceedsFromMaturitiesPrepaymentsAndCallsOfAvailableForSaleSecurities&#39;,
+                    &#39;ProceedsFromSaleOfInvestmentsInAffiliates&#39;,
+                    &#39;ProceedsFromSaleOfHeldToMaturitySecurities&#39;,
+                ]
+            )
+        ]
+    )
 
-
+    cf_payments_dividends = RuleGroup(
+        prefix=&#34;PayDividends&#34;,
+        rules=[
+            SumUpRule(
+                sum_tag=&#34;PaymentsOfDividends&#34;,
+                potential_summands=[
+                    &#39;PaymentsOfDividendsCommonStock&#39;,
+                    &#39;PaymentsOfDividendsPreferredStockAndPreferenceStock&#39;,
+                    &#39;PaymentsOfDividendsMinorityInterest&#39;,
+                ]
+            )
+        ]
+    )
 
     main_rule_tree = RuleGroup(prefix=&#34;CF&#34;,
                                rules=[
@@ -1338,7 +1418,8 @@ as negated.</dd>
                                    cf_increase_decrease,
                                    cf_end_of_period,
                                    cf_depr_depl_amort,
-
+                                   cf_proceeds_sale_invest,
+                                   cf_payments_dividends,
                                ])
 
     post_rule_tree = RuleGroup(
@@ -1461,7 +1542,34 @@ as negated.</dd>
         &#39;EffectOfExchangeRateFinal&#39;,
         &#39;CashPeriodIncreaseDecreaseIncludingExRateEffectFinal&#39;,
         &#39;CashAndCashEquivalentsEndOfPeriod&#39;,
+
+        # Details in Operating activities
         &#39;DepreciationDepletionAndAmortization&#39;,
+        &#39;DeferredIncomeTaxExpenseBenefit,&#39;
+        &#39;ShareBasedCompensation&#39;,
+        &#39;IncreaseDecreaseInAccountsPayable&#39;,
+        &#39;IncreaseDecreaseInAccruedLiabilities&#39;,
+        &#39;InterestPaidNet&#39;,
+        &#39;IncomeTaxesPaidNet&#39;,
+
+        # Details of Investing activities
+        &#39;PaymentsToAcquirePropertyPlantAndEquipment&#39;,
+        &#39;ProceedsFromSaleOfPropertyPlantAndEquipment&#39;,
+        &#39;PaymentsToAcquireInvestments&#39;,
+        &#39;ProceedsFromSaleOfInvestments&#39;,
+        &#39;PaymentsToAcquireBusinessesNetOfCashAcquired&#39;,
+        &#39;ProceedsFromDivestitureOfBusinessesNetOfCashDivested&#39;,
+        &#39;PaymentsToAcquireIntangibleAssets&#39;,
+        &#39;ProceedsFromSaleOfIntangibleAssets&#39;,
+
+        # Details of Financing activities
+        &#39;ProceedsFromIssuanceOfCommonStock&#39;,
+        &#39;ProceedsFromStockOptionsExercised&#39;,
+        &#39;PaymentsForRepurchaseOfCommonStock&#39;,
+        &#39;ProceedsFromIssuanceOfDebt&#39;,
+        &#39;RepaymentsOfDebt&#39;,
+        &#39;PaymentsOfDividends&#39;,
+
     ]
 
     # used to evaluate if a report is the main cashflow report
@@ -1520,6 +1628,14 @@ as negated.</dd>
 <div class="desc"></div>
 </dd>
 <dt id="secfsdstools.f_standardize.cf_standardize.CashFlowStandardizer.cf_netcash"><code class="name">var <span class="ident">cf_netcash</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="secfsdstools.f_standardize.cf_standardize.CashFlowStandardizer.cf_payments_dividends"><code class="name">var <span class="ident">cf_payments_dividends</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="secfsdstools.f_standardize.cf_standardize.CashFlowStandardizer.cf_proceeds_sale_invest"><code class="name">var <span class="ident">cf_proceeds_sale_invest</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -2068,7 +2184,8 @@ this value is lost.</p>
         relevant_entries_df = data_df[mask]
 
         added_dfs: List[pd.DataFrame] = []
-        for qtrs in range(0, 5):
+        # copy entries for qtrs 0...4
+        for qtrs in range(5):
             # define which adshs have entries with the current qtrs loop-variable
             adshs_with_qtrs = adsh_qtrs_df[adsh_qtrs_df.qtrs == qtrs].adsh.tolist()
 
@@ -2148,7 +2265,8 @@ is defined by the provide mask Series.</p>
     relevant_entries_df = data_df[mask]
 
     added_dfs: List[pd.DataFrame] = []
-    for qtrs in range(0, 5):
+    # copy entries for qtrs 0...4
+    for qtrs in range(5):
         # define which adshs have entries with the current qtrs loop-variable
         adshs_with_qtrs = adsh_qtrs_df[adsh_qtrs_df.qtrs == qtrs].adsh.tolist()
 
@@ -2326,6 +2444,8 @@ is defined by the provide mask Series.</p>
 <li><code><a title="secfsdstools.f_standardize.cf_standardize.CashFlowStandardizer.cf_end_of_period" href="#secfsdstools.f_standardize.cf_standardize.CashFlowStandardizer.cf_end_of_period">cf_end_of_period</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.cf_standardize.CashFlowStandardizer.cf_increase_decrease" href="#secfsdstools.f_standardize.cf_standardize.CashFlowStandardizer.cf_increase_decrease">cf_increase_decrease</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.cf_standardize.CashFlowStandardizer.cf_netcash" href="#secfsdstools.f_standardize.cf_standardize.CashFlowStandardizer.cf_netcash">cf_netcash</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.cf_standardize.CashFlowStandardizer.cf_payments_dividends" href="#secfsdstools.f_standardize.cf_standardize.CashFlowStandardizer.cf_payments_dividends">cf_payments_dividends</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.cf_standardize.CashFlowStandardizer.cf_proceeds_sale_invest" href="#secfsdstools.f_standardize.cf_standardize.CashFlowStandardizer.cf_proceeds_sale_invest">cf_proceeds_sale_invest</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.cf_standardize.CashFlowStandardizer.final_tags" href="#secfsdstools.f_standardize.cf_standardize.CashFlowStandardizer.final_tags">final_tags</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.cf_standardize.CashFlowStandardizer.main_rule_tree" href="#secfsdstools.f_standardize.cf_standardize.CashFlowStandardizer.main_rule_tree">main_rule_tree</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.cf_standardize.CashFlowStandardizer.main_statement_tags" href="#secfsdstools.f_standardize.cf_standardize.CashFlowStandardizer.main_statement_tags">main_statement_tags</a></code></li>

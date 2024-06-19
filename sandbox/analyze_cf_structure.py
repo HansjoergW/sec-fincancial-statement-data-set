@@ -242,9 +242,19 @@ if __name__ == '__main__':
     #                                      'NetCashProvidedByUsedInFinancingActivities'],
     #                                  excluded_tags=['NetCashProvidedByUsedInOperatingActivities'])
 
-    # print(find_tags_containing(cf_joined_bag, contains="PeriodIncreaseDecrease"))
+    #print(find_tags_containing(cf_joined_bag, contains="Dividends"))
     # print(count_selected_tags(cf_joined_bag, [
+    #     'DividendsPaidToNoncontrollingInterest',
+    #     'DividendsPaidToControllingInterest',
+    #     'DividendsPaidOnCommonStock',
+    #     'DividendsPaidOnPreferredStock',
+    #     'DividendsPaidOnOtherEquityInstruments',
+    #     'DividendsPaidIncludingDividendEquivalents',
     # ]))
+
+
+
+
 
     # print(check_relevant_tags(cf_joined_bag))
     # print(find_reports_with_all(cf_joined_bag, ['NetCashProvidedByUsedInDiscontinuedOperations']))

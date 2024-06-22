@@ -110,7 +110,7 @@ def check_signed_values(is_joined_bag: JoinedDataBag, tag_list: List[str]):
     just_cost = just_cost[just_cost.tag.isin(tag_list)]
     just_cost = just_cost[~(just_cost.value.isna() | (just_cost.value == 0.0))]
     just_cost['value_pos'] = just_cost.value >= 0.0
-    return just_cost.groupby(['negating', 'value_neg']).count()
+    return just_cost.groupby(['negating', 'value_pos']).count()
 
 
 

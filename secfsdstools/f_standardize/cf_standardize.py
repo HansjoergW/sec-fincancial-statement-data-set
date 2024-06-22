@@ -4,13 +4,49 @@ from typing import List, Set
 import pandas as pd
 import pandera as pa
 
-from secfsdstools.f_standardize.base_prepivot_rules import PrePivotDeduplicate
+from secfsdstools.f_standardize.base_prepivot_rules import PrePivotDeduplicate, PrePivotCorrectSign
 from secfsdstools.f_standardize.base_rule_framework import RuleGroup, Rule, PrePivotRule
 from secfsdstools.f_standardize.base_rules import CopyTagRule, SumUpRule, PostSetToZero, \
     MissingSummandRule, PostCopyToFirstSummand, MissingSumRule
 from secfsdstools.f_standardize.base_validation_rules import ValidationRule, SumValidationRule, \
     IsSetValidationRule
 from secfsdstools.f_standardize.standardizing import Standardizer
+
+
+# list of tags which indicate an inflow of money and therefore should have a positive value
+inflow_tags = [
+    'ProceedsFromDivestitureOfBusinessesNetOfCashDivested',
+    'ProceedsFromIssuanceOfCommonStock',
+    'ProceedsFromIssuanceOfDebt',
+    'ProceedsFromMaturitiesPrepaymentsAndCallsOfAvailableForSaleSecurities',
+    'ProceedsFromSaleAndMaturityOfOtherInvestments',
+    'ProceedsFromSaleOfAvailableForSaleSecurities',
+    'ProceedsFromSaleOfHeldToMaturitySecurities',
+    'ProceedsFromSaleOfIntangibleAssets',
+    'ProceedsFromSaleOfPropertyPlantAndEquipment',
+    'ProceedsFromStockOptionsExercised',
+    'AmortizationOfDeferredCharges',
+    'AmortizationOfFinancingCosts',
+    'AmortizationOfIntangibleAssets',
+    'Depletion',
+    'Depreciation',
+    'DepreciationAndAmortization',
+    'DepreciationDepletionAndAmortization',
+]
+
+# list of tags which indicate an outflow of money and therefore should have a positive value
+outflow_tags = [
+    'PaymentsForRepurchaseOfCommonStock',
+    'PaymentsOfDividends',
+    'PaymentsOfDividendsCommonStock',
+    'PaymentsOfDividendsMinorityInterest',
+    'PaymentsOfDividendsPreferredStockAndPreferenceStock',
+    'PaymentsToAcquireBusinessesNetOfCashAcquired',
+    'PaymentsToAcquireIntangibleAssets',
+    'PaymentsToAcquireInvestments',
+    'PaymentsToAcquirePropertyPlantAndEquipment',
+    'RepaymentsOfDebt',
+]
 
 
 class PrePivotMaxQtrs(PrePivotRule):
@@ -473,7 +509,16 @@ class CashFlowStandardizer(Standardizer):
         prefix="CF_PREPIV",
         rules=[PrePivotDeduplicate(),
                PrePivotMaxQtrs(max_qtrs=4),
-               PrePivotCashAtEndOfPeriod()]
+               PrePivotCorrectSign(
+                   tag_list=inflow_tags,
+                   is_positive=True
+               ),
+               PrePivotCorrectSign(
+                   tag_list=outflow_tags,
+                   is_positive=True
+               ),
+               PrePivotCashAtEndOfPeriod()
+               ]
     )
 
     preprocess_rule_tree = (

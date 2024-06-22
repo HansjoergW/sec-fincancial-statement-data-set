@@ -2,7 +2,6 @@ import time
 from typing import List
 
 import pandas as pd
-from secfsdstools.e_filter.joinedfiltering import AdshJoinedFilter
 
 from secfsdstools.d_container.databagmodel import JoinedDataBag
 from secfsdstools.e_collector.companycollecting import CompanyReportCollector
@@ -172,12 +171,14 @@ def standardize_v2(cf_joined_bag: JoinedDataBag) -> StandardizedBag:
     return cf_standardizer.get_standardize_bag()
 
 
-def check_signed_values(is_joined_bag: JoinedDataBag, tag_list: List[str]):
-    just_cost = is_joined_bag.pre_num_df[['tag', 'value', 'negating']]
+def check_signed_values(joined_bag: JoinedDataBag, tag_list: List[str]):
+    just_cost = joined_bag.pre_num_df[['tag', 'value', 'negating']]
     just_cost = just_cost[just_cost.tag.isin(tag_list)]
     just_cost = just_cost[~(just_cost.value.isna() | (just_cost.value == 0.0))]
     just_cost['value_pos'] = just_cost.value >= 0.0
-    return just_cost.groupby(['negating', 'value_neg']).count()
+    grouped_df = just_cost.groupby(['tag', 'negating', 'value_pos']).count()
+    grouped_df.reset_index(inplace=True)
+    return grouped_df
 
 
 def check_relevant_tags(cf_joined_bag: JoinedDataBag):
@@ -230,11 +231,16 @@ def count_selected_tags(cf_joined_bag: JoinedDataBag, selected_tags: List[str]) 
 
 if __name__ == '__main__':
     # create_smaller_sample_CF_set()
-    #prepare_all_data_set()
+    # prepare_all_data_set()
 
     cf_joined_bag: JoinedDataBag = load_joined_CF_set()
-    #cf_joined_bag = cf_joined_bag.filter(AdshJoinedFilter(adshs=['0000885725-20-000036']))
+    # cf_joined_bag = cf_joined_bag.filter(AdshJoinedFilter(adshs=['0000885725-20-000036']))
     # cf_joined_bag = load_smaller_sample_IS_set()
+
+    # check_df = check_signed_values(joined_bag=cf_joined_bag, tag_list=[
+    #
+    # ])
+    # print(check_df)
 
     # find_reports_using_and_excluding(cf_joined_bag=cf_joined_bag,
     #                                  all_included_tags=[
@@ -242,7 +248,7 @@ if __name__ == '__main__':
     #                                      'NetCashProvidedByUsedInFinancingActivities'],
     #                                  excluded_tags=['NetCashProvidedByUsedInOperatingActivities'])
 
-    #print(find_tags_containing(cf_joined_bag, contains="Dividends"))
+    # print(find_tags_containing(cf_joined_bag, contains="Dividends"))
     # print(count_selected_tags(cf_joined_bag, [
     #     'DividendsPaidToNoncontrollingInterest',
     #     'DividendsPaidToControllingInterest',
@@ -252,17 +258,12 @@ if __name__ == '__main__':
     #     'DividendsPaidIncludingDividendEquivalents',
     # ]))
 
-
-
-
-
     # print(check_relevant_tags(cf_joined_bag))
     # print(find_reports_with_all(cf_joined_bag, ['NetCashProvidedByUsedInDiscontinuedOperations']))
     print("sub_df", cf_joined_bag.sub_df.shape)
     print("pre_num_df", cf_joined_bag.pre_num_df.shape)
 
     standardized_bag = standardize_v2(cf_joined_bag)
-
 
     print(standardized_bag.result_df.shape)
 

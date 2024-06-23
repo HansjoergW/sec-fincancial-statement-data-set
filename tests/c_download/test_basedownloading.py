@@ -17,7 +17,7 @@ class MyDownloader(BaseDownloader):
 
 @pytest.fixture
 def basedownloader(tmp_path):
-    url_downloader = UrlDownloader()
+    url_downloader = UrlDownloader(user_agent="abc.xyz@main.com")
     zip_dir = tmp_path / 'zipfiles'
     parquet_dir = tmp_path / 'parquet'
     os.makedirs(zip_dir)

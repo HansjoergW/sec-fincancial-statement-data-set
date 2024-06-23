@@ -4,14 +4,14 @@ from typing import List, Set
 import pandas as pd
 import pandera as pa
 
-from secfsdstools.f_standardize.base_prepivot_rules import PrePivotDeduplicate, PrePivotCorrectSign
+from secfsdstools.f_standardize.base_prepivot_rules import (PrePivotDeduplicate,
+                                                            PrePivotCorrectSign, PrePivotMaxQtrs)
 from secfsdstools.f_standardize.base_rule_framework import RuleGroup, Rule, PrePivotRule
 from secfsdstools.f_standardize.base_rules import CopyTagRule, SumUpRule, PostSetToZero, \
     MissingSummandRule, PostCopyToFirstSummand, MissingSumRule
 from secfsdstools.f_standardize.base_validation_rules import ValidationRule, SumValidationRule, \
     IsSetValidationRule
 from secfsdstools.f_standardize.standardizing import Standardizer
-
 
 # list of tags which indicate an inflow of money and therefore should have a positive value
 inflow_tags = [
@@ -49,52 +49,6 @@ outflow_tags = [
 ]
 
 
-class PrePivotMaxQtrs(PrePivotRule):
-    """
-        filters the entries that have qtrs value that are equal or below the configured max_qtrs.
-    """
-
-    def __init__(self, max_qtrs: int = 4):
-        super().__init__("MaxQtr")
-        self.max_qtrs = max_qtrs
-
-    def mask(self, data_df: pd.DataFrame) -> pa.typing.Series[bool]:
-        """
-            returns a Series[bool] which defines the rows to which this rule has to be applied.
-
-        Args:
-            data_df: dataframe on which the rules should be applied
-
-        Returns:
-            pa.typing.Series[bool]: a boolean Series that marks which rows have to be calculated
-        """
-        return data_df.qtrs <= self.max_qtrs
-
-    def apply(self, data_df: pd.DataFrame, mask: pa.typing.Series[bool]) -> pd.DataFrame:
-        """
-        apply the rule on the provided dataframe. the rows, on which the rule has to be applied
-        is defined by the provide mask Series.
-
-        Important, the rules have to be applied "in-place", so no new dataframe is produced.
-
-        Args:
-            df: dataframe on which the rule has to be applied
-            mask: a Series marking the rows in the dataframe on which the rule has to be applied
-        Returns:
-            pd.DataFrame: make the process chainable
-        """
-
-        return data_df[mask]
-
-    def get_description(self) -> str:
-        """
-        Returns the description String
-        Returns:
-            str: description
-        """
-        return (f"Removes the entries that have a bigger qtrs value than {self.max_qtrs}")
-
-
 class PrePivotCashAtEndOfPeriod(PrePivotRule):
     """
     The cash at the beginning and end of a period always has qtrs=0, since this is
@@ -111,6 +65,7 @@ class PrePivotCashAtEndOfPeriod(PrePivotRule):
     we add copied entries for the qtrs that are present for that adsh number.
     """
 
+    # pylint: disable=C0301
     def __init__(self):
         super().__init__("CashEndOfPeriod")
         self.cash_tags = [
@@ -365,6 +320,7 @@ class PostFixMixedContinuingWithSum(Rule):
                 " '...ContinuingOperations' tags. "
                 "(e.g. 'NetCashProvidedByUsedInOperatingActivitiesContinuingOperations').")
 
+# pylint: disable=C0301
 
 class CashFlowStandardizer(Standardizer):
     """
@@ -377,7 +333,7 @@ class CashFlowStandardizer(Standardizer):
 
     Final Tags
         NetCashProvidedByUsedInOperatingActivities
-        1.1. AdjustmentsToReconcileNetIncomeLossToCashProvidedByUsedInOperatingActivities <- (not copied)
+        1.1. AdjustmentsToReconcileNetIncomeLossToCashProvidedByUsedInOperatingActivities (not used)
         1.1.1. DepreciationDepletionAndAmortization             ok Hierarchy
         1.1.2. DeferredIncomeTaxExpenseBenefit                  ok direct
         1.1.3. ShareBasedCompensation                           ok direct
@@ -515,7 +471,7 @@ class CashFlowStandardizer(Standardizer):
                ),
                PrePivotCorrectSign(
                    tag_list=outflow_tags,
-                   is_positive=True
+                   is_positive=False
                ),
                PrePivotCashAtEndOfPeriod()
                ]

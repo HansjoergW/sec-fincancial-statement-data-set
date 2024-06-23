@@ -14,7 +14,7 @@ RE_MATCH_QRTR_FILENAME_compiled = re.compile(RE_MATCH_QRTR_FILENAME)
 
 @pytest.fixture
 def seczipdownloader(tmp_path):
-    url_downloader = UrlDownloader()
+    url_downloader = UrlDownloader(user_agent="abc.xyz@main.com")
     zip_dir = tmp_path / 'zipfiles'
     parquet_dir = tmp_path / 'parquet'
     os.makedirs(zip_dir)

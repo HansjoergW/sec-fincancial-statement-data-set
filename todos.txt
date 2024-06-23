@@ -21,12 +21,17 @@ v.1.6.0
 
 Todo:
 - in CF haben wir oft auch zusätzliche 'Cash' Tags -> benötigen wir diese im BS auch?
-- in CF: welche Tags können auf Vorzeichen geprüft werden?
+
+- Aufbereitung der Daten für BS, IS und CF Statement möglichst direkt bei update machen,
+  so dass diese Daten schon vorbereitet und gefiltert zur Verfügung stehen.
+  Vlt. auch eine Art PostDownload Hook anbieten.
 - Discord Channel?
 - evtl. sollte jede Regel noch eine "Explanation" bekommen. Ein Text, der die Regel spezifisch erklärt,
   nicht allgemein wie in description.
 
 - usecase/analyzes ausarbeiten und eigenes Notebook mit Beispielen
+
+
 
 Next:
 - vlt switch um parallele verarbeitung komplett auszuschalten?

@@ -124,3 +124,49 @@ class PrePivotCorrectSign(PrePivotRule):
 
         return f"Ensures that the tags {self.tag_list} have a {pos_neg_text} value. Applied when " \
                f"the expectation of having a negative or positive value is not met"
+
+
+class PrePivotMaxQtrs(PrePivotRule):
+    """
+        filters the entries that have qtrs value that are equal or below the configured max_qtrs.
+    """
+
+    def __init__(self, max_qtrs: int = 4):
+        super().__init__("MaxQtr")
+        self.max_qtrs = max_qtrs
+
+    def mask(self, data_df: pd.DataFrame) -> pa.typing.Series[bool]:
+        """
+            returns a Series[bool] which defines the rows to which this rule has to be applied.
+
+        Args:
+            data_df: dataframe on which the rules should be applied
+
+        Returns:
+            pa.typing.Series[bool]: a boolean Series that marks which rows have to be calculated
+        """
+        return data_df.qtrs <= self.max_qtrs
+
+    def apply(self, data_df: pd.DataFrame, mask: pa.typing.Series[bool]) -> pd.DataFrame:
+        """
+        apply the rule on the provided dataframe. the rows, on which the rule has to be applied
+        is defined by the provide mask Series.
+
+        Important, the rules have to be applied "in-place", so no new dataframe is produced.
+
+        Args:
+            df: dataframe on which the rule has to be applied
+            mask: a Series marking the rows in the dataframe on which the rule has to be applied
+        Returns:
+            pd.DataFrame: make the process chainable
+        """
+
+        return data_df[mask]
+
+    def get_description(self) -> str:
+        """
+        Returns the description String
+        Returns:
+            str: description
+        """
+        return f"Removes the entries that have a bigger qtrs value than {self.max_qtrs}"

@@ -5,10 +5,11 @@ from typing import List, Set
 import pandas as pd
 import pandera as pa
 
-from secfsdstools.f_standardize.base_prepivot_rules import PrePivotDeduplicate, PrePivotCorrectSign
+from secfsdstools.f_standardize.base_prepivot_rules import (PrePivotDeduplicate,
+    PrePivotCorrectSign, PrePivotMaxQtrs)
 from secfsdstools.f_standardize.base_rule_framework import RuleGroup, Rule
-from secfsdstools.f_standardize.base_rules import CopyTagRule, SumUpRule, SubtractFromRule, \
-    missingsumparts_rules_creator, MissingSummandRule, PostSetToZero, PostFixSign
+from secfsdstools.f_standardize.base_rules import (CopyTagRule, SumUpRule, SubtractFromRule,
+    missingsumparts_rules_creator, MissingSummandRule, PostSetToZero, PostFixSign)
 from secfsdstools.f_standardize.base_validation_rules import ValidationRule, SumValidationRule
 from secfsdstools.f_standardize.standardizing import Standardizer
 
@@ -540,6 +541,7 @@ class IncomeStatementStandardizer(Standardizer):
     prepivot_rule_tree = RuleGroup(
         prefix="IS_PREPIV",
         rules=[PrePivotDeduplicate(),
+               PrePivotMaxQtrs(max_qtrs=4),
                PrePivotCorrectSign(
                    # all these tags are costOf and therefore should appear as a positive number
                    # since costs are subtracted from the Revenue to get the GrossProfit

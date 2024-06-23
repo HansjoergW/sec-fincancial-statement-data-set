@@ -1,6 +1,7 @@
 import pandas as pd
 
-from secfsdstools.f_standardize.base_prepivot_rules import PrePivotDeduplicate, PrePivotCorrectSign
+from secfsdstools.f_standardize.base_prepivot_rules import PrePivotDeduplicate, PrePivotCorrectSign, \
+    PrePivotMaxQtrs
 
 
 def test_deduplicate_dataframe_with_no_duplicates():
@@ -45,7 +46,6 @@ def test_handle_dataframe_with_one_row():
     assert data_df.equals(expected_df)
 
 
-
 def test_deduplicate_dataframe_with_duplicates():
     # Create a sample dataframe with duplicates
     data = {
@@ -82,6 +82,7 @@ def test_deduplicate_dataframe_with_duplicates():
     assert len(deduplicate_rule.log_df) == 2
     assert deduplicate_rule.log_df.iloc[0].id == "X_DeDup"
 
+
 def test_correctsign_tags():
     # Arrange
     rule = PrePivotCorrectSign(["tag1", "tag2"], True)
@@ -106,3 +107,20 @@ def test_correctsign_tags():
 
     assert len(rule.log_df) == 1
     assert rule.log_df.iloc[0].id == "X_CorSign"
+
+def test_filters_rows_based_on_max_qtrs():
+    data = {
+        'adsh': ['0001', '0002', '0003'],
+        'coreg': [None, None, None],
+        'report': [1, 1, 1],
+        'ddate': [20200101, 20200101, 20200101],
+        'uom': ['USD', 'USD', 'USD'],
+        'qtrs': [1, 5, 3],
+        'tag': ['tag1', 'tag2', 'tag3'],
+        'version': [1, 1, 1]
+    }
+    df = pd.DataFrame(data)
+    rule = PrePivotMaxQtrs(max_qtrs=4)
+    result_df = rule.process(df)
+    expected_df = df[df['qtrs'] <= 4]
+    pd.testing.assert_frame_equal(result_df, expected_df)

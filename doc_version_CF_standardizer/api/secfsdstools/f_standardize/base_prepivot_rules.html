@@ -152,7 +152,53 @@ class PrePivotCorrectSign(PrePivotRule):
         pos_neg_text = &#34;positive&#34; if self.is_positive else &#34;negative&#34;
 
         return f&#34;Ensures that the tags {self.tag_list} have a {pos_neg_text} value. Applied when &#34; \
-               f&#34;the expectation of having a negative or positive value is not met&#34;</code></pre>
+               f&#34;the expectation of having a negative or positive value is not met&#34;
+
+
+class PrePivotMaxQtrs(PrePivotRule):
+    &#34;&#34;&#34;
+        filters the entries that have qtrs value that are equal or below the configured max_qtrs.
+    &#34;&#34;&#34;
+
+    def __init__(self, max_qtrs: int = 4):
+        super().__init__(&#34;MaxQtr&#34;)
+        self.max_qtrs = max_qtrs
+
+    def mask(self, data_df: pd.DataFrame) -&gt; pa.typing.Series[bool]:
+        &#34;&#34;&#34;
+            returns a Series[bool] which defines the rows to which this rule has to be applied.
+
+        Args:
+            data_df: dataframe on which the rules should be applied
+
+        Returns:
+            pa.typing.Series[bool]: a boolean Series that marks which rows have to be calculated
+        &#34;&#34;&#34;
+        return data_df.qtrs &lt;= self.max_qtrs
+
+    def apply(self, data_df: pd.DataFrame, mask: pa.typing.Series[bool]) -&gt; pd.DataFrame:
+        &#34;&#34;&#34;
+        apply the rule on the provided dataframe. the rows, on which the rule has to be applied
+        is defined by the provide mask Series.
+
+        Important, the rules have to be applied &#34;in-place&#34;, so no new dataframe is produced.
+
+        Args:
+            df: dataframe on which the rule has to be applied
+            mask: a Series marking the rows in the dataframe on which the rule has to be applied
+        Returns:
+            pd.DataFrame: make the process chainable
+        &#34;&#34;&#34;
+
+        return data_df[mask]
+
+    def get_description(self) -&gt; str:
+        &#34;&#34;&#34;
+        Returns the description String
+        Returns:
+            str: description
+        &#34;&#34;&#34;
+        return f&#34;Removes the entries that have a bigger qtrs value than {self.max_qtrs}&#34;</code></pre>
 </details>
 </section>
 <section>
@@ -458,6 +504,132 @@ is defined by the provide mask Series.</p>
 </li>
 </ul>
 </dd>
+<dt id="secfsdstools.f_standardize.base_prepivot_rules.PrePivotMaxQtrs"><code class="flex name class">
+<span>class <span class="ident">PrePivotMaxQtrs</span></span>
+<span>(</span><span>max_qtrs: int = 4)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>filters the entries that have qtrs value that are equal or below the configured max_qtrs.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class PrePivotMaxQtrs(PrePivotRule):
+    &#34;&#34;&#34;
+        filters the entries that have qtrs value that are equal or below the configured max_qtrs.
+    &#34;&#34;&#34;
+
+    def __init__(self, max_qtrs: int = 4):
+        super().__init__(&#34;MaxQtr&#34;)
+        self.max_qtrs = max_qtrs
+
+    def mask(self, data_df: pd.DataFrame) -&gt; pa.typing.Series[bool]:
+        &#34;&#34;&#34;
+            returns a Series[bool] which defines the rows to which this rule has to be applied.
+
+        Args:
+            data_df: dataframe on which the rules should be applied
+
+        Returns:
+            pa.typing.Series[bool]: a boolean Series that marks which rows have to be calculated
+        &#34;&#34;&#34;
+        return data_df.qtrs &lt;= self.max_qtrs
+
+    def apply(self, data_df: pd.DataFrame, mask: pa.typing.Series[bool]) -&gt; pd.DataFrame:
+        &#34;&#34;&#34;
+        apply the rule on the provided dataframe. the rows, on which the rule has to be applied
+        is defined by the provide mask Series.
+
+        Important, the rules have to be applied &#34;in-place&#34;, so no new dataframe is produced.
+
+        Args:
+            df: dataframe on which the rule has to be applied
+            mask: a Series marking the rows in the dataframe on which the rule has to be applied
+        Returns:
+            pd.DataFrame: make the process chainable
+        &#34;&#34;&#34;
+
+        return data_df[mask]
+
+    def get_description(self) -&gt; str:
+        &#34;&#34;&#34;
+        Returns the description String
+        Returns:
+            str: description
+        &#34;&#34;&#34;
+        return f&#34;Removes the entries that have a bigger qtrs value than {self.max_qtrs}&#34;</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="secfsdstools.f_standardize.base_rule_framework.PrePivotRule" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.PrePivotRule">PrePivotRule</a></li>
+<li><a title="secfsdstools.f_standardize.base_rule_framework.AbstractRule" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.AbstractRule">AbstractRule</a></li>
+<li><a title="secfsdstools.f_standardize.base_rule_framework.RuleEntity" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.RuleEntity">RuleEntity</a></li>
+<li>abc.ABC</li>
+</ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="secfsdstools.f_standardize.base_prepivot_rules.PrePivotMaxQtrs.identifier"><code class="name">var <span class="ident">identifier</span> : str</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="secfsdstools.f_standardize.base_prepivot_rules.PrePivotMaxQtrs.apply"><code class="name flex">
+<span>def <span class="ident">apply</span></span>(<span>self, data_df: pandas.core.frame.DataFrame, mask: pandera.typing.pandas.Series[bool]) ‑> pandas.core.frame.DataFrame</span>
+</code></dt>
+<dd>
+<div class="desc"><p>apply the rule on the provided dataframe. the rows, on which the rule has to be applied
+is defined by the provide mask Series.</p>
+<p>Important, the rules have to be applied "in-place", so no new dataframe is produced.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>df</code></strong></dt>
+<dd>dataframe on which the rule has to be applied</dd>
+<dt><strong><code>mask</code></strong></dt>
+<dd>a Series marking the rows in the dataframe on which the rule has to be applied</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>pd.DataFrame</code></dt>
+<dd>make the process chainable</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def apply(self, data_df: pd.DataFrame, mask: pa.typing.Series[bool]) -&gt; pd.DataFrame:
+    &#34;&#34;&#34;
+    apply the rule on the provided dataframe. the rows, on which the rule has to be applied
+    is defined by the provide mask Series.
+
+    Important, the rules have to be applied &#34;in-place&#34;, so no new dataframe is produced.
+
+    Args:
+        df: dataframe on which the rule has to be applied
+        mask: a Series marking the rows in the dataframe on which the rule has to be applied
+    Returns:
+        pd.DataFrame: make the process chainable
+    &#34;&#34;&#34;
+
+    return data_df[mask]</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="secfsdstools.f_standardize.base_rule_framework.PrePivotRule" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.PrePivotRule">PrePivotRule</a></b></code>:
+<ul class="hlist">
+<li><code><a title="secfsdstools.f_standardize.base_rule_framework.PrePivotRule.collect_description" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.AbstractRule.collect_description">collect_description</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.base_rule_framework.PrePivotRule.get_description" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.RuleEntity.get_description">get_description</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.base_rule_framework.PrePivotRule.get_input_tags" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.RuleEntity.get_input_tags">get_input_tags</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.base_rule_framework.PrePivotRule.mask" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.AbstractRule.mask">mask</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.base_rule_framework.PrePivotRule.process" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.PrePivotRule.process">process</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.base_rule_framework.PrePivotRule.set_id" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.RuleEntity.set_id">set_id</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
 </dl>
 </section>
 </article>
@@ -486,6 +658,13 @@ is defined by the provide mask Series.</p>
 <ul class="">
 <li><code><a title="secfsdstools.f_standardize.base_prepivot_rules.PrePivotDeduplicate.apply" href="#secfsdstools.f_standardize.base_prepivot_rules.PrePivotDeduplicate.apply">apply</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.base_prepivot_rules.PrePivotDeduplicate.identifier" href="#secfsdstools.f_standardize.base_prepivot_rules.PrePivotDeduplicate.identifier">identifier</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="secfsdstools.f_standardize.base_prepivot_rules.PrePivotMaxQtrs" href="#secfsdstools.f_standardize.base_prepivot_rules.PrePivotMaxQtrs">PrePivotMaxQtrs</a></code></h4>
+<ul class="">
+<li><code><a title="secfsdstools.f_standardize.base_prepivot_rules.PrePivotMaxQtrs.apply" href="#secfsdstools.f_standardize.base_prepivot_rules.PrePivotMaxQtrs.apply">apply</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.base_prepivot_rules.PrePivotMaxQtrs.identifier" href="#secfsdstools.f_standardize.base_prepivot_rules.PrePivotMaxQtrs.identifier">identifier</a></code></li>
 </ul>
 </li>
 </ul>

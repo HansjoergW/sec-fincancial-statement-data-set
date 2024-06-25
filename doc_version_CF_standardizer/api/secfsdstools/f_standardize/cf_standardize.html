@@ -398,23 +398,24 @@ class CashFlowStandardizer(Standardizer):
     &#34;&#34;&#34;
     prepivot_rule_tree = RuleGroup(
         prefix=&#34;CF_PREPIV&#34;,
-        rules=[PrePivotDeduplicate(),
-               PrePivotMaxQtrs(max_qtrs=4),
+        rules=[PrePivotDeduplicate(), # remove duplicates
+               PrePivotMaxQtrs(max_qtrs=4), # only keep entries with qtrs &lt;= 4
                PrePivotCorrectSign(
-                   tag_list=inflow_tags,
+                   tag_list=inflow_tags, # make sure these tags have a positive value
                    is_positive=True
                ),
                PrePivotCorrectSign(
-                   tag_list=outflow_tags,
+                   tag_list=outflow_tags, # make sure these tags have a negative value
                    is_positive=False
                ),
-               PrePivotCashAtEndOfPeriod()
+               PrePivotCashAtEndOfPeriod() # prepare CashAtEndOfPeriod
                ]
     )
 
     preprocess_rule_tree = (
         RuleGroup(prefix=&#34;CF_PRE&#34;,
                   rules=[
+                      # fix wrong usage of NetCashProvidedByUsedInContinuingOperations
                       PreCorrectMixUpContinuingOperations(),
                   ]))
 
@@ -432,6 +433,7 @@ class CashFlowStandardizer(Standardizer):
             CopyTagRule(original=&#39;CashProvidedByUsedInDiscontinuedOperationsFinancingActivities&#39;,
                         target=&#39;CashProvidedByUsedInFinancingActivitiesDiscontinuedOperations&#39;),
 
+            # Calculate SumTags for Continuing and Discontinued
             SumUpRule(sum_tag=&#39;NetCashProvidedByUsedInOperatingActivities&#39;,
                       potential_summands=[
                           &#39;NetCashProvidedByUsedInOperatingActivitiesContinuingOperations&#39;,
@@ -936,23 +938,24 @@ as negated.</dd>
     &#34;&#34;&#34;
     prepivot_rule_tree = RuleGroup(
         prefix=&#34;CF_PREPIV&#34;,
-        rules=[PrePivotDeduplicate(),
-               PrePivotMaxQtrs(max_qtrs=4),
+        rules=[PrePivotDeduplicate(), # remove duplicates
+               PrePivotMaxQtrs(max_qtrs=4), # only keep entries with qtrs &lt;= 4
                PrePivotCorrectSign(
-                   tag_list=inflow_tags,
+                   tag_list=inflow_tags, # make sure these tags have a positive value
                    is_positive=True
                ),
                PrePivotCorrectSign(
-                   tag_list=outflow_tags,
+                   tag_list=outflow_tags, # make sure these tags have a negative value
                    is_positive=False
                ),
-               PrePivotCashAtEndOfPeriod()
+               PrePivotCashAtEndOfPeriod() # prepare CashAtEndOfPeriod
                ]
     )
 
     preprocess_rule_tree = (
         RuleGroup(prefix=&#34;CF_PRE&#34;,
                   rules=[
+                      # fix wrong usage of NetCashProvidedByUsedInContinuingOperations
                       PreCorrectMixUpContinuingOperations(),
                   ]))
 
@@ -970,6 +973,7 @@ as negated.</dd>
             CopyTagRule(original=&#39;CashProvidedByUsedInDiscontinuedOperationsFinancingActivities&#39;,
                         target=&#39;CashProvidedByUsedInFinancingActivitiesDiscontinuedOperations&#39;),
 
+            # Calculate SumTags for Continuing and Discontinued
             SumUpRule(sum_tag=&#39;NetCashProvidedByUsedInOperatingActivities&#39;,
                       potential_summands=[
                           &#39;NetCashProvidedByUsedInOperatingActivitiesContinuingOperations&#39;,

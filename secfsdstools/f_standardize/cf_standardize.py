@@ -369,23 +369,24 @@ class CashFlowStandardizer(Standardizer):
     """
     prepivot_rule_tree = RuleGroup(
         prefix="CF_PREPIV",
-        rules=[PrePivotDeduplicate(),
-               PrePivotMaxQtrs(max_qtrs=4),
+        rules=[PrePivotDeduplicate(), # remove duplicates
+               PrePivotMaxQtrs(max_qtrs=4), # only keep entries with qtrs <= 4
                PrePivotCorrectSign(
-                   tag_list=inflow_tags,
+                   tag_list=inflow_tags, # make sure these tags have a positive value
                    is_positive=True
                ),
                PrePivotCorrectSign(
-                   tag_list=outflow_tags,
+                   tag_list=outflow_tags, # make sure these tags have a negative value
                    is_positive=False
                ),
-               PrePivotCashAtEndOfPeriod()
+               PrePivotCashAtEndOfPeriod() # prepare CashAtEndOfPeriod
                ]
     )
 
     preprocess_rule_tree = (
         RuleGroup(prefix="CF_PRE",
                   rules=[
+                      # fix wrong usage of NetCashProvidedByUsedInContinuingOperations
                       PreCorrectMixUpContinuingOperations(),
                   ]))
 
@@ -403,6 +404,7 @@ class CashFlowStandardizer(Standardizer):
             CopyTagRule(original='CashProvidedByUsedInDiscontinuedOperationsFinancingActivities',
                         target='CashProvidedByUsedInFinancingActivitiesDiscontinuedOperations'),
 
+            # Calculate SumTags for Continuing and Discontinued
             SumUpRule(sum_tag='NetCashProvidedByUsedInOperatingActivities',
                       potential_summands=[
                           'NetCashProvidedByUsedInOperatingActivitiesContinuingOperations',

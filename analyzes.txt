@@ -1,5 +1,122 @@
 CF
---
+=====================================
+Final build up
+
+          + NetCashProvidedByUsedInOperatingActivitiesContinuingOperations
+          + CashProvidedByUsedInOperatingActivitiesDiscontinuedOperations <- CashProvidedByUsedInDiscontinuedOperationsOperatingActivities
+          --------
+      + NetCashProvidedByUsedInOperatingActivities
+
+          + NetCashProvidedByUsedInInvestingActivitiesContinuingOperations
+          + CashProvidedByUsedInInvestingActivitiesDiscontinuedOperations <- CashProvidedByUsedInDiscontinuedOperationsInvestingActivities
+          --------
+      + NetCashProvidedByUsedInInvestingActivities
+
+          + NetCashProvidedByUsedInInvestingActivitiesContinuingOperations
+          + CashProvidedByUsedInFinancingActivitiesDiscontinuedOperations <- CashProvidedByUsedInDiscontinuedOperationsFinancingActivities
+          --------
+      + NetCashProvidedByUsedInInvestingActivities
+
+
+                  Prio 1
+                           <- EffectOfExchangeRateOnCash
+                       <- EffectOfExchangeRateOnCashAndCashEquivalents
+                  + EffectOfExchangeRateOnCashCashEquivalentsRestrictedCashAndRestrictedCashEquivalents
+                  + EffectOfExchangeRateOnCashCashEquivalentsRestrictedCashAndRestrictedCashEquivalentsDisposalGroupIncludingDiscontinuedOperations
+                  --------
+                  EffectOfExchangeRateOnCashCashEquivalentsRestrictedCashAndRestrictedCashEquivalentsIncludingDisposalGroupAndDiscontinuedOperations
+                 <-
+              EffectOfExchangeRateFinal
+
+
+                  Prio 2
+                  + EffectOfExchangeRateOnCashAndCashEquivalentsContinuingOperations <- EffectOfExchangeRateOnCashContinuingOperations
+                  + EffectOfExchangeRateOnCashAndCashEquivalentsDiscontinuedOperations <- EffectOfExchangeRateOnCashDiscontinuedOperations
+                  --------
+              EffectOfExchangeRateFinal
+
+
+      + EffectOfExchangeRateFinal
+      ---------------------------
+
+                   <- CashPeriodIncreaseDecrease
+             <- CashAndCashEquivalentsPeriodIncreaseDecrease
+        <- CashCashEquivalentsRestrictedCashAndRestrictedCashEquivalentsPeriodIncreaseDecreaseIncludingExchangeRateEffect
+      CashPeriodIncreaseDecreaseIncludingExRateEffectFinal
+      ==================
+
+                                       <- CashEndOfPeriod
+                                  <- CashAndDueFromBanksEndOfPeriod
+                             <- CashAndCashEquivalentsAtCarryingValueEndOfPeriod
+                        <- CashAndCashEquivalentsAtCarryingValueIncludingDiscontinuedOperationsEndOfPeriod
+                   <- CashCashEquivalentsRestrictedCashAndRestrictedCashEquivalentsEndOfPeriod
+              <- CashCashEquivalentsRestrictedCashAndRestrictedCashEquivalentsIncludingDisposalGroupAndDiscontinuedOperationsEndOfPeriod
+        <- CashCashEquivalentsRestrictedCashAndRestrictedCashEquivalentsIncludingDisposalGroupAndDiscontinuedOperationsEndOfPeriod
+      CashAndCashEquivalentsEndOfPeriod
+
+
+      Details of Operating Activities
+
+                  + AmortizationOfIntangibleAssets
+                  + AmortizationOfDeferredCharges
+                  + AmortizationOfFinancingCosts
+                  -------------
+                + Amortization
+                + Depreciation
+                --------------
+                + DepreciationAndAmortization
+                + Depletion
+                ----------
+            DepreciationDepletionAndAmortization
+
+            DeferredIncomeTaxExpenseBenefit
+            ShareBasedCompensation
+            IncreaseDecreaseInAccountsPayable
+            IncreaseDecreaseInAccruedLiabilities
+            InterestPaidNet
+            IncomeTaxesPaidNet
+
+
+      Details of Investing activities
+
+                + ProceedsFromSaleOfAvailableForSaleSecurities
+                + ProceedsFromSaleOfTradingSecurities
+                + ProceedsFromSaleOfEquitySecurities
+                + ProceedsFromSaleOfDebtSecurities
+                + ProceedsFromSaleAndMaturityOfOtherInvestments
+                + ProceedsFromMaturitiesPrepaymentsAndCallsOfAvailableForSaleSecurities
+                + ProceedsFromSaleOfInvestmentsInAffiliates
+                + ProceedsFromSaleOfHeldToMaturitySecurities
+                --------------------------------------------
+            ProceedsFromSaleOfInvestments
+
+            PaymentsToAcquirePropertyPlantAndEquipment
+            ProceedsFromSaleOfPropertyPlantAndEquipment
+            PaymentsToAcquireInvestments
+            PaymentsToAcquireBusinessesNetOfCashAcquired
+            ProceedsFromDivestitureOfBusinessesNetOfCashDivested
+            PaymentsToAcquireIntangibleAssets
+            ProceedsFromSaleOfIntangibleAssets
+
+
+      Details of Financing activities
+
+                  + PaymentsOfDividendsCommonStock
+                  + PaymentsOfDividendsPreferredStockAndPreferenceStock
+                  + PaymentsOfDividendsMinorityInterest
+                  -------------
+             PaymentsOfDividends
+
+             ProceedsFromIssuanceOfCommonStock
+             ProceedsFromStockOptionsExercised
+             PaymentsForRepurchaseOfCommonStock
+             ProceedsFromIssuanceOfDebt
+             RepaymentsOfDebt
+
+
+
+CF Analyzes
+----------------------
 CashAtBeginning
 
     Problem 1:
@@ -25,19 +142,6 @@ CashAtBeginning
 
                             CashCashEquivalentsRestrictedCashAndRestrictedCashEquivalents
 
-CashAtEnd
-   PrePivotRules müssen auch Methoden haben um definieren zu können, welche
-   tags relevant sind, sonst werden die gefiltert!
-
-   ich kann nicht effizient erweitern. Daher bleibt eigentlich nur die Variante,
-   dass apply den Wert zurückgibt.. wodurch aber wieder die baseklasse anders wird..
-
-
-Todos Next:
-- There are entries where all final tags have values of 0.0
-- Details -> maybe check also for sign, because some seem to be typical
-             Payment... Outgoing
-             Proceeds... Incoming
 
 
 Main positions
@@ -135,7 +239,7 @@ V2
 
 
 IS
---
+============================================================
   Main Rules
     Revenues:
 
@@ -330,9 +434,11 @@ IS
     If there is no NetIncomeLoss, set it to ProfitLoss
     If there is no NetIncomeLossAttributableToNoncontrollingInterest, set it to ProfitLoss - NetIncomeLoss
 
-Todos
------
 
+IS Analyzes
+-------------------------------------------
+
+Todos
 - EarningsPerShare
 
 
@@ -436,7 +542,8 @@ NetIncomeLossFromDiscontinuedOperationsAvailableToCommonShareholdersDiluted
 
 
 Sonstiges
----------
+==========
+
 Falls Firmen nur die Resultate für Q2 und Q3 seit Beginn angeben, könnte man die Differenz für das einzelne Quartal
 nachträglich berechnen. Wenn man beim Standardizer angeben könnte, ob qrtrs ein Bestandteil des Keys ist, könnte man diese auch direkt
 berechnen und dann in einem Post Schritt das ganze cleanen, so, dass nur "einzelne Quarter" als Ergebnisse angezeigt werden.

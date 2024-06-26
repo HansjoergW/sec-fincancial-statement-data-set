@@ -228,7 +228,7 @@ class PreCorrectMixUpContinuingOperations(Rule):
 
 class PostFixMixedContinuingWithSum(Rule):
     """
-    Normally, when NetCashProvidedByUsedInXXXActivities are the sum of
+    Normally, NetCashProvidedByUsedInXXXActivities is the sum of
     NetCashProvidedByUsedInXXXActivitiesContinuingOperations and
     CashProvidedByUsedInXXXgActivitiesDiscontinuedOperations
 
@@ -236,7 +236,7 @@ class PostFixMixedContinuingWithSum(Rule):
     NetCashProvidedByUsedInXXXActivities is used to tag the continuingOperations instead of
     NetCashProvidedByUsedInXXXActivitiesContinuingOperations.
 
-    This results in wrong summation and therefore validation.
+    This results in a wrong summation and therefore validation.
 
     This rule fixes these entries.
     """
@@ -280,11 +280,34 @@ class PostFixMixedContinuingWithSum(Rule):
         Returns:
             pa.typing.Series[bool]: a boolean Series that marks which rows have to be calculated
         """
+
+        # how to detect..
+        # Summing up the NetCashProvidedByUsedInOperatingActivities values and adding
+        # the value of EffectOfExchangeRateFinal gives the expected
+        # CashPeriodIncreaseDecrease value.
+
         expected_sum = data_df[self.sum_tags].sum(axis=1) + data_df['EffectOfExchangeRateFinal']
+
+        # we sum up the values for the discontinued tags, and create a filter if they are all 0
         sum_disc = data_df[self.disc_tags].sum(axis=1)
         mask_sum_disc_not_zero = ~(sum_disc == 0)
 
+        # now, we compare the expected CashPeriodIncDec value with the actual value the tag
+        # the difference should be 0.0
         diff = data_df['CashPeriodIncreaseDecreaseIncludingExRateEffectFinal'] - expected_sum
+
+        # So if the difference matches the sum of the disc operations, we know that the
+        # Discontinued Value is not in the appropriate SumTag.
+
+        # Explanation:
+        # it should be that
+        #   + NetCashProvidedByUsedInOperatingActivitiesContinuingOperations
+        #   + CashProvidedByUsedInOperatingActivitiesDiscontinuedOperations
+        #   = NetCashProvidedByUsedInOperatingActivities (expected)
+        #
+        #  However, if the tag NetCashProvidedByUsedInOperatingActivities was used to tag the
+        #  actual value for NetCashProvidedByUsedInOperatingActivitiesContinuingOperations
+        #  the value is off by the value of CashProvidedByUsedInOperatingActivitiesDiscontinuedOperations
 
         mask: pa.typing.Series[bool] = mask_sum_disc_not_zero & (diff == sum_disc)
         return mask
@@ -304,8 +327,8 @@ class PostFixMixedContinuingWithSum(Rule):
         """
         for idx in range(3):
             data_df.loc[mask, self.cont_tags[idx]] = data_df[self.sum_tags[idx]]
-            data_df.loc[mask, self.sum_tags[idx]] = data_df[self.cont_tags[idx]] + data_df[
-                self.disc_tags[idx]]
+            data_df.loc[mask, self.sum_tags[idx]] = (
+                    data_df[self.cont_tags[idx]] + data_df[self.disc_tags[idx]])
         return data_df
 
     def get_description(self) -> str:
@@ -330,40 +353,205 @@ class CashFlowStandardizer(Standardizer):
     At the end, the standardized CF contains the following columns
 
     <pre>
-
     Final Tags
         NetCashProvidedByUsedInOperatingActivities
-          DepreciationDepletionAndAmortization                 ok Hierarchy
-          DeferredIncomeTaxExpenseBenefit                      ok direct
-          ShareBasedCompensation                               ok direct
-          IncreaseDecreaseInAccountsPayable                    ok direct
-          IncreaseDecreaseInAccruedLiabilities                 ok direct
-          InterestPaidNet                                      ok direct
-          IncomeTaxesPaidNet                                   ok direct
+          CashProvidedByUsedInOperatingActivitiesDiscontinuedOperations
+          NetCashProvidedByUsedInOperatingActivitiesContinuingOperations
+              DepreciationDepletionAndAmortization
+              DeferredIncomeTaxExpenseBenefit
+              ShareBasedCompensation
+              IncreaseDecreaseInAccountsPayable
+              IncreaseDecreaseInAccruedLiabilities
+              InterestPaidNet
+              IncomeTaxesPaidNet
 
         NetCashProvidedByUsedInInvestingActivities
-          PaymentsToAcquirePropertyPlantAndEquipment           ok direct
-          ProceedsFromSaleOfPropertyPlantAndEquipment          ok direct
-          PaymentsToAcquireInvestments                         ok direct
-          ProceedsFromSaleOfInvestments                        ok Hierarchy
-          PaymentsToAcquireBusinessesNetOfCashAcquired         ok direct
-          ProceedsFromDivestitureOfBusinessesNetOfCashDivested ok direct
-          PaymentsToAcquireIntangibleAssets                    ok direct
-          ProceedsFromSaleOfIntangibleAssets                   ok direct
+            CashProvidedByUsedInInvestingActivitiesDiscontinuedOperations
+            NetCashProvidedByUsedInInvestingActivitiesContinuingOperations
+              PaymentsToAcquirePropertyPlantAndEquipment
+              ProceedsFromSaleOfPropertyPlantAndEquipment
+              PaymentsToAcquireInvestments
+              ProceedsFromSaleOfInvestments
+              PaymentsToAcquireBusinessesNetOfCashAcquired
+              ProceedsFromDivestitureOfBusinessesNetOfCashDivested
+              PaymentsToAcquireIntangibleAssets
+              ProceedsFromSaleOfIntangibleAssets
 
         NetCashProvidedByUsedInFinancingActivities
-          ProceedsFromIssuanceOfCommonStock                    ok direct
-          ProceedsFromStockOptionsExercised                    ok direct
-          PaymentsForRepurchaseOfCommonStock                   ok direct
-          ProceedsFromIssuanceOfDebt                           ok direct
-          RepaymentsOfDebt                                     ok direct
-          PaymentsOfDividends                                  ok Hierarchy
+            CashProvidedByUsedInFinancingActivitiesDiscontinuedOperations
+            NetCashProvidedByUsedInFinancingActivitiesContinuingOperations
+              ProceedsFromIssuanceOfCommonStock
+              ProceedsFromStockOptionsExercised
+              PaymentsForRepurchaseOfCommonStock
+              ProceedsFromIssuanceOfDebt
+              RepaymentsOfDebt
+              PaymentsOfDividends
 
 
-        NetIncreaseDecreaseInCashAndCashEquivalents
-        4.1. CashAndCashEquivalentsPeriodIncreaseDecrease
-        4.2. EffectOfExchangeRateOnCashAndCashEquivalents
+        EffectOfExchangeRateFinal
+        CashPeriodIncreaseDecreaseIncludingExRateEffectFinal
 
+        CashAndCashEquivalentsEndOfPeriod
+    </pre>
+
+    Rule overview:
+    <pre>
+          + NetCashProvidedByUsedInOperatingActivitiesContinuingOperations
+          + CashProvidedByUsedInOperatingActivitiesDiscontinuedOperations <- CashProvidedByUsedInDiscontinuedOperationsOperatingActivities
+          --------
+      + NetCashProvidedByUsedInOperatingActivities
+
+          + NetCashProvidedByUsedInInvestingActivitiesContinuingOperations
+          + CashProvidedByUsedInInvestingActivitiesDiscontinuedOperations <- CashProvidedByUsedInDiscontinuedOperationsInvestingActivities
+          --------
+      + NetCashProvidedByUsedInInvestingActivities
+
+          + NetCashProvidedByUsedInInvestingActivitiesContinuingOperations
+          + CashProvidedByUsedInFinancingActivitiesDiscontinuedOperations <- CashProvidedByUsedInDiscontinuedOperationsFinancingActivities
+          --------
+      + NetCashProvidedByUsedInInvestingActivities
+
+
+                  Prio 1
+                           <- EffectOfExchangeRateOnCash
+                       <- EffectOfExchangeRateOnCashAndCashEquivalents
+                  + EffectOfExchangeRateOnCashCashEquivalentsRestrictedCashAndRestrictedCashEquivalents
+                  + EffectOfExchangeRateOnCashCashEquivalentsRestrictedCashAndRestrictedCashEquivalentsDisposalGroupIncludingDiscontinuedOperations
+                  --------
+                  EffectOfExchangeRateOnCashCashEquivalentsRestrictedCashAndRestrictedCashEquivalentsIncludingDisposalGroupAndDiscontinuedOperations
+                 <-
+              EffectOfExchangeRateFinal
+
+
+                  Prio 2
+                  + EffectOfExchangeRateOnCashAndCashEquivalentsContinuingOperations <- EffectOfExchangeRateOnCashContinuingOperations
+                  + EffectOfExchangeRateOnCashAndCashEquivalentsDiscontinuedOperations <- EffectOfExchangeRateOnCashDiscontinuedOperations
+                  --------
+              EffectOfExchangeRateFinal
+
+
+      + EffectOfExchangeRateFinal
+      ---------------------------
+
+                   <- CashPeriodIncreaseDecrease
+             <- CashAndCashEquivalentsPeriodIncreaseDecrease
+        <- CashCashEquivalentsRestrictedCashAndRestrictedCashEquivalentsPeriodIncreaseDecreaseIncludingExchangeRateEffect
+      CashPeriodIncreaseDecreaseIncludingExRateEffectFinal
+      ==================
+
+                                       <- CashEndOfPeriod
+                                  <- CashAndDueFromBanksEndOfPeriod
+                             <- CashAndCashEquivalentsAtCarryingValueEndOfPeriod
+                        <- CashAndCashEquivalentsAtCarryingValueIncludingDiscontinuedOperationsEndOfPeriod
+                   <- CashCashEquivalentsRestrictedCashAndRestrictedCashEquivalentsEndOfPeriod
+              <- CashCashEquivalentsRestrictedCashAndRestrictedCashEquivalentsIncludingDisposalGroupAndDiscontinuedOperationsEndOfPeriod
+        <- CashCashEquivalentsRestrictedCashAndRestrictedCashEquivalentsIncludingDisposalGroupAndDiscontinuedOperationsEndOfPeriod
+      CashAndCashEquivalentsEndOfPeriod
+
+
+      Details of Operating Activities
+
+                  + AmortizationOfIntangibleAssets
+                  + AmortizationOfDeferredCharges
+                  + AmortizationOfFinancingCosts
+                  -------------
+                + Amortization
+                + Depreciation
+                --------------
+                + DepreciationAndAmortization
+                + Depletion
+                ----------
+            DepreciationDepletionAndAmortization
+
+            DeferredIncomeTaxExpenseBenefit
+            ShareBasedCompensation
+            IncreaseDecreaseInAccountsPayable
+            IncreaseDecreaseInAccruedLiabilities
+            InterestPaidNet
+            IncomeTaxesPaidNet
+
+
+      Details of Investing activities
+
+                + ProceedsFromSaleOfAvailableForSaleSecurities
+                + ProceedsFromSaleOfTradingSecurities
+                + ProceedsFromSaleOfEquitySecurities
+                + ProceedsFromSaleOfDebtSecurities
+                + ProceedsFromSaleAndMaturityOfOtherInvestments
+                + ProceedsFromMaturitiesPrepaymentsAndCallsOfAvailableForSaleSecurities
+                + ProceedsFromSaleOfInvestmentsInAffiliates
+                + ProceedsFromSaleOfHeldToMaturitySecurities
+                --------------------------------------------
+            ProceedsFromSaleOfInvestments
+
+            PaymentsToAcquirePropertyPlantAndEquipment
+            ProceedsFromSaleOfPropertyPlantAndEquipment
+            PaymentsToAcquireInvestments
+            PaymentsToAcquireBusinessesNetOfCashAcquired
+            ProceedsFromDivestitureOfBusinessesNetOfCashDivested
+            PaymentsToAcquireIntangibleAssets
+            ProceedsFromSaleOfIntangibleAssets
+
+
+      Details of Financing activities
+
+                  + PaymentsOfDividendsCommonStock
+                  + PaymentsOfDividendsPreferredStockAndPreferenceStock
+                  + PaymentsOfDividendsMinorityInterest
+                  -------------
+             PaymentsOfDividends
+
+             ProceedsFromIssuanceOfCommonStock
+             ProceedsFromStockOptionsExercised
+             PaymentsForRepurchaseOfCommonStock
+             ProceedsFromIssuanceOfDebt
+             RepaymentsOfDebt
+
+     Post Rules
+
+        Calculate missing "Operating" tags
+
+        + NetCashProvidedByUsedInOperatingActivities (if present)
+        - NetCashProvidedByUsedInOperatingActivitiesContinuingOperations (if present)
+        -------
+        = CashProvidedByUsedInOperatingActivitiesDiscontinuedOperations (if not present)
+
+
+        + NetCashProvidedByUsedInOperatingActivities (if present)
+        - CashProvidedByUsedInOperatingActivitiesDiscontinuedOperations (if present)
+        -------
+        = NetCashProvidedByUsedInOperatingActivitiesContinuingOperations (if not present)
+
+
+        if only NetCashProvidedByUsedInOperatingActivities is set:
+          NetCashProvidedByUsedInOperatingActivitiesContinuingOperations = NetCashProvidedByUsedInOperatingActivities
+          CashProvidedByUsedInOperatingActivitiesDiscontinuedOperations = 0
+
+
+        Same as above for Financing and Investing triples
+
+        Set to Zero if still not set:
+           NetCashProvidedByUsedInOperatingActivitiesContinuingOperations
+           NetCashProvidedByUsedInInvestingActivitiesContinuingOperations
+           NetCashProvidedByUsedInFinancingActivitiesContinuingOperations
+           NetCashProvidedByUsedInOperatingActivities
+           NetCashProvidedByUsedInInvestingActivities
+           NetCashProvidedByUsedInFinancingActivities
+           CashProvidedByUsedInOperatingActivitiesDiscontinuedOperations
+           CashProvidedByUsedInInvestingActivitiesDiscontinuedOperations
+           CashProvidedByUsedInFinancingActivitiesDiscontinuedOperations
+
+           EffectOfExchangeRateFinal
+
+        Set CashPeriodIncreaseDecreaseIncludingExRateEffectFinal (if not set yet)
+            + NetCashProvidedByUsedInOperatingActivities
+            + NetCashProvidedByUsedInInvestingActivities
+            + NetCashProvidedByUsedInFinancingActivities
+            + EffectOfExchangeRateFinal
+            ------------------
+            = CashPeriodIncreaseDecreaseIncludingExRateEffectFinal
+
+        Fix mixed up usage of NetCashProvidedByUsed...Activities/-ContinuingOperations
     </pre>
 
     """

@@ -113,6 +113,52 @@ Final build up
              ProceedsFromIssuanceOfDebt
              RepaymentsOfDebt
 
+     Post Rules
+
+        Calculate missing "Operating" tags
+
+        + NetCashProvidedByUsedInOperatingActivities (if present)
+        - NetCashProvidedByUsedInOperatingActivitiesContinuingOperations (if present)
+        -------
+        = CashProvidedByUsedInOperatingActivitiesDiscontinuedOperations (if not present)
+
+
+        + NetCashProvidedByUsedInOperatingActivities (if present)
+        - CashProvidedByUsedInOperatingActivitiesDiscontinuedOperations (if present)
+        -------
+        = NetCashProvidedByUsedInOperatingActivitiesContinuingOperations (if not present)
+
+
+        if only NetCashProvidedByUsedInOperatingActivities is set:
+          NetCashProvidedByUsedInOperatingActivitiesContinuingOperations = NetCashProvidedByUsedInOperatingActivities
+          CashProvidedByUsedInOperatingActivitiesDiscontinuedOperations = 0
+
+
+        Same as above for Financing and Investing triples
+
+        Set to Zero if still not set:
+           NetCashProvidedByUsedInOperatingActivitiesContinuingOperations
+           NetCashProvidedByUsedInInvestingActivitiesContinuingOperations
+           NetCashProvidedByUsedInFinancingActivitiesContinuingOperations
+           NetCashProvidedByUsedInOperatingActivities
+           NetCashProvidedByUsedInInvestingActivities
+           NetCashProvidedByUsedInFinancingActivities
+           CashProvidedByUsedInOperatingActivitiesDiscontinuedOperations
+           CashProvidedByUsedInInvestingActivitiesDiscontinuedOperations
+           CashProvidedByUsedInFinancingActivitiesDiscontinuedOperations
+
+           EffectOfExchangeRateFinal
+
+        Set CashPeriodIncreaseDecreaseIncludingExRateEffectFinal (if not set yet)
+            + NetCashProvidedByUsedInOperatingActivities
+            + NetCashProvidedByUsedInInvestingActivities
+            + NetCashProvidedByUsedInFinancingActivities
+            + EffectOfExchangeRateFinal
+            ------------------
+            = CashPeriodIncreaseDecreaseIncludingExRateEffectFinal
+
+        Fix mixed up usage of NetCashProvidedByUsed...Activities/-ContinuingOperations
+
 
 
 CF Analyzes

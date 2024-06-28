@@ -343,8 +343,8 @@ class PostFixMixedContinuingWithSum(Rule):
                 " '...ContinuingOperations' tags. "
                 "(e.g. 'NetCashProvidedByUsedInOperatingActivitiesContinuingOperations').")
 
-# pylint: disable=C0301
 
+# pylint: disable=C0301
 class CashFlowStandardizer(Standardizer):
     """
     The goal of this Standardizer is to create CashFlow statements that are comparable,

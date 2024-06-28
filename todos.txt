@@ -22,6 +22,7 @@ v.1.6.0
 Todo:
 - in CF haben wir oft auch zusätzliche 'Cash' Tags -> benötigen wir diese im BS auch?
 - in Is fehlt noch Earnings per Share
+- MaxQtr PrePivot Rule also for BS und IS
 
 - Aufbereitung der Daten für BS, IS und CF Statement möglichst direkt bei update machen,
   so dass diese Daten schon vorbereitet und gefiltert zur Verfügung stehen.

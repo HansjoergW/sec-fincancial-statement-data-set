@@ -96,7 +96,11 @@ class PrePivotCorrectSign(PrePivotRule):
         Returns:
             pa.typing.Series[bool]: a boolean Series that marks which rows have to be calculated
         """
-        return data_df.tag.isin(self.tag_list) & ((data_df.value < 0) == self.is_positive)
+        # don't consider values that are 0 or values that are not set
+        return (data_df.tag.isin(self.tag_list)
+                & ~data_df.value.isna()
+                & ~(data_df.value == 0.0)
+                & ((data_df.value < 0) == self.is_positive))
 
     def apply(self, data_df: pd.DataFrame, mask: pa.typing.Series[bool]) -> pd.DataFrame:
         """

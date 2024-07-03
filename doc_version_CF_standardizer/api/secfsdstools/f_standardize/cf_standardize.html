@@ -473,7 +473,7 @@ class CashFlowStandardizer(Standardizer):
                              &lt;- CashAndCashEquivalentsAtCarryingValueEndOfPeriod
                         &lt;- CashAndCashEquivalentsAtCarryingValueIncludingDiscontinuedOperationsEndOfPeriod
                    &lt;- CashCashEquivalentsRestrictedCashAndRestrictedCashEquivalentsEndOfPeriod
-              &lt;- CashCashEquivalentsRestrictedCashAndRestrictedCashEquivalentsIncludingDisposalGroupAndDiscontinuedOperationsEndOfPeriod
+              &lt;- CashCashEquivalentsRestrictedCashAndRestrictedCashEquivalentsDisposalGroupIncludingDiscontinuedOperationsEndOfPeriod
         &lt;- CashCashEquivalentsRestrictedCashAndRestrictedCashEquivalentsIncludingDisposalGroupAndDiscontinuedOperationsEndOfPeriod
       CashAndCashEquivalentsEndOfPeriod
 
@@ -713,7 +713,7 @@ class CashFlowStandardizer(Standardizer):
                 target=&#39;CashCashEquivalentsRestrictedCashAndRestrictedCashEquivalentsEndOfPeriod&#39;),
             CopyTagRule(
                 original=&#39;CashCashEquivalentsRestrictedCashAndRestrictedCashEquivalentsEndOfPeriod&#39;,
-                target=&#39;CashCashEquivalentsRestrictedCashAndRestrictedCashEquivalentsIncludingDisposalGroupAndDiscontinuedOperationsEndOfPeriod&#39;),
+                target=&#39;CashCashEquivalentsRestrictedCashAndRestrictedCashEquivalentsDisposalGroupIncludingDiscontinuedOperationsEndOfPeriod&#39;),
             CopyTagRule(
                 original=&#39;CashCashEquivalentsRestrictedCashAndRestrictedCashEquivalentsDisposalGroupIncludingDiscontinuedOperationsEndOfPeriod&#39;,
                 target=&#39;CashCashEquivalentsRestrictedCashAndRestrictedCashEquivalentsIncludingDisposalGroupAndDiscontinuedOperationsEndOfPeriod&#39;),
@@ -1092,7 +1092,7 @@ Final Tags
                          <- CashAndCashEquivalentsAtCarryingValueEndOfPeriod
                     <- CashAndCashEquivalentsAtCarryingValueIncludingDiscontinuedOperationsEndOfPeriod
                <- CashCashEquivalentsRestrictedCashAndRestrictedCashEquivalentsEndOfPeriod
-          <- CashCashEquivalentsRestrictedCashAndRestrictedCashEquivalentsIncludingDisposalGroupAndDiscontinuedOperationsEndOfPeriod
+          <- CashCashEquivalentsRestrictedCashAndRestrictedCashEquivalentsDisposalGroupIncludingDiscontinuedOperationsEndOfPeriod
     <- CashCashEquivalentsRestrictedCashAndRestrictedCashEquivalentsIncludingDisposalGroupAndDiscontinuedOperationsEndOfPeriod
   CashAndCashEquivalentsEndOfPeriod
 
@@ -1342,7 +1342,7 @@ as negated.</dd>
                              &lt;- CashAndCashEquivalentsAtCarryingValueEndOfPeriod
                         &lt;- CashAndCashEquivalentsAtCarryingValueIncludingDiscontinuedOperationsEndOfPeriod
                    &lt;- CashCashEquivalentsRestrictedCashAndRestrictedCashEquivalentsEndOfPeriod
-              &lt;- CashCashEquivalentsRestrictedCashAndRestrictedCashEquivalentsIncludingDisposalGroupAndDiscontinuedOperationsEndOfPeriod
+              &lt;- CashCashEquivalentsRestrictedCashAndRestrictedCashEquivalentsDisposalGroupIncludingDiscontinuedOperationsEndOfPeriod
         &lt;- CashCashEquivalentsRestrictedCashAndRestrictedCashEquivalentsIncludingDisposalGroupAndDiscontinuedOperationsEndOfPeriod
       CashAndCashEquivalentsEndOfPeriod
 
@@ -1582,7 +1582,7 @@ as negated.</dd>
                 target=&#39;CashCashEquivalentsRestrictedCashAndRestrictedCashEquivalentsEndOfPeriod&#39;),
             CopyTagRule(
                 original=&#39;CashCashEquivalentsRestrictedCashAndRestrictedCashEquivalentsEndOfPeriod&#39;,
-                target=&#39;CashCashEquivalentsRestrictedCashAndRestrictedCashEquivalentsIncludingDisposalGroupAndDiscontinuedOperationsEndOfPeriod&#39;),
+                target=&#39;CashCashEquivalentsRestrictedCashAndRestrictedCashEquivalentsDisposalGroupIncludingDiscontinuedOperationsEndOfPeriod&#39;),
             CopyTagRule(
                 original=&#39;CashCashEquivalentsRestrictedCashAndRestrictedCashEquivalentsDisposalGroupIncludingDiscontinuedOperationsEndOfPeriod&#39;,
                 target=&#39;CashCashEquivalentsRestrictedCashAndRestrictedCashEquivalentsIncludingDisposalGroupAndDiscontinuedOperationsEndOfPeriod&#39;),

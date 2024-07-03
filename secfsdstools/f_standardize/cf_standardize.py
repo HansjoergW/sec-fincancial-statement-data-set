@@ -444,7 +444,7 @@ class CashFlowStandardizer(Standardizer):
                              <- CashAndCashEquivalentsAtCarryingValueEndOfPeriod
                         <- CashAndCashEquivalentsAtCarryingValueIncludingDiscontinuedOperationsEndOfPeriod
                    <- CashCashEquivalentsRestrictedCashAndRestrictedCashEquivalentsEndOfPeriod
-              <- CashCashEquivalentsRestrictedCashAndRestrictedCashEquivalentsIncludingDisposalGroupAndDiscontinuedOperationsEndOfPeriod
+              <- CashCashEquivalentsRestrictedCashAndRestrictedCashEquivalentsDisposalGroupIncludingDiscontinuedOperationsEndOfPeriod
         <- CashCashEquivalentsRestrictedCashAndRestrictedCashEquivalentsIncludingDisposalGroupAndDiscontinuedOperationsEndOfPeriod
       CashAndCashEquivalentsEndOfPeriod
 
@@ -684,7 +684,7 @@ class CashFlowStandardizer(Standardizer):
                 target='CashCashEquivalentsRestrictedCashAndRestrictedCashEquivalentsEndOfPeriod'),
             CopyTagRule(
                 original='CashCashEquivalentsRestrictedCashAndRestrictedCashEquivalentsEndOfPeriod',
-                target='CashCashEquivalentsRestrictedCashAndRestrictedCashEquivalentsIncludingDisposalGroupAndDiscontinuedOperationsEndOfPeriod'),
+                target='CashCashEquivalentsRestrictedCashAndRestrictedCashEquivalentsDisposalGroupIncludingDiscontinuedOperationsEndOfPeriod'),
             CopyTagRule(
                 original='CashCashEquivalentsRestrictedCashAndRestrictedCashEquivalentsDisposalGroupIncludingDiscontinuedOperationsEndOfPeriod',
                 target='CashCashEquivalentsRestrictedCashAndRestrictedCashEquivalentsIncludingDisposalGroupAndDiscontinuedOperationsEndOfPeriod'),

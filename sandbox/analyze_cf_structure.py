@@ -237,19 +237,19 @@ if __name__ == '__main__':
     # cf_joined_bag = cf_joined_bag.filter(AdshJoinedFilter(adshs=['0000885725-20-000036']))
     # cf_joined_bag = load_smaller_sample_IS_set()
 
-    check_df = check_signed_values(joined_bag=cf_joined_bag, tag_list=[
-        'PaymentsForRepurchaseOfCommonStock',
-        'PaymentsOfDividends',
-        'PaymentsOfDividendsCommonStock',
-        'PaymentsOfDividendsMinorityInterest',
-        'PaymentsOfDividendsPreferredStockAndPreferenceStock',
-        'PaymentsToAcquireBusinessesNetOfCashAcquired',
-        'PaymentsToAcquireIntangibleAssets',
-        'PaymentsToAcquireInvestments',
-        'PaymentsToAcquirePropertyPlantAndEquipment',
-        'RepaymentsOfDebt',
-    ])
-    print(check_df)
+    # check_df = check_signed_values(joined_bag=cf_joined_bag, tag_list=[
+    #     'PaymentsForRepurchaseOfCommonStock',
+    #     'PaymentsOfDividends',
+    #     'PaymentsOfDividendsCommonStock',
+    #     'PaymentsOfDividendsMinorityInterest',
+    #     'PaymentsOfDividendsPreferredStockAndPreferenceStock',
+    #     'PaymentsToAcquireBusinessesNetOfCashAcquired',
+    #     'PaymentsToAcquireIntangibleAssets',
+    #     'PaymentsToAcquireInvestments',
+    #     'PaymentsToAcquirePropertyPlantAndEquipment',
+    #     'RepaymentsOfDebt',
+    # ])
+    # print(check_df)
 
     # find_reports_using_and_excluding(cf_joined_bag=cf_joined_bag,
     #                                  all_included_tags=[

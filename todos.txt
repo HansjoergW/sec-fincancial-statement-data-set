@@ -20,6 +20,8 @@ v.1.6.0
 - CF Standardizer
 
 Todo:
+- Dedup in CF ist sehr hoch, warum (320k)? sind das wirklich immer dieselben Werte?
+
 - in CF haben wir oft auch zusätzliche 'Cash' Tags -> benötigen wir diese im BS auch?
 - in Is fehlt noch Earnings per Share
 - MaxQtr PrePivot Rule also for BS und IS

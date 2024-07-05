@@ -43,7 +43,7 @@ The main features include:
                      .filter(...) #  
                      .save("./preparedset")) # save the filtered data 
   ```
-- standardize the data for balance sheets and income statements (cash flow statements coming soon) to make reports easily comparable
+- standardize the data for balance sheets, income statements, and cash flow statements to make reports easily comparable
   ```python
   company_collector = CompanyReportCollector.get_company_collector(ciks=[320193, 789019], # Apple, Microsoft
                                                                    post_load_filter=default_postloadfilter) # use predefined filter
@@ -55,6 +55,10 @@ The main features include:
 
 # Latest news / most important changes from previous versions
 See the [Release Notes](https://hansjoergw.github.io/sec-fincancial-statement-data-set/releasenotes/) for details.
+## 1.5 -> 1.6
+* Introducing **Cash Flow Standardizer**<br>
+  The Cash Flow Standardizer makes the cash flow statements easily comparable.<br>
+  [07_03_CF_standardizer](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/07_03_CF_standardizer.ipynb) <br>
 ## 1.4.2 -> 1.5
 * Introducing **Income Statement Standardizer**<br>
   The Income Statement Standardizer makes the income statements easily comparable.<br>
@@ -115,6 +119,8 @@ report into pandas dataframe tables.
 * [standardizer_basics](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/07_00_standardizer_basics.ipynb)
 * [BS_standardizer](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/07_01_BS_standardizer.ipynb)
 * [IS_standardizer](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/07_02_IS_standardizer.ipynb)
+* [CF_standardizer](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/07_03_CF_standardizer.ipynb) <br>
+
 
 
 # Installation
@@ -308,7 +314,8 @@ as a pandas dataframe. Filters can be applied, the content can directly be saved
 * **Joined Processing** <br/> From the "Raw Data", a "joined" representation can be created. This joins the data from
 the pre.txt and num.txt content together based on the "adhs", "tag", and "version" attributes. "Joined data" can also be
 filtered, concatenated, directly saved and loaded.
-* **Present** <br/> Produce a single pandas dataframe out of the data and use it for further processing.
+* **Present** <br/> Produce a single pandas dataframe out of the data and use it for further processing or use the standardizers
+ to create comparable data for the balance sheet, the income statement, and the cash flow statement.
 
 The diagramm also shows the main classes with which a user interacts. The use of them  is described in the following chapters.
 
@@ -724,40 +731,41 @@ implementations (module `secfsdstools.e_presenter.presenting`):
   If you compare this with the real report at https://www.sec.gov/ix?doc=/Archives/edgar/data/320193/000032019322000108/aapl-20220924.htm
   you will notice, that order of the tags and the values are the same.
 
-  * `Standardizer` <br>
-    Even if xbrl is a standard on how to tag positions and numbers in financial statements, that doesn't mean that financial
-    statements can then be compared easily. For instance, there are over 3000 tags which can be used in a balance sheet.
-    Moreover, some tags can mean similar things or can be grouped behind a "parent" tag, which itself might not be present.
-    For instance, "AccountsNoncurrent" is often not shown in statements. So you would find the position for "Accounts"
-    and "AccountsCurrent", but not for "AccountsNoncurrent". Instead, only child tags for "AccountsNoncurrent" might be
-    present.<br><br>
-    The standardizer helps to solve these problems by unifying the information of financial statements.<br> <br>
-    With the standardized financial statements, you can then actually compare the statements between different
-    companies or different years, and you can use the dataset for ML. <br><br>
-    Have a look at [standardizer_basics](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/07_00_standardizer_basics.ipynb) which explains it in more details.<br><br>
 
-    * `BalanceSheetStandardizer` <br>
-    The `BalanceSheetStandardizer` collects and/or calculates the following positions of balance sheets:  
+* `Standardizer` <br>
+  Even if xbrl is a standard on how to tag positions and numbers in financial statements, that doesn't mean that financial
+  statements can then be compared easily. For instance, there are over 3000 tags which can be used in a balance sheet.
+  Moreover, some tags can mean similar things or can be grouped behind a "parent" tag, which itself might not be present.
+  For instance, "AccountsNoncurrent" is often not shown in statements. So you would find the position for "Accounts"
+  and "AccountsCurrent", but not for "AccountsNoncurrent". Instead, only child tags for "AccountsNoncurrent" might be
+  present.<br><br>
+  The standardizer helps to solve these problems by unifying the information of financial statements.<br> <br>
+  With the standardized financial statements, you can then actually compare the statements between different
+  companies or different years, and you can use the dataset for ML. <br><br>
+  Have a look at [standardizer_basics](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/07_00_standardizer_basics.ipynb) which explains it in more details.<br><br>
 
-     ````
-      - Assets
-        - AssetsCurrent
-          - Cash
-        - AssetsNoncurrent
-      - Liabilities
-        - LiabilitiesCurrent
-        - LiabilitiesNoncurrent
-      - Equity
-        - HolderEquity (mainly StockholderEquity or PartnerCapital)
-          - RetainedEarnings
-          - AdditionalPaidInCapital
-          - TreasuryStockValue
-        - TemporaryEquity
-        - RedeemableEquity
-      - LiabilitiesAndEquity
+  * `BalanceSheetStandardizer` <br>
+  The `BalanceSheetStandardizer` collects and/or calculates the following positions of balance sheets:  
+
+    ````
+    - Assets
+      - AssetsCurrent
+        - Cash
+      - AssetsNoncurrent
+    - Liabilities
+      - LiabilitiesCurrent
+      - LiabilitiesNoncurrent
+    - Equity
+      - HolderEquity (mainly StockholderEquity or PartnerCapital)
+        - RetainedEarnings
+        - AdditionalPaidInCapital
+        - TreasuryStockValue
+      - TemporaryEquity
+      - RedeemableEquity
+    - LiabilitiesAndEquity
     ````
 
-  With just a few lines of code, you'll get a comparable dataset with the main positions of a balance sheet for Microsoft, Alphabet, and Amazon:
+    With just a few lines of code, you'll get a comparable dataset with the main positions of a balance sheet for Microsoft, Alphabet, and Amazon:
     (see the [stanardize the balance sheets and make them comparable notebook](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/07_01_BS_standardizer.ipynb) for details)
      ````python
      from secfsdstools.e_collector.companycollecting import CompanyReportCollector
@@ -788,63 +796,140 @@ implementations (module `secfsdstools.e_presenter.presenting`):
      ````
      ![Equity Compare](https://github.com/HansjoergW/sec-fincancial-statement-data-set/raw/main/docs/images/equity_compare.png)
 
-    * `IncomeStatementStandardizer` <br>
-      The `IncomeStatementStandardizer` collects and/or calculates the following positions of balance sheets:
+  * `IncomeStatementStandardizer` <br>
+  The `IncomeStatementStandardizer` collects and/or calculates the following positions of balance sheets:
     
-      ````  
-        Revenues
-        - CostOfRevenue
-        ---------------
-        = GrossProfit
-        - OperatingExpenses
-        -------------------
-        = OperatingIncomeLoss
-      
-        IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit
-        - AllIncomeTaxExpenseBenefit
-        ----------------------------
-        = IncomeLossFromContinuingOperations
-        + IncomeLossFromDiscontinuedOperationsNetOfTax
-        -----------------------------------------------
-        = ProfitLoss
-        - NetIncomeLossAttributableToNoncontrollingInterest
-        ---------------------------------------------------
-        = NetIncomeLoss
-      ````
-
-  With just a few lines of code, you'll get a comparable dataset with the main positions of an income statement for Microsoft, Alphabet, and Amazon:
-  (see the [stanardize the income statement and make them comparable notebook](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/07_02_IS_standardizer.ipynb) for details)
-   ````python
+    ````  
+      Revenues
+      - CostOfRevenue
+      ---------------
+      = GrossProfit
+      - OperatingExpenses
+      -------------------
+      = OperatingIncomeLoss
+        
+      IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit
+      - AllIncomeTaxExpenseBenefit
+      ----------------------------
+      = IncomeLossFromContinuingOperations
+      + IncomeLossFromDiscontinuedOperationsNetOfTax
+      -----------------------------------------------
+      = ProfitLoss
+      - NetIncomeLossAttributableToNoncontrollingInterest
+      ---------------------------------------------------
+      = NetIncomeLoss
+    ````
+  
+    With just a few lines of code, you'll get a comparable dataset with the main positions of an income statement for Microsoft, Alphabet, and Amazon:
+  (see the [standardize the income statement and make them comparable notebook](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/07_02_IS_standardizer.ipynb) for details)
+   
+    ````python
     from secfsdstools.e_collector.companycollecting import CompanyReportCollector
     from secfsdstools.e_filter.rawfiltering import ReportPeriodRawFilter, MainCoregRawFilter, OfficialTagsOnlyRawFilter, USDOnlyRawFilter
     from secfsdstools.f_standardize.is_standardize import IncomeStatementStandardizer
-    
+      
     bag = CompanyReportCollector.get_company_collector(ciks=[789019, 1652044,1018724]).collect() #Microsoft, Alphabet, Amazon
     filtered_bag = bag[ReportPeriodRawFilter()][MainCoregRawFilter()][OfficialTagsOnlyRawFilter()][USDOnlyRawFilter()]
     joined_bag = filtered_bag.join()
-    
+      
     standardizer = IncomeStatementStandardizer()
-    
+      
     standardized_is_df = joined_bag.present(standardizer)
     # just use the yearly reports with data for the whole year
     standardized_is_df = standardized_is_df[(standardized_is_df.fp=="FY") & (standardized_is_df.qtrs==4)].copy()
-    
+      
     import matplotlib.pyplot as plt
     # Group by 'name' and plot equity for each group
     # Note: using the `present` method ensured that the same cik has always the same name even if the company name did change in the past
     for name, group in standardized_is_df.groupby('name'):
     plt.plot(group['date'], group['GrossProfit'], label=name, linestyle='-')
-    
+      
     # Add labels and title
     plt.xlabel('Date')
     plt.ylabel('GrossProfit')
     plt.title('GrossProfit Over Time for Different Companies (CIKs)')
+      
+    # Display legend
+    plt.legend()
+     ````
+
+  ![GrossProfit Compare](https://github.com/HansjoergW/sec-fincancial-statement-data-set/raw/main/docs/images/grossprofit_compare.png)
+
+  * `CashFlowStandardizer` <br>
+   The `CashFlowStandardizer` collects and/or calculates the following positions of cash flow statements:
+     
+    ````
+     NetCashProvidedByUsedInOperatingActivities
+       CashProvidedByUsedInOperatingActivitiesDiscontinuedOperations
+       NetCashProvidedByUsedInOperatingActivitiesContinuingOperations
+           DepreciationDepletionAndAmortization
+           DeferredIncomeTaxExpenseBenefit
+           ShareBasedCompensation
+           IncreaseDecreaseInAccountsPayable
+           IncreaseDecreaseInAccruedLiabilities
+           InterestPaidNet
+           IncomeTaxesPaidNet
+    
+     NetCashProvidedByUsedInInvestingActivities
+         CashProvidedByUsedInInvestingActivitiesDiscontinuedOperations
+         NetCashProvidedByUsedInInvestingActivitiesContinuingOperations
+           PaymentsToAcquirePropertyPlantAndEquipment
+           ProceedsFromSaleOfPropertyPlantAndEquipment
+           PaymentsToAcquireInvestments
+           ProceedsFromSaleOfInvestments
+           PaymentsToAcquireBusinessesNetOfCashAcquired
+           ProceedsFromDivestitureOfBusinessesNetOfCashDivested
+           PaymentsToAcquireIntangibleAssets
+           ProceedsFromSaleOfIntangibleAssets
+    
+     NetCashProvidedByUsedInFinancingActivities
+         CashProvidedByUsedInFinancingActivitiesDiscontinuedOperations
+         NetCashProvidedByUsedInFinancingActivitiesContinuingOperations
+           ProceedsFromIssuanceOfCommonStock
+           ProceedsFromStockOptionsExercised
+           PaymentsForRepurchaseOfCommonStock
+           ProceedsFromIssuanceOfDebt
+           RepaymentsOfDebt
+           PaymentsOfDividends
+    
+    
+     EffectOfExchangeRateFinal
+     CashPeriodIncreaseDecreaseIncludingExRateEffectFinal
+    
+     CashAndCashEquivalentsEndOfPeriod
+    ````
+
+     With just a few lines of code, you'll get a comparable dataset with the main positions of an cash flow statement for Microsoft, Alphabet, and Amazon:
+(see the [standardize the cash flow statements and make them comparable](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/07_03_CF_standardizer.ipynb) for details)
+    ````
+    from secfsdstools.e_collector.companycollecting import CompanyReportCollector
+    from secfsdstools.e_filter.rawfiltering import ReportPeriodRawFilter, MainCoregRawFilter, OfficialTagsOnlyRawFilter, USDOnlyRawFilter
+    from secfsdstools.f_standardize.cf_standardize import CashFlowStandardizer
+    
+    bag = CompanyReportCollector.get_company_collector(ciks=[789019, 1652044,1018724]).collect() #Microsoft, Alphabet, Amazon
+    filtered_bag = bag[ReportPeriodRawFilter()][MainCoregRawFilter()][OfficialTagsOnlyRawFilter()][USDOnlyRawFilter()]
+    joined_bag = filtered_bag.join()
+    
+    standardizer = CashFlowStandardizer()
+    
+    standardized_cf_df = joined_bag.present(standardizer)
+    standardized_cf_df = standardized_cf_df[(standardized_cf_df.fp=="FY") & (standardized_cf_df.qtrs==4)].copy()
+    
+    import matplotlib.pyplot as plt
+    # Group by 'name' and plot NetCashProvidedByUsedInOperatingActivities for each group
+    # Note: using the `present` method ensured that the same cik has always the same name even if the company name did change in the past
+    for name, group in standardized_cf_df.groupby('name'):
+        plt.plot(group['date'], group['NetCashProvidedByUsedInOperatingActivities'], label=name, linestyle='-')
+    
+    # Add labels and title
+    plt.xlabel('Date')
+    plt.ylabel('NetCashProvidedByUsedInOperatingActivities')
+    plt.title('NetCashProvidedByUsedInOperatingActivities Over Time for Different Companies (CIKs)')
     
     # Display legend
     plt.legend()
-   ````
-  ![GrossProfit Compare](https://github.com/HansjoergW/sec-fincancial-statement-data-set/raw/main/docs/images/grossprofit_compare.png)
-
+    ````
+  ![NetCashOperating Compare](https://github.com/HansjoergW/sec-fincancial-statement-data-set/raw/main/docs/images/netcashoperating_compare.png)
 
 
 # What to explore further
@@ -856,8 +941,10 @@ implementations (module `secfsdstools.e_presenter.presenting`):
 * [filter_deep_dive Notebook](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/05_filter_deep_dive.ipynb).
 * [bulk_data_processing_deep_dive Notebook](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/06_bulk_data_processing_deep_dive.ipynb)
 * [checkout the `u_usecases` package](https://hansjoergw.github.io/sec-fincancial-statement-data-set/doc_latest/api/secfsdstools/u_usecases/index.html)
-* [stanardize the balance sheets and make them comparable](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/07_01_BS_standardizer.ipynb)
-* [stanardize the income statements and make them comparable](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/07_02_IS_standardizer.ipynb)
+* [standardize the balance sheets and make them comparable](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/07_01_BS_standardizer.ipynb)
+* [standardize the income statements and make them comparable](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/07_02_IS_standardizer.ipynb)
+* [standardize the cash flow statements and make them comparable](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/07_03_CF_standardizer.ipynb) <br>
+
 
 
 # Troubleshooting

@@ -203,7 +203,6 @@ def test_check_rapid_configuration(tmp_path):
     assert len(results) == 0
 
     rapid_api_key = os.environ.get('RAPID_API_KEY')
-    print("RAPID_API_KEY: ", rapid_api_key)
     valid_api_key = Configuration(db_dir=str(tmp_path),
                                   download_dir=str(tmp_path),
                                   user_agent_email='abc@xy.com',

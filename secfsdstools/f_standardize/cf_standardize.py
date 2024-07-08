@@ -307,7 +307,8 @@ class PostFixMixedContinuingWithSum(Rule):
         #
         #  However, if the tag NetCashProvidedByUsedInOperatingActivities was used to tag the
         #  actual value for NetCashProvidedByUsedInOperatingActivitiesContinuingOperations
-        #  the value is off by the value of CashProvidedByUsedInOperatingActivitiesDiscontinuedOperations
+        #  the value is off by the value of
+        #  CashProvidedByUsedInOperatingActivitiesDiscontinuedOperations
 
         mask: pa.typing.Series[bool] = mask_sum_disc_not_zero & (diff == sum_disc)
         return mask

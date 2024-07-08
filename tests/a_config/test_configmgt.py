@@ -210,6 +210,7 @@ def test_check_rapid_configuration(tmp_path):
                                   rapid_api_key=rapid_api_key,
                                   parquet_dir=os.path.join(tmp_path, 'parquet'))
     results = ConfigurationManager.check_rapid_configuration(valid_api_key)
+    print(results)
     assert len(results) == 0
 
     invalid_api_key = Configuration(db_dir=str(tmp_path),

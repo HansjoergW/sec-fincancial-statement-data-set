@@ -34,10 +34,11 @@ from typing import List, Set
 import pandas as pd
 import pandera as pa
 
-from secfsdstools.f_standardize.base_prepivot_rules import PrePivotDeduplicate, PrePivotCorrectSign
+from secfsdstools.f_standardize.base_prepivot_rules import (PrePivotDeduplicate,
+    PrePivotCorrectSign, PrePivotMaxQtrs)
 from secfsdstools.f_standardize.base_rule_framework import RuleGroup, Rule
-from secfsdstools.f_standardize.base_rules import CopyTagRule, SumUpRule, SubtractFromRule, \
-    missingsumparts_rules_creator, MissingSummandRule, PostSetToZero, PostFixSign
+from secfsdstools.f_standardize.base_rules import (CopyTagRule, SumUpRule, SubtractFromRule,
+    missingsumparts_rules_creator, MissingSummandRule, PostSetToZero, PostFixSign)
 from secfsdstools.f_standardize.base_validation_rules import ValidationRule, SumValidationRule
 from secfsdstools.f_standardize.standardizing import Standardizer
 
@@ -302,7 +303,7 @@ class PostFixIncomeLossFromContinuingOperationsAndSignOfIncomeTaxExpenseBenefit(
             ((data_df.ProfitLoss - data_df.IncomeLossFromContinuingOperations).abs() &gt;=
              1.8 * data_df.AllIncomeTaxExpenseBenefit.abs())
 
-    def apply(self, data_df: pd.DataFrame, mask: pa.typing.Series[bool]):
+    def apply(self, data_df: pd.DataFrame, mask: pa.typing.Series[bool]) -&gt; pd.DataFrame:
         &#34;&#34;&#34;
         apply the rule on the provided dataframe. the rows, on which the rule has to be applied
         is defined by the provide mask Series.
@@ -310,8 +311,10 @@ class PostFixIncomeLossFromContinuingOperationsAndSignOfIncomeTaxExpenseBenefit(
         Important, the rules have to be applied &#34;in-place&#34;, so no new dataframe is produced.
 
         Args:
-            df: dataframe on which the rule has to be applied
+            data_df: dataframe on which the rule has to be applied
             mask: a Series marking the rows in the dataframe on which the rule has to be applied
+        Returns:
+            pd.DataFrame: make the process chainable
         &#34;&#34;&#34;
 
         data_df.loc[mask, &#39;AllIncomeTaxExpenseBenefit&#39;] = -data_df.AllIncomeTaxExpenseBenefit
@@ -323,6 +326,7 @@ class PostFixIncomeLossFromContinuingOperationsAndSignOfIncomeTaxExpenseBenefit(
         data_df.loc[subtract_mask, &#39;IncomeLossFromContinuingOperations&#39;] = (
                 data_df[&#39;IncomeLossFromContinuingOperations&#39;] -
                 data_df.AllIncomeTaxExpenseBenefit)
+        return data_df
 
     def get_description(self) -&gt; str:
         return &#34;Corrects the sign of &#39;IncomeTaxExpenseBenefits&#39; if it seems to be wrong. Checks&#34; \
@@ -566,6 +570,7 @@ class IncomeStatementStandardizer(Standardizer):
     prepivot_rule_tree = RuleGroup(
         prefix=&#34;IS_PREPIV&#34;,
         rules=[PrePivotDeduplicate(),
+               PrePivotMaxQtrs(max_qtrs=4),
                PrePivotCorrectSign(
                    # all these tags are costOf and therefore should appear as a positive number
                    # since costs are subtracted from the Revenue to get the GrossProfit
@@ -1023,10 +1028,10 @@ class IncomeStatementStandardizer(Standardizer):
                              &#39;NetIncomeLoss&#39;
                              ]
 
-    # used to evaluate if a report is the main balancesheet report
+    # used to evaluate if a report is the main income statement report
     # inside a report, there can be several tables (different report nr)
-    # which stmt value is BS.
-    # however, we might be only interested in the &#34;major&#34; BS report. Usually this is the
+    # which stmt value is IS.
+    # however, we might be only interested in the &#34;major&#34; IS report. Usually this is the
     # one which has the least nan in the following columns
     main_statement_tags = [&#39;Revenues&#39;,
                            &#39;SalesRevenueNet&#39;,
@@ -1576,6 +1581,7 @@ as negated.</dd>
     prepivot_rule_tree = RuleGroup(
         prefix=&#34;IS_PREPIV&#34;,
         rules=[PrePivotDeduplicate(),
+               PrePivotMaxQtrs(max_qtrs=4),
                PrePivotCorrectSign(
                    # all these tags are costOf and therefore should appear as a positive number
                    # since costs are subtracted from the Revenue to get the GrossProfit
@@ -2033,10 +2039,10 @@ as negated.</dd>
                              &#39;NetIncomeLoss&#39;
                              ]
 
-    # used to evaluate if a report is the main balancesheet report
+    # used to evaluate if a report is the main income statement report
     # inside a report, there can be several tables (different report nr)
-    # which stmt value is BS.
-    # however, we might be only interested in the &#34;major&#34; BS report. Usually this is the
+    # which stmt value is IS.
+    # however, we might be only interested in the &#34;major&#34; IS report. Usually this is the
     # one which has the least nan in the following columns
     main_statement_tags = [&#39;Revenues&#39;,
                            &#39;SalesRevenueNet&#39;,
@@ -2265,7 +2271,7 @@ and recalculates IncomeLossFromContinuingOperations</p></div>
             ((data_df.ProfitLoss - data_df.IncomeLossFromContinuingOperations).abs() &gt;=
              1.8 * data_df.AllIncomeTaxExpenseBenefit.abs())
 
-    def apply(self, data_df: pd.DataFrame, mask: pa.typing.Series[bool]):
+    def apply(self, data_df: pd.DataFrame, mask: pa.typing.Series[bool]) -&gt; pd.DataFrame:
         &#34;&#34;&#34;
         apply the rule on the provided dataframe. the rows, on which the rule has to be applied
         is defined by the provide mask Series.
@@ -2273,8 +2279,10 @@ and recalculates IncomeLossFromContinuingOperations</p></div>
         Important, the rules have to be applied &#34;in-place&#34;, so no new dataframe is produced.
 
         Args:
-            df: dataframe on which the rule has to be applied
+            data_df: dataframe on which the rule has to be applied
             mask: a Series marking the rows in the dataframe on which the rule has to be applied
+        Returns:
+            pd.DataFrame: make the process chainable
         &#34;&#34;&#34;
 
         data_df.loc[mask, &#39;AllIncomeTaxExpenseBenefit&#39;] = -data_df.AllIncomeTaxExpenseBenefit
@@ -2286,6 +2294,7 @@ and recalculates IncomeLossFromContinuingOperations</p></div>
         data_df.loc[subtract_mask, &#39;IncomeLossFromContinuingOperations&#39;] = (
                 data_df[&#39;IncomeLossFromContinuingOperations&#39;] -
                 data_df.AllIncomeTaxExpenseBenefit)
+        return data_df
 
     def get_description(self) -&gt; str:
         return &#34;Corrects the sign of &#39;IncomeTaxExpenseBenefits&#39; if it seems to be wrong. Checks&#34; \
@@ -2310,7 +2319,7 @@ and recalculates IncomeLossFromContinuingOperations</p></div>
 <h3>Methods</h3>
 <dl>
 <dt id="secfsdstools.f_standardize.is_standardize.PostFixIncomeLossFromContinuingOperationsAndSignOfIncomeTaxExpenseBenefit.apply"><code class="name flex">
-<span>def <span class="ident">apply</span></span>(<span>self, data_df: pandas.core.frame.DataFrame, mask: pandera.typing.pandas.Series[bool])</span>
+<span>def <span class="ident">apply</span></span>(<span>self, data_df: pandas.core.frame.DataFrame, mask: pandera.typing.pandas.Series[bool]) ‑> pandas.core.frame.DataFrame</span>
 </code></dt>
 <dd>
 <div class="desc"><p>apply the rule on the provided dataframe. the rows, on which the rule has to be applied
@@ -2318,16 +2327,21 @@ is defined by the provide mask Series.</p>
 <p>Important, the rules have to be applied "in-place", so no new dataframe is produced.</p>
 <h2 id="args">Args</h2>
 <dl>
-<dt><strong><code>df</code></strong></dt>
+<dt><strong><code>data_df</code></strong></dt>
 <dd>dataframe on which the rule has to be applied</dd>
 <dt><strong><code>mask</code></strong></dt>
 <dd>a Series marking the rows in the dataframe on which the rule has to be applied</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>pd.DataFrame</code></dt>
+<dd>make the process chainable</dd>
 </dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def apply(self, data_df: pd.DataFrame, mask: pa.typing.Series[bool]):
+<pre><code class="python">def apply(self, data_df: pd.DataFrame, mask: pa.typing.Series[bool]) -&gt; pd.DataFrame:
     &#34;&#34;&#34;
     apply the rule on the provided dataframe. the rows, on which the rule has to be applied
     is defined by the provide mask Series.
@@ -2335,8 +2349,10 @@ is defined by the provide mask Series.</p>
     Important, the rules have to be applied &#34;in-place&#34;, so no new dataframe is produced.
 
     Args:
-        df: dataframe on which the rule has to be applied
+        data_df: dataframe on which the rule has to be applied
         mask: a Series marking the rows in the dataframe on which the rule has to be applied
+    Returns:
+        pd.DataFrame: make the process chainable
     &#34;&#34;&#34;
 
     data_df.loc[mask, &#39;AllIncomeTaxExpenseBenefit&#39;] = -data_df.AllIncomeTaxExpenseBenefit
@@ -2347,7 +2363,8 @@ is defined by the provide mask Series.</p>
     subtract_mask = mask &amp; ~data_df.AllIncomeTaxExpenseBenefit.isna()
     data_df.loc[subtract_mask, &#39;IncomeLossFromContinuingOperations&#39;] = (
             data_df[&#39;IncomeLossFromContinuingOperations&#39;] -
-            data_df.AllIncomeTaxExpenseBenefit)</code></pre>
+            data_df.AllIncomeTaxExpenseBenefit)
+    return data_df</code></pre>
 </details>
 </dd>
 <dt id="secfsdstools.f_standardize.is_standardize.PostFixIncomeLossFromContinuingOperationsAndSignOfIncomeTaxExpenseBenefit.get_input_tags"><code class="name flex">

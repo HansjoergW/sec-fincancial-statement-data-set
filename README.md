@@ -842,7 +842,7 @@ implementations (module `secfsdstools.e_presenter.presenting`):
     # Group by 'name' and plot equity for each group
     # Note: using the `present` method ensured that the same cik has always the same name even if the company name did change in the past
     for name, group in standardized_is_df.groupby('name'):
-    plt.plot(group['date'], group['GrossProfit'], label=name, linestyle='-')
+      plt.plot(group['date'], group['GrossProfit'], label=name, linestyle='-')
       
     # Add labels and title
     plt.xlabel('Date')
@@ -901,7 +901,7 @@ implementations (module `secfsdstools.e_presenter.presenting`):
 
      With just a few lines of code, you'll get a comparable dataset with the main positions of an cash flow statement for Microsoft, Alphabet, and Amazon:
 (see the [standardize the cash flow statements and make them comparable](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/07_03_CF_standardizer.ipynb) for details)
-    ````
+    ````python
     from secfsdstools.e_collector.companycollecting import CompanyReportCollector
     from secfsdstools.e_filter.rawfiltering import ReportPeriodRawFilter, MainCoregRawFilter, OfficialTagsOnlyRawFilter, USDOnlyRawFilter
     from secfsdstools.f_standardize.cf_standardize import CashFlowStandardizer

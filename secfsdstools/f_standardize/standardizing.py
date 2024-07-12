@@ -413,7 +413,7 @@ class Standardizer(Presenter[JoinedDataBag]):
         LOGGER.info("start POST processing ...")
         post_df = self._post_processing(main_df)
 
-        LOGGER.info("start FINAlIZE ...")
+        LOGGER.info("start FINALIZE ...")
         self.result = self._finalize(post_df)
         return self.result
 

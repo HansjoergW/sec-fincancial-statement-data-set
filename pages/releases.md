@@ -8,7 +8,15 @@ permalink: /releasenotes/
 ## Upcoming
 * 
 
-## 1.5.0 2024-May-18
+## 1.6.0 2024-July-12
+* New
+  - Introducing **Cash Flow Standardizer**<br>
+    The Cash Flow Standardizer makes the cash flow statements easily comparable.<br>
+    [07_03_CF_standardizer](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/07_03_CF_standardizer.ipynb) <br>
+* Improvements
+  - Small improvements in the Standardizer framework and rules
+
+## 1.5.0 2024-May-18_
 * New
   - Introducing **Income Statement Standardizer**<br>
     The Income Statement Standardizer makes the income statements easily comparable.<br>

@@ -13,15 +13,13 @@ New Release
 - on github -> under code releases: draft new release
 
 
-
 v.1.6.0
 - Standardizer Rule-Framework
   process and apply method chainable
 - CF Standardizer
 
-Todo:
-- New chapter in quickstart for Standardizer
 
+Todo:
 - Dedup in CF ist sehr hoch, warum (320k)? sind das wirklich immer dieselben Werte?
   Sind alles Cash Positionen...
   Vermutlich ist das "Join" ein Problem, da immer am Anfang und am Ende eine CashPosition steht

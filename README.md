@@ -112,15 +112,9 @@ The db directory is the directory in which the sqllite db is created.
 The useragentemail is used in the requests made to the sec.gov website. Since we only make limited calls to the sec.gov,
 you can leave the example "your.email@goeshere.com". 
 
+# Vewing data using SQLite DB Browser
 
-
-
-
-
-# Using the index db with a db browser in order to get an overview of all available report
-___
 **Note:** This is just if you are curious about the content of the database file. The library itself also contains functions to analyze the content of the database file.
-___
 
 The "index of reports" that was created in the previous step can be viewed using a database viewer that supports the SQLite format,
 such as [DB Browser for SQLite](https://sqlitebrowser.org/).
@@ -151,8 +145,8 @@ If you accidentally delete data in the database file, don't worry. Just delete t
 and run `update()` again (see previous chapter).
 
 
-# Working with the SECFSDSTools library
-Note: the code within this chapter is also contained in the "01_quickstart.ipynb" notebook. 
+# Vewing data using SECFSDSTools library
+Note: the code within this chapter is also contained in the [notebooks/01_quickstart.ipynb](notebooks/01_quickstart.ipynb). 
 If you want to follow along, just open the notebook.
 
 ## A first simple example
@@ -191,7 +185,7 @@ The following diagram gives an overview on SECFSDSTools library.
 
 ![Overview](https://github.com/HansjoergW/sec-fincancial-statement-data-set/raw/main/docs/images/overview.png)
 
-It mainly exists out of two main processes. The first one ist the "Date Update Process" wich is responsible for the
+It mainly exists out of two main processes. The first one ist the "Date Update Process" which is responsible for the
 download of the Financial Statement Data Sets zip files from the sec.gov website, transforming the content into parquet
 format, and indexing the content of these files in a simple SQLite database. Again, this whole process can be started
 "manually" by calling the update method, or it is done automatically, as it described above.
@@ -212,18 +206,18 @@ filtered, concatenated, directly saved and loaded.
 The diagramm also shows the main classes with which a user interacts. The use of them  is described in the following chapters.
 
 ## General
-Most of the classes you can interact with have a factory method which name starts with "get_". All this factory method
-take at least one **optional** parameter called configuration which is of type "Configuration".
+Most of the classes you can interact with have a factory method which name starts with `get_`. All this factory method
+take at least one **optional** parameter called configuration which is of type `Configuration`.
 
 If you do not provide this parameter, the class will read the configuration info from you configuration file in your home
 directory. If, for whatever reason, you do want to provide an alternative configuration, you can overwrite it.
 
-However, normally you do not have to provide the "configuration" parameter.
+However, normally you do not have to provide the `configuration` parameter.
 
 ## Index: working with the index
 The first class that interacts with the index is the `IndexSearch` class. It provides a single method `find_company_by_name`
 which executes a SQL Like search on the name of the available companies and returns a pandas dataframe with the columns
-'name' and 'cik' (the central index key, or the unique id of a company in the financial statements data sets).
+`name` and `cik` (the central index key, or the unique id of a company in the financial statements data sets).
 The main purpose of this class is to find the cik for a company (of course, you can also directly search the cik on https://www.sec.gov/edgar/searchedgar/companysearch).
 
 

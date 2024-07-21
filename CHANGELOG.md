@@ -37,6 +37,42 @@ The main features include:
   result_df = joined_bag.present(is_standardizer) # 
   ```
 
+
+# Latest news / most important changes from previous versions
+See the [Release Notes](https://hansjoergw.github.io/sec-fincancial-statement-data-set/releasenotes/) for details.
+## 1.5 -> 1.6
+* Introducing **Cash Flow Standardizer**<br>
+  The Cash Flow Standardizer makes the cash flow statements easily comparable.<br>
+  [07_03_CF_standardizer](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/07_03_CF_standardizer.ipynb) <br>
+## 1.4.2 -> 1.5
+* Introducing **Income Statement Standardizer**<br>
+  The Income Statement Standardizer makes the income statements easily comparable.<br>
+  [07_02_IS_standardizer](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/07_02_IS_standardizer.ipynb) <br>
+* Small improvements in the Standardizer framework and rules
+## 1.4 -> 1.4.2
+* Fix in `StandardStatementPresenter`: <br>
+  The `StandardStatementPresenter` also considers `qtrs` when displaying the information.
+  This was a problem when displaying information for income statements and cash flows, since they often show
+  data for different periods.
+* Improvements in the Standardizer framework as preparation to implement the income statement and cash flow standardizer.
+## 1.3 -> 1.4
+* Introducing the Standardizer Framework and the **Balance Sheet Standardizer** as a first implementation.<br>
+  The Balance Sheet Standardizer makes the balance sheets easily comparable.<br>
+  Check out the following notebooks: <br>
+  [07_00_standardizer_basics](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/07_00_standardizer_basics.ipynb) <br>
+  [07_01_BS_standardizer](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/07_01_BS_standardizer.ipynb) <br>
+* Efficiency improvements for `MultiReportCollector`. 
+
+## 1.2 -> 1.3
+* New notebook [06_bulk_data_processing_deep_dive](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/06_bulk_data_processing_deep_dive.ipynb)<br>
+  This first version shows how datasets can be created with data from all available zip files. It shows a faster
+  parallel approach which uses more memory and cpu resources and a slower serial approach which uses significant
+  less resources.
+* New package `u_usecases` introduced. This package is a place to provide concrete examples what you can do
+  with the `secfsdstools` library. As a first usecase, the logic shown and explained in the `06_bulk_data_processing_deep_dive`
+  is provided as logic within the modul `bulk_loading`.
+
+
 # Principles
 
 The goal is to be able to do bulk processing of the data without the need to do countless API calls to sec.gov.
@@ -51,7 +87,25 @@ appropriate zip file, reducing the need to open and search through each zip file
 Moreover, the downloaded zip files are converted to the parquet format which provides faster read access
 to the data compared to reading the csv files inside the zip files.
 
-The library is designed to have a low memory footprint, only parsing and reading the data for a specific report into pandas dataframe tables.
+The library is designed to have a low memory footprint, only parsing and reading the data for a specific
+report into pandas dataframe tables.
+
+
+# Links
+* [For a detail description of the content and the structure of the dataset](https://www.sec.gov/files/aqfs.pdf)
+* [Release Notes](https://hansjoergw.github.io/sec-fincancial-statement-data-set/releasenotes/)
+* [Documentation](https://hansjoergw.github.io/sec-fincancial-statement-data-set/)
+* [QuickStart Jupyter Notebook](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/01_quickstart.ipynb)
+* [Connect to the daily-sec-financial-statement-dataset Notebook](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/02_connect_rapidapi.ipynb)
+* [Explore the data with an interactive Notebook](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/03_explore_with_interactive_notebook.ipynb)
+* [collector_deep_dive Notebook](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/04_collector_deep_dive.ipynb)
+* [filter_deep_dive Notebook](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/05_filter_deep_dive.ipynb).
+* [bulk_data_processing_deep_dive Notebook](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/06_bulk_data_processing_deep_dive.ipynb)
+* [standardizer_basics](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/07_00_standardizer_basics.ipynb)
+* [BS_standardizer](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/07_01_BS_standardizer.ipynb)
+* [IS_standardizer](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/07_02_IS_standardizer.ipynb)
+* [CF_standardizer](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/07_03_CF_standardizer.ipynb) <br>
+
 
 
 # Installation
@@ -67,30 +121,9 @@ The library has been tested for python version 3.7, 3.8, 3.9, and 3.10
 If you want to contribute, just clone the project and use a python 3.7 environment.
 The dependencies are defined in the requirements.txt file or use the pyproject.toml to install them.
 
-# Basic usage
-
-In order to download the data files and create the index, just call the `update()` method:
-
-```
-from secfsdstools.update import update
-
-if __name__ == '__main__':
-    update()
-```
-
-The following tasks will be executed:
-1. All currently available zip-files are downloaded form sec.gov (these are over 50 files that will need over 2 GB of space on your local drive)
-2. All the zipfiles are transformed and stored as parquet files. Per default, the zipfile is deleted afterwards. If you want to keep the zip files, set the parameter 'KeepZipFiles' in the config file to True.
-3. An index inside a sqlite db file is created
-
-If you don't call update "manually", then the first time you call a function from the library, a download will be triggered.
-
-Moreover, at most once a day, it is checked if there is a new zip file available on sec.gov. If there is, a download will be started automatically. 
-If you don't want 'auto-update', set the 'AutoUpdate' in your config file to False.
 
 
-
-# Configuration (optional)
+# Configuration
 
 To configure the library, create a file called ".secfsdstools.cfg" in your home directory. The file only requires 
 the following entries:
@@ -112,9 +145,69 @@ The db directory is the directory in which the sqllite db is created.
 The useragentemail is used in the requests made to the sec.gov website. Since we only make limited calls to the sec.gov,
 you can leave the example "your.email@goeshere.com". 
 
+# Attention when using on Windows
+In order to support parallel processing, this library uses the multiprocessing package. For instance when transforming the
+zip files to the parquet format or when reading data from different files.
+
+However, in order for it to work on Windows when calling `python yourscript.py`, it is necessary that the logic
+is started within the "main block" (`if __name__ == '__main__':`).
+
+Of course, your main logic can be in another package that you import, but the "entry point" needs to be a "main block":
+
+yourscript.py:
+```
+import yourpackage as yp
+
+if __name__ == '__main__':
+  yp.run()
+```
+
+Otherwise, you will observe the following kind of error messages:
+```
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+  File "C:\ieu\Anaconda3\envs\sectestclean\lib\site-packages\multiprocess\spawn.py", line 116, in spawn_main
+    exitcode = _main(fd, parent_sentinel)
+  File "C:\ieu\Anaconda3\envs\sectestclean\lib\site-packages\multiprocess\spawn.py", line 125, in _main
+    prepare(preparation_data)
+  File "C:\ieu\Anaconda3\envs\sectestclean\lib\site-packages\multiprocess\spawn.py", line 236, in prepare
+    _fixup_main_from_path(data['init_main_from_path'])
+  File "C:\ieu\Anaconda3\envs\sectestclean\lib\site-packages\multiprocess\spawn.py", line 287, in _fixup_main_from_path
+    main_content = runpy.run_path(main_path,
+  File "C:\ieu\Anaconda3\envs\sectestclean\lib\runpy.py", line 269, in run_path
+    return _run_module_code(code, init_globals, run_name,
+  File "C:\ieu\Anaconda3\envs\sectestclean\lib\runpy.py", line 96, in _run_module_code
+    _run_code(code, mod_globals, init_globals,
+  ...
+```
+
+For details have a look at the python documentation:
+- https://docs.python.org/3.10/library/multiprocessing.html#the-process-class
+- https://docs.python.org/3.10/library/multiprocessing.html#multiprocessing-programming
+
+It is not a problem if you run it inside Jupyter.
 
 
+# Downloading the data files from sec and index the content
 
+In order to download the data files and create the index, just call the `update()` method:
+
+```
+from secfsdstools.update import update
+
+if __name__ == '__main__':
+    update()
+```
+
+The following tasks will be executed:
+1. All currently available zip-files are downloaded form sec.gov (these are over 50 files that will need over 2 GB of space on your local drive)
+2. All the zipfiles are transformed and stored as parquet files. Per default, the zipfile is deleted afterwards. If you want to keep the zip files, set the parameter 'KeepZipFiles' in the config file to True.
+3. An index inside a sqlite db file is created
+
+If you don't call update "manually", then the first time you call a function from the library, a download will be triggered.
+
+Moreover, at most once a day, it is checked if there is a new zip file available on sec.gov. If there is, a download will be started automatically. 
+If you don't want 'auto-update', set the 'AutoUpdate' in your config file to False.
 
 
 # Using the index db with a db browser in order to get an overview of all available report
@@ -823,21 +916,77 @@ implementations (module `secfsdstools.e_presenter.presenting`):
     ````
   ![NetCashOperating Compare](https://github.com/HansjoergW/sec-fincancial-statement-data-set/raw/main/docs/images/netcashoperating_compare.png)
 
-# Links 
-* [For a detail description of the content and the structure of the dataset](https://www.sec.gov/files/aqfs.pdf)
-* [Release Notes](https://hansjoergw.github.io/sec-fincancial-statement-data-set/releasenotes/)
-* [Documentation](https://hansjoergw.github.io/sec-fincancial-statement-data-set/)
+
+# What to explore further
+
 * [QuickStart Jupyter Notebook](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/01_quickstart.ipynb)
-* [Connect to the daily-sec-financial-statement-dataset Notebook](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/02_connect_rapidapi.ipynb)
 * [Explore the data with an interactive Notebook](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/03_explore_with_interactive_notebook.ipynb)
+* [Connect to the daily-sec-financial-statement-dataset Notebook](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/02_connect_rapidapi.ipynb) 
 * [collector_deep_dive Notebook](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/04_collector_deep_dive.ipynb)
 * [filter_deep_dive Notebook](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/05_filter_deep_dive.ipynb).
 * [bulk_data_processing_deep_dive Notebook](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/06_bulk_data_processing_deep_dive.ipynb)
-* [standardizer_basics](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/07_00_standardizer_basics.ipynb)
-* [BS_standardizer](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/07_01_BS_standardizer.ipynb)
-* [IS_standardizer](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/07_02_IS_standardizer.ipynb)
-* [CF_standardizer](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/07_03_CF_standardizer.ipynb)
 * [checkout the `u_usecases` package](https://hansjoergw.github.io/sec-fincancial-statement-data-set/doc_latest/api/secfsdstools/u_usecases/index.html)
 * [standardize the balance sheets and make them comparable](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/07_01_BS_standardizer.ipynb)
 * [standardize the income statements and make them comparable](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/07_02_IS_standardizer.ipynb)
 * [standardize the cash flow statements and make them comparable](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/07_03_CF_standardizer.ipynb) <br>
+
+
+
+# Troubleshooting
+
+----
+**Problem:** I receive error messages like the following when I try to start a script on windows:
+````
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+  File "C:\ieu\Anaconda3\envs\sectestclean\lib\site-packages\multiprocess\spawn.py", line 116, in spawn_main
+    exitcode = _main(fd, parent_sentinel)
+  File "C:\ieu\Anaconda3\envs\sectestclean\lib\site-packages\multiprocess\spawn.py", line 125, in _main
+    prepare(preparation_data)
+  File "C:\ieu\Anaconda3\envs\sectestclean\lib\site-packages\multiprocess\spawn.py", line 236, in prepare
+    _fixup_main_from_path(data['init_main_from_path'])
+  File "C:\ieu\Anaconda3\envs\sectestclean\lib\site-packages\multiprocess\spawn.py", line 287, in _fixup_main_from_path
+    main_content = runpy.run_path(main_path,
+  File "C:\ieu\Anaconda3\envs\sectestclean\lib\runpy.py", line 269, in run_path
+    return _run_module_code(code, init_globals, run_name,
+  File "C:\ieu\Anaconda3\envs\sectestclean\lib\runpy.py", line 96, in _run_module_code
+    _run_code(code, mod_globals, init_globals,
+ ...
+````
+
+**Solution:** 
+This library uses the multiprocessing package. However, on Windows this works only correctly if the "entry point" of the
+script is within a `if __name__ == '__main__':` block.
+
+Therefore, change your scripts from
+````python
+import xy
+
+your code goes here
+````
+
+to 
+````python
+import xy
+
+if __name__ == '__main__':
+    your code goes here
+````
+
+For details have a look at the python documentation:
+- https://docs.python.org/3.10/library/multiprocessing.html#the-process-class
+- https://docs.python.org/3.10/library/multiprocessing.html#multiprocessing-programming
+
+
+
+
+
+
+
+
+
+
+
+
+
+

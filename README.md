@@ -1,75 +1,54 @@
 # sec-fincancial-statement-data-set
 
 Helper tools to analyze the [Financial Statement Data Sets](https://www.sec.gov/dera/data/financial-statement-data-sets) from the U.S. securities and exchange commission (sec.gov).
-
-The SEC releases quarterly zip files, each containing four CSV files with numerical data from all financial reports
-filed within that quarter.
-
-However, accessing data from the past 12 years can be time-consuming due to the large amount
-of data - over 120 million data points in over 2GB of zip files by 2023.
+The SEC releases quarterly zip files, each containing four CSV files with numerical data from all financial reports filed within that quarter. However, accessing data from the past 12 years can be time-consuming due to the large amount of data - over 120 million data points in over 2GB of zip files by 2023.
 
 This library simplifies the process of working with this data and provides a
-convenient way to extract information from the primary financial statements - the balance sheet, income statement, and
-statement of cash flows.
+convenient way to extract information from the primary financial statements - the balance sheet (BS), income statement (IS), and statement of cash flows (CF).
 
 The main features include:
-- all data is on your local hard drive, no need for numerous API calls
+- all data is on your local hard drive and can be updated automatically, no need for numerous API calls
 - data is loaded as pandas files
-- fast an efficient reading of a single report, all reports of one or multiple companies, or even all available reports
-  ```python
-  single_collector: SingleReportCollector = SingleReportCollector.get_report_by_adsh(adsh="0000320193-22-000108")
-  company_collector = CompanyReportCollector.get_company_collector(ciks=[320193, 789019]) # Apple, Microsoft
-  all_2022_collector: ZipCollector = ZipCollector.get_zip_by_names(names=["2022q1.zip", "2022q2.zip", "2022q3.zip", "2022q4.zip"])
-  ```
-- filter framework with predefined filters, easy to extend, supports easy way of saving, loading, and combining filtered data
-  ```python
-  (collector.collect().filter(USDOnlyRawFilter()) # only data in USD
-                     .filter(StmtRawFilter(['BS']) # only data for balance sheets
-                     .filter(...) #  
-                     .save("./preparedset")) # save the filtered data 
-  ```
+- fast and efficient reading of a single report, all reports of one or multiple companies, or even all available reports 
+- filter framework with predefined filters, easy to extend, supports easy way of saving, loading, and combining filtered data (see [01_quickstart.ipynb](notebooks/01_quickstart.ipynb) and
+[03_explore_with_interactive_notebook.ipynb](notebooks/03_explore_with_interactive_notebook.ipynb))
 - standardize the data for balance sheets, income statements, and cash flow statements to make reports easily comparable
-  ```python
-  company_collector = CompanyReportCollector.get_company_collector(ciks=[320193, 789019], # Apple, Microsoft
-                                                                   post_load_filter=default_postloadfilter) # use predefined filter
-  joined_bag = company_collector.collect().join() # load the sub_df, pre_df, and num_df from the zipfiles and join num and pre
-  is_standardizer = IncomeStatementStandardizer()
-  result_df = joined_bag.present(is_standardizer) # 
-  ```
+(see [07_00_standardizer_basics.ipynb](notebooks/07_00_standardizer_basics.ipynb), 
+[07_01_BS_standardizer.ipynb](notebooks/07_01_BS_standardizer.ipynb), 
+[07_01_BS_standardizer.ipynb](notebooks/07_01_BS_standardizer.ipynb), and
+[07_03_CF_standardizer.ipynb](notebooks/07_03_CF_standardizer.ipynb))
 
 # Principles
 
-The goal is to be able to do bulk processing of the data without the need to do countless API calls to sec.gov.
-
-Therefore, the quarterly zip files are downloaded and indexed using a SQLite database table.
+The goal is to be able to do bulk processing of the data without the need to do countless API calls to sec.gov. Therefore, the quarterly zip files are downloaded and indexed using a SQLite database table.
 The index table contains information on all filed reports since about 2010, over 500,000 in total. The first
 download will take a couple of minutes but after that, all the data is on your local harddisk.
 
 Using the index in the sqlite db allows for direct extraction of data for a specific report from the
 appropriate zip file, reducing the need to open and search through each zip file.
-
 Moreover, the downloaded zip files are converted to the parquet format which provides faster read access
 to the data compared to reading the csv files inside the zip files.
 
 The library is designed to have a low memory footprint, only parsing and reading the data for a specific report into pandas dataframe tables.
 
 
-# Installation
+# Installation and basic usage
 
-The project is published on pypi.org. Simply use pip install to install it:
+The library has been tested for python version 3.7, 3.8, 3.9, and 3.10.
+The project is published on [pypi.org](https://pypi.org/project/secfsdstools/). Simply use the following command to install the latest version:
 
 ```
 pip install secfsdstools
 ```
 
-The library has been tested for python version 3.7, 3.8, 3.9, and 3.10
+
 
 If you want to contribute, just clone the project and use a python 3.7 environment.
 The dependencies are defined in the requirements.txt file or use the pyproject.toml to install them.
 
-# Basic usage
+It is possible to write standalone python script but I recommend to first start with interactive jupyter notebooks [01_quickstart.ipynb](notebooks/01_quickstart.ipynb) and [03_explore_with_interactive_notebook.ipynb](notebooks/03_explore_with_interactive_notebook.ipynb) that are located in `notebooks` directory.
 
-In order to download the data files and create the index, just call the `update()` method:
+Upon using the library for the first time, it downloads the data files and creates the index by calling the `update()` method. You can manually trigger the update using the following code:
 
 ```
 from secfsdstools.update import update
@@ -83,17 +62,16 @@ The following tasks will be executed:
 2. All the zipfiles are transformed and stored as parquet files. Per default, the zipfile is deleted afterwards. If you want to keep the zip files, set the parameter 'KeepZipFiles' in the config file to True.
 3. An index inside a sqlite db file is created
 
-If you don't call update "manually", then the first time you call a function from the library, a download will be triggered.
 
 Moreover, at most once a day, it is checked if there is a new zip file available on sec.gov. If there is, a download will be started automatically. 
 If you don't want 'auto-update', set the 'AutoUpdate' in your config file to False.
 
 
 
-# Configuration (optional)
+## Configuration (optional)
 
-To configure the library, create a file called ".secfsdstools.cfg" in your home directory. The file only requires 
-the following entries:
+If you don't provide a config file, a config file with name `secfsdstools.cfg` will be created the first time you use the api and placed inside your home directory. 
+The file only requires the following entries:
 
 ```
 [DEFAULT]
@@ -103,38 +81,37 @@ dbdirectory = c:/users/me/secfsdstools/data/db
 useragentemail = your.email@goeshere.com
 ```
 
-If you don't provide a config file, one will be created the first time you use the api and put it inside your home
-directory. You can then change the content of it or directly start with the downloading of the data.
 
-The download directory is the place where quarterly zip files from the sec.gov are downloaded to.
-The parquet directory is the folder where the data is stored in parquet format.
-The db directory is the directory in which the sqllite db is created.
-The useragentemail is used in the requests made to the sec.gov website. Since we only make limited calls to the sec.gov,
+
+The `downloaddirectory` is the place where quarterly zip files from the sec.gov are downloaded to.
+The `parquetdirectory` is the folder where the data is stored in parquet format.
+The `dbdirectory` is the directory in which the sqllite db is created.
+The `useragentemail` is used in the requests made to the sec.gov website. Since we only make limited calls to the sec.gov,
 you can leave the example "your.email@goeshere.com". 
 
-# Vewing data using SQLite DB Browser
+## Viewing metadata
 
-**Note:** This is just if you are curious about the content of the database file. The library itself also contains functions to analyze the content of the database file.
+The recommend way to view and use the metadata is using `secfsdstools` library functions as described in [notebooks/01_quickstart.ipynb](notebooks/01_quickstart.ipynb)  
 
 The "index of reports" that was created in the previous step can be viewed using a database viewer that supports the SQLite format,
 such as [DB Browser for SQLite](https://sqlitebrowser.org/).
 
-(The location of the SQLite database file is specified in the "dbdirectory" field of the config file, which is set to
-"<home>/secfsdstools/data/db" in the default configuration. The database file is named "secfsdstools.db".)
+(The location of the SQLite database file is specified in the `dbdirectory` field of the config file, which is set to
+`<home>/secfsdstools/data/db` in the default configuration. The database file is named `secfsdstools.db`.)
 
-There are only two relevant tables in the database: "index_parquet_reports" and "index_parquet_processing_state".
+There are only two relevant tables in the database: `index_parquet_reports` and `index_parquet_processing_state`.
 
-The "index_parquet_reports" table provides an overview of all available reports in the downloaded
+The `index_parquet_reports` table provides an overview of all available reports in the downloaded
 data and includes the following relevant columns:
 
-* **adsh** <br>The unique id of the report (a string).
-* **cik** <br>The unique id of the company (an int).
-* **name** <br>The name of the company in uppercases.
-* **form** <br>The type of the report (e.g.: annual: 10-K, quarterly: 10-Q).
-* **filed** <br>The date when the report has been filed in the format YYYYMMDD (Note: this is stored as a number).
-* **period** <br>The date for which the report was created (the date on the balancesheet). Also in the format YYYYMMDD.
-* **fullPath** <br>The path to the downloaded zip files that contains the details of that report.
-* **url** <br>The url which takes you directly to the filing of this report on the sec.gov website.
+* **adsh** : The unique id of the report (a string).
+* **cik** : The unique id of the company (an int).
+* **name** : The name of the company in uppercases.
+* **form** : The type of the report (e.g.: annual: 10-K, quarterly: 10-Q).
+* **filed** : The date when the report has been filed in the format YYYYMMDD (stored as a integer number).
+* **period** : The date for which the report was create. this is the date on the balancesheet.(stored as a integer number) 
+* **fullPath** : The path to the downloaded zip files that contains the details of that report.
+* **url** : The url which takes you directly to the filing of this report on the sec.gov website.
 
 For instance, if you want to have an overview of all reports that Apple has filed since 2010,
 just search for "%APPLE INC%" in the name column.
@@ -145,9 +122,7 @@ If you accidentally delete data in the database file, don't worry. Just delete t
 and run `update()` again (see previous chapter).
 
 
-# Vewing data using SECFSDSTools library
-Note: the code within this chapter is also contained in the [notebooks/01_quickstart.ipynb](notebooks/01_quickstart.ipynb). 
-If you want to follow along, just open the notebook.
+
 
 ## A first simple example
 Goal: present the information in the balance sheet of Apple's 2022 10-K report in the same way as it appears in the
@@ -834,4 +809,6 @@ implementations (module `secfsdstools.e_presenter.presenting`):
 * [checkout the `u_usecases` package](https://hansjoergw.github.io/sec-fincancial-statement-data-set/doc_latest/api/secfsdstools/u_usecases/index.html)
 * [standardize the balance sheets and make them comparable](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/07_01_BS_standardizer.ipynb)
 * [standardize the income statements and make them comparable](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/07_02_IS_standardizer.ipynb)
-* [standardize the cash flow statements and make them comparable](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/07_03_CF_standardizer.ipynb) <br>
+* [standardize the cash flow statements and make them comparable](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/07_03_CF_standardizer.ipynb)
+* [Trouble hssting and known issues](KNOWN_ISSUES.md)
+* [Changelog](CHANGELOG.md)

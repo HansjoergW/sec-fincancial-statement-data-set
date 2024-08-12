@@ -897,7 +897,7 @@ class CashFlowStandardizer(Standardizer):
 
         # Details in Operating activities
         'DepreciationDepletionAndAmortization',
-        'DeferredIncomeTaxExpenseBenefit,'
+        'DeferredIncomeTaxExpenseBenefit',
         'ShareBasedCompensation',
         'IncreaseDecreaseInAccountsPayable',
         'IncreaseDecreaseInAccruedLiabilities',

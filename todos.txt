@@ -20,11 +20,6 @@ v.1.6.0
 
 
 Todo:
-- Dedup in CF ist sehr hoch, warum (320k)? sind das wirklich immer dieselben Werte?
-  Sind alles Cash Positionen...
-  Vermutlich ist das "Join" ein Problem, da immer am Anfang und am Ende eine CashPosition steht
-  (im CF) -> Daher stimmt das eigentlich nicht und wir haben 2x denselben Wert
-
 - in CF haben wir oft auch zusätzliche 'Cash' Tags -> benötigen wir diese im BS auch?
 - in Is fehlt noch Earnings per Share
 - MaxQtr PrePivot Rule also for BS und IS
@@ -32,6 +27,7 @@ Todo:
 - Aufbereitung der Daten für BS, IS und CF Statement möglichst direkt bei update machen,
   so dass diese Daten schon vorbereitet und gefiltert zur Verfügung stehen.
   Vlt. auch eine Art PostDownload Hook anbieten.
+  einfaches Pipeline Framework
 
 - Discord Channel?
 - evtl. sollte jede Regel noch eine "Explanation" bekommen. Ein Text, der die Regel spezifisch erklärt,

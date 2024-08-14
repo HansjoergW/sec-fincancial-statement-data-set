@@ -46,6 +46,20 @@ Automatisierter Ablauf mit GitHubAction
 -> Template benützen (neuer Workflow), bzw. https://github.com/pypa/gh-action-pypi-publish
 
 
+XBRL Daten
+----------
+- "Axis" interpretieren:
+  im Report von https://www.sec.gov/ix?doc=/Archives/edgar/data/320193/000032019324000069/aapl-20240330.htm (IS)
+  sehen wir, dass die erste 3 Reihen alle RevenueFromContractWithCustomerExcludingAssessedTax als Tag besitzen,
+  aber dass dann die Details über die "Axis" differenziert werden (ob Product oder Service).
+  Auf den Details des Facts sieht man dann zusätzliche Infos:
+      Axis: SRTProduct Or Service Axis
+      Member: US-GAAPProduct Member
+      Explicit Member: us-gaap:ProductMember
+
+  Diese Infos sind aber nicht im Datensatz enthalten.
+
+
 Logging
 -------
 Multiprocessing

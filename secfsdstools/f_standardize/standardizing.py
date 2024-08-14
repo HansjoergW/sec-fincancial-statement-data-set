@@ -456,7 +456,7 @@ class Standardizer(Presenter[JoinedDataBag]):
         """
         standardized_df = self.process(databag.pre_num_df)
 
-        data_to_merge_df = databag.sub_df[['adsh', 'cik', 'form', 'fye', 'fy', 'fp']].copy()
+        data_to_merge_df = databag.sub_df[['adsh', 'cik', 'form', 'fye', 'fy', 'fp', 'filed']].copy()
 
         # The name of a company can change during its liftime. However, we want to have the
         # same name for the same cik in all entries. Therefore, we first have to find the
@@ -477,7 +477,7 @@ class Standardizer(Presenter[JoinedDataBag]):
         merged_df['date'] = pd.to_datetime(merged_df['ddate'], format='%Y%m%d')
 
         # sort the columns
-        merged_df = merged_df[['adsh', 'cik', 'name', 'form', 'fye', 'fy', 'fp', 'date'] +
+        merged_df = merged_df[['adsh', 'cik', 'name', 'form', 'fye', 'fy', 'fp', 'date', 'filed'] +
                               standardized_df.columns.tolist()[1:]]
 
         # store it in the standardizer object as new result

@@ -13,13 +13,20 @@ New Release
 - on github -> under code releases: draft new release
 
 
-v.1.6.0
-- Standardizer Rule-Framework
-  process and apply method chainable
-- CF Standardizer
+v.1.6.1
+- "filed" in present of Standardizer
+- link to medium article
+- concat for standardizedbag
+- readme improvements?
 
 
 Todo:
+- Version der Library im code abfragbar machen
+  -> Variante impotlib.metadata -> ist aber erst ab Python 3.8 vorhanden
+- Ergebnisse Standardizer müssen concateniert werden können.
+
+
+
 - in CF haben wir oft auch zusätzliche 'Cash' Tags -> benötigen wir diese im BS auch?
 - in Is fehlt noch Earnings per Share
 - MaxQtr PrePivot Rule also for BS und IS

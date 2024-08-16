@@ -15,7 +15,6 @@ STANDARDIZED = TypeVar('STANDARDIZED', bound='StandardizedBag')
 
 LOGGER = logging.getLogger(__name__)
 
-
 class StandardizedBag:
     """
     A class to contain the results of a standardizer.
@@ -95,6 +94,55 @@ class StandardizedBag:
         return StandardizedBag(result_df=result_df,
                                applied_prepivot_rules_log_df=applied_prepivot_rules_log_df,
                                applied_rules_log_df=applied_rules_log_df, stats_df=stats_df,
+                               applied_rules_sum_s=applied_rules_sum_s,
+                               validation_overview_df=validation_overview_df,
+                               process_description_df=process_description_df)
+
+
+    @staticmethod
+    def concat(bags: List[STANDARDIZED]) -> STANDARDIZED:
+
+        result_dfs = [bag.result_df for bag in bags]
+        applied_prepivot_rules_log_dfs = [bag.applied_prepivot_rules_log_df for bag in bags]
+        applied_rules_log_dfs = [bag.applied_rules_log_df for bag in bags]
+
+        # get stats_df, without the _rel and _gain cols
+        stats_dfs = [bag.stats_df.loc[:, ~bag.stats_df.columns.str.endswith('_rel') & ~bag.stats_df.columns.str.endswith('_gain')] for bag in bags]
+
+        applied_rules_sum_ss = [bag.applied_rules_sum_s for bag in bags]
+
+        # get validation_overview_dfs without _pct column
+        validation_overview_dfs = [bag.validation_overview_df.loc[:, ~bag.validation_overview_df.columns.str.endswith('_pct')] for bag in bags]
+        process_description_dfs = [bag.process_description_df for bag in bags]
+
+        result_df = pd.concat(result_dfs, ignore_index=True)
+        applied_prepivot_rules_log_df = pd.concat(applied_prepivot_rules_log_dfs, ignore_index=True)
+        applied_rules_log_df = pd.concat(applied_rules_log_dfs, ignore_index=True)
+        applied_rules_sum_s: pd.Series = sum(applied_rules_sum_ss)
+        process_description_df = process_description_dfs[0]
+
+        # handling stats
+        #  stats_dfs only contains stats_df objects without _rel and _gain, so we can simply sum
+        stats_df: pd.DataFrame = sum(stats_dfs)
+        # next we use the Stats class do recalculate the _gain and _rel columns
+        stats = Stats([])
+        stats.stats = stats_df
+        stats.finalize_stats(len(result_df))
+
+        stats_df = stats.stats
+
+        # handling validation overview
+        validation_overview_df = validation_overview_dfs[0]
+        for df in validation_overview_dfs[1:]:
+            validation_overview_df = validation_overview_df.add(df, fill_value=0)
+
+        for col in validation_overview_df.columns:
+            validation_overview_df[f"{col}_pct"] = 100 * (validation_overview_df[col] / len(result_df))
+
+        return StandardizedBag(result_df=result_df,
+                               applied_prepivot_rules_log_df=applied_prepivot_rules_log_df,
+                               applied_rules_log_df=applied_rules_log_df,
+                               stats_df=stats_df,
                                applied_rules_sum_s=applied_rules_sum_s,
                                validation_overview_df=validation_overview_df,
                                process_description_df=process_description_df)

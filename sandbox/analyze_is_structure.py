@@ -38,18 +38,19 @@ def load_joined_MultiQtrs_IS_set() -> JoinedDataBag:
     return JoinedDataBag.load("../notebooks/set/filtered/IS/joinedMultiQtrs")
 
 @timing
-def create_smaller_sample_IS_set():
-    bag = CompanyReportCollector.get_company_collector(ciks=[789019, 1652044, 1018724],
+def create_smaller_sample_IS_set(ciks: List[int] = [789019, 1652044, 1018724],
+                                 path:str = "./saved_data/is_small_joined"):
+    bag = CompanyReportCollector.get_company_collector(ciks=ciks,
                                                        stmt_filter=[
                                                            'IS']).collect()  # Microsoft, Alphabet, Amazon
     filtered_bag = bag[ReportPeriodRawFilter()][MainCoregRawFilter()][OfficialTagsOnlyRawFilter()][
         USDOnlyRawFilter()]
-    filtered_bag.join()[ISQrtrsFilter()].save("./saved_data/is_small_joined")
+    filtered_bag.join()[ISQrtrsFilter()].save(path)
 
 
 @timing
-def load_smaller_sample_IS_set() -> JoinedDataBag:
-    return JoinedDataBag.load("./saved_data/is_small_joined")
+def load_smaller_sample_IS_set(path="./saved_data/is_small_joined") -> JoinedDataBag:
+    return JoinedDataBag.load(path)
 
 
 def filter_tags(pre_num_df: pd.DataFrame, tag_like: str) -> List[str]:
@@ -142,10 +143,14 @@ def find_operating_expense_tags(joined_bag: JoinedDataBag):
 
 
 if __name__ == '__main__':
+    # ciks_bag2 = [50863, 1182374, 1045810] # intel, amd, nvidia
+
     # create_smaller_sample_IS_set()
+    # create_smaller_sample_IS_set(ciks=ciks_bag2, path="./saved_data/is_small_joined_2")
     # prepare_all_data_set()
 
-    is_joined_bag: JoinedDataBag = load_joined_MultiQtrs_IS_set()
+    #is_joined_bag: JoinedDataBag = load_joined_MultiQtrs_IS_set()
+    is_joined_bag: JoinedDataBag = load_smaller_sample_IS_set(path="./saved_data/is_small_joined_2")
     from secfsdstools.u_usecases.analyzes import find_tags_containing
     # with_profitloss = find_tags_containing(is_joined_bag, 'ProfitLoss')
     # print(with_profitloss)
@@ -188,6 +193,7 @@ if __name__ == '__main__':
 
     standardized_bag = standardize(is_joined_bag)
 
+    standardized_bag.save("../tests/_testdata/is_standardized_2")
     print(standardized_bag.result_df.shape)
 
     print("wait")

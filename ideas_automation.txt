@@ -1,0 +1,20 @@
+Fragen:
+- standard Framework verwenden, dass auch bereits parallelisierung beherrscht?
+- Alle Prozessschritte in Pipelines umwandeln, oder kann download z.B. belassen wie es ist?
+- Wie mit quarterly und daily umgehen?
+- Wie wird der Status gemanaged? Immer über Files, oder doch besser über eine Tabelle?
+  -> Vorteil File -> der Ist Zustand ist immer korrekt
+  -> Vorteil Status in Tabelle -> Abfrage ist immer identisch
+- Wie machen wir das ganze robust / Fehlerbehandlung
+  -> Wie wird geprüft, ob ein Schritt für einen Teil tatsächlich ausgeführt wurde
+     -> Z.B. welche Files müssen vorhanden sein.
+
+Schritte
+- Version der Library im code abfragbar machen
+  -> Variante impotlib.metadata -> ist aber erst ab Python 3.8 vorhanden
+- Ergebnisse Standardizer müssen concateniert werden können.
+- Umstellen der vorhanden Schritte download, index, transform
+  als Pipeline definition
+- Hinzufügen von customer Schritten
+
+

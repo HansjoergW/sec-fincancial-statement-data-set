@@ -11,4 +11,8 @@ def run_test():
 
 
 if __name__ == '__main__':
-    run_test()
+    from importlib_metadata import version
+    import secfsdstools
+    print(version('secfsdstools'))
+    print(secfsdstools.__version__)
+    # run_test()

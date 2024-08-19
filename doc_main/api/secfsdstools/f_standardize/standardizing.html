@@ -253,7 +253,7 @@ class Standardizer(Presenter[JoinedDataBag]):
     &#34;&#34;&#34;
 
     # this tags identify single statements in the final standardized table
-    identifier_cols = [&#39;adsh&#39;, &#39;coreg&#39;, &#39;report&#39;, &#39;ddate&#39;, &#39;uom&#39;, &#39;qtrs&#39;]
+    identifier_cols = [&#39;adsh&#39;, &#39;coreg&#39;, &#39;report&#39;, &#39;ddate&#39;, &#39;qtrs&#39;]
 
     def __init__(self,
                  prepivot_rule_tree: RuleGroup,
@@ -370,6 +370,11 @@ class Standardizer(Presenter[JoinedDataBag]):
     def _preprocess(self, data_df: pd.DataFrame) -&gt; pd.DataFrame:
         # sourcery skip: simplify-len-comparison, use-named-expression
         # only select rows with tags that are actually used by the defined rules
+
+        currency_uoms = [x for x in list(data_df.uom.unique()) if (len(x) == 3) and x.isupper()]
+        if len(currency_uoms) &gt; 1:
+            raise ValueError(&#34;Multiple currencies are not supported. &#34;
+                             &#34;Please make sure that the uom column only contains one currency.&#34;)
 
         relevant_pivot_cols = \
             self.identifier_cols + [&#39;tag&#39;, &#39;version&#39;, &#39;value&#39;, &#39;line&#39;, &#39;negating&#39;]
@@ -947,7 +952,7 @@ as negated.</dd>
     &#34;&#34;&#34;
 
     # this tags identify single statements in the final standardized table
-    identifier_cols = [&#39;adsh&#39;, &#39;coreg&#39;, &#39;report&#39;, &#39;ddate&#39;, &#39;uom&#39;, &#39;qtrs&#39;]
+    identifier_cols = [&#39;adsh&#39;, &#39;coreg&#39;, &#39;report&#39;, &#39;ddate&#39;, &#39;qtrs&#39;]
 
     def __init__(self,
                  prepivot_rule_tree: RuleGroup,
@@ -1064,6 +1069,11 @@ as negated.</dd>
     def _preprocess(self, data_df: pd.DataFrame) -&gt; pd.DataFrame:
         # sourcery skip: simplify-len-comparison, use-named-expression
         # only select rows with tags that are actually used by the defined rules
+
+        currency_uoms = [x for x in list(data_df.uom.unique()) if (len(x) == 3) and x.isupper()]
+        if len(currency_uoms) &gt; 1:
+            raise ValueError(&#34;Multiple currencies are not supported. &#34;
+                             &#34;Please make sure that the uom column only contains one currency.&#34;)
 
         relevant_pivot_cols = \
             self.identifier_cols + [&#39;tag&#39;, &#39;version&#39;, &#39;value&#39;, &#39;line&#39;, &#39;negating&#39;]

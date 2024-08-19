@@ -149,11 +149,13 @@ if __name__ == '__main__':
     # create_smaller_sample_IS_set(ciks=ciks_bag2, path="./saved_data/is_small_joined_2")
     # prepare_all_data_set()
 
+    is_joined_bag: JoinedDataBag = load_joined_IS_set()
     #is_joined_bag: JoinedDataBag = load_joined_MultiQtrs_IS_set()
-    is_joined_bag: JoinedDataBag = load_smaller_sample_IS_set(path="./saved_data/is_small_joined_2")
+    #is_joined_bag: JoinedDataBag = load_smaller_sample_IS_set(path="./saved_data/is_small_joined_2")
+
     from secfsdstools.u_usecases.analyzes import find_tags_containing
-    # with_profitloss = find_tags_containing(is_joined_bag, 'ProfitLoss')
-    # print(with_profitloss)
+    with_shares_issued = find_tags_containing(is_joined_bag, 'Shares')
+    print(with_shares_issued)
 
     #find_operating_expense_tags(is_joined_bag)
     # print(check_signed_values(is_joined_bag, tag_list=['LicenseCost',
@@ -163,7 +165,7 @@ if __name__ == '__main__':
     #                                              'CostOfServices']))
 
 
-    #is_joined_bag = is_joined_bag.filter(AdshJoinedFilter(adshs=['0001070235-23-000131'])) # expect 2 entries
+    is_joined_bag = is_joined_bag.filter(AdshJoinedFilter(adshs=['0000320193-23-000064'])) # expect 2 entries
 
     #is_joined_bag = load_smaller_sample_IS_set()
     #
@@ -193,7 +195,7 @@ if __name__ == '__main__':
 
     standardized_bag = standardize(is_joined_bag)
 
-    standardized_bag.save("../tests/_testdata/is_standardized_2")
+    #standardized_bag.save("../tests/_testdata/is_standardized_2")
     print(standardized_bag.result_df.shape)
 
     print("wait")

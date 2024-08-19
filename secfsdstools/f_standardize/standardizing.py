@@ -224,7 +224,7 @@ class Standardizer(Presenter[JoinedDataBag]):
     """
 
     # this tags identify single statements in the final standardized table
-    identifier_cols = ['adsh', 'coreg', 'report', 'ddate', 'uom', 'qtrs']
+    identifier_cols = ['adsh', 'coreg', 'report', 'ddate', 'qtrs']
 
     def __init__(self,
                  prepivot_rule_tree: RuleGroup,
@@ -341,6 +341,11 @@ class Standardizer(Presenter[JoinedDataBag]):
     def _preprocess(self, data_df: pd.DataFrame) -> pd.DataFrame:
         # sourcery skip: simplify-len-comparison, use-named-expression
         # only select rows with tags that are actually used by the defined rules
+
+        currency_uoms = [x for x in list(data_df.uom.unique()) if (len(x) == 3) and x.isupper()]
+        if len(currency_uoms) > 1:
+            raise ValueError("Multiple currencies are not supported. "
+                             "Please make sure that the uom column only contains one currency.")
 
         relevant_pivot_cols = \
             self.identifier_cols + ['tag', 'version', 'value', 'line', 'negating']

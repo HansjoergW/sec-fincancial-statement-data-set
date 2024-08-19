@@ -15,20 +15,26 @@ New Release
 
 v.1.6.1
 - "filed" in present of Standardizer
-- link to medium article
 - concat for standardizedbag
-- readme improvements?
+- standardizer -> check for only one uom
+- SharesOutstanding and EarningsPerSahre added
+
+- link to medium article
+- readme improvements?-> credits
+
+v.1.6.2
+- configure attribute list for sub_df
+- version of library readable
+- 3.7 not checked anymore
+- hook for after updated logic
 
 
 Todo:
 - Version der Library im code abfragbar machen
   -> Variante impotlib.metadata -> ist aber erst ab Python 3.8 vorhanden
-- Ergebnisse Standardizer müssen concateniert werden können.
-
 
 
 - in CF haben wir oft auch zusätzliche 'Cash' Tags -> benötigen wir diese im BS auch?
-- in Is fehlt noch Earnings per Share
 - MaxQtr PrePivot Rule also for BS und IS
 
 - Aufbereitung der Daten für BS, IS und CF Statement möglichst direkt bei update machen,

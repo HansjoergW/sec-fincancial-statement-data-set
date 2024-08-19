@@ -996,7 +996,11 @@ class IncomeStatementStandardizer(Standardizer):
                              'IncomeLossFromDiscontinuedOperationsNetOfTax',
                              'ProfitLoss',
                              'NetIncomeLossAttributableToNoncontrollingInterest',
-                             'NetIncomeLoss'
+                             'NetIncomeLoss',
+                             'EarningsPerShareBasic',
+                             'EarningsPerShareDiluted',
+                             'WeightedAverageNumberOfSharesOutstandingBasic',
+                             'WeightedAverageNumberOfDilutedSharesOutstanding',
                              ]
 
     # used to evaluate if a report is the main income statement report

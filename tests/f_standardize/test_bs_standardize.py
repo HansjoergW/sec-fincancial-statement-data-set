@@ -55,8 +55,8 @@ def test_standardizing(joined_bag):
 
     # check result_df
     assert (standardize_bag.result_df.columns.to_list() == ['adsh', 'cik', 'name', 'form', 'fye',
-                                                            'fy', 'fp', 'date', 'coreg', 'report',
-                                                            'ddate', 'uom', 'qtrs'] +
+                                                            'fy', 'fp', 'date', 'filed', 'coreg',
+                                                            'report', 'ddate', 'qtrs'] +
             standardizer.final_tags +
             ['AssetsCheck_error', 'AssetsCheck_cat', 'LiabilitiesCheck_error',
              'LiabilitiesCheck_cat',

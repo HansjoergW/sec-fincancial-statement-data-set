@@ -1,205 +1,57 @@
 # sec-fincancial-statement-data-set
 
-Helper tools to analyze the [Financial Statement Data Sets](https://www.sec.gov/dera/data/financial-statement-data-sets)
-from the U.S. securities and exchange commission (sec.gov).
-
-For a detail description of the content and the structure of the dataset, see https://www.sec.gov/files/aqfs.pdf.
-
-> The SEC financial statement datasets contain financial information that companies are required to disclose to the US
-> Securities and Exchange Commission (SEC). These financial statements include the balance sheet, income statement,
-> statement of cash flows, and statement of stockholders' equity. The datasets also include footnotes and other
-> disclosures that provide additional information about a company's financial position and performance. The financial
-> statements are typically presented in a standardized format, making it easier to compare the financial performance of
-> different companies. The datasets are useful for a wide range of purposes, including financial analysis, credit
-> analysis, and investment research.
->
-> *chat.openai.com*
-
-# TL;DR
-
-The SEC releases quarterly zip files, each containing four CSV files with numerical data from all financial reports
-filed within that quarter.
-
-However, accessing data from the past 12 years can be time-consuming due to the large amount
-of data - over 120 million data points in over 2GB of zip files by 2023.
+Helper tools to analyze the [Financial Statement Data Sets](https://www.sec.gov/dera/data/financial-statement-data-sets) from the U.S. securities and exchange commission (sec.gov).
+The SEC releases quarterly zip files, each containing four CSV files with numerical data from all financial reports filed within that quarter. However, accessing data from the past 12 years can be time-consuming due to the large amount of data - over 120 million data points in over 2GB of zip files by 2023.
 
 This library simplifies the process of working with this data and provides a
-convenient way to extract information from the primary financial statements - the balance sheet, income statement, and
-statement of cash flows.
+convenient way to extract information from the primary financial statements - the balance sheet (BS), income statement (IS), and statement of cash flows (CF).
+
+Check out my article at Medium [Understanding the the SEC Financial Statement Data Sets](https://medium.com/@hansjoerg.wingeier/understanding-the-sec-financial-statement-data-sets-6148e07d1715) to get
+an introduction to the [Financial Statement Data Sets](https://www.sec.gov/dera/data/financial-statement-data-sets).
 
 The main features include:
-- all data is on your local hard drive, no need for numerous API calls
+- all data is on your local hard drive and can be updated automatically, no need for numerous API calls
 - data is loaded as pandas files
-- fast an efficient reading of a single report, all reports of one or multiple companies, or even all available reports
-  ```python
-  single_collector: SingleReportCollector = SingleReportCollector.get_report_by_adsh(adsh="0000320193-22-000108")
-  company_collector = CompanyReportCollector.get_company_collector(ciks=[320193, 789019]) # Apple, Microsoft
-  all_2022_collector: ZipCollector = ZipCollector.get_zip_by_names(names=["2022q1.zip", "2022q2.zip", "2022q3.zip", "2022q4.zip"])
-  ```
-- filter framework with predefined filters, easy to extend, supports easy way of saving, loading, and combining filtered data
-  ```python
-  (collector.collect().filter(USDOnlyRawFilter()) # only data in USD
-                     .filter(StmtRawFilter(['BS']) # only data for balance sheets
-                     .filter(...) #  
-                     .save("./preparedset")) # save the filtered data 
-  ```
-- standardize the data for balance sheets and income statements (cash flow statements coming soon) to make reports easily comparable
-  ```python
-  company_collector = CompanyReportCollector.get_company_collector(ciks=[320193, 789019], # Apple, Microsoft
-                                                                   post_load_filter=default_postloadfilter) # use predefined filter
-  joined_bag = company_collector.collect().join() # load the sub_df, pre_df, and num_df from the zipfiles and join num and pre
-  is_standardizer = IncomeStatementStandardizer()
-  result_df = joined_bag.present(is_standardizer) # 
-  ```
-
-
-# Latest news / most important changes from previous versions
-See the [Release Notes](https://hansjoergw.github.io/sec-fincancial-statement-data-set/releasenotes/) for details.
-## 1.4.2 -> 1.5
-* Introducing **Income Statement Standardizer**<br>
-  The Income Statement Standardizer makes the income statements easily comparable.<br>
-  [07_02_IS_standardizer](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/07_02_IS_standardizer.ipynb) <br>
-* Small improvements in the Standardizer framework and rules
-## 1.4 -> 1.4.2
-* Fix in `StandardStatementPresenter`: <br>
-  The `StandardStatementPresenter` also considers `qtrs` when displaying the information.
-  This was a problem when displaying information for income statements and cash flows, since they often show
-  data for different periods.
-* Improvements in the Standardizer framework as preparation to implement the income statement and cash flow standardizer.
-## 1.3 -> 1.4
-* Introducing the Standardizer Framework and the **Balance Sheet Standardizer** as a first implementation.<br>
-  The Balance Sheet Standardizer makes the balance sheets easily comparable.<br>
-  Check out the following notebooks: <br>
-  [07_00_standardizer_basics](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/07_00_standardizer_basics.ipynb) <br>
-  [07_01_BS_standardizer](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/07_01_BS_standardizer.ipynb) <br>
-* Efficiency improvements for `MultiReportCollector`. 
-
-## 1.2 -> 1.3
-* New notebook [06_bulk_data_processing_deep_dive](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/06_bulk_data_processing_deep_dive.ipynb)<br>
-  This first version shows how datasets can be created with data from all available zip files. It shows a faster
-  parallel approach which uses more memory and cpu resources and a slower serial approach which uses significant
-  less resources.
-* New package `u_usecases` introduced. This package is a place to provide concrete examples what you can do
-  with the `secfsdstools` library. As a first usecase, the logic shown and explained in the `06_bulk_data_processing_deep_dive`
-  is provided as logic within the modul `bulk_loading`.
-
+- fast and efficient reading of a single report, all reports of one or multiple companies, or even all available reports 
+- filter framework with predefined filters, easy to extend, supports easy way of saving, loading, and combining filtered data (see [01_quickstart.ipynb](notebooks/01_quickstart.ipynb) and
+[03_explore_with_interactive_notebook.ipynb](notebooks/03_explore_with_interactive_notebook.ipynb))
+- standardize the data for balance sheets, income statements, and cash flow statements to make reports easily comparable
+(see [07_00_standardizer_basics.ipynb](notebooks/07_00_standardizer_basics.ipynb), 
+[07_01_BS_standardizer.ipynb](notebooks/07_01_BS_standardizer.ipynb), 
+[07_01_BS_standardizer.ipynb](notebooks/07_01_BS_standardizer.ipynb), and
+[07_03_CF_standardizer.ipynb](notebooks/07_03_CF_standardizer.ipynb))
 
 # Principles
 
-The goal is to be able to do bulk processing of the data without the need to do countless API calls to sec.gov.
-
-Therefore, the quarterly zip files are downloaded and indexed using a SQLite database table.
+The goal is to be able to do bulk processing of the data without the need to do countless API calls to sec.gov. Therefore, the quarterly zip files are downloaded and indexed using a SQLite database table.
 The index table contains information on all filed reports since about 2010, over 500,000 in total. The first
 download will take a couple of minutes but after that, all the data is on your local harddisk.
 
 Using the index in the sqlite db allows for direct extraction of data for a specific report from the
 appropriate zip file, reducing the need to open and search through each zip file.
-
 Moreover, the downloaded zip files are converted to the parquet format which provides faster read access
 to the data compared to reading the csv files inside the zip files.
 
-The library is designed to have a low memory footprint, only parsing and reading the data for a specific
-report into pandas dataframe tables.
+The library is designed to have a low memory footprint, only parsing and reading the data for a specific report into pandas dataframe tables.
 
 
-# Links
+# Installation and basic usage
 
-* [Release Notes](https://hansjoergw.github.io/sec-fincancial-statement-data-set/releasenotes/)
-* [Documentation](https://hansjoergw.github.io/sec-fincancial-statement-data-set/)
-* [QuickStart Jupyter Notebook](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/01_quickstart.ipynb)
-* [Connect to the daily-sec-financial-statement-dataset Notebook](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/02_connect_rapidapi.ipynb)
-* [Explore the data with an interactive Notebook](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/03_explore_with_interactive_notebook.ipynb)
-* [collector_deep_dive Notebook](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/04_collector_deep_dive.ipynb)
-* [filter_deep_dive Notebook](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/05_filter_deep_dive.ipynb).
-* [bulk_data_processing_deep_dive Notebook](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/06_bulk_data_processing_deep_dive.ipynb)
-* [standardizer_basics](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/07_00_standardizer_basics.ipynb)
-* [BS_standardizer](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/07_01_BS_standardizer.ipynb)
-* [IS_standardizer](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/07_02_IS_standardizer.ipynb)
-
-
-# Installation
-
-The project is published on pypi.org. Simply use pip install to install it:
+The library has been tested for python version 3.7, 3.8, 3.9, and 3.10.
+The project is published on [pypi.org](https://pypi.org/project/secfsdstools/). Simply use the following command to install the latest version:
 
 ```
 pip install secfsdstools
 ```
 
-The library has been tested for python version 3.7, 3.8, 3.9, and 3.10
+
 
 If you want to contribute, just clone the project and use a python 3.7 environment.
 The dependencies are defined in the requirements.txt file or use the pyproject.toml to install them.
 
+It is possible to write standalone python script but I recommend to first start with interactive jupyter notebooks [01_quickstart.ipynb](notebooks/01_quickstart.ipynb) and [03_explore_with_interactive_notebook.ipynb](notebooks/03_explore_with_interactive_notebook.ipynb) that are located in `notebooks` directory.
 
-
-# Configuration
-
-To configure the library, create a file called ".secfsdstools.cfg" in your home directory. The file only requires 
-the following entries:
-
-```
-[DEFAULT]
-downloaddirectory = c:/users/me/secfsdstools/data/dld
-parquetdirectory = c:/users/me/secfsdstools/data/parquet
-dbdirectory = c:/users/me/secfsdstools/data/db
-useragentemail = your.email@goeshere.com
-```
-
-If you don't provide a config file, one will be created the first time you use the api and put it inside your home
-directory. You can then change the content of it or directly start with the downloading of the data.
-
-The download directory is the place where quarterly zip files from the sec.gov are downloaded to.
-The parquet directory is the folder where the data is stored in parquet format.
-The db directory is the directory in which the sqllite db is created.
-The useragentemail is used in the requests made to the sec.gov website. Since we only make limited calls to the sec.gov,
-you can leave the example "your.email@goeshere.com". 
-
-# Attention when using on Windows
-In order to support parallel processing, this library uses the multiprocessing package. For instance when transforming the
-zip files to the parquet format or when reading data from different files.
-
-However, in order for it to work on Windows when calling `python yourscript.py`, it is necessary that the logic
-is started within the "main block" (`if __name__ == '__main__':`).
-
-Of course, your main logic can be in another package that you import, but the "entry point" needs to be a "main block":
-
-yourscript.py:
-```
-import yourpackage as yp
-
-if __name__ == '__main__':
-  yp.run()
-```
-
-Otherwise, you will observe the following kind of error messages:
-```
-Traceback (most recent call last):
-  File "<string>", line 1, in <module>
-  File "C:\ieu\Anaconda3\envs\sectestclean\lib\site-packages\multiprocess\spawn.py", line 116, in spawn_main
-    exitcode = _main(fd, parent_sentinel)
-  File "C:\ieu\Anaconda3\envs\sectestclean\lib\site-packages\multiprocess\spawn.py", line 125, in _main
-    prepare(preparation_data)
-  File "C:\ieu\Anaconda3\envs\sectestclean\lib\site-packages\multiprocess\spawn.py", line 236, in prepare
-    _fixup_main_from_path(data['init_main_from_path'])
-  File "C:\ieu\Anaconda3\envs\sectestclean\lib\site-packages\multiprocess\spawn.py", line 287, in _fixup_main_from_path
-    main_content = runpy.run_path(main_path,
-  File "C:\ieu\Anaconda3\envs\sectestclean\lib\runpy.py", line 269, in run_path
-    return _run_module_code(code, init_globals, run_name,
-  File "C:\ieu\Anaconda3\envs\sectestclean\lib\runpy.py", line 96, in _run_module_code
-    _run_code(code, mod_globals, init_globals,
-  ...
-```
-
-For details have a look at the python documentation:
-- https://docs.python.org/3.10/library/multiprocessing.html#the-process-class
-- https://docs.python.org/3.10/library/multiprocessing.html#multiprocessing-programming
-
-It is not a problem if you run it inside Jupyter.
-
-
-# Downloading the data files from sec and index the content
-
-In order to download the data files and create the index, just call the `update()` method:
+Upon using the library for the first time, it downloads the data files and creates the index by calling the `update()` method. You can manually trigger the update using the following code:
 
 ```
 from secfsdstools.update import update
@@ -213,36 +65,56 @@ The following tasks will be executed:
 2. All the zipfiles are transformed and stored as parquet files. Per default, the zipfile is deleted afterwards. If you want to keep the zip files, set the parameter 'KeepZipFiles' in the config file to True.
 3. An index inside a sqlite db file is created
 
-If you don't call update "manually", then the first time you call a function from the library, a download will be triggered.
 
 Moreover, at most once a day, it is checked if there is a new zip file available on sec.gov. If there is, a download will be started automatically. 
 If you don't want 'auto-update', set the 'AutoUpdate' in your config file to False.
 
 
-# Using the index db with a db browser in order to get an overview of all available report
-___
-**Note:** This is just if you are curious about the content of the database file. The library itself also contains functions to analyze the content of the database file.
-___
+
+## Configuration (optional)
+
+If you don't provide a config file, a config file with name `secfsdstools.cfg` will be created the first time you use the api and placed inside your home directory. 
+The file only requires the following entries:
+
+```
+[DEFAULT]
+downloaddirectory = c:/users/me/secfsdstools/data/dld
+parquetdirectory = c:/users/me/secfsdstools/data/parquet
+dbdirectory = c:/users/me/secfsdstools/data/db
+useragentemail = your.email@goeshere.com
+```
+
+
+
+The `downloaddirectory` is the place where quarterly zip files from the sec.gov are downloaded to.
+The `parquetdirectory` is the folder where the data is stored in parquet format.
+The `dbdirectory` is the directory in which the sqllite db is created.
+The `useragentemail` is used in the requests made to the sec.gov website. Since we only make limited calls to the sec.gov,
+you can leave the example "your.email@goeshere.com". 
+
+## Viewing metadata
+
+The recommend way to view and use the metadata is using `secfsdstools` library functions as described in [notebooks/01_quickstart.ipynb](notebooks/01_quickstart.ipynb)  
 
 The "index of reports" that was created in the previous step can be viewed using a database viewer that supports the SQLite format,
 such as [DB Browser for SQLite](https://sqlitebrowser.org/).
 
-(The location of the SQLite database file is specified in the "dbdirectory" field of the config file, which is set to
-"<home>/secfsdstools/data/db" in the default configuration. The database file is named "secfsdstools.db".)
+(The location of the SQLite database file is specified in the `dbdirectory` field of the config file, which is set to
+`<home>/secfsdstools/data/db` in the default configuration. The database file is named `secfsdstools.db`.)
 
-There are only two relevant tables in the database: "index_parquet_reports" and "index_parquet_processing_state".
+There are only two relevant tables in the database: `index_parquet_reports` and `index_parquet_processing_state`.
 
-The "index_parquet_reports" table provides an overview of all available reports in the downloaded
+The `index_parquet_reports` table provides an overview of all available reports in the downloaded
 data and includes the following relevant columns:
 
-* **adsh** <br>The unique id of the report (a string).
-* **cik** <br>The unique id of the company (an int).
-* **name** <br>The name of the company in uppercases.
-* **form** <br>The type of the report (e.g.: annual: 10-K, quarterly: 10-Q).
-* **filed** <br>The date when the report has been filed in the format YYYYMMDD (Note: this is stored as a number).
-* **period** <br>The date for which the report was created (the date on the balancesheet). Also in the format YYYYMMDD.
-* **fullPath** <br>The path to the downloaded zip files that contains the details of that report.
-* **url** <br>The url which takes you directly to the filing of this report on the sec.gov website.
+* **adsh** : The unique id of the report (a string).
+* **cik** : The unique id of the company (an int).
+* **name** : The name of the company in uppercases.
+* **form** : The type of the report (e.g.: annual: 10-K, quarterly: 10-Q).
+* **filed** : The date when the report has been filed in the format YYYYMMDD (stored as a integer number).
+* **period** : The date for which the report was create. this is the date on the balancesheet.(stored as a integer number) 
+* **fullPath** : The path to the downloaded zip files that contains the details of that report.
+* **url** : The url which takes you directly to the filing of this report on the sec.gov website.
 
 For instance, if you want to have an overview of all reports that Apple has filed since 2010,
 just search for "%APPLE INC%" in the name column.
@@ -253,9 +125,7 @@ If you accidentally delete data in the database file, don't worry. Just delete t
 and run `update()` again (see previous chapter).
 
 
-# Working with the SECFSDSTools library
-Note: the code within this chapter is also contained in the "01_quickstart.ipynb" notebook. 
-If you want to follow along, just open the notebook.
+
 
 ## A first simple example
 Goal: present the information in the balance sheet of Apple's 2022 10-K report in the same way as it appears in the
@@ -293,7 +163,7 @@ The following diagram gives an overview on SECFSDSTools library.
 
 ![Overview](https://github.com/HansjoergW/sec-fincancial-statement-data-set/raw/main/docs/images/overview.png)
 
-It mainly exists out of two main processes. The first one ist the "Date Update Process" wich is responsible for the
+It mainly exists out of two main processes. The first one ist the "Date Update Process" which is responsible for the
 download of the Financial Statement Data Sets zip files from the sec.gov website, transforming the content into parquet
 format, and indexing the content of these files in a simple SQLite database. Again, this whole process can be started
 "manually" by calling the update method, or it is done automatically, as it described above.
@@ -308,23 +178,24 @@ as a pandas dataframe. Filters can be applied, the content can directly be saved
 * **Joined Processing** <br/> From the "Raw Data", a "joined" representation can be created. This joins the data from
 the pre.txt and num.txt content together based on the "adhs", "tag", and "version" attributes. "Joined data" can also be
 filtered, concatenated, directly saved and loaded.
-* **Present** <br/> Produce a single pandas dataframe out of the data and use it for further processing.
+* **Present** <br/> Produce a single pandas dataframe out of the data and use it for further processing or use the standardizers
+ to create comparable data for the balance sheet, the income statement, and the cash flow statement.
 
 The diagramm also shows the main classes with which a user interacts. The use of them  is described in the following chapters.
 
 ## General
-Most of the classes you can interact with have a factory method which name starts with "get_". All this factory method
-take at least one **optional** parameter called configuration which is of type "Configuration".
+Most of the classes you can interact with have a factory method which name starts with `get_`. All this factory method
+take at least one **optional** parameter called configuration which is of type `Configuration`.
 
 If you do not provide this parameter, the class will read the configuration info from you configuration file in your home
 directory. If, for whatever reason, you do want to provide an alternative configuration, you can overwrite it.
 
-However, normally you do not have to provide the "configuration" parameter.
+However, normally you do not have to provide the `configuration` parameter.
 
 ## Index: working with the index
 The first class that interacts with the index is the `IndexSearch` class. It provides a single method `find_company_by_name`
 which executes a SQL Like search on the name of the available companies and returns a pandas dataframe with the columns
-'name' and 'cik' (the central index key, or the unique id of a company in the financial statements data sets).
+`name` and `cik` (the central index key, or the unique id of a company in the financial statements data sets).
 The main purpose of this class is to find the cik for a company (of course, you can also directly search the cik on https://www.sec.gov/edgar/searchedgar/companysearch).
 
 
@@ -724,40 +595,41 @@ implementations (module `secfsdstools.e_presenter.presenting`):
   If you compare this with the real report at https://www.sec.gov/ix?doc=/Archives/edgar/data/320193/000032019322000108/aapl-20220924.htm
   you will notice, that order of the tags and the values are the same.
 
-  * `Standardizer` <br>
-    Even if xbrl is a standard on how to tag positions and numbers in financial statements, that doesn't mean that financial
-    statements can then be compared easily. For instance, there are over 3000 tags which can be used in a balance sheet.
-    Moreover, some tags can mean similar things or can be grouped behind a "parent" tag, which itself might not be present.
-    For instance, "AccountsNoncurrent" is often not shown in statements. So you would find the position for "Accounts"
-    and "AccountsCurrent", but not for "AccountsNoncurrent". Instead, only child tags for "AccountsNoncurrent" might be
-    present.<br><br>
-    The standardizer helps to solve these problems by unifying the information of financial statements.<br> <br>
-    With the standardized financial statements, you can then actually compare the statements between different
-    companies or different years, and you can use the dataset for ML. <br><br>
-    Have a look at [standardizer_basics](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/07_00_standardizer_basics.ipynb) which explains it in more details.<br><br>
 
-    * `BalanceSheetStandardizer` <br>
-    The `BalanceSheetStandardizer` collects and/or calculates the following positions of balance sheets:  
+* `Standardizer` <br>
+  Even if xbrl is a standard on how to tag positions and numbers in financial statements, that doesn't mean that financial
+  statements can then be compared easily. For instance, there are over 3000 tags which can be used in a balance sheet.
+  Moreover, some tags can mean similar things or can be grouped behind a "parent" tag, which itself might not be present.
+  For instance, "AccountsNoncurrent" is often not shown in statements. So you would find the position for "Accounts"
+  and "AccountsCurrent", but not for "AccountsNoncurrent". Instead, only child tags for "AccountsNoncurrent" might be
+  present.<br><br>
+  The standardizer helps to solve these problems by unifying the information of financial statements.<br> <br>
+  With the standardized financial statements, you can then actually compare the statements between different
+  companies or different years, and you can use the dataset for ML. <br><br>
+  Have a look at [standardizer_basics](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/07_00_standardizer_basics.ipynb) which explains it in more details.<br><br>
 
-     ````
-      - Assets
-        - AssetsCurrent
-          - Cash
-        - AssetsNoncurrent
-      - Liabilities
-        - LiabilitiesCurrent
-        - LiabilitiesNoncurrent
-      - Equity
-        - HolderEquity (mainly StockholderEquity or PartnerCapital)
-          - RetainedEarnings
-          - AdditionalPaidInCapital
-          - TreasuryStockValue
-        - TemporaryEquity
-        - RedeemableEquity
-      - LiabilitiesAndEquity
+  * `BalanceSheetStandardizer` <br>
+  The `BalanceSheetStandardizer` collects and/or calculates the following positions of balance sheets:  
+
+    ````
+    - Assets
+      - AssetsCurrent
+        - Cash
+      - AssetsNoncurrent
+    - Liabilities
+      - LiabilitiesCurrent
+      - LiabilitiesNoncurrent
+    - Equity
+      - HolderEquity (mainly StockholderEquity or PartnerCapital)
+        - RetainedEarnings
+        - AdditionalPaidInCapital
+        - TreasuryStockValue
+      - TemporaryEquity
+      - RedeemableEquity
+    - LiabilitiesAndEquity
     ````
 
-  With just a few lines of code, you'll get a comparable dataset with the main positions of a balance sheet for Microsoft, Alphabet, and Amazon:
+    With just a few lines of code, you'll get a comparable dataset with the main positions of a balance sheet for Microsoft, Alphabet, and Amazon:
     (see the [stanardize the balance sheets and make them comparable notebook](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/07_01_BS_standardizer.ipynb) for details)
      ````python
      from secfsdstools.e_collector.companycollecting import CompanyReportCollector
@@ -788,133 +660,158 @@ implementations (module `secfsdstools.e_presenter.presenting`):
      ````
      ![Equity Compare](https://github.com/HansjoergW/sec-fincancial-statement-data-set/raw/main/docs/images/equity_compare.png)
 
-    * `IncomeStatementStandardizer` <br>
-      The `IncomeStatementStandardizer` collects and/or calculates the following positions of balance sheets:
+  * `IncomeStatementStandardizer` <br>
+  The `IncomeStatementStandardizer` collects and/or calculates the following positions of balance sheets:
     
-      ````  
-        Revenues
-        - CostOfRevenue
-        ---------------
-        = GrossProfit
-        - OperatingExpenses
-        -------------------
-        = OperatingIncomeLoss
-      
-        IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit
-        - AllIncomeTaxExpenseBenefit
-        ----------------------------
-        = IncomeLossFromContinuingOperations
-        + IncomeLossFromDiscontinuedOperationsNetOfTax
-        -----------------------------------------------
-        = ProfitLoss
-        - NetIncomeLossAttributableToNoncontrollingInterest
-        ---------------------------------------------------
-        = NetIncomeLoss
-      ````
-
-  With just a few lines of code, you'll get a comparable dataset with the main positions of an income statement for Microsoft, Alphabet, and Amazon:
-  (see the [stanardize the income statement and make them comparable notebook](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/07_02_IS_standardizer.ipynb) for details)
-   ````python
+    ````  
+      Revenues
+      - CostOfRevenue
+      ---------------
+      = GrossProfit
+      - OperatingExpenses
+      -------------------
+      = OperatingIncomeLoss
+        
+      IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit
+      - AllIncomeTaxExpenseBenefit
+      ----------------------------
+      = IncomeLossFromContinuingOperations
+      + IncomeLossFromDiscontinuedOperationsNetOfTax
+      -----------------------------------------------
+      = ProfitLoss
+      - NetIncomeLossAttributableToNoncontrollingInterest
+      ---------------------------------------------------
+      = NetIncomeLoss
+    ````
+  
+    With just a few lines of code, you'll get a comparable dataset with the main positions of an income statement for Microsoft, Alphabet, and Amazon:
+  (see the [standardize the income statement and make them comparable notebook](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/07_02_IS_standardizer.ipynb) for details)
+   
+    ````python
     from secfsdstools.e_collector.companycollecting import CompanyReportCollector
     from secfsdstools.e_filter.rawfiltering import ReportPeriodRawFilter, MainCoregRawFilter, OfficialTagsOnlyRawFilter, USDOnlyRawFilter
     from secfsdstools.f_standardize.is_standardize import IncomeStatementStandardizer
+      
+    bag = CompanyReportCollector.get_company_collector(ciks=[789019, 1652044,1018724]).collect() #Microsoft, Alphabet, Amazon
+    filtered_bag = bag[ReportPeriodRawFilter()][MainCoregRawFilter()][OfficialTagsOnlyRawFilter()][USDOnlyRawFilter()]
+    joined_bag = filtered_bag.join()
+      
+    standardizer = IncomeStatementStandardizer()
+      
+    standardized_is_df = joined_bag.present(standardizer)
+    # just use the yearly reports with data for the whole year
+    standardized_is_df = standardized_is_df[(standardized_is_df.fp=="FY") & (standardized_is_df.qtrs==4)].copy()
+      
+    import matplotlib.pyplot as plt
+    # Group by 'name' and plot equity for each group
+    # Note: using the `present` method ensured that the same cik has always the same name even if the company name did change in the past
+    for name, group in standardized_is_df.groupby('name'):
+      plt.plot(group['date'], group['GrossProfit'], label=name, linestyle='-')
+      
+    # Add labels and title
+    plt.xlabel('Date')
+    plt.ylabel('GrossProfit')
+    plt.title('GrossProfit Over Time for Different Companies (CIKs)')
+      
+    # Display legend
+    plt.legend()
+     ````
+
+  ![GrossProfit Compare](https://github.com/HansjoergW/sec-fincancial-statement-data-set/raw/main/docs/images/grossprofit_compare.png)
+
+  * `CashFlowStandardizer` <br>
+   The `CashFlowStandardizer` collects and/or calculates the following positions of cash flow statements:
+     
+    ````
+     NetCashProvidedByUsedInOperatingActivities
+       CashProvidedByUsedInOperatingActivitiesDiscontinuedOperations
+       NetCashProvidedByUsedInOperatingActivitiesContinuingOperations
+           DepreciationDepletionAndAmortization
+           DeferredIncomeTaxExpenseBenefit
+           ShareBasedCompensation
+           IncreaseDecreaseInAccountsPayable
+           IncreaseDecreaseInAccruedLiabilities
+           InterestPaidNet
+           IncomeTaxesPaidNet
+    
+     NetCashProvidedByUsedInInvestingActivities
+         CashProvidedByUsedInInvestingActivitiesDiscontinuedOperations
+         NetCashProvidedByUsedInInvestingActivitiesContinuingOperations
+           PaymentsToAcquirePropertyPlantAndEquipment
+           ProceedsFromSaleOfPropertyPlantAndEquipment
+           PaymentsToAcquireInvestments
+           ProceedsFromSaleOfInvestments
+           PaymentsToAcquireBusinessesNetOfCashAcquired
+           ProceedsFromDivestitureOfBusinessesNetOfCashDivested
+           PaymentsToAcquireIntangibleAssets
+           ProceedsFromSaleOfIntangibleAssets
+    
+     NetCashProvidedByUsedInFinancingActivities
+         CashProvidedByUsedInFinancingActivitiesDiscontinuedOperations
+         NetCashProvidedByUsedInFinancingActivitiesContinuingOperations
+           ProceedsFromIssuanceOfCommonStock
+           ProceedsFromStockOptionsExercised
+           PaymentsForRepurchaseOfCommonStock
+           ProceedsFromIssuanceOfDebt
+           RepaymentsOfDebt
+           PaymentsOfDividends
+    
+    
+     EffectOfExchangeRateFinal
+     CashPeriodIncreaseDecreaseIncludingExRateEffectFinal
+    
+     CashAndCashEquivalentsEndOfPeriod
+    ````
+
+     With just a few lines of code, you'll get a comparable dataset with the main positions of an cash flow statement for Microsoft, Alphabet, and Amazon:
+(see the [standardize the cash flow statements and make them comparable](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/07_03_CF_standardizer.ipynb) for details)
+    ````python
+    from secfsdstools.e_collector.companycollecting import CompanyReportCollector
+    from secfsdstools.e_filter.rawfiltering import ReportPeriodRawFilter, MainCoregRawFilter, OfficialTagsOnlyRawFilter, USDOnlyRawFilter
+    from secfsdstools.f_standardize.cf_standardize import CashFlowStandardizer
     
     bag = CompanyReportCollector.get_company_collector(ciks=[789019, 1652044,1018724]).collect() #Microsoft, Alphabet, Amazon
     filtered_bag = bag[ReportPeriodRawFilter()][MainCoregRawFilter()][OfficialTagsOnlyRawFilter()][USDOnlyRawFilter()]
     joined_bag = filtered_bag.join()
     
-    standardizer = IncomeStatementStandardizer()
+    standardizer = CashFlowStandardizer()
     
-    standardized_is_df = joined_bag.present(standardizer)
-    # just use the yearly reports with data for the whole year
-    standardized_is_df = standardized_is_df[(standardized_is_df.fp=="FY") & (standardized_is_df.qtrs==4)].copy()
+    standardized_cf_df = joined_bag.present(standardizer)
+    standardized_cf_df = standardized_cf_df[(standardized_cf_df.fp=="FY") & (standardized_cf_df.qtrs==4)].copy()
     
     import matplotlib.pyplot as plt
-    # Group by 'name' and plot equity for each group
+    # Group by 'name' and plot NetCashProvidedByUsedInOperatingActivities for each group
     # Note: using the `present` method ensured that the same cik has always the same name even if the company name did change in the past
-    for name, group in standardized_is_df.groupby('name'):
-    plt.plot(group['date'], group['GrossProfit'], label=name, linestyle='-')
+    for name, group in standardized_cf_df.groupby('name'):
+        plt.plot(group['date'], group['NetCashProvidedByUsedInOperatingActivities'], label=name, linestyle='-')
     
     # Add labels and title
     plt.xlabel('Date')
-    plt.ylabel('GrossProfit')
-    plt.title('GrossProfit Over Time for Different Companies (CIKs)')
+    plt.ylabel('NetCashProvidedByUsedInOperatingActivities')
+    plt.title('NetCashProvidedByUsedInOperatingActivities Over Time for Different Companies (CIKs)')
     
     # Display legend
     plt.legend()
-   ````
-  ![GrossProfit Compare](https://github.com/HansjoergW/sec-fincancial-statement-data-set/raw/main/docs/images/grossprofit_compare.png)
+    ````
+  ![NetCashOperating Compare](https://github.com/HansjoergW/sec-fincancial-statement-data-set/raw/main/docs/images/netcashoperating_compare.png)
 
-
-
-# What to explore further
-
+# Links 
+* [For a detail description of the content and the structure of the dataset](https://www.sec.gov/files/aqfs.pdf)
+* [Release Notes](https://hansjoergw.github.io/sec-fincancial-statement-data-set/releasenotes/)
+* [Documentation](https://hansjoergw.github.io/sec-fincancial-statement-data-set/)
 * [QuickStart Jupyter Notebook](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/01_quickstart.ipynb)
+* [Connect to the daily-sec-financial-statement-dataset Notebook](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/02_connect_rapidapi.ipynb)
 * [Explore the data with an interactive Notebook](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/03_explore_with_interactive_notebook.ipynb)
-* [Connect to the daily-sec-financial-statement-dataset Notebook](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/02_connect_rapidapi.ipynb) 
 * [collector_deep_dive Notebook](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/04_collector_deep_dive.ipynb)
 * [filter_deep_dive Notebook](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/05_filter_deep_dive.ipynb).
 * [bulk_data_processing_deep_dive Notebook](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/06_bulk_data_processing_deep_dive.ipynb)
+* [standardizer_basics](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/07_00_standardizer_basics.ipynb)
+* [BS_standardizer](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/07_01_BS_standardizer.ipynb)
+* [IS_standardizer](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/07_02_IS_standardizer.ipynb)
+* [CF_standardizer](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/07_03_CF_standardizer.ipynb)
 * [checkout the `u_usecases` package](https://hansjoergw.github.io/sec-fincancial-statement-data-set/doc_latest/api/secfsdstools/u_usecases/index.html)
-* [stanardize the balance sheets and make them comparable](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/07_01_BS_standardizer.ipynb)
-* [stanardize the income statements and make them comparable](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/07_02_IS_standardizer.ipynb)
-
-
-# Troubleshooting
-
-----
-**Problem:** I receive error messages like the following when I try to start a script on windows:
-````
-Traceback (most recent call last):
-  File "<string>", line 1, in <module>
-  File "C:\ieu\Anaconda3\envs\sectestclean\lib\site-packages\multiprocess\spawn.py", line 116, in spawn_main
-    exitcode = _main(fd, parent_sentinel)
-  File "C:\ieu\Anaconda3\envs\sectestclean\lib\site-packages\multiprocess\spawn.py", line 125, in _main
-    prepare(preparation_data)
-  File "C:\ieu\Anaconda3\envs\sectestclean\lib\site-packages\multiprocess\spawn.py", line 236, in prepare
-    _fixup_main_from_path(data['init_main_from_path'])
-  File "C:\ieu\Anaconda3\envs\sectestclean\lib\site-packages\multiprocess\spawn.py", line 287, in _fixup_main_from_path
-    main_content = runpy.run_path(main_path,
-  File "C:\ieu\Anaconda3\envs\sectestclean\lib\runpy.py", line 269, in run_path
-    return _run_module_code(code, init_globals, run_name,
-  File "C:\ieu\Anaconda3\envs\sectestclean\lib\runpy.py", line 96, in _run_module_code
-    _run_code(code, mod_globals, init_globals,
- ...
-````
-
-**Solution:** 
-This library uses the multiprocessing package. However, on Windows this works only correctly if the "entry point" of the
-script is within a `if __name__ == '__main__':` block.
-
-Therefore, change your scripts from
-````python
-import xy
-
-your code goes here
-````
-
-to 
-````python
-import xy
-
-if __name__ == '__main__':
-    your code goes here
-````
-
-For details have a look at the python documentation:
-- https://docs.python.org/3.10/library/multiprocessing.html#the-process-class
-- https://docs.python.org/3.10/library/multiprocessing.html#multiprocessing-programming
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+* [standardize the balance sheets and make them comparable](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/07_01_BS_standardizer.ipynb)
+* [standardize the income statements and make them comparable](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/07_02_IS_standardizer.ipynb)
+* [standardize the cash flow statements and make them comparable](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/07_03_CF_standardizer.ipynb)
+* [Trouble hssting and known issues](KNOWN_ISSUES.md)
+* [Changelog](CHANGELOG.md)

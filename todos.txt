@@ -18,9 +18,9 @@ v.1.6.1
 - concat for standardizedbag
 - standardizer -> check for only one uom
 - SharesOutstanding and EarningsPerSahre added
-
+- readme improvements
 - link to medium article
-- readme improvements?-> credits
+
 
 v.1.6.2
 - configure attribute list for sub_df

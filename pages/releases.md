@@ -6,7 +6,18 @@ permalink: /releasenotes/
 # Release Notes
 
 ## Upcoming
-* 
+
+## 1.6 -> 1.6.1 2024-August-20
+* Minor improvements
+  * `filed` column added to result of present method of standardizer
+  * `StandardizedBag` now has a `concat()` method to concat multiple instances into one
+  * `Standardizer` checks that the data contains just one currency
+  * `IncomeStatementStandardizer` now also returns OustandingShares and EarningsPerShare tags
+  * [03_explore_with_interactive_notebook.ipynb](notebooks/03_explore_with_interactive_notebook.ipynb) includes use of the `CashFlowStandardizer`
+  * improvements in the READMD.md -> thanks to [Hamid Ebadi](https://github.com/ebadi)
+* Documentation
+  *  Medium article [Understanding the the SEC Financial Statement Data Sets](https://medium.com/@hansjoerg.wingeier/understanding-the-sec-financial-statement-data-sets-6148e07d1715)
+
 
 ## 1.6.0 2024-July-12
 * New

@@ -100,19 +100,33 @@ class StandardizedBag:
 
 
     @staticmethod
+    # pylint: disable=R0914
     def concat(bags: List[STANDARDIZED]) -> STANDARDIZED:
+        """
+        Concat multiple StandardizedBags into a single one
+        Args:
+            bags: List of StandardizeBag instances to be concatenated
+
+        Returns:
+            StandardizedBag: single result
+
+        """
 
         result_dfs = [bag.result_df for bag in bags]
         applied_prepivot_rules_log_dfs = [bag.applied_prepivot_rules_log_df for bag in bags]
         applied_rules_log_dfs = [bag.applied_rules_log_df for bag in bags]
 
         # get stats_df, without the _rel and _gain cols
-        stats_dfs = [bag.stats_df.loc[:, ~bag.stats_df.columns.str.endswith('_rel') & ~bag.stats_df.columns.str.endswith('_gain')] for bag in bags]
+        stats_dfs = [bag.stats_df.loc[:, ~bag.stats_df.columns.str.endswith('_rel') &
+                                         ~bag.stats_df.columns.str.endswith('_gain')]
+                     for bag in bags]
 
         applied_rules_sum_ss = [bag.applied_rules_sum_s for bag in bags]
 
         # get validation_overview_dfs without _pct column
-        validation_overview_dfs = [bag.validation_overview_df.loc[:, ~bag.validation_overview_df.columns.str.endswith('_pct')] for bag in bags]
+        validation_overview_dfs = [bag.validation_overview_df.loc[:,
+                                   ~bag.validation_overview_df.columns.str.endswith('_pct')]
+                                   for bag in bags]
         process_description_dfs = [bag.process_description_df for bag in bags]
 
         result_df = pd.concat(result_dfs, ignore_index=True)
@@ -133,11 +147,13 @@ class StandardizedBag:
 
         # handling validation overview
         validation_overview_df = validation_overview_dfs[0]
-        for df in validation_overview_dfs[1:]:
-            validation_overview_df = validation_overview_df.add(df, fill_value=0)
+        for entry_df in validation_overview_dfs[1:]:
+            validation_overview_df = validation_overview_df.add(entry_df, fill_value=0)
 
+        # calculate validation percentage columns
         for col in validation_overview_df.columns:
-            validation_overview_df[f"{col}_pct"] = 100 * (validation_overview_df[col] / len(result_df))
+            validation_overview_df[f"{col}_pct"] = \
+                100 * (validation_overview_df[col] / len(result_df))
 
         return StandardizedBag(result_df=result_df,
                                applied_prepivot_rules_log_df=applied_prepivot_rules_log_df,
@@ -509,7 +525,8 @@ class Standardizer(Presenter[JoinedDataBag]):
         """
         standardized_df = self.process(databag.pre_num_df)
 
-        data_to_merge_df = databag.sub_df[['adsh', 'cik', 'form', 'fye', 'fy', 'fp', 'filed']].copy()
+        data_to_merge_df = \
+            databag.sub_df[['adsh', 'cik', 'form', 'fye', 'fy', 'fp', 'filed']].copy()
 
         # The name of a company can change during its liftime. However, we want to have the
         # same name for the same cik in all entries. Therefore, we first have to find the

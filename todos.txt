@@ -32,7 +32,10 @@ v.1.6.2
 Todo:
 - Version der Library im code abfragbar machen
   -> Variante impotlib.metadata -> ist aber erst ab Python 3.8 vorhanden
-
+- Completion and Validation for SharesOutstanding und EarningsPerShare
+  I noticed that there are two columns EarningsPerShareBasic/EarningsPerShareDiluted that can be calculated
+  if we have NetIncomeLos and WeightedAverageNumberOfSharesOutstandingBasic/WeightedAverageNumberOfDilutedSharesOutstanding.
+  It is up to you to keep the column
 
 - in CF haben wir oft auch zusätzliche 'Cash' Tags -> benötigen wir diese im BS auch?
 - MaxQtr PrePivot Rule also for BS und IS

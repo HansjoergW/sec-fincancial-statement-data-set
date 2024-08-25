@@ -13,15 +13,31 @@ New Release
 - on github -> under code releases: draft new release
 
 
-v.1.6.0
-- Standardizer Rule-Framework
-  process and apply method chainable
-- CF Standardizer
+v.1.6.1
+- "filed" in present of Standardizer
+- concat for standardizedbag
+- standardizer -> check for only one uom
+- SharesOutstanding and EarningsPerSahre added
+- readme improvements
+- link to medium article
+
+
+v.1.6.2
+- configure attribute list for sub_df
+- version of library readable
+- 3.7 not checked anymore
+- hook for after updated logic
 
 
 Todo:
+- Version der Library im code abfragbar machen
+  -> Variante impotlib.metadata -> ist aber erst ab Python 3.8 vorhanden
+- Completion and Validation for SharesOutstanding und EarningsPerShare
+  I noticed that there are two columns EarningsPerShareBasic/EarningsPerShareDiluted that can be calculated
+  if we have NetIncomeLos and WeightedAverageNumberOfSharesOutstandingBasic/WeightedAverageNumberOfDilutedSharesOutstanding.
+  It is up to you to keep the column
+
 - in CF haben wir oft auch zusätzliche 'Cash' Tags -> benötigen wir diese im BS auch?
-- in Is fehlt noch Earnings per Share
 - MaxQtr PrePivot Rule also for BS und IS
 
 - Aufbereitung der Daten für BS, IS und CF Statement möglichst direkt bei update machen,

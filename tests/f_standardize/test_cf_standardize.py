@@ -37,7 +37,7 @@ def test_standardizing(joined_bag):
     # check applied_prepivot_rules_log_df
     # .. check DeDuplication
     dedup_entries = prepivt_rules_log_df[prepivt_rules_log_df.id.str.endswith('DeDup')]
-    assert len(dedup_entries) == 5761
+    assert len(dedup_entries) == 5763
 
     # check applied_rules_log_df
     assert len(result) == len(standardize_bag.applied_rules_log_df)
@@ -56,8 +56,8 @@ def test_standardizing(joined_bag):
 
     # check result_df
     assert (standardize_bag.result_df.columns.to_list() == ['adsh', 'cik', 'name', 'form', 'fye',
-                                                            'fy', 'fp', 'date', 'coreg', 'report',
-                                                            'ddate', 'uom', 'qtrs'] +
+                                                            'fy', 'fp', 'date', 'filed', 'coreg',
+                                                            'report', 'ddate', 'qtrs'] +
             standardizer.final_tags +
             ['BaseOpAct_error',
              'BaseOpAct_cat',

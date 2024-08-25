@@ -149,7 +149,7 @@ def test_preprocess(empty_instance, sample_dataframe_preprocess):
 
     # we expect that the applied_rules_log_df was instantiated
     assert empty_instance.applied_rules_log_df.columns.tolist() == \
-           ['adsh', 'coreg', 'report', 'ddate', 'uom', 'qtrs']
+           ['adsh', 'coreg', 'report', 'ddate', 'qtrs']
 
     # ensure that the stats are initialized and that the pre column was added
     assert empty_instance.stats.stats.columns.tolist() == ['pre']

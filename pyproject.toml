@@ -22,7 +22,7 @@ dependencies = [
 description = "A few python tools to analyze the SEC.gov financial statements data sets (https://www.sec.gov/dera/data/financial-statement-data-sets)"
 readme = "README.md"
 long_description = "README.md"
-requires-python = ">=3.7"
+requires-python = ">=3.8"
 license = "Apache-2.0"
 classifiers = [
     "Development Status :: 5 - Production/Stable",
@@ -56,6 +56,7 @@ keywords=[
 "Homepage" = "https://hansjoergw.github.io/sec-fincancial-statement-data-set/"
 "Bug Tracker" = "https://github.com/HansjoergW/sec-fincancial-statement-data-set/issues"
 "Github" = "https://github.com/HansjoergW/sec-fincancial-statement-data-set"
+
 
 [project.optional-dependencies]
 test = [

@@ -13,15 +13,6 @@ New Release
 - on github -> under code releases: draft new release
 
 
-v.1.6.1
-- "filed" in present of Standardizer
-- concat for standardizedbag
-- standardizer -> check for only one uom
-- SharesOutstanding and EarningsPerSahre added
-- readme improvements
-- link to medium article
-
-
 v.1.6.2
 - configure attribute list for sub_df
 - version of library readable

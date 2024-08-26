@@ -44,7 +44,6 @@ STANDARDIZED = TypeVar(&#39;STANDARDIZED&#39;, bound=&#39;StandardizedBag&#39;)
 
 LOGGER = logging.getLogger(__name__)
 
-
 class StandardizedBag:
     &#34;&#34;&#34;
     A class to contain the results of a standardizer.
@@ -129,6 +128,71 @@ class StandardizedBag:
                                process_description_df=process_description_df)
 
 
+    @staticmethod
+    # pylint: disable=R0914
+    def concat(bags: List[STANDARDIZED]) -&gt; STANDARDIZED:
+        &#34;&#34;&#34;
+        Concat multiple StandardizedBags into a single one
+        Args:
+            bags: List of StandardizeBag instances to be concatenated
+
+        Returns:
+            StandardizedBag: single result
+
+        &#34;&#34;&#34;
+
+        result_dfs = [bag.result_df for bag in bags]
+        applied_prepivot_rules_log_dfs = [bag.applied_prepivot_rules_log_df for bag in bags]
+        applied_rules_log_dfs = [bag.applied_rules_log_df for bag in bags]
+
+        # get stats_df, without the _rel and _gain cols
+        stats_dfs = [bag.stats_df.loc[:, ~bag.stats_df.columns.str.endswith(&#39;_rel&#39;) &amp;
+                                         ~bag.stats_df.columns.str.endswith(&#39;_gain&#39;)]
+                     for bag in bags]
+
+        applied_rules_sum_ss = [bag.applied_rules_sum_s for bag in bags]
+
+        # get validation_overview_dfs without _pct column
+        validation_overview_dfs = [bag.validation_overview_df.loc[:,
+                                   ~bag.validation_overview_df.columns.str.endswith(&#39;_pct&#39;)]
+                                   for bag in bags]
+        process_description_dfs = [bag.process_description_df for bag in bags]
+
+        result_df = pd.concat(result_dfs, ignore_index=True)
+        applied_prepivot_rules_log_df = pd.concat(applied_prepivot_rules_log_dfs, ignore_index=True)
+        applied_rules_log_df = pd.concat(applied_rules_log_dfs, ignore_index=True)
+        applied_rules_sum_s: pd.Series = sum(applied_rules_sum_ss)
+        process_description_df = process_description_dfs[0]
+
+        # handling stats
+        #  stats_dfs only contains stats_df objects without _rel and _gain, so we can simply sum
+        stats_df: pd.DataFrame = sum(stats_dfs)
+        # next we use the Stats class do recalculate the _gain and _rel columns
+        stats = Stats([])
+        stats.stats = stats_df
+        stats.finalize_stats(len(result_df))
+
+        stats_df = stats.stats
+
+        # handling validation overview
+        validation_overview_df = validation_overview_dfs[0]
+        for entry_df in validation_overview_dfs[1:]:
+            validation_overview_df = validation_overview_df.add(entry_df, fill_value=0)
+
+        # calculate validation percentage columns
+        for col in validation_overview_df.columns:
+            validation_overview_df[f&#34;{col}_pct&#34;] = \
+                100 * (validation_overview_df[col] / len(result_df))
+
+        return StandardizedBag(result_df=result_df,
+                               applied_prepivot_rules_log_df=applied_prepivot_rules_log_df,
+                               applied_rules_log_df=applied_rules_log_df,
+                               stats_df=stats_df,
+                               applied_rules_sum_s=applied_rules_sum_s,
+                               validation_overview_df=validation_overview_df,
+                               process_description_df=process_description_df)
+
+
 class Stats:
     &#34;&#34;&#34;
     Simple class to hold the process statics. This class contains
@@ -205,7 +269,7 @@ class Standardizer(Presenter[JoinedDataBag]):
     &#34;&#34;&#34;
 
     # this tags identify single statements in the final standardized table
-    identifier_cols = [&#39;adsh&#39;, &#39;coreg&#39;, &#39;report&#39;, &#39;ddate&#39;, &#39;uom&#39;, &#39;qtrs&#39;]
+    identifier_cols = [&#39;adsh&#39;, &#39;coreg&#39;, &#39;report&#39;, &#39;ddate&#39;, &#39;qtrs&#39;]
 
     def __init__(self,
                  prepivot_rule_tree: RuleGroup,
@@ -322,6 +386,11 @@ class Standardizer(Presenter[JoinedDataBag]):
     def _preprocess(self, data_df: pd.DataFrame) -&gt; pd.DataFrame:
         # sourcery skip: simplify-len-comparison, use-named-expression
         # only select rows with tags that are actually used by the defined rules
+
+        currency_uoms = [x for x in list(data_df.uom.unique()) if (len(x) == 3) and x.isupper()]
+        if len(currency_uoms) &gt; 1:
+            raise ValueError(&#34;Multiple currencies are not supported. &#34;
+                             &#34;Please make sure that the uom column only contains one currency.&#34;)
 
         relevant_pivot_cols = \
             self.identifier_cols + [&#39;tag&#39;, &#39;version&#39;, &#39;value&#39;, &#39;line&#39;, &#39;negating&#39;]
@@ -485,7 +554,8 @@ class Standardizer(Presenter[JoinedDataBag]):
         &#34;&#34;&#34;
         standardized_df = self.process(databag.pre_num_df)
 
-        data_to_merge_df = databag.sub_df[[&#39;adsh&#39;, &#39;cik&#39;, &#39;form&#39;, &#39;fye&#39;, &#39;fy&#39;, &#39;fp&#39;, &#39;filed&#39;]].copy()
+        data_to_merge_df = \
+            databag.sub_df[[&#39;adsh&#39;, &#39;cik&#39;, &#39;form&#39;, &#39;fye&#39;, &#39;fy&#39;, &#39;fp&#39;, &#39;filed&#39;]].copy()
 
         # The name of a company can change during its liftime. However, we want to have the
         # same name for the same cik in all entries. Therefore, we first have to find the
@@ -629,10 +699,159 @@ class Standardizer(Presenter[JoinedDataBag]):
                                applied_rules_log_df=applied_rules_log_df, stats_df=stats_df,
                                applied_rules_sum_s=applied_rules_sum_s,
                                validation_overview_df=validation_overview_df,
+                               process_description_df=process_description_df)
+
+
+    @staticmethod
+    # pylint: disable=R0914
+    def concat(bags: List[STANDARDIZED]) -&gt; STANDARDIZED:
+        &#34;&#34;&#34;
+        Concat multiple StandardizedBags into a single one
+        Args:
+            bags: List of StandardizeBag instances to be concatenated
+
+        Returns:
+            StandardizedBag: single result
+
+        &#34;&#34;&#34;
+
+        result_dfs = [bag.result_df for bag in bags]
+        applied_prepivot_rules_log_dfs = [bag.applied_prepivot_rules_log_df for bag in bags]
+        applied_rules_log_dfs = [bag.applied_rules_log_df for bag in bags]
+
+        # get stats_df, without the _rel and _gain cols
+        stats_dfs = [bag.stats_df.loc[:, ~bag.stats_df.columns.str.endswith(&#39;_rel&#39;) &amp;
+                                         ~bag.stats_df.columns.str.endswith(&#39;_gain&#39;)]
+                     for bag in bags]
+
+        applied_rules_sum_ss = [bag.applied_rules_sum_s for bag in bags]
+
+        # get validation_overview_dfs without _pct column
+        validation_overview_dfs = [bag.validation_overview_df.loc[:,
+                                   ~bag.validation_overview_df.columns.str.endswith(&#39;_pct&#39;)]
+                                   for bag in bags]
+        process_description_dfs = [bag.process_description_df for bag in bags]
+
+        result_df = pd.concat(result_dfs, ignore_index=True)
+        applied_prepivot_rules_log_df = pd.concat(applied_prepivot_rules_log_dfs, ignore_index=True)
+        applied_rules_log_df = pd.concat(applied_rules_log_dfs, ignore_index=True)
+        applied_rules_sum_s: pd.Series = sum(applied_rules_sum_ss)
+        process_description_df = process_description_dfs[0]
+
+        # handling stats
+        #  stats_dfs only contains stats_df objects without _rel and _gain, so we can simply sum
+        stats_df: pd.DataFrame = sum(stats_dfs)
+        # next we use the Stats class do recalculate the _gain and _rel columns
+        stats = Stats([])
+        stats.stats = stats_df
+        stats.finalize_stats(len(result_df))
+
+        stats_df = stats.stats
+
+        # handling validation overview
+        validation_overview_df = validation_overview_dfs[0]
+        for entry_df in validation_overview_dfs[1:]:
+            validation_overview_df = validation_overview_df.add(entry_df, fill_value=0)
+
+        # calculate validation percentage columns
+        for col in validation_overview_df.columns:
+            validation_overview_df[f&#34;{col}_pct&#34;] = \
+                100 * (validation_overview_df[col] / len(result_df))
+
+        return StandardizedBag(result_df=result_df,
+                               applied_prepivot_rules_log_df=applied_prepivot_rules_log_df,
+                               applied_rules_log_df=applied_rules_log_df,
+                               stats_df=stats_df,
+                               applied_rules_sum_s=applied_rules_sum_s,
+                               validation_overview_df=validation_overview_df,
                                process_description_df=process_description_df)</code></pre>
 </details>
 <h3>Static methods</h3>
 <dl>
+<dt id="secfsdstools.f_standardize.standardizing.StandardizedBag.concat"><code class="name flex">
+<span>def <span class="ident">concat</span></span>(<span>bags: List[~STANDARDIZED]) ‑> ~STANDARDIZED</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Concat multiple StandardizedBags into a single one</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>bags</code></strong></dt>
+<dd>List of StandardizeBag instances to be concatenated</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code><a title="secfsdstools.f_standardize.standardizing.StandardizedBag" href="#secfsdstools.f_standardize.standardizing.StandardizedBag">StandardizedBag</a></code></dt>
+<dd>single result</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@staticmethod
+# pylint: disable=R0914
+def concat(bags: List[STANDARDIZED]) -&gt; STANDARDIZED:
+    &#34;&#34;&#34;
+    Concat multiple StandardizedBags into a single one
+    Args:
+        bags: List of StandardizeBag instances to be concatenated
+
+    Returns:
+        StandardizedBag: single result
+
+    &#34;&#34;&#34;
+
+    result_dfs = [bag.result_df for bag in bags]
+    applied_prepivot_rules_log_dfs = [bag.applied_prepivot_rules_log_df for bag in bags]
+    applied_rules_log_dfs = [bag.applied_rules_log_df for bag in bags]
+
+    # get stats_df, without the _rel and _gain cols
+    stats_dfs = [bag.stats_df.loc[:, ~bag.stats_df.columns.str.endswith(&#39;_rel&#39;) &amp;
+                                     ~bag.stats_df.columns.str.endswith(&#39;_gain&#39;)]
+                 for bag in bags]
+
+    applied_rules_sum_ss = [bag.applied_rules_sum_s for bag in bags]
+
+    # get validation_overview_dfs without _pct column
+    validation_overview_dfs = [bag.validation_overview_df.loc[:,
+                               ~bag.validation_overview_df.columns.str.endswith(&#39;_pct&#39;)]
+                               for bag in bags]
+    process_description_dfs = [bag.process_description_df for bag in bags]
+
+    result_df = pd.concat(result_dfs, ignore_index=True)
+    applied_prepivot_rules_log_df = pd.concat(applied_prepivot_rules_log_dfs, ignore_index=True)
+    applied_rules_log_df = pd.concat(applied_rules_log_dfs, ignore_index=True)
+    applied_rules_sum_s: pd.Series = sum(applied_rules_sum_ss)
+    process_description_df = process_description_dfs[0]
+
+    # handling stats
+    #  stats_dfs only contains stats_df objects without _rel and _gain, so we can simply sum
+    stats_df: pd.DataFrame = sum(stats_dfs)
+    # next we use the Stats class do recalculate the _gain and _rel columns
+    stats = Stats([])
+    stats.stats = stats_df
+    stats.finalize_stats(len(result_df))
+
+    stats_df = stats.stats
+
+    # handling validation overview
+    validation_overview_df = validation_overview_dfs[0]
+    for entry_df in validation_overview_dfs[1:]:
+        validation_overview_df = validation_overview_df.add(entry_df, fill_value=0)
+
+    # calculate validation percentage columns
+    for col in validation_overview_df.columns:
+        validation_overview_df[f&#34;{col}_pct&#34;] = \
+            100 * (validation_overview_df[col] / len(result_df))
+
+    return StandardizedBag(result_df=result_df,
+                           applied_prepivot_rules_log_df=applied_prepivot_rules_log_df,
+                           applied_rules_log_df=applied_rules_log_df,
+                           stats_df=stats_df,
+                           applied_rules_sum_s=applied_rules_sum_s,
+                           validation_overview_df=validation_overview_df,
+                           process_description_df=process_description_df)</code></pre>
+</details>
+</dd>
 <dt id="secfsdstools.f_standardize.standardizing.StandardizedBag.load"><code class="name flex">
 <span>def <span class="ident">load</span></span>(<span>target_path: str) ‑> ~STANDARDIZED</span>
 </code></dt>
@@ -792,7 +1011,7 @@ as negated.</dd>
     &#34;&#34;&#34;
 
     # this tags identify single statements in the final standardized table
-    identifier_cols = [&#39;adsh&#39;, &#39;coreg&#39;, &#39;report&#39;, &#39;ddate&#39;, &#39;uom&#39;, &#39;qtrs&#39;]
+    identifier_cols = [&#39;adsh&#39;, &#39;coreg&#39;, &#39;report&#39;, &#39;ddate&#39;, &#39;qtrs&#39;]
 
     def __init__(self,
                  prepivot_rule_tree: RuleGroup,
@@ -909,6 +1128,11 @@ as negated.</dd>
     def _preprocess(self, data_df: pd.DataFrame) -&gt; pd.DataFrame:
         # sourcery skip: simplify-len-comparison, use-named-expression
         # only select rows with tags that are actually used by the defined rules
+
+        currency_uoms = [x for x in list(data_df.uom.unique()) if (len(x) == 3) and x.isupper()]
+        if len(currency_uoms) &gt; 1:
+            raise ValueError(&#34;Multiple currencies are not supported. &#34;
+                             &#34;Please make sure that the uom column only contains one currency.&#34;)
 
         relevant_pivot_cols = \
             self.identifier_cols + [&#39;tag&#39;, &#39;version&#39;, &#39;value&#39;, &#39;line&#39;, &#39;negating&#39;]
@@ -1072,7 +1296,8 @@ as negated.</dd>
         &#34;&#34;&#34;
         standardized_df = self.process(databag.pre_num_df)
 
-        data_to_merge_df = databag.sub_df[[&#39;adsh&#39;, &#39;cik&#39;, &#39;form&#39;, &#39;fye&#39;, &#39;fy&#39;, &#39;fp&#39;, &#39;filed&#39;]].copy()
+        data_to_merge_df = \
+            databag.sub_df[[&#39;adsh&#39;, &#39;cik&#39;, &#39;form&#39;, &#39;fye&#39;, &#39;fy&#39;, &#39;fp&#39;, &#39;filed&#39;]].copy()
 
         # The name of a company can change during its liftime. However, we want to have the
         # same name for the same cik in all entries. Therefore, we first have to find the
@@ -1238,7 +1463,8 @@ creates a date column based on the ddated value.</p>
     &#34;&#34;&#34;
     standardized_df = self.process(databag.pre_num_df)
 
-    data_to_merge_df = databag.sub_df[[&#39;adsh&#39;, &#39;cik&#39;, &#39;form&#39;, &#39;fye&#39;, &#39;fy&#39;, &#39;fp&#39;, &#39;filed&#39;]].copy()
+    data_to_merge_df = \
+        databag.sub_df[[&#39;adsh&#39;, &#39;cik&#39;, &#39;form&#39;, &#39;fye&#39;, &#39;fy&#39;, &#39;fp&#39;, &#39;filed&#39;]].copy()
 
     # The name of a company can change during its liftime. However, we want to have the
     # same name for the same cik in all entries. Therefore, we first have to find the
@@ -1512,6 +1738,7 @@ to the previous step.</p></div>
 <li>
 <h4><code><a title="secfsdstools.f_standardize.standardizing.StandardizedBag" href="#secfsdstools.f_standardize.standardizing.StandardizedBag">StandardizedBag</a></code></h4>
 <ul class="">
+<li><code><a title="secfsdstools.f_standardize.standardizing.StandardizedBag.concat" href="#secfsdstools.f_standardize.standardizing.StandardizedBag.concat">concat</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.standardizing.StandardizedBag.load" href="#secfsdstools.f_standardize.standardizing.StandardizedBag.load">load</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.standardizing.StandardizedBag.save" href="#secfsdstools.f_standardize.standardizing.StandardizedBag.save">save</a></code></li>
 </ul>

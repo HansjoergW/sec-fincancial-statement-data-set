@@ -158,7 +158,7 @@ class AbstractRule(RuleEntity):
 class PrePivotRule(AbstractRule):
     &#34;&#34;&#34;Base class to define a single rule that is applied before the dataframe was pivoted&#34;&#34;&#34;
 
-    index_cols = [&#39;adsh&#39;, &#39;coreg&#39;, &#39;report&#39;, &#39;ddate&#39;, &#39;uom&#39;, &#39;qtrs&#39;, &#39;tag&#39;, &#39;version&#39;]
+    index_cols = [&#39;adsh&#39;, &#39;coreg&#39;, &#39;report&#39;, &#39;ddate&#39;, &#39;qtrs&#39;, &#39;tag&#39;, &#39;version&#39;]
 
     def __init__(self, rule_id: str):
         self.rule_id = rule_id
@@ -628,7 +628,7 @@ process descrption table.</p></div>
 <pre><code class="python">class PrePivotRule(AbstractRule):
     &#34;&#34;&#34;Base class to define a single rule that is applied before the dataframe was pivoted&#34;&#34;&#34;
 
-    index_cols = [&#39;adsh&#39;, &#39;coreg&#39;, &#39;report&#39;, &#39;ddate&#39;, &#39;uom&#39;, &#39;qtrs&#39;, &#39;tag&#39;, &#39;version&#39;]
+    index_cols = [&#39;adsh&#39;, &#39;coreg&#39;, &#39;report&#39;, &#39;ddate&#39;, &#39;qtrs&#39;, &#39;tag&#39;, &#39;version&#39;]
 
     def __init__(self, rule_id: str):
         self.rule_id = rule_id

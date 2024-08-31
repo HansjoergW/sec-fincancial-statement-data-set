@@ -35,11 +35,13 @@ import pandas as pd
 import pandera as pa
 
 from secfsdstools.f_standardize.base_prepivot_rules import (PrePivotDeduplicate,
-    PrePivotCorrectSign, PrePivotMaxQtrs)
+                                                            PrePivotCorrectSign, PrePivotMaxQtrs)
 from secfsdstools.f_standardize.base_rule_framework import RuleGroup, Rule
 from secfsdstools.f_standardize.base_rules import (CopyTagRule, SumUpRule, SubtractFromRule,
-    missingsumparts_rules_creator, MissingSummandRule, PostSetToZero, PostFixSign)
-from secfsdstools.f_standardize.base_validation_rules import ValidationRule, SumValidationRule
+                                                   missingsumparts_rules_creator,
+                                                   MissingSummandRule, PostSetToZero, PostFixSign)
+from secfsdstools.f_standardize.base_validation_rules import ValidationRule, SumValidationRule, \
+    ProductValidationRule
 from secfsdstools.f_standardize.standardizing import Standardizer
 
 # All tags that are used for costs of goods and services
@@ -527,6 +529,14 @@ class IncomeStatementStandardizer(Standardizer):
                 7. Prio IncomeLossAttributableToParent
                 8. Prio NetInvestmentIncome
 
+        OutstandingShares
+            1. Prio WeightedAverageNumberOfSharesOutstandingBasic
+            2. Prio WeightedAverageNumberOfDilutedSharesOutstanding
+            3. Prio WeightedAverageNumberOfShareOutstandingBasicAndDiluted
+            4. Prio WeightedAverageLimitedPartnershipUnitsOutstanding
+            5. Prio WeightedAverageLimitedPartnershipUnitsOutstandingDiluted
+            6. Prio WeightedAverageNumberOfLimitedPartnershipAndGeneralPartnershipUnitOutstandingBasicAndDiluted
+            7. Prio WeightedAverageGeneralPartnershipUnitsOutstanding
 
       Post Rule (Cleanup)
         Fix Sign of AllIncomeTaxExpenseBenefit (should be positive if taxed were paid)
@@ -895,6 +905,35 @@ class IncomeStatementStandardizer(Standardizer):
         missing_summand_tag=&#39;NetIncomeLossAttributableToNoncontrollingInterest&#39;
     )
 
+    is_outstandingshares = RuleGroup(
+        prefix=&#34;sharesAndEPS&#34;,
+        description=&#34;Rules to extract the number of shares&#34;,
+        rules=[
+            CopyTagRule(target=&#39;OutstandingShares&#39;,
+                        original=&#39;WeightedAverageNumberOfSharesOutstandingBasic&#39;),
+            CopyTagRule(target=&#39;OutstandingShares&#39;,
+                        original=&#39;WeightedAverageNumberOfDilutedSharesOutstanding&#39;),
+            CopyTagRule(target=&#39;OutstandingShares&#39;,
+                        original=&#39;WeightedAverageNumberOfShareOutstandingBasicAndDiluted&#39;),
+            CopyTagRule(target=&#39;OutstandingShares&#39;,
+                        original=&#39;WeightedAverageLimitedPartnershipUnitsOutstanding&#39;),
+            CopyTagRule(target=&#39;OutstandingShares&#39;,
+                        original=&#39;WeightedAverageLimitedPartnershipUnitsOutstandingDiluted&#39;),
+            CopyTagRule(target=&#39;OutstandingShares&#39;,
+                        original=&#39;WeightedAverageNumberOfLimitedPartnershipAndGeneralPartnershipUnitOutstandingBasicAndDiluted&#39;),
+            CopyTagRule(target=&#39;OutstandingShares&#39;,
+                        original=&#39;WeightedAverageGeneralPartnershipUnitsOutstanding&#39;),
+            CopyTagRule(target=&#39;EarningsPerShare&#39;,
+                        original=&#39;EarningsPerShareBasic&#39;),
+            CopyTagRule(target=&#39;EarningsPerShare&#39;,
+                        original=&#39;EarningsPerShareBasic&#39;),
+            CopyTagRule(target=&#39;EarningsPerShare&#39;,
+                        original=&#39;EarningsPerShareDiluted&#39;),
+            CopyTagRule(target=&#39;EarningsPerShare&#39;,
+                        original=&#39;EarningsPerShareBasicAndDiluted&#39;),
+        ]
+    )
+
     main_rule_tree = RuleGroup(prefix=&#34;IS&#34;,
                                rules=[
                                    is_revenue_rg,
@@ -906,7 +945,8 @@ class IncomeStatementStandardizer(Standardizer):
                                    is_inclossbeforetax,
                                    is_netincome_rg,
                                    is_missing_ilbefore_tax_ilcontop,
-                                   is_missing_nilattnoncnt
+                                   is_missing_nilattnoncnt,
+                                   is_outstandingshares
                                ])
 
     preprocess_rule_tree = RuleGroup(prefix=&#34;IS_PRE&#34;,
@@ -1010,7 +1050,10 @@ class IncomeStatementStandardizer(Standardizer):
                               &#39;NetIncomeLoss&#39;,
                               &#39;NetIncomeLossAttributableToNoncontrollingInterest&#39;
                           ]),
-
+        ProductValidationRule(identifier=&#39;EPS&#39;,
+                              product_tag=&#39;NetIncomeLoss&#39;,
+                              multipliers=[&#39;EarningsPerShare&#39;,
+                                           &#39;OutstandingShares&#39;]),
     ]
 
     # these are the columns that finally are returned after the standardization
@@ -1026,10 +1069,8 @@ class IncomeStatementStandardizer(Standardizer):
                              &#39;ProfitLoss&#39;,
                              &#39;NetIncomeLossAttributableToNoncontrollingInterest&#39;,
                              &#39;NetIncomeLoss&#39;,
-                             &#39;EarningsPerShareBasic&#39;,
-                             &#39;EarningsPerShareDiluted&#39;,
-                             &#39;WeightedAverageNumberOfSharesOutstandingBasic&#39;,
-                             &#39;WeightedAverageNumberOfDilutedSharesOutstanding&#39;,
+                             &#39;OutstandingShares&#39;,
+                             &#39;EarningsPerShare&#39;
                              ]
 
     # used to evaluate if a report is the main income statement report
@@ -1270,6 +1311,14 @@ meaning that they have the same tags.</p>
             7. Prio IncomeLossAttributableToParent
             8. Prio NetInvestmentIncome
 
+    OutstandingShares
+        1. Prio WeightedAverageNumberOfSharesOutstandingBasic
+        2. Prio WeightedAverageNumberOfDilutedSharesOutstanding
+        3. Prio WeightedAverageNumberOfShareOutstandingBasicAndDiluted
+        4. Prio WeightedAverageLimitedPartnershipUnitsOutstanding
+        5. Prio WeightedAverageLimitedPartnershipUnitsOutstandingDiluted
+        6. Prio WeightedAverageNumberOfLimitedPartnershipAndGeneralPartnershipUnitOutstandingBasicAndDiluted
+        7. Prio WeightedAverageGeneralPartnershipUnitsOutstanding
 
   Post Rule (Cleanup)
     Fix Sign of AllIncomeTaxExpenseBenefit (should be positive if taxed were paid)
@@ -1542,6 +1591,14 @@ as negated.</dd>
                 7. Prio IncomeLossAttributableToParent
                 8. Prio NetInvestmentIncome
 
+        OutstandingShares
+            1. Prio WeightedAverageNumberOfSharesOutstandingBasic
+            2. Prio WeightedAverageNumberOfDilutedSharesOutstanding
+            3. Prio WeightedAverageNumberOfShareOutstandingBasicAndDiluted
+            4. Prio WeightedAverageLimitedPartnershipUnitsOutstanding
+            5. Prio WeightedAverageLimitedPartnershipUnitsOutstandingDiluted
+            6. Prio WeightedAverageNumberOfLimitedPartnershipAndGeneralPartnershipUnitOutstandingBasicAndDiluted
+            7. Prio WeightedAverageGeneralPartnershipUnitsOutstanding
 
       Post Rule (Cleanup)
         Fix Sign of AllIncomeTaxExpenseBenefit (should be positive if taxed were paid)
@@ -1910,6 +1967,35 @@ as negated.</dd>
         missing_summand_tag=&#39;NetIncomeLossAttributableToNoncontrollingInterest&#39;
     )
 
+    is_outstandingshares = RuleGroup(
+        prefix=&#34;sharesAndEPS&#34;,
+        description=&#34;Rules to extract the number of shares&#34;,
+        rules=[
+            CopyTagRule(target=&#39;OutstandingShares&#39;,
+                        original=&#39;WeightedAverageNumberOfSharesOutstandingBasic&#39;),
+            CopyTagRule(target=&#39;OutstandingShares&#39;,
+                        original=&#39;WeightedAverageNumberOfDilutedSharesOutstanding&#39;),
+            CopyTagRule(target=&#39;OutstandingShares&#39;,
+                        original=&#39;WeightedAverageNumberOfShareOutstandingBasicAndDiluted&#39;),
+            CopyTagRule(target=&#39;OutstandingShares&#39;,
+                        original=&#39;WeightedAverageLimitedPartnershipUnitsOutstanding&#39;),
+            CopyTagRule(target=&#39;OutstandingShares&#39;,
+                        original=&#39;WeightedAverageLimitedPartnershipUnitsOutstandingDiluted&#39;),
+            CopyTagRule(target=&#39;OutstandingShares&#39;,
+                        original=&#39;WeightedAverageNumberOfLimitedPartnershipAndGeneralPartnershipUnitOutstandingBasicAndDiluted&#39;),
+            CopyTagRule(target=&#39;OutstandingShares&#39;,
+                        original=&#39;WeightedAverageGeneralPartnershipUnitsOutstanding&#39;),
+            CopyTagRule(target=&#39;EarningsPerShare&#39;,
+                        original=&#39;EarningsPerShareBasic&#39;),
+            CopyTagRule(target=&#39;EarningsPerShare&#39;,
+                        original=&#39;EarningsPerShareBasic&#39;),
+            CopyTagRule(target=&#39;EarningsPerShare&#39;,
+                        original=&#39;EarningsPerShareDiluted&#39;),
+            CopyTagRule(target=&#39;EarningsPerShare&#39;,
+                        original=&#39;EarningsPerShareBasicAndDiluted&#39;),
+        ]
+    )
+
     main_rule_tree = RuleGroup(prefix=&#34;IS&#34;,
                                rules=[
                                    is_revenue_rg,
@@ -1921,7 +2007,8 @@ as negated.</dd>
                                    is_inclossbeforetax,
                                    is_netincome_rg,
                                    is_missing_ilbefore_tax_ilcontop,
-                                   is_missing_nilattnoncnt
+                                   is_missing_nilattnoncnt,
+                                   is_outstandingshares
                                ])
 
     preprocess_rule_tree = RuleGroup(prefix=&#34;IS_PRE&#34;,
@@ -2025,7 +2112,10 @@ as negated.</dd>
                               &#39;NetIncomeLoss&#39;,
                               &#39;NetIncomeLossAttributableToNoncontrollingInterest&#39;
                           ]),
-
+        ProductValidationRule(identifier=&#39;EPS&#39;,
+                              product_tag=&#39;NetIncomeLoss&#39;,
+                              multipliers=[&#39;EarningsPerShare&#39;,
+                                           &#39;OutstandingShares&#39;]),
     ]
 
     # these are the columns that finally are returned after the standardization
@@ -2041,10 +2131,8 @@ as negated.</dd>
                              &#39;ProfitLoss&#39;,
                              &#39;NetIncomeLossAttributableToNoncontrollingInterest&#39;,
                              &#39;NetIncomeLoss&#39;,
-                             &#39;EarningsPerShareBasic&#39;,
-                             &#39;EarningsPerShareDiluted&#39;,
-                             &#39;WeightedAverageNumberOfSharesOutstandingBasic&#39;,
-                             &#39;WeightedAverageNumberOfDilutedSharesOutstanding&#39;,
+                             &#39;OutstandingShares&#39;,
+                             &#39;EarningsPerShare&#39;
                              ]
 
     # used to evaluate if a report is the main income statement report
@@ -2129,6 +2217,10 @@ as negated.</dd>
 <div class="desc"></div>
 </dd>
 <dt id="secfsdstools.f_standardize.is_standardize.IncomeStatementStandardizer.is_operating_expenses_rg"><code class="name">var <span class="ident">is_operating_expenses_rg</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="secfsdstools.f_standardize.is_standardize.IncomeStatementStandardizer.is_outstandingshares"><code class="name">var <span class="ident">is_outstandingshares</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -2476,6 +2568,7 @@ is defined by the provide mask Series.</p>
 <li><code><a title="secfsdstools.f_standardize.is_standardize.IncomeStatementStandardizer.is_missing_rev_cost_gross" href="#secfsdstools.f_standardize.is_standardize.IncomeStatementStandardizer.is_missing_rev_cost_gross">is_missing_rev_cost_gross</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.is_standardize.IncomeStatementStandardizer.is_netincome_rg" href="#secfsdstools.f_standardize.is_standardize.IncomeStatementStandardizer.is_netincome_rg">is_netincome_rg</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.is_standardize.IncomeStatementStandardizer.is_operating_expenses_rg" href="#secfsdstools.f_standardize.is_standardize.IncomeStatementStandardizer.is_operating_expenses_rg">is_operating_expenses_rg</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.is_standardize.IncomeStatementStandardizer.is_outstandingshares" href="#secfsdstools.f_standardize.is_standardize.IncomeStatementStandardizer.is_outstandingshares">is_outstandingshares</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.is_standardize.IncomeStatementStandardizer.is_revenue_rg" href="#secfsdstools.f_standardize.is_standardize.IncomeStatementStandardizer.is_revenue_rg">is_revenue_rg</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.is_standardize.IncomeStatementStandardizer.main_rule_tree" href="#secfsdstools.f_standardize.is_standardize.IncomeStatementStandardizer.main_rule_tree">main_rule_tree</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.is_standardize.IncomeStatementStandardizer.main_statement_tags" href="#secfsdstools.f_standardize.is_standardize.IncomeStatementStandardizer.main_statement_tags">main_statement_tags</a></code></li>

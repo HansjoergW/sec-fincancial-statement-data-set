@@ -140,6 +140,11 @@ def find_operating_expense_tags(joined_bag: JoinedDataBag):
 
     print(tag_counts)
 
+def count_selected_tags(cf_joined_bag: JoinedDataBag, selected_tags: List[str]) -> pd.DataFrame:
+    from secfsdstools.u_usecases.analyzes import count_tags
+
+    count_all_df = count_tags(cf_joined_bag)
+    return count_all_df[count_all_df.tag.isin(selected_tags)]
 
 
 if __name__ == '__main__':
@@ -150,26 +155,27 @@ if __name__ == '__main__':
     # prepare_all_data_set()
 
     is_joined_bag: JoinedDataBag = load_joined_IS_set()
-    #is_joined_bag: JoinedDataBag = load_joined_MultiQtrs_IS_set()
-    #is_joined_bag: JoinedDataBag = load_smaller_sample_IS_set(path="./saved_data/is_small_joined_2")
+    # is_joined_bag = load_smaller_sample_IS_set()
+    # is_joined_bag: JoinedDataBag = load_joined_MultiQtrs_IS_set()
+    # is_joined_bag: JoinedDataBag = load_smaller_sample_IS_set(path="./saved_data/is_small_joined_2")
 
-    from secfsdstools.u_usecases.analyzes import find_tags_containing
-    with_shares_issued = find_tags_containing(is_joined_bag, 'Shares')
-    print(with_shares_issued)
+    # print(count_selected_tags(is_joined_bag, [
+    # 'EarningsPerShareBasicAndDiluted', 'EarningsPerShareBasic', 'EarningsPerShareDiluted', 'DilutedEarningsPerShareProForma', 'BasicEarningsPerShareProForma', 'AntidilutiveSecuritiesExcludedFromComputationOfEarningsPerShareAmount', 'EarningsPerShareBasicDistributed', 'EarningsPerShareBasicUndistributed', 'EarningsPerShareDilutedUndistributed', 'BasicEarningsPerShareAdjustmentProForma', 'EarningsPerShareDilutedDistributed', 'EarningsPerShareDilutedProFormaAdjustment', 'DilutiveSecuritiesEffectOnBasicEarningsPerShareOther', 'EarningsPerShareNonrecurringCommonControlIntraEntityTransactionsPerBasicShareEffect', 'BusinessAcquisitionProFormaEarningsPerShareBasic', 'BusinessAcquisitionProFormaEarningsPerShareDiluted', 'ExtraordinaryItemEarningsPerShareImpactNet']
+    # ))
 
-    #find_operating_expense_tags(is_joined_bag)
+    # from secfsdstools.u_usecases.analyzes import find_tags_containing
+    # with_shares_issued = find_tags_containing(is_joined_bag, 'Shares')
+    # print(with_shares_issued)
+
+    # find_operating_expense_tags(is_joined_bag)
     # print(check_signed_values(is_joined_bag, tag_list=['LicenseCost',
     #                                              'CostOfRevenue',
     #                                              'CostOfGoodsAndServicesSold',
     #                                              'CostOfGoodsSold',
     #                                              'CostOfServices']))
 
-
-    is_joined_bag = is_joined_bag.filter(AdshJoinedFilter(adshs=['0000320193-23-000064'])) # expect 2 entries
-
-    #is_joined_bag = load_smaller_sample_IS_set()
+    # is_joined_bag = is_joined_bag.filter(AdshJoinedFilter(adshs=['0000320193-23-000064'])) # expect 2 entries
     #
-
 
     # print(find_entries_with_all_tags(bag=is_joined_bag,
     #                            tag_list=[
@@ -184,16 +190,20 @@ if __name__ == '__main__':
     #             'SalesRevenueServicesNet']
     # ))
 
-    #print(filter_tags(is_joined_bag.pre_num_df, tag_like="IncomeLossFromDiscontinuedOperations"))
+    #print(filter_tags(is_joined_bag.pre_num_df, tag_like="EarningsPerShare"))
     #
     # # check the loaded data
-    print("sub_df", is_joined_bag.sub_df.shape)
-    print("pre_num_df", is_joined_bag.pre_num_df.shape)
+    # print("sub_df", is_joined_bag.sub_df.shape)
+    # print("pre_num_df", is_joined_bag.pre_num_df.shape)
 
     #cost_of_lst = is_joined_bag.pre_num_df[is_joined_bag.pre_num_df.tag.str.contains('CostOf')].tag.unique().tolist()
 
-
     standardized_bag = standardize(is_joined_bag)
+
+    df = standardized_bag.result_df
+    df_null_eps = df[df.EarningsPerShare.isnull() &
+                     df.OutstandingShares.isnull()]
+
 
     #standardized_bag.save("../tests/_testdata/is_standardized_2")
     print(standardized_bag.result_df.shape)

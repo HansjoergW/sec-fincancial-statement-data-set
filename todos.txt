@@ -14,15 +14,16 @@ New Release
 
 
 v.1.6.2
+- 3.7 not checked anymore, 3.11 added
+- version of library readable: print(secfsdstools.__version__) returns the version
+- simplification of OutstandingShares and EPS
 - configure attribute list for sub_df
-- version of library readable
-- 3.7 not checked anymore
+- configure additional final tags
 - hook for after updated logic
 
 
 Todo:
-- Version der Library im code abfragbar machen
-  -> Variante impotlib.metadata -> ist aber erst ab Python 3.8 vorhanden
+
 - Completion and Validation for SharesOutstanding und EarningsPerShare
   I noticed that there are two columns EarningsPerShareBasic/EarningsPerShareDiluted that can be calculated
   if we have NetIncomeLos and WeightedAverageNumberOfSharesOutstandingBasic/WeightedAverageNumberOfDilutedSharesOutstanding.

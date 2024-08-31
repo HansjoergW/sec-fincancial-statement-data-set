@@ -488,6 +488,15 @@ IS Analyzes
 Todos
 - EarningsPerShare
 
+  Es gibt auch WeightedAverageLimitedPartnershipUnitsOutstanding und WeightedAverageLimitedPartnershipUnitsOutstandingDiluted
+  Bsp: 0001552000-19-000064
+
+  0001319161-21-000036
+  -> mit Axis -> diese Daten sind nicht vorhanden
+
+  -> IncomeLossFromContinuingOperationsPerDilutedShare -> Alternative zu EPS !!!!
+
+  EPS -> provide calculated
 
 Revenue
 -------

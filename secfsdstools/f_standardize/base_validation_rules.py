@@ -180,6 +180,78 @@ class SumValidationRule(ValidationRule):
         return f"Checks whether the sum of {self.summands} equals the value in '{self.sum_tag}'"
 
 
+class ProductValidationRule(ValidationRule):
+    """
+    Checks whether an expected multiplication - equation is actually true. So for instance if the
+    equation NetIncomeLoss = OustandingShares * EarningsPerShare is actually true.
+    """
+
+    def __init__(self, identifier: str, product_tag: str, multipliers: List[str]):
+        """
+
+        Args:
+            identifier: the identifier of the rule
+            product_tag: the tag that should contain the product of all multipliers
+            multipliers: the list with multipliers
+        """
+        super().__init__(identifier=identifier)
+        self.product_tag = product_tag
+        self.multipliers = multipliers
+
+    def mask(self, data_df: pd.DataFrame) -> pa.typing.Series[bool]:
+        """
+            returns a Series[bool] which defines the rows to which this rule has to be applied.
+            For validation rules this means to select the rows for which all necessary tags
+            are available.
+
+        Args:
+            df: dataframe on which the rules should be applied
+
+        Returns:
+            pa.typing.Series[bool]: a boolean Series that marks which rows have to be calculated
+        """
+        mask = ~data_df[self.product_tag].isna()
+        for multiplier in self.multipliers:
+            mask = mask & ~data_df[multiplier].isna()
+
+        return mask
+
+    def calculate_error(self, data_df: pd.DataFrame, mask: pa.typing.Series[bool]) -> \
+            pa.typing.Series[np.float64]:
+        """
+        implements the calculation logic.
+        Args:
+            data_df: the dataset to validate
+            mask: the mask masking the rows to which the calculation should be applied to.
+
+        Returns:
+            pa.typing.Series[np.float64]: containing the relative error
+        """
+
+        # subtract the product of all multipliers from the sum_tag and make it relative by dividing
+        # with the product_tag. finally make the result absolute, so that error is always positive
+
+
+
+        result = ((data_df[self.product_tag] - data_df[self.multipliers].prod(axis='columns'))
+                  / data_df[self.product_tag]).abs()
+
+        # correct if we did devide by zero
+        mask_zero = data_df[self.product_tag] == 0.0
+        result.loc[mask_zero & (data_df[self.multipliers].prod(axis='columns') == 0.0)] = 0.0
+
+        return result
+
+    def get_description(self) -> str:
+        """
+        Returns the description String
+        Returns:
+            str: description
+        """
+        return (f"Checks whether the product of {self.multipliers} equals"
+                f" the value in '{self.product_tag}'")
+
+
 class IsSetValidationRule(ValidationRule):
     """
     Checks whether a certain tag has a value and is not nan.

@@ -16,7 +16,8 @@ New Release
 v.1.6.2
 - 3.7 not checked anymore, 3.11 added
 - version of library readable: print(secfsdstools.__version__) returns the version
-- simplification of OutstandingShares and EPS
+- simplification of OutstandingShares and EPS / Validation for EPS added
+
 - configure attribute list for sub_df
 - configure additional final tags
 - hook for after updated logic

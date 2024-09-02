@@ -509,6 +509,18 @@ class IncomeStatementStandardizer(Standardizer):
             6. Prio WeightedAverageNumberOfLimitedPartnershipAndGeneralPartnershipUnitOutstandingBasicAndDiluted
             7. Prio WeightedAverageGeneralPartnershipUnitsOutstanding
 
+        EarningsPerShare
+            1. Prio EarningsPerShareBasic
+            2. Prio EarningsPerShareDiluted
+            3. Prio EarningsPerShareBasicAndDiluted
+            4. Prio IncomeLossFromContinuingOperationsPerBasicShare
+            5. Prio IncomeLossFromContinuingOperationsPerDilutedShare
+            6. Prio IncomeLossFromContinuingOperationsPerBasicAndDilutedShare
+            7. Prio IncomeLossFromContinuingOperationsPerOutstandingLimitedPartnershipUnit
+            8. Prio IncomeLossFromContinuingOperationsPerOutstandingLimitedPartnershipUnitBasicNetOfTax
+            9. Prio IncomeLossFromContinuingOperationsPerOutstandingLimitedPartnershipAndGeneralPartnershipUnitBasicAndDiluted
+
+
       Post Rule (Cleanup)
         Fix Sign of AllIncomeTaxExpenseBenefit (should be positive if taxed were paid)
             expected equation to be true:
@@ -894,16 +906,28 @@ class IncomeStatementStandardizer(Standardizer):
                         original='WeightedAverageNumberOfLimitedPartnershipAndGeneralPartnershipUnitOutstandingBasicAndDiluted'),
             CopyTagRule(target='OutstandingShares',
                         original='WeightedAverageGeneralPartnershipUnitsOutstanding'),
-            CopyTagRule(target='EarningsPerShare',
-                        original='EarningsPerShareBasic'),
+
             CopyTagRule(target='EarningsPerShare',
                         original='EarningsPerShareBasic'),
             CopyTagRule(target='EarningsPerShare',
                         original='EarningsPerShareDiluted'),
             CopyTagRule(target='EarningsPerShare',
                         original='EarningsPerShareBasicAndDiluted'),
+            CopyTagRule(target='EarningsPerShare',
+                        original='IncomeLossFromContinuingOperationsPerBasicShare'),
+            CopyTagRule(target='EarningsPerShare',
+                        original='IncomeLossFromContinuingOperationsPerDilutedShare'),
+            CopyTagRule(target='EarningsPerShare',
+                        original='IncomeLossFromContinuingOperationsPerBasicAndDilutedShare'),
+            CopyTagRule(target='EarningsPerShare',
+                        original='IncomeLossFromContinuingOperationsPerOutstandingLimitedPartnershipUnit'),
+            CopyTagRule(target='EarningsPerShare',
+                        original='IncomeLossFromContinuingOperationsPerOutstandingLimitedPartnershipUnitBasicNetOfTax'),
+            CopyTagRule(target='EarningsPerShare',
+                        original='IncomeLossFromContinuingOperationsPerOutstandingLimitedPartnershipAndGeneralPartnershipUnitBasicAndDiluted'),
         ]
     )
+
 
     main_rule_tree = RuleGroup(prefix="IS",
                                rules=[

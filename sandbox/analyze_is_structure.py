@@ -160,8 +160,19 @@ if __name__ == '__main__':
     # is_joined_bag: JoinedDataBag = load_smaller_sample_IS_set(path="./saved_data/is_small_joined_2")
 
     # print(count_selected_tags(is_joined_bag, [
-    # 'EarningsPerShareBasicAndDiluted', 'EarningsPerShareBasic', 'EarningsPerShareDiluted', 'DilutedEarningsPerShareProForma', 'BasicEarningsPerShareProForma', 'AntidilutiveSecuritiesExcludedFromComputationOfEarningsPerShareAmount', 'EarningsPerShareBasicDistributed', 'EarningsPerShareBasicUndistributed', 'EarningsPerShareDilutedUndistributed', 'BasicEarningsPerShareAdjustmentProForma', 'EarningsPerShareDilutedDistributed', 'EarningsPerShareDilutedProFormaAdjustment', 'DilutiveSecuritiesEffectOnBasicEarningsPerShareOther', 'EarningsPerShareNonrecurringCommonControlIntraEntityTransactionsPerBasicShareEffect', 'BusinessAcquisitionProFormaEarningsPerShareBasic', 'BusinessAcquisitionProFormaEarningsPerShareDiluted', 'ExtraordinaryItemEarningsPerShareImpactNet']
-    # ))
+    #     'IncomeLossFromContinuingOperationsPerBasicShare',
+    #     'IncomeLossFromContinuingOperationsPerDilutedShare',
+    #     'IncomeLossFromContinuingOperationsPerBasicAndDilutedShare',
+    #
+    #     'IncomeLossFromContinuingOperationsPerOutstandingLimitedPartnershipUnit',
+    #     'IncomeLossFromContinuingOperationsPerOutstandingLimitedPartnershipUnitDiluted',
+    #     'IncomeLossFromContinuingOperationsPerOutstandingLimitedPartnershipUnitBasicNetOfTax',
+    #
+    #     'IncomeLossFromContinuingOperationsNetOfTaxPerOutstandingLimitedPartnershipUnitDiluted',
+    #     'IncomeLossFromContinuingOperationsPerOutstandingLimitedPartnershipAndGeneralPartnershipUnitBasicAndDiluted',
+    #     'IncomeLossFromContinuingOperationsPerOutstandingLimitedPartnershipAndGeneralPartnershipUnitBasic',
+    #     'IncomeLossFromContinuingOperationsPerOutstandingGeneralPartnershipUnitNetOfTax'
+    # ]))
 
     # from secfsdstools.u_usecases.analyzes import find_tags_containing
     # with_shares_issued = find_tags_containing(is_joined_bag, 'Shares')
@@ -190,7 +201,7 @@ if __name__ == '__main__':
     #             'SalesRevenueServicesNet']
     # ))
 
-    #print(filter_tags(is_joined_bag.pre_num_df, tag_like="EarningsPerShare"))
+    print(filter_tags(is_joined_bag.pre_num_df, tag_like="IncomeLossFromContinuingOperations"))
     #
     # # check the loaded data
     # print("sub_df", is_joined_bag.sub_df.shape)
@@ -200,9 +211,9 @@ if __name__ == '__main__':
 
     standardized_bag = standardize(is_joined_bag)
 
-    df = standardized_bag.result_df
-    df_null_eps = df[df.EarningsPerShare.isnull() &
-                     df.OutstandingShares.isnull()]
+    # df = standardized_bag.result_df
+    # df_null_eps = df[df.EarningsPerShare.isnull() &
+    #                  df.OutstandingShares.isnull()]
 
 
     #standardized_bag.save("../tests/_testdata/is_standardized_2")

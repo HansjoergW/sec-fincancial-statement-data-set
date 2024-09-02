@@ -1,5 +1,5 @@
 """Contains the definitions to standardize balance sheets."""
-from typing import List
+from typing import List, Optional
 
 from secfsdstools.f_standardize.base_rule_framework import RuleGroup
 from secfsdstools.f_standardize.base_prepivot_rules import PrePivotDeduplicate
@@ -293,7 +293,8 @@ class BalanceSheetStandardizer(Standardizer):
     main_statement_tags = ['Assets', 'AssetsCurrent', 'AssetsNoncurrent',
                            'Liabilities', 'LiabilitiesCurrent', 'LiabilitiesNoncurrent']
 
-    def __init__(self, filter_for_main_statement: bool = True, iterations: int = 3):
+    def __init__(self, filter_for_main_statement: bool = True, iterations: int = 3,
+                 additional_final_sub_fields: Optional[List[str]] = None):
         super().__init__(
             prepivot_rule_tree=self.prepivot_rule_tree,
             pre_rule_tree=self.preprocess_rule_tree,
@@ -303,4 +304,5 @@ class BalanceSheetStandardizer(Standardizer):
             final_tags=self.final_tags,
             main_iterations=iterations,
             filter_for_main_statement=filter_for_main_statement,
-            main_statement_tags=self.main_statement_tags)
+            main_statement_tags=self.main_statement_tags,
+            additional_final_sub_fields=additional_final_sub_fields)

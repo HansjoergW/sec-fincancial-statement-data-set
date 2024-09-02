@@ -15,6 +15,7 @@ STANDARDIZED = TypeVar('STANDARDIZED', bound='StandardizedBag')
 
 LOGGER = logging.getLogger(__name__)
 
+
 class StandardizedBag:
     """
     A class to contain the results of a standardizer.
@@ -97,7 +98,6 @@ class StandardizedBag:
                                applied_rules_sum_s=applied_rules_sum_s,
                                validation_overview_df=validation_overview_df,
                                process_description_df=process_description_df)
-
 
     @staticmethod
     # pylint: disable=R0914
@@ -242,6 +242,8 @@ class Standardizer(Presenter[JoinedDataBag]):
     # this tags identify single statements in the final standardized table
     identifier_cols = ['adsh', 'coreg', 'report', 'ddate', 'qtrs']
 
+    sub_df_result_cols = ['adsh', 'cik', 'form', 'fye', 'fy', 'fp', 'filed']
+
     def __init__(self,
                  prepivot_rule_tree: RuleGroup,
                  pre_rule_tree: RuleGroup,
@@ -252,7 +254,8 @@ class Standardizer(Presenter[JoinedDataBag]):
                  main_iterations: int = 2,
                  filter_for_main_statement: bool = True,
                  main_statement_tags: List[str] = None,
-                 invert_negated: bool = True):
+                 invert_negated: bool = True,
+                 additional_final_sub_fields: Optional[List[str]] = None):
         """
 
         Args:
@@ -281,6 +284,9 @@ class Standardizer(Presenter[JoinedDataBag]):
             main_statement_tags: tbd
             invert_negated (bool, Optional, True): inverts the value of the that are marked
                    as negated.
+            additional_final_sub_fields: define additional fields from the sub_df that will
+                   be added in addition to 'adsh', 'cik', 'form', 'fye', 'fy', 'fp', 'filed'
+                   to the resulting df, when the present method is called.
         """
         self.prepivot_rule_tree = prepivot_rule_tree
         self.pre_rule_tree = pre_rule_tree
@@ -292,6 +298,7 @@ class Standardizer(Presenter[JoinedDataBag]):
         self.main_iterations = main_iterations
         self.filter_for_main_statement = filter_for_main_statement
         self.invert_negated = invert_negated
+        self.additional_final_sub_fields = additional_final_sub_fields
 
         self.all_input_tags: Set[str] = (self.prepivot_rule_tree.get_input_tags() |
                                          self.pre_rule_tree.get_input_tags() |
@@ -525,8 +532,13 @@ class Standardizer(Presenter[JoinedDataBag]):
         """
         standardized_df = self.process(databag.pre_num_df)
 
+        sub_df_cols = self.sub_df_result_cols
+
+        if self.additional_final_sub_fields:
+            sub_df_cols = sub_df_cols + self.additional_final_sub_fields
+
         data_to_merge_df = \
-            databag.sub_df[['adsh', 'cik', 'form', 'fye', 'fy', 'fp', 'filed']].copy()
+            databag.sub_df[sub_df_cols].copy()
 
         # The name of a company can change during its liftime. However, we want to have the
         # same name for the same cik in all entries. Therefore, we first have to find the
@@ -547,8 +559,10 @@ class Standardizer(Presenter[JoinedDataBag]):
         merged_df['date'] = pd.to_datetime(merged_df['ddate'], format='%Y%m%d')
 
         # sort the columns
-        merged_df = merged_df[['adsh', 'cik', 'name', 'form', 'fye', 'fy', 'fp', 'date', 'filed'] +
-                              standardized_df.columns.tolist()[1:]]
+        merged_df = merged_df[
+            ['adsh', 'cik', 'name', 'form', 'fye', 'fy', 'fp', 'date', 'filed'] +
+            (self.additional_final_sub_fields if self.additional_final_sub_fields else []) +
+            standardized_df.columns.tolist()[1:]]
 
         # store it in the standardizer object as new result
         self.result = merged_df.sort_values(by='date')

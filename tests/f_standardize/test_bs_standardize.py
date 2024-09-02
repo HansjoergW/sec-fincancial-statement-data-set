@@ -62,3 +62,18 @@ def test_standardizing(joined_bag):
              'LiabilitiesCheck_cat',
              'EquityCheck_error', 'EquityCheck_cat', 'AssetsLiaEquCheck_error',
              'AssetsLiaEquCheck_cat'])
+
+
+def test_options_standardizing(joined_bag):
+    standardizer = BalanceSheetStandardizer(additional_final_sub_fields=['zipba'])
+
+    result_df = standardizer.present(joined_bag)
+
+    assert (result_df.columns.to_list() == ['adsh', 'cik', 'name', 'form', 'fye',
+                                            'fy', 'fp', 'date', 'filed', 'zipba', 'coreg',
+                                            'report', 'ddate', 'qtrs'] +
+            standardizer.final_tags +
+            ['AssetsCheck_error', 'AssetsCheck_cat', 'LiabilitiesCheck_error',
+             'LiabilitiesCheck_cat',
+             'EquityCheck_error', 'EquityCheck_cat', 'AssetsLiaEquCheck_error',
+             'AssetsLiaEquCheck_cat'])

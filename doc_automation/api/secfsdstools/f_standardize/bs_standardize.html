@@ -28,7 +28,7 @@
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">&#34;&#34;&#34;Contains the definitions to standardize balance sheets.&#34;&#34;&#34;
-from typing import List
+from typing import List, Optional
 
 from secfsdstools.f_standardize.base_rule_framework import RuleGroup
 from secfsdstools.f_standardize.base_prepivot_rules import PrePivotDeduplicate
@@ -322,7 +322,8 @@ class BalanceSheetStandardizer(Standardizer):
     main_statement_tags = [&#39;Assets&#39;, &#39;AssetsCurrent&#39;, &#39;AssetsNoncurrent&#39;,
                            &#39;Liabilities&#39;, &#39;LiabilitiesCurrent&#39;, &#39;LiabilitiesNoncurrent&#39;]
 
-    def __init__(self, filter_for_main_statement: bool = True, iterations: int = 3):
+    def __init__(self, filter_for_main_statement: bool = True, iterations: int = 3,
+                 additional_final_sub_fields: Optional[List[str]] = None):
         super().__init__(
             prepivot_rule_tree=self.prepivot_rule_tree,
             pre_rule_tree=self.preprocess_rule_tree,
@@ -332,7 +333,8 @@ class BalanceSheetStandardizer(Standardizer):
             final_tags=self.final_tags,
             main_iterations=iterations,
             filter_for_main_statement=filter_for_main_statement,
-            main_statement_tags=self.main_statement_tags)</code></pre>
+            main_statement_tags=self.main_statement_tags,
+            additional_final_sub_fields=additional_final_sub_fields)</code></pre>
 </details>
 </section>
 <section>
@@ -346,7 +348,7 @@ class BalanceSheetStandardizer(Standardizer):
 <dl>
 <dt id="secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizer"><code class="flex name class">
 <span>class <span class="ident">BalanceSheetStandardizer</span></span>
-<span>(</span><span>filter_for_main_statement: bool = True, iterations: int = 3)</span>
+<span>(</span><span>filter_for_main_statement: bool = True, iterations: int = 3, additional_final_sub_fields: Optional[List[str]] = None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>The goal of this Standardizer is to create BalanceSheets that are comparable,
@@ -404,6 +406,10 @@ the tags that are used are defined in the main_statement_tags parameter</dd>
 <dt><strong><code>invert_negated</code></strong> :&ensp;<code>bool, Optional, True</code></dt>
 <dd>inverts the value of the that are marked
 as negated.</dd>
+<dt><strong><code>additional_final_sub_fields</code></strong></dt>
+<dd>define additional fields from the sub_df that will
+be added in addition to 'adsh', 'cik', 'form', 'fye', 'fy', 'fp', 'filed'
+to the resulting df, when the present method is called.</dd>
 </dl></div>
 <details class="source">
 <summary>
@@ -692,7 +698,8 @@ as negated.</dd>
     main_statement_tags = [&#39;Assets&#39;, &#39;AssetsCurrent&#39;, &#39;AssetsNoncurrent&#39;,
                            &#39;Liabilities&#39;, &#39;LiabilitiesCurrent&#39;, &#39;LiabilitiesNoncurrent&#39;]
 
-    def __init__(self, filter_for_main_statement: bool = True, iterations: int = 3):
+    def __init__(self, filter_for_main_statement: bool = True, iterations: int = 3,
+                 additional_final_sub_fields: Optional[List[str]] = None):
         super().__init__(
             prepivot_rule_tree=self.prepivot_rule_tree,
             pre_rule_tree=self.preprocess_rule_tree,
@@ -702,7 +709,8 @@ as negated.</dd>
             final_tags=self.final_tags,
             main_iterations=iterations,
             filter_for_main_statement=filter_for_main_statement,
-            main_statement_tags=self.main_statement_tags)</code></pre>
+            main_statement_tags=self.main_statement_tags,
+            additional_final_sub_fields=additional_final_sub_fields)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">

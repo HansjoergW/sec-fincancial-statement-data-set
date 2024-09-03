@@ -310,7 +310,8 @@ class BalanceSheetStandardizer(Standardizer):
                              &#39;RetainedEarnings&#39;,
                              &#39;AdditionalPaidInCapital&#39;,
                              &#39;TreasuryStockValue&#39;,
-                             &#39;TemporaryEquity&#39;, &#39;RedeemableEquity&#39;,
+                             &#39;TemporaryEquity&#39;,
+                             &#39;RedeemableEquity&#39;,
                              &#39;LiabilitiesAndEquity&#39;,
                              ]
 
@@ -322,8 +323,32 @@ class BalanceSheetStandardizer(Standardizer):
     main_statement_tags = [&#39;Assets&#39;, &#39;AssetsCurrent&#39;, &#39;AssetsNoncurrent&#39;,
                            &#39;Liabilities&#39;, &#39;LiabilitiesCurrent&#39;, &#39;LiabilitiesNoncurrent&#39;]
 
-    def __init__(self, filter_for_main_statement: bool = True, iterations: int = 3,
-                 additional_final_sub_fields: Optional[List[str]] = None):
+    def __init__(self,
+                 filter_for_main_statement: bool = True,
+                 iterations: int = 3,
+                 additional_final_sub_fields: Optional[List[str]] = None,
+                 additional_final_tags: Optional[List[str]] = None
+                 ):
+        &#34;&#34;&#34;
+        Initialize the Income Statement Standardizer.
+
+        Fine tune it with the following arguments:
+
+        Args:
+            filter_for_main_statement (bool):
+                    Only consider the reports that contain most of the &#34;main_statement_tags&#34;.
+                    Default is True.
+            iterations (int): Number of times the main rules should be applied.
+                    Default is 3 for CashFlow.
+            additional_final_sub_fields (List, Optional):
+                    When using the present method, the results are joined with the following fields
+                    from the sub_df entry: &#39;adsh&#39;, &#39;cik&#39;, &#39;form&#39;, &#39;fye&#39;, &#39;fy&#39;, &#39;fp&#39;, &#39;filed&#39;
+                    Additional fields can be assigend in this list. Default is None.
+            additional_final_tags (List, Optional):
+                     the &#34;final_tags&#34; list define the tags that will be present in the final result
+                     dataframe. Additional tags can be added via this parameter. Default is None.
+        &#34;&#34;&#34;
+
         super().__init__(
             prepivot_rule_tree=self.prepivot_rule_tree,
             pre_rule_tree=self.preprocess_rule_tree,
@@ -334,7 +359,9 @@ class BalanceSheetStandardizer(Standardizer):
             main_iterations=iterations,
             filter_for_main_statement=filter_for_main_statement,
             main_statement_tags=self.main_statement_tags,
-            additional_final_sub_fields=additional_final_sub_fields)</code></pre>
+            additional_final_sub_fields=additional_final_sub_fields,
+            additional_final_tags=additional_final_tags
+        )</code></pre>
 </details>
 </section>
 <section>
@@ -348,7 +375,7 @@ class BalanceSheetStandardizer(Standardizer):
 <dl>
 <dt id="secfsdstools.f_standardize.bs_standardize.BalanceSheetStandardizer"><code class="flex name class">
 <span>class <span class="ident">BalanceSheetStandardizer</span></span>
-<span>(</span><span>filter_for_main_statement: bool = True, iterations: int = 3, additional_final_sub_fields: Optional[List[str]] = None)</span>
+<span>(</span><span>filter_for_main_statement: bool = True, iterations: int = 3, additional_final_sub_fields: Optional[List[str]] = None, additional_final_tags: Optional[List[str]] = None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>The goal of this Standardizer is to create BalanceSheets that are comparable,
@@ -369,48 +396,24 @@ RetainedEarnings
 TemporaryEquity
 RedeemableEquity
 LiabilitiesAndEquity</p>
+<p>Initialize the Income Statement Standardizer.</p>
+<p>Fine tune it with the following arguments:</p>
 <h2 id="args">Args</h2>
 <dl>
-<dt><strong><code>prepivot_rule_tree</code></strong></dt>
-<dd>rules that are applied before the data is pivoted. These are rules
-that filter (like deduplicate) or correct values.</dd>
-<dt><strong><code>pre_rule_tree</code></strong></dt>
-<dd>rules that are applied once before the main processing. These are mainly
-rules that try to correct existing data from obvious errors (like wrong
-tagging)</dd>
-<dt><strong><code>main_rule_tree</code></strong></dt>
-<dd>rules that are applied during the main processing rule and which do the
-heavy lifting. These rules can be excuted multipe times depending on the value
-of the main_iterations parameter</dd>
-<dt><strong><code>post_rule_tree</code></strong></dt>
-<dd>rules that are used to "cleanup", like setting certain values to
-0.0</dd>
-<dt><strong><code>validation_rules</code></strong></dt>
-<dd>Validation rules are applied after all rules were applied.
-they add validation columns to the main dataset. Validation rules do check
-if certain requirements are met. E.g. in a Balance Sheet, the following
-equation should be true: Assets = AssetsCurrent + AssetsNoncurrent</dd>
-<dt><strong><code>main_iterations</code></strong></dt>
-<dd>defining the number of iterations the main rules should be applied</dd>
-<dt><strong><code>final_tags</code></strong></dt>
-<dd>tbd</dd>
-<dt><strong><code>filter_for_main_statement</code></strong> :&ensp;<code>bool, Optional, True</code></dt>
-<dd>depending on the data, it could look
-as if multiple Balance Sheets statements could be present in a single report.
-However, there should only be one. Setting
-this flag to true (which is the default), tries to select the one that is most
-likely the real statement.
-the tags that are used are defined in the main_statement_tags parameter</dd>
-<dt><strong><code>main_statement_tags</code></strong></dt>
-<dd>tbd</dd>
-<dt><strong><code>invert_negated</code></strong> :&ensp;<code>bool, Optional, True</code></dt>
-<dd>inverts the value of the that are marked
-as negated.</dd>
-<dt><strong><code>additional_final_sub_fields</code></strong></dt>
-<dd>define additional fields from the sub_df that will
-be added in addition to 'adsh', 'cik', 'form', 'fye', 'fy', 'fp', 'filed'
-to the resulting df, when the present method is called.</dd>
-</dl></div>
+<dt>filter_for_main_statement (bool):</dt>
+<dt>Only consider the reports that contain most of the "main_statement_tags".</dt>
+<dt>Default is True.</dt>
+<dt><strong><code>iterations</code></strong> :&ensp;<code>int</code></dt>
+<dd>Number of times the main rules should be applied.
+Default is 3 for CashFlow.</dd>
+</dl>
+<p>additional_final_sub_fields (List, Optional):
+When using the present method, the results are joined with the following fields
+from the sub_df entry: 'adsh', 'cik', 'form', 'fye', 'fy', 'fp', 'filed'
+Additional fields can be assigend in this list. Default is None.
+additional_final_tags (List, Optional):
+the "final_tags" list define the tags that will be present in the final result
+dataframe. Additional tags can be added via this parameter. Default is None.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -686,7 +689,8 @@ to the resulting df, when the present method is called.</dd>
                              &#39;RetainedEarnings&#39;,
                              &#39;AdditionalPaidInCapital&#39;,
                              &#39;TreasuryStockValue&#39;,
-                             &#39;TemporaryEquity&#39;, &#39;RedeemableEquity&#39;,
+                             &#39;TemporaryEquity&#39;,
+                             &#39;RedeemableEquity&#39;,
                              &#39;LiabilitiesAndEquity&#39;,
                              ]
 
@@ -698,8 +702,32 @@ to the resulting df, when the present method is called.</dd>
     main_statement_tags = [&#39;Assets&#39;, &#39;AssetsCurrent&#39;, &#39;AssetsNoncurrent&#39;,
                            &#39;Liabilities&#39;, &#39;LiabilitiesCurrent&#39;, &#39;LiabilitiesNoncurrent&#39;]
 
-    def __init__(self, filter_for_main_statement: bool = True, iterations: int = 3,
-                 additional_final_sub_fields: Optional[List[str]] = None):
+    def __init__(self,
+                 filter_for_main_statement: bool = True,
+                 iterations: int = 3,
+                 additional_final_sub_fields: Optional[List[str]] = None,
+                 additional_final_tags: Optional[List[str]] = None
+                 ):
+        &#34;&#34;&#34;
+        Initialize the Income Statement Standardizer.
+
+        Fine tune it with the following arguments:
+
+        Args:
+            filter_for_main_statement (bool):
+                    Only consider the reports that contain most of the &#34;main_statement_tags&#34;.
+                    Default is True.
+            iterations (int): Number of times the main rules should be applied.
+                    Default is 3 for CashFlow.
+            additional_final_sub_fields (List, Optional):
+                    When using the present method, the results are joined with the following fields
+                    from the sub_df entry: &#39;adsh&#39;, &#39;cik&#39;, &#39;form&#39;, &#39;fye&#39;, &#39;fy&#39;, &#39;fp&#39;, &#39;filed&#39;
+                    Additional fields can be assigend in this list. Default is None.
+            additional_final_tags (List, Optional):
+                     the &#34;final_tags&#34; list define the tags that will be present in the final result
+                     dataframe. Additional tags can be added via this parameter. Default is None.
+        &#34;&#34;&#34;
+
         super().__init__(
             prepivot_rule_tree=self.prepivot_rule_tree,
             pre_rule_tree=self.preprocess_rule_tree,
@@ -710,7 +738,9 @@ to the resulting df, when the present method is called.</dd>
             main_iterations=iterations,
             filter_for_main_statement=filter_for_main_statement,
             main_statement_tags=self.main_statement_tags,
-            additional_final_sub_fields=additional_final_sub_fields)</code></pre>
+            additional_final_sub_fields=additional_final_sub_fields,
+            additional_final_tags=additional_final_tags
+        )</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">

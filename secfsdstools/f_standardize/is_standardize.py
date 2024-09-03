@@ -1093,8 +1093,31 @@ class IncomeStatementStandardizer(Standardizer):
                            'ProfitLoss'
                            ]
 
-    def __init__(self, filter_for_main_statement: bool = True, iterations: int = 3,
-                 additional_final_sub_fields: Optional[List[str]] = None):
+    def __init__(self,
+                 filter_for_main_statement: bool = True,
+                 iterations: int = 3,
+                 additional_final_sub_fields: Optional[List[str]] = None,
+                 additional_final_tags: Optional[List[str]] = None
+                 ):
+        """
+        Initialize the Income Statement Standardizer.
+
+        Fine tune it with the following arguments:
+
+        Args:
+            filter_for_main_statement (bool):
+                    Only consider the reports that contain most of the "main_statement_tags".
+                    Default is True.
+            iterations (int): Number of times the main rules should be applied.
+                    Default is 3 for CashFlow.
+            additional_final_sub_fields (List, Optional):
+                    When using the present method, the results are joined with the following fields
+                    from the sub_df entry: 'adsh', 'cik', 'form', 'fye', 'fy', 'fp', 'filed'
+                    Additional fields can be assigned in this list. Default is None.
+            additional_final_tags (List, Optional):
+                     the "final_tags" list define the tags that will be present in the final result
+                     dataframe. Additional tags can be added via this parameter. Default is None.
+        """
         super().__init__(
             prepivot_rule_tree=self.prepivot_rule_tree,
             pre_rule_tree=self.preprocess_rule_tree,
@@ -1105,5 +1128,6 @@ class IncomeStatementStandardizer(Standardizer):
             main_iterations=iterations,
             filter_for_main_statement=filter_for_main_statement,
             main_statement_tags=self.main_statement_tags,
-            additional_final_sub_fields=additional_final_sub_fields
+            additional_final_sub_fields=additional_final_sub_fields,
+            additional_final_tags=additional_final_tags
         )

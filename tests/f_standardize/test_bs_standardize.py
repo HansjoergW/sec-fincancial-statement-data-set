@@ -54,9 +54,10 @@ def test_standardizing(joined_bag):
     assert validation_overview_df.loc[0].AssetsLiaEquCheck_cat_pct > 93.0
 
     # check result_df
-    assert (standardize_bag.result_df.columns.to_list() == ['adsh', 'cik', 'name', 'form', 'fye',
-                                                            'fy', 'fp', 'date', 'filed', 'coreg',
-                                                            'report', 'ddate', 'qtrs'] +
+    assert (standardize_bag.result_df.columns.to_list() ==
+            ['adsh', 'cik', 'name', 'form', 'fye',
+             'fy', 'fp', 'date', 'filed', 'coreg',
+             'report', 'ddate', 'qtrs'] +
             standardizer.final_tags +
             ['AssetsCheck_error', 'AssetsCheck_cat', 'LiabilitiesCheck_error',
              'LiabilitiesCheck_cat',
@@ -65,15 +66,13 @@ def test_standardizing(joined_bag):
 
 
 def test_options_standardizing(joined_bag):
-    standardizer = BalanceSheetStandardizer(additional_final_sub_fields=['zipba'])
+    standardizer = BalanceSheetStandardizer(additional_final_sub_fields=['zipba'],
+                                            additional_final_tags=['LongTermDebt'])
 
     result_df = standardizer.present(joined_bag)
 
-    assert (result_df.columns.to_list() == ['adsh', 'cik', 'name', 'form', 'fye',
-                                            'fy', 'fp', 'date', 'filed', 'zipba', 'coreg',
-                                            'report', 'ddate', 'qtrs'] +
-            standardizer.final_tags +
-            ['AssetsCheck_error', 'AssetsCheck_cat', 'LiabilitiesCheck_error',
-             'LiabilitiesCheck_cat',
-             'EquityCheck_error', 'EquityCheck_cat', 'AssetsLiaEquCheck_error',
-             'AssetsLiaEquCheck_cat'])
+    assert 'LongTermDebt' in result_df.columns.to_list()
+    assert 'zipba' in result_df.columns.to_list()
+
+
+

@@ -255,7 +255,8 @@ class Standardizer(Presenter[JoinedDataBag]):
                  filter_for_main_statement: bool = True,
                  main_statement_tags: List[str] = None,
                  invert_negated: bool = True,
-                 additional_final_sub_fields: Optional[List[str]] = None):
+                 additional_final_sub_fields: Optional[List[str]] = None,
+                 additional_final_tags: Optional[List[str]] = None):
         """
 
         Args:
@@ -284,9 +285,13 @@ class Standardizer(Presenter[JoinedDataBag]):
             main_statement_tags: tbd
             invert_negated (bool, Optional, True): inverts the value of the that are marked
                    as negated.
-            additional_final_sub_fields: define additional fields from the sub_df that will
-                   be added in addition to 'adsh', 'cik', 'form', 'fye', 'fy', 'fp', 'filed'
-                   to the resulting df, when the present method is called.
+            additional_final_sub_fields:
+                    When using the present method, the results are joined with the following fields
+                    from the sub_df entry: 'adsh', 'cik', 'form', 'fye', 'fy', 'fp', 'filed'
+                    Additional fields can be assigned in this list. Default is None.
+            additional_final_tags:
+                     the "final_tags" list define the tags that will be present in the final result
+                     dataframe. Additional tags can be added via this parameter. Default is None.
         """
         self.prepivot_rule_tree = prepivot_rule_tree
         self.pre_rule_tree = pre_rule_tree
@@ -295,6 +300,8 @@ class Standardizer(Presenter[JoinedDataBag]):
         self.validation_rules = validation_rules
         self.main_statement_tags = main_statement_tags
         self.final_tags = final_tags
+        if additional_final_tags:
+            self.final_tags = self.final_tags + additional_final_tags
         self.main_iterations = main_iterations
         self.filter_for_main_statement = filter_for_main_statement
         self.invert_negated = invert_negated

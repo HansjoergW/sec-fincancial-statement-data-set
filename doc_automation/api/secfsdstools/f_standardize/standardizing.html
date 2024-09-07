@@ -280,9 +280,10 @@ class Standardizer(Presenter[JoinedDataBag]):
                  post_rule_tree: RuleGroup,
                  validation_rules: List[ValidationRule],
                  final_tags: List[str],
-                 main_iterations: int = 2,
-                 filter_for_main_statement: bool = True,
                  main_statement_tags: List[str] = None,
+
+                 filter_for_main_statement: bool = True,
+                 main_iterations: int = 2,
                  invert_negated: bool = True,
                  additional_final_sub_fields: Optional[List[str]] = None,
                  additional_final_tags: Optional[List[str]] = None):
@@ -295,25 +296,28 @@ class Standardizer(Presenter[JoinedDataBag]):
                     rules that try to correct existing data from obvious errors (like wrong
                     tagging)
             main_rule_tree: rules that are applied during the main processing rule and which do the
-                    heavy lifting. These rules can be excuted multipe times depending on the value
+                    heavy lifting. These rules can be executed multiple times depending on the value
                     of the main_iterations parameter
             post_rule_tree: rules that are used to &#34;cleanup&#34;, like setting certain values to
-                    0.0
+                    0.0. They are just executed once.
             validation_rules: Validation rules are applied after all rules were applied.
                    they add validation columns to the main dataset. Validation rules do check
                    if certain requirements are met. E.g. in a Balance Sheet, the following
                    equation should be true: Assets = AssetsCurrent + AssetsNoncurrent
-            main_iterations: defining the number of iterations the main rules should be applied
-            final_tags: tbd
+            final_tags: The list of tags/columns that will appear in the final result dataframe.
+            main_statement_tags: list of tags that is used to identify the main table of a
+                   financial statement (income statement, balance sheet, cash flow).
+
+
             filter_for_main_statement (bool, Optional, True): depending on the data, it could look
                    as if multiple Balance Sheets statements could be present in a single report.
                    However, there should only be one. Setting
                    this flag to true (which is the default), tries to select the one that is most
                    likely the real statement.
                    the tags that are used are defined in the main_statement_tags parameter
-            main_statement_tags: tbd
-            invert_negated (bool, Optional, True): inverts the value of the that are marked
-                   as negated.
+            main_iterations: defining the number of iterations the main rules should be applied
+            invert_negated (bool, Optional, True): inverts the value of the tags that are marked
+                   as negated (in the pre_df).
             additional_final_sub_fields:
                     When using the present method, the results are joined with the following fields
                     from the sub_df entry: &#39;adsh&#39;, &#39;cik&#39;, &#39;form&#39;, &#39;fye&#39;, &#39;fy&#39;, &#39;fp&#39;, &#39;filed&#39;
@@ -979,7 +983,7 @@ will be created</dd>
 </dd>
 <dt id="secfsdstools.f_standardize.standardizing.Standardizer"><code class="flex name class">
 <span>class <span class="ident">Standardizer</span></span>
-<span>(</span><span>prepivot_rule_tree: <a title="secfsdstools.f_standardize.base_rule_framework.RuleGroup" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.RuleGroup">RuleGroup</a>, pre_rule_tree: <a title="secfsdstools.f_standardize.base_rule_framework.RuleGroup" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.RuleGroup">RuleGroup</a>, main_rule_tree: <a title="secfsdstools.f_standardize.base_rule_framework.RuleGroup" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.RuleGroup">RuleGroup</a>, post_rule_tree: <a title="secfsdstools.f_standardize.base_rule_framework.RuleGroup" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.RuleGroup">RuleGroup</a>, validation_rules: List[<a title="secfsdstools.f_standardize.base_validation_rules.ValidationRule" href="base_validation_rules.html#secfsdstools.f_standardize.base_validation_rules.ValidationRule">ValidationRule</a>], final_tags: List[str], main_iterations: int = 2, filter_for_main_statement: bool = True, main_statement_tags: List[str] = None, invert_negated: bool = True, additional_final_sub_fields: Optional[List[str]] = None, additional_final_tags: Optional[List[str]] = None)</span>
+<span>(</span><span>prepivot_rule_tree: <a title="secfsdstools.f_standardize.base_rule_framework.RuleGroup" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.RuleGroup">RuleGroup</a>, pre_rule_tree: <a title="secfsdstools.f_standardize.base_rule_framework.RuleGroup" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.RuleGroup">RuleGroup</a>, main_rule_tree: <a title="secfsdstools.f_standardize.base_rule_framework.RuleGroup" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.RuleGroup">RuleGroup</a>, post_rule_tree: <a title="secfsdstools.f_standardize.base_rule_framework.RuleGroup" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.RuleGroup">RuleGroup</a>, validation_rules: List[<a title="secfsdstools.f_standardize.base_validation_rules.ValidationRule" href="base_validation_rules.html#secfsdstools.f_standardize.base_validation_rules.ValidationRule">ValidationRule</a>], final_tags: List[str], main_statement_tags: List[str] = None, filter_for_main_statement: bool = True, main_iterations: int = 2, invert_negated: bool = True, additional_final_sub_fields: Optional[List[str]] = None, additional_final_tags: Optional[List[str]] = None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>The Standardizer implements the base processing logic to standardize financial statements.</p>
@@ -994,20 +998,21 @@ rules that try to correct existing data from obvious errors (like wrong
 tagging)</dd>
 <dt><strong><code>main_rule_tree</code></strong></dt>
 <dd>rules that are applied during the main processing rule and which do the
-heavy lifting. These rules can be excuted multipe times depending on the value
+heavy lifting. These rules can be executed multiple times depending on the value
 of the main_iterations parameter</dd>
 <dt><strong><code>post_rule_tree</code></strong></dt>
 <dd>rules that are used to "cleanup", like setting certain values to
-0.0</dd>
+0.0. They are just executed once.</dd>
 <dt><strong><code>validation_rules</code></strong></dt>
 <dd>Validation rules are applied after all rules were applied.
 they add validation columns to the main dataset. Validation rules do check
 if certain requirements are met. E.g. in a Balance Sheet, the following
 equation should be true: Assets = AssetsCurrent + AssetsNoncurrent</dd>
-<dt><strong><code>main_iterations</code></strong></dt>
-<dd>defining the number of iterations the main rules should be applied</dd>
 <dt><strong><code>final_tags</code></strong></dt>
-<dd>tbd</dd>
+<dd>The list of tags/columns that will appear in the final result dataframe.</dd>
+<dt><strong><code>main_statement_tags</code></strong></dt>
+<dd>list of tags that is used to identify the main table of a
+financial statement (income statement, balance sheet, cash flow).</dd>
 <dt><strong><code>filter_for_main_statement</code></strong> :&ensp;<code>bool, Optional, True</code></dt>
 <dd>depending on the data, it could look
 as if multiple Balance Sheets statements could be present in a single report.
@@ -1015,11 +1020,11 @@ However, there should only be one. Setting
 this flag to true (which is the default), tries to select the one that is most
 likely the real statement.
 the tags that are used are defined in the main_statement_tags parameter</dd>
-<dt><strong><code>main_statement_tags</code></strong></dt>
-<dd>tbd</dd>
+<dt><strong><code>main_iterations</code></strong></dt>
+<dd>defining the number of iterations the main rules should be applied</dd>
 <dt><strong><code>invert_negated</code></strong> :&ensp;<code>bool, Optional, True</code></dt>
-<dd>inverts the value of the that are marked
-as negated.</dd>
+<dd>inverts the value of the tags that are marked
+as negated (in the pre_df).</dd>
 </dl>
 <p>additional_final_sub_fields:
 When using the present method, the results are joined with the following fields
@@ -1049,9 +1054,10 @@ dataframe. Additional tags can be added via this parameter. Default is None.</p>
                  post_rule_tree: RuleGroup,
                  validation_rules: List[ValidationRule],
                  final_tags: List[str],
-                 main_iterations: int = 2,
-                 filter_for_main_statement: bool = True,
                  main_statement_tags: List[str] = None,
+
+                 filter_for_main_statement: bool = True,
+                 main_iterations: int = 2,
                  invert_negated: bool = True,
                  additional_final_sub_fields: Optional[List[str]] = None,
                  additional_final_tags: Optional[List[str]] = None):
@@ -1064,25 +1070,28 @@ dataframe. Additional tags can be added via this parameter. Default is None.</p>
                     rules that try to correct existing data from obvious errors (like wrong
                     tagging)
             main_rule_tree: rules that are applied during the main processing rule and which do the
-                    heavy lifting. These rules can be excuted multipe times depending on the value
+                    heavy lifting. These rules can be executed multiple times depending on the value
                     of the main_iterations parameter
             post_rule_tree: rules that are used to &#34;cleanup&#34;, like setting certain values to
-                    0.0
+                    0.0. They are just executed once.
             validation_rules: Validation rules are applied after all rules were applied.
                    they add validation columns to the main dataset. Validation rules do check
                    if certain requirements are met. E.g. in a Balance Sheet, the following
                    equation should be true: Assets = AssetsCurrent + AssetsNoncurrent
-            main_iterations: defining the number of iterations the main rules should be applied
-            final_tags: tbd
+            final_tags: The list of tags/columns that will appear in the final result dataframe.
+            main_statement_tags: list of tags that is used to identify the main table of a
+                   financial statement (income statement, balance sheet, cash flow).
+
+
             filter_for_main_statement (bool, Optional, True): depending on the data, it could look
                    as if multiple Balance Sheets statements could be present in a single report.
                    However, there should only be one. Setting
                    this flag to true (which is the default), tries to select the one that is most
                    likely the real statement.
                    the tags that are used are defined in the main_statement_tags parameter
-            main_statement_tags: tbd
-            invert_negated (bool, Optional, True): inverts the value of the that are marked
-                   as negated.
+            main_iterations: defining the number of iterations the main rules should be applied
+            invert_negated (bool, Optional, True): inverts the value of the tags that are marked
+                   as negated (in the pre_df).
             additional_final_sub_fields:
                     When using the present method, the results are joined with the following fields
                     from the sub_df entry: &#39;adsh&#39;, &#39;cik&#39;, &#39;form&#39;, &#39;fye&#39;, &#39;fy&#39;, &#39;fp&#39;, &#39;filed&#39;

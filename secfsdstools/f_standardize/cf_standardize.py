@@ -558,17 +558,17 @@ class CashFlowStandardizer(Standardizer):
     """
     prepivot_rule_tree = RuleGroup(
         prefix="CF_PREPIV",
-        rules=[PrePivotDeduplicate(), # remove duplicates
-               PrePivotMaxQtrs(max_qtrs=4), # only keep entries with qtrs <= 4
+        rules=[PrePivotDeduplicate(),  # remove duplicates
+               PrePivotMaxQtrs(max_qtrs=4),  # only keep entries with qtrs <= 4
                PrePivotCorrectSign(
-                   tag_list=inflow_tags, # make sure these tags have a positive value
+                   tag_list=inflow_tags,  # make sure these tags have a positive value
                    is_positive=True
                ),
                PrePivotCorrectSign(
-                   tag_list=outflow_tags, # make sure these tags have a negative value
+                   tag_list=outflow_tags,  # make sure these tags have a negative value
                    is_positive=False
                ),
-               PrePivotCashAtEndOfPeriod() # prepare CashAtEndOfPeriod
+               PrePivotCashAtEndOfPeriod()  # prepare CashAtEndOfPeriod
                ]
     )
 
@@ -944,8 +944,17 @@ class CashFlowStandardizer(Standardizer):
     ]
 
     def __init__(self,
+                 prepivot_rule_tree: Optional[RuleGroup] = None,
+                 pre_rule_tree: Optional[RuleGroup] = None,
+                 main_rule_tree: Optional[RuleGroup] = None,
+                 post_rule_tree: Optional[RuleGroup] = None,
+                 validation_rules: Optional[List[ValidationRule]] = None,
+                 final_tags: Optional[List[str]] = None,
+                 main_statement_tags: Optional[List[str]] = None,
+
                  filter_for_main_statement: bool = True,
-                 iterations: int = 1,
+                 main_iterations: int = 1,
+                 invert_negated: bool = True,
                  additional_final_sub_fields: Optional[List[str]] = None,
                  additional_final_tags: Optional[List[str]] = None):
         """
@@ -954,11 +963,31 @@ class CashFlowStandardizer(Standardizer):
         Fine tune it with the following arguments:
 
         Args:
+            prepivot_rule_tree: rules that are applied before the data is pivoted. These are rules
+                    that filter (like deduplicate) or correct values.
+            pre_rule_tree: rules that are applied once before the main processing. These are mainly
+                    rules that try to correct existing data from obvious errors (like wrong
+                    tagging)
+            main_rule_tree: rules that are applied during the main processing rule and which do the
+                    heavy lifting. These rules can be executed multiple times depending on the value
+                    of the main_iterations parameter
+            post_rule_tree: rules that are used to "cleanup", like setting certain values to
+                    0.0. They are just executed once.
+            validation_rules: Validation rules are applied after all rules were applied.
+                   they add validation columns to the main dataset. Validation rules do check
+                   if certain requirements are met. E.g. in a Balance Sheet, the following
+                   equation should be true: Assets = AssetsCurrent + AssetsNoncurrent
+            final_tags: The list of tags/columns that will appear in the final result dataframe.
+            main_statement_tags: list of tags that is used to identify the main table of a
+                   financial statement (income statement, balance sheet, cash flow).
+
             filter_for_main_statement (bool):
                     Only consider the reports that contain most of the "main_statement_tags".
                     Default is True.
-            iterations (int): Number of times the main rules should be applied.
+            main_iterations (int): Number of times the main rules should be applied.
                     Default is 1 for CashFlow.
+            invert_negated (bool, Optional, True): inverts the value of the tags that are marked
+                   as negated (in the pre_df).
             additional_final_sub_fields (List, Optional):
                     When using the present method, the results are joined with the following fields
                     from the sub_df entry: 'adsh', 'cik', 'form', 'fye', 'fy', 'fp', 'filed'
@@ -968,15 +997,19 @@ class CashFlowStandardizer(Standardizer):
                      dataframe. Additional tags can be added via this parameter. Default is None.
         """
         super().__init__(
-            prepivot_rule_tree=self.prepivot_rule_tree,
-            pre_rule_tree=self.preprocess_rule_tree,
-            main_rule_tree=self.main_rule_tree,
-            post_rule_tree=self.post_rule_tree,
-            validation_rules=self.validation_rules,
-            final_tags=self.final_tags,
-            main_iterations=iterations,
+            prepivot_rule_tree=
+                    prepivot_rule_tree if prepivot_rule_tree else self.prepivot_rule_tree,
+            pre_rule_tree=pre_rule_tree if pre_rule_tree else self.preprocess_rule_tree,
+            main_rule_tree=main_rule_tree if main_rule_tree else self.main_rule_tree,
+            post_rule_tree=post_rule_tree if post_rule_tree else self.post_rule_tree,
+            validation_rules=validation_rules if validation_rules else self.validation_rules,
+            final_tags=final_tags if final_tags else self.final_tags,
+            main_statement_tags=
+                    main_statement_tags if main_statement_tags else self.main_statement_tags,
+
             filter_for_main_statement=filter_for_main_statement,
-            main_statement_tags=self.main_statement_tags,
+            main_iterations=main_iterations,
+            invert_negated=invert_negated,
             additional_final_sub_fields=additional_final_sub_fields,
             additional_final_tags=additional_final_tags
         )

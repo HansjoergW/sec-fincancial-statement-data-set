@@ -251,9 +251,10 @@ class Standardizer(Presenter[JoinedDataBag]):
                  post_rule_tree: RuleGroup,
                  validation_rules: List[ValidationRule],
                  final_tags: List[str],
-                 main_iterations: int = 2,
-                 filter_for_main_statement: bool = True,
                  main_statement_tags: List[str] = None,
+
+                 filter_for_main_statement: bool = True,
+                 main_iterations: int = 2,
                  invert_negated: bool = True,
                  additional_final_sub_fields: Optional[List[str]] = None,
                  additional_final_tags: Optional[List[str]] = None):
@@ -266,25 +267,28 @@ class Standardizer(Presenter[JoinedDataBag]):
                     rules that try to correct existing data from obvious errors (like wrong
                     tagging)
             main_rule_tree: rules that are applied during the main processing rule and which do the
-                    heavy lifting. These rules can be excuted multipe times depending on the value
+                    heavy lifting. These rules can be executed multiple times depending on the value
                     of the main_iterations parameter
             post_rule_tree: rules that are used to "cleanup", like setting certain values to
-                    0.0
+                    0.0. They are just executed once.
             validation_rules: Validation rules are applied after all rules were applied.
                    they add validation columns to the main dataset. Validation rules do check
                    if certain requirements are met. E.g. in a Balance Sheet, the following
                    equation should be true: Assets = AssetsCurrent + AssetsNoncurrent
-            main_iterations: defining the number of iterations the main rules should be applied
-            final_tags: tbd
+            final_tags: The list of tags/columns that will appear in the final result dataframe.
+            main_statement_tags: list of tags that is used to identify the main table of a
+                   financial statement (income statement, balance sheet, cash flow).
+
+
             filter_for_main_statement (bool, Optional, True): depending on the data, it could look
                    as if multiple Balance Sheets statements could be present in a single report.
                    However, there should only be one. Setting
                    this flag to true (which is the default), tries to select the one that is most
                    likely the real statement.
                    the tags that are used are defined in the main_statement_tags parameter
-            main_statement_tags: tbd
-            invert_negated (bool, Optional, True): inverts the value of the that are marked
-                   as negated.
+            main_iterations: defining the number of iterations the main rules should be applied
+            invert_negated (bool, Optional, True): inverts the value of the tags that are marked
+                   as negated (in the pre_df).
             additional_final_sub_fields:
                     When using the present method, the results are joined with the following fields
                     from the sub_df entry: 'adsh', 'cik', 'form', 'fye', 'fy', 'fp', 'filed'

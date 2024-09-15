@@ -17,32 +17,30 @@ v.1.6.2
 - 3.7 not checked anymore, 3.11 added
 - version of library readable: print(secfsdstools.__version__) returns the version
 - simplification of OutstandingShares and EPS / Validation for EPS added
-- configure attribute list for sub_df
-- configure additional final tags
-
-- Customization doc for Standardizer
-  - Parameters
-  - SubClass
-  - adding rules
-  - finding other Tags
-
-- hook for after updated logic
+- improve ability to customize the Standardizer
+  - configure column list which are joined from for sub_df
+  - configure additional final tags
+  - all constructor parameters from the Base Standardizer class can be overwritten via Derived Standardizer classes
+  - notebook on how to customize standardizer and how to find used tag-names
 
 
 Todo:
+- hook for after updated logic
+    - Aufbereitung der Daten für BS, IS und CF Statement möglichst direkt bei update machen,
+      so, dass diese Daten schon vorbereitet und gefiltert zur Verfügung stehen.
+      Vlt. auch eine Art PostDownload Hook anbieten.
+      einfaches Pipeline Framework
+
 
 - Completion and Validation for SharesOutstanding und EarningsPerShare
   I noticed that there are two columns EarningsPerShareBasic/EarningsPerShareDiluted that can be calculated
   if we have NetIncomeLos and WeightedAverageNumberOfSharesOutstandingBasic/WeightedAverageNumberOfDilutedSharesOutstanding.
   It is up to you to keep the column
 
+
 - in CF haben wir oft auch zusätzliche 'Cash' Tags -> benötigen wir diese im BS auch?
 - MaxQtr PrePivot Rule also for BS und IS
 
-- Aufbereitung der Daten für BS, IS und CF Statement möglichst direkt bei update machen,
-  so, dass diese Daten schon vorbereitet und gefiltert zur Verfügung stehen.
-  Vlt. auch eine Art PostDownload Hook anbieten.
-  einfaches Pipeline Framework
 
 - Discord Channel?
 - evtl. sollte jede Regel noch eine "Explanation" bekommen. Ein Text, der die Regel spezifisch erklärt,
@@ -71,8 +69,6 @@ Next:
   z.B. Collector als Input bis zur Presentation
   -> z.B. für selektierte ciks daten so aufbereiten, dass sie alle vorhandenen Jahre in Spalten angezeigt werden
 
-- transform methode, z.b. um zu homogenisieren
-
 - update des config files
   fehlende Inhalte müssen gesetzt und auf default gesetzt werden, oder?
   überflüssige Inhalte müssen entfernt werden
@@ -87,8 +83,6 @@ Next:
     -> Hinweis Message beim Laden der Config
     -> config for autocheck to download / autodownload
 
-- using sourcery ai to improve code
-  -> see PR in Fork https://github.com/pikki622/sec-fincancial-statement-data-set/pulls
 
 later
 -build timeline for company

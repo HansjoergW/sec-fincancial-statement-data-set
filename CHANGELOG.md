@@ -2,6 +2,23 @@
 # Changelog
 See the [Release Notes](https://hansjoergw.github.io/sec-fincancial-statement-data-set/releasenotes/) for details.
 
+
+## 1.6.1 -> 1.6.2
+* Major changes
+  * Compatibility for Python 3.7 is no longer checked
+  * Compatibility for Python 3.11 was added
+* Minor changes
+  * `secfsdstools.__version__` now returns the version of the library
+  * `IncomeStatementStandardizer`
+    * Calculation for `OutstandingShares` and `EarningsPerShare` was simplified and improved
+    * Validation rule for `EarningsPerShare` was added
+    * Please have a look at the comments in [07_02_IS_standardizer](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/07_02_IS_standardizer.ipynb) <br>
+  * Ability to customize the standardizer was improved
+    * Configure the columns that are merged from sub_df into the final results can be extended
+    * Configure additional tags that should appear in the final result can be defined
+    * All constructor parameters of the `Standardizer` base class can be overwritten via the constructor of the three standardizer classes
+    * New notebook that shows the different possibilities for customization: [07_04_customize_standardizer](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/07_04_customize_standardizer.ipynb) <br>
+
 ## 1.6 -> 1.6.1
 * Minor improvements
   * `filed` column added to result of present method of standardizer

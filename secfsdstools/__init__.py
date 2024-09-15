@@ -1,3 +1,8 @@
+"""
+main __init__.py
+
+Defines the version attribut of the library
+"""
 from importlib.metadata import version, PackageNotFoundError
 
 try:

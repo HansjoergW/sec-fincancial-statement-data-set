@@ -1,3 +1,4 @@
+# pylint: disable=C0302
 """Contains the definitions to standardize incaome statements."""
 from typing import List, Set, Optional
 
@@ -998,14 +999,14 @@ class CashFlowStandardizer(Standardizer):
         """
         super().__init__(
             prepivot_rule_tree=
-                    prepivot_rule_tree if prepivot_rule_tree else self.prepivot_rule_tree,
+            prepivot_rule_tree if prepivot_rule_tree else self.prepivot_rule_tree,
             pre_rule_tree=pre_rule_tree if pre_rule_tree else self.preprocess_rule_tree,
             main_rule_tree=main_rule_tree if main_rule_tree else self.main_rule_tree,
             post_rule_tree=post_rule_tree if post_rule_tree else self.post_rule_tree,
             validation_rules=validation_rules if validation_rules else self.validation_rules,
             final_tags=final_tags if final_tags else self.final_tags,
             main_statement_tags=
-                    main_statement_tags if main_statement_tags else self.main_statement_tags,
+            main_statement_tags if main_statement_tags else self.main_statement_tags,
 
             filter_for_main_statement=filter_for_main_statement,
             main_iterations=main_iterations,

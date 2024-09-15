@@ -24,6 +24,11 @@ v.1.6.2
   - notebook on how to customize standardizer and how to find used tag-names
 
 
+Problems:
+- introduced with "adapted standardizer constructors for better customization"
+   https://github.com/HansjoergW/sec-fincancial-statement-data-set/commit/cc62c6e5602490502b8279a33a289e7b55941dbd
+
+
 Todos:
 - hook for after updated logic
     - Aufbereitung der Daten für BS, IS und CF Statement möglichst direkt bei update machen,

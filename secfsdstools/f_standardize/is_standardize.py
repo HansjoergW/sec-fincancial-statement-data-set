@@ -1102,7 +1102,7 @@ class IncomeStatementStandardizer(Standardizer):
                  main_statement_tags: Optional[List[str]] = None,
 
                  filter_for_main_statement: bool = True,
-                 main_iterations: int = 1,
+                 main_iterations: int = 3,
                  invert_negated: bool = True,
                  additional_final_sub_fields: Optional[List[str]] = None,
                  additional_final_tags: Optional[List[str]] = None):

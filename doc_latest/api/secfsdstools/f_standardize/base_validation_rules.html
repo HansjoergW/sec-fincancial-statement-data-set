@@ -209,6 +209,78 @@ class SumValidationRule(ValidationRule):
         return f&#34;Checks whether the sum of {self.summands} equals the value in &#39;{self.sum_tag}&#39;&#34;
 
 
+class ProductValidationRule(ValidationRule):
+    &#34;&#34;&#34;
+    Checks whether an expected multiplication - equation is actually true. So for instance if the
+    equation NetIncomeLoss = OustandingShares * EarningsPerShare is actually true.
+    &#34;&#34;&#34;
+
+    def __init__(self, identifier: str, product_tag: str, multipliers: List[str]):
+        &#34;&#34;&#34;
+
+        Args:
+            identifier: the identifier of the rule
+            product_tag: the tag that should contain the product of all multipliers
+            multipliers: the list with multipliers
+        &#34;&#34;&#34;
+        super().__init__(identifier=identifier)
+        self.product_tag = product_tag
+        self.multipliers = multipliers
+
+    def mask(self, data_df: pd.DataFrame) -&gt; pa.typing.Series[bool]:
+        &#34;&#34;&#34;
+            returns a Series[bool] which defines the rows to which this rule has to be applied.
+            For validation rules this means to select the rows for which all necessary tags
+            are available.
+
+        Args:
+            df: dataframe on which the rules should be applied
+
+        Returns:
+            pa.typing.Series[bool]: a boolean Series that marks which rows have to be calculated
+        &#34;&#34;&#34;
+        mask = ~data_df[self.product_tag].isna()
+        for multiplier in self.multipliers:
+            mask = mask &amp; ~data_df[multiplier].isna()
+
+        return mask
+
+    def calculate_error(self, data_df: pd.DataFrame, mask: pa.typing.Series[bool]) -&gt; \
+            pa.typing.Series[np.float64]:
+        &#34;&#34;&#34;
+        implements the calculation logic.
+        Args:
+            data_df: the dataset to validate
+            mask: the mask masking the rows to which the calculation should be applied to.
+
+        Returns:
+            pa.typing.Series[np.float64]: containing the relative error
+        &#34;&#34;&#34;
+
+        # subtract the product of all multipliers from the sum_tag and make it relative by dividing
+        # with the product_tag. finally make the result absolute, so that error is always positive
+
+
+
+        result = ((data_df[self.product_tag] - data_df[self.multipliers].prod(axis=&#39;columns&#39;))
+                  / data_df[self.product_tag]).abs()
+
+        # correct if we did devide by zero
+        mask_zero = data_df[self.product_tag] == 0.0
+        result.loc[mask_zero &amp; (data_df[self.multipliers].prod(axis=&#39;columns&#39;) == 0.0)] = 0.0
+
+        return result
+
+    def get_description(self) -&gt; str:
+        &#34;&#34;&#34;
+        Returns the description String
+        Returns:
+            str: description
+        &#34;&#34;&#34;
+        return (f&#34;Checks whether the product of {self.multipliers} equals&#34;
+                f&#34; the value in &#39;{self.product_tag}&#39;&#34;)
+
+
 class IsSetValidationRule(ValidationRule):
     &#34;&#34;&#34;
     Checks whether a certain tag has a value and is not nan.
@@ -394,6 +466,157 @@ are available.</p>
     &#34;&#34;&#34;
     # we have to mask all rows
     return pd.Series([True] * len(data_df), index=data_df.index)</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="secfsdstools.f_standardize.base_validation_rules.ValidationRule" href="#secfsdstools.f_standardize.base_validation_rules.ValidationRule">ValidationRule</a></b></code>:
+<ul class="hlist">
+<li><code><a title="secfsdstools.f_standardize.base_validation_rules.ValidationRule.calculate_error" href="#secfsdstools.f_standardize.base_validation_rules.ValidationRule.calculate_error">calculate_error</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.base_validation_rules.ValidationRule.collect_description" href="#secfsdstools.f_standardize.base_validation_rules.ValidationRule.collect_description">collect_description</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.base_validation_rules.ValidationRule.get_description" href="#secfsdstools.f_standardize.base_validation_rules.ValidationRule.get_description">get_description</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.base_validation_rules.ValidationRule.validate" href="#secfsdstools.f_standardize.base_validation_rules.ValidationRule.validate">validate</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+<dt id="secfsdstools.f_standardize.base_validation_rules.ProductValidationRule"><code class="flex name class">
+<span>class <span class="ident">ProductValidationRule</span></span>
+<span>(</span><span>identifier: str, product_tag: str, multipliers: List[str])</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Checks whether an expected multiplication - equation is actually true. So for instance if the
+equation NetIncomeLoss = OustandingShares * EarningsPerShare is actually true.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>identifier</code></strong></dt>
+<dd>the identifier of the rule</dd>
+<dt><strong><code>product_tag</code></strong></dt>
+<dd>the tag that should contain the product of all multipliers</dd>
+<dt><strong><code>multipliers</code></strong></dt>
+<dd>the list with multipliers</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class ProductValidationRule(ValidationRule):
+    &#34;&#34;&#34;
+    Checks whether an expected multiplication - equation is actually true. So for instance if the
+    equation NetIncomeLoss = OustandingShares * EarningsPerShare is actually true.
+    &#34;&#34;&#34;
+
+    def __init__(self, identifier: str, product_tag: str, multipliers: List[str]):
+        &#34;&#34;&#34;
+
+        Args:
+            identifier: the identifier of the rule
+            product_tag: the tag that should contain the product of all multipliers
+            multipliers: the list with multipliers
+        &#34;&#34;&#34;
+        super().__init__(identifier=identifier)
+        self.product_tag = product_tag
+        self.multipliers = multipliers
+
+    def mask(self, data_df: pd.DataFrame) -&gt; pa.typing.Series[bool]:
+        &#34;&#34;&#34;
+            returns a Series[bool] which defines the rows to which this rule has to be applied.
+            For validation rules this means to select the rows for which all necessary tags
+            are available.
+
+        Args:
+            df: dataframe on which the rules should be applied
+
+        Returns:
+            pa.typing.Series[bool]: a boolean Series that marks which rows have to be calculated
+        &#34;&#34;&#34;
+        mask = ~data_df[self.product_tag].isna()
+        for multiplier in self.multipliers:
+            mask = mask &amp; ~data_df[multiplier].isna()
+
+        return mask
+
+    def calculate_error(self, data_df: pd.DataFrame, mask: pa.typing.Series[bool]) -&gt; \
+            pa.typing.Series[np.float64]:
+        &#34;&#34;&#34;
+        implements the calculation logic.
+        Args:
+            data_df: the dataset to validate
+            mask: the mask masking the rows to which the calculation should be applied to.
+
+        Returns:
+            pa.typing.Series[np.float64]: containing the relative error
+        &#34;&#34;&#34;
+
+        # subtract the product of all multipliers from the sum_tag and make it relative by dividing
+        # with the product_tag. finally make the result absolute, so that error is always positive
+
+
+
+        result = ((data_df[self.product_tag] - data_df[self.multipliers].prod(axis=&#39;columns&#39;))
+                  / data_df[self.product_tag]).abs()
+
+        # correct if we did devide by zero
+        mask_zero = data_df[self.product_tag] == 0.0
+        result.loc[mask_zero &amp; (data_df[self.multipliers].prod(axis=&#39;columns&#39;) == 0.0)] = 0.0
+
+        return result
+
+    def get_description(self) -&gt; str:
+        &#34;&#34;&#34;
+        Returns the description String
+        Returns:
+            str: description
+        &#34;&#34;&#34;
+        return (f&#34;Checks whether the product of {self.multipliers} equals&#34;
+                f&#34; the value in &#39;{self.product_tag}&#39;&#34;)</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="secfsdstools.f_standardize.base_validation_rules.ValidationRule" href="#secfsdstools.f_standardize.base_validation_rules.ValidationRule">ValidationRule</a></li>
+<li>abc.ABC</li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="secfsdstools.f_standardize.base_validation_rules.ProductValidationRule.mask"><code class="name flex">
+<span>def <span class="ident">mask</span></span>(<span>self, data_df: pandas.core.frame.DataFrame) ‑> pandera.typing.pandas.Series[bool]</span>
+</code></dt>
+<dd>
+<div class="desc"><p>returns a Series[bool] which defines the rows to which this rule has to be applied.
+For validation rules this means to select the rows for which all necessary tags
+are available.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>df</code></strong></dt>
+<dd>dataframe on which the rules should be applied</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>pa.typing.Series[bool]</code></dt>
+<dd>a boolean Series that marks which rows have to be calculated</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def mask(self, data_df: pd.DataFrame) -&gt; pa.typing.Series[bool]:
+    &#34;&#34;&#34;
+        returns a Series[bool] which defines the rows to which this rule has to be applied.
+        For validation rules this means to select the rows for which all necessary tags
+        are available.
+
+    Args:
+        df: dataframe on which the rules should be applied
+
+    Returns:
+        pa.typing.Series[bool]: a boolean Series that marks which rows have to be calculated
+    &#34;&#34;&#34;
+    mask = ~data_df[self.product_tag].isna()
+    for multiplier in self.multipliers:
+        mask = mask &amp; ~data_df[multiplier].isna()
+
+    return mask</code></pre>
 </details>
 </dd>
 </dl>
@@ -687,6 +910,7 @@ added to the dataframe.</p>
 <h3>Subclasses</h3>
 <ul class="hlist">
 <li><a title="secfsdstools.f_standardize.base_validation_rules.IsSetValidationRule" href="#secfsdstools.f_standardize.base_validation_rules.IsSetValidationRule">IsSetValidationRule</a></li>
+<li><a title="secfsdstools.f_standardize.base_validation_rules.ProductValidationRule" href="#secfsdstools.f_standardize.base_validation_rules.ProductValidationRule">ProductValidationRule</a></li>
 <li><a title="secfsdstools.f_standardize.base_validation_rules.SumValidationRule" href="#secfsdstools.f_standardize.base_validation_rules.SumValidationRule">SumValidationRule</a></li>
 </ul>
 <h3>Methods</h3>
@@ -872,6 +1096,12 @@ dataframe. <id>_error containing the relative error and <id>_cat containing the 
 <h4><code><a title="secfsdstools.f_standardize.base_validation_rules.IsSetValidationRule" href="#secfsdstools.f_standardize.base_validation_rules.IsSetValidationRule">IsSetValidationRule</a></code></h4>
 <ul class="">
 <li><code><a title="secfsdstools.f_standardize.base_validation_rules.IsSetValidationRule.mask" href="#secfsdstools.f_standardize.base_validation_rules.IsSetValidationRule.mask">mask</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="secfsdstools.f_standardize.base_validation_rules.ProductValidationRule" href="#secfsdstools.f_standardize.base_validation_rules.ProductValidationRule">ProductValidationRule</a></code></h4>
+<ul class="">
+<li><code><a title="secfsdstools.f_standardize.base_validation_rules.ProductValidationRule.mask" href="#secfsdstools.f_standardize.base_validation_rules.ProductValidationRule.mask">mask</a></code></li>
 </ul>
 </li>
 <li>

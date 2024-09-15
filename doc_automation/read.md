@@ -6,6 +6,9 @@ The SEC releases quarterly zip files, each containing four CSV files with numeri
 This library simplifies the process of working with this data and provides a
 convenient way to extract information from the primary financial statements - the balance sheet (BS), income statement (IS), and statement of cash flows (CF).
 
+Check out my article at Medium [Understanding the the SEC Financial Statement Data Sets](https://medium.com/@hansjoerg.wingeier/understanding-the-sec-financial-statement-data-sets-6148e07d1715) to get
+an introduction to the [Financial Statement Data Sets](https://www.sec.gov/dera/data/financial-statement-data-sets).
+
 The main features include:
 - all data is on your local hard drive and can be updated automatically, no need for numerous API calls
 - data is loaded as pandas files
@@ -679,6 +682,9 @@ implementations (module `secfsdstools.e_presenter.presenting`):
       - NetIncomeLossAttributableToNoncontrollingInterest
       ---------------------------------------------------
       = NetIncomeLoss
+    
+      OustandingShares
+      EarningsPerShare
     ````
   
     With just a few lines of code, you'll get a comparable dataset with the main positions of an income statement for Microsoft, Alphabet, and Amazon:

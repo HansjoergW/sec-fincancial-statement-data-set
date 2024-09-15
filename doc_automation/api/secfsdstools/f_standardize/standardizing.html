@@ -128,6 +128,70 @@ class StandardizedBag:
                                validation_overview_df=validation_overview_df,
                                process_description_df=process_description_df)
 
+    @staticmethod
+    # pylint: disable=R0914
+    def concat(bags: List[STANDARDIZED]) -&gt; STANDARDIZED:
+        &#34;&#34;&#34;
+        Concat multiple StandardizedBags into a single one
+        Args:
+            bags: List of StandardizeBag instances to be concatenated
+
+        Returns:
+            StandardizedBag: single result
+
+        &#34;&#34;&#34;
+
+        result_dfs = [bag.result_df for bag in bags]
+        applied_prepivot_rules_log_dfs = [bag.applied_prepivot_rules_log_df for bag in bags]
+        applied_rules_log_dfs = [bag.applied_rules_log_df for bag in bags]
+
+        # get stats_df, without the _rel and _gain cols
+        stats_dfs = [bag.stats_df.loc[:, ~bag.stats_df.columns.str.endswith(&#39;_rel&#39;) &amp;
+                                         ~bag.stats_df.columns.str.endswith(&#39;_gain&#39;)]
+                     for bag in bags]
+
+        applied_rules_sum_ss = [bag.applied_rules_sum_s for bag in bags]
+
+        # get validation_overview_dfs without _pct column
+        validation_overview_dfs = [bag.validation_overview_df.loc[:,
+                                   ~bag.validation_overview_df.columns.str.endswith(&#39;_pct&#39;)]
+                                   for bag in bags]
+        process_description_dfs = [bag.process_description_df for bag in bags]
+
+        result_df = pd.concat(result_dfs, ignore_index=True)
+        applied_prepivot_rules_log_df = pd.concat(applied_prepivot_rules_log_dfs, ignore_index=True)
+        applied_rules_log_df = pd.concat(applied_rules_log_dfs, ignore_index=True)
+        applied_rules_sum_s: pd.Series = sum(applied_rules_sum_ss)
+        process_description_df = process_description_dfs[0]
+
+        # handling stats
+        #  stats_dfs only contains stats_df objects without _rel and _gain, so we can simply sum
+        stats_df: pd.DataFrame = sum(stats_dfs)
+        # next we use the Stats class do recalculate the _gain and _rel columns
+        stats = Stats([])
+        stats.stats = stats_df
+        stats.finalize_stats(len(result_df))
+
+        stats_df = stats.stats
+
+        # handling validation overview
+        validation_overview_df = validation_overview_dfs[0]
+        for entry_df in validation_overview_dfs[1:]:
+            validation_overview_df = validation_overview_df.add(entry_df, fill_value=0)
+
+        # calculate validation percentage columns
+        for col in validation_overview_df.columns:
+            validation_overview_df[f&#34;{col}_pct&#34;] = \
+                100 * (validation_overview_df[col] / len(result_df))
+
+        return StandardizedBag(result_df=result_df,
+                               applied_prepivot_rules_log_df=applied_prepivot_rules_log_df,
+                               applied_rules_log_df=applied_rules_log_df,
+                               stats_df=stats_df,
+                               applied_rules_sum_s=applied_rules_sum_s,
+                               validation_overview_df=validation_overview_df,
+                               process_description_df=process_description_df)
+
 
 class Stats:
     &#34;&#34;&#34;
@@ -205,7 +269,9 @@ class Standardizer(Presenter[JoinedDataBag]):
     &#34;&#34;&#34;
 
     # this tags identify single statements in the final standardized table
-    identifier_cols = [&#39;adsh&#39;, &#39;coreg&#39;, &#39;report&#39;, &#39;ddate&#39;, &#39;uom&#39;, &#39;qtrs&#39;]
+    identifier_cols = [&#39;adsh&#39;, &#39;coreg&#39;, &#39;report&#39;, &#39;ddate&#39;, &#39;qtrs&#39;]
+
+    sub_df_result_cols = [&#39;adsh&#39;, &#39;cik&#39;, &#39;form&#39;, &#39;fye&#39;, &#39;fy&#39;, &#39;fp&#39;, &#39;filed&#39;]
 
     def __init__(self,
                  prepivot_rule_tree: RuleGroup,
@@ -214,10 +280,13 @@ class Standardizer(Presenter[JoinedDataBag]):
                  post_rule_tree: RuleGroup,
                  validation_rules: List[ValidationRule],
                  final_tags: List[str],
-                 main_iterations: int = 2,
-                 filter_for_main_statement: bool = True,
                  main_statement_tags: List[str] = None,
-                 invert_negated: bool = True):
+
+                 filter_for_main_statement: bool = True,
+                 main_iterations: int = 2,
+                 invert_negated: bool = True,
+                 additional_final_sub_fields: Optional[List[str]] = None,
+                 additional_final_tags: Optional[List[str]] = None):
         &#34;&#34;&#34;
 
         Args:
@@ -227,25 +296,35 @@ class Standardizer(Presenter[JoinedDataBag]):
                     rules that try to correct existing data from obvious errors (like wrong
                     tagging)
             main_rule_tree: rules that are applied during the main processing rule and which do the
-                    heavy lifting. These rules can be excuted multipe times depending on the value
+                    heavy lifting. These rules can be executed multiple times depending on the value
                     of the main_iterations parameter
             post_rule_tree: rules that are used to &#34;cleanup&#34;, like setting certain values to
-                    0.0
+                    0.0. They are just executed once.
             validation_rules: Validation rules are applied after all rules were applied.
                    they add validation columns to the main dataset. Validation rules do check
                    if certain requirements are met. E.g. in a Balance Sheet, the following
                    equation should be true: Assets = AssetsCurrent + AssetsNoncurrent
-            main_iterations: defining the number of iterations the main rules should be applied
-            final_tags: tbd
+            final_tags: The list of tags/columns that will appear in the final result dataframe.
+            main_statement_tags: list of tags that is used to identify the main table of a
+                   financial statement (income statement, balance sheet, cash flow).
+
+
             filter_for_main_statement (bool, Optional, True): depending on the data, it could look
                    as if multiple Balance Sheets statements could be present in a single report.
                    However, there should only be one. Setting
                    this flag to true (which is the default), tries to select the one that is most
                    likely the real statement.
                    the tags that are used are defined in the main_statement_tags parameter
-            main_statement_tags: tbd
-            invert_negated (bool, Optional, True): inverts the value of the that are marked
-                   as negated.
+            main_iterations: defining the number of iterations the main rules should be applied
+            invert_negated (bool, Optional, True): inverts the value of the tags that are marked
+                   as negated (in the pre_df).
+            additional_final_sub_fields:
+                    When using the present method, the results are joined with the following fields
+                    from the sub_df entry: &#39;adsh&#39;, &#39;cik&#39;, &#39;form&#39;, &#39;fye&#39;, &#39;fy&#39;, &#39;fp&#39;, &#39;filed&#39;
+                    Additional fields can be assigned in this list. Default is None.
+            additional_final_tags:
+                     the &#34;final_tags&#34; list define the tags that will be present in the final result
+                     dataframe. Additional tags can be added via this parameter. Default is None.
         &#34;&#34;&#34;
         self.prepivot_rule_tree = prepivot_rule_tree
         self.pre_rule_tree = pre_rule_tree
@@ -254,9 +333,12 @@ class Standardizer(Presenter[JoinedDataBag]):
         self.validation_rules = validation_rules
         self.main_statement_tags = main_statement_tags
         self.final_tags = final_tags
+        if additional_final_tags:
+            self.final_tags = self.final_tags + additional_final_tags
         self.main_iterations = main_iterations
         self.filter_for_main_statement = filter_for_main_statement
         self.invert_negated = invert_negated
+        self.additional_final_sub_fields = additional_final_sub_fields
 
         self.all_input_tags: Set[str] = (self.prepivot_rule_tree.get_input_tags() |
                                          self.pre_rule_tree.get_input_tags() |
@@ -322,6 +404,11 @@ class Standardizer(Presenter[JoinedDataBag]):
     def _preprocess(self, data_df: pd.DataFrame) -&gt; pd.DataFrame:
         # sourcery skip: simplify-len-comparison, use-named-expression
         # only select rows with tags that are actually used by the defined rules
+
+        currency_uoms = [x for x in list(data_df.uom.unique()) if (len(x) == 3) and x.isupper()]
+        if len(currency_uoms) &gt; 1:
+            raise ValueError(&#34;Multiple currencies are not supported. &#34;
+                             &#34;Please make sure that the uom column only contains one currency.&#34;)
 
         relevant_pivot_cols = \
             self.identifier_cols + [&#39;tag&#39;, &#39;version&#39;, &#39;value&#39;, &#39;line&#39;, &#39;negating&#39;]
@@ -485,7 +572,13 @@ class Standardizer(Presenter[JoinedDataBag]):
         &#34;&#34;&#34;
         standardized_df = self.process(databag.pre_num_df)
 
-        data_to_merge_df = databag.sub_df[[&#39;adsh&#39;, &#39;cik&#39;, &#39;form&#39;, &#39;fye&#39;, &#39;fy&#39;, &#39;fp&#39;, &#39;filed&#39;]].copy()
+        sub_df_cols = self.sub_df_result_cols
+
+        if self.additional_final_sub_fields:
+            sub_df_cols = sub_df_cols + self.additional_final_sub_fields
+
+        data_to_merge_df = \
+            databag.sub_df[sub_df_cols].copy()
 
         # The name of a company can change during its liftime. However, we want to have the
         # same name for the same cik in all entries. Therefore, we first have to find the
@@ -506,8 +599,10 @@ class Standardizer(Presenter[JoinedDataBag]):
         merged_df[&#39;date&#39;] = pd.to_datetime(merged_df[&#39;ddate&#39;], format=&#39;%Y%m%d&#39;)
 
         # sort the columns
-        merged_df = merged_df[[&#39;adsh&#39;, &#39;cik&#39;, &#39;name&#39;, &#39;form&#39;, &#39;fye&#39;, &#39;fy&#39;, &#39;fp&#39;, &#39;date&#39;, &#39;filed&#39;] +
-                              standardized_df.columns.tolist()[1:]]
+        merged_df = merged_df[
+            [&#39;adsh&#39;, &#39;cik&#39;, &#39;name&#39;, &#39;form&#39;, &#39;fye&#39;, &#39;fy&#39;, &#39;fp&#39;, &#39;date&#39;, &#39;filed&#39;] +
+            (self.additional_final_sub_fields if self.additional_final_sub_fields else []) +
+            standardized_df.columns.tolist()[1:]]
 
         # store it in the standardizer object as new result
         self.result = merged_df.sort_values(by=&#39;date&#39;)
@@ -629,10 +724,158 @@ class Standardizer(Presenter[JoinedDataBag]):
                                applied_rules_log_df=applied_rules_log_df, stats_df=stats_df,
                                applied_rules_sum_s=applied_rules_sum_s,
                                validation_overview_df=validation_overview_df,
+                               process_description_df=process_description_df)
+
+    @staticmethod
+    # pylint: disable=R0914
+    def concat(bags: List[STANDARDIZED]) -&gt; STANDARDIZED:
+        &#34;&#34;&#34;
+        Concat multiple StandardizedBags into a single one
+        Args:
+            bags: List of StandardizeBag instances to be concatenated
+
+        Returns:
+            StandardizedBag: single result
+
+        &#34;&#34;&#34;
+
+        result_dfs = [bag.result_df for bag in bags]
+        applied_prepivot_rules_log_dfs = [bag.applied_prepivot_rules_log_df for bag in bags]
+        applied_rules_log_dfs = [bag.applied_rules_log_df for bag in bags]
+
+        # get stats_df, without the _rel and _gain cols
+        stats_dfs = [bag.stats_df.loc[:, ~bag.stats_df.columns.str.endswith(&#39;_rel&#39;) &amp;
+                                         ~bag.stats_df.columns.str.endswith(&#39;_gain&#39;)]
+                     for bag in bags]
+
+        applied_rules_sum_ss = [bag.applied_rules_sum_s for bag in bags]
+
+        # get validation_overview_dfs without _pct column
+        validation_overview_dfs = [bag.validation_overview_df.loc[:,
+                                   ~bag.validation_overview_df.columns.str.endswith(&#39;_pct&#39;)]
+                                   for bag in bags]
+        process_description_dfs = [bag.process_description_df for bag in bags]
+
+        result_df = pd.concat(result_dfs, ignore_index=True)
+        applied_prepivot_rules_log_df = pd.concat(applied_prepivot_rules_log_dfs, ignore_index=True)
+        applied_rules_log_df = pd.concat(applied_rules_log_dfs, ignore_index=True)
+        applied_rules_sum_s: pd.Series = sum(applied_rules_sum_ss)
+        process_description_df = process_description_dfs[0]
+
+        # handling stats
+        #  stats_dfs only contains stats_df objects without _rel and _gain, so we can simply sum
+        stats_df: pd.DataFrame = sum(stats_dfs)
+        # next we use the Stats class do recalculate the _gain and _rel columns
+        stats = Stats([])
+        stats.stats = stats_df
+        stats.finalize_stats(len(result_df))
+
+        stats_df = stats.stats
+
+        # handling validation overview
+        validation_overview_df = validation_overview_dfs[0]
+        for entry_df in validation_overview_dfs[1:]:
+            validation_overview_df = validation_overview_df.add(entry_df, fill_value=0)
+
+        # calculate validation percentage columns
+        for col in validation_overview_df.columns:
+            validation_overview_df[f&#34;{col}_pct&#34;] = \
+                100 * (validation_overview_df[col] / len(result_df))
+
+        return StandardizedBag(result_df=result_df,
+                               applied_prepivot_rules_log_df=applied_prepivot_rules_log_df,
+                               applied_rules_log_df=applied_rules_log_df,
+                               stats_df=stats_df,
+                               applied_rules_sum_s=applied_rules_sum_s,
+                               validation_overview_df=validation_overview_df,
                                process_description_df=process_description_df)</code></pre>
 </details>
 <h3>Static methods</h3>
 <dl>
+<dt id="secfsdstools.f_standardize.standardizing.StandardizedBag.concat"><code class="name flex">
+<span>def <span class="ident">concat</span></span>(<span>bags: List[~STANDARDIZED]) ‑> ~STANDARDIZED</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Concat multiple StandardizedBags into a single one</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>bags</code></strong></dt>
+<dd>List of StandardizeBag instances to be concatenated</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code><a title="secfsdstools.f_standardize.standardizing.StandardizedBag" href="#secfsdstools.f_standardize.standardizing.StandardizedBag">StandardizedBag</a></code></dt>
+<dd>single result</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@staticmethod
+# pylint: disable=R0914
+def concat(bags: List[STANDARDIZED]) -&gt; STANDARDIZED:
+    &#34;&#34;&#34;
+    Concat multiple StandardizedBags into a single one
+    Args:
+        bags: List of StandardizeBag instances to be concatenated
+
+    Returns:
+        StandardizedBag: single result
+
+    &#34;&#34;&#34;
+
+    result_dfs = [bag.result_df for bag in bags]
+    applied_prepivot_rules_log_dfs = [bag.applied_prepivot_rules_log_df for bag in bags]
+    applied_rules_log_dfs = [bag.applied_rules_log_df for bag in bags]
+
+    # get stats_df, without the _rel and _gain cols
+    stats_dfs = [bag.stats_df.loc[:, ~bag.stats_df.columns.str.endswith(&#39;_rel&#39;) &amp;
+                                     ~bag.stats_df.columns.str.endswith(&#39;_gain&#39;)]
+                 for bag in bags]
+
+    applied_rules_sum_ss = [bag.applied_rules_sum_s for bag in bags]
+
+    # get validation_overview_dfs without _pct column
+    validation_overview_dfs = [bag.validation_overview_df.loc[:,
+                               ~bag.validation_overview_df.columns.str.endswith(&#39;_pct&#39;)]
+                               for bag in bags]
+    process_description_dfs = [bag.process_description_df for bag in bags]
+
+    result_df = pd.concat(result_dfs, ignore_index=True)
+    applied_prepivot_rules_log_df = pd.concat(applied_prepivot_rules_log_dfs, ignore_index=True)
+    applied_rules_log_df = pd.concat(applied_rules_log_dfs, ignore_index=True)
+    applied_rules_sum_s: pd.Series = sum(applied_rules_sum_ss)
+    process_description_df = process_description_dfs[0]
+
+    # handling stats
+    #  stats_dfs only contains stats_df objects without _rel and _gain, so we can simply sum
+    stats_df: pd.DataFrame = sum(stats_dfs)
+    # next we use the Stats class do recalculate the _gain and _rel columns
+    stats = Stats([])
+    stats.stats = stats_df
+    stats.finalize_stats(len(result_df))
+
+    stats_df = stats.stats
+
+    # handling validation overview
+    validation_overview_df = validation_overview_dfs[0]
+    for entry_df in validation_overview_dfs[1:]:
+        validation_overview_df = validation_overview_df.add(entry_df, fill_value=0)
+
+    # calculate validation percentage columns
+    for col in validation_overview_df.columns:
+        validation_overview_df[f&#34;{col}_pct&#34;] = \
+            100 * (validation_overview_df[col] / len(result_df))
+
+    return StandardizedBag(result_df=result_df,
+                           applied_prepivot_rules_log_df=applied_prepivot_rules_log_df,
+                           applied_rules_log_df=applied_rules_log_df,
+                           stats_df=stats_df,
+                           applied_rules_sum_s=applied_rules_sum_s,
+                           validation_overview_df=validation_overview_df,
+                           process_description_df=process_description_df)</code></pre>
+</details>
+</dd>
 <dt id="secfsdstools.f_standardize.standardizing.StandardizedBag.load"><code class="name flex">
 <span>def <span class="ident">load</span></span>(<span>target_path: str) ‑> ~STANDARDIZED</span>
 </code></dt>
@@ -740,7 +983,7 @@ will be created</dd>
 </dd>
 <dt id="secfsdstools.f_standardize.standardizing.Standardizer"><code class="flex name class">
 <span>class <span class="ident">Standardizer</span></span>
-<span>(</span><span>prepivot_rule_tree: <a title="secfsdstools.f_standardize.base_rule_framework.RuleGroup" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.RuleGroup">RuleGroup</a>, pre_rule_tree: <a title="secfsdstools.f_standardize.base_rule_framework.RuleGroup" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.RuleGroup">RuleGroup</a>, main_rule_tree: <a title="secfsdstools.f_standardize.base_rule_framework.RuleGroup" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.RuleGroup">RuleGroup</a>, post_rule_tree: <a title="secfsdstools.f_standardize.base_rule_framework.RuleGroup" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.RuleGroup">RuleGroup</a>, validation_rules: List[<a title="secfsdstools.f_standardize.base_validation_rules.ValidationRule" href="base_validation_rules.html#secfsdstools.f_standardize.base_validation_rules.ValidationRule">ValidationRule</a>], final_tags: List[str], main_iterations: int = 2, filter_for_main_statement: bool = True, main_statement_tags: List[str] = None, invert_negated: bool = True)</span>
+<span>(</span><span>prepivot_rule_tree: <a title="secfsdstools.f_standardize.base_rule_framework.RuleGroup" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.RuleGroup">RuleGroup</a>, pre_rule_tree: <a title="secfsdstools.f_standardize.base_rule_framework.RuleGroup" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.RuleGroup">RuleGroup</a>, main_rule_tree: <a title="secfsdstools.f_standardize.base_rule_framework.RuleGroup" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.RuleGroup">RuleGroup</a>, post_rule_tree: <a title="secfsdstools.f_standardize.base_rule_framework.RuleGroup" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.RuleGroup">RuleGroup</a>, validation_rules: List[<a title="secfsdstools.f_standardize.base_validation_rules.ValidationRule" href="base_validation_rules.html#secfsdstools.f_standardize.base_validation_rules.ValidationRule">ValidationRule</a>], final_tags: List[str], main_statement_tags: List[str] = None, filter_for_main_statement: bool = True, main_iterations: int = 2, invert_negated: bool = True, additional_final_sub_fields: Optional[List[str]] = None, additional_final_tags: Optional[List[str]] = None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>The Standardizer implements the base processing logic to standardize financial statements.</p>
@@ -755,20 +998,21 @@ rules that try to correct existing data from obvious errors (like wrong
 tagging)</dd>
 <dt><strong><code>main_rule_tree</code></strong></dt>
 <dd>rules that are applied during the main processing rule and which do the
-heavy lifting. These rules can be excuted multipe times depending on the value
+heavy lifting. These rules can be executed multiple times depending on the value
 of the main_iterations parameter</dd>
 <dt><strong><code>post_rule_tree</code></strong></dt>
 <dd>rules that are used to "cleanup", like setting certain values to
-0.0</dd>
+0.0. They are just executed once.</dd>
 <dt><strong><code>validation_rules</code></strong></dt>
 <dd>Validation rules are applied after all rules were applied.
 they add validation columns to the main dataset. Validation rules do check
 if certain requirements are met. E.g. in a Balance Sheet, the following
 equation should be true: Assets = AssetsCurrent + AssetsNoncurrent</dd>
-<dt><strong><code>main_iterations</code></strong></dt>
-<dd>defining the number of iterations the main rules should be applied</dd>
 <dt><strong><code>final_tags</code></strong></dt>
-<dd>tbd</dd>
+<dd>The list of tags/columns that will appear in the final result dataframe.</dd>
+<dt><strong><code>main_statement_tags</code></strong></dt>
+<dd>list of tags that is used to identify the main table of a
+financial statement (income statement, balance sheet, cash flow).</dd>
 <dt><strong><code>filter_for_main_statement</code></strong> :&ensp;<code>bool, Optional, True</code></dt>
 <dd>depending on the data, it could look
 as if multiple Balance Sheets statements could be present in a single report.
@@ -776,12 +1020,19 @@ However, there should only be one. Setting
 this flag to true (which is the default), tries to select the one that is most
 likely the real statement.
 the tags that are used are defined in the main_statement_tags parameter</dd>
-<dt><strong><code>main_statement_tags</code></strong></dt>
-<dd>tbd</dd>
+<dt><strong><code>main_iterations</code></strong></dt>
+<dd>defining the number of iterations the main rules should be applied</dd>
 <dt><strong><code>invert_negated</code></strong> :&ensp;<code>bool, Optional, True</code></dt>
-<dd>inverts the value of the that are marked
-as negated.</dd>
-</dl></div>
+<dd>inverts the value of the tags that are marked
+as negated (in the pre_df).</dd>
+</dl>
+<p>additional_final_sub_fields:
+When using the present method, the results are joined with the following fields
+from the sub_df entry: 'adsh', 'cik', 'form', 'fye', 'fy', 'fp', 'filed'
+Additional fields can be assigned in this list. Default is None.
+additional_final_tags:
+the "final_tags" list define the tags that will be present in the final result
+dataframe. Additional tags can be added via this parameter. Default is None.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -792,7 +1043,9 @@ as negated.</dd>
     &#34;&#34;&#34;
 
     # this tags identify single statements in the final standardized table
-    identifier_cols = [&#39;adsh&#39;, &#39;coreg&#39;, &#39;report&#39;, &#39;ddate&#39;, &#39;uom&#39;, &#39;qtrs&#39;]
+    identifier_cols = [&#39;adsh&#39;, &#39;coreg&#39;, &#39;report&#39;, &#39;ddate&#39;, &#39;qtrs&#39;]
+
+    sub_df_result_cols = [&#39;adsh&#39;, &#39;cik&#39;, &#39;form&#39;, &#39;fye&#39;, &#39;fy&#39;, &#39;fp&#39;, &#39;filed&#39;]
 
     def __init__(self,
                  prepivot_rule_tree: RuleGroup,
@@ -801,10 +1054,13 @@ as negated.</dd>
                  post_rule_tree: RuleGroup,
                  validation_rules: List[ValidationRule],
                  final_tags: List[str],
-                 main_iterations: int = 2,
-                 filter_for_main_statement: bool = True,
                  main_statement_tags: List[str] = None,
-                 invert_negated: bool = True):
+
+                 filter_for_main_statement: bool = True,
+                 main_iterations: int = 2,
+                 invert_negated: bool = True,
+                 additional_final_sub_fields: Optional[List[str]] = None,
+                 additional_final_tags: Optional[List[str]] = None):
         &#34;&#34;&#34;
 
         Args:
@@ -814,25 +1070,35 @@ as negated.</dd>
                     rules that try to correct existing data from obvious errors (like wrong
                     tagging)
             main_rule_tree: rules that are applied during the main processing rule and which do the
-                    heavy lifting. These rules can be excuted multipe times depending on the value
+                    heavy lifting. These rules can be executed multiple times depending on the value
                     of the main_iterations parameter
             post_rule_tree: rules that are used to &#34;cleanup&#34;, like setting certain values to
-                    0.0
+                    0.0. They are just executed once.
             validation_rules: Validation rules are applied after all rules were applied.
                    they add validation columns to the main dataset. Validation rules do check
                    if certain requirements are met. E.g. in a Balance Sheet, the following
                    equation should be true: Assets = AssetsCurrent + AssetsNoncurrent
-            main_iterations: defining the number of iterations the main rules should be applied
-            final_tags: tbd
+            final_tags: The list of tags/columns that will appear in the final result dataframe.
+            main_statement_tags: list of tags that is used to identify the main table of a
+                   financial statement (income statement, balance sheet, cash flow).
+
+
             filter_for_main_statement (bool, Optional, True): depending on the data, it could look
                    as if multiple Balance Sheets statements could be present in a single report.
                    However, there should only be one. Setting
                    this flag to true (which is the default), tries to select the one that is most
                    likely the real statement.
                    the tags that are used are defined in the main_statement_tags parameter
-            main_statement_tags: tbd
-            invert_negated (bool, Optional, True): inverts the value of the that are marked
-                   as negated.
+            main_iterations: defining the number of iterations the main rules should be applied
+            invert_negated (bool, Optional, True): inverts the value of the tags that are marked
+                   as negated (in the pre_df).
+            additional_final_sub_fields:
+                    When using the present method, the results are joined with the following fields
+                    from the sub_df entry: &#39;adsh&#39;, &#39;cik&#39;, &#39;form&#39;, &#39;fye&#39;, &#39;fy&#39;, &#39;fp&#39;, &#39;filed&#39;
+                    Additional fields can be assigned in this list. Default is None.
+            additional_final_tags:
+                     the &#34;final_tags&#34; list define the tags that will be present in the final result
+                     dataframe. Additional tags can be added via this parameter. Default is None.
         &#34;&#34;&#34;
         self.prepivot_rule_tree = prepivot_rule_tree
         self.pre_rule_tree = pre_rule_tree
@@ -841,9 +1107,12 @@ as negated.</dd>
         self.validation_rules = validation_rules
         self.main_statement_tags = main_statement_tags
         self.final_tags = final_tags
+        if additional_final_tags:
+            self.final_tags = self.final_tags + additional_final_tags
         self.main_iterations = main_iterations
         self.filter_for_main_statement = filter_for_main_statement
         self.invert_negated = invert_negated
+        self.additional_final_sub_fields = additional_final_sub_fields
 
         self.all_input_tags: Set[str] = (self.prepivot_rule_tree.get_input_tags() |
                                          self.pre_rule_tree.get_input_tags() |
@@ -909,6 +1178,11 @@ as negated.</dd>
     def _preprocess(self, data_df: pd.DataFrame) -&gt; pd.DataFrame:
         # sourcery skip: simplify-len-comparison, use-named-expression
         # only select rows with tags that are actually used by the defined rules
+
+        currency_uoms = [x for x in list(data_df.uom.unique()) if (len(x) == 3) and x.isupper()]
+        if len(currency_uoms) &gt; 1:
+            raise ValueError(&#34;Multiple currencies are not supported. &#34;
+                             &#34;Please make sure that the uom column only contains one currency.&#34;)
 
         relevant_pivot_cols = \
             self.identifier_cols + [&#39;tag&#39;, &#39;version&#39;, &#39;value&#39;, &#39;line&#39;, &#39;negating&#39;]
@@ -1072,7 +1346,13 @@ as negated.</dd>
         &#34;&#34;&#34;
         standardized_df = self.process(databag.pre_num_df)
 
-        data_to_merge_df = databag.sub_df[[&#39;adsh&#39;, &#39;cik&#39;, &#39;form&#39;, &#39;fye&#39;, &#39;fy&#39;, &#39;fp&#39;, &#39;filed&#39;]].copy()
+        sub_df_cols = self.sub_df_result_cols
+
+        if self.additional_final_sub_fields:
+            sub_df_cols = sub_df_cols + self.additional_final_sub_fields
+
+        data_to_merge_df = \
+            databag.sub_df[sub_df_cols].copy()
 
         # The name of a company can change during its liftime. However, we want to have the
         # same name for the same cik in all entries. Therefore, we first have to find the
@@ -1093,8 +1373,10 @@ as negated.</dd>
         merged_df[&#39;date&#39;] = pd.to_datetime(merged_df[&#39;ddate&#39;], format=&#39;%Y%m%d&#39;)
 
         # sort the columns
-        merged_df = merged_df[[&#39;adsh&#39;, &#39;cik&#39;, &#39;name&#39;, &#39;form&#39;, &#39;fye&#39;, &#39;fy&#39;, &#39;fp&#39;, &#39;date&#39;, &#39;filed&#39;] +
-                              standardized_df.columns.tolist()[1:]]
+        merged_df = merged_df[
+            [&#39;adsh&#39;, &#39;cik&#39;, &#39;name&#39;, &#39;form&#39;, &#39;fye&#39;, &#39;fy&#39;, &#39;fp&#39;, &#39;date&#39;, &#39;filed&#39;] +
+            (self.additional_final_sub_fields if self.additional_final_sub_fields else []) +
+            standardized_df.columns.tolist()[1:]]
 
         # store it in the standardizer object as new result
         self.result = merged_df.sort_values(by=&#39;date&#39;)
@@ -1129,6 +1411,10 @@ as negated.</dd>
 <h3>Class variables</h3>
 <dl>
 <dt id="secfsdstools.f_standardize.standardizing.Standardizer.identifier_cols"><code class="name">var <span class="ident">identifier_cols</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="secfsdstools.f_standardize.standardizing.Standardizer.sub_df_result_cols"><code class="name">var <span class="ident">sub_df_result_cols</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -1238,7 +1524,13 @@ creates a date column based on the ddated value.</p>
     &#34;&#34;&#34;
     standardized_df = self.process(databag.pre_num_df)
 
-    data_to_merge_df = databag.sub_df[[&#39;adsh&#39;, &#39;cik&#39;, &#39;form&#39;, &#39;fye&#39;, &#39;fy&#39;, &#39;fp&#39;, &#39;filed&#39;]].copy()
+    sub_df_cols = self.sub_df_result_cols
+
+    if self.additional_final_sub_fields:
+        sub_df_cols = sub_df_cols + self.additional_final_sub_fields
+
+    data_to_merge_df = \
+        databag.sub_df[sub_df_cols].copy()
 
     # The name of a company can change during its liftime. However, we want to have the
     # same name for the same cik in all entries. Therefore, we first have to find the
@@ -1259,8 +1551,10 @@ creates a date column based on the ddated value.</p>
     merged_df[&#39;date&#39;] = pd.to_datetime(merged_df[&#39;ddate&#39;], format=&#39;%Y%m%d&#39;)
 
     # sort the columns
-    merged_df = merged_df[[&#39;adsh&#39;, &#39;cik&#39;, &#39;name&#39;, &#39;form&#39;, &#39;fye&#39;, &#39;fy&#39;, &#39;fp&#39;, &#39;date&#39;, &#39;filed&#39;] +
-                          standardized_df.columns.tolist()[1:]]
+    merged_df = merged_df[
+        [&#39;adsh&#39;, &#39;cik&#39;, &#39;name&#39;, &#39;form&#39;, &#39;fye&#39;, &#39;fy&#39;, &#39;fp&#39;, &#39;date&#39;, &#39;filed&#39;] +
+        (self.additional_final_sub_fields if self.additional_final_sub_fields else []) +
+        standardized_df.columns.tolist()[1:]]
 
     # store it in the standardizer object as new result
     self.result = merged_df.sort_values(by=&#39;date&#39;)
@@ -1512,6 +1806,7 @@ to the previous step.</p></div>
 <li>
 <h4><code><a title="secfsdstools.f_standardize.standardizing.StandardizedBag" href="#secfsdstools.f_standardize.standardizing.StandardizedBag">StandardizedBag</a></code></h4>
 <ul class="">
+<li><code><a title="secfsdstools.f_standardize.standardizing.StandardizedBag.concat" href="#secfsdstools.f_standardize.standardizing.StandardizedBag.concat">concat</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.standardizing.StandardizedBag.load" href="#secfsdstools.f_standardize.standardizing.StandardizedBag.load">load</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.standardizing.StandardizedBag.save" href="#secfsdstools.f_standardize.standardizing.StandardizedBag.save">save</a></code></li>
 </ul>
@@ -1524,6 +1819,7 @@ to the previous step.</p></div>
 <li><code><a title="secfsdstools.f_standardize.standardizing.Standardizer.identifier_cols" href="#secfsdstools.f_standardize.standardizing.Standardizer.identifier_cols">identifier_cols</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.standardizing.Standardizer.present" href="#secfsdstools.f_standardize.standardizing.Standardizer.present">present</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.standardizing.Standardizer.process" href="#secfsdstools.f_standardize.standardizing.Standardizer.process">process</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.standardizing.Standardizer.sub_df_result_cols" href="#secfsdstools.f_standardize.standardizing.Standardizer.sub_df_result_cols">sub_df_result_cols</a></code></li>
 </ul>
 </li>
 <li>

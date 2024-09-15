@@ -28,7 +28,7 @@
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">&#34;&#34;&#34;Contains the definitions to standardize incaome statements.&#34;&#34;&#34;
-from typing import List, Set
+from typing import List, Set, Optional
 
 import pandas as pd
 import pandera as pa
@@ -587,17 +587,17 @@ class CashFlowStandardizer(Standardizer):
     &#34;&#34;&#34;
     prepivot_rule_tree = RuleGroup(
         prefix=&#34;CF_PREPIV&#34;,
-        rules=[PrePivotDeduplicate(), # remove duplicates
-               PrePivotMaxQtrs(max_qtrs=4), # only keep entries with qtrs &lt;= 4
+        rules=[PrePivotDeduplicate(),  # remove duplicates
+               PrePivotMaxQtrs(max_qtrs=4),  # only keep entries with qtrs &lt;= 4
                PrePivotCorrectSign(
-                   tag_list=inflow_tags, # make sure these tags have a positive value
+                   tag_list=inflow_tags,  # make sure these tags have a positive value
                    is_positive=True
                ),
                PrePivotCorrectSign(
-                   tag_list=outflow_tags, # make sure these tags have a negative value
+                   tag_list=outflow_tags,  # make sure these tags have a negative value
                    is_positive=False
                ),
-               PrePivotCashAtEndOfPeriod() # prepare CashAtEndOfPeriod
+               PrePivotCashAtEndOfPeriod()  # prepare CashAtEndOfPeriod
                ]
     )
 
@@ -972,17 +972,76 @@ class CashFlowStandardizer(Standardizer):
         &#39;CashPeriodIncreaseDecrease&#39;,
     ]
 
-    def __init__(self, filter_for_main_statement: bool = True, iterations: int = 1):
+    def __init__(self,
+                 prepivot_rule_tree: Optional[RuleGroup] = None,
+                 pre_rule_tree: Optional[RuleGroup] = None,
+                 main_rule_tree: Optional[RuleGroup] = None,
+                 post_rule_tree: Optional[RuleGroup] = None,
+                 validation_rules: Optional[List[ValidationRule]] = None,
+                 final_tags: Optional[List[str]] = None,
+                 main_statement_tags: Optional[List[str]] = None,
+
+                 filter_for_main_statement: bool = True,
+                 main_iterations: int = 1,
+                 invert_negated: bool = True,
+                 additional_final_sub_fields: Optional[List[str]] = None,
+                 additional_final_tags: Optional[List[str]] = None):
+        &#34;&#34;&#34;
+        Initialize the CashFlow Standardizer.
+
+        Fine tune it with the following arguments:
+
+        Args:
+            prepivot_rule_tree: rules that are applied before the data is pivoted. These are rules
+                    that filter (like deduplicate) or correct values.
+            pre_rule_tree: rules that are applied once before the main processing. These are mainly
+                    rules that try to correct existing data from obvious errors (like wrong
+                    tagging)
+            main_rule_tree: rules that are applied during the main processing rule and which do the
+                    heavy lifting. These rules can be executed multiple times depending on the value
+                    of the main_iterations parameter
+            post_rule_tree: rules that are used to &#34;cleanup&#34;, like setting certain values to
+                    0.0. They are just executed once.
+            validation_rules: Validation rules are applied after all rules were applied.
+                   they add validation columns to the main dataset. Validation rules do check
+                   if certain requirements are met. E.g. in a Balance Sheet, the following
+                   equation should be true: Assets = AssetsCurrent + AssetsNoncurrent
+            final_tags: The list of tags/columns that will appear in the final result dataframe.
+            main_statement_tags: list of tags that is used to identify the main table of a
+                   financial statement (income statement, balance sheet, cash flow).
+
+            filter_for_main_statement (bool):
+                    Only consider the reports that contain most of the &#34;main_statement_tags&#34;.
+                    Default is True.
+            main_iterations (int): Number of times the main rules should be applied.
+                    Default is 1 for CashFlow.
+            invert_negated (bool, Optional, True): inverts the value of the tags that are marked
+                   as negated (in the pre_df).
+            additional_final_sub_fields (List, Optional):
+                    When using the present method, the results are joined with the following fields
+                    from the sub_df entry: &#39;adsh&#39;, &#39;cik&#39;, &#39;form&#39;, &#39;fye&#39;, &#39;fy&#39;, &#39;fp&#39;, &#39;filed&#39;
+                    Additional fields can be assigend in this list. Default is None.
+            additional_final_tags (List, Optional):
+                     the &#34;final_tags&#34; list define the tags that will be present in the final result
+                     dataframe. Additional tags can be added via this parameter. Default is None.
+        &#34;&#34;&#34;
         super().__init__(
-            prepivot_rule_tree=self.prepivot_rule_tree,
-            pre_rule_tree=self.preprocess_rule_tree,
-            main_rule_tree=self.main_rule_tree,
-            post_rule_tree=self.post_rule_tree,
-            validation_rules=self.validation_rules,
-            final_tags=self.final_tags,
-            main_iterations=iterations,
+            prepivot_rule_tree=
+                    prepivot_rule_tree if prepivot_rule_tree else self.prepivot_rule_tree,
+            pre_rule_tree=pre_rule_tree if pre_rule_tree else self.preprocess_rule_tree,
+            main_rule_tree=main_rule_tree if main_rule_tree else self.main_rule_tree,
+            post_rule_tree=post_rule_tree if post_rule_tree else self.post_rule_tree,
+            validation_rules=validation_rules if validation_rules else self.validation_rules,
+            final_tags=final_tags if final_tags else self.final_tags,
+            main_statement_tags=
+                    main_statement_tags if main_statement_tags else self.main_statement_tags,
+
             filter_for_main_statement=filter_for_main_statement,
-            main_statement_tags=self.main_statement_tags)</code></pre>
+            main_iterations=main_iterations,
+            invert_negated=invert_negated,
+            additional_final_sub_fields=additional_final_sub_fields,
+            additional_final_tags=additional_final_tags
+        )</code></pre>
 </details>
 </section>
 <section>
@@ -996,7 +1055,7 @@ class CashFlowStandardizer(Standardizer):
 <dl>
 <dt id="secfsdstools.f_standardize.cf_standardize.CashFlowStandardizer"><code class="flex name class">
 <span>class <span class="ident">CashFlowStandardizer</span></span>
-<span>(</span><span>filter_for_main_statement: bool = True, iterations: int = 1)</span>
+<span>(</span><span>prepivot_rule_tree: Optional[<a title="secfsdstools.f_standardize.base_rule_framework.RuleGroup" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.RuleGroup">RuleGroup</a>] = None, pre_rule_tree: Optional[<a title="secfsdstools.f_standardize.base_rule_framework.RuleGroup" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.RuleGroup">RuleGroup</a>] = None, main_rule_tree: Optional[<a title="secfsdstools.f_standardize.base_rule_framework.RuleGroup" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.RuleGroup">RuleGroup</a>] = None, post_rule_tree: Optional[<a title="secfsdstools.f_standardize.base_rule_framework.RuleGroup" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.RuleGroup">RuleGroup</a>] = None, validation_rules: Optional[List[<a title="secfsdstools.f_standardize.base_validation_rules.ValidationRule" href="base_validation_rules.html#secfsdstools.f_standardize.base_validation_rules.ValidationRule">ValidationRule</a>]] = None, final_tags: Optional[List[str]] = None, main_statement_tags: Optional[List[str]] = None, filter_for_main_statement: bool = True, main_iterations: int = 1, invert_negated: bool = True, additional_final_sub_fields: Optional[List[str]] = None, additional_final_tags: Optional[List[str]] = None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>The goal of this Standardizer is to create CashFlow statements that are comparable,
@@ -1202,6 +1261,8 @@ Final Tags
 
     Fix mixed up usage of NetCashProvidedByUsed...Activities/-ContinuingOperations
 </pre>
+<p>Initialize the CashFlow Standardizer.</p>
+<p>Fine tune it with the following arguments:</p>
 <h2 id="args">Args</h2>
 <dl>
 <dt><strong><code>prepivot_rule_tree</code></strong></dt>
@@ -1213,33 +1274,38 @@ rules that try to correct existing data from obvious errors (like wrong
 tagging)</dd>
 <dt><strong><code>main_rule_tree</code></strong></dt>
 <dd>rules that are applied during the main processing rule and which do the
-heavy lifting. These rules can be excuted multipe times depending on the value
+heavy lifting. These rules can be executed multiple times depending on the value
 of the main_iterations parameter</dd>
 <dt><strong><code>post_rule_tree</code></strong></dt>
 <dd>rules that are used to "cleanup", like setting certain values to
-0.0</dd>
+0.0. They are just executed once.</dd>
 <dt><strong><code>validation_rules</code></strong></dt>
 <dd>Validation rules are applied after all rules were applied.
 they add validation columns to the main dataset. Validation rules do check
 if certain requirements are met. E.g. in a Balance Sheet, the following
 equation should be true: Assets = AssetsCurrent + AssetsNoncurrent</dd>
-<dt><strong><code>main_iterations</code></strong></dt>
-<dd>defining the number of iterations the main rules should be applied</dd>
 <dt><strong><code>final_tags</code></strong></dt>
-<dd>tbd</dd>
-<dt><strong><code>filter_for_main_statement</code></strong> :&ensp;<code>bool, Optional, True</code></dt>
-<dd>depending on the data, it could look
-as if multiple Balance Sheets statements could be present in a single report.
-However, there should only be one. Setting
-this flag to true (which is the default), tries to select the one that is most
-likely the real statement.
-the tags that are used are defined in the main_statement_tags parameter</dd>
+<dd>The list of tags/columns that will appear in the final result dataframe.</dd>
 <dt><strong><code>main_statement_tags</code></strong></dt>
-<dd>tbd</dd>
+<dd>list of tags that is used to identify the main table of a
+financial statement (income statement, balance sheet, cash flow).</dd>
+<dt>filter_for_main_statement (bool):</dt>
+<dt>Only consider the reports that contain most of the "main_statement_tags".</dt>
+<dt>Default is True.</dt>
+<dt><strong><code>main_iterations</code></strong> :&ensp;<code>int</code></dt>
+<dd>Number of times the main rules should be applied.
+Default is 1 for CashFlow.</dd>
 <dt><strong><code>invert_negated</code></strong> :&ensp;<code>bool, Optional, True</code></dt>
-<dd>inverts the value of the that are marked
-as negated.</dd>
-</dl></div>
+<dd>inverts the value of the tags that are marked
+as negated (in the pre_df).</dd>
+</dl>
+<p>additional_final_sub_fields (List, Optional):
+When using the present method, the results are joined with the following fields
+from the sub_df entry: 'adsh', 'cik', 'form', 'fye', 'fy', 'fp', 'filed'
+Additional fields can be assigend in this list. Default is None.
+additional_final_tags (List, Optional):
+the "final_tags" list define the tags that will be present in the final result
+dataframe. Additional tags can be added via this parameter. Default is None.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -1456,17 +1522,17 @@ as negated.</dd>
     &#34;&#34;&#34;
     prepivot_rule_tree = RuleGroup(
         prefix=&#34;CF_PREPIV&#34;,
-        rules=[PrePivotDeduplicate(), # remove duplicates
-               PrePivotMaxQtrs(max_qtrs=4), # only keep entries with qtrs &lt;= 4
+        rules=[PrePivotDeduplicate(),  # remove duplicates
+               PrePivotMaxQtrs(max_qtrs=4),  # only keep entries with qtrs &lt;= 4
                PrePivotCorrectSign(
-                   tag_list=inflow_tags, # make sure these tags have a positive value
+                   tag_list=inflow_tags,  # make sure these tags have a positive value
                    is_positive=True
                ),
                PrePivotCorrectSign(
-                   tag_list=outflow_tags, # make sure these tags have a negative value
+                   tag_list=outflow_tags,  # make sure these tags have a negative value
                    is_positive=False
                ),
-               PrePivotCashAtEndOfPeriod() # prepare CashAtEndOfPeriod
+               PrePivotCashAtEndOfPeriod()  # prepare CashAtEndOfPeriod
                ]
     )
 
@@ -1841,17 +1907,76 @@ as negated.</dd>
         &#39;CashPeriodIncreaseDecrease&#39;,
     ]
 
-    def __init__(self, filter_for_main_statement: bool = True, iterations: int = 1):
+    def __init__(self,
+                 prepivot_rule_tree: Optional[RuleGroup] = None,
+                 pre_rule_tree: Optional[RuleGroup] = None,
+                 main_rule_tree: Optional[RuleGroup] = None,
+                 post_rule_tree: Optional[RuleGroup] = None,
+                 validation_rules: Optional[List[ValidationRule]] = None,
+                 final_tags: Optional[List[str]] = None,
+                 main_statement_tags: Optional[List[str]] = None,
+
+                 filter_for_main_statement: bool = True,
+                 main_iterations: int = 1,
+                 invert_negated: bool = True,
+                 additional_final_sub_fields: Optional[List[str]] = None,
+                 additional_final_tags: Optional[List[str]] = None):
+        &#34;&#34;&#34;
+        Initialize the CashFlow Standardizer.
+
+        Fine tune it with the following arguments:
+
+        Args:
+            prepivot_rule_tree: rules that are applied before the data is pivoted. These are rules
+                    that filter (like deduplicate) or correct values.
+            pre_rule_tree: rules that are applied once before the main processing. These are mainly
+                    rules that try to correct existing data from obvious errors (like wrong
+                    tagging)
+            main_rule_tree: rules that are applied during the main processing rule and which do the
+                    heavy lifting. These rules can be executed multiple times depending on the value
+                    of the main_iterations parameter
+            post_rule_tree: rules that are used to &#34;cleanup&#34;, like setting certain values to
+                    0.0. They are just executed once.
+            validation_rules: Validation rules are applied after all rules were applied.
+                   they add validation columns to the main dataset. Validation rules do check
+                   if certain requirements are met. E.g. in a Balance Sheet, the following
+                   equation should be true: Assets = AssetsCurrent + AssetsNoncurrent
+            final_tags: The list of tags/columns that will appear in the final result dataframe.
+            main_statement_tags: list of tags that is used to identify the main table of a
+                   financial statement (income statement, balance sheet, cash flow).
+
+            filter_for_main_statement (bool):
+                    Only consider the reports that contain most of the &#34;main_statement_tags&#34;.
+                    Default is True.
+            main_iterations (int): Number of times the main rules should be applied.
+                    Default is 1 for CashFlow.
+            invert_negated (bool, Optional, True): inverts the value of the tags that are marked
+                   as negated (in the pre_df).
+            additional_final_sub_fields (List, Optional):
+                    When using the present method, the results are joined with the following fields
+                    from the sub_df entry: &#39;adsh&#39;, &#39;cik&#39;, &#39;form&#39;, &#39;fye&#39;, &#39;fy&#39;, &#39;fp&#39;, &#39;filed&#39;
+                    Additional fields can be assigend in this list. Default is None.
+            additional_final_tags (List, Optional):
+                     the &#34;final_tags&#34; list define the tags that will be present in the final result
+                     dataframe. Additional tags can be added via this parameter. Default is None.
+        &#34;&#34;&#34;
         super().__init__(
-            prepivot_rule_tree=self.prepivot_rule_tree,
-            pre_rule_tree=self.preprocess_rule_tree,
-            main_rule_tree=self.main_rule_tree,
-            post_rule_tree=self.post_rule_tree,
-            validation_rules=self.validation_rules,
-            final_tags=self.final_tags,
-            main_iterations=iterations,
+            prepivot_rule_tree=
+                    prepivot_rule_tree if prepivot_rule_tree else self.prepivot_rule_tree,
+            pre_rule_tree=pre_rule_tree if pre_rule_tree else self.preprocess_rule_tree,
+            main_rule_tree=main_rule_tree if main_rule_tree else self.main_rule_tree,
+            post_rule_tree=post_rule_tree if post_rule_tree else self.post_rule_tree,
+            validation_rules=validation_rules if validation_rules else self.validation_rules,
+            final_tags=final_tags if final_tags else self.final_tags,
+            main_statement_tags=
+                    main_statement_tags if main_statement_tags else self.main_statement_tags,
+
             filter_for_main_statement=filter_for_main_statement,
-            main_statement_tags=self.main_statement_tags)</code></pre>
+            main_iterations=main_iterations,
+            invert_negated=invert_negated,
+            additional_final_sub_fields=additional_final_sub_fields,
+            additional_final_tags=additional_final_tags
+        )</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">

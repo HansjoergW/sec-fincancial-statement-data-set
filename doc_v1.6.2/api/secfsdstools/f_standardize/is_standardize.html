@@ -1,0 +1,2782 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.10.0" />
+<title>secfsdstools.f_standardize.is_standardize API documentation</title>
+<meta name="description" content="Contains the definitions to standardize incaome statements." />
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
+<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js" integrity="sha256-Uv3H6lx7dJmRfRvH8TH6kJD1TSK1aFcwgx+mdg3epi8=" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>secfsdstools.f_standardize.is_standardize</code></h1>
+</header>
+<section id="section-intro">
+<p>Contains the definitions to standardize incaome statements.</p>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python"># pylint: disable=C0302
+&#34;&#34;&#34;Contains the definitions to standardize incaome statements.&#34;&#34;&#34;
+from typing import List, Set, Optional
+
+import pandas as pd
+import pandera as pa
+
+from secfsdstools.f_standardize.base_prepivot_rules import (PrePivotDeduplicate,
+                                                            PrePivotCorrectSign, PrePivotMaxQtrs)
+from secfsdstools.f_standardize.base_rule_framework import RuleGroup, Rule
+from secfsdstools.f_standardize.base_rules import (CopyTagRule, SumUpRule, SubtractFromRule,
+                                                   missingsumparts_rules_creator,
+                                                   MissingSummandRule, PostSetToZero, PostFixSign)
+from secfsdstools.f_standardize.base_validation_rules import ValidationRule, SumValidationRule, \
+    ProductValidationRule
+from secfsdstools.f_standardize.standardizing import Standardizer
+
+# All tags that are used for costs of goods and services
+# pylint: disable=C0301
+cost_of_GaS_tags = [&#39;CostOfGoodsSold&#39;,
+                    &#39;CostOfServices&#39;,
+                    &#39;CostOfGoodsAndServicesSold&#39;,
+                    &#39;CostOfRevenue&#39;,
+                    &#39;CostOfGoodsSoldExcludingDepreciationDepletionAndAmortization&#39;,
+                    &#39;CostOfGoodsSoldDepreciationDepletionAndAmortization&#39;,
+                    &#39;CostOfGoodsSoldDepletion&#39;,
+                    &#39;CostOfGoodsSoldDepreciation&#39;,
+                    &#39;CostOfGoodsSoldAmortization&#39;,
+                    &#39;CostOfGoodsSoldDepreciationAndAmortization&#39;,
+                    &#39;CostOfGoodsSoldDirectFinancingLease&#39;,
+                    &#39;CostOfGoodsSoldElectric&#39;,
+                    &#39;CostOfGoodsSoldDirectMaterials&#39;,
+                    &#39;CostOfGoodsSoldDirectLabor&#39;,
+                    &#39;CostOfGoodsSoldOverhead&#39;,
+                    &#39;CostOfGoodsSoldOilAndGas&#39;,
+                    &#39;CostOfGoodsSoldSubscription&#39;,
+                    &#39;CostOfGoodsSoldDirectTaxesAndLicensesCosts&#39;,
+                    &#39;CostOfGoodsSoldMaintenanceCosts&#39;,
+                    &#39;CostOfGoodsSoldSalesTypeLease&#39;,
+                    &#39;CostOfServicesExcludingDepreciationDepletionAndAmortization&#39;,
+                    &#39;CostOfServicesDepreciation&#39;,
+                    &#39;CostOfServicesDepreciationAndAmortization&#39;,
+                    &#39;CostOfServicesCatering&#39;,
+                    &#39;CostOfServicesAmortization&#39;,
+                    &#39;CostOfServicesOilAndGas&#39;,
+                    &#39;CostOfServicesDirectTaxesAndLicensesCosts&#39;,
+                    &#39;CostOfServicesMaintenanceCosts&#39;,
+                    &#39;CostOfServicesLicensesAndServices&#39;,
+                    &#39;CostOfServicesDirectLabor&#39;,
+                    &#39;CostOfServicesLicensesAndMaintenanceAgreements&#39;,
+                    &#39;CostOfServicesEnergyServices&#39;,
+                    &#39;CostOfServicesDirectMaterials&#39;,
+                    &#39;CostOfServicesEnvironmentalRemediation&#39;,
+                    &#39;CostOfServicesOverhead&#39;,
+                    &#39;CostOfGoodsAndServicesSoldDepreciationAndAmortization&#39;,
+                    &#39;CostOfGoodsAndServicesSoldAmortization&#39;,
+                    &#39;CostOfGoodsAndServicesSoldOverhead&#39;,
+                    &#39;CostOfGoodsAndServicesSoldDepreciation&#39;,
+                    &#39;CostOfGoodsAndServicesEnergyCommoditiesAndServices&#39;,
+                    &#39;CostOfGoodsAndServiceExcludingDepreciationDepletionAndAmortization&#39;
+                    ]
+
+# All tags containing detailled revenue values
+# pylint: disable=C0301
+detailled_revenue_tags = [
+    &#39;RegulatedAndUnregulatedOperatingRevenue&#39;,
+    &#39;HealthCareOrganizationPatientServiceRevenue&#39;,
+    &#39;ContractsRevenue&#39;,
+    &#39;RevenueOilAndGasServices&#39;,
+    &#39;HealthCareOrganizationRevenue&#39;,
+    &#39;RevenueMineralSales&#39;,
+    &#39;SalesRevenueEnergyServices&#39;,
+    &#39;RealEstateRevenueNet&#39;,
+    &#39;OperatingLeasesIncomeStatementLeaseRevenue&#39;,
+    &#39;LicensesRevenue&#39;, &#39;RevenueFromRelatedParties&#39;,
+    &#39;BrokerageCommissionsRevenue&#39;, &#39;RoyaltyRevenue&#39;, &#39;OilAndGasSalesRevenue&#39;,
+    &#39;OilAndGasRevenue&#39;, &#39;OtherRealEstateRevenue&#39;,
+    &#39;TechnologyServicesRevenue&#39;, &#39;ManagementFeesRevenue&#39;,
+    &#39;ReimbursementRevenue&#39;,
+    &#39;OperatingLeasesIncomeStatementMinimumLeaseRevenue&#39;,
+    &#39;FoodAndBeverageRevenue&#39;, &#39;MaintenanceRevenue&#39;,
+    &#39;LicenseAndServicesRevenue&#39;, &#39;FranchiseRevenue&#39;, &#39;SubscriptionRevenue&#39;,
+    &#39;FinancialServicesRevenue&#39;,
+    &#39;RevenueFromGrants&#39;,
+    &#39;GasGatheringTransportationMarketingAndProcessingRevenue&#39;,
+    &#39;OccupancyRevenue&#39;, &#39;NaturalGasProductionRevenue&#39;,
+    &#39;SalesRevenueServicesGross&#39;, &#39;InvestmentBankingRevenue&#39;,
+    &#39;AdvertisingRevenue&#39;, &#39;RevenueOtherFinancialServices&#39;,
+    &#39;OilAndCondensateRevenue&#39;, &#39;RevenueFromLeasedAndOwnedHotels&#39;,
+    &#39;RevenuesNetOfInterestExpense&#39;, &#39;RegulatedAndUnregulatedOperatingRevenue&#39;,
+    &#39;UnregulatedOperatingRevenue&#39;, &#39;ElectricUtilityRevenue&#39;,
+    &#39;CargoAndFreightRevenue&#39;, &#39;OtherHotelOperatingRevenue&#39;,
+    &#39;CasinoRevenue&#39;, &#39;RefiningAndMarketingRevenue&#39;,
+    &#39;PrincipalTransactionsRevenue&#39;, &#39;InterestRevenueExpenseNet&#39;,
+    &#39;HomeBuildingRevenue&#39;, &#39;OtherRevenueExpenseFromRealEstateOperations&#39;,
+    &#39;GasDomesticRegulatedRevenue&#39;, &#39;LicenseAndMaintenanceRevenue&#39;,
+    &#39;RegulatedOperatingRevenue&#39;, &#39;AdmissionsRevenue&#39;, &#39;PassengerRevenue&#39;
+]
+
+# The 100 most common tags which appear between GrossProfit and OperatingIncomeLoss
+# pylint: disable=C0301
+top_100_operating_costs_tags = [
+    &#39;SellingGeneralAndAdministrativeExpense&#39;,
+    &#39;GeneralAndAdministrativeExpense&#39;,
+    &#39;ResearchAndDevelopmentExpense&#39;,
+    &#39;SellingAndMarketingExpense&#39;,
+    &#39;AmortizationOfIntangibleAssets&#39;,
+    &#39;DepreciationAndAmortization&#39;,
+    &#39;RestructuringCharges&#39;,
+    &#39;ProfessionalFees&#39;,
+    &#39;SellingExpense&#39;,
+    &#39;AssetImpairmentCharges&#39;,
+    &#39;OtherOperatingIncomeExpenseNet&#39;,
+    &#39;DepreciationDepletionAndAmortization&#39;,
+    &#39;LaborAndRelatedExpense&#39;,
+    &#39;BusinessCombinationAcquisitionRelatedCosts&#39;,
+    &#39;GoodwillImpairmentLoss&#39;,
+    &#39;Depreciation&#39;,
+    &#39;OtherCostAndExpenseOperating&#39;,
+    &#39;MarketingAndAdvertisingExpense&#39;,
+    &#39;RestructuringSettlementAndImpairmentProvisions&#39;,
+    &#39;SalariesAndWages&#39;,
+    &#39;ShareBasedCompensation&#39;,
+    &#39;ProvisionForDoubtfulAccounts&#39;,
+    &#39;GainLossOnDispositionOfAssets&#39;,
+    &#39;CostsAndExpenses&#39;,
+    &#39;OperatingCostsAndExpenses&#39;,
+    &#39;OtherGeneralAndAdministrativeExpense&#39;,
+    &#39;ResearchAndDevelopmentExpenseExcludingAcquiredInProcessCost&#39;,
+    &#39;GainLossOnSaleOfPropertyPlantEquipment&#39;,
+    &#39;GoodwillAndIntangibleAssetImpairment&#39;,
+    &#39;MarketingExpense&#39;,
+    &#39;GainLossOnDispositionOfAssets1&#39;,
+    &#39;AdvertisingExpense&#39;,
+    &#39;BusinessCombinationContingentConsiderationArrangementsChangeInAmountOfContingentConsiderationLiability1&#39;,
+    &#39;LeaseAndRentalExpense&#39;,
+    &#39;LegalFees&#39;,
+    &#39;OtherSellingGeneralAndAdministrativeExpense&#39;,
+    &#39;GainLossRelatedToLitigationSettlement&#39;,
+    &#39;IncomeLossFromEquityMethodInvestments&#39;,
+    &#39;DepreciationNonproduction&#39;,
+    &#39;AllocatedShareBasedCompensationExpense&#39;,
+    &#39;SalariesWagesAndOfficersCompensation&#39;,
+    &#39;TravelAndEntertainmentExpense&#39;,
+    &#39;ImpairmentOfLongLivedAssetsHeldForUse&#39;,
+    &#39;ResearchAndDevelopmentExpenseSoftwareExcludingAcquiredInProcessCost&#39;,
+    &#39;OfficersCompensation&#39;,
+    &#39;OtherGeneralExpense&#39;,
+    &#39;ImpairmentOfIntangibleAssetsExcludingGoodwill&#39;,
+    &#39;OtherOperatingIncome&#39;,
+    &#39;ProfessionalAndContractServicesExpense&#39;,
+    &#39;LitigationSettlementExpense&#39;,
+    &#39;GainLossOnSaleOfBusiness&#39;,
+    &#39;ImpairmentOfIntangibleAssetsFinitelived&#39;,
+    &#39;RestructuringCostsAndAssetImpairmentCharges&#39;,
+    &#39;ForeignCurrencyTransactionGainLossBeforeTax&#39;,
+    &#39;OtherDepreciationAndAmortization&#39;,
+    &#39;OtherExpenses&#39;,
+    &#39;RestructuringCosts&#39;,
+    &#39;SalesCommissionsAndFees&#39;,
+    &#39;BusinessCombinationIntegrationRelatedCosts&#39;,
+    &#39;AdjustmentForAmortization&#39;,
+    &#39;InterestExpense&#39;,
+    &#39;ImpairmentOfIntangibleAssetsIndefinitelivedExcludingGoodwill&#39;,
+    &#39;CommunicationsAndInformationTechnology&#39;,
+    &#39;PreOpeningCosts&#39;,
+    &#39;OtherNonrecurringIncomeExpense&#39;,
+    &#39;GainLossOnSalesOfAssetsAndAssetImpairmentCharges&#39;,
+    &#39;OtherAssetImpairmentCharges&#39;,
+    &#39;ImpairmentOfLongLivedAssetsToBeDisposedOf&#39;,
+    &#39;DisposalGroupNotDiscontinuedOperationGainLossOnDisposal&#39;,
+    &#39;GainLossOnSaleOfOtherAssets&#39;,
+    &#39;ShippingHandlingAndTransportationCosts&#39;,
+    &#39;RoyaltyExpense&#39;,
+    &#39;GeneralInsuranceExpense&#39;,
+    &#39;ManagementFeeExpense&#39;,
+    &#39;GainsLossesOnSalesOfAssets&#39;,
+    &#39;OccupancyNet&#39;,
+    &#39;TaxesExcludingIncomeAndExciseTaxes&#39;,
+    &#39;TechnologyServicesCosts&#39;,
+    &#39;OtherIncome&#39;,
+    &#39;RestructuringAndRelatedCostIncurredCost&#39;,
+    &#39;OtherLaborRelatedExpenses&#39;,
+    &#39;SeveranceCosts1&#39;,
+    &#39;UtilitiesOperatingExpenseMaintenanceAndOperations&#39;,
+    &#39;EmployeeBenefitsAndShareBasedCompensation&#39;,
+    &#39;BusinessDevelopment&#39;,
+    &#39;CostsAndExpensesRelatedParty&#39;,
+    &#39;ExplorationExpenseMining&#39;,
+    &#39;DepreciationAmortizationAndAccretionNet&#39;,
+    &#39;GainLossOnDispositionOfProperty&#39;,
+    &#39;InventoryWriteDown&#39;,
+    &#39;AssetRetirementObligationAccretionExpense&#39;,
+    &#39;InsuranceRecoveries&#39;,
+    &#39;AmortizationOfAcquiredIntangibleAssets&#39;,
+    &#39;GainsLossesOnExtinguishmentOfDebt&#39;,
+    &#39;AmortizationOfAcquisitionCosts&#39;,
+    &#39;TangibleAssetImpairmentCharges&#39;,
+    &#39;ResearchAndDevelopmentInProcess&#39;,
+    &#39;OperatingLeasesRentExpenseNet&#39;,
+    &#39;OperatingLeaseExpense&#39;,
+]
+
+
+class PostFixIncomeLossFromContinuingOperationsAndSignOfIncomeTaxExpenseBenefit(Rule):
+    &#34;&#34;&#34;
+    Usually, when TaxExpenseBenefit is a positive number, meaning that this amount
+    of taxes were paid by the company. Therefore, the equation
+
+    IncomeLossBeforeTaxes - TaxExpenseBenefit = NetIncomeLoss
+
+    However, there  is a quite significant number of reports, which us a negative
+    number to display paid Taxes and therefore, the following equations would be
+    used:
+
+    IncomeLossBeforeTaxes + TaxExpenseBenefit = NetIncomeLoss
+
+    This rule select these entries and tries to fix that, whenever possible.
+
+    Since the rules calculate IncomeLossFromContinuingOperations as follows
+
+    IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit
+    - IncomeTaxExpenseBenefit
+    = IncomeLossFromContinuingOperations
+
+    We might end up having a wrong value for IncomeLossFromContinuingOperation.
+
+    Therefore, we mask the entries, where
+
+    abs(NetIncomeLoss - IncomeLossFromContinuingOperations) = 2*abs(IncomeTaxExpenseBenefit)
+    if IncomeTaxExpenseBenefit &gt; 0
+
+    in order to fix the sign for IncomeTaxExpenseBenefit and to correct
+    IncomeLossFromContinuingOperations
+
+    The rule also uses some threshold.
+
+    Of course, this is not perfect and does not consider the cases with DiscontinuedOperations,
+    However, it is able to fix a significant number of cases.
+
+    For the masked entries, it changes the sign of TaxExpenseBenefit
+    and recalculates IncomeLossFromContinuingOperations
+
+    &#34;&#34;&#34;
+
+    def get_target_tags(self) -&gt; List[str]:
+        &#34;&#34;&#34;
+        returns a list of tags that could be affected/changed by this rule
+
+        Returns:
+            List[str]: list with affected tags/columns
+        &#34;&#34;&#34;
+        return [&#39;IncomeLossFromContinuingOperations&#39;, &#39;AllIncomeTaxExpenseBenefit&#39;]
+
+    def get_input_tags(self) -&gt; Set[str]:
+        &#34;&#34;&#34;
+        return all tags that the rules within this group need.
+
+        Returns:
+            Set[str]: set of all input tags that are used by rules in this group
+        &#34;&#34;&#34;
+        return {&#39;IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit&#39;,
+                &#39;AllIncomeTaxExpenseBenefit&#39;, &#39;IncomeLossFromContinuingOperations&#39;, &#39;ProfitLoss&#39;}
+
+    def mask(self, data_df: pd.DataFrame) -&gt; pa.typing.Series[bool]:
+        &#34;&#34;&#34;
+            returns a Series[bool] which defines the rows to which this rule has to be applied.
+
+        Args:
+            data_df dataframe on which the rules should be applied
+
+        Returns:
+            pa.typing.Series[bool]: a boolean Series that marks which rows have to be calculated
+        &#34;&#34;&#34;
+        return (data_df.AllIncomeTaxExpenseBenefit != 0) &amp; \
+            ((data_df.ProfitLoss - data_df.IncomeLossFromContinuingOperations).abs() &gt;=
+             1.8 * data_df.AllIncomeTaxExpenseBenefit.abs())
+
+    def apply(self, data_df: pd.DataFrame, mask: pa.typing.Series[bool]) -&gt; pd.DataFrame:
+        &#34;&#34;&#34;
+        apply the rule on the provided dataframe. the rows, on which the rule has to be applied
+        is defined by the provide mask Series.
+
+        Important, the rules have to be applied &#34;in-place&#34;, so no new dataframe is produced.
+
+        Args:
+            data_df: dataframe on which the rule has to be applied
+            mask: a Series marking the rows in the dataframe on which the rule has to be applied
+        Returns:
+            pd.DataFrame: make the process chainable
+        &#34;&#34;&#34;
+
+        data_df.loc[mask, &#39;AllIncomeTaxExpenseBenefit&#39;] = -data_df.AllIncomeTaxExpenseBenefit
+
+        # recalculate IncomeLossFromContinuingOperations
+        data_df.loc[mask, &#39;IncomeLossFromContinuingOperations&#39;] = \
+            data_df[&#39;IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit&#39;]
+        subtract_mask = mask &amp; ~data_df.AllIncomeTaxExpenseBenefit.isna()
+        data_df.loc[subtract_mask, &#39;IncomeLossFromContinuingOperations&#39;] = (
+                data_df[&#39;IncomeLossFromContinuingOperations&#39;] -
+                data_df.AllIncomeTaxExpenseBenefit)
+        return data_df
+
+    def get_description(self) -&gt; str:
+        return &#34;Corrects the sign of &#39;IncomeTaxExpenseBenefits&#39; if it seems to be wrong. Checks&#34; \
+               &#34;if the difference between &#39;NetIncomeLoss&#39; and &#34; \
+               &#34;&#39;IncomeLossFromContinuingOperations&#39;&#34; \
+               &#34;is about 2. Which is a clear indication, that the sign was wrong.&#34;
+
+
+# pylint: disable=C0301
+class IncomeStatementStandardizer(Standardizer):
+    &#34;&#34;&#34;
+    The goal of this Standardizer is to create IncomeStatements that are comparable,
+    meaning that they have the same tags.
+
+    At the end, the standardized IS contains the following columns
+
+    &lt;pre&gt;
+          Revenues
+        - CostOfRevenue
+        ---------------
+        = GrossProfit
+        - OperatingExpenses
+        -------------------
+        = OperatingIncomeLoss
+
+          IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit
+        - AllIncomeTaxExpenseBenefit
+        ----------------------------
+        = IncomeLossFromContinuingOperations
+        + IncomeLossFromDiscontinuedOperationsNetOfTax
+        -----------------------------------------------
+        = ProfitLoss
+        - NetIncomeLossAttributableToNoncontrollingInterest
+        ---------------------------------------------------
+        = NetIncomeLoss
+    &lt;/pre&gt;
+
+    Detailled View:
+    &lt;pre&gt;
+      Main Rules
+        Revenues:
+            Pre
+                + SalesRevenueGoodsNet     &lt;- SalesRevenueGoodsGross
+                + SalesRevenueServicesNet  &lt;- SalesRevenueServicesGross
+                + OtherSalesRevenueNet
+                --------------
+                = SalesRevenueNet
+
+
+                RevenueFromContractWithCustomerIncludingAssessedTax
+                - ExciseAndSalesTaxes
+                ---------------------
+                = RevenueFromContractWithCustomerExcludingAssessedTax
+
+
+                + RegulatedAndUnregulatedOperatingRevenue
+                + HealthCareOrganizationPatientServiceRevenue
+                + ContractsRevenue
+                + RevenueOilAndGasServices
+                  ...
+                ------------------
+                = RevenuesSum
+
+            Set
+                1. Prio: Revenues
+                2. Prio: SalesRevenueNet
+                3. Prio: RevenueFromContractWithCustomerExcludingAssessedTax
+                4. Prio: RevenueFromContractWithCustomerIncludingAssessedTax
+                5. Prio: RevenuesExcludingInterestAndDividends
+                6. Prio: RevenuesSum
+                7. Prio: InvestmentIncomeInterest
+                8. Prio: CostOfRevenue + GrossProfit
+
+
+        CostOfRevenue
+
+            Pre
+                    + CostOfGoodsSoldExcludingDepreciationDepletionAndAmortization
+                    + CostOfGoodsSoldDepreciationDepletionAndAmortization
+                    + CostOfGoodsSoldDepletion
+                    + CostOfGoodsSoldDepreciation
+                    + ...
+                    ------------
+                    = CostOfGoodsSold (if not set)
+
+
+                    + CostOfServicesExcludingDepreciationDepletionAndAmortization
+                    + CostOfServicesDepreciation
+                    + CostOfServicesDepreciationAndAmortization
+                    + CostOfServicesCatering
+                    + ...
+                    ------------
+                    = CostOfServices (if not set)
+
+
+                    + CostOfGoodsAndServicesSoldDepreciationAndAmortization
+                    + CostOfGoodsAndServicesSoldAmortization
+                    + CostOfGoodsAndServicesSoldOverhead
+                    + CostOfGoodsAndServicesSoldDepreciation
+                    + CostOfGoodsAndServicesEnergyCommoditiesAndServices
+                    + CostOfGoodsAndServiceExcludingDepreciationDepletionAndAmortizatio
+                    ------------
+                    = CostOfGoodsAndServicesSold (if not set)
+
+
+                      CostOfGoodsSold
+                    + CostOfServices
+                    ---------------
+                    = CostOfGoodsAndServicesSold (if not set)
+
+            Set
+                1. Prio CostOfRevenue
+                2. Prio CostOfGoodsAndServicesSold
+                3. Prio Revenues - GrossProfit
+
+        GrossProfit
+
+            1. Prio GrossProfit
+            2. Prio Revenues - CostOfRevenue
+            3. Prio GrossInvestmentIncomeOperating
+            4. Prio InterestAndDividendIncomeOperating
+
+        OperatingExpenses
+
+            Pre
+                + SellingGeneralAndAdministrativeExpense
+                + GeneralAndAdministrativeExpense
+                + ResearchAndDevelopmentExpense
+                + SellingAndMarketingExpense
+                + ... (96 most expense tags)
+                ----------------------------
+                = OperatingExpensesSum
+
+            Set
+                1. Prio OperatingExpenses
+                2. Prio GrossProfit - OperatingIncomeLoss
+                3. Prio OperatingExpensesSum
+
+
+        OperatingIncomeLoss
+            Set
+            1. Prio OperatingIncomeLoss
+            2. Prio GrossProfit - OperatingExpenses
+
+
+        IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit
+          Pre
+              + IncomeLossFromContinuingOperationsBeforeIncomeTaxesMinorityInterestAndIncomeLossFromEquityMethodInvestments
+              + (Optional) IncomeLossFromEquityMethodInvestments
+              --------------------------------------------------
+              = IncomeLossFromContinuingOperationsFromEquityMethodInvestements
+          Set
+              1. Prio IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest rename
+              2. Prio IncomeLossFromContinuingOperationsFromEquityMethodInvestements
+              3. Prio IncomeLossFromContinuingOperations + AllIncomeTaxExpenseBenefit
+
+
+        NetIncome
+           Pre
+                + IncomeTaxExpenseBenefit
+                + DeferredIncomeTaxExpenseBenefit
+                + (optional) IncomeLossFromEquityMethodInvestments
+                ---------------------------------
+                = AllIncomeTaxExpenseBenefit
+
+
+                IncomeLossFromContinuingOperations &lt;- (rename) IncomeLossFromContinuingOperationsIncludingPortionAttributableToNoncontrollingInterest
+                IncomeLossFromDiscontinuedOperationsNetOfTax &lt;- (rename) IncomeLossFromDiscontinuedOperationsNetOfTaxAttributableToReportingEntity
+
+                + IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit
+                - AllIncomeTaxExpenseBenefit
+                ---------------------------------
+                = IncomeLossFromContinuingOperations
+
+
+                + IncomeLossFromContinuingOperations
+                + IncomeLossFromDiscontinuedOperationsNetOfTax
+                -------------------------
+                = ProfitLossParts
+
+
+           SetProfitLoss
+                1. Prio ProfitLoss
+                2. Prio ProfitLossParts
+                3. Prio NetIncomeLoss
+
+           SetIncomeLossContinuingOperations
+                3. Prio ProfitLoss
+
+           SetNetIncomeLoss
+                1. Prio NetIncomeLoss
+                2. Prio NetIncomeLossAvailableToCommonStockholdersBasic
+                3. Prio NetIncomeLossAllocatedToLimitedPartners
+                3. Prio ProfitLoss
+                4. Prio ProfitLossIncludingRedeemableNonControllingInterest
+                5. Prio OtherComprehensiveIncomeLossNetOfTax
+                6. Prio ComprehensiveIncomeNetOfTax
+                7. Prio IncomeLossAttributableToParent
+                8. Prio NetInvestmentIncome
+
+        OutstandingShares
+            1. Prio WeightedAverageNumberOfSharesOutstandingBasic
+            2. Prio WeightedAverageNumberOfDilutedSharesOutstanding
+            3. Prio WeightedAverageNumberOfShareOutstandingBasicAndDiluted
+            4. Prio WeightedAverageLimitedPartnershipUnitsOutstanding
+            5. Prio WeightedAverageLimitedPartnershipUnitsOutstandingDiluted
+            6. Prio WeightedAverageNumberOfLimitedPartnershipAndGeneralPartnershipUnitOutstandingBasicAndDiluted
+            7. Prio WeightedAverageGeneralPartnershipUnitsOutstanding
+
+        EarningsPerShare
+            1. Prio EarningsPerShareBasic
+            2. Prio EarningsPerShareDiluted
+            3. Prio EarningsPerShareBasicAndDiluted
+            4. Prio IncomeLossFromContinuingOperationsPerBasicShare
+            5. Prio IncomeLossFromContinuingOperationsPerDilutedShare
+            6. Prio IncomeLossFromContinuingOperationsPerBasicAndDilutedShare
+            7. Prio IncomeLossFromContinuingOperationsPerOutstandingLimitedPartnershipUnit
+            8. Prio IncomeLossFromContinuingOperationsPerOutstandingLimitedPartnershipUnitBasicNetOfTax
+            9. Prio IncomeLossFromContinuingOperationsPerOutstandingLimitedPartnershipAndGeneralPartnershipUnitBasicAndDiluted
+
+
+      Post Rule (Cleanup)
+        Fix Sign of AllIncomeTaxExpenseBenefit (should be positive if taxed were paid)
+            expected equation to be true:
+               IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit - AllIncomeTaxExpenseBenefit = ProfitLoss
+
+            invert sign of AllIncomeTaxExpenseBenefit if the following equation is true:
+               IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit + AllIncomeTaxExpenseBenefit = ProfitLoss
+
+        Fix sign of NetIncomeLossAttributableToNoncontrollingInterest
+            expected equation to be true:
+               ProfitLoss - NetIncomeLossAttributableToNoncontrollingInterest = NetIncomeLoss
+
+            invert sign of NetIncomeLossAttributableToNoncontrollingInterest if the following equation is true:
+               ProfitLoss + NetIncomeLossAttributableToNoncontrollingInterest = NetIncomeLoss
+
+        If Revenues was not set, but there is a GrossProfit, set it to GrossProfit,
+              since was no CostOfRevenue found
+
+        If GrossProfit couldn&#39;t be set, but there is Revenues, set it to Revenues
+              since was no CostOfRevenue found
+
+        if CostORevenues couldn&#39;t be set, but Revenues and GrossProfit are present, set it to Revenues - Grossprofit
+
+        if OperatingIncomeLoss is not set yet, and GrossProfit (available now) and OperatingExpenses are present,
+             set it to GrossProfit - OperatingExpenses
+
+        If there is no IncomeLossFromContinuingOperations, set it to ProfitLoss
+        if there is no IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit, set it to IncomeLossFromContinuingOperations
+        if there is no AllIncomeTaxExpenseBenefit, set it to IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit - AllIncomeTaxExpenseBenefit
+
+        set IncomeLossFromDiscontinuedOperationsNetOfTax to 0.0 if not present
+
+        If there is no IncomeLossFromContinuingOperations, set it to IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit
+        If there is no ProfitLoss, set it to IncomeLossFromContinuingOperations + IncomeLossFromDiscontinuedOperationsNetOfTax
+        If there is no NetIncomeLoss, set it to ProfitLoss
+        If there is no NetIncomeLossAttributableToNoncontrollingInterest, set it to ProfitLoss - NetIncomeLoss
+
+    &lt;/pre&gt;
+    &#34;&#34;&#34;
+    prepivot_rule_tree = RuleGroup(
+        prefix=&#34;IS_PREPIV&#34;,
+        rules=[PrePivotDeduplicate(),
+               PrePivotMaxQtrs(max_qtrs=4),
+               PrePivotCorrectSign(
+                   # all these tags are costOf and therefore should appear as a positive number
+                   # since costs are subtracted from the Revenue to get the GrossProfit
+                   tag_list=cost_of_GaS_tags,
+                   is_positive=True
+               )]
+    )
+
+    is_revenue_rg = RuleGroup(
+        prefix=&#34;Rev&#34;,
+        rules=[
+            RuleGroup(prefix=&#34;Pre&#34;,
+                      description=&#34;Preparation rules which might be usable to estimate the revenue&#34;,
+                      rules=[
+                          # normally, (Goods and Services) Gross and Net appear together, resp. Net has priority.
+                          # so if net is not present, we copy the gross value in the net value
+                          # and then sum the nets up to the SalesRevenue
+                          CopyTagRule(
+                              original=&#39;SalesRevenueGoodsGross&#39;,
+                              target=&#39;SalesRevenueGoodsNet&#39;),
+
+                          CopyTagRule(
+                              original=&#39;SalesRevenueServicesGross&#39;,
+                              target=&#39;SalesRevenueServicesNet&#39;),
+
+                          SumUpRule(sum_tag=&#39;SalesRevenueNet&#39;,
+                                    potential_summands=[
+                                        &#39;SalesRevenueGoodsNet&#39;,
+                                        &#39;SalesRevenueServicesNet&#39;],
+                                    optional_summands=[
+                                        &#39;OtherSalesRevenueNet&#39;
+                                    ]),
+
+                          # RevenueFromContractWithCustomer-tags are also often used to report the
+                          # total Revenue. so the following rules take care of these cases.
+                          # the order of the rules also defines the precedence.
+                          # first: if RevenueFromContractWithCustomerExcludingAssessedTax is not set
+                          #    we calculate it from RevenueFromContractWithCustomerIncludingAssessedTax
+                          #          and ExciseAndSalesTaxes (if present)
+                          SubtractFromRule(
+                              subtract_from_tag=&#39;RevenueFromContractWithCustomerIncludingAssessedTax&#39;,
+                              potential_subtract_tags=[&#39;ExciseAndSalesTaxes&#39;],
+                              target_tag=&#39;RevenueFromContractWithCustomerExcludingAssessedTax&#39;),
+
+                          # if we were not able to define the Revenue so far, there are
+                          # a couple of other tags which define Revenue, so we count them together
+                          # and set the total as Revenue
+                          SumUpRule(sum_tag=&#39;RevenuesSum&#39;,
+                                    potential_summands=detailled_revenue_tags,
+                                    optional_summands=[
+                                        &#39;OtherSalesRevenueNet&#39;
+                                    ]),
+                      ]),
+
+            RuleGroup(prefix=&#34;Set&#34;,
+                      description=&#34;Rules that might set the Revenue tag.&#34;
+                                  &#34;the order is the precedence.&#34;,
+                      rules=[
+                          # if Revenues is not set, we use the following precedence:
+                          # - SalesRevenueNet
+                          # - RevenueFromContractWithCustomerExcludingAssessedTax
+                          # - RevenueFromContractWithCustomerIncludingAssessedTax
+                          # - RevenuesExcludingInterestAndDividends
+                          # - RevenuesSum
+                          # - InvestmentIncomeInterest
+
+                          CopyTagRule(original=&#39;SalesRevenueNet&#39;, target=&#39;Revenues&#39;),
+                          CopyTagRule(
+                              original=&#39;RevenueFromContractWithCustomerExcludingAssessedTax&#39;,
+                              target=&#39;Revenues&#39;),
+                          CopyTagRule(
+                              original=&#39;RevenueFromContractWithCustomerIncludingAssessedTax&#39;,
+                              target=&#39;Revenues&#39;),
+                          CopyTagRule(original=&#39;RevenuesExcludingInterestAndDividends&#39;,
+                                      target=&#39;Revenues&#39;),
+                          CopyTagRule(original=&#39;RevenuesSum&#39;, target=&#39;Revenues&#39;),
+                          CopyTagRule(original=&#39;InvestmentIncomeInterest&#39;, target=&#39;Revenues&#39;)])
+        ]
+    )
+
+    is_costofrevenue_rg = RuleGroup(
+        prefix=&#34;CostOfRevenues&#34;,
+        rules=[
+            RuleGroup(prefix=&#34;Pre&#34;,
+                      description=&#34;Preparation rules which might be usable to estimate &#34;
+                                  &#34;the cost of revenue&#34;,
+                      rules=[
+                          SumUpRule(sum_tag=&#39;CostOfGoodsSold&#39;,
+                                    potential_summands=[
+                                        &#39;CostOfGoodsSoldExcludingDepreciationDepletionAndAmortization&#39;,
+                                        &#39;CostOfGoodsSoldDepreciationDepletionAndAmortization&#39;,
+                                        &#39;CostOfGoodsSoldDepletion&#39;,
+                                        &#39;CostOfGoodsSoldDepreciation&#39;,
+                                        &#39;CostOfGoodsSoldAmortization&#39;,
+                                        &#39;CostOfGoodsSoldDepreciationAndAmortization&#39;,
+                                        &#39;CostOfGoodsSoldDirectFinancingLease&#39;,
+                                        &#39;CostOfGoodsSoldElectric&#39;,
+                                        &#39;CostOfGoodsSoldDirectMaterials&#39;,
+                                        &#39;CostOfGoodsSoldDirectLabor&#39;,
+                                        &#39;CostOfGoodsSoldOverhead&#39;,
+                                        &#39;CostOfGoodsSoldOilAndGas&#39;,
+                                        &#39;CostOfGoodsSoldSubscription&#39;,
+                                        &#39;CostOfGoodsSoldDirectTaxesAndLicensesCosts&#39;,
+                                        &#39;CostOfGoodsSoldMaintenanceCosts&#39;,
+                                        &#39;CostOfGoodsSoldSalesTypeLease&#39;]),
+
+                          SumUpRule(sum_tag=&#39;CostOfServices&#39;,
+                                    potential_summands=[
+                                        &#39;CostOfServicesExcludingDepreciationDepletionAndAmortization&#39;,
+                                        &#39;CostOfServicesDepreciation&#39;,
+                                        &#39;CostOfServicesDepreciationAndAmortization&#39;,
+                                        &#39;CostOfServicesCatering&#39;,
+                                        &#39;CostOfServicesAmortization&#39;,
+                                        &#39;CostOfServicesOilAndGas&#39;,
+                                        &#39;CostOfServicesDirectTaxesAndLicensesCosts&#39;,
+                                        &#39;CostOfServicesMaintenanceCosts&#39;,
+                                        &#39;CostOfServicesLicensesAndServices&#39;,
+                                        &#39;CostOfServicesDirectLabor&#39;,
+                                        &#39;CostOfServicesLicensesAndMaintenanceAgreements&#39;,
+                                        &#39;CostOfServicesEnergyServices&#39;,
+                                        &#39;CostOfServicesDirectMaterials&#39;,
+                                        &#39;CostOfServicesEnvironmentalRemediation&#39;,
+                                        &#39;CostOfServicesOverhead&#39;
+                                    ]),
+
+                          SumUpRule(sum_tag=&#39;CostOfGoodsAndServicesSold&#39;,
+                                    potential_summands=[
+                                        &#39;CostOfGoodsSold&#39;,
+                                        &#39;CostOfServices&#39;]),
+
+                          SumUpRule(sum_tag=&#39;CostOfGoodsAndServicesSold&#39;,
+                                    potential_summands=[
+                                        &#39;CostOfGoodsAndServicesSoldDepreciationAndAmortization&#39;,
+                                        &#39;CostOfGoodsAndServicesSoldAmortization&#39;,
+                                        &#39;CostOfGoodsAndServicesSoldOverhead&#39;,
+                                        &#39;CostOfGoodsAndServicesSoldDepreciation&#39;,
+                                        &#39;CostOfGoodsAndServicesEnergyCommoditiesAndServices&#39;,
+                                        &#39;CostOfGoodsAndServiceExcludingDepreciationDepletionAndAmortization&#39;]
+                                    )]),
+            RuleGroup(prefix=&#34;Set&#34;,
+                      description=&#34;Rules that might set the CostOfRevenue tag.&#34;
+                                  &#34;the order is the precedence.&#34;,
+                      rules=[
+                          CopyTagRule(original=&#39;CostOfGoodsAndServicesSold&#39;,
+                                      target=&#39;CostOfRevenue&#39;)])
+        ]
+    )
+
+    is_missing_rev_cost_gross = RuleGroup(
+        prefix=&#34;RevCostGross_missing&#34;,
+        description=&#34;Calculates the third tag, if two of Revenues, CostOfRevenues, &#34;
+                    &#34;and GrossProfit are present&#34;,
+        rules=missingsumparts_rules_creator(sum_tag=&#39;Revenues&#39;,
+                                            summand_tags=[&#39;CostOfRevenue&#39;, &#39;GrossProfit&#39;])
+    )
+
+    is_grossprofit_rg = RuleGroup(
+        prefix=&#39;GrossProfit&#39;,
+        rules=[
+            RuleGroup(prefix=&#34;Set&#34;,
+                      description=&#34;Rules that might set the GrossProfit tag.&#34;
+                                  &#34;The order is the precedence.&#34;,
+                      rules=[
+                          # for investment companies
+                          CopyTagRule(original=&#39;GrossInvestmentIncomeOperating&#39;,
+                                      target=&#39;GrossProfit&#39;),
+                          CopyTagRule(original=&#39;InterestAndDividendIncomeOperating&#39;,
+                                      target=&#39;GrossProfit&#39;)])
+        ]
+    )
+
+    is_missing_gross_opil_opexp = RuleGroup(
+        prefix=&#34;GrossOpILOpExp_missing&#34;,
+        description=&#34;Calculates the third tag, if two of GrossProfit, OperatingExpenses, &#34;
+                    &#34;and OperatingIncomeLoss are present&#34;,
+        rules=missingsumparts_rules_creator(sum_tag=&#39;GrossProfit&#39;,
+                                            summand_tags=[&#39;OperatingExpenses&#39;,
+                                                          &#39;OperatingIncomeLoss&#39;]))
+
+    # this rule has to follow after the previous rule:
+    # first prio is to try to calc OperatingExpenses from GrossProfit-OperatingIncomeLoss
+    # second, we try to calculat OperatingExpenses from the 100 top used operating costs
+    # and then maybe use it in the next iteration to calculate GrossProfit or OpIncLoss
+    # with the previous rule
+    is_operating_expenses_rg = RuleGroup(
+        prefix=&#34;OperatingExpenses&#34;,
+        rules=[
+            RuleGroup(prefix=&#34;Pre&#34;,
+                      description=&#34;Preparation rules which might be usable to estimate &#34;
+                                  &#34;OperatingExpenses&#34;,
+                      rules=[
+                          SumUpRule(sum_tag=&#39;OperatingExpensesSum&#39;,
+                                    potential_summands=top_100_operating_costs_tags)]),
+            RuleGroup(prefix=&#34;Set&#34;,
+                      description=&#34;Rules that might set the OperatingExpenses tag.&#34;
+                                  &#34;The order is the precedence&#34;,
+                      rules=[
+                          CopyTagRule(original=&#39;OperatingExpensesSum&#39;, target=&#39;OperatingExpenses&#39;)])
+        ])
+
+    is_inclossbeforetax = RuleGroup(
+        prefix=&#34;inclossbeforetax&#34;,
+        rules=[
+            RuleGroup(prefix=&#34;Pre&#34;,
+                      description=&#34;Preparation rules which might be usable to estimate &#34;
+                                  &#34;IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit&#34;,
+                      rules=[
+                          SumUpRule(
+                              sum_tag=&#39;IncomeLossFromContinuingOperationsFromEquityMethodInvestements&#39;,
+                              potential_summands=[
+                                  &#39;IncomeLossFromContinuingOperationsBeforeIncomeTaxesMinorityInterestAndIncomeLossFromEquityMethodInvestments&#39;,
+                              ], optional_summands=[&#39;IncomeLossFromEquityMethodInvestments&#39;]),
+                      ]),
+            RuleGroup(prefix=&#34;Set&#34;,
+                      description=&#34;Rules that might set the &#34;
+                                  &#34;IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit&#34;
+                                  &#34; tag. The order is the precedence&#34;,
+                      rules=[
+                          # Renaming
+                          CopyTagRule(
+                              original=&#39;IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest&#39;,
+                              target=&#39;IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit&#39;),
+                          CopyTagRule(
+                              original=&#39;IncomeLossFromContinuingOperationsFromEquityMethodInvestements&#39;,
+                              target=&#39;IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit&#39;),
+                      ])
+        ])
+
+    is_netincome_rg = RuleGroup(
+        prefix=&#34;netincome&#34;,
+        rules=[
+            RuleGroup(prefix=&#34;Pre&#34;,
+                      description=&#34;Preparation rules which might be usable to estimate &#34;
+                                  &#34;NetIncomeLoss, ProfitLoss, and IncomeLossFromContinuingOperations&#34;,
+                      rules=[
+                          SumUpRule(
+                              sum_tag=&#39;AllIncomeTaxExpenseBenefit&#39;,
+                              potential_summands=[
+                                  &#39;IncomeTaxExpenseBenefit&#39;, &#39;DeferredIncomeTaxExpenseBenefit&#39;
+                              ], optional_summands=[&#39;IncomeLossFromEquityMethodInvestments&#39;]),
+
+                          CopyTagRule(
+                              original=&#39;IncomeLossFromContinuingOperationsIncludingPortionAttributableToNoncontrollingInterest&#39;,
+                              target=&#39;IncomeLossFromContinuingOperations&#39;),
+
+                          SubtractFromRule(
+                              target_tag=&#39;IncomeLossFromContinuingOperations&#39;,
+                              subtract_from_tag=&#39;IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit&#39;,
+                              potential_subtract_tags=[&#39;AllIncomeTaxExpenseBenefit&#39;]
+                          ),
+
+                          CopyTagRule(
+                              original=&#39;IncomeLossFromDiscontinuedOperationsNetOfTaxAttributableToReportingEntity&#39;,
+                              target=&#39;IncomeLossFromDiscontinuedOperationsNetOfTax&#39;),
+
+                          SumUpRule(sum_tag=&#39;ProfitLossParts&#39;,
+                                    potential_summands=[
+                                        &#39;IncomeLossFromContinuingOperations&#39;,
+                                        &#39;IncomeLossFromDiscontinuedOperationsNetOfTax&#39;
+                                    ])
+                      ]),
+            RuleGroup(prefix=&#34;SetPL&#34;,
+                      description=&#34;Rules that might set the ProfitLoss tag.&#34;
+                                  &#34;The order is the precedence&#34;,
+                      rules=[
+                          CopyTagRule(original=&#39;ProfitLossParts&#39;, target=&#39;ProfitLoss&#39;),
+                          # if there is no value for ProfitLoss, we set it to NetIncomeLoss
+                          CopyTagRule(original=&#39;NetIncomeLoss&#39;, target=&#39;ProfitLoss&#39;)]),
+
+            RuleGroup(prefix=&#34;SetILContOp&#34;,
+                      description=&#34;Rules that might set the IncomeLossFromContinuingOperations tag.&#34;
+                                  &#34;The order is the precedence&#34;,
+                      rules=[
+                          # since IncomeLossFromContinuingOperations is part of a validation rule,
+                          # and if it was not set, we assume that there is only
+                          # IncomeLossFromContinuingOperations and
+                          # copy the value from ProfitLoss
+                          CopyTagRule(original=&#39;ProfitLoss&#39;,
+                                      target=&#39;IncomeLossFromContinuingOperations&#39;)
+                      ]),
+
+            # the following rules set the NetIncomeLoss, if not already set.
+            # the order of the rules is the precedence
+            RuleGroup(prefix=&#34;SetNIL&#34;,
+                      description=&#34;Rules that might set the NetIncomeLoss tag.&#34;
+                                  &#34;The order is the precedence&#34;,
+                      rules=[
+                          CopyTagRule(original=&#39;NetIncomeLossAvailableToCommonStockholdersBasic&#39;,
+                                      target=&#39;NetIncomeLoss&#39;),
+                          CopyTagRule(original=&#39;NetIncomeLossAllocatedToLimitedPartners&#39;,
+                                      target=&#39;NetIncomeLoss&#39;),
+                          CopyTagRule(original=&#39;ProfitLoss&#39;, target=&#39;NetIncomeLoss&#39;),
+                          CopyTagRule(
+                              original=&#39;ProfitLossIncludingRedeemableNonControllingInterest&#39;,
+                              target=&#39;NetIncomeLoss&#39;),
+                          CopyTagRule(original=&#39;OtherComprehensiveIncomeLossNetOfTax&#39;,
+                                      target=&#39;NetIncomeLoss&#39;),
+                          CopyTagRule(original=&#39;ComprehensiveIncomeNetOfTax&#39;,
+                                      target=&#39;NetIncomeLoss&#39;),
+                          CopyTagRule(original=&#39;IncomeLossAttributableToParent&#39;,
+                                      target=&#39;NetIncomeLoss&#39;),
+                          # for investment companies
+                          CopyTagRule(original=&#39;NetInvestmentIncome&#39;, target=&#39;NetIncomeLoss&#39;),
+                      ])
+        ]
+    )
+
+    is_missing_ilbefore_tax_ilcontop = RuleGroup(
+        prefix=&#34;inclossbefore_tax_inclossop_missing&#34;,
+        description=&#34;Calculates the third tag, if two of AllIncomeTaxExpenseBenefit,&#34;
+                    &#34; IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit, &#34;
+                    &#34;and IncomeLossFromContinuingOperations are present&#34;,
+        rules=missingsumparts_rules_creator(
+            sum_tag=&#39;IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit&#39;,
+            summand_tags=[&#39;IncomeLossFromContinuingOperations&#39;,
+                          &#39;AllIncomeTaxExpenseBenefit&#39;])
+    )
+
+    is_missing_nilattnoncnt = MissingSummandRule(
+        sum_tag=&#39;ProfitLoss&#39;,
+        existing_summands_tags=[&#39;NetIncomeLoss&#39;],
+        missing_summand_tag=&#39;NetIncomeLossAttributableToNoncontrollingInterest&#39;
+    )
+
+    is_outstandingshares = RuleGroup(
+        prefix=&#34;sharesAndEPS&#34;,
+        description=&#34;Rules to extract the number of shares&#34;,
+        rules=[
+            CopyTagRule(target=&#39;OutstandingShares&#39;,
+                        original=&#39;WeightedAverageNumberOfSharesOutstandingBasic&#39;),
+            CopyTagRule(target=&#39;OutstandingShares&#39;,
+                        original=&#39;WeightedAverageNumberOfDilutedSharesOutstanding&#39;),
+            CopyTagRule(target=&#39;OutstandingShares&#39;,
+                        original=&#39;WeightedAverageNumberOfShareOutstandingBasicAndDiluted&#39;),
+            CopyTagRule(target=&#39;OutstandingShares&#39;,
+                        original=&#39;WeightedAverageLimitedPartnershipUnitsOutstanding&#39;),
+            CopyTagRule(target=&#39;OutstandingShares&#39;,
+                        original=&#39;WeightedAverageLimitedPartnershipUnitsOutstandingDiluted&#39;),
+            CopyTagRule(target=&#39;OutstandingShares&#39;,
+                        original=&#39;WeightedAverageNumberOfLimitedPartnershipAndGeneralPartnershipUnitOutstandingBasicAndDiluted&#39;),
+            CopyTagRule(target=&#39;OutstandingShares&#39;,
+                        original=&#39;WeightedAverageGeneralPartnershipUnitsOutstanding&#39;),
+
+            CopyTagRule(target=&#39;EarningsPerShare&#39;,
+                        original=&#39;EarningsPerShareBasic&#39;),
+            CopyTagRule(target=&#39;EarningsPerShare&#39;,
+                        original=&#39;EarningsPerShareDiluted&#39;),
+            CopyTagRule(target=&#39;EarningsPerShare&#39;,
+                        original=&#39;EarningsPerShareBasicAndDiluted&#39;),
+            CopyTagRule(target=&#39;EarningsPerShare&#39;,
+                        original=&#39;IncomeLossFromContinuingOperationsPerBasicShare&#39;),
+            CopyTagRule(target=&#39;EarningsPerShare&#39;,
+                        original=&#39;IncomeLossFromContinuingOperationsPerDilutedShare&#39;),
+            CopyTagRule(target=&#39;EarningsPerShare&#39;,
+                        original=&#39;IncomeLossFromContinuingOperationsPerBasicAndDilutedShare&#39;),
+            CopyTagRule(target=&#39;EarningsPerShare&#39;,
+                        original=&#39;IncomeLossFromContinuingOperationsPerOutstandingLimitedPartnershipUnit&#39;),
+            CopyTagRule(target=&#39;EarningsPerShare&#39;,
+                        original=&#39;IncomeLossFromContinuingOperationsPerOutstandingLimitedPartnershipUnitBasicNetOfTax&#39;),
+            CopyTagRule(target=&#39;EarningsPerShare&#39;,
+                        original=&#39;IncomeLossFromContinuingOperationsPerOutstandingLimitedPartnershipAndGeneralPartnershipUnitBasicAndDiluted&#39;),
+        ]
+    )
+
+    main_rule_tree = RuleGroup(prefix=&#34;IS&#34;,
+                               rules=[
+                                   is_revenue_rg,
+                                   is_costofrevenue_rg,
+                                   is_missing_rev_cost_gross,
+                                   is_grossprofit_rg,
+                                   is_missing_gross_opil_opexp,
+                                   is_operating_expenses_rg,
+                                   is_inclossbeforetax,
+                                   is_netincome_rg,
+                                   is_missing_ilbefore_tax_ilcontop,
+                                   is_missing_nilattnoncnt,
+                                   is_outstandingshares
+                               ])
+
+    preprocess_rule_tree = RuleGroup(prefix=&#34;IS_PRE&#34;,
+                                     rules=[
+                                     ])
+
+    post_rule_tree = RuleGroup(
+        prefix=&#34;IS&#34;,
+        rules=[
+            PostFixIncomeLossFromContinuingOperationsAndSignOfIncomeTaxExpenseBenefit(),
+            PostFixSign(start_tag=&#39;ProfitLoss&#39;,
+                        summand_tag=&#39;AllIncomeTaxExpenseBenefit&#39;,
+                        result_tag=&#39;IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit&#39;),
+            PostFixSign(start_tag=&#39;NetIncomeLoss&#39;,
+                        summand_tag=&#39;NetIncomeLossAttributableToNoncontrollingInterest&#39;,
+                        result_tag=&#39;ProfitLoss&#39;),
+
+            # 1. if there is no value for Revenues, but GrossProfit
+            # we set Revenues to GrossProfit
+            # 2. if there is no value for  GrossProfit, but Revenues
+            # we set GrossProfit to Revenues
+            # 3. in both cases, CostOfRevenue is set to zero with the following
+            # MissingSummandRule.
+            CopyTagRule(original=&#39;GrossProfit&#39;, target=&#39;Revenues&#39;),
+            CopyTagRule(original=&#39;Revenues&#39;, target=&#39;GrossProfit&#39;),
+            MissingSummandRule(sum_tag=&#39;Revenues&#39;,
+                               existing_summands_tags=[&#39;GrossProfit&#39;],
+                               missing_summand_tag=&#39;CostOfRevenue&#39;),
+
+            # Next, we finalize OperatingIncomeLoss, by subtracting
+            # a last time the OperatingExpenses from the GrossProfit,
+            # if OperatingIncomeLoss is not yet set
+            SubtractFromRule(subtract_from_tag=&#39;GrossProfit&#39;,
+                             potential_subtract_tags=[&#39;OperatingExpenses&#39;],
+                             target_tag=&#39;OperatingIncomeLoss&#39;),
+
+            # 1. if there is no value for IncomeLossFromContinuingOperations,
+            # but for ProfitLoss, we set it to the same value
+            # 2. if there is no value for IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit,
+            # but for IncomeLossFromContinuingOperations, we set it to the same value
+            # 3. afterward, we set IncomeTaxExpenseBenefit to zero with the following rule
+            CopyTagRule(original=&#39;ProfitLoss&#39;,
+                        target=&#39;IncomeLossFromContinuingOperations&#39;),
+            CopyTagRule(original=&#39;IncomeLossFromContinuingOperations&#39;,
+                        target=&#39;IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit&#39;),
+
+            MissingSummandRule(
+                sum_tag=&#39;IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit&#39;,
+                existing_summands_tags=[&#39;IncomeLossFromContinuingOperations&#39;],
+                missing_summand_tag=&#39;AllIncomeTaxExpenseBenefit&#39;),
+
+            # if there is no &#34;IncomeLossFromDiscontinuedOperationsNetOfTax&#34;, set it to 0
+            PostSetToZero(tags=[&#39;IncomeLossFromDiscontinuedOperationsNetOfTax&#39;]),
+
+            # if IncomeLossFromContinuingOperations is not set, but IL..BeforeIncomeTaxExpenseBenefit is set
+            # set it to IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit
+            CopyTagRule(original=&#39;IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit&#39;,
+                        target=&#39;IncomeLossFromContinuingOperations&#39;),
+
+            # since new IncomeLossFromContinuingOperations values could have been set,
+            # calculate missing ProfitLoss entries, if possible
+            SumUpRule(sum_tag=&#39;ProfitLoss&#39;,
+                      potential_summands=[
+                          &#39;IncomeLossFromContinuingOperations&#39;,
+                          &#39;IncomeLossFromDiscontinuedOperationsNetOfTax&#39;
+                      ]),
+
+            # since new ProfitLoss could have been set, use it to set still missing NetIncomeLoss
+            CopyTagRule(original=&#39;ProfitLoss&#39;,
+                        target=&#39;NetIncomeLoss&#39;),
+
+            # calculate missing NetIncomeLossAttributableToNoncontrollingInterest
+            # which at this point will mean to set it to 0.
+            MissingSummandRule(
+                sum_tag=&#39;ProfitLoss&#39;,
+                existing_summands_tags=[&#39;NetIncomeLoss&#39;],
+                missing_summand_tag=&#39;NetIncomeLossAttributableToNoncontrollingInterest&#39;),
+
+        ])
+
+    validation_rules: List[ValidationRule] = [
+        SumValidationRule(identifier=&#34;RevCogGrossCheck&#34;,
+                          sum_tag=&#39;Revenues&#39;,
+                          summands=[&#39;CostOfRevenue&#39;, &#39;GrossProfit&#39;]),
+        SumValidationRule(identifier=&#34;GrossOpexpOpil&#34;,
+                          sum_tag=&#39;GrossProfit&#39;,
+                          summands=[&#39;OperatingExpenses&#39;, &#39;OperatingIncomeLoss&#39;]),
+        SumValidationRule(identifier=&#34;ContIncTax&#34;,
+                          sum_tag=&#39;IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit&#39;,
+                          summands=[&#39;AllIncomeTaxExpenseBenefit&#39;,
+                                    &#39;IncomeLossFromContinuingOperations&#39;]),
+        SumValidationRule(identifier=&#39;ProfitLoss&#39;,
+                          sum_tag=&#39;ProfitLoss&#39;,
+                          summands=[
+                              &#39;IncomeLossFromContinuingOperations&#39;,
+                              &#39;IncomeLossFromDiscontinuedOperationsNetOfTax&#39;
+                          ]),
+        SumValidationRule(identifier=&#39;NetIncomeLoss&#39;,
+                          sum_tag=&#39;ProfitLoss&#39;,
+                          summands=[
+                              &#39;NetIncomeLoss&#39;,
+                              &#39;NetIncomeLossAttributableToNoncontrollingInterest&#39;
+                          ]),
+        ProductValidationRule(identifier=&#39;EPS&#39;,
+                              product_tag=&#39;NetIncomeLoss&#39;,
+                              multipliers=[&#39;EarningsPerShare&#39;,
+                                           &#39;OutstandingShares&#39;]),
+    ]
+
+    # these are the columns that finally are returned after the standardization
+    final_tags: List[str] = [&#39;Revenues&#39;,
+                             &#39;CostOfRevenue&#39;,
+                             &#39;GrossProfit&#39;,
+                             &#39;OperatingExpenses&#39;,
+                             &#39;OperatingIncomeLoss&#39;,
+                             &#39;IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit&#39;,
+                             &#39;AllIncomeTaxExpenseBenefit&#39;,
+                             &#39;IncomeLossFromContinuingOperations&#39;,
+                             &#39;IncomeLossFromDiscontinuedOperationsNetOfTax&#39;,
+                             &#39;ProfitLoss&#39;,
+                             &#39;NetIncomeLossAttributableToNoncontrollingInterest&#39;,
+                             &#39;NetIncomeLoss&#39;,
+                             &#39;OutstandingShares&#39;,
+                             &#39;EarningsPerShare&#39;
+                             ]
+
+    # used to evaluate if a report is the main income statement report
+    # inside a report, there can be several tables (different report nr)
+    # which stmt value is IS.
+    # however, we might be only interested in the &#34;major&#34; IS report. Usually this is the
+    # one which has the least nan in the following columns
+    main_statement_tags = [&#39;Revenues&#39;,
+                           &#39;SalesRevenueNet&#39;,
+                           &#39;SalesRevenueGoodsNet&#39;,
+                           &#39;SalesRevenueServicesNet&#39;,
+                           &#39;CostOfRevenue&#39;,
+                           &#39;CostOfGoodsAndServicesSold&#39;,
+                           &#39;CostOfGoodsSold&#39;,
+                           &#39;CostOfServices&#39;,
+                           &#39;GrossProfit&#39;,
+                           &#39;OperatingExpenses&#39;,
+                           &#39;OperatingIncomeLoss&#39;,
+                           &#39;IncomeLossFromContinuingOperationsBeforeIncomeTaxesMinorityInterestAndIncomeLossFromEquityMethodInvestments&#39;,
+                           &#39;IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest&#39;,
+                           &#39;IncomeLossBeforeIncomeTaxExpenseBenefit&#39;,
+                           &#39;IncomeTaxExpenseBenefit&#39;,
+                           &#39;DeferredIncomeTaxExpenseBenefit&#39;,
+                           &#39;NetIncomeLoss&#39;,
+                           &#39;ProfitLoss&#39;
+                           ]
+
+    def __init__(self,
+                 prepivot_rule_tree: Optional[RuleGroup] = None,
+                 pre_rule_tree: Optional[RuleGroup] = None,
+                 main_rule_tree: Optional[RuleGroup] = None,
+                 post_rule_tree: Optional[RuleGroup] = None,
+                 validation_rules: Optional[List[ValidationRule]] = None,
+                 final_tags: Optional[List[str]] = None,
+                 main_statement_tags: Optional[List[str]] = None,
+
+                 filter_for_main_statement: bool = True,
+                 main_iterations: int = 3,
+                 invert_negated: bool = True,
+                 additional_final_sub_fields: Optional[List[str]] = None,
+                 additional_final_tags: Optional[List[str]] = None):
+        &#34;&#34;&#34;
+        Initialize the Income Statement Standardizer.
+
+        Fine tune it with the following arguments:
+
+        Args:
+            prepivot_rule_tree: rules that are applied before the data is pivoted. These are rules
+                    that filter (like deduplicate) or correct values.
+            pre_rule_tree: rules that are applied once before the main processing. These are mainly
+                    rules that try to correct existing data from obvious errors (like wrong
+                    tagging)
+            main_rule_tree: rules that are applied during the main processing rule and which do the
+                    heavy lifting. These rules can be executed multiple times depending on the value
+                    of the main_iterations parameter
+            post_rule_tree: rules that are used to &#34;cleanup&#34;, like setting certain values to
+                    0.0. They are just executed once.
+            validation_rules: Validation rules are applied after all rules were applied.
+                   they add validation columns to the main dataset. Validation rules do check
+                   if certain requirements are met. E.g. in a Balance Sheet, the following
+                   equation should be true: Assets = AssetsCurrent + AssetsNoncurrent
+            final_tags: The list of tags/columns that will appear in the final result dataframe.
+            main_statement_tags: list of tags that is used to identify the main table of a
+                   financial statement (income statement, balance sheet, cash flow).
+
+            filter_for_main_statement (bool):
+                    Only consider the reports that contain most of the &#34;main_statement_tags&#34;.
+                    Default is True.
+            main_iterations (int): Number of times the main rules should be applied.
+                    Default is 3 for CashFlow.
+            invert_negated (bool, Optional, True): inverts the value of the tags that are marked
+                   as negated (in the pre_df).
+            additional_final_sub_fields (List, Optional):
+                    When using the present method, the results are joined with the following fields
+                    from the sub_df entry: &#39;adsh&#39;, &#39;cik&#39;, &#39;form&#39;, &#39;fye&#39;, &#39;fy&#39;, &#39;fp&#39;, &#39;filed&#39;
+                    Additional fields can be assigned in this list. Default is None.
+            additional_final_tags (List, Optional):
+                     the &#34;final_tags&#34; list define the tags that will be present in the final result
+                     dataframe. Additional tags can be added via this parameter. Default is None.
+        &#34;&#34;&#34;
+        super().__init__(
+            prepivot_rule_tree=
+                    prepivot_rule_tree if prepivot_rule_tree else self.prepivot_rule_tree,
+            pre_rule_tree=pre_rule_tree if pre_rule_tree else self.preprocess_rule_tree,
+            main_rule_tree=main_rule_tree if main_rule_tree else self.main_rule_tree,
+            post_rule_tree=post_rule_tree if post_rule_tree else self.post_rule_tree,
+            validation_rules=validation_rules if validation_rules else self.validation_rules,
+            final_tags=final_tags if final_tags else self.final_tags,
+            main_statement_tags=
+                    main_statement_tags if main_statement_tags else self.main_statement_tags,
+
+            filter_for_main_statement=filter_for_main_statement,
+            main_iterations=main_iterations,
+            invert_negated=invert_negated,
+            additional_final_sub_fields=additional_final_sub_fields,
+            additional_final_tags=additional_final_tags
+        )</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="secfsdstools.f_standardize.is_standardize.IncomeStatementStandardizer"><code class="flex name class">
+<span>class <span class="ident">IncomeStatementStandardizer</span></span>
+<span>(</span><span>prepivot_rule_tree: Optional[<a title="secfsdstools.f_standardize.base_rule_framework.RuleGroup" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.RuleGroup">RuleGroup</a>] = None, pre_rule_tree: Optional[<a title="secfsdstools.f_standardize.base_rule_framework.RuleGroup" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.RuleGroup">RuleGroup</a>] = None, main_rule_tree: Optional[<a title="secfsdstools.f_standardize.base_rule_framework.RuleGroup" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.RuleGroup">RuleGroup</a>] = None, post_rule_tree: Optional[<a title="secfsdstools.f_standardize.base_rule_framework.RuleGroup" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.RuleGroup">RuleGroup</a>] = None, validation_rules: Optional[List[<a title="secfsdstools.f_standardize.base_validation_rules.ValidationRule" href="base_validation_rules.html#secfsdstools.f_standardize.base_validation_rules.ValidationRule">ValidationRule</a>]] = None, final_tags: Optional[List[str]] = None, main_statement_tags: Optional[List[str]] = None, filter_for_main_statement: bool = True, main_iterations: int = 3, invert_negated: bool = True, additional_final_sub_fields: Optional[List[str]] = None, additional_final_tags: Optional[List[str]] = None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>The goal of this Standardizer is to create IncomeStatements that are comparable,
+meaning that they have the same tags.</p>
+<p>At the end, the standardized IS contains the following columns</p>
+<pre>
+      Revenues
+    - CostOfRevenue
+    ---------------
+    = GrossProfit
+    - OperatingExpenses
+    -------------------
+    = OperatingIncomeLoss
+
+      IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit
+    - AllIncomeTaxExpenseBenefit
+    ----------------------------
+    = IncomeLossFromContinuingOperations
+    + IncomeLossFromDiscontinuedOperationsNetOfTax
+    -----------------------------------------------
+    = ProfitLoss
+    - NetIncomeLossAttributableToNoncontrollingInterest
+    ---------------------------------------------------
+    = NetIncomeLoss
+</pre>
+<p>Detailled View:</p>
+<pre>
+  Main Rules
+    Revenues:
+        Pre
+            + SalesRevenueGoodsNet     <- SalesRevenueGoodsGross
+            + SalesRevenueServicesNet  <- SalesRevenueServicesGross
+            + OtherSalesRevenueNet
+            --------------
+            = SalesRevenueNet
+
+
+            RevenueFromContractWithCustomerIncludingAssessedTax
+            - ExciseAndSalesTaxes
+            ---------------------
+            = RevenueFromContractWithCustomerExcludingAssessedTax
+
+
+            + RegulatedAndUnregulatedOperatingRevenue
+            + HealthCareOrganizationPatientServiceRevenue
+            + ContractsRevenue
+            + RevenueOilAndGasServices
+              ...
+            ------------------
+            = RevenuesSum
+
+        Set
+            1. Prio: Revenues
+            2. Prio: SalesRevenueNet
+            3. Prio: RevenueFromContractWithCustomerExcludingAssessedTax
+            4. Prio: RevenueFromContractWithCustomerIncludingAssessedTax
+            5. Prio: RevenuesExcludingInterestAndDividends
+            6. Prio: RevenuesSum
+            7. Prio: InvestmentIncomeInterest
+            8. Prio: CostOfRevenue + GrossProfit
+
+
+    CostOfRevenue
+
+        Pre
+                + CostOfGoodsSoldExcludingDepreciationDepletionAndAmortization
+                + CostOfGoodsSoldDepreciationDepletionAndAmortization
+                + CostOfGoodsSoldDepletion
+                + CostOfGoodsSoldDepreciation
+                + ...
+                ------------
+                = CostOfGoodsSold (if not set)
+
+
+                + CostOfServicesExcludingDepreciationDepletionAndAmortization
+                + CostOfServicesDepreciation
+                + CostOfServicesDepreciationAndAmortization
+                + CostOfServicesCatering
+                + ...
+                ------------
+                = CostOfServices (if not set)
+
+
+                + CostOfGoodsAndServicesSoldDepreciationAndAmortization
+                + CostOfGoodsAndServicesSoldAmortization
+                + CostOfGoodsAndServicesSoldOverhead
+                + CostOfGoodsAndServicesSoldDepreciation
+                + CostOfGoodsAndServicesEnergyCommoditiesAndServices
+                + CostOfGoodsAndServiceExcludingDepreciationDepletionAndAmortizatio
+                ------------
+                = CostOfGoodsAndServicesSold (if not set)
+
+
+                  CostOfGoodsSold
+                + CostOfServices
+                ---------------
+                = CostOfGoodsAndServicesSold (if not set)
+
+        Set
+            1. Prio CostOfRevenue
+            2. Prio CostOfGoodsAndServicesSold
+            3. Prio Revenues - GrossProfit
+
+    GrossProfit
+
+        1. Prio GrossProfit
+        2. Prio Revenues - CostOfRevenue
+        3. Prio GrossInvestmentIncomeOperating
+        4. Prio InterestAndDividendIncomeOperating
+
+    OperatingExpenses
+
+        Pre
+            + SellingGeneralAndAdministrativeExpense
+            + GeneralAndAdministrativeExpense
+            + ResearchAndDevelopmentExpense
+            + SellingAndMarketingExpense
+            + ... (96 most expense tags)
+            ----------------------------
+            = OperatingExpensesSum
+
+        Set
+            1. Prio OperatingExpenses
+            2. Prio GrossProfit - OperatingIncomeLoss
+            3. Prio OperatingExpensesSum
+
+
+    OperatingIncomeLoss
+        Set
+        1. Prio OperatingIncomeLoss
+        2. Prio GrossProfit - OperatingExpenses
+
+
+    IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit
+      Pre
+          + IncomeLossFromContinuingOperationsBeforeIncomeTaxesMinorityInterestAndIncomeLossFromEquityMethodInvestments
+          + (Optional) IncomeLossFromEquityMethodInvestments
+          --------------------------------------------------
+          = IncomeLossFromContinuingOperationsFromEquityMethodInvestements
+      Set
+          1. Prio IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest rename
+          2. Prio IncomeLossFromContinuingOperationsFromEquityMethodInvestements
+          3. Prio IncomeLossFromContinuingOperations + AllIncomeTaxExpenseBenefit
+
+
+    NetIncome
+       Pre
+            + IncomeTaxExpenseBenefit
+            + DeferredIncomeTaxExpenseBenefit
+            + (optional) IncomeLossFromEquityMethodInvestments
+            ---------------------------------
+            = AllIncomeTaxExpenseBenefit
+
+
+            IncomeLossFromContinuingOperations <- (rename) IncomeLossFromContinuingOperationsIncludingPortionAttributableToNoncontrollingInterest
+            IncomeLossFromDiscontinuedOperationsNetOfTax <- (rename) IncomeLossFromDiscontinuedOperationsNetOfTaxAttributableToReportingEntity
+
+            + IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit
+            - AllIncomeTaxExpenseBenefit
+            ---------------------------------
+            = IncomeLossFromContinuingOperations
+
+
+            + IncomeLossFromContinuingOperations
+            + IncomeLossFromDiscontinuedOperationsNetOfTax
+            -------------------------
+            = ProfitLossParts
+
+
+       SetProfitLoss
+            1. Prio ProfitLoss
+            2. Prio ProfitLossParts
+            3. Prio NetIncomeLoss
+
+       SetIncomeLossContinuingOperations
+            3. Prio ProfitLoss
+
+       SetNetIncomeLoss
+            1. Prio NetIncomeLoss
+            2. Prio NetIncomeLossAvailableToCommonStockholdersBasic
+            3. Prio NetIncomeLossAllocatedToLimitedPartners
+            3. Prio ProfitLoss
+            4. Prio ProfitLossIncludingRedeemableNonControllingInterest
+            5. Prio OtherComprehensiveIncomeLossNetOfTax
+            6. Prio ComprehensiveIncomeNetOfTax
+            7. Prio IncomeLossAttributableToParent
+            8. Prio NetInvestmentIncome
+
+    OutstandingShares
+        1. Prio WeightedAverageNumberOfSharesOutstandingBasic
+        2. Prio WeightedAverageNumberOfDilutedSharesOutstanding
+        3. Prio WeightedAverageNumberOfShareOutstandingBasicAndDiluted
+        4. Prio WeightedAverageLimitedPartnershipUnitsOutstanding
+        5. Prio WeightedAverageLimitedPartnershipUnitsOutstandingDiluted
+        6. Prio WeightedAverageNumberOfLimitedPartnershipAndGeneralPartnershipUnitOutstandingBasicAndDiluted
+        7. Prio WeightedAverageGeneralPartnershipUnitsOutstanding
+
+    EarningsPerShare
+        1. Prio EarningsPerShareBasic
+        2. Prio EarningsPerShareDiluted
+        3. Prio EarningsPerShareBasicAndDiluted
+        4. Prio IncomeLossFromContinuingOperationsPerBasicShare
+        5. Prio IncomeLossFromContinuingOperationsPerDilutedShare
+        6. Prio IncomeLossFromContinuingOperationsPerBasicAndDilutedShare
+        7. Prio IncomeLossFromContinuingOperationsPerOutstandingLimitedPartnershipUnit
+        8. Prio IncomeLossFromContinuingOperationsPerOutstandingLimitedPartnershipUnitBasicNetOfTax
+        9. Prio IncomeLossFromContinuingOperationsPerOutstandingLimitedPartnershipAndGeneralPartnershipUnitBasicAndDiluted
+
+
+  Post Rule (Cleanup)
+    Fix Sign of AllIncomeTaxExpenseBenefit (should be positive if taxed were paid)
+        expected equation to be true:
+           IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit - AllIncomeTaxExpenseBenefit = ProfitLoss
+
+        invert sign of AllIncomeTaxExpenseBenefit if the following equation is true:
+           IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit + AllIncomeTaxExpenseBenefit = ProfitLoss
+
+    Fix sign of NetIncomeLossAttributableToNoncontrollingInterest
+        expected equation to be true:
+           ProfitLoss - NetIncomeLossAttributableToNoncontrollingInterest = NetIncomeLoss
+
+        invert sign of NetIncomeLossAttributableToNoncontrollingInterest if the following equation is true:
+           ProfitLoss + NetIncomeLossAttributableToNoncontrollingInterest = NetIncomeLoss
+
+    If Revenues was not set, but there is a GrossProfit, set it to GrossProfit,
+          since was no CostOfRevenue found
+
+    If GrossProfit couldn't be set, but there is Revenues, set it to Revenues
+          since was no CostOfRevenue found
+
+    if CostORevenues couldn't be set, but Revenues and GrossProfit are present, set it to Revenues - Grossprofit
+
+    if OperatingIncomeLoss is not set yet, and GrossProfit (available now) and OperatingExpenses are present,
+         set it to GrossProfit - OperatingExpenses
+
+    If there is no IncomeLossFromContinuingOperations, set it to ProfitLoss
+    if there is no IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit, set it to IncomeLossFromContinuingOperations
+    if there is no AllIncomeTaxExpenseBenefit, set it to IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit - AllIncomeTaxExpenseBenefit
+
+    set IncomeLossFromDiscontinuedOperationsNetOfTax to 0.0 if not present
+
+    If there is no IncomeLossFromContinuingOperations, set it to IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit
+    If there is no ProfitLoss, set it to IncomeLossFromContinuingOperations + IncomeLossFromDiscontinuedOperationsNetOfTax
+    If there is no NetIncomeLoss, set it to ProfitLoss
+    If there is no NetIncomeLossAttributableToNoncontrollingInterest, set it to ProfitLoss - NetIncomeLoss
+
+</pre>
+<p>Initialize the Income Statement Standardizer.</p>
+<p>Fine tune it with the following arguments:</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>prepivot_rule_tree</code></strong></dt>
+<dd>rules that are applied before the data is pivoted. These are rules
+that filter (like deduplicate) or correct values.</dd>
+<dt><strong><code>pre_rule_tree</code></strong></dt>
+<dd>rules that are applied once before the main processing. These are mainly
+rules that try to correct existing data from obvious errors (like wrong
+tagging)</dd>
+<dt><strong><code>main_rule_tree</code></strong></dt>
+<dd>rules that are applied during the main processing rule and which do the
+heavy lifting. These rules can be executed multiple times depending on the value
+of the main_iterations parameter</dd>
+<dt><strong><code>post_rule_tree</code></strong></dt>
+<dd>rules that are used to "cleanup", like setting certain values to
+0.0. They are just executed once.</dd>
+<dt><strong><code>validation_rules</code></strong></dt>
+<dd>Validation rules are applied after all rules were applied.
+they add validation columns to the main dataset. Validation rules do check
+if certain requirements are met. E.g. in a Balance Sheet, the following
+equation should be true: Assets = AssetsCurrent + AssetsNoncurrent</dd>
+<dt><strong><code>final_tags</code></strong></dt>
+<dd>The list of tags/columns that will appear in the final result dataframe.</dd>
+<dt><strong><code>main_statement_tags</code></strong></dt>
+<dd>list of tags that is used to identify the main table of a
+financial statement (income statement, balance sheet, cash flow).</dd>
+<dt>filter_for_main_statement (bool):</dt>
+<dt>Only consider the reports that contain most of the "main_statement_tags".</dt>
+<dt>Default is True.</dt>
+<dt><strong><code>main_iterations</code></strong> :&ensp;<code>int</code></dt>
+<dd>Number of times the main rules should be applied.
+Default is 3 for CashFlow.</dd>
+<dt><strong><code>invert_negated</code></strong> :&ensp;<code>bool, Optional, True</code></dt>
+<dd>inverts the value of the tags that are marked
+as negated (in the pre_df).</dd>
+</dl>
+<p>additional_final_sub_fields (List, Optional):
+When using the present method, the results are joined with the following fields
+from the sub_df entry: 'adsh', 'cik', 'form', 'fye', 'fy', 'fp', 'filed'
+Additional fields can be assigned in this list. Default is None.
+additional_final_tags (List, Optional):
+the "final_tags" list define the tags that will be present in the final result
+dataframe. Additional tags can be added via this parameter. Default is None.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class IncomeStatementStandardizer(Standardizer):
+    &#34;&#34;&#34;
+    The goal of this Standardizer is to create IncomeStatements that are comparable,
+    meaning that they have the same tags.
+
+    At the end, the standardized IS contains the following columns
+
+    &lt;pre&gt;
+          Revenues
+        - CostOfRevenue
+        ---------------
+        = GrossProfit
+        - OperatingExpenses
+        -------------------
+        = OperatingIncomeLoss
+
+          IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit
+        - AllIncomeTaxExpenseBenefit
+        ----------------------------
+        = IncomeLossFromContinuingOperations
+        + IncomeLossFromDiscontinuedOperationsNetOfTax
+        -----------------------------------------------
+        = ProfitLoss
+        - NetIncomeLossAttributableToNoncontrollingInterest
+        ---------------------------------------------------
+        = NetIncomeLoss
+    &lt;/pre&gt;
+
+    Detailled View:
+    &lt;pre&gt;
+      Main Rules
+        Revenues:
+            Pre
+                + SalesRevenueGoodsNet     &lt;- SalesRevenueGoodsGross
+                + SalesRevenueServicesNet  &lt;- SalesRevenueServicesGross
+                + OtherSalesRevenueNet
+                --------------
+                = SalesRevenueNet
+
+
+                RevenueFromContractWithCustomerIncludingAssessedTax
+                - ExciseAndSalesTaxes
+                ---------------------
+                = RevenueFromContractWithCustomerExcludingAssessedTax
+
+
+                + RegulatedAndUnregulatedOperatingRevenue
+                + HealthCareOrganizationPatientServiceRevenue
+                + ContractsRevenue
+                + RevenueOilAndGasServices
+                  ...
+                ------------------
+                = RevenuesSum
+
+            Set
+                1. Prio: Revenues
+                2. Prio: SalesRevenueNet
+                3. Prio: RevenueFromContractWithCustomerExcludingAssessedTax
+                4. Prio: RevenueFromContractWithCustomerIncludingAssessedTax
+                5. Prio: RevenuesExcludingInterestAndDividends
+                6. Prio: RevenuesSum
+                7. Prio: InvestmentIncomeInterest
+                8. Prio: CostOfRevenue + GrossProfit
+
+
+        CostOfRevenue
+
+            Pre
+                    + CostOfGoodsSoldExcludingDepreciationDepletionAndAmortization
+                    + CostOfGoodsSoldDepreciationDepletionAndAmortization
+                    + CostOfGoodsSoldDepletion
+                    + CostOfGoodsSoldDepreciation
+                    + ...
+                    ------------
+                    = CostOfGoodsSold (if not set)
+
+
+                    + CostOfServicesExcludingDepreciationDepletionAndAmortization
+                    + CostOfServicesDepreciation
+                    + CostOfServicesDepreciationAndAmortization
+                    + CostOfServicesCatering
+                    + ...
+                    ------------
+                    = CostOfServices (if not set)
+
+
+                    + CostOfGoodsAndServicesSoldDepreciationAndAmortization
+                    + CostOfGoodsAndServicesSoldAmortization
+                    + CostOfGoodsAndServicesSoldOverhead
+                    + CostOfGoodsAndServicesSoldDepreciation
+                    + CostOfGoodsAndServicesEnergyCommoditiesAndServices
+                    + CostOfGoodsAndServiceExcludingDepreciationDepletionAndAmortizatio
+                    ------------
+                    = CostOfGoodsAndServicesSold (if not set)
+
+
+                      CostOfGoodsSold
+                    + CostOfServices
+                    ---------------
+                    = CostOfGoodsAndServicesSold (if not set)
+
+            Set
+                1. Prio CostOfRevenue
+                2. Prio CostOfGoodsAndServicesSold
+                3. Prio Revenues - GrossProfit
+
+        GrossProfit
+
+            1. Prio GrossProfit
+            2. Prio Revenues - CostOfRevenue
+            3. Prio GrossInvestmentIncomeOperating
+            4. Prio InterestAndDividendIncomeOperating
+
+        OperatingExpenses
+
+            Pre
+                + SellingGeneralAndAdministrativeExpense
+                + GeneralAndAdministrativeExpense
+                + ResearchAndDevelopmentExpense
+                + SellingAndMarketingExpense
+                + ... (96 most expense tags)
+                ----------------------------
+                = OperatingExpensesSum
+
+            Set
+                1. Prio OperatingExpenses
+                2. Prio GrossProfit - OperatingIncomeLoss
+                3. Prio OperatingExpensesSum
+
+
+        OperatingIncomeLoss
+            Set
+            1. Prio OperatingIncomeLoss
+            2. Prio GrossProfit - OperatingExpenses
+
+
+        IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit
+          Pre
+              + IncomeLossFromContinuingOperationsBeforeIncomeTaxesMinorityInterestAndIncomeLossFromEquityMethodInvestments
+              + (Optional) IncomeLossFromEquityMethodInvestments
+              --------------------------------------------------
+              = IncomeLossFromContinuingOperationsFromEquityMethodInvestements
+          Set
+              1. Prio IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest rename
+              2. Prio IncomeLossFromContinuingOperationsFromEquityMethodInvestements
+              3. Prio IncomeLossFromContinuingOperations + AllIncomeTaxExpenseBenefit
+
+
+        NetIncome
+           Pre
+                + IncomeTaxExpenseBenefit
+                + DeferredIncomeTaxExpenseBenefit
+                + (optional) IncomeLossFromEquityMethodInvestments
+                ---------------------------------
+                = AllIncomeTaxExpenseBenefit
+
+
+                IncomeLossFromContinuingOperations &lt;- (rename) IncomeLossFromContinuingOperationsIncludingPortionAttributableToNoncontrollingInterest
+                IncomeLossFromDiscontinuedOperationsNetOfTax &lt;- (rename) IncomeLossFromDiscontinuedOperationsNetOfTaxAttributableToReportingEntity
+
+                + IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit
+                - AllIncomeTaxExpenseBenefit
+                ---------------------------------
+                = IncomeLossFromContinuingOperations
+
+
+                + IncomeLossFromContinuingOperations
+                + IncomeLossFromDiscontinuedOperationsNetOfTax
+                -------------------------
+                = ProfitLossParts
+
+
+           SetProfitLoss
+                1. Prio ProfitLoss
+                2. Prio ProfitLossParts
+                3. Prio NetIncomeLoss
+
+           SetIncomeLossContinuingOperations
+                3. Prio ProfitLoss
+
+           SetNetIncomeLoss
+                1. Prio NetIncomeLoss
+                2. Prio NetIncomeLossAvailableToCommonStockholdersBasic
+                3. Prio NetIncomeLossAllocatedToLimitedPartners
+                3. Prio ProfitLoss
+                4. Prio ProfitLossIncludingRedeemableNonControllingInterest
+                5. Prio OtherComprehensiveIncomeLossNetOfTax
+                6. Prio ComprehensiveIncomeNetOfTax
+                7. Prio IncomeLossAttributableToParent
+                8. Prio NetInvestmentIncome
+
+        OutstandingShares
+            1. Prio WeightedAverageNumberOfSharesOutstandingBasic
+            2. Prio WeightedAverageNumberOfDilutedSharesOutstanding
+            3. Prio WeightedAverageNumberOfShareOutstandingBasicAndDiluted
+            4. Prio WeightedAverageLimitedPartnershipUnitsOutstanding
+            5. Prio WeightedAverageLimitedPartnershipUnitsOutstandingDiluted
+            6. Prio WeightedAverageNumberOfLimitedPartnershipAndGeneralPartnershipUnitOutstandingBasicAndDiluted
+            7. Prio WeightedAverageGeneralPartnershipUnitsOutstanding
+
+        EarningsPerShare
+            1. Prio EarningsPerShareBasic
+            2. Prio EarningsPerShareDiluted
+            3. Prio EarningsPerShareBasicAndDiluted
+            4. Prio IncomeLossFromContinuingOperationsPerBasicShare
+            5. Prio IncomeLossFromContinuingOperationsPerDilutedShare
+            6. Prio IncomeLossFromContinuingOperationsPerBasicAndDilutedShare
+            7. Prio IncomeLossFromContinuingOperationsPerOutstandingLimitedPartnershipUnit
+            8. Prio IncomeLossFromContinuingOperationsPerOutstandingLimitedPartnershipUnitBasicNetOfTax
+            9. Prio IncomeLossFromContinuingOperationsPerOutstandingLimitedPartnershipAndGeneralPartnershipUnitBasicAndDiluted
+
+
+      Post Rule (Cleanup)
+        Fix Sign of AllIncomeTaxExpenseBenefit (should be positive if taxed were paid)
+            expected equation to be true:
+               IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit - AllIncomeTaxExpenseBenefit = ProfitLoss
+
+            invert sign of AllIncomeTaxExpenseBenefit if the following equation is true:
+               IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit + AllIncomeTaxExpenseBenefit = ProfitLoss
+
+        Fix sign of NetIncomeLossAttributableToNoncontrollingInterest
+            expected equation to be true:
+               ProfitLoss - NetIncomeLossAttributableToNoncontrollingInterest = NetIncomeLoss
+
+            invert sign of NetIncomeLossAttributableToNoncontrollingInterest if the following equation is true:
+               ProfitLoss + NetIncomeLossAttributableToNoncontrollingInterest = NetIncomeLoss
+
+        If Revenues was not set, but there is a GrossProfit, set it to GrossProfit,
+              since was no CostOfRevenue found
+
+        If GrossProfit couldn&#39;t be set, but there is Revenues, set it to Revenues
+              since was no CostOfRevenue found
+
+        if CostORevenues couldn&#39;t be set, but Revenues and GrossProfit are present, set it to Revenues - Grossprofit
+
+        if OperatingIncomeLoss is not set yet, and GrossProfit (available now) and OperatingExpenses are present,
+             set it to GrossProfit - OperatingExpenses
+
+        If there is no IncomeLossFromContinuingOperations, set it to ProfitLoss
+        if there is no IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit, set it to IncomeLossFromContinuingOperations
+        if there is no AllIncomeTaxExpenseBenefit, set it to IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit - AllIncomeTaxExpenseBenefit
+
+        set IncomeLossFromDiscontinuedOperationsNetOfTax to 0.0 if not present
+
+        If there is no IncomeLossFromContinuingOperations, set it to IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit
+        If there is no ProfitLoss, set it to IncomeLossFromContinuingOperations + IncomeLossFromDiscontinuedOperationsNetOfTax
+        If there is no NetIncomeLoss, set it to ProfitLoss
+        If there is no NetIncomeLossAttributableToNoncontrollingInterest, set it to ProfitLoss - NetIncomeLoss
+
+    &lt;/pre&gt;
+    &#34;&#34;&#34;
+    prepivot_rule_tree = RuleGroup(
+        prefix=&#34;IS_PREPIV&#34;,
+        rules=[PrePivotDeduplicate(),
+               PrePivotMaxQtrs(max_qtrs=4),
+               PrePivotCorrectSign(
+                   # all these tags are costOf and therefore should appear as a positive number
+                   # since costs are subtracted from the Revenue to get the GrossProfit
+                   tag_list=cost_of_GaS_tags,
+                   is_positive=True
+               )]
+    )
+
+    is_revenue_rg = RuleGroup(
+        prefix=&#34;Rev&#34;,
+        rules=[
+            RuleGroup(prefix=&#34;Pre&#34;,
+                      description=&#34;Preparation rules which might be usable to estimate the revenue&#34;,
+                      rules=[
+                          # normally, (Goods and Services) Gross and Net appear together, resp. Net has priority.
+                          # so if net is not present, we copy the gross value in the net value
+                          # and then sum the nets up to the SalesRevenue
+                          CopyTagRule(
+                              original=&#39;SalesRevenueGoodsGross&#39;,
+                              target=&#39;SalesRevenueGoodsNet&#39;),
+
+                          CopyTagRule(
+                              original=&#39;SalesRevenueServicesGross&#39;,
+                              target=&#39;SalesRevenueServicesNet&#39;),
+
+                          SumUpRule(sum_tag=&#39;SalesRevenueNet&#39;,
+                                    potential_summands=[
+                                        &#39;SalesRevenueGoodsNet&#39;,
+                                        &#39;SalesRevenueServicesNet&#39;],
+                                    optional_summands=[
+                                        &#39;OtherSalesRevenueNet&#39;
+                                    ]),
+
+                          # RevenueFromContractWithCustomer-tags are also often used to report the
+                          # total Revenue. so the following rules take care of these cases.
+                          # the order of the rules also defines the precedence.
+                          # first: if RevenueFromContractWithCustomerExcludingAssessedTax is not set
+                          #    we calculate it from RevenueFromContractWithCustomerIncludingAssessedTax
+                          #          and ExciseAndSalesTaxes (if present)
+                          SubtractFromRule(
+                              subtract_from_tag=&#39;RevenueFromContractWithCustomerIncludingAssessedTax&#39;,
+                              potential_subtract_tags=[&#39;ExciseAndSalesTaxes&#39;],
+                              target_tag=&#39;RevenueFromContractWithCustomerExcludingAssessedTax&#39;),
+
+                          # if we were not able to define the Revenue so far, there are
+                          # a couple of other tags which define Revenue, so we count them together
+                          # and set the total as Revenue
+                          SumUpRule(sum_tag=&#39;RevenuesSum&#39;,
+                                    potential_summands=detailled_revenue_tags,
+                                    optional_summands=[
+                                        &#39;OtherSalesRevenueNet&#39;
+                                    ]),
+                      ]),
+
+            RuleGroup(prefix=&#34;Set&#34;,
+                      description=&#34;Rules that might set the Revenue tag.&#34;
+                                  &#34;the order is the precedence.&#34;,
+                      rules=[
+                          # if Revenues is not set, we use the following precedence:
+                          # - SalesRevenueNet
+                          # - RevenueFromContractWithCustomerExcludingAssessedTax
+                          # - RevenueFromContractWithCustomerIncludingAssessedTax
+                          # - RevenuesExcludingInterestAndDividends
+                          # - RevenuesSum
+                          # - InvestmentIncomeInterest
+
+                          CopyTagRule(original=&#39;SalesRevenueNet&#39;, target=&#39;Revenues&#39;),
+                          CopyTagRule(
+                              original=&#39;RevenueFromContractWithCustomerExcludingAssessedTax&#39;,
+                              target=&#39;Revenues&#39;),
+                          CopyTagRule(
+                              original=&#39;RevenueFromContractWithCustomerIncludingAssessedTax&#39;,
+                              target=&#39;Revenues&#39;),
+                          CopyTagRule(original=&#39;RevenuesExcludingInterestAndDividends&#39;,
+                                      target=&#39;Revenues&#39;),
+                          CopyTagRule(original=&#39;RevenuesSum&#39;, target=&#39;Revenues&#39;),
+                          CopyTagRule(original=&#39;InvestmentIncomeInterest&#39;, target=&#39;Revenues&#39;)])
+        ]
+    )
+
+    is_costofrevenue_rg = RuleGroup(
+        prefix=&#34;CostOfRevenues&#34;,
+        rules=[
+            RuleGroup(prefix=&#34;Pre&#34;,
+                      description=&#34;Preparation rules which might be usable to estimate &#34;
+                                  &#34;the cost of revenue&#34;,
+                      rules=[
+                          SumUpRule(sum_tag=&#39;CostOfGoodsSold&#39;,
+                                    potential_summands=[
+                                        &#39;CostOfGoodsSoldExcludingDepreciationDepletionAndAmortization&#39;,
+                                        &#39;CostOfGoodsSoldDepreciationDepletionAndAmortization&#39;,
+                                        &#39;CostOfGoodsSoldDepletion&#39;,
+                                        &#39;CostOfGoodsSoldDepreciation&#39;,
+                                        &#39;CostOfGoodsSoldAmortization&#39;,
+                                        &#39;CostOfGoodsSoldDepreciationAndAmortization&#39;,
+                                        &#39;CostOfGoodsSoldDirectFinancingLease&#39;,
+                                        &#39;CostOfGoodsSoldElectric&#39;,
+                                        &#39;CostOfGoodsSoldDirectMaterials&#39;,
+                                        &#39;CostOfGoodsSoldDirectLabor&#39;,
+                                        &#39;CostOfGoodsSoldOverhead&#39;,
+                                        &#39;CostOfGoodsSoldOilAndGas&#39;,
+                                        &#39;CostOfGoodsSoldSubscription&#39;,
+                                        &#39;CostOfGoodsSoldDirectTaxesAndLicensesCosts&#39;,
+                                        &#39;CostOfGoodsSoldMaintenanceCosts&#39;,
+                                        &#39;CostOfGoodsSoldSalesTypeLease&#39;]),
+
+                          SumUpRule(sum_tag=&#39;CostOfServices&#39;,
+                                    potential_summands=[
+                                        &#39;CostOfServicesExcludingDepreciationDepletionAndAmortization&#39;,
+                                        &#39;CostOfServicesDepreciation&#39;,
+                                        &#39;CostOfServicesDepreciationAndAmortization&#39;,
+                                        &#39;CostOfServicesCatering&#39;,
+                                        &#39;CostOfServicesAmortization&#39;,
+                                        &#39;CostOfServicesOilAndGas&#39;,
+                                        &#39;CostOfServicesDirectTaxesAndLicensesCosts&#39;,
+                                        &#39;CostOfServicesMaintenanceCosts&#39;,
+                                        &#39;CostOfServicesLicensesAndServices&#39;,
+                                        &#39;CostOfServicesDirectLabor&#39;,
+                                        &#39;CostOfServicesLicensesAndMaintenanceAgreements&#39;,
+                                        &#39;CostOfServicesEnergyServices&#39;,
+                                        &#39;CostOfServicesDirectMaterials&#39;,
+                                        &#39;CostOfServicesEnvironmentalRemediation&#39;,
+                                        &#39;CostOfServicesOverhead&#39;
+                                    ]),
+
+                          SumUpRule(sum_tag=&#39;CostOfGoodsAndServicesSold&#39;,
+                                    potential_summands=[
+                                        &#39;CostOfGoodsSold&#39;,
+                                        &#39;CostOfServices&#39;]),
+
+                          SumUpRule(sum_tag=&#39;CostOfGoodsAndServicesSold&#39;,
+                                    potential_summands=[
+                                        &#39;CostOfGoodsAndServicesSoldDepreciationAndAmortization&#39;,
+                                        &#39;CostOfGoodsAndServicesSoldAmortization&#39;,
+                                        &#39;CostOfGoodsAndServicesSoldOverhead&#39;,
+                                        &#39;CostOfGoodsAndServicesSoldDepreciation&#39;,
+                                        &#39;CostOfGoodsAndServicesEnergyCommoditiesAndServices&#39;,
+                                        &#39;CostOfGoodsAndServiceExcludingDepreciationDepletionAndAmortization&#39;]
+                                    )]),
+            RuleGroup(prefix=&#34;Set&#34;,
+                      description=&#34;Rules that might set the CostOfRevenue tag.&#34;
+                                  &#34;the order is the precedence.&#34;,
+                      rules=[
+                          CopyTagRule(original=&#39;CostOfGoodsAndServicesSold&#39;,
+                                      target=&#39;CostOfRevenue&#39;)])
+        ]
+    )
+
+    is_missing_rev_cost_gross = RuleGroup(
+        prefix=&#34;RevCostGross_missing&#34;,
+        description=&#34;Calculates the third tag, if two of Revenues, CostOfRevenues, &#34;
+                    &#34;and GrossProfit are present&#34;,
+        rules=missingsumparts_rules_creator(sum_tag=&#39;Revenues&#39;,
+                                            summand_tags=[&#39;CostOfRevenue&#39;, &#39;GrossProfit&#39;])
+    )
+
+    is_grossprofit_rg = RuleGroup(
+        prefix=&#39;GrossProfit&#39;,
+        rules=[
+            RuleGroup(prefix=&#34;Set&#34;,
+                      description=&#34;Rules that might set the GrossProfit tag.&#34;
+                                  &#34;The order is the precedence.&#34;,
+                      rules=[
+                          # for investment companies
+                          CopyTagRule(original=&#39;GrossInvestmentIncomeOperating&#39;,
+                                      target=&#39;GrossProfit&#39;),
+                          CopyTagRule(original=&#39;InterestAndDividendIncomeOperating&#39;,
+                                      target=&#39;GrossProfit&#39;)])
+        ]
+    )
+
+    is_missing_gross_opil_opexp = RuleGroup(
+        prefix=&#34;GrossOpILOpExp_missing&#34;,
+        description=&#34;Calculates the third tag, if two of GrossProfit, OperatingExpenses, &#34;
+                    &#34;and OperatingIncomeLoss are present&#34;,
+        rules=missingsumparts_rules_creator(sum_tag=&#39;GrossProfit&#39;,
+                                            summand_tags=[&#39;OperatingExpenses&#39;,
+                                                          &#39;OperatingIncomeLoss&#39;]))
+
+    # this rule has to follow after the previous rule:
+    # first prio is to try to calc OperatingExpenses from GrossProfit-OperatingIncomeLoss
+    # second, we try to calculat OperatingExpenses from the 100 top used operating costs
+    # and then maybe use it in the next iteration to calculate GrossProfit or OpIncLoss
+    # with the previous rule
+    is_operating_expenses_rg = RuleGroup(
+        prefix=&#34;OperatingExpenses&#34;,
+        rules=[
+            RuleGroup(prefix=&#34;Pre&#34;,
+                      description=&#34;Preparation rules which might be usable to estimate &#34;
+                                  &#34;OperatingExpenses&#34;,
+                      rules=[
+                          SumUpRule(sum_tag=&#39;OperatingExpensesSum&#39;,
+                                    potential_summands=top_100_operating_costs_tags)]),
+            RuleGroup(prefix=&#34;Set&#34;,
+                      description=&#34;Rules that might set the OperatingExpenses tag.&#34;
+                                  &#34;The order is the precedence&#34;,
+                      rules=[
+                          CopyTagRule(original=&#39;OperatingExpensesSum&#39;, target=&#39;OperatingExpenses&#39;)])
+        ])
+
+    is_inclossbeforetax = RuleGroup(
+        prefix=&#34;inclossbeforetax&#34;,
+        rules=[
+            RuleGroup(prefix=&#34;Pre&#34;,
+                      description=&#34;Preparation rules which might be usable to estimate &#34;
+                                  &#34;IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit&#34;,
+                      rules=[
+                          SumUpRule(
+                              sum_tag=&#39;IncomeLossFromContinuingOperationsFromEquityMethodInvestements&#39;,
+                              potential_summands=[
+                                  &#39;IncomeLossFromContinuingOperationsBeforeIncomeTaxesMinorityInterestAndIncomeLossFromEquityMethodInvestments&#39;,
+                              ], optional_summands=[&#39;IncomeLossFromEquityMethodInvestments&#39;]),
+                      ]),
+            RuleGroup(prefix=&#34;Set&#34;,
+                      description=&#34;Rules that might set the &#34;
+                                  &#34;IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit&#34;
+                                  &#34; tag. The order is the precedence&#34;,
+                      rules=[
+                          # Renaming
+                          CopyTagRule(
+                              original=&#39;IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest&#39;,
+                              target=&#39;IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit&#39;),
+                          CopyTagRule(
+                              original=&#39;IncomeLossFromContinuingOperationsFromEquityMethodInvestements&#39;,
+                              target=&#39;IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit&#39;),
+                      ])
+        ])
+
+    is_netincome_rg = RuleGroup(
+        prefix=&#34;netincome&#34;,
+        rules=[
+            RuleGroup(prefix=&#34;Pre&#34;,
+                      description=&#34;Preparation rules which might be usable to estimate &#34;
+                                  &#34;NetIncomeLoss, ProfitLoss, and IncomeLossFromContinuingOperations&#34;,
+                      rules=[
+                          SumUpRule(
+                              sum_tag=&#39;AllIncomeTaxExpenseBenefit&#39;,
+                              potential_summands=[
+                                  &#39;IncomeTaxExpenseBenefit&#39;, &#39;DeferredIncomeTaxExpenseBenefit&#39;
+                              ], optional_summands=[&#39;IncomeLossFromEquityMethodInvestments&#39;]),
+
+                          CopyTagRule(
+                              original=&#39;IncomeLossFromContinuingOperationsIncludingPortionAttributableToNoncontrollingInterest&#39;,
+                              target=&#39;IncomeLossFromContinuingOperations&#39;),
+
+                          SubtractFromRule(
+                              target_tag=&#39;IncomeLossFromContinuingOperations&#39;,
+                              subtract_from_tag=&#39;IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit&#39;,
+                              potential_subtract_tags=[&#39;AllIncomeTaxExpenseBenefit&#39;]
+                          ),
+
+                          CopyTagRule(
+                              original=&#39;IncomeLossFromDiscontinuedOperationsNetOfTaxAttributableToReportingEntity&#39;,
+                              target=&#39;IncomeLossFromDiscontinuedOperationsNetOfTax&#39;),
+
+                          SumUpRule(sum_tag=&#39;ProfitLossParts&#39;,
+                                    potential_summands=[
+                                        &#39;IncomeLossFromContinuingOperations&#39;,
+                                        &#39;IncomeLossFromDiscontinuedOperationsNetOfTax&#39;
+                                    ])
+                      ]),
+            RuleGroup(prefix=&#34;SetPL&#34;,
+                      description=&#34;Rules that might set the ProfitLoss tag.&#34;
+                                  &#34;The order is the precedence&#34;,
+                      rules=[
+                          CopyTagRule(original=&#39;ProfitLossParts&#39;, target=&#39;ProfitLoss&#39;),
+                          # if there is no value for ProfitLoss, we set it to NetIncomeLoss
+                          CopyTagRule(original=&#39;NetIncomeLoss&#39;, target=&#39;ProfitLoss&#39;)]),
+
+            RuleGroup(prefix=&#34;SetILContOp&#34;,
+                      description=&#34;Rules that might set the IncomeLossFromContinuingOperations tag.&#34;
+                                  &#34;The order is the precedence&#34;,
+                      rules=[
+                          # since IncomeLossFromContinuingOperations is part of a validation rule,
+                          # and if it was not set, we assume that there is only
+                          # IncomeLossFromContinuingOperations and
+                          # copy the value from ProfitLoss
+                          CopyTagRule(original=&#39;ProfitLoss&#39;,
+                                      target=&#39;IncomeLossFromContinuingOperations&#39;)
+                      ]),
+
+            # the following rules set the NetIncomeLoss, if not already set.
+            # the order of the rules is the precedence
+            RuleGroup(prefix=&#34;SetNIL&#34;,
+                      description=&#34;Rules that might set the NetIncomeLoss tag.&#34;
+                                  &#34;The order is the precedence&#34;,
+                      rules=[
+                          CopyTagRule(original=&#39;NetIncomeLossAvailableToCommonStockholdersBasic&#39;,
+                                      target=&#39;NetIncomeLoss&#39;),
+                          CopyTagRule(original=&#39;NetIncomeLossAllocatedToLimitedPartners&#39;,
+                                      target=&#39;NetIncomeLoss&#39;),
+                          CopyTagRule(original=&#39;ProfitLoss&#39;, target=&#39;NetIncomeLoss&#39;),
+                          CopyTagRule(
+                              original=&#39;ProfitLossIncludingRedeemableNonControllingInterest&#39;,
+                              target=&#39;NetIncomeLoss&#39;),
+                          CopyTagRule(original=&#39;OtherComprehensiveIncomeLossNetOfTax&#39;,
+                                      target=&#39;NetIncomeLoss&#39;),
+                          CopyTagRule(original=&#39;ComprehensiveIncomeNetOfTax&#39;,
+                                      target=&#39;NetIncomeLoss&#39;),
+                          CopyTagRule(original=&#39;IncomeLossAttributableToParent&#39;,
+                                      target=&#39;NetIncomeLoss&#39;),
+                          # for investment companies
+                          CopyTagRule(original=&#39;NetInvestmentIncome&#39;, target=&#39;NetIncomeLoss&#39;),
+                      ])
+        ]
+    )
+
+    is_missing_ilbefore_tax_ilcontop = RuleGroup(
+        prefix=&#34;inclossbefore_tax_inclossop_missing&#34;,
+        description=&#34;Calculates the third tag, if two of AllIncomeTaxExpenseBenefit,&#34;
+                    &#34; IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit, &#34;
+                    &#34;and IncomeLossFromContinuingOperations are present&#34;,
+        rules=missingsumparts_rules_creator(
+            sum_tag=&#39;IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit&#39;,
+            summand_tags=[&#39;IncomeLossFromContinuingOperations&#39;,
+                          &#39;AllIncomeTaxExpenseBenefit&#39;])
+    )
+
+    is_missing_nilattnoncnt = MissingSummandRule(
+        sum_tag=&#39;ProfitLoss&#39;,
+        existing_summands_tags=[&#39;NetIncomeLoss&#39;],
+        missing_summand_tag=&#39;NetIncomeLossAttributableToNoncontrollingInterest&#39;
+    )
+
+    is_outstandingshares = RuleGroup(
+        prefix=&#34;sharesAndEPS&#34;,
+        description=&#34;Rules to extract the number of shares&#34;,
+        rules=[
+            CopyTagRule(target=&#39;OutstandingShares&#39;,
+                        original=&#39;WeightedAverageNumberOfSharesOutstandingBasic&#39;),
+            CopyTagRule(target=&#39;OutstandingShares&#39;,
+                        original=&#39;WeightedAverageNumberOfDilutedSharesOutstanding&#39;),
+            CopyTagRule(target=&#39;OutstandingShares&#39;,
+                        original=&#39;WeightedAverageNumberOfShareOutstandingBasicAndDiluted&#39;),
+            CopyTagRule(target=&#39;OutstandingShares&#39;,
+                        original=&#39;WeightedAverageLimitedPartnershipUnitsOutstanding&#39;),
+            CopyTagRule(target=&#39;OutstandingShares&#39;,
+                        original=&#39;WeightedAverageLimitedPartnershipUnitsOutstandingDiluted&#39;),
+            CopyTagRule(target=&#39;OutstandingShares&#39;,
+                        original=&#39;WeightedAverageNumberOfLimitedPartnershipAndGeneralPartnershipUnitOutstandingBasicAndDiluted&#39;),
+            CopyTagRule(target=&#39;OutstandingShares&#39;,
+                        original=&#39;WeightedAverageGeneralPartnershipUnitsOutstanding&#39;),
+
+            CopyTagRule(target=&#39;EarningsPerShare&#39;,
+                        original=&#39;EarningsPerShareBasic&#39;),
+            CopyTagRule(target=&#39;EarningsPerShare&#39;,
+                        original=&#39;EarningsPerShareDiluted&#39;),
+            CopyTagRule(target=&#39;EarningsPerShare&#39;,
+                        original=&#39;EarningsPerShareBasicAndDiluted&#39;),
+            CopyTagRule(target=&#39;EarningsPerShare&#39;,
+                        original=&#39;IncomeLossFromContinuingOperationsPerBasicShare&#39;),
+            CopyTagRule(target=&#39;EarningsPerShare&#39;,
+                        original=&#39;IncomeLossFromContinuingOperationsPerDilutedShare&#39;),
+            CopyTagRule(target=&#39;EarningsPerShare&#39;,
+                        original=&#39;IncomeLossFromContinuingOperationsPerBasicAndDilutedShare&#39;),
+            CopyTagRule(target=&#39;EarningsPerShare&#39;,
+                        original=&#39;IncomeLossFromContinuingOperationsPerOutstandingLimitedPartnershipUnit&#39;),
+            CopyTagRule(target=&#39;EarningsPerShare&#39;,
+                        original=&#39;IncomeLossFromContinuingOperationsPerOutstandingLimitedPartnershipUnitBasicNetOfTax&#39;),
+            CopyTagRule(target=&#39;EarningsPerShare&#39;,
+                        original=&#39;IncomeLossFromContinuingOperationsPerOutstandingLimitedPartnershipAndGeneralPartnershipUnitBasicAndDiluted&#39;),
+        ]
+    )
+
+    main_rule_tree = RuleGroup(prefix=&#34;IS&#34;,
+                               rules=[
+                                   is_revenue_rg,
+                                   is_costofrevenue_rg,
+                                   is_missing_rev_cost_gross,
+                                   is_grossprofit_rg,
+                                   is_missing_gross_opil_opexp,
+                                   is_operating_expenses_rg,
+                                   is_inclossbeforetax,
+                                   is_netincome_rg,
+                                   is_missing_ilbefore_tax_ilcontop,
+                                   is_missing_nilattnoncnt,
+                                   is_outstandingshares
+                               ])
+
+    preprocess_rule_tree = RuleGroup(prefix=&#34;IS_PRE&#34;,
+                                     rules=[
+                                     ])
+
+    post_rule_tree = RuleGroup(
+        prefix=&#34;IS&#34;,
+        rules=[
+            PostFixIncomeLossFromContinuingOperationsAndSignOfIncomeTaxExpenseBenefit(),
+            PostFixSign(start_tag=&#39;ProfitLoss&#39;,
+                        summand_tag=&#39;AllIncomeTaxExpenseBenefit&#39;,
+                        result_tag=&#39;IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit&#39;),
+            PostFixSign(start_tag=&#39;NetIncomeLoss&#39;,
+                        summand_tag=&#39;NetIncomeLossAttributableToNoncontrollingInterest&#39;,
+                        result_tag=&#39;ProfitLoss&#39;),
+
+            # 1. if there is no value for Revenues, but GrossProfit
+            # we set Revenues to GrossProfit
+            # 2. if there is no value for  GrossProfit, but Revenues
+            # we set GrossProfit to Revenues
+            # 3. in both cases, CostOfRevenue is set to zero with the following
+            # MissingSummandRule.
+            CopyTagRule(original=&#39;GrossProfit&#39;, target=&#39;Revenues&#39;),
+            CopyTagRule(original=&#39;Revenues&#39;, target=&#39;GrossProfit&#39;),
+            MissingSummandRule(sum_tag=&#39;Revenues&#39;,
+                               existing_summands_tags=[&#39;GrossProfit&#39;],
+                               missing_summand_tag=&#39;CostOfRevenue&#39;),
+
+            # Next, we finalize OperatingIncomeLoss, by subtracting
+            # a last time the OperatingExpenses from the GrossProfit,
+            # if OperatingIncomeLoss is not yet set
+            SubtractFromRule(subtract_from_tag=&#39;GrossProfit&#39;,
+                             potential_subtract_tags=[&#39;OperatingExpenses&#39;],
+                             target_tag=&#39;OperatingIncomeLoss&#39;),
+
+            # 1. if there is no value for IncomeLossFromContinuingOperations,
+            # but for ProfitLoss, we set it to the same value
+            # 2. if there is no value for IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit,
+            # but for IncomeLossFromContinuingOperations, we set it to the same value
+            # 3. afterward, we set IncomeTaxExpenseBenefit to zero with the following rule
+            CopyTagRule(original=&#39;ProfitLoss&#39;,
+                        target=&#39;IncomeLossFromContinuingOperations&#39;),
+            CopyTagRule(original=&#39;IncomeLossFromContinuingOperations&#39;,
+                        target=&#39;IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit&#39;),
+
+            MissingSummandRule(
+                sum_tag=&#39;IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit&#39;,
+                existing_summands_tags=[&#39;IncomeLossFromContinuingOperations&#39;],
+                missing_summand_tag=&#39;AllIncomeTaxExpenseBenefit&#39;),
+
+            # if there is no &#34;IncomeLossFromDiscontinuedOperationsNetOfTax&#34;, set it to 0
+            PostSetToZero(tags=[&#39;IncomeLossFromDiscontinuedOperationsNetOfTax&#39;]),
+
+            # if IncomeLossFromContinuingOperations is not set, but IL..BeforeIncomeTaxExpenseBenefit is set
+            # set it to IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit
+            CopyTagRule(original=&#39;IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit&#39;,
+                        target=&#39;IncomeLossFromContinuingOperations&#39;),
+
+            # since new IncomeLossFromContinuingOperations values could have been set,
+            # calculate missing ProfitLoss entries, if possible
+            SumUpRule(sum_tag=&#39;ProfitLoss&#39;,
+                      potential_summands=[
+                          &#39;IncomeLossFromContinuingOperations&#39;,
+                          &#39;IncomeLossFromDiscontinuedOperationsNetOfTax&#39;
+                      ]),
+
+            # since new ProfitLoss could have been set, use it to set still missing NetIncomeLoss
+            CopyTagRule(original=&#39;ProfitLoss&#39;,
+                        target=&#39;NetIncomeLoss&#39;),
+
+            # calculate missing NetIncomeLossAttributableToNoncontrollingInterest
+            # which at this point will mean to set it to 0.
+            MissingSummandRule(
+                sum_tag=&#39;ProfitLoss&#39;,
+                existing_summands_tags=[&#39;NetIncomeLoss&#39;],
+                missing_summand_tag=&#39;NetIncomeLossAttributableToNoncontrollingInterest&#39;),
+
+        ])
+
+    validation_rules: List[ValidationRule] = [
+        SumValidationRule(identifier=&#34;RevCogGrossCheck&#34;,
+                          sum_tag=&#39;Revenues&#39;,
+                          summands=[&#39;CostOfRevenue&#39;, &#39;GrossProfit&#39;]),
+        SumValidationRule(identifier=&#34;GrossOpexpOpil&#34;,
+                          sum_tag=&#39;GrossProfit&#39;,
+                          summands=[&#39;OperatingExpenses&#39;, &#39;OperatingIncomeLoss&#39;]),
+        SumValidationRule(identifier=&#34;ContIncTax&#34;,
+                          sum_tag=&#39;IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit&#39;,
+                          summands=[&#39;AllIncomeTaxExpenseBenefit&#39;,
+                                    &#39;IncomeLossFromContinuingOperations&#39;]),
+        SumValidationRule(identifier=&#39;ProfitLoss&#39;,
+                          sum_tag=&#39;ProfitLoss&#39;,
+                          summands=[
+                              &#39;IncomeLossFromContinuingOperations&#39;,
+                              &#39;IncomeLossFromDiscontinuedOperationsNetOfTax&#39;
+                          ]),
+        SumValidationRule(identifier=&#39;NetIncomeLoss&#39;,
+                          sum_tag=&#39;ProfitLoss&#39;,
+                          summands=[
+                              &#39;NetIncomeLoss&#39;,
+                              &#39;NetIncomeLossAttributableToNoncontrollingInterest&#39;
+                          ]),
+        ProductValidationRule(identifier=&#39;EPS&#39;,
+                              product_tag=&#39;NetIncomeLoss&#39;,
+                              multipliers=[&#39;EarningsPerShare&#39;,
+                                           &#39;OutstandingShares&#39;]),
+    ]
+
+    # these are the columns that finally are returned after the standardization
+    final_tags: List[str] = [&#39;Revenues&#39;,
+                             &#39;CostOfRevenue&#39;,
+                             &#39;GrossProfit&#39;,
+                             &#39;OperatingExpenses&#39;,
+                             &#39;OperatingIncomeLoss&#39;,
+                             &#39;IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit&#39;,
+                             &#39;AllIncomeTaxExpenseBenefit&#39;,
+                             &#39;IncomeLossFromContinuingOperations&#39;,
+                             &#39;IncomeLossFromDiscontinuedOperationsNetOfTax&#39;,
+                             &#39;ProfitLoss&#39;,
+                             &#39;NetIncomeLossAttributableToNoncontrollingInterest&#39;,
+                             &#39;NetIncomeLoss&#39;,
+                             &#39;OutstandingShares&#39;,
+                             &#39;EarningsPerShare&#39;
+                             ]
+
+    # used to evaluate if a report is the main income statement report
+    # inside a report, there can be several tables (different report nr)
+    # which stmt value is IS.
+    # however, we might be only interested in the &#34;major&#34; IS report. Usually this is the
+    # one which has the least nan in the following columns
+    main_statement_tags = [&#39;Revenues&#39;,
+                           &#39;SalesRevenueNet&#39;,
+                           &#39;SalesRevenueGoodsNet&#39;,
+                           &#39;SalesRevenueServicesNet&#39;,
+                           &#39;CostOfRevenue&#39;,
+                           &#39;CostOfGoodsAndServicesSold&#39;,
+                           &#39;CostOfGoodsSold&#39;,
+                           &#39;CostOfServices&#39;,
+                           &#39;GrossProfit&#39;,
+                           &#39;OperatingExpenses&#39;,
+                           &#39;OperatingIncomeLoss&#39;,
+                           &#39;IncomeLossFromContinuingOperationsBeforeIncomeTaxesMinorityInterestAndIncomeLossFromEquityMethodInvestments&#39;,
+                           &#39;IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest&#39;,
+                           &#39;IncomeLossBeforeIncomeTaxExpenseBenefit&#39;,
+                           &#39;IncomeTaxExpenseBenefit&#39;,
+                           &#39;DeferredIncomeTaxExpenseBenefit&#39;,
+                           &#39;NetIncomeLoss&#39;,
+                           &#39;ProfitLoss&#39;
+                           ]
+
+    def __init__(self,
+                 prepivot_rule_tree: Optional[RuleGroup] = None,
+                 pre_rule_tree: Optional[RuleGroup] = None,
+                 main_rule_tree: Optional[RuleGroup] = None,
+                 post_rule_tree: Optional[RuleGroup] = None,
+                 validation_rules: Optional[List[ValidationRule]] = None,
+                 final_tags: Optional[List[str]] = None,
+                 main_statement_tags: Optional[List[str]] = None,
+
+                 filter_for_main_statement: bool = True,
+                 main_iterations: int = 3,
+                 invert_negated: bool = True,
+                 additional_final_sub_fields: Optional[List[str]] = None,
+                 additional_final_tags: Optional[List[str]] = None):
+        &#34;&#34;&#34;
+        Initialize the Income Statement Standardizer.
+
+        Fine tune it with the following arguments:
+
+        Args:
+            prepivot_rule_tree: rules that are applied before the data is pivoted. These are rules
+                    that filter (like deduplicate) or correct values.
+            pre_rule_tree: rules that are applied once before the main processing. These are mainly
+                    rules that try to correct existing data from obvious errors (like wrong
+                    tagging)
+            main_rule_tree: rules that are applied during the main processing rule and which do the
+                    heavy lifting. These rules can be executed multiple times depending on the value
+                    of the main_iterations parameter
+            post_rule_tree: rules that are used to &#34;cleanup&#34;, like setting certain values to
+                    0.0. They are just executed once.
+            validation_rules: Validation rules are applied after all rules were applied.
+                   they add validation columns to the main dataset. Validation rules do check
+                   if certain requirements are met. E.g. in a Balance Sheet, the following
+                   equation should be true: Assets = AssetsCurrent + AssetsNoncurrent
+            final_tags: The list of tags/columns that will appear in the final result dataframe.
+            main_statement_tags: list of tags that is used to identify the main table of a
+                   financial statement (income statement, balance sheet, cash flow).
+
+            filter_for_main_statement (bool):
+                    Only consider the reports that contain most of the &#34;main_statement_tags&#34;.
+                    Default is True.
+            main_iterations (int): Number of times the main rules should be applied.
+                    Default is 3 for CashFlow.
+            invert_negated (bool, Optional, True): inverts the value of the tags that are marked
+                   as negated (in the pre_df).
+            additional_final_sub_fields (List, Optional):
+                    When using the present method, the results are joined with the following fields
+                    from the sub_df entry: &#39;adsh&#39;, &#39;cik&#39;, &#39;form&#39;, &#39;fye&#39;, &#39;fy&#39;, &#39;fp&#39;, &#39;filed&#39;
+                    Additional fields can be assigned in this list. Default is None.
+            additional_final_tags (List, Optional):
+                     the &#34;final_tags&#34; list define the tags that will be present in the final result
+                     dataframe. Additional tags can be added via this parameter. Default is None.
+        &#34;&#34;&#34;
+        super().__init__(
+            prepivot_rule_tree=
+                    prepivot_rule_tree if prepivot_rule_tree else self.prepivot_rule_tree,
+            pre_rule_tree=pre_rule_tree if pre_rule_tree else self.preprocess_rule_tree,
+            main_rule_tree=main_rule_tree if main_rule_tree else self.main_rule_tree,
+            post_rule_tree=post_rule_tree if post_rule_tree else self.post_rule_tree,
+            validation_rules=validation_rules if validation_rules else self.validation_rules,
+            final_tags=final_tags if final_tags else self.final_tags,
+            main_statement_tags=
+                    main_statement_tags if main_statement_tags else self.main_statement_tags,
+
+            filter_for_main_statement=filter_for_main_statement,
+            main_iterations=main_iterations,
+            invert_negated=invert_negated,
+            additional_final_sub_fields=additional_final_sub_fields,
+            additional_final_tags=additional_final_tags
+        )</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="secfsdstools.f_standardize.standardizing.Standardizer" href="standardizing.html#secfsdstools.f_standardize.standardizing.Standardizer">Standardizer</a></li>
+<li><a title="secfsdstools.d_container.presentation.Presenter" href="../d_container/presentation.html#secfsdstools.d_container.presentation.Presenter">Presenter</a></li>
+<li>typing.Generic</li>
+</ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="secfsdstools.f_standardize.is_standardize.IncomeStatementStandardizer.final_tags"><code class="name">var <span class="ident">final_tags</span> : List[str]</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="secfsdstools.f_standardize.is_standardize.IncomeStatementStandardizer.is_costofrevenue_rg"><code class="name">var <span class="ident">is_costofrevenue_rg</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="secfsdstools.f_standardize.is_standardize.IncomeStatementStandardizer.is_grossprofit_rg"><code class="name">var <span class="ident">is_grossprofit_rg</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="secfsdstools.f_standardize.is_standardize.IncomeStatementStandardizer.is_inclossbeforetax"><code class="name">var <span class="ident">is_inclossbeforetax</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="secfsdstools.f_standardize.is_standardize.IncomeStatementStandardizer.is_missing_gross_opil_opexp"><code class="name">var <span class="ident">is_missing_gross_opil_opexp</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="secfsdstools.f_standardize.is_standardize.IncomeStatementStandardizer.is_missing_ilbefore_tax_ilcontop"><code class="name">var <span class="ident">is_missing_ilbefore_tax_ilcontop</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="secfsdstools.f_standardize.is_standardize.IncomeStatementStandardizer.is_missing_nilattnoncnt"><code class="name">var <span class="ident">is_missing_nilattnoncnt</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="secfsdstools.f_standardize.is_standardize.IncomeStatementStandardizer.is_missing_rev_cost_gross"><code class="name">var <span class="ident">is_missing_rev_cost_gross</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="secfsdstools.f_standardize.is_standardize.IncomeStatementStandardizer.is_netincome_rg"><code class="name">var <span class="ident">is_netincome_rg</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="secfsdstools.f_standardize.is_standardize.IncomeStatementStandardizer.is_operating_expenses_rg"><code class="name">var <span class="ident">is_operating_expenses_rg</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="secfsdstools.f_standardize.is_standardize.IncomeStatementStandardizer.is_outstandingshares"><code class="name">var <span class="ident">is_outstandingshares</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="secfsdstools.f_standardize.is_standardize.IncomeStatementStandardizer.is_revenue_rg"><code class="name">var <span class="ident">is_revenue_rg</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="secfsdstools.f_standardize.is_standardize.IncomeStatementStandardizer.main_rule_tree"><code class="name">var <span class="ident">main_rule_tree</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="secfsdstools.f_standardize.is_standardize.IncomeStatementStandardizer.main_statement_tags"><code class="name">var <span class="ident">main_statement_tags</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="secfsdstools.f_standardize.is_standardize.IncomeStatementStandardizer.post_rule_tree"><code class="name">var <span class="ident">post_rule_tree</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="secfsdstools.f_standardize.is_standardize.IncomeStatementStandardizer.prepivot_rule_tree"><code class="name">var <span class="ident">prepivot_rule_tree</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="secfsdstools.f_standardize.is_standardize.IncomeStatementStandardizer.preprocess_rule_tree"><code class="name">var <span class="ident">preprocess_rule_tree</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="secfsdstools.f_standardize.is_standardize.IncomeStatementStandardizer.validation_rules"><code class="name">var <span class="ident">validation_rules</span> : List[<a title="secfsdstools.f_standardize.base_validation_rules.ValidationRule" href="base_validation_rules.html#secfsdstools.f_standardize.base_validation_rules.ValidationRule">ValidationRule</a>]</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="secfsdstools.f_standardize.standardizing.Standardizer" href="standardizing.html#secfsdstools.f_standardize.standardizing.Standardizer">Standardizer</a></b></code>:
+<ul class="hlist">
+<li><code><a title="secfsdstools.f_standardize.standardizing.Standardizer.get_process_description" href="standardizing.html#secfsdstools.f_standardize.standardizing.Standardizer.get_process_description">get_process_description</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.standardizing.Standardizer.get_standardize_bag" href="standardizing.html#secfsdstools.f_standardize.standardizing.Standardizer.get_standardize_bag">get_standardize_bag</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.standardizing.Standardizer.present" href="standardizing.html#secfsdstools.f_standardize.standardizing.Standardizer.present">present</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.standardizing.Standardizer.process" href="standardizing.html#secfsdstools.f_standardize.standardizing.Standardizer.process">process</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+<dt id="secfsdstools.f_standardize.is_standardize.PostFixIncomeLossFromContinuingOperationsAndSignOfIncomeTaxExpenseBenefit"><code class="flex name class">
+<span>class <span class="ident">PostFixIncomeLossFromContinuingOperationsAndSignOfIncomeTaxExpenseBenefit</span></span>
+</code></dt>
+<dd>
+<div class="desc"><p>Usually, when TaxExpenseBenefit is a positive number, meaning that this amount
+of taxes were paid by the company. Therefore, the equation</p>
+<p>IncomeLossBeforeTaxes - TaxExpenseBenefit = NetIncomeLoss</p>
+<p>However, there
+is a quite significant number of reports, which us a negative
+number to display paid Taxes and therefore, the following equations would be
+used:</p>
+<p>IncomeLossBeforeTaxes + TaxExpenseBenefit = NetIncomeLoss</p>
+<p>This rule select these entries and tries to fix that, whenever possible.</p>
+<p>Since the rules calculate IncomeLossFromContinuingOperations as follows</p>
+<p>IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit
+- IncomeTaxExpenseBenefit
+= IncomeLossFromContinuingOperations</p>
+<p>We might end up having a wrong value for IncomeLossFromContinuingOperation.</p>
+<p>Therefore, we mask the entries, where</p>
+<p>abs(NetIncomeLoss - IncomeLossFromContinuingOperations) = 2*abs(IncomeTaxExpenseBenefit)
+if IncomeTaxExpenseBenefit &gt; 0</p>
+<p>in order to fix the sign for IncomeTaxExpenseBenefit and to correct
+IncomeLossFromContinuingOperations</p>
+<p>The rule also uses some threshold.</p>
+<p>Of course, this is not perfect and does not consider the cases with DiscontinuedOperations,
+However, it is able to fix a significant number of cases.</p>
+<p>For the masked entries, it changes the sign of TaxExpenseBenefit
+and recalculates IncomeLossFromContinuingOperations</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class PostFixIncomeLossFromContinuingOperationsAndSignOfIncomeTaxExpenseBenefit(Rule):
+    &#34;&#34;&#34;
+    Usually, when TaxExpenseBenefit is a positive number, meaning that this amount
+    of taxes were paid by the company. Therefore, the equation
+
+    IncomeLossBeforeTaxes - TaxExpenseBenefit = NetIncomeLoss
+
+    However, there  is a quite significant number of reports, which us a negative
+    number to display paid Taxes and therefore, the following equations would be
+    used:
+
+    IncomeLossBeforeTaxes + TaxExpenseBenefit = NetIncomeLoss
+
+    This rule select these entries and tries to fix that, whenever possible.
+
+    Since the rules calculate IncomeLossFromContinuingOperations as follows
+
+    IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit
+    - IncomeTaxExpenseBenefit
+    = IncomeLossFromContinuingOperations
+
+    We might end up having a wrong value for IncomeLossFromContinuingOperation.
+
+    Therefore, we mask the entries, where
+
+    abs(NetIncomeLoss - IncomeLossFromContinuingOperations) = 2*abs(IncomeTaxExpenseBenefit)
+    if IncomeTaxExpenseBenefit &gt; 0
+
+    in order to fix the sign for IncomeTaxExpenseBenefit and to correct
+    IncomeLossFromContinuingOperations
+
+    The rule also uses some threshold.
+
+    Of course, this is not perfect and does not consider the cases with DiscontinuedOperations,
+    However, it is able to fix a significant number of cases.
+
+    For the masked entries, it changes the sign of TaxExpenseBenefit
+    and recalculates IncomeLossFromContinuingOperations
+
+    &#34;&#34;&#34;
+
+    def get_target_tags(self) -&gt; List[str]:
+        &#34;&#34;&#34;
+        returns a list of tags that could be affected/changed by this rule
+
+        Returns:
+            List[str]: list with affected tags/columns
+        &#34;&#34;&#34;
+        return [&#39;IncomeLossFromContinuingOperations&#39;, &#39;AllIncomeTaxExpenseBenefit&#39;]
+
+    def get_input_tags(self) -&gt; Set[str]:
+        &#34;&#34;&#34;
+        return all tags that the rules within this group need.
+
+        Returns:
+            Set[str]: set of all input tags that are used by rules in this group
+        &#34;&#34;&#34;
+        return {&#39;IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit&#39;,
+                &#39;AllIncomeTaxExpenseBenefit&#39;, &#39;IncomeLossFromContinuingOperations&#39;, &#39;ProfitLoss&#39;}
+
+    def mask(self, data_df: pd.DataFrame) -&gt; pa.typing.Series[bool]:
+        &#34;&#34;&#34;
+            returns a Series[bool] which defines the rows to which this rule has to be applied.
+
+        Args:
+            data_df dataframe on which the rules should be applied
+
+        Returns:
+            pa.typing.Series[bool]: a boolean Series that marks which rows have to be calculated
+        &#34;&#34;&#34;
+        return (data_df.AllIncomeTaxExpenseBenefit != 0) &amp; \
+            ((data_df.ProfitLoss - data_df.IncomeLossFromContinuingOperations).abs() &gt;=
+             1.8 * data_df.AllIncomeTaxExpenseBenefit.abs())
+
+    def apply(self, data_df: pd.DataFrame, mask: pa.typing.Series[bool]) -&gt; pd.DataFrame:
+        &#34;&#34;&#34;
+        apply the rule on the provided dataframe. the rows, on which the rule has to be applied
+        is defined by the provide mask Series.
+
+        Important, the rules have to be applied &#34;in-place&#34;, so no new dataframe is produced.
+
+        Args:
+            data_df: dataframe on which the rule has to be applied
+            mask: a Series marking the rows in the dataframe on which the rule has to be applied
+        Returns:
+            pd.DataFrame: make the process chainable
+        &#34;&#34;&#34;
+
+        data_df.loc[mask, &#39;AllIncomeTaxExpenseBenefit&#39;] = -data_df.AllIncomeTaxExpenseBenefit
+
+        # recalculate IncomeLossFromContinuingOperations
+        data_df.loc[mask, &#39;IncomeLossFromContinuingOperations&#39;] = \
+            data_df[&#39;IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit&#39;]
+        subtract_mask = mask &amp; ~data_df.AllIncomeTaxExpenseBenefit.isna()
+        data_df.loc[subtract_mask, &#39;IncomeLossFromContinuingOperations&#39;] = (
+                data_df[&#39;IncomeLossFromContinuingOperations&#39;] -
+                data_df.AllIncomeTaxExpenseBenefit)
+        return data_df
+
+    def get_description(self) -&gt; str:
+        return &#34;Corrects the sign of &#39;IncomeTaxExpenseBenefits&#39; if it seems to be wrong. Checks&#34; \
+               &#34;if the difference between &#39;NetIncomeLoss&#39; and &#34; \
+               &#34;&#39;IncomeLossFromContinuingOperations&#39;&#34; \
+               &#34;is about 2. Which is a clear indication, that the sign was wrong.&#34;</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="secfsdstools.f_standardize.base_rule_framework.Rule" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.Rule">Rule</a></li>
+<li><a title="secfsdstools.f_standardize.base_rule_framework.AbstractRule" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.AbstractRule">AbstractRule</a></li>
+<li><a title="secfsdstools.f_standardize.base_rule_framework.RuleEntity" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.RuleEntity">RuleEntity</a></li>
+<li>abc.ABC</li>
+</ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="secfsdstools.f_standardize.is_standardize.PostFixIncomeLossFromContinuingOperationsAndSignOfIncomeTaxExpenseBenefit.masked"><code class="name">var <span class="ident">masked</span> : pandas.core.series.Series</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="secfsdstools.f_standardize.is_standardize.PostFixIncomeLossFromContinuingOperationsAndSignOfIncomeTaxExpenseBenefit.apply"><code class="name flex">
+<span>def <span class="ident">apply</span></span>(<span>self, data_df: pandas.core.frame.DataFrame, mask: pandera.typing.pandas.Series[bool]) ‑> pandas.core.frame.DataFrame</span>
+</code></dt>
+<dd>
+<div class="desc"><p>apply the rule on the provided dataframe. the rows, on which the rule has to be applied
+is defined by the provide mask Series.</p>
+<p>Important, the rules have to be applied "in-place", so no new dataframe is produced.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>data_df</code></strong></dt>
+<dd>dataframe on which the rule has to be applied</dd>
+<dt><strong><code>mask</code></strong></dt>
+<dd>a Series marking the rows in the dataframe on which the rule has to be applied</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>pd.DataFrame</code></dt>
+<dd>make the process chainable</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def apply(self, data_df: pd.DataFrame, mask: pa.typing.Series[bool]) -&gt; pd.DataFrame:
+    &#34;&#34;&#34;
+    apply the rule on the provided dataframe. the rows, on which the rule has to be applied
+    is defined by the provide mask Series.
+
+    Important, the rules have to be applied &#34;in-place&#34;, so no new dataframe is produced.
+
+    Args:
+        data_df: dataframe on which the rule has to be applied
+        mask: a Series marking the rows in the dataframe on which the rule has to be applied
+    Returns:
+        pd.DataFrame: make the process chainable
+    &#34;&#34;&#34;
+
+    data_df.loc[mask, &#39;AllIncomeTaxExpenseBenefit&#39;] = -data_df.AllIncomeTaxExpenseBenefit
+
+    # recalculate IncomeLossFromContinuingOperations
+    data_df.loc[mask, &#39;IncomeLossFromContinuingOperations&#39;] = \
+        data_df[&#39;IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit&#39;]
+    subtract_mask = mask &amp; ~data_df.AllIncomeTaxExpenseBenefit.isna()
+    data_df.loc[subtract_mask, &#39;IncomeLossFromContinuingOperations&#39;] = (
+            data_df[&#39;IncomeLossFromContinuingOperations&#39;] -
+            data_df.AllIncomeTaxExpenseBenefit)
+    return data_df</code></pre>
+</details>
+</dd>
+<dt id="secfsdstools.f_standardize.is_standardize.PostFixIncomeLossFromContinuingOperationsAndSignOfIncomeTaxExpenseBenefit.get_input_tags"><code class="name flex">
+<span>def <span class="ident">get_input_tags</span></span>(<span>self) ‑> Set[str]</span>
+</code></dt>
+<dd>
+<div class="desc"><p>return all tags that the rules within this group need.</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>Set[str]</code></dt>
+<dd>set of all input tags that are used by rules in this group</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_input_tags(self) -&gt; Set[str]:
+    &#34;&#34;&#34;
+    return all tags that the rules within this group need.
+
+    Returns:
+        Set[str]: set of all input tags that are used by rules in this group
+    &#34;&#34;&#34;
+    return {&#39;IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit&#39;,
+            &#39;AllIncomeTaxExpenseBenefit&#39;, &#39;IncomeLossFromContinuingOperations&#39;, &#39;ProfitLoss&#39;}</code></pre>
+</details>
+</dd>
+<dt id="secfsdstools.f_standardize.is_standardize.PostFixIncomeLossFromContinuingOperationsAndSignOfIncomeTaxExpenseBenefit.mask"><code class="name flex">
+<span>def <span class="ident">mask</span></span>(<span>self, data_df: pandas.core.frame.DataFrame) ‑> pandera.typing.pandas.Series[bool]</span>
+</code></dt>
+<dd>
+<div class="desc"><p>returns a Series[bool] which defines the rows to which this rule has to be applied.</p>
+<h2 id="args">Args</h2>
+<p>data_df dataframe on which the rules should be applied</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>pa.typing.Series[bool]</code></dt>
+<dd>a boolean Series that marks which rows have to be calculated</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def mask(self, data_df: pd.DataFrame) -&gt; pa.typing.Series[bool]:
+    &#34;&#34;&#34;
+        returns a Series[bool] which defines the rows to which this rule has to be applied.
+
+    Args:
+        data_df dataframe on which the rules should be applied
+
+    Returns:
+        pa.typing.Series[bool]: a boolean Series that marks which rows have to be calculated
+    &#34;&#34;&#34;
+    return (data_df.AllIncomeTaxExpenseBenefit != 0) &amp; \
+        ((data_df.ProfitLoss - data_df.IncomeLossFromContinuingOperations).abs() &gt;=
+         1.8 * data_df.AllIncomeTaxExpenseBenefit.abs())</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="secfsdstools.f_standardize.base_rule_framework.Rule" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.Rule">Rule</a></b></code>:
+<ul class="hlist">
+<li><code><a title="secfsdstools.f_standardize.base_rule_framework.Rule.collect_description" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.AbstractRule.collect_description">collect_description</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.base_rule_framework.Rule.get_description" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.RuleEntity.get_description">get_description</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.base_rule_framework.Rule.get_mask" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.Rule.get_mask">get_mask</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.base_rule_framework.Rule.get_target_tags" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.Rule.get_target_tags">get_target_tags</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.base_rule_framework.Rule.get_target_tags_str" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.Rule.get_target_tags_str">get_target_tags_str</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.base_rule_framework.Rule.process" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.Rule.process">process</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.base_rule_framework.Rule.set_id" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.RuleEntity.set_id">set_id</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+</dl>
+</section>
+</article>
+<nav id="sidebar">
+<h1>Index</h1>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="secfsdstools.f_standardize" href="index.html">secfsdstools.f_standardize</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="secfsdstools.f_standardize.is_standardize.IncomeStatementStandardizer" href="#secfsdstools.f_standardize.is_standardize.IncomeStatementStandardizer">IncomeStatementStandardizer</a></code></h4>
+<ul class="">
+<li><code><a title="secfsdstools.f_standardize.is_standardize.IncomeStatementStandardizer.final_tags" href="#secfsdstools.f_standardize.is_standardize.IncomeStatementStandardizer.final_tags">final_tags</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.is_standardize.IncomeStatementStandardizer.is_costofrevenue_rg" href="#secfsdstools.f_standardize.is_standardize.IncomeStatementStandardizer.is_costofrevenue_rg">is_costofrevenue_rg</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.is_standardize.IncomeStatementStandardizer.is_grossprofit_rg" href="#secfsdstools.f_standardize.is_standardize.IncomeStatementStandardizer.is_grossprofit_rg">is_grossprofit_rg</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.is_standardize.IncomeStatementStandardizer.is_inclossbeforetax" href="#secfsdstools.f_standardize.is_standardize.IncomeStatementStandardizer.is_inclossbeforetax">is_inclossbeforetax</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.is_standardize.IncomeStatementStandardizer.is_missing_gross_opil_opexp" href="#secfsdstools.f_standardize.is_standardize.IncomeStatementStandardizer.is_missing_gross_opil_opexp">is_missing_gross_opil_opexp</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.is_standardize.IncomeStatementStandardizer.is_missing_ilbefore_tax_ilcontop" href="#secfsdstools.f_standardize.is_standardize.IncomeStatementStandardizer.is_missing_ilbefore_tax_ilcontop">is_missing_ilbefore_tax_ilcontop</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.is_standardize.IncomeStatementStandardizer.is_missing_nilattnoncnt" href="#secfsdstools.f_standardize.is_standardize.IncomeStatementStandardizer.is_missing_nilattnoncnt">is_missing_nilattnoncnt</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.is_standardize.IncomeStatementStandardizer.is_missing_rev_cost_gross" href="#secfsdstools.f_standardize.is_standardize.IncomeStatementStandardizer.is_missing_rev_cost_gross">is_missing_rev_cost_gross</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.is_standardize.IncomeStatementStandardizer.is_netincome_rg" href="#secfsdstools.f_standardize.is_standardize.IncomeStatementStandardizer.is_netincome_rg">is_netincome_rg</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.is_standardize.IncomeStatementStandardizer.is_operating_expenses_rg" href="#secfsdstools.f_standardize.is_standardize.IncomeStatementStandardizer.is_operating_expenses_rg">is_operating_expenses_rg</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.is_standardize.IncomeStatementStandardizer.is_outstandingshares" href="#secfsdstools.f_standardize.is_standardize.IncomeStatementStandardizer.is_outstandingshares">is_outstandingshares</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.is_standardize.IncomeStatementStandardizer.is_revenue_rg" href="#secfsdstools.f_standardize.is_standardize.IncomeStatementStandardizer.is_revenue_rg">is_revenue_rg</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.is_standardize.IncomeStatementStandardizer.main_rule_tree" href="#secfsdstools.f_standardize.is_standardize.IncomeStatementStandardizer.main_rule_tree">main_rule_tree</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.is_standardize.IncomeStatementStandardizer.main_statement_tags" href="#secfsdstools.f_standardize.is_standardize.IncomeStatementStandardizer.main_statement_tags">main_statement_tags</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.is_standardize.IncomeStatementStandardizer.post_rule_tree" href="#secfsdstools.f_standardize.is_standardize.IncomeStatementStandardizer.post_rule_tree">post_rule_tree</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.is_standardize.IncomeStatementStandardizer.prepivot_rule_tree" href="#secfsdstools.f_standardize.is_standardize.IncomeStatementStandardizer.prepivot_rule_tree">prepivot_rule_tree</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.is_standardize.IncomeStatementStandardizer.preprocess_rule_tree" href="#secfsdstools.f_standardize.is_standardize.IncomeStatementStandardizer.preprocess_rule_tree">preprocess_rule_tree</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.is_standardize.IncomeStatementStandardizer.validation_rules" href="#secfsdstools.f_standardize.is_standardize.IncomeStatementStandardizer.validation_rules">validation_rules</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="secfsdstools.f_standardize.is_standardize.PostFixIncomeLossFromContinuingOperationsAndSignOfIncomeTaxExpenseBenefit" href="#secfsdstools.f_standardize.is_standardize.PostFixIncomeLossFromContinuingOperationsAndSignOfIncomeTaxExpenseBenefit">PostFixIncomeLossFromContinuingOperationsAndSignOfIncomeTaxExpenseBenefit</a></code></h4>
+<ul class="">
+<li><code><a title="secfsdstools.f_standardize.is_standardize.PostFixIncomeLossFromContinuingOperationsAndSignOfIncomeTaxExpenseBenefit.apply" href="#secfsdstools.f_standardize.is_standardize.PostFixIncomeLossFromContinuingOperationsAndSignOfIncomeTaxExpenseBenefit.apply">apply</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.is_standardize.PostFixIncomeLossFromContinuingOperationsAndSignOfIncomeTaxExpenseBenefit.get_input_tags" href="#secfsdstools.f_standardize.is_standardize.PostFixIncomeLossFromContinuingOperationsAndSignOfIncomeTaxExpenseBenefit.get_input_tags">get_input_tags</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.is_standardize.PostFixIncomeLossFromContinuingOperationsAndSignOfIncomeTaxExpenseBenefit.mask" href="#secfsdstools.f_standardize.is_standardize.PostFixIncomeLossFromContinuingOperationsAndSignOfIncomeTaxExpenseBenefit.mask">mask</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.is_standardize.PostFixIncomeLossFromContinuingOperationsAndSignOfIncomeTaxExpenseBenefit.masked" href="#secfsdstools.f_standardize.is_standardize.PostFixIncomeLossFromContinuingOperationsAndSignOfIncomeTaxExpenseBenefit.masked">masked</a></code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.10.0</a>.</p>
+</footer>
+</body>
+</html>

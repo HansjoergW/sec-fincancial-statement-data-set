@@ -29,17 +29,19 @@
 </summary>
 <pre><code class="python"># pylint: disable=C0302
 &#34;&#34;&#34;Contains the definitions to standardize incaome statements.&#34;&#34;&#34;
-from typing import List, Set
+from typing import List, Set, Optional
 
 import pandas as pd
 import pandera as pa
 
 from secfsdstools.f_standardize.base_prepivot_rules import (PrePivotDeduplicate,
-    PrePivotCorrectSign, PrePivotMaxQtrs)
+                                                            PrePivotCorrectSign, PrePivotMaxQtrs)
 from secfsdstools.f_standardize.base_rule_framework import RuleGroup, Rule
 from secfsdstools.f_standardize.base_rules import (CopyTagRule, SumUpRule, SubtractFromRule,
-    missingsumparts_rules_creator, MissingSummandRule, PostSetToZero, PostFixSign)
-from secfsdstools.f_standardize.base_validation_rules import ValidationRule, SumValidationRule
+                                                   missingsumparts_rules_creator,
+                                                   MissingSummandRule, PostSetToZero, PostFixSign)
+from secfsdstools.f_standardize.base_validation_rules import ValidationRule, SumValidationRule, \
+    ProductValidationRule
 from secfsdstools.f_standardize.standardizing import Standardizer
 
 # All tags that are used for costs of goods and services
@@ -527,6 +529,26 @@ class IncomeStatementStandardizer(Standardizer):
                 7. Prio IncomeLossAttributableToParent
                 8. Prio NetInvestmentIncome
 
+        OutstandingShares
+            1. Prio WeightedAverageNumberOfSharesOutstandingBasic
+            2. Prio WeightedAverageNumberOfDilutedSharesOutstanding
+            3. Prio WeightedAverageNumberOfShareOutstandingBasicAndDiluted
+            4. Prio WeightedAverageLimitedPartnershipUnitsOutstanding
+            5. Prio WeightedAverageLimitedPartnershipUnitsOutstandingDiluted
+            6. Prio WeightedAverageNumberOfLimitedPartnershipAndGeneralPartnershipUnitOutstandingBasicAndDiluted
+            7. Prio WeightedAverageGeneralPartnershipUnitsOutstanding
+
+        EarningsPerShare
+            1. Prio EarningsPerShareBasic
+            2. Prio EarningsPerShareDiluted
+            3. Prio EarningsPerShareBasicAndDiluted
+            4. Prio IncomeLossFromContinuingOperationsPerBasicShare
+            5. Prio IncomeLossFromContinuingOperationsPerDilutedShare
+            6. Prio IncomeLossFromContinuingOperationsPerBasicAndDilutedShare
+            7. Prio IncomeLossFromContinuingOperationsPerOutstandingLimitedPartnershipUnit
+            8. Prio IncomeLossFromContinuingOperationsPerOutstandingLimitedPartnershipUnitBasicNetOfTax
+            9. Prio IncomeLossFromContinuingOperationsPerOutstandingLimitedPartnershipAndGeneralPartnershipUnitBasicAndDiluted
+
 
       Post Rule (Cleanup)
         Fix Sign of AllIncomeTaxExpenseBenefit (should be positive if taxed were paid)
@@ -895,6 +917,46 @@ class IncomeStatementStandardizer(Standardizer):
         missing_summand_tag=&#39;NetIncomeLossAttributableToNoncontrollingInterest&#39;
     )
 
+    is_outstandingshares = RuleGroup(
+        prefix=&#34;sharesAndEPS&#34;,
+        description=&#34;Rules to extract the number of shares&#34;,
+        rules=[
+            CopyTagRule(target=&#39;OutstandingShares&#39;,
+                        original=&#39;WeightedAverageNumberOfSharesOutstandingBasic&#39;),
+            CopyTagRule(target=&#39;OutstandingShares&#39;,
+                        original=&#39;WeightedAverageNumberOfDilutedSharesOutstanding&#39;),
+            CopyTagRule(target=&#39;OutstandingShares&#39;,
+                        original=&#39;WeightedAverageNumberOfShareOutstandingBasicAndDiluted&#39;),
+            CopyTagRule(target=&#39;OutstandingShares&#39;,
+                        original=&#39;WeightedAverageLimitedPartnershipUnitsOutstanding&#39;),
+            CopyTagRule(target=&#39;OutstandingShares&#39;,
+                        original=&#39;WeightedAverageLimitedPartnershipUnitsOutstandingDiluted&#39;),
+            CopyTagRule(target=&#39;OutstandingShares&#39;,
+                        original=&#39;WeightedAverageNumberOfLimitedPartnershipAndGeneralPartnershipUnitOutstandingBasicAndDiluted&#39;),
+            CopyTagRule(target=&#39;OutstandingShares&#39;,
+                        original=&#39;WeightedAverageGeneralPartnershipUnitsOutstanding&#39;),
+
+            CopyTagRule(target=&#39;EarningsPerShare&#39;,
+                        original=&#39;EarningsPerShareBasic&#39;),
+            CopyTagRule(target=&#39;EarningsPerShare&#39;,
+                        original=&#39;EarningsPerShareDiluted&#39;),
+            CopyTagRule(target=&#39;EarningsPerShare&#39;,
+                        original=&#39;EarningsPerShareBasicAndDiluted&#39;),
+            CopyTagRule(target=&#39;EarningsPerShare&#39;,
+                        original=&#39;IncomeLossFromContinuingOperationsPerBasicShare&#39;),
+            CopyTagRule(target=&#39;EarningsPerShare&#39;,
+                        original=&#39;IncomeLossFromContinuingOperationsPerDilutedShare&#39;),
+            CopyTagRule(target=&#39;EarningsPerShare&#39;,
+                        original=&#39;IncomeLossFromContinuingOperationsPerBasicAndDilutedShare&#39;),
+            CopyTagRule(target=&#39;EarningsPerShare&#39;,
+                        original=&#39;IncomeLossFromContinuingOperationsPerOutstandingLimitedPartnershipUnit&#39;),
+            CopyTagRule(target=&#39;EarningsPerShare&#39;,
+                        original=&#39;IncomeLossFromContinuingOperationsPerOutstandingLimitedPartnershipUnitBasicNetOfTax&#39;),
+            CopyTagRule(target=&#39;EarningsPerShare&#39;,
+                        original=&#39;IncomeLossFromContinuingOperationsPerOutstandingLimitedPartnershipAndGeneralPartnershipUnitBasicAndDiluted&#39;),
+        ]
+    )
+
     main_rule_tree = RuleGroup(prefix=&#34;IS&#34;,
                                rules=[
                                    is_revenue_rg,
@@ -906,7 +968,8 @@ class IncomeStatementStandardizer(Standardizer):
                                    is_inclossbeforetax,
                                    is_netincome_rg,
                                    is_missing_ilbefore_tax_ilcontop,
-                                   is_missing_nilattnoncnt
+                                   is_missing_nilattnoncnt,
+                                   is_outstandingshares
                                ])
 
     preprocess_rule_tree = RuleGroup(prefix=&#34;IS_PRE&#34;,
@@ -1010,7 +1073,10 @@ class IncomeStatementStandardizer(Standardizer):
                               &#39;NetIncomeLoss&#39;,
                               &#39;NetIncomeLossAttributableToNoncontrollingInterest&#39;
                           ]),
-
+        ProductValidationRule(identifier=&#39;EPS&#39;,
+                              product_tag=&#39;NetIncomeLoss&#39;,
+                              multipliers=[&#39;EarningsPerShare&#39;,
+                                           &#39;OutstandingShares&#39;]),
     ]
 
     # these are the columns that finally are returned after the standardization
@@ -1026,10 +1092,8 @@ class IncomeStatementStandardizer(Standardizer):
                              &#39;ProfitLoss&#39;,
                              &#39;NetIncomeLossAttributableToNoncontrollingInterest&#39;,
                              &#39;NetIncomeLoss&#39;,
-                             &#39;EarningsPerShareBasic&#39;,
-                             &#39;EarningsPerShareDiluted&#39;,
-                             &#39;WeightedAverageNumberOfSharesOutstandingBasic&#39;,
-                             &#39;WeightedAverageNumberOfDilutedSharesOutstanding&#39;,
+                             &#39;OutstandingShares&#39;,
+                             &#39;EarningsPerShare&#39;
                              ]
 
     # used to evaluate if a report is the main income statement report
@@ -1057,17 +1121,76 @@ class IncomeStatementStandardizer(Standardizer):
                            &#39;ProfitLoss&#39;
                            ]
 
-    def __init__(self, filter_for_main_statement: bool = True, iterations: int = 3):
+    def __init__(self,
+                 prepivot_rule_tree: Optional[RuleGroup] = None,
+                 pre_rule_tree: Optional[RuleGroup] = None,
+                 main_rule_tree: Optional[RuleGroup] = None,
+                 post_rule_tree: Optional[RuleGroup] = None,
+                 validation_rules: Optional[List[ValidationRule]] = None,
+                 final_tags: Optional[List[str]] = None,
+                 main_statement_tags: Optional[List[str]] = None,
+
+                 filter_for_main_statement: bool = True,
+                 main_iterations: int = 1,
+                 invert_negated: bool = True,
+                 additional_final_sub_fields: Optional[List[str]] = None,
+                 additional_final_tags: Optional[List[str]] = None):
+        &#34;&#34;&#34;
+        Initialize the Income Statement Standardizer.
+
+        Fine tune it with the following arguments:
+
+        Args:
+            prepivot_rule_tree: rules that are applied before the data is pivoted. These are rules
+                    that filter (like deduplicate) or correct values.
+            pre_rule_tree: rules that are applied once before the main processing. These are mainly
+                    rules that try to correct existing data from obvious errors (like wrong
+                    tagging)
+            main_rule_tree: rules that are applied during the main processing rule and which do the
+                    heavy lifting. These rules can be executed multiple times depending on the value
+                    of the main_iterations parameter
+            post_rule_tree: rules that are used to &#34;cleanup&#34;, like setting certain values to
+                    0.0. They are just executed once.
+            validation_rules: Validation rules are applied after all rules were applied.
+                   they add validation columns to the main dataset. Validation rules do check
+                   if certain requirements are met. E.g. in a Balance Sheet, the following
+                   equation should be true: Assets = AssetsCurrent + AssetsNoncurrent
+            final_tags: The list of tags/columns that will appear in the final result dataframe.
+            main_statement_tags: list of tags that is used to identify the main table of a
+                   financial statement (income statement, balance sheet, cash flow).
+
+            filter_for_main_statement (bool):
+                    Only consider the reports that contain most of the &#34;main_statement_tags&#34;.
+                    Default is True.
+            main_iterations (int): Number of times the main rules should be applied.
+                    Default is 3 for CashFlow.
+            invert_negated (bool, Optional, True): inverts the value of the tags that are marked
+                   as negated (in the pre_df).
+            additional_final_sub_fields (List, Optional):
+                    When using the present method, the results are joined with the following fields
+                    from the sub_df entry: &#39;adsh&#39;, &#39;cik&#39;, &#39;form&#39;, &#39;fye&#39;, &#39;fy&#39;, &#39;fp&#39;, &#39;filed&#39;
+                    Additional fields can be assigned in this list. Default is None.
+            additional_final_tags (List, Optional):
+                     the &#34;final_tags&#34; list define the tags that will be present in the final result
+                     dataframe. Additional tags can be added via this parameter. Default is None.
+        &#34;&#34;&#34;
         super().__init__(
-            prepivot_rule_tree=self.prepivot_rule_tree,
-            pre_rule_tree=self.preprocess_rule_tree,
-            main_rule_tree=self.main_rule_tree,
-            post_rule_tree=self.post_rule_tree,
-            validation_rules=self.validation_rules,
-            final_tags=self.final_tags,
-            main_iterations=iterations,
+            prepivot_rule_tree=
+                    prepivot_rule_tree if prepivot_rule_tree else self.prepivot_rule_tree,
+            pre_rule_tree=pre_rule_tree if pre_rule_tree else self.preprocess_rule_tree,
+            main_rule_tree=main_rule_tree if main_rule_tree else self.main_rule_tree,
+            post_rule_tree=post_rule_tree if post_rule_tree else self.post_rule_tree,
+            validation_rules=validation_rules if validation_rules else self.validation_rules,
+            final_tags=final_tags if final_tags else self.final_tags,
+            main_statement_tags=
+                    main_statement_tags if main_statement_tags else self.main_statement_tags,
+
             filter_for_main_statement=filter_for_main_statement,
-            main_statement_tags=self.main_statement_tags)</code></pre>
+            main_iterations=main_iterations,
+            invert_negated=invert_negated,
+            additional_final_sub_fields=additional_final_sub_fields,
+            additional_final_tags=additional_final_tags
+        )</code></pre>
 </details>
 </section>
 <section>
@@ -1081,7 +1204,7 @@ class IncomeStatementStandardizer(Standardizer):
 <dl>
 <dt id="secfsdstools.f_standardize.is_standardize.IncomeStatementStandardizer"><code class="flex name class">
 <span>class <span class="ident">IncomeStatementStandardizer</span></span>
-<span>(</span><span>filter_for_main_statement: bool = True, iterations: int = 3)</span>
+<span>(</span><span>prepivot_rule_tree: Optional[<a title="secfsdstools.f_standardize.base_rule_framework.RuleGroup" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.RuleGroup">RuleGroup</a>] = None, pre_rule_tree: Optional[<a title="secfsdstools.f_standardize.base_rule_framework.RuleGroup" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.RuleGroup">RuleGroup</a>] = None, main_rule_tree: Optional[<a title="secfsdstools.f_standardize.base_rule_framework.RuleGroup" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.RuleGroup">RuleGroup</a>] = None, post_rule_tree: Optional[<a title="secfsdstools.f_standardize.base_rule_framework.RuleGroup" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.RuleGroup">RuleGroup</a>] = None, validation_rules: Optional[List[<a title="secfsdstools.f_standardize.base_validation_rules.ValidationRule" href="base_validation_rules.html#secfsdstools.f_standardize.base_validation_rules.ValidationRule">ValidationRule</a>]] = None, final_tags: Optional[List[str]] = None, main_statement_tags: Optional[List[str]] = None, filter_for_main_statement: bool = True, main_iterations: int = 1, invert_negated: bool = True, additional_final_sub_fields: Optional[List[str]] = None, additional_final_tags: Optional[List[str]] = None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>The goal of this Standardizer is to create IncomeStatements that are comparable,
@@ -1270,6 +1393,26 @@ meaning that they have the same tags.</p>
             7. Prio IncomeLossAttributableToParent
             8. Prio NetInvestmentIncome
 
+    OutstandingShares
+        1. Prio WeightedAverageNumberOfSharesOutstandingBasic
+        2. Prio WeightedAverageNumberOfDilutedSharesOutstanding
+        3. Prio WeightedAverageNumberOfShareOutstandingBasicAndDiluted
+        4. Prio WeightedAverageLimitedPartnershipUnitsOutstanding
+        5. Prio WeightedAverageLimitedPartnershipUnitsOutstandingDiluted
+        6. Prio WeightedAverageNumberOfLimitedPartnershipAndGeneralPartnershipUnitOutstandingBasicAndDiluted
+        7. Prio WeightedAverageGeneralPartnershipUnitsOutstanding
+
+    EarningsPerShare
+        1. Prio EarningsPerShareBasic
+        2. Prio EarningsPerShareDiluted
+        3. Prio EarningsPerShareBasicAndDiluted
+        4. Prio IncomeLossFromContinuingOperationsPerBasicShare
+        5. Prio IncomeLossFromContinuingOperationsPerDilutedShare
+        6. Prio IncomeLossFromContinuingOperationsPerBasicAndDilutedShare
+        7. Prio IncomeLossFromContinuingOperationsPerOutstandingLimitedPartnershipUnit
+        8. Prio IncomeLossFromContinuingOperationsPerOutstandingLimitedPartnershipUnitBasicNetOfTax
+        9. Prio IncomeLossFromContinuingOperationsPerOutstandingLimitedPartnershipAndGeneralPartnershipUnitBasicAndDiluted
+
 
   Post Rule (Cleanup)
     Fix Sign of AllIncomeTaxExpenseBenefit (should be positive if taxed were paid)
@@ -1309,6 +1452,8 @@ meaning that they have the same tags.</p>
     If there is no NetIncomeLossAttributableToNoncontrollingInterest, set it to ProfitLoss - NetIncomeLoss
 
 </pre>
+<p>Initialize the Income Statement Standardizer.</p>
+<p>Fine tune it with the following arguments:</p>
 <h2 id="args">Args</h2>
 <dl>
 <dt><strong><code>prepivot_rule_tree</code></strong></dt>
@@ -1320,33 +1465,38 @@ rules that try to correct existing data from obvious errors (like wrong
 tagging)</dd>
 <dt><strong><code>main_rule_tree</code></strong></dt>
 <dd>rules that are applied during the main processing rule and which do the
-heavy lifting. These rules can be excuted multipe times depending on the value
+heavy lifting. These rules can be executed multiple times depending on the value
 of the main_iterations parameter</dd>
 <dt><strong><code>post_rule_tree</code></strong></dt>
 <dd>rules that are used to "cleanup", like setting certain values to
-0.0</dd>
+0.0. They are just executed once.</dd>
 <dt><strong><code>validation_rules</code></strong></dt>
 <dd>Validation rules are applied after all rules were applied.
 they add validation columns to the main dataset. Validation rules do check
 if certain requirements are met. E.g. in a Balance Sheet, the following
 equation should be true: Assets = AssetsCurrent + AssetsNoncurrent</dd>
-<dt><strong><code>main_iterations</code></strong></dt>
-<dd>defining the number of iterations the main rules should be applied</dd>
 <dt><strong><code>final_tags</code></strong></dt>
-<dd>tbd</dd>
-<dt><strong><code>filter_for_main_statement</code></strong> :&ensp;<code>bool, Optional, True</code></dt>
-<dd>depending on the data, it could look
-as if multiple Balance Sheets statements could be present in a single report.
-However, there should only be one. Setting
-this flag to true (which is the default), tries to select the one that is most
-likely the real statement.
-the tags that are used are defined in the main_statement_tags parameter</dd>
+<dd>The list of tags/columns that will appear in the final result dataframe.</dd>
 <dt><strong><code>main_statement_tags</code></strong></dt>
-<dd>tbd</dd>
+<dd>list of tags that is used to identify the main table of a
+financial statement (income statement, balance sheet, cash flow).</dd>
+<dt>filter_for_main_statement (bool):</dt>
+<dt>Only consider the reports that contain most of the "main_statement_tags".</dt>
+<dt>Default is True.</dt>
+<dt><strong><code>main_iterations</code></strong> :&ensp;<code>int</code></dt>
+<dd>Number of times the main rules should be applied.
+Default is 3 for CashFlow.</dd>
 <dt><strong><code>invert_negated</code></strong> :&ensp;<code>bool, Optional, True</code></dt>
-<dd>inverts the value of the that are marked
-as negated.</dd>
-</dl></div>
+<dd>inverts the value of the tags that are marked
+as negated (in the pre_df).</dd>
+</dl>
+<p>additional_final_sub_fields (List, Optional):
+When using the present method, the results are joined with the following fields
+from the sub_df entry: 'adsh', 'cik', 'form', 'fye', 'fy', 'fp', 'filed'
+Additional fields can be assigned in this list. Default is None.
+additional_final_tags (List, Optional):
+the "final_tags" list define the tags that will be present in the final result
+dataframe. Additional tags can be added via this parameter. Default is None.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -1542,6 +1692,26 @@ as negated.</dd>
                 7. Prio IncomeLossAttributableToParent
                 8. Prio NetInvestmentIncome
 
+        OutstandingShares
+            1. Prio WeightedAverageNumberOfSharesOutstandingBasic
+            2. Prio WeightedAverageNumberOfDilutedSharesOutstanding
+            3. Prio WeightedAverageNumberOfShareOutstandingBasicAndDiluted
+            4. Prio WeightedAverageLimitedPartnershipUnitsOutstanding
+            5. Prio WeightedAverageLimitedPartnershipUnitsOutstandingDiluted
+            6. Prio WeightedAverageNumberOfLimitedPartnershipAndGeneralPartnershipUnitOutstandingBasicAndDiluted
+            7. Prio WeightedAverageGeneralPartnershipUnitsOutstanding
+
+        EarningsPerShare
+            1. Prio EarningsPerShareBasic
+            2. Prio EarningsPerShareDiluted
+            3. Prio EarningsPerShareBasicAndDiluted
+            4. Prio IncomeLossFromContinuingOperationsPerBasicShare
+            5. Prio IncomeLossFromContinuingOperationsPerDilutedShare
+            6. Prio IncomeLossFromContinuingOperationsPerBasicAndDilutedShare
+            7. Prio IncomeLossFromContinuingOperationsPerOutstandingLimitedPartnershipUnit
+            8. Prio IncomeLossFromContinuingOperationsPerOutstandingLimitedPartnershipUnitBasicNetOfTax
+            9. Prio IncomeLossFromContinuingOperationsPerOutstandingLimitedPartnershipAndGeneralPartnershipUnitBasicAndDiluted
+
 
       Post Rule (Cleanup)
         Fix Sign of AllIncomeTaxExpenseBenefit (should be positive if taxed were paid)
@@ -1910,6 +2080,46 @@ as negated.</dd>
         missing_summand_tag=&#39;NetIncomeLossAttributableToNoncontrollingInterest&#39;
     )
 
+    is_outstandingshares = RuleGroup(
+        prefix=&#34;sharesAndEPS&#34;,
+        description=&#34;Rules to extract the number of shares&#34;,
+        rules=[
+            CopyTagRule(target=&#39;OutstandingShares&#39;,
+                        original=&#39;WeightedAverageNumberOfSharesOutstandingBasic&#39;),
+            CopyTagRule(target=&#39;OutstandingShares&#39;,
+                        original=&#39;WeightedAverageNumberOfDilutedSharesOutstanding&#39;),
+            CopyTagRule(target=&#39;OutstandingShares&#39;,
+                        original=&#39;WeightedAverageNumberOfShareOutstandingBasicAndDiluted&#39;),
+            CopyTagRule(target=&#39;OutstandingShares&#39;,
+                        original=&#39;WeightedAverageLimitedPartnershipUnitsOutstanding&#39;),
+            CopyTagRule(target=&#39;OutstandingShares&#39;,
+                        original=&#39;WeightedAverageLimitedPartnershipUnitsOutstandingDiluted&#39;),
+            CopyTagRule(target=&#39;OutstandingShares&#39;,
+                        original=&#39;WeightedAverageNumberOfLimitedPartnershipAndGeneralPartnershipUnitOutstandingBasicAndDiluted&#39;),
+            CopyTagRule(target=&#39;OutstandingShares&#39;,
+                        original=&#39;WeightedAverageGeneralPartnershipUnitsOutstanding&#39;),
+
+            CopyTagRule(target=&#39;EarningsPerShare&#39;,
+                        original=&#39;EarningsPerShareBasic&#39;),
+            CopyTagRule(target=&#39;EarningsPerShare&#39;,
+                        original=&#39;EarningsPerShareDiluted&#39;),
+            CopyTagRule(target=&#39;EarningsPerShare&#39;,
+                        original=&#39;EarningsPerShareBasicAndDiluted&#39;),
+            CopyTagRule(target=&#39;EarningsPerShare&#39;,
+                        original=&#39;IncomeLossFromContinuingOperationsPerBasicShare&#39;),
+            CopyTagRule(target=&#39;EarningsPerShare&#39;,
+                        original=&#39;IncomeLossFromContinuingOperationsPerDilutedShare&#39;),
+            CopyTagRule(target=&#39;EarningsPerShare&#39;,
+                        original=&#39;IncomeLossFromContinuingOperationsPerBasicAndDilutedShare&#39;),
+            CopyTagRule(target=&#39;EarningsPerShare&#39;,
+                        original=&#39;IncomeLossFromContinuingOperationsPerOutstandingLimitedPartnershipUnit&#39;),
+            CopyTagRule(target=&#39;EarningsPerShare&#39;,
+                        original=&#39;IncomeLossFromContinuingOperationsPerOutstandingLimitedPartnershipUnitBasicNetOfTax&#39;),
+            CopyTagRule(target=&#39;EarningsPerShare&#39;,
+                        original=&#39;IncomeLossFromContinuingOperationsPerOutstandingLimitedPartnershipAndGeneralPartnershipUnitBasicAndDiluted&#39;),
+        ]
+    )
+
     main_rule_tree = RuleGroup(prefix=&#34;IS&#34;,
                                rules=[
                                    is_revenue_rg,
@@ -1921,7 +2131,8 @@ as negated.</dd>
                                    is_inclossbeforetax,
                                    is_netincome_rg,
                                    is_missing_ilbefore_tax_ilcontop,
-                                   is_missing_nilattnoncnt
+                                   is_missing_nilattnoncnt,
+                                   is_outstandingshares
                                ])
 
     preprocess_rule_tree = RuleGroup(prefix=&#34;IS_PRE&#34;,
@@ -2025,7 +2236,10 @@ as negated.</dd>
                               &#39;NetIncomeLoss&#39;,
                               &#39;NetIncomeLossAttributableToNoncontrollingInterest&#39;
                           ]),
-
+        ProductValidationRule(identifier=&#39;EPS&#39;,
+                              product_tag=&#39;NetIncomeLoss&#39;,
+                              multipliers=[&#39;EarningsPerShare&#39;,
+                                           &#39;OutstandingShares&#39;]),
     ]
 
     # these are the columns that finally are returned after the standardization
@@ -2041,10 +2255,8 @@ as negated.</dd>
                              &#39;ProfitLoss&#39;,
                              &#39;NetIncomeLossAttributableToNoncontrollingInterest&#39;,
                              &#39;NetIncomeLoss&#39;,
-                             &#39;EarningsPerShareBasic&#39;,
-                             &#39;EarningsPerShareDiluted&#39;,
-                             &#39;WeightedAverageNumberOfSharesOutstandingBasic&#39;,
-                             &#39;WeightedAverageNumberOfDilutedSharesOutstanding&#39;,
+                             &#39;OutstandingShares&#39;,
+                             &#39;EarningsPerShare&#39;
                              ]
 
     # used to evaluate if a report is the main income statement report
@@ -2072,17 +2284,76 @@ as negated.</dd>
                            &#39;ProfitLoss&#39;
                            ]
 
-    def __init__(self, filter_for_main_statement: bool = True, iterations: int = 3):
+    def __init__(self,
+                 prepivot_rule_tree: Optional[RuleGroup] = None,
+                 pre_rule_tree: Optional[RuleGroup] = None,
+                 main_rule_tree: Optional[RuleGroup] = None,
+                 post_rule_tree: Optional[RuleGroup] = None,
+                 validation_rules: Optional[List[ValidationRule]] = None,
+                 final_tags: Optional[List[str]] = None,
+                 main_statement_tags: Optional[List[str]] = None,
+
+                 filter_for_main_statement: bool = True,
+                 main_iterations: int = 1,
+                 invert_negated: bool = True,
+                 additional_final_sub_fields: Optional[List[str]] = None,
+                 additional_final_tags: Optional[List[str]] = None):
+        &#34;&#34;&#34;
+        Initialize the Income Statement Standardizer.
+
+        Fine tune it with the following arguments:
+
+        Args:
+            prepivot_rule_tree: rules that are applied before the data is pivoted. These are rules
+                    that filter (like deduplicate) or correct values.
+            pre_rule_tree: rules that are applied once before the main processing. These are mainly
+                    rules that try to correct existing data from obvious errors (like wrong
+                    tagging)
+            main_rule_tree: rules that are applied during the main processing rule and which do the
+                    heavy lifting. These rules can be executed multiple times depending on the value
+                    of the main_iterations parameter
+            post_rule_tree: rules that are used to &#34;cleanup&#34;, like setting certain values to
+                    0.0. They are just executed once.
+            validation_rules: Validation rules are applied after all rules were applied.
+                   they add validation columns to the main dataset. Validation rules do check
+                   if certain requirements are met. E.g. in a Balance Sheet, the following
+                   equation should be true: Assets = AssetsCurrent + AssetsNoncurrent
+            final_tags: The list of tags/columns that will appear in the final result dataframe.
+            main_statement_tags: list of tags that is used to identify the main table of a
+                   financial statement (income statement, balance sheet, cash flow).
+
+            filter_for_main_statement (bool):
+                    Only consider the reports that contain most of the &#34;main_statement_tags&#34;.
+                    Default is True.
+            main_iterations (int): Number of times the main rules should be applied.
+                    Default is 3 for CashFlow.
+            invert_negated (bool, Optional, True): inverts the value of the tags that are marked
+                   as negated (in the pre_df).
+            additional_final_sub_fields (List, Optional):
+                    When using the present method, the results are joined with the following fields
+                    from the sub_df entry: &#39;adsh&#39;, &#39;cik&#39;, &#39;form&#39;, &#39;fye&#39;, &#39;fy&#39;, &#39;fp&#39;, &#39;filed&#39;
+                    Additional fields can be assigned in this list. Default is None.
+            additional_final_tags (List, Optional):
+                     the &#34;final_tags&#34; list define the tags that will be present in the final result
+                     dataframe. Additional tags can be added via this parameter. Default is None.
+        &#34;&#34;&#34;
         super().__init__(
-            prepivot_rule_tree=self.prepivot_rule_tree,
-            pre_rule_tree=self.preprocess_rule_tree,
-            main_rule_tree=self.main_rule_tree,
-            post_rule_tree=self.post_rule_tree,
-            validation_rules=self.validation_rules,
-            final_tags=self.final_tags,
-            main_iterations=iterations,
+            prepivot_rule_tree=
+                    prepivot_rule_tree if prepivot_rule_tree else self.prepivot_rule_tree,
+            pre_rule_tree=pre_rule_tree if pre_rule_tree else self.preprocess_rule_tree,
+            main_rule_tree=main_rule_tree if main_rule_tree else self.main_rule_tree,
+            post_rule_tree=post_rule_tree if post_rule_tree else self.post_rule_tree,
+            validation_rules=validation_rules if validation_rules else self.validation_rules,
+            final_tags=final_tags if final_tags else self.final_tags,
+            main_statement_tags=
+                    main_statement_tags if main_statement_tags else self.main_statement_tags,
+
             filter_for_main_statement=filter_for_main_statement,
-            main_statement_tags=self.main_statement_tags)</code></pre>
+            main_iterations=main_iterations,
+            invert_negated=invert_negated,
+            additional_final_sub_fields=additional_final_sub_fields,
+            additional_final_tags=additional_final_tags
+        )</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -2129,6 +2400,10 @@ as negated.</dd>
 <div class="desc"></div>
 </dd>
 <dt id="secfsdstools.f_standardize.is_standardize.IncomeStatementStandardizer.is_operating_expenses_rg"><code class="name">var <span class="ident">is_operating_expenses_rg</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="secfsdstools.f_standardize.is_standardize.IncomeStatementStandardizer.is_outstandingshares"><code class="name">var <span class="ident">is_outstandingshares</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -2476,6 +2751,7 @@ is defined by the provide mask Series.</p>
 <li><code><a title="secfsdstools.f_standardize.is_standardize.IncomeStatementStandardizer.is_missing_rev_cost_gross" href="#secfsdstools.f_standardize.is_standardize.IncomeStatementStandardizer.is_missing_rev_cost_gross">is_missing_rev_cost_gross</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.is_standardize.IncomeStatementStandardizer.is_netincome_rg" href="#secfsdstools.f_standardize.is_standardize.IncomeStatementStandardizer.is_netincome_rg">is_netincome_rg</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.is_standardize.IncomeStatementStandardizer.is_operating_expenses_rg" href="#secfsdstools.f_standardize.is_standardize.IncomeStatementStandardizer.is_operating_expenses_rg">is_operating_expenses_rg</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.is_standardize.IncomeStatementStandardizer.is_outstandingshares" href="#secfsdstools.f_standardize.is_standardize.IncomeStatementStandardizer.is_outstandingshares">is_outstandingshares</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.is_standardize.IncomeStatementStandardizer.is_revenue_rg" href="#secfsdstools.f_standardize.is_standardize.IncomeStatementStandardizer.is_revenue_rg">is_revenue_rg</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.is_standardize.IncomeStatementStandardizer.main_rule_tree" href="#secfsdstools.f_standardize.is_standardize.IncomeStatementStandardizer.main_rule_tree">main_rule_tree</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.is_standardize.IncomeStatementStandardizer.main_statement_tags" href="#secfsdstools.f_standardize.is_standardize.IncomeStatementStandardizer.main_statement_tags">main_statement_tags</a></code></li>

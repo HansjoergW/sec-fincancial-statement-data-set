@@ -682,6 +682,9 @@ implementations (module `secfsdstools.e_presenter.presenting`):
       - NetIncomeLossAttributableToNoncontrollingInterest
       ---------------------------------------------------
       = NetIncomeLoss
+    
+      OustandingShares
+      EarningsPerShare
     ````
   
     With just a few lines of code, you'll get a comparable dataset with the main positions of an income statement for Microsoft, Alphabet, and Amazon:

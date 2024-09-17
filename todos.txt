@@ -13,17 +13,7 @@ New Release
 - on github -> under code releases: draft new release
 
 
-v.1.6.2
-- 3.7 not checked anymore, 3.11 added
-- version of library readable: print(secfsdstools.__version__) returns the version
-- simplification of OutstandingShares and EPS / Validation for EPS added
-- improve ability to customize the Standardizer
-  - configure column list which are joined from for sub_df
-  - configure additional final tags
-  - all constructor parameters from the Base Standardizer class can be overwritten via Derived Standardizer classes
-  - notebook on how to customize standardizer and how to find used tag-names
-
-Todos:
+v.1.7.0
 - hook for after updated logic
     - Aufbereitung der Daten für BS, IS und CF Statement möglichst direkt bei update machen,
       so, dass diese Daten schon vorbereitet und gefiltert zur Verfügung stehen.
@@ -31,11 +21,8 @@ Todos:
       einfaches Pipeline Framework
 
 
-- Completion and Validation for SharesOutstanding und EarningsPerShare
-  I noticed that there are two columns EarningsPerShareBasic/EarningsPerShareDiluted that can be calculated
-  if we have NetIncomeLos and WeightedAverageNumberOfSharesOutstandingBasic/WeightedAverageNumberOfDilutedSharesOutstanding.
-  It is up to you to keep the column
 
+Todos:
 
 - in CF haben wir oft auch zusätzliche 'Cash' Tags -> benötigen wir diese im BS auch?
 - MaxQtr PrePivot Rule also for BS und IS

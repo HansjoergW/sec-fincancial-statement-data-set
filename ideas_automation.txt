@@ -8,13 +8,42 @@ Fragen:
 - Wie machen wir das ganze robust / Fehlerbehandlung
   -> Wie wird geprüft, ob ein Schritt für einen Teil tatsächlich ausgeführt wurde
      -> Z.B. welche Files müssen vorhanden sein.
+- Steps eines Tasks
+  - calculate_tasks -> bestimmen, für welche Teile (zip-files) Tasks überhaupt erstellt werden muss
+  - pro Task
+    - prepare -> Verzeichnis estellen/vorhandenes löschen
+    - do -> Schritt ausführen
+    - commit -> irgendwie bestätigen, dass Task vollendet ist
+    - finish (z.B. entfernen von zip files -> müsste aber im Transform gemacht werden
+    - exception -> cleanup
+
+- Performance Optimierung ist nicht wirklich das Thema, da die Logik nur einmal pro Quartal läuft
 
 Schritte
 - Version der Library im code abfragbar machen
   -> Variante impotlib.metadata -> ist aber erst ab Python 3.8 vorhanden
 - Ergebnisse Standardizer müssen concateniert werden können.
+
+- einfachste Variante:
+  -> eine simple Hook Methode
+- kleines Framework
 - Umstellen der vorhanden Schritte download, index, transform
   als Pipeline definition
 - Hinzufügen von customer Schritten
 
+
+class Task
+  prepare()
+  execute()
+  commit()
+  finish()
+  exception()
+
+
+
+class Process
+  create_tasks() List[Task]
+    # berechnet, was für arbeiten erledigt werden müssen
+    # z.B.für alle Zipfiles
+    #  oder auch nur ein einzelner Task am Ende (z.B. concatenieren zu einer einzigen Datei
 

@@ -33,7 +33,7 @@ Schritte
 
 
 class Task
-  prepare()
+  prepare() -> vorbereiten -> directory an
   execute()
   commit()
   finish()

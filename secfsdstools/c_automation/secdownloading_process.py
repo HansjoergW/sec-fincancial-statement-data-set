@@ -5,6 +5,7 @@ import logging
 import os
 import re
 from abc import abstractmethod
+from pathlib import Path
 from typing import List, Tuple
 
 from secfsdstools.a_utils.downloadutils import UrlDownloader
@@ -27,29 +28,32 @@ class DownloadTask:
         self.url = url
         self.urldownloader = urldownloader
 
-        def prepare(self):
-            """ """
-            pass
+        self.file_path = Path(self.zip_dir) / self.file_name
 
-        def execute(self):
-            """ """
-            file_path = os.path.join(self.zip_dir, self.file_name)
-            try:
-                self.urldownloader.binary_download_url_to_file(url, file_path,
-                                                               headers=self._get_headers())
-                return 'success'
-            except Exception as ex:  # pylint: disable=W0703
-                # we want to catch everything here.
-                return f'failed: {ex}'
-        def commit(self):
-            """ """
-            pass
+    def prepare(self):
+        """ """
+        self.file_path.parent.mkdir(parents=True, exist_ok=True)
 
-        def post_commit(self):
-            """ """
+    def execute(self):
+        """ """
+        logger = logging.getLogger()
+        logger.info("download %s", self.url)
+        self.urldownloader.binary_download_url_to_file(self.url,
+                                                       str(self.file_path),
+                                                       headers={})
 
-        def exception(self, exception):
-            """ """
+    def commit(self) -> str:
+        """ """
+        return "success"
+
+    def post_commit(self):
+        """ """
+        pass
+
+    def exception(self, ex) -> str:
+        """ """
+        return f"failed {ex}"
+
 
 class BaseDownloadingProcess(AbstractProcess):
 
@@ -58,6 +62,8 @@ class BaseDownloadingProcess(AbstractProcess):
                  parquet_dir: str,
                  urldownloader: UrlDownloader,
                  execute_serial: bool = False):
+        super().__init__(execute_serial=execute_serial)
+
         self.zip_dir = zip_dir
         self.parquet_dir = parquet_dir
         self.urldownloader = urldownloader
@@ -80,11 +86,11 @@ class BaseDownloadingProcess(AbstractProcess):
     def calculate_tasks(self) -> List[Task]:
         missing_zips: List[Tuple[str, str]] = self._calculate_missing_zips()
 
-        tasks: List[Task] = []
-        for name, href in missing_zips:
-            pass
-
-        return tasks
+        return [DownloadTask(zip_dir=self.zip_dir,
+                             file_name=name,
+                             url=href,
+                             urldownloader=self.urldownloader)
+                for name, href in missing_zips]
 
 
 class SecDownloadingProcess(BaseDownloadingProcess):
@@ -125,3 +131,6 @@ class SecDownloadingProcess(BaseDownloadingProcess):
 
         return [(name, href) for name, href in available_zips_to_dld_dict if
                 name not in download_or_transformed_zips]
+
+    def post_process(self):
+        pass

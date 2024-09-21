@@ -54,6 +54,8 @@ class DownloadTask:
         """ """
         return f"failed {ex}"
 
+    def __str__(self) -> str:
+        return f"DownloadTask (file_name: {self.file_name})"
 
 class BaseDownloadingProcess(AbstractProcess):
 
@@ -130,7 +132,7 @@ class SecDownloadingProcess(BaseDownloadingProcess):
         download_or_transformed_zips = set(downloaded_zip_files).union(set(transformed_parquet))
 
         return [(name, href) for name, href in available_zips_to_dld_dict if
-                name not in download_or_transformed_zips]
+                name not in download_or_transformed_zips][:3]
 
     def post_process(self):
         pass

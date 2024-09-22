@@ -1131,7 +1131,7 @@ class IncomeStatementStandardizer(Standardizer):
                  main_statement_tags: Optional[List[str]] = None,
 
                  filter_for_main_statement: bool = True,
-                 main_iterations: int = 1,
+                 main_iterations: int = 3,
                  invert_negated: bool = True,
                  additional_final_sub_fields: Optional[List[str]] = None,
                  additional_final_tags: Optional[List[str]] = None):
@@ -1204,7 +1204,7 @@ class IncomeStatementStandardizer(Standardizer):
 <dl>
 <dt id="secfsdstools.f_standardize.is_standardize.IncomeStatementStandardizer"><code class="flex name class">
 <span>class <span class="ident">IncomeStatementStandardizer</span></span>
-<span>(</span><span>prepivot_rule_tree: Optional[<a title="secfsdstools.f_standardize.base_rule_framework.RuleGroup" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.RuleGroup">RuleGroup</a>] = None, pre_rule_tree: Optional[<a title="secfsdstools.f_standardize.base_rule_framework.RuleGroup" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.RuleGroup">RuleGroup</a>] = None, main_rule_tree: Optional[<a title="secfsdstools.f_standardize.base_rule_framework.RuleGroup" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.RuleGroup">RuleGroup</a>] = None, post_rule_tree: Optional[<a title="secfsdstools.f_standardize.base_rule_framework.RuleGroup" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.RuleGroup">RuleGroup</a>] = None, validation_rules: Optional[List[<a title="secfsdstools.f_standardize.base_validation_rules.ValidationRule" href="base_validation_rules.html#secfsdstools.f_standardize.base_validation_rules.ValidationRule">ValidationRule</a>]] = None, final_tags: Optional[List[str]] = None, main_statement_tags: Optional[List[str]] = None, filter_for_main_statement: bool = True, main_iterations: int = 1, invert_negated: bool = True, additional_final_sub_fields: Optional[List[str]] = None, additional_final_tags: Optional[List[str]] = None)</span>
+<span>(</span><span>prepivot_rule_tree: Optional[<a title="secfsdstools.f_standardize.base_rule_framework.RuleGroup" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.RuleGroup">RuleGroup</a>] = None, pre_rule_tree: Optional[<a title="secfsdstools.f_standardize.base_rule_framework.RuleGroup" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.RuleGroup">RuleGroup</a>] = None, main_rule_tree: Optional[<a title="secfsdstools.f_standardize.base_rule_framework.RuleGroup" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.RuleGroup">RuleGroup</a>] = None, post_rule_tree: Optional[<a title="secfsdstools.f_standardize.base_rule_framework.RuleGroup" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.RuleGroup">RuleGroup</a>] = None, validation_rules: Optional[List[<a title="secfsdstools.f_standardize.base_validation_rules.ValidationRule" href="base_validation_rules.html#secfsdstools.f_standardize.base_validation_rules.ValidationRule">ValidationRule</a>]] = None, final_tags: Optional[List[str]] = None, main_statement_tags: Optional[List[str]] = None, filter_for_main_statement: bool = True, main_iterations: int = 3, invert_negated: bool = True, additional_final_sub_fields: Optional[List[str]] = None, additional_final_tags: Optional[List[str]] = None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>The goal of this Standardizer is to create IncomeStatements that are comparable,
@@ -2294,7 +2294,7 @@ dataframe. Additional tags can be added via this parameter. Default is None.</p>
                  main_statement_tags: Optional[List[str]] = None,
 
                  filter_for_main_statement: bool = True,
-                 main_iterations: int = 1,
+                 main_iterations: int = 3,
                  invert_negated: bool = True,
                  additional_final_sub_fields: Optional[List[str]] = None,
                  additional_final_tags: Optional[List[str]] = None):

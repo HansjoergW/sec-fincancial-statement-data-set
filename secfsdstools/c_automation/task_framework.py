@@ -1,8 +1,9 @@
 import logging
 from abc import ABC, abstractmethod
+from collections import defaultdict
 from dataclasses import dataclass
 from enum import Enum
-from typing import Protocol, List, Any
+from typing import Protocol, List, Any, Dict
 
 from secfsdstools.a_utils.parallelexecution import ThreadExecutor
 
@@ -38,7 +39,12 @@ class AbstractProcess(ABC):
 
     def __init__(self, execute_serial: bool = False):
         self.execute_serial = execute_serial
-        self.results: List[TaskResult] = []
+
+        # since failed tasks are retried, results[FAILED] can contain multiple entries for
+        # a continuing failing task
+        self.results: Dict[TaskResultState, List[TaskResult]] = defaultdict(list)
+
+        self.failed_tasks: List[Task] = []
 
     @abstractmethod
     def calculate_tasks(self) -> List[Task]:
@@ -65,33 +71,26 @@ class AbstractProcess(ABC):
                               result=task.exception(exception=ex),
                               state=TaskResultState.FAILED)
 
-    def _process_parallel(self):
+    def _process(self):
         executor = ThreadExecutor[Task, TaskResult, TaskResult](
             processes=3,
             max_calls_per_sec=8,
             chunksize=3,
-            execute_serial=False
-            # execute_serial=self.execute_serial
+            execute_serial=self.execute_serial
         )
         executor.set_get_entries_function(self.calculate_tasks)
         executor.set_process_element_function(self._process_task)
-        executor.set_post_process_chunk_function(lambda x: x) # no process_chunk at this place
+        executor.set_post_process_chunk_function(lambda x: x)  # no process_chunk at this place
 
-        problem: results enthalten auch fehlgeschlagene, die retried werden
-        missing ist nur der Task, ohne Fehlermeldung
+        results_all, self.failed_tasks = executor.execute()
+        for entry in results_all:
+            self.results[entry.state].append(entry)
 
-        entweder results liste bereiningen -> nur ein Success oder "Id" in missing
-        results:List[TaskResult], missing: List[Task] = executor.execute()
-        print("trial")
-
-    def _process_serial(self):
-        self.results = [self._process_task(task) for task in self.calculate_tasks()]
-
-    def process(self):
-        sollte serial nicht via ThreadExecutor gehen, damit retry gemanaged ist?
-        if self.execute_serial:
-            self._process_serial()
-        else:
-            self._process_parallel()
+        logger = logging.getLogger()
+        for failed in self.failed_tasks:
+            logger.warning("not able to process %s", failed)
 
         self.post_process()
+
+    def process(self):
+        self._process()

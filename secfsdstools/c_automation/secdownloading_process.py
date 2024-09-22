@@ -50,12 +50,12 @@ class DownloadTask:
         """ """
         pass
 
-    def exception(self, ex) -> str:
+    def exception(self, exception) -> str:
         """ """
-        return f"failed {ex}"
+        return f"failed {exception}"
 
     def __str__(self) -> str:
-        return f"DownloadTask (file_name: {self.file_name})"
+        return f"DownloadTask(file_name: {self.file_name})"
 
 class BaseDownloadingProcess(AbstractProcess):
 
@@ -126,13 +126,13 @@ class SecDownloadingProcess(BaseDownloadingProcess):
     def _calculate_missing_zips(self) -> List[Tuple[str, str]]:
         downloaded_zip_files = self._get_downloaded_zips()
         transformed_parquet = self._get_transformed_parquet()
-        available_zips_to_dld_dict = self._get_available_zips()
+        available_zips_to_dld_dict = self._get_available_zips()[:3]
 
         # define which zip files don't have to be downloaded
         download_or_transformed_zips = set(downloaded_zip_files).union(set(transformed_parquet))
 
         return [(name, href) for name, href in available_zips_to_dld_dict if
-                name not in download_or_transformed_zips][:3]
+                name not in download_or_transformed_zips]
 
     def post_process(self):
         pass

@@ -2,7 +2,8 @@ import logging
 from typing import List
 
 from secfsdstools.a_utils.downloadutils import UrlDownloader
-from secfsdstools.c_automation.secdownloading_process import SecDownloadingProcess, DownloadTask
+from secfsdstools.c_download.basedownloading_process import DownloadTask
+from secfsdstools.c_download.secdownloading_process import SecDownloadingProcess
 from secfsdstools.c_automation.task_framework import Task
 
 

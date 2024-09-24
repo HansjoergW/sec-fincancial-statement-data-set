@@ -1,12 +1,11 @@
 """
-Downloading zip files of the financial statement data sets from the sec.
+Base classes for Downloading zip files of the financial statement data sets.
 """
 import logging
 import os
-import re
 from abc import abstractmethod
 from pathlib import Path
-from typing import List, Tuple
+from typing import List, Tuple, Dict
 
 from secfsdstools.a_utils.downloadutils import UrlDownloader
 from secfsdstools.a_utils.fileutils import get_filenames_in_directory, get_directories_in_directory
@@ -21,12 +20,14 @@ class DownloadTask:
                  zip_dir: str,
                  file_name: str,
                  url: str,
-                 urldownloader: UrlDownloader
+                 urldownloader: UrlDownloader,
+                 headers: Dict[str, str] = {}
                  ):
         self.zip_dir = zip_dir
         self.file_name = file_name
         self.url = url
         self.urldownloader = urldownloader
+        self.headers = headers
 
         self.file_path = Path(self.zip_dir) / self.file_name
 
@@ -40,7 +41,7 @@ class DownloadTask:
         logger.info("download %s", self.url)
         self.urldownloader.binary_download_url_to_file(self.url,
                                                        str(self.file_path),
-                                                       headers={})
+                                                       headers=self.headers)
 
     def commit(self) -> str:
         """ """
@@ -56,6 +57,7 @@ class DownloadTask:
 
     def __str__(self) -> str:
         return f"DownloadTask(file_name: {self.file_name})"
+
 
 class BaseDownloadingProcess(AbstractProcess):
 
@@ -75,6 +77,9 @@ class BaseDownloadingProcess(AbstractProcess):
             LOGGER.info("creating download folder: %s", self.zip_dir)
             os.makedirs(self.zip_dir)
 
+    def get_headers(self) -> Dict[str, str]:
+        return {}
+
     def _get_downloaded_zips(self) -> List[str]:
         return get_filenames_in_directory(os.path.join(self.zip_dir, '*.zip'))
 
@@ -91,48 +96,6 @@ class BaseDownloadingProcess(AbstractProcess):
         return [DownloadTask(zip_dir=self.zip_dir,
                              file_name=name,
                              url=href,
-                             urldownloader=self.urldownloader)
+                             urldownloader=self.urldownloader,
+                             headers=self.get_headers())
                 for name, href in missing_zips]
-
-
-class SecDownloadingProcess(BaseDownloadingProcess):
-    """
-        Downloading the quarterly zip files of the financial statement data sets
-    """
-    FIN_STAT_DATASET_URL = 'https://www.sec.gov/dera/data/financial-statement-data-sets.html'
-
-    table_re = re.compile('<TABLE.*?>.*</TABLE>', re.IGNORECASE + re.MULTILINE + re.DOTALL)
-    href_re = re.compile("href=\".*?\"", re.IGNORECASE + re.MULTILINE + re.DOTALL)
-
-    def __init__(self,
-                 zip_dir: str,
-                 parquet_root_dir: str,
-                 urldownloader: UrlDownloader,
-                 execute_serial: bool = False):
-        super().__init__(zip_dir=zip_dir,
-                         urldownloader=urldownloader,
-                         parquet_dir=os.path.join(parquet_root_dir, 'quarter'),
-                         execute_serial=execute_serial
-                         )
-
-    def _get_available_zips(self) -> List[Tuple[str, str]]:
-        content = self.urldownloader.get_url_content(self.FIN_STAT_DATASET_URL)
-        first_table = self.table_re.findall(content.text)[0]
-        hrefs = self.href_re.findall(first_table)
-
-        hrefs = [f'https://www.sec.gov{href[6:-1]}' for href in hrefs]
-        return [(os.path.basename(href), href) for href in hrefs]
-
-    def _calculate_missing_zips(self) -> List[Tuple[str, str]]:
-        downloaded_zip_files = self._get_downloaded_zips()
-        transformed_parquet = self._get_transformed_parquet()
-        available_zips_to_dld_dict = self._get_available_zips()[:3]
-
-        # define which zip files don't have to be downloaded
-        download_or_transformed_zips = set(downloaded_zip_files).union(set(transformed_parquet))
-
-        return [(name, href) for name, href in available_zips_to_dld_dict if
-                name not in download_or_transformed_zips]
-
-    def post_process(self):
-        pass

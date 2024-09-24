@@ -1,3 +1,6 @@
+"""
+Base classes for the Task and Process Framework.
+"""
 import logging
 from abc import ABC, abstractmethod
 from collections import defaultdict
@@ -9,11 +12,17 @@ from secfsdstools.a_utils.parallelexecution import ThreadExecutor
 
 
 class TaskResultState(Enum):
+    """
+    Enum defining possible ResultStates of one task.
+    """
     SUCCESS = 1
     FAILED = 2
 
 
 class Task(Protocol):
+    """
+    Task interface.
+    """
     def prepare(self):
         """ Prepare everything to execute the task.
             E.g., creation or clearing a directory. """
@@ -21,22 +30,29 @@ class Task(Protocol):
     def execute(self):
         """ Execution the task. """
 
-    def commit(self) -> str:
+    def commit(self) -> Any:
         """ Commit the task. """
 
-    def exception(self, exception) -> str:
-        """ Report the exception. """
+    def exception(self, exception) -> Any:
+        """ Handle the exception. """
 
 
 @dataclass
 class TaskResult:
+    """
+    Dataclass containing the result of a task.
+    Contains the task, the TaskResultState and the result (either the return value form the commit()
+    or exception() method.
+    """
     task: Task
     result: Any
     state: TaskResultState
 
 
 class AbstractProcess(ABC):
-
+    """
+    Defines the Abstract process of processing tasks for a certain process.
+    """
     def __init__(self, execute_serial: bool = False):
         self.execute_serial = execute_serial
 
@@ -48,13 +64,21 @@ class AbstractProcess(ABC):
 
     @abstractmethod
     def calculate_tasks(self) -> List[Task]:
-        """ """
+        """
+        Calculate the tasks that have to be executed for the implemented process
 
-    @abstractmethod
+        Returns:
+            List[Tasks] : List of the tasks to be processed.
+        """
+
     def post_process(self):
-        """ If something has to be done after the process is finished """
+        """ Hook method to implement logic that is executed after the whole process is finished. """
+        pass
 
     def _process_task(self, task: Task) -> TaskResult:
+        """
+        execute a single task.
+        """
         logger = logging.getLogger()
         try:
             task.prepare()
@@ -71,7 +95,14 @@ class AbstractProcess(ABC):
                               result=task.exception(exception=ex),
                               state=TaskResultState.FAILED)
 
-    def _process(self):
+    def process(self):
+        """
+        execute the process by executing all the tasks that need to be executed.
+        The execution can happen in parallel or serial.
+
+        There is a retry mechanism for failing tasks.
+
+        """
         executor = ThreadExecutor[Task, TaskResult, TaskResult](
             processes=3,
             max_calls_per_sec=8,
@@ -83,6 +114,7 @@ class AbstractProcess(ABC):
         executor.set_post_process_chunk_function(lambda x: x)  # no process_chunk at this place
 
         results_all, self.failed_tasks = executor.execute()
+
         for entry in results_all:
             self.results[entry.state].append(entry)
 
@@ -91,6 +123,3 @@ class AbstractProcess(ABC):
             logger.warning("not able to process %s", failed)
 
         self.post_process()
-
-    def process(self):
-        self._process()

@@ -1,7 +1,6 @@
 """
-Logic to download the zipfiles from the rapid api.
+Downloading zip files of the financial statement data sets from the sec.
 """
-
 import json
 import logging
 import os
@@ -10,12 +9,12 @@ from typing import List, Tuple, Dict
 from secfsdstools.a_utils.downloadutils import UrlDownloader
 from secfsdstools.a_utils.fileutils import get_filenames_in_directory
 from secfsdstools.a_utils.rapiddownloadutils import RapidUrlBuilder
-from secfsdstools.c_download.basedownloading import BaseDownloader
+from secfsdstools.c_download.basedownloading_process import BaseDownloadingProcess
 
 LOGGER = logging.getLogger(__name__)
 
 
-class RapidZipDownloader(BaseDownloader):
+class RapidDownloadingProcess(BaseDownloadingProcess):
     """
     Class which coordinates downloading form the rapidapi api
     https://rapidapi.com/hansjoerg.wingeier/api/daily-sec-financial-statement-dataset
@@ -30,22 +29,22 @@ class RapidZipDownloader(BaseDownloader):
                  execute_serial: bool = False):
         super().__init__(zip_dir=daily_zip_dir,
                          urldownloader=urldownloader,
-                         execute_serial=execute_serial,
-                         parquet_dir_typed=os.path.join(parquet_root_dir, 'quarter'))
+                         parquet_dir=os.path.join(parquet_root_dir, 'quarter'),
+                         execute_serial=execute_serial
+                         )
         self.rapidurlbuilder = rapidurlbuilder
-
         self.qrtr_zip_dir = qrtr_zip_dir
 
         if not os.path.isdir(self.zip_dir):
             LOGGER.info("creating download folder: %s", self.zip_dir)
             os.makedirs(self.zip_dir)
 
-    def _get_headers(self) -> Dict[str, str]:
+    def get_headers(self) -> Dict[str, str]:
         return self.rapidurlbuilder.get_headers()
 
     def _get_content(self) -> str:
         response = self.urldownloader.get_url_content(self.rapidurlbuilder.get_content_url(),
-                                                      headers=self._get_headers())
+                                                      headers=self.get_headers())
         return response.text
 
     def _get_latest_quarter_file_name(self):
@@ -117,3 +116,4 @@ class RapidZipDownloader(BaseDownloader):
         return [entry['file'] for entry in daily_entries if
                 ((entry['subscription'] == 'basic') | (
                         entry['subscription'] == self.rapidurlbuilder.rapid_plan))]
+

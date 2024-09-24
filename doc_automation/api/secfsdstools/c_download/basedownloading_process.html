@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.10.0" />
-<title>secfsdstools.c_automation.secdownloading_process API documentation</title>
-<meta name="description" content="Downloading zip files of the financial statement data sets from the sec." />
+<title>secfsdstools.c_download.basedownloading_process API documentation</title>
+<meta name="description" content="Base classes for Downloading zip files of the financial statement data sets." />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
 <link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
@@ -19,23 +19,22 @@
 <main>
 <article id="content">
 <header>
-<h1 class="title">Module <code>secfsdstools.c_automation.secdownloading_process</code></h1>
+<h1 class="title">Module <code>secfsdstools.c_download.basedownloading_process</code></h1>
 </header>
 <section id="section-intro">
-<p>Downloading zip files of the financial statement data sets from the sec.</p>
+<p>Base classes for Downloading zip files of the financial statement data sets.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">&#34;&#34;&#34;
-Downloading zip files of the financial statement data sets from the sec.
+Base classes for Downloading zip files of the financial statement data sets.
 &#34;&#34;&#34;
 import logging
 import os
-import re
 from abc import abstractmethod
 from pathlib import Path
-from typing import List, Tuple
+from typing import List, Tuple, Dict
 
 from secfsdstools.a_utils.downloadutils import UrlDownloader
 from secfsdstools.a_utils.fileutils import get_filenames_in_directory, get_directories_in_directory
@@ -50,12 +49,14 @@ class DownloadTask:
                  zip_dir: str,
                  file_name: str,
                  url: str,
-                 urldownloader: UrlDownloader
+                 urldownloader: UrlDownloader,
+                 headers: Dict[str, str] = {}
                  ):
         self.zip_dir = zip_dir
         self.file_name = file_name
         self.url = url
         self.urldownloader = urldownloader
+        self.headers = headers
 
         self.file_path = Path(self.zip_dir) / self.file_name
 
@@ -69,7 +70,7 @@ class DownloadTask:
         logger.info(&#34;download %s&#34;, self.url)
         self.urldownloader.binary_download_url_to_file(self.url,
                                                        str(self.file_path),
-                                                       headers={})
+                                                       headers=self.headers)
 
     def commit(self) -&gt; str:
         &#34;&#34;&#34; &#34;&#34;&#34;
@@ -85,6 +86,7 @@ class DownloadTask:
 
     def __str__(self) -&gt; str:
         return f&#34;DownloadTask(file_name: {self.file_name})&#34;
+
 
 class BaseDownloadingProcess(AbstractProcess):
 
@@ -104,6 +106,9 @@ class BaseDownloadingProcess(AbstractProcess):
             LOGGER.info(&#34;creating download folder: %s&#34;, self.zip_dir)
             os.makedirs(self.zip_dir)
 
+    def get_headers(self) -&gt; Dict[str, str]:
+        return {}
+
     def _get_downloaded_zips(self) -&gt; List[str]:
         return get_filenames_in_directory(os.path.join(self.zip_dir, &#39;*.zip&#39;))
 
@@ -120,51 +125,9 @@ class BaseDownloadingProcess(AbstractProcess):
         return [DownloadTask(zip_dir=self.zip_dir,
                              file_name=name,
                              url=href,
-                             urldownloader=self.urldownloader)
-                for name, href in missing_zips]
-
-
-class SecDownloadingProcess(BaseDownloadingProcess):
-    &#34;&#34;&#34;
-        Downloading the quarterly zip files of the financial statement data sets
-    &#34;&#34;&#34;
-    FIN_STAT_DATASET_URL = &#39;https://www.sec.gov/dera/data/financial-statement-data-sets.html&#39;
-
-    table_re = re.compile(&#39;&lt;TABLE.*?&gt;.*&lt;/TABLE&gt;&#39;, re.IGNORECASE + re.MULTILINE + re.DOTALL)
-    href_re = re.compile(&#34;href=\&#34;.*?\&#34;&#34;, re.IGNORECASE + re.MULTILINE + re.DOTALL)
-
-    def __init__(self,
-                 zip_dir: str,
-                 parquet_root_dir: str,
-                 urldownloader: UrlDownloader,
-                 execute_serial: bool = False):
-        super().__init__(zip_dir=zip_dir,
-                         urldownloader=urldownloader,
-                         parquet_dir=os.path.join(parquet_root_dir, &#39;quarter&#39;),
-                         execute_serial=execute_serial
-                         )
-
-    def _get_available_zips(self) -&gt; List[Tuple[str, str]]:
-        content = self.urldownloader.get_url_content(self.FIN_STAT_DATASET_URL)
-        first_table = self.table_re.findall(content.text)[0]
-        hrefs = self.href_re.findall(first_table)
-
-        hrefs = [f&#39;https://www.sec.gov{href[6:-1]}&#39; for href in hrefs]
-        return [(os.path.basename(href), href) for href in hrefs]
-
-    def _calculate_missing_zips(self) -&gt; List[Tuple[str, str]]:
-        downloaded_zip_files = self._get_downloaded_zips()
-        transformed_parquet = self._get_transformed_parquet()
-        available_zips_to_dld_dict = self._get_available_zips()[:3]
-
-        # define which zip files don&#39;t have to be downloaded
-        download_or_transformed_zips = set(downloaded_zip_files).union(set(transformed_parquet))
-
-        return [(name, href) for name, href in available_zips_to_dld_dict if
-                name not in download_or_transformed_zips]
-
-    def post_process(self):
-        pass</code></pre>
+                             urldownloader=self.urldownloader,
+                             headers=self.get_headers())
+                for name, href in missing_zips]</code></pre>
 </details>
 </section>
 <section>
@@ -176,13 +139,12 @@ class SecDownloadingProcess(BaseDownloadingProcess):
 <section>
 <h2 class="section-title" id="header-classes">Classes</h2>
 <dl>
-<dt id="secfsdstools.c_automation.secdownloading_process.BaseDownloadingProcess"><code class="flex name class">
+<dt id="secfsdstools.c_download.basedownloading_process.BaseDownloadingProcess"><code class="flex name class">
 <span>class <span class="ident">BaseDownloadingProcess</span></span>
 <span>(</span><span>zip_dir: str, parquet_dir: str, urldownloader: <a title="secfsdstools.a_utils.downloadutils.UrlDownloader" href="../a_utils/downloadutils.html#secfsdstools.a_utils.downloadutils.UrlDownloader">UrlDownloader</a>, execute_serial: bool = False)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Helper class that provides a standard way to create an ABC using
-inheritance.</p></div>
+<div class="desc"><p>Defines the Abstract process of processing tasks for a certain process.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -205,6 +167,9 @@ inheritance.</p></div>
             LOGGER.info(&#34;creating download folder: %s&#34;, self.zip_dir)
             os.makedirs(self.zip_dir)
 
+    def get_headers(self) -&gt; Dict[str, str]:
+        return {}
+
     def _get_downloaded_zips(self) -&gt; List[str]:
         return get_filenames_in_directory(os.path.join(self.zip_dir, &#39;*.zip&#39;))
 
@@ -221,22 +186,24 @@ inheritance.</p></div>
         return [DownloadTask(zip_dir=self.zip_dir,
                              file_name=name,
                              url=href,
-                             urldownloader=self.urldownloader)
+                             urldownloader=self.urldownloader,
+                             headers=self.get_headers())
                 for name, href in missing_zips]</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li><a title="secfsdstools.c_automation.task_framework.AbstractProcess" href="task_framework.html#secfsdstools.c_automation.task_framework.AbstractProcess">AbstractProcess</a></li>
+<li><a title="secfsdstools.c_automation.task_framework.AbstractProcess" href="../c_automation/task_framework.html#secfsdstools.c_automation.task_framework.AbstractProcess">AbstractProcess</a></li>
 <li>abc.ABC</li>
 </ul>
 <h3>Subclasses</h3>
 <ul class="hlist">
-<li><a title="secfsdstools.c_automation.secdownloading_process.SecDownloadingProcess" href="#secfsdstools.c_automation.secdownloading_process.SecDownloadingProcess">SecDownloadingProcess</a></li>
+<li><a title="secfsdstools.c_download.rapiddownloading_process.RapidDownloadingProcess" href="rapiddownloading_process.html#secfsdstools.c_download.rapiddownloading_process.RapidDownloadingProcess">RapidDownloadingProcess</a></li>
+<li><a title="secfsdstools.c_download.secdownloading_process.SecDownloadingProcess" href="secdownloading_process.html#secfsdstools.c_download.secdownloading_process.SecDownloadingProcess">SecDownloadingProcess</a></li>
 </ul>
 <h3>Methods</h3>
 <dl>
-<dt id="secfsdstools.c_automation.secdownloading_process.BaseDownloadingProcess.calculate_tasks"><code class="name flex">
-<span>def <span class="ident">calculate_tasks</span></span>(<span>self) ‑> List[<a title="secfsdstools.c_automation.task_framework.Task" href="task_framework.html#secfsdstools.c_automation.task_framework.Task">Task</a>]</span>
+<dt id="secfsdstools.c_download.basedownloading_process.BaseDownloadingProcess.get_headers"><code class="name flex">
+<span>def <span class="ident">get_headers</span></span>(<span>self) ‑> Dict[str, str]</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -244,29 +211,25 @@ inheritance.</p></div>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def calculate_tasks(self) -&gt; List[Task]:
-    missing_zips: List[Tuple[str, str]] = self._calculate_missing_zips()
-
-    return [DownloadTask(zip_dir=self.zip_dir,
-                         file_name=name,
-                         url=href,
-                         urldownloader=self.urldownloader)
-            for name, href in missing_zips]</code></pre>
+<pre><code class="python">def get_headers(self) -&gt; Dict[str, str]:
+    return {}</code></pre>
 </details>
 </dd>
 </dl>
 <h3>Inherited members</h3>
 <ul class="hlist">
-<li><code><b><a title="secfsdstools.c_automation.task_framework.AbstractProcess" href="task_framework.html#secfsdstools.c_automation.task_framework.AbstractProcess">AbstractProcess</a></b></code>:
+<li><code><b><a title="secfsdstools.c_automation.task_framework.AbstractProcess" href="../c_automation/task_framework.html#secfsdstools.c_automation.task_framework.AbstractProcess">AbstractProcess</a></b></code>:
 <ul class="hlist">
-<li><code><a title="secfsdstools.c_automation.task_framework.AbstractProcess.post_process" href="task_framework.html#secfsdstools.c_automation.task_framework.AbstractProcess.post_process">post_process</a></code></li>
+<li><code><a title="secfsdstools.c_automation.task_framework.AbstractProcess.calculate_tasks" href="../c_automation/task_framework.html#secfsdstools.c_automation.task_framework.AbstractProcess.calculate_tasks">calculate_tasks</a></code></li>
+<li><code><a title="secfsdstools.c_automation.task_framework.AbstractProcess.post_process" href="../c_automation/task_framework.html#secfsdstools.c_automation.task_framework.AbstractProcess.post_process">post_process</a></code></li>
+<li><code><a title="secfsdstools.c_automation.task_framework.AbstractProcess.process" href="../c_automation/task_framework.html#secfsdstools.c_automation.task_framework.AbstractProcess.process">process</a></code></li>
 </ul>
 </li>
 </ul>
 </dd>
-<dt id="secfsdstools.c_automation.secdownloading_process.DownloadTask"><code class="flex name class">
+<dt id="secfsdstools.c_download.basedownloading_process.DownloadTask"><code class="flex name class">
 <span>class <span class="ident">DownloadTask</span></span>
-<span>(</span><span>zip_dir: str, file_name: str, url: str, urldownloader: <a title="secfsdstools.a_utils.downloadutils.UrlDownloader" href="../a_utils/downloadutils.html#secfsdstools.a_utils.downloadutils.UrlDownloader">UrlDownloader</a>)</span>
+<span>(</span><span>zip_dir: str, file_name: str, url: str, urldownloader: <a title="secfsdstools.a_utils.downloadutils.UrlDownloader" href="../a_utils/downloadutils.html#secfsdstools.a_utils.downloadutils.UrlDownloader">UrlDownloader</a>, headers: Dict[str, str] = {})</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -280,12 +243,14 @@ inheritance.</p></div>
                  zip_dir: str,
                  file_name: str,
                  url: str,
-                 urldownloader: UrlDownloader
+                 urldownloader: UrlDownloader,
+                 headers: Dict[str, str] = {}
                  ):
         self.zip_dir = zip_dir
         self.file_name = file_name
         self.url = url
         self.urldownloader = urldownloader
+        self.headers = headers
 
         self.file_path = Path(self.zip_dir) / self.file_name
 
@@ -299,7 +264,7 @@ inheritance.</p></div>
         logger.info(&#34;download %s&#34;, self.url)
         self.urldownloader.binary_download_url_to_file(self.url,
                                                        str(self.file_path),
-                                                       headers={})
+                                                       headers=self.headers)
 
     def commit(self) -&gt; str:
         &#34;&#34;&#34; &#34;&#34;&#34;
@@ -318,7 +283,7 @@ inheritance.</p></div>
 </details>
 <h3>Methods</h3>
 <dl>
-<dt id="secfsdstools.c_automation.secdownloading_process.DownloadTask.commit"><code class="name flex">
+<dt id="secfsdstools.c_download.basedownloading_process.DownloadTask.commit"><code class="name flex">
 <span>def <span class="ident">commit</span></span>(<span>self) ‑> str</span>
 </code></dt>
 <dd>
@@ -332,7 +297,7 @@ inheritance.</p></div>
     return &#34;success&#34;</code></pre>
 </details>
 </dd>
-<dt id="secfsdstools.c_automation.secdownloading_process.DownloadTask.exception"><code class="name flex">
+<dt id="secfsdstools.c_download.basedownloading_process.DownloadTask.exception"><code class="name flex">
 <span>def <span class="ident">exception</span></span>(<span>self, exception) ‑> str</span>
 </code></dt>
 <dd>
@@ -346,7 +311,7 @@ inheritance.</p></div>
     return f&#34;failed {exception}&#34;</code></pre>
 </details>
 </dd>
-<dt id="secfsdstools.c_automation.secdownloading_process.DownloadTask.execute"><code class="name flex">
+<dt id="secfsdstools.c_download.basedownloading_process.DownloadTask.execute"><code class="name flex">
 <span>def <span class="ident">execute</span></span>(<span>self)</span>
 </code></dt>
 <dd>
@@ -361,10 +326,10 @@ inheritance.</p></div>
     logger.info(&#34;download %s&#34;, self.url)
     self.urldownloader.binary_download_url_to_file(self.url,
                                                    str(self.file_path),
-                                                   headers={})</code></pre>
+                                                   headers=self.headers)</code></pre>
 </details>
 </dd>
-<dt id="secfsdstools.c_automation.secdownloading_process.DownloadTask.post_commit"><code class="name flex">
+<dt id="secfsdstools.c_download.basedownloading_process.DownloadTask.post_commit"><code class="name flex">
 <span>def <span class="ident">post_commit</span></span>(<span>self)</span>
 </code></dt>
 <dd>
@@ -378,7 +343,7 @@ inheritance.</p></div>
     pass</code></pre>
 </details>
 </dd>
-<dt id="secfsdstools.c_automation.secdownloading_process.DownloadTask.prepare"><code class="name flex">
+<dt id="secfsdstools.c_download.basedownloading_process.DownloadTask.prepare"><code class="name flex">
 <span>def <span class="ident">prepare</span></span>(<span>self)</span>
 </code></dt>
 <dd>
@@ -394,88 +359,6 @@ inheritance.</p></div>
 </dd>
 </dl>
 </dd>
-<dt id="secfsdstools.c_automation.secdownloading_process.SecDownloadingProcess"><code class="flex name class">
-<span>class <span class="ident">SecDownloadingProcess</span></span>
-<span>(</span><span>zip_dir: str, parquet_root_dir: str, urldownloader: <a title="secfsdstools.a_utils.downloadutils.UrlDownloader" href="../a_utils/downloadutils.html#secfsdstools.a_utils.downloadutils.UrlDownloader">UrlDownloader</a>, execute_serial: bool = False)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Downloading the quarterly zip files of the financial statement data sets</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">class SecDownloadingProcess(BaseDownloadingProcess):
-    &#34;&#34;&#34;
-        Downloading the quarterly zip files of the financial statement data sets
-    &#34;&#34;&#34;
-    FIN_STAT_DATASET_URL = &#39;https://www.sec.gov/dera/data/financial-statement-data-sets.html&#39;
-
-    table_re = re.compile(&#39;&lt;TABLE.*?&gt;.*&lt;/TABLE&gt;&#39;, re.IGNORECASE + re.MULTILINE + re.DOTALL)
-    href_re = re.compile(&#34;href=\&#34;.*?\&#34;&#34;, re.IGNORECASE + re.MULTILINE + re.DOTALL)
-
-    def __init__(self,
-                 zip_dir: str,
-                 parquet_root_dir: str,
-                 urldownloader: UrlDownloader,
-                 execute_serial: bool = False):
-        super().__init__(zip_dir=zip_dir,
-                         urldownloader=urldownloader,
-                         parquet_dir=os.path.join(parquet_root_dir, &#39;quarter&#39;),
-                         execute_serial=execute_serial
-                         )
-
-    def _get_available_zips(self) -&gt; List[Tuple[str, str]]:
-        content = self.urldownloader.get_url_content(self.FIN_STAT_DATASET_URL)
-        first_table = self.table_re.findall(content.text)[0]
-        hrefs = self.href_re.findall(first_table)
-
-        hrefs = [f&#39;https://www.sec.gov{href[6:-1]}&#39; for href in hrefs]
-        return [(os.path.basename(href), href) for href in hrefs]
-
-    def _calculate_missing_zips(self) -&gt; List[Tuple[str, str]]:
-        downloaded_zip_files = self._get_downloaded_zips()
-        transformed_parquet = self._get_transformed_parquet()
-        available_zips_to_dld_dict = self._get_available_zips()[:3]
-
-        # define which zip files don&#39;t have to be downloaded
-        download_or_transformed_zips = set(downloaded_zip_files).union(set(transformed_parquet))
-
-        return [(name, href) for name, href in available_zips_to_dld_dict if
-                name not in download_or_transformed_zips]
-
-    def post_process(self):
-        pass</code></pre>
-</details>
-<h3>Ancestors</h3>
-<ul class="hlist">
-<li><a title="secfsdstools.c_automation.secdownloading_process.BaseDownloadingProcess" href="#secfsdstools.c_automation.secdownloading_process.BaseDownloadingProcess">BaseDownloadingProcess</a></li>
-<li><a title="secfsdstools.c_automation.task_framework.AbstractProcess" href="task_framework.html#secfsdstools.c_automation.task_framework.AbstractProcess">AbstractProcess</a></li>
-<li>abc.ABC</li>
-</ul>
-<h3>Class variables</h3>
-<dl>
-<dt id="secfsdstools.c_automation.secdownloading_process.SecDownloadingProcess.FIN_STAT_DATASET_URL"><code class="name">var <span class="ident">FIN_STAT_DATASET_URL</span></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt id="secfsdstools.c_automation.secdownloading_process.SecDownloadingProcess.href_re"><code class="name">var <span class="ident">href_re</span></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt id="secfsdstools.c_automation.secdownloading_process.SecDownloadingProcess.table_re"><code class="name">var <span class="ident">table_re</span></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-</dl>
-<h3>Inherited members</h3>
-<ul class="hlist">
-<li><code><b><a title="secfsdstools.c_automation.secdownloading_process.BaseDownloadingProcess" href="#secfsdstools.c_automation.secdownloading_process.BaseDownloadingProcess">BaseDownloadingProcess</a></b></code>:
-<ul class="hlist">
-<li><code><a title="secfsdstools.c_automation.secdownloading_process.BaseDownloadingProcess.post_process" href="task_framework.html#secfsdstools.c_automation.task_framework.AbstractProcess.post_process">post_process</a></code></li>
-</ul>
-</li>
-</ul>
-</dd>
 </dl>
 </section>
 </article>
@@ -487,33 +370,25 @@ inheritance.</p></div>
 <ul id="index">
 <li><h3>Super-module</h3>
 <ul>
-<li><code><a title="secfsdstools.c_automation" href="index.html">secfsdstools.c_automation</a></code></li>
+<li><code><a title="secfsdstools.c_download" href="index.html">secfsdstools.c_download</a></code></li>
 </ul>
 </li>
 <li><h3><a href="#header-classes">Classes</a></h3>
 <ul>
 <li>
-<h4><code><a title="secfsdstools.c_automation.secdownloading_process.BaseDownloadingProcess" href="#secfsdstools.c_automation.secdownloading_process.BaseDownloadingProcess">BaseDownloadingProcess</a></code></h4>
+<h4><code><a title="secfsdstools.c_download.basedownloading_process.BaseDownloadingProcess" href="#secfsdstools.c_download.basedownloading_process.BaseDownloadingProcess">BaseDownloadingProcess</a></code></h4>
 <ul class="">
-<li><code><a title="secfsdstools.c_automation.secdownloading_process.BaseDownloadingProcess.calculate_tasks" href="#secfsdstools.c_automation.secdownloading_process.BaseDownloadingProcess.calculate_tasks">calculate_tasks</a></code></li>
+<li><code><a title="secfsdstools.c_download.basedownloading_process.BaseDownloadingProcess.get_headers" href="#secfsdstools.c_download.basedownloading_process.BaseDownloadingProcess.get_headers">get_headers</a></code></li>
 </ul>
 </li>
 <li>
-<h4><code><a title="secfsdstools.c_automation.secdownloading_process.DownloadTask" href="#secfsdstools.c_automation.secdownloading_process.DownloadTask">DownloadTask</a></code></h4>
+<h4><code><a title="secfsdstools.c_download.basedownloading_process.DownloadTask" href="#secfsdstools.c_download.basedownloading_process.DownloadTask">DownloadTask</a></code></h4>
 <ul class="">
-<li><code><a title="secfsdstools.c_automation.secdownloading_process.DownloadTask.commit" href="#secfsdstools.c_automation.secdownloading_process.DownloadTask.commit">commit</a></code></li>
-<li><code><a title="secfsdstools.c_automation.secdownloading_process.DownloadTask.exception" href="#secfsdstools.c_automation.secdownloading_process.DownloadTask.exception">exception</a></code></li>
-<li><code><a title="secfsdstools.c_automation.secdownloading_process.DownloadTask.execute" href="#secfsdstools.c_automation.secdownloading_process.DownloadTask.execute">execute</a></code></li>
-<li><code><a title="secfsdstools.c_automation.secdownloading_process.DownloadTask.post_commit" href="#secfsdstools.c_automation.secdownloading_process.DownloadTask.post_commit">post_commit</a></code></li>
-<li><code><a title="secfsdstools.c_automation.secdownloading_process.DownloadTask.prepare" href="#secfsdstools.c_automation.secdownloading_process.DownloadTask.prepare">prepare</a></code></li>
-</ul>
-</li>
-<li>
-<h4><code><a title="secfsdstools.c_automation.secdownloading_process.SecDownloadingProcess" href="#secfsdstools.c_automation.secdownloading_process.SecDownloadingProcess">SecDownloadingProcess</a></code></h4>
-<ul class="">
-<li><code><a title="secfsdstools.c_automation.secdownloading_process.SecDownloadingProcess.FIN_STAT_DATASET_URL" href="#secfsdstools.c_automation.secdownloading_process.SecDownloadingProcess.FIN_STAT_DATASET_URL">FIN_STAT_DATASET_URL</a></code></li>
-<li><code><a title="secfsdstools.c_automation.secdownloading_process.SecDownloadingProcess.href_re" href="#secfsdstools.c_automation.secdownloading_process.SecDownloadingProcess.href_re">href_re</a></code></li>
-<li><code><a title="secfsdstools.c_automation.secdownloading_process.SecDownloadingProcess.table_re" href="#secfsdstools.c_automation.secdownloading_process.SecDownloadingProcess.table_re">table_re</a></code></li>
+<li><code><a title="secfsdstools.c_download.basedownloading_process.DownloadTask.commit" href="#secfsdstools.c_download.basedownloading_process.DownloadTask.commit">commit</a></code></li>
+<li><code><a title="secfsdstools.c_download.basedownloading_process.DownloadTask.exception" href="#secfsdstools.c_download.basedownloading_process.DownloadTask.exception">exception</a></code></li>
+<li><code><a title="secfsdstools.c_download.basedownloading_process.DownloadTask.execute" href="#secfsdstools.c_download.basedownloading_process.DownloadTask.execute">execute</a></code></li>
+<li><code><a title="secfsdstools.c_download.basedownloading_process.DownloadTask.post_commit" href="#secfsdstools.c_download.basedownloading_process.DownloadTask.post_commit">post_commit</a></code></li>
+<li><code><a title="secfsdstools.c_download.basedownloading_process.DownloadTask.prepare" href="#secfsdstools.c_download.basedownloading_process.DownloadTask.prepare">prepare</a></code></li>
 </ul>
 </li>
 </ul>

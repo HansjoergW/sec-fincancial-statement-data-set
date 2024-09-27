@@ -53,8 +53,11 @@ class AbstractProcess(ABC):
     """
     Defines the Abstract process of processing tasks for a certain process.
     """
-    def __init__(self, execute_serial: bool = False):
+    def __init__(self,
+                 execute_serial: bool = False,
+                 chunksize: int = 3):
         self.execute_serial = execute_serial
+        self.chunksize = chunksize
 
         # since failed tasks are retried, results[FAILED] can contain multiple entries for
         # a continuing failing task
@@ -106,7 +109,7 @@ class AbstractProcess(ABC):
         executor = ThreadExecutor[Task, TaskResult, TaskResult](
             processes=3,
             max_calls_per_sec=8,
-            chunksize=3,
+            chunksize=self.chunksize,
             execute_serial=self.execute_serial
         )
         executor.set_get_entries_function(self.calculate_tasks)

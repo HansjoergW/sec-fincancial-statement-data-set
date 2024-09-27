@@ -21,8 +21,10 @@ class DownloadTask:
                  file_name: str,
                  url: str,
                  urldownloader: UrlDownloader,
-                 headers: Dict[str, str] = {}
+                 headers=None
                  ):
+        if headers is None:
+            headers = {}
         self.zip_dir = zip_dir
         self.file_name = file_name
         self.url = url
@@ -66,7 +68,8 @@ class BaseDownloadingProcess(AbstractProcess):
                  parquet_dir: str,
                  urldownloader: UrlDownloader,
                  execute_serial: bool = False):
-        super().__init__(execute_serial=execute_serial)
+        super().__init__(execute_serial=execute_serial,
+                         chunksize=3)
 
         self.zip_dir = zip_dir
         self.parquet_dir = parquet_dir

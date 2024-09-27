@@ -34,6 +34,11 @@ Todos:
 
 - usecase/analyzes ausarbeiten und eigenes Notebook mit Beispielen
 
+- idea: using configuration file as parameter or as option instead of only class:
+  Input Medium Feedback:
+  "What do you think about letting update() and ConfigurationManager take config_file_name with default value ''?
+  This seems to provide more explicit control. I know this would affect many functions which take config.
+  How about replacing it by config_file_name?"
 
 
 Next:

@@ -43,7 +43,7 @@ class ToParquetTransformTask:
 
     def prepare(self):
         """ """
-        self.file_path.parent.mkdir(parents=True, exist_ok=True)
+        self.file_path.mkdir(parents=True, exist_ok=True)
 
     def execute(self):
         self._inner_transform_zip_file(self.file_path, self.zip_file_path)

@@ -50,8 +50,10 @@ class DownloadTask:
                  file_name: str,
                  url: str,
                  urldownloader: UrlDownloader,
-                 headers: Dict[str, str] = {}
+                 headers=None
                  ):
+        if headers is None:
+            headers = {}
         self.zip_dir = zip_dir
         self.file_name = file_name
         self.url = url
@@ -95,7 +97,8 @@ class BaseDownloadingProcess(AbstractProcess):
                  parquet_dir: str,
                  urldownloader: UrlDownloader,
                  execute_serial: bool = False):
-        super().__init__(execute_serial=execute_serial)
+        super().__init__(execute_serial=execute_serial,
+                         chunksize=3)
 
         self.zip_dir = zip_dir
         self.parquet_dir = parquet_dir
@@ -156,7 +159,8 @@ class BaseDownloadingProcess(AbstractProcess):
                  parquet_dir: str,
                  urldownloader: UrlDownloader,
                  execute_serial: bool = False):
-        super().__init__(execute_serial=execute_serial)
+        super().__init__(execute_serial=execute_serial,
+                         chunksize=3)
 
         self.zip_dir = zip_dir
         self.parquet_dir = parquet_dir
@@ -229,7 +233,7 @@ class BaseDownloadingProcess(AbstractProcess):
 </dd>
 <dt id="secfsdstools.c_download.basedownloading_process.DownloadTask"><code class="flex name class">
 <span>class <span class="ident">DownloadTask</span></span>
-<span>(</span><span>zip_dir: str, file_name: str, url: str, urldownloader: <a title="secfsdstools.a_utils.downloadutils.UrlDownloader" href="../a_utils/downloadutils.html#secfsdstools.a_utils.downloadutils.UrlDownloader">UrlDownloader</a>, headers: Dict[str, str] = {})</span>
+<span>(</span><span>zip_dir: str, file_name: str, url: str, urldownloader: <a title="secfsdstools.a_utils.downloadutils.UrlDownloader" href="../a_utils/downloadutils.html#secfsdstools.a_utils.downloadutils.UrlDownloader">UrlDownloader</a>, headers=None)</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -244,8 +248,10 @@ class BaseDownloadingProcess(AbstractProcess):
                  file_name: str,
                  url: str,
                  urldownloader: UrlDownloader,
-                 headers: Dict[str, str] = {}
+                 headers=None
                  ):
+        if headers is None:
+            headers = {}
         self.zip_dir = zip_dir
         self.file_name = file_name
         self.url = url

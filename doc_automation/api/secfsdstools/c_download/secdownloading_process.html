@@ -92,7 +92,19 @@ class SecDownloadingProcess(BaseDownloadingProcess):
 <span>(</span><span>zip_dir: str, parquet_root_dir: str, urldownloader: <a title="secfsdstools.a_utils.downloadutils.UrlDownloader" href="../a_utils/downloadutils.html#secfsdstools.a_utils.downloadutils.UrlDownloader">UrlDownloader</a>, execute_serial: bool = False)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Downloading the quarterly zip files of the financial statement data sets</p></div>
+<div class="desc"><p>Downloading the quarterly zip files of the financial statement data sets</p>
+<p>Constructor.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>zip_dir</code></strong></dt>
+<dd>target folder to store downloaded files to.</dd>
+<dt><strong><code>parquet_dir</code></strong></dt>
+<dd>directory where the transformed content of zip files are</dd>
+<dt><strong><code>urldownloader</code></strong></dt>
+<dd>UrlDownloader instance</dd>
+<dt><strong><code>execute_serial</code></strong></dt>
+<dd>whether to execute it in parallel or serial</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -161,7 +173,8 @@ class SecDownloadingProcess(BaseDownloadingProcess):
 <ul class="hlist">
 <li><code><b><a title="secfsdstools.c_download.basedownloading_process.BaseDownloadingProcess" href="basedownloading_process.html#secfsdstools.c_download.basedownloading_process.BaseDownloadingProcess">BaseDownloadingProcess</a></b></code>:
 <ul class="hlist">
-<li><code><a title="secfsdstools.c_download.basedownloading_process.BaseDownloadingProcess.calculate_tasks" href="../c_automation/task_framework.html#secfsdstools.c_automation.task_framework.AbstractProcess.calculate_tasks">calculate_tasks</a></code></li>
+<li><code><a title="secfsdstools.c_download.basedownloading_process.BaseDownloadingProcess.calculate_tasks" href="basedownloading_process.html#secfsdstools.c_download.basedownloading_process.BaseDownloadingProcess.calculate_tasks">calculate_tasks</a></code></li>
+<li><code><a title="secfsdstools.c_download.basedownloading_process.BaseDownloadingProcess.get_headers" href="basedownloading_process.html#secfsdstools.c_download.basedownloading_process.BaseDownloadingProcess.get_headers">get_headers</a></code></li>
 <li><code><a title="secfsdstools.c_download.basedownloading_process.BaseDownloadingProcess.post_process" href="../c_automation/task_framework.html#secfsdstools.c_automation.task_framework.AbstractProcess.post_process">post_process</a></code></li>
 <li><code><a title="secfsdstools.c_download.basedownloading_process.BaseDownloadingProcess.process" href="../c_automation/task_framework.html#secfsdstools.c_automation.task_framework.AbstractProcess.process">process</a></code></li>
 </ul>

@@ -49,10 +49,6 @@ class DownloadTask:
         """ """
         return "success"
 
-    def post_commit(self):
-        """ """
-        pass
-
     def exception(self, exception) -> str:
         """ """
         return f"failed {exception}"

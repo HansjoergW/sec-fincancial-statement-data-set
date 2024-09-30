@@ -57,13 +57,10 @@ class ToParquetTransformTask:
         """ """
         return "success"
 
-    def post_commit(self):
-        """ """
-        pass
-
     def exception(self, exception) -> str:
         """ """
-        LOGGER.error('failed to process %s', self.zip_file_name)
+        logger = logging.getLogger()
+        logger.error('failed to process %s', self.zip_file_name)
         # the created dir has to be removed with all its content
         shutil.rmtree(self.file_path, ignore_errors=True)
         return f"failed {exception}"

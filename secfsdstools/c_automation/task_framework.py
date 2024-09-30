@@ -31,7 +31,12 @@ class Task(Protocol):
         """ Execution the task. """
 
     def commit(self) -> Any:
-        """ Commit the task. """
+        """ Commit the task if the execution method is not "self-commiting". E.g.,
+         If you do some file processing in the execute-method,
+         but want to update a state in a table,
+         you could do the update of the state in the commit method.
+         """
+
 
     def exception(self, exception) -> Any:
         """ Handle the exception. """
@@ -114,7 +119,7 @@ class AbstractProcess(ABC):
         )
         executor.set_get_entries_function(self.calculate_tasks)
         executor.set_process_element_function(self._process_task)
-        executor.set_post_process_chunk_function(lambda x: x)  # no process_chunk at this place
+        executor.set_post_process_chunk_function(lambda x: x)  # no process_chunk for this purpose
 
         results_all, self.failed_tasks = executor.execute()
 

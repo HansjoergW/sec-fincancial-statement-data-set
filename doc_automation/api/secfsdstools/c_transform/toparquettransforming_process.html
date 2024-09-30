@@ -86,13 +86,10 @@ class ToParquetTransformTask:
         &#34;&#34;&#34; &#34;&#34;&#34;
         return &#34;success&#34;
 
-    def post_commit(self):
-        &#34;&#34;&#34; &#34;&#34;&#34;
-        pass
-
     def exception(self, exception) -&gt; str:
         &#34;&#34;&#34; &#34;&#34;&#34;
-        LOGGER.error(&#39;failed to process %s&#39;, self.zip_file_name)
+        logger = logging.getLogger()
+        logger.error(&#39;failed to process %s&#39;, self.zip_file_name)
         # the created dir has to be removed with all its content
         shutil.rmtree(self.file_path, ignore_errors=True)
         return f&#34;failed {exception}&#34;
@@ -255,13 +252,10 @@ subfolder in the parquet dir</dd>
         &#34;&#34;&#34; &#34;&#34;&#34;
         return &#34;success&#34;
 
-    def post_commit(self):
-        &#34;&#34;&#34; &#34;&#34;&#34;
-        pass
-
     def exception(self, exception) -&gt; str:
         &#34;&#34;&#34; &#34;&#34;&#34;
-        LOGGER.error(&#39;failed to process %s&#39;, self.zip_file_name)
+        logger = logging.getLogger()
+        logger.error(&#39;failed to process %s&#39;, self.zip_file_name)
         # the created dir has to be removed with all its content
         shutil.rmtree(self.file_path, ignore_errors=True)
         return f&#34;failed {exception}&#34;
@@ -321,7 +315,8 @@ subfolder in the parquet dir</dd>
 </summary>
 <pre><code class="python">def exception(self, exception) -&gt; str:
     &#34;&#34;&#34; &#34;&#34;&#34;
-    LOGGER.error(&#39;failed to process %s&#39;, self.zip_file_name)
+    logger = logging.getLogger()
+    logger.error(&#39;failed to process %s&#39;, self.zip_file_name)
     # the created dir has to be removed with all its content
     shutil.rmtree(self.file_path, ignore_errors=True)
     return f&#34;failed {exception}&#34;</code></pre>
@@ -343,20 +338,6 @@ subfolder in the parquet dir</dd>
     if not self.keep_zip_files:
         with contextlib.suppress(OSError):
             os.remove(self.zip_file_path)</code></pre>
-</details>
-</dd>
-<dt id="secfsdstools.c_transform.toparquettransforming_process.ToParquetTransformTask.post_commit"><code class="name flex">
-<span>def <span class="ident">post_commit</span></span>(<span>self)</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def post_commit(self):
-    &#34;&#34;&#34; &#34;&#34;&#34;
-    pass</code></pre>
 </details>
 </dd>
 <dt id="secfsdstools.c_transform.toparquettransforming_process.ToParquetTransformTask.prepare"><code class="name flex">
@@ -494,7 +475,6 @@ subfolder in the parquet dir</dd>
 <li><code><a title="secfsdstools.c_transform.toparquettransforming_process.ToParquetTransformTask.commit" href="#secfsdstools.c_transform.toparquettransforming_process.ToParquetTransformTask.commit">commit</a></code></li>
 <li><code><a title="secfsdstools.c_transform.toparquettransforming_process.ToParquetTransformTask.exception" href="#secfsdstools.c_transform.toparquettransforming_process.ToParquetTransformTask.exception">exception</a></code></li>
 <li><code><a title="secfsdstools.c_transform.toparquettransforming_process.ToParquetTransformTask.execute" href="#secfsdstools.c_transform.toparquettransforming_process.ToParquetTransformTask.execute">execute</a></code></li>
-<li><code><a title="secfsdstools.c_transform.toparquettransforming_process.ToParquetTransformTask.post_commit" href="#secfsdstools.c_transform.toparquettransforming_process.ToParquetTransformTask.post_commit">post_commit</a></code></li>
 <li><code><a title="secfsdstools.c_transform.toparquettransforming_process.ToParquetTransformTask.prepare" href="#secfsdstools.c_transform.toparquettransforming_process.ToParquetTransformTask.prepare">prepare</a></code></li>
 </ul>
 </li>

@@ -60,7 +60,12 @@ class Task(Protocol):
         &#34;&#34;&#34; Execution the task. &#34;&#34;&#34;
 
     def commit(self) -&gt; Any:
-        &#34;&#34;&#34; Commit the task. &#34;&#34;&#34;
+        &#34;&#34;&#34; Commit the task if the execution method is not &#34;self-commiting&#34;. E.g.,
+         If you do some file processing in the execute-method,
+         but want to update a state in a table,
+         you could do the update of the state in the commit method.
+         &#34;&#34;&#34;
+
 
     def exception(self, exception) -&gt; Any:
         &#34;&#34;&#34; Handle the exception. &#34;&#34;&#34;
@@ -143,7 +148,7 @@ class AbstractProcess(ABC):
         )
         executor.set_get_entries_function(self.calculate_tasks)
         executor.set_process_element_function(self._process_task)
-        executor.set_post_process_chunk_function(lambda x: x)  # no process_chunk at this place
+        executor.set_post_process_chunk_function(lambda x: x)  # no process_chunk for this purpose
 
         results_all, self.failed_tasks = executor.execute()
 
@@ -241,7 +246,7 @@ class AbstractProcess(ABC):
         )
         executor.set_get_entries_function(self.calculate_tasks)
         executor.set_process_element_function(self._process_task)
-        executor.set_post_process_chunk_function(lambda x: x)  # no process_chunk at this place
+        executor.set_post_process_chunk_function(lambda x: x)  # no process_chunk for this purpose
 
         results_all, self.failed_tasks = executor.execute()
 
@@ -261,6 +266,7 @@ class AbstractProcess(ABC):
 <h3>Subclasses</h3>
 <ul class="hlist">
 <li><a title="secfsdstools.c_download.basedownloading_process.BaseDownloadingProcess" href="../c_download/basedownloading_process.html#secfsdstools.c_download.basedownloading_process.BaseDownloadingProcess">BaseDownloadingProcess</a></li>
+<li><a title="secfsdstools.c_index.indexing_process.ReportParquetIndexer" href="../c_index/indexing_process.html#secfsdstools.c_index.indexing_process.ReportParquetIndexer">ReportParquetIndexer</a></li>
 <li><a title="secfsdstools.c_transform.toparquettransforming_process.ToParquetTransformerProcess" href="../c_transform/toparquettransforming_process.html#secfsdstools.c_transform.toparquettransforming_process.ToParquetTransformerProcess">ToParquetTransformerProcess</a></li>
 </ul>
 <h3>Methods</h3>
@@ -330,7 +336,7 @@ The execution can happen in parallel or serial.</p>
     )
     executor.set_get_entries_function(self.calculate_tasks)
     executor.set_process_element_function(self._process_task)
-    executor.set_post_process_chunk_function(lambda x: x)  # no process_chunk at this place
+    executor.set_post_process_chunk_function(lambda x: x)  # no process_chunk for this purpose
 
     results_all, self.failed_tasks = executor.execute()
 
@@ -368,7 +374,12 @@ The execution can happen in parallel or serial.</p>
         &#34;&#34;&#34; Execution the task. &#34;&#34;&#34;
 
     def commit(self) -&gt; Any:
-        &#34;&#34;&#34; Commit the task. &#34;&#34;&#34;
+        &#34;&#34;&#34; Commit the task if the execution method is not &#34;self-commiting&#34;. E.g.,
+         If you do some file processing in the execute-method,
+         but want to update a state in a table,
+         you could do the update of the state in the commit method.
+         &#34;&#34;&#34;
+
 
     def exception(self, exception) -&gt; Any:
         &#34;&#34;&#34; Handle the exception. &#34;&#34;&#34;</code></pre>
@@ -384,13 +395,20 @@ The execution can happen in parallel or serial.</p>
 <span>def <span class="ident">commit</span></span>(<span>self) ‑> Any</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Commit the task.</p></div>
+<div class="desc"><p>Commit the task if the execution method is not "self-commiting". E.g.,
+If you do some file processing in the execute-method,
+but want to update a state in a table,
+you could do the update of the state in the commit method.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def commit(self) -&gt; Any:
-    &#34;&#34;&#34; Commit the task. &#34;&#34;&#34;</code></pre>
+    &#34;&#34;&#34; Commit the task if the execution method is not &#34;self-commiting&#34;. E.g.,
+     If you do some file processing in the execute-method,
+     but want to update a state in a table,
+     you could do the update of the state in the commit method.
+     &#34;&#34;&#34;</code></pre>
 </details>
 </dd>
 <dt id="secfsdstools.c_automation.task_framework.Task.exception"><code class="name flex">

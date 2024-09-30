@@ -78,10 +78,6 @@ class DownloadTask:
         &#34;&#34;&#34; &#34;&#34;&#34;
         return &#34;success&#34;
 
-    def post_commit(self):
-        &#34;&#34;&#34; &#34;&#34;&#34;
-        pass
-
     def exception(self, exception) -&gt; str:
         &#34;&#34;&#34; &#34;&#34;&#34;
         return f&#34;failed {exception}&#34;
@@ -276,10 +272,6 @@ class BaseDownloadingProcess(AbstractProcess):
         &#34;&#34;&#34; &#34;&#34;&#34;
         return &#34;success&#34;
 
-    def post_commit(self):
-        &#34;&#34;&#34; &#34;&#34;&#34;
-        pass
-
     def exception(self, exception) -&gt; str:
         &#34;&#34;&#34; &#34;&#34;&#34;
         return f&#34;failed {exception}&#34;
@@ -335,20 +327,6 @@ class BaseDownloadingProcess(AbstractProcess):
                                                    headers=self.headers)</code></pre>
 </details>
 </dd>
-<dt id="secfsdstools.c_download.basedownloading_process.DownloadTask.post_commit"><code class="name flex">
-<span>def <span class="ident">post_commit</span></span>(<span>self)</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def post_commit(self):
-    &#34;&#34;&#34; &#34;&#34;&#34;
-    pass</code></pre>
-</details>
-</dd>
 <dt id="secfsdstools.c_download.basedownloading_process.DownloadTask.prepare"><code class="name flex">
 <span>def <span class="ident">prepare</span></span>(<span>self)</span>
 </code></dt>
@@ -393,7 +371,6 @@ class BaseDownloadingProcess(AbstractProcess):
 <li><code><a title="secfsdstools.c_download.basedownloading_process.DownloadTask.commit" href="#secfsdstools.c_download.basedownloading_process.DownloadTask.commit">commit</a></code></li>
 <li><code><a title="secfsdstools.c_download.basedownloading_process.DownloadTask.exception" href="#secfsdstools.c_download.basedownloading_process.DownloadTask.exception">exception</a></code></li>
 <li><code><a title="secfsdstools.c_download.basedownloading_process.DownloadTask.execute" href="#secfsdstools.c_download.basedownloading_process.DownloadTask.execute">execute</a></code></li>
-<li><code><a title="secfsdstools.c_download.basedownloading_process.DownloadTask.post_commit" href="#secfsdstools.c_download.basedownloading_process.DownloadTask.post_commit">post_commit</a></code></li>
 <li><code><a title="secfsdstools.c_download.basedownloading_process.DownloadTask.prepare" href="#secfsdstools.c_download.basedownloading_process.DownloadTask.prepare">prepare</a></code></li>
 </ul>
 </li>

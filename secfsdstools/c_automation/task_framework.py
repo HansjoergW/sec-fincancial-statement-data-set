@@ -81,7 +81,6 @@ class AbstractProcess(ABC):
 
     def post_process(self):
         """ Hook method to implement logic that is executed after the whole process is finished. """
-        pass
 
     def _process_task(self, task: Task) -> TaskResult:
         """

@@ -116,4 +116,3 @@ class RapidDownloadingProcess(BaseDownloadingProcess):
         return [entry['file'] for entry in daily_entries if
                 ((entry['subscription'] == 'basic') | (
                         entry['subscription'] == self.rapidurlbuilder.rapid_plan))]
-

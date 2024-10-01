@@ -110,6 +110,8 @@ class AbstractProcess(ABC):
         There is a retry mechanism for failing tasks.
 
         """
+        logger = logging.getLogger()
+        logger.info("Starting process %s", self.__class__.__name__)
         executor = ThreadExecutor[Task, TaskResult, TaskResult](
             processes=3,
             max_calls_per_sec=8,
@@ -125,7 +127,6 @@ class AbstractProcess(ABC):
         for entry in results_all:
             self.results[entry.state].append(entry)
 
-        logger = logging.getLogger()
         for failed in self.failed_tasks:
             logger.warning("not able to process %s", failed)
 

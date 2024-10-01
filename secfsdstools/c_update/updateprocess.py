@@ -4,13 +4,14 @@ into parquet format, and indexing the reports.
 """
 import logging
 import time
-from typing import Optional
+from typing import Optional, List
 
 from secfsdstools.a_config.configmodel import Configuration
 from secfsdstools.a_utils.dbutils import DBStateAcessor
 from secfsdstools.a_utils.downloadutils import UrlDownloader
 from secfsdstools.a_utils.rapiddownloadutils import RapidUrlBuilder
 from secfsdstools.b_setup.setupdb import DbCreator
+from secfsdstools.c_automation.task_framework import AbstractProcess
 from secfsdstools.c_download.rapiddownloading_process import RapidDownloadingProcess
 from secfsdstools.c_download.secdownloading_process import SecDownloadingProcess
 from secfsdstools.c_index.indexing_process import ReportParquetIndexerProcess
@@ -78,67 +79,58 @@ class Updater:
 
         return float(last_check) + Updater.CHECK_EVERY_SECONDS < time.time()
 
-    def _do_download(self):
+    def _build_process_list(self) -> List[AbstractProcess]:
+        process_list: List[AbstractProcess] = []
         urldownloader = UrlDownloader(user_agent=self.user_agent)
 
         # download data from sec
-        LOGGER.info("check if there are new files to download from sec.gov ...")
-        secdownloader = SecDownloadingProcess(zip_dir=self.dld_dir,
-                                         parquet_root_dir=self.parquet_dir,
-                                         urldownloader=urldownloader)
-        secdownloader.process()
+        process_list.append(SecDownloadingProcess(zip_dir=self.dld_dir,
+                                                  parquet_root_dir=self.parquet_dir,
+                                                  urldownloader=urldownloader))
+        # transform sec zip files
+        process_list.append(ToParquetTransformerProcess(zip_dir=self.dld_dir,
+                                                        parquet_dir=self.parquet_dir,
+                                                        keep_zip_files=self.keep_zip_files,
+                                                        file_type='quarter'))
 
-        # download data from rapid
+        # index sec zip files
+        process_list.append(ReportParquetIndexerProcess(db_dir=self.db_dir,
+                                                        parquet_dir=self.parquet_dir,
+                                                        file_type='quarter'))
+
         if (self.rapid_api_key is not None) & (self.rapid_api_key != ''):
-            try:
-                LOGGER.info("check if there are new files to download from rapid...")
-                rapidurlbuilder = RapidUrlBuilder(rapid_plan=self.rapid_api_plan,
-                                                  rapid_api_key=self.rapid_api_key)
-                rapiddownloader = RapidDownloadingProcess(rapidurlbuilder=rapidurlbuilder,
-                                                     daily_zip_dir=self.daily_dld_dir,
-                                                     qrtr_zip_dir=self.dld_dir,
-                                                     urldownloader=urldownloader,
-                                                     parquet_root_dir=self.parquet_dir)
-                rapiddownloader.process()
-                return
-            except Exception as ex:  # pylint: disable=W0703
-                LOGGER.warning("Failed to get data from rapid api, please check rapid-api-key. ")
-                LOGGER.warning("Only using data from Sec.gov because of: %s", ex)
-        print("No rapid-api-key is set: \n"
-              + "If you are interested in daily updates, please have a look at "
-              + "https://rapidapi.com/hansjoerg.wingeier/api/daily-sec-financial-statement-dataset")
+            # download daily zip files
+            rapidurlbuilder = RapidUrlBuilder(rapid_plan=self.rapid_api_plan,
+                                              rapid_api_key=self.rapid_api_key)
+            process_list.append(RapidDownloadingProcess(rapidurlbuilder=rapidurlbuilder,
+                                                        daily_zip_dir=self.daily_dld_dir,
+                                                        qrtr_zip_dir=self.dld_dir,
+                                                        urldownloader=urldownloader,
+                                                        parquet_root_dir=self.parquet_dir))
 
-    def _do_transform(self):
-        LOGGER.info("start to transform to parquet format ...")
-        qrtr_transformer = ToParquetTransformerProcess(zip_dir=self.dld_dir,
-                                                parquet_dir=self.parquet_dir,
-                                                keep_zip_files=self.keep_zip_files,
-                                                file_type='quarter')
-        qrtr_transformer.process()
+            # transform daily zip files
+            process_list.append(ToParquetTransformerProcess(zip_dir=self.daily_dld_dir,
+                                                            parquet_dir=self.parquet_dir,
+                                                            keep_zip_files=self.keep_zip_files,
+                                                            file_type='daily'))
 
-        daily_transformer = ToParquetTransformerProcess(zip_dir=self.daily_dld_dir,
-                                                 parquet_dir=self.parquet_dir,
-                                                 keep_zip_files=self.keep_zip_files,
-                                                 file_type='daily')
-        daily_transformer.process()
+            # index daily zip files
+            process_list.append(ReportParquetIndexerProcess(db_dir=self.db_dir,
+                                                            parquet_dir=self.parquet_dir,
+                                                            file_type='daily'))
 
-    def _do_index(self):
-        # create parquet index
-        LOGGER.info("start to index parquet files ...")
-        qrtr_parquet_indexer = ReportParquetIndexerProcess(db_dir=self.db_dir,
-                                                    parquet_dir=self.parquet_dir,
-                                                    file_type='quarter')
-        qrtr_parquet_indexer.process()
+        else:
+            print("No rapid-api-key is set: \n"
+                  + "If you are interested in daily updates, please have a look at "
+                  + "https://rapidapi.com/hansjoerg.wingeier/api/daily-sec-financial-statement-dataset")
 
-        daily_parquet_indexer = ReportParquetIndexerProcess(db_dir=self.db_dir,
-                                                     parquet_dir=self.parquet_dir,
-                                                     file_type='daily')
-        daily_parquet_indexer.process()
+        return process_list
 
     def _update(self):
-        self._do_download()
-        self._do_transform()
-        self._do_index()
+        processes: List[AbstractProcess] = self._build_process_list()
+
+        for process in processes:
+            process.process()
 
     def update(self):
         """

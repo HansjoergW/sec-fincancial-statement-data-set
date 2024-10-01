@@ -116,3 +116,10 @@ class RapidDownloadingProcess(BaseDownloadingProcess):
         return [entry['file'] for entry in daily_entries if
                 ((entry['subscription'] == 'basic') | (
                         entry['subscription'] == self.rapidurlbuilder.rapid_plan))]
+
+    def process(self):
+        try:
+            super().process()
+        except Exception as ex:  # pylint: disable=W0703
+            LOGGER.warning("Failed to get data from rapid api, please check rapid-api-key. ")
+            LOGGER.warning("Only using data from Sec.gov because of: %s", ex)

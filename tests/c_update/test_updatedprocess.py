@@ -48,9 +48,9 @@ def test_check_for_update(updater):
 
 
 def test_do_download_no_rapid_api(updater):
-    with patch('secfsdstools.c_download.secdownloading.SecZipDownloader.download') \
+    with patch('secfsdstools.c_download.secdownloading_process.SecDownloadingProcess.process') \
             as sec_download, \
-            patch('secfsdstools.c_download.rapiddownloading.RapidZipDownloader.download') \
+            patch('secfsdstools.c_download.rapiddownloading_process.RapidDownloadingProcess.process') \
                     as rapid_download:
         updater._do_download()
 
@@ -63,9 +63,9 @@ def test_do_download_with_rapid_api(updater):
     updater.rapid_api_key = "akey"
     updater.rapid_api_plan = "basic"
 
-    with patch('secfsdstools.c_download.secdownloading.SecZipDownloader.download') \
+    with patch('secfsdstools.c_download.secdownloading_process.SecDownloadingProcess.process') \
             as sec_download, \
-            patch('secfsdstools.c_download.rapiddownloading.RapidZipDownloader.download') \
+            patch('secfsdstools.c_download.rapiddownloading_process.RapidDownloadingProcess.process') \
                     as rapid_download:
         updater._do_download()
 
@@ -106,9 +106,9 @@ def test_integration_test(updater):
 
     start_time = time.time()
     time.sleep(1)  # make sure some time has past, before calling update
-    with patch('secfsdstools.c_download.secdownloading.SecZipDownloader.download') \
+    with patch('secfsdstools.c_download.secdownloading_process.SecDownloadingProcess.process') \
             as sec_download, \
-            patch('secfsdstools.c_download.rapiddownloading.RapidZipDownloader.download') \
+            patch('secfsdstools.c_download.rapiddownloading_process.RapidDownloadingProcess.process') \
                     as rapid_download:
         # updates LAST_UPDATE_CHECK_KEY
         updater.update()

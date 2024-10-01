@@ -5,14 +5,14 @@ import pytest
 
 from secfsdstools.b_setup.setupdb import DbCreator
 from secfsdstools.c_index.indexdataaccess import IndexFileProcessingState
-from secfsdstools.c_index.indexing_process import ReportParquetIndexer, IndexingTask
+from secfsdstools.c_index.indexing_process import ReportParquetIndexerProcess, IndexingTask
 
 
 @pytest.fixture
 def parquetreportindexer(tmp_path):
     DbCreator(db_dir=str(tmp_path)).create_db()
     os.makedirs(tmp_path / 'quarter')
-    return ReportParquetIndexer(db_dir=str(tmp_path),
+    return ReportParquetIndexerProcess(db_dir=str(tmp_path),
                                 parquet_dir=str(tmp_path),
                                 file_type='quarter')
 

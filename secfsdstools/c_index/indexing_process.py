@@ -100,7 +100,7 @@ class IndexingTask:
         return f"IndexingTask(file_path: {self.file_path})"
 
 
-class ReportParquetIndexer(AbstractProcess):
+class ReportParquetIndexerProcess(AbstractProcess):
     """
     Index the reports in parquet files.
     """

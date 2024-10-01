@@ -35,21 +35,23 @@ import logging
 import os
 import shutil
 from pathlib import Path
-from typing import List, Tuple
+from typing import List
 
 from secfsdstools.a_utils.constants import SUB_TXT, PRE_TXT, NUM_TXT, NUM_DTYPE, PRE_DTYPE, \
     SUB_DTYPE
 from secfsdstools.a_utils.fileutils import get_directories_in_directory, \
     read_df_from_file_in_zip
-from secfsdstools.c_automation.task_framework import AbstractProcess, Task
+from secfsdstools.c_automation.task_framework import AbstractProcess
 
 LOGGER = logging.getLogger(__name__)
 
 
 class ToParquetTransformTask:
+    &#34;&#34;&#34;
+    Transforms a zip file containing csv files to a folder with parquet files.
+    &#34;&#34;&#34;
 
     def __init__(self,
-                 zip_file_name: str,
                  zip_file_path: str,
                  parquet_dir: str,
                  file_type: str,
@@ -57,24 +59,29 @@ class ToParquetTransformTask:
         &#34;&#34;&#34;
         Constructor.
         Args:
-            zip_dir: directory which contains the zipfiles that have to be transformed to parquet
+            zip_file_path: path to the zipfile that must be transformed
             parquet_dir: target base directory for the parguet files
             file_type: file_type, either &#39;quarter&#39; or &#39;daily&#39; used to define the
                        subfolder in the parquet dir
+            keep_zip_files: flag that indicates whether the zipfiles should be deleted after
+                            successful transformation
         &#34;&#34;&#34;
-        self.zip_file_name = zip_file_name
+        self.zip_file_name = os.path.basename(zip_file_path)
         self.zip_file_path = zip_file_path
         self.parquet_dir = parquet_dir
         self.file_type = file_type
         self.keep_zip_files = keep_zip_files
 
-        self.file_path = Path(self.parquet_dir) / self.file_type / zip_file_name
+        self.file_path = Path(self.parquet_dir) / self.file_type / self.zip_file_name
 
     def prepare(self):
-        &#34;&#34;&#34; &#34;&#34;&#34;
+        &#34;&#34;&#34; create the necessary parent directories. &#34;&#34;&#34;
         self.file_path.mkdir(parents=True, exist_ok=True)
 
     def execute(self):
+        &#34;&#34;&#34;
+        transform the zip file.
+        &#34;&#34;&#34;
         self._inner_transform_zip_file(self.file_path, self.zip_file_path)
 
         # remove the file if keep_zip_files is False
@@ -83,11 +90,11 @@ class ToParquetTransformTask:
                 os.remove(self.zip_file_path)
 
     def commit(self) -&gt; str:
-        &#34;&#34;&#34; &#34;&#34;&#34;
+        &#34;&#34;&#34; nothing special to do. &#34;&#34;&#34;
         return &#34;success&#34;
 
     def exception(self, exception) -&gt; str:
-        &#34;&#34;&#34; &#34;&#34;&#34;
+        &#34;&#34;&#34; log the problem and clean the target directory. &#34;&#34;&#34;
         logger = logging.getLogger()
         logger.error(&#39;failed to process %s&#39;, self.zip_file_name)
         # the created dir has to be removed with all its content
@@ -150,13 +157,13 @@ class ToParquetTransformerProcess(AbstractProcess):
         self.file_type = file_type
         self.keep_zip_files = keep_zip_files
 
-    def _calculate_not_transformed(self) -&gt; List[Tuple[str, str]]:
+    def _calculate_not_transformed(self) -&gt; List[str]:
         &#34;&#34;&#34;
         calculates the untransformed zip files in the zip_dir.
         simply reads all the existing file names in the zip_dir and checks if there is a
          subfolder with the same name in the parguet-dir
         Returns:
-            List[Tuple[str, str]]: List with tuple of zipfile-name and zipfile path.
+            List[str]: List with tuple of zipfile path.
         &#34;&#34;&#34;
         downloaded_zipfiles = glob.glob(os.path.join(self.zip_dir, &#34;*.zip&#34;))
         present_parquet_dirs = get_directories_in_directory(
@@ -169,18 +176,22 @@ class ToParquetTransformerProcess(AbstractProcess):
 
         # key is the zipfile name, value is the whole path of the file
         # the returned dict only contains elements for which not parquet directory does exist yet
-        return [(k, v) for k, v in zip_file_names.items() if k in not_transformed_names]
+        return [v for k, v in zip_file_names.items() if k in not_transformed_names]
 
-    def calculate_tasks(self) -&gt; List[Task]:
-        mssing_parquet_dirs: List[Tuple[str, str]] = self._calculate_not_transformed()
+    def calculate_tasks(self) -&gt; List[ToParquetTransformTask]:
+        &#34;&#34;&#34;
 
-        return [ToParquetTransformTask(zip_file_name=zip_file_name,
-                                       zip_file_path=zip_file_path,
+        Returns:
+            List[ToParquetTransformTask]: calculates the necessary tasks that have to be executed.
+        &#34;&#34;&#34;
+        not_transformed_paths: List[str] = self._calculate_not_transformed()
+
+        return [ToParquetTransformTask(zip_file_path=zip_file_path,
                                        parquet_dir=self.parquet_dir,
                                        file_type=self.file_type,
                                        keep_zip_files=self.keep_zip_files
                                        )
-                for zip_file_name, zip_file_path in mssing_parquet_dirs]</code></pre>
+                for zip_file_path in not_transformed_paths]</code></pre>
 </details>
 </section>
 <section>
@@ -194,28 +205,34 @@ class ToParquetTransformerProcess(AbstractProcess):
 <dl>
 <dt id="secfsdstools.c_transform.toparquettransforming_process.ToParquetTransformTask"><code class="flex name class">
 <span>class <span class="ident">ToParquetTransformTask</span></span>
-<span>(</span><span>zip_file_name: str, zip_file_path: str, parquet_dir: str, file_type: str, keep_zip_files: bool)</span>
+<span>(</span><span>zip_file_path: str, parquet_dir: str, file_type: str, keep_zip_files: bool)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Constructor.</p>
+<div class="desc"><p>Transforms a zip file containing csv files to a folder with parquet files.</p>
+<p>Constructor.</p>
 <h2 id="args">Args</h2>
 <dl>
-<dt><strong><code>zip_dir</code></strong></dt>
-<dd>directory which contains the zipfiles that have to be transformed to parquet</dd>
+<dt><strong><code>zip_file_path</code></strong></dt>
+<dd>path to the zipfile that must be transformed</dd>
 <dt><strong><code>parquet_dir</code></strong></dt>
 <dd>target base directory for the parguet files</dd>
 <dt><strong><code>file_type</code></strong></dt>
 <dd>file_type, either 'quarter' or 'daily' used to define the
 subfolder in the parquet dir</dd>
+<dt><strong><code>keep_zip_files</code></strong></dt>
+<dd>flag that indicates whether the zipfiles should be deleted after
+successful transformation</dd>
 </dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class ToParquetTransformTask:
+    &#34;&#34;&#34;
+    Transforms a zip file containing csv files to a folder with parquet files.
+    &#34;&#34;&#34;
 
     def __init__(self,
-                 zip_file_name: str,
                  zip_file_path: str,
                  parquet_dir: str,
                  file_type: str,
@@ -223,24 +240,29 @@ subfolder in the parquet dir</dd>
         &#34;&#34;&#34;
         Constructor.
         Args:
-            zip_dir: directory which contains the zipfiles that have to be transformed to parquet
+            zip_file_path: path to the zipfile that must be transformed
             parquet_dir: target base directory for the parguet files
             file_type: file_type, either &#39;quarter&#39; or &#39;daily&#39; used to define the
                        subfolder in the parquet dir
+            keep_zip_files: flag that indicates whether the zipfiles should be deleted after
+                            successful transformation
         &#34;&#34;&#34;
-        self.zip_file_name = zip_file_name
+        self.zip_file_name = os.path.basename(zip_file_path)
         self.zip_file_path = zip_file_path
         self.parquet_dir = parquet_dir
         self.file_type = file_type
         self.keep_zip_files = keep_zip_files
 
-        self.file_path = Path(self.parquet_dir) / self.file_type / zip_file_name
+        self.file_path = Path(self.parquet_dir) / self.file_type / self.zip_file_name
 
     def prepare(self):
-        &#34;&#34;&#34; &#34;&#34;&#34;
+        &#34;&#34;&#34; create the necessary parent directories. &#34;&#34;&#34;
         self.file_path.mkdir(parents=True, exist_ok=True)
 
     def execute(self):
+        &#34;&#34;&#34;
+        transform the zip file.
+        &#34;&#34;&#34;
         self._inner_transform_zip_file(self.file_path, self.zip_file_path)
 
         # remove the file if keep_zip_files is False
@@ -249,11 +271,11 @@ subfolder in the parquet dir</dd>
                 os.remove(self.zip_file_path)
 
     def commit(self) -&gt; str:
-        &#34;&#34;&#34; &#34;&#34;&#34;
+        &#34;&#34;&#34; nothing special to do. &#34;&#34;&#34;
         return &#34;success&#34;
 
     def exception(self, exception) -&gt; str:
-        &#34;&#34;&#34; &#34;&#34;&#34;
+        &#34;&#34;&#34; log the problem and clean the target directory. &#34;&#34;&#34;
         logger = logging.getLogger()
         logger.error(&#39;failed to process %s&#39;, self.zip_file_name)
         # the created dir has to be removed with all its content
@@ -294,13 +316,13 @@ subfolder in the parquet dir</dd>
 <span>def <span class="ident">commit</span></span>(<span>self) ‑> str</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>nothing special to do.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def commit(self) -&gt; str:
-    &#34;&#34;&#34; &#34;&#34;&#34;
+    &#34;&#34;&#34; nothing special to do. &#34;&#34;&#34;
     return &#34;success&#34;</code></pre>
 </details>
 </dd>
@@ -308,13 +330,13 @@ subfolder in the parquet dir</dd>
 <span>def <span class="ident">exception</span></span>(<span>self, exception) ‑> str</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>log the problem and clean the target directory.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def exception(self, exception) -&gt; str:
-    &#34;&#34;&#34; &#34;&#34;&#34;
+    &#34;&#34;&#34; log the problem and clean the target directory. &#34;&#34;&#34;
     logger = logging.getLogger()
     logger.error(&#39;failed to process %s&#39;, self.zip_file_name)
     # the created dir has to be removed with all its content
@@ -326,12 +348,15 @@ subfolder in the parquet dir</dd>
 <span>def <span class="ident">execute</span></span>(<span>self)</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>transform the zip file.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def execute(self):
+    &#34;&#34;&#34;
+    transform the zip file.
+    &#34;&#34;&#34;
     self._inner_transform_zip_file(self.file_path, self.zip_file_path)
 
     # remove the file if keep_zip_files is False
@@ -344,13 +369,13 @@ subfolder in the parquet dir</dd>
 <span>def <span class="ident">prepare</span></span>(<span>self)</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>create the necessary parent directories.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def prepare(self):
-    &#34;&#34;&#34; &#34;&#34;&#34;
+    &#34;&#34;&#34; create the necessary parent directories. &#34;&#34;&#34;
     self.file_path.mkdir(parents=True, exist_ok=True)</code></pre>
 </details>
 </dd>
@@ -405,13 +430,13 @@ subfolder in the parquet dir</dd>
         self.file_type = file_type
         self.keep_zip_files = keep_zip_files
 
-    def _calculate_not_transformed(self) -&gt; List[Tuple[str, str]]:
+    def _calculate_not_transformed(self) -&gt; List[str]:
         &#34;&#34;&#34;
         calculates the untransformed zip files in the zip_dir.
         simply reads all the existing file names in the zip_dir and checks if there is a
          subfolder with the same name in the parguet-dir
         Returns:
-            List[Tuple[str, str]]: List with tuple of zipfile-name and zipfile path.
+            List[str]: List with tuple of zipfile path.
         &#34;&#34;&#34;
         downloaded_zipfiles = glob.glob(os.path.join(self.zip_dir, &#34;*.zip&#34;))
         present_parquet_dirs = get_directories_in_directory(
@@ -424,29 +449,64 @@ subfolder in the parquet dir</dd>
 
         # key is the zipfile name, value is the whole path of the file
         # the returned dict only contains elements for which not parquet directory does exist yet
-        return [(k, v) for k, v in zip_file_names.items() if k in not_transformed_names]
+        return [v for k, v in zip_file_names.items() if k in not_transformed_names]
 
-    def calculate_tasks(self) -&gt; List[Task]:
-        mssing_parquet_dirs: List[Tuple[str, str]] = self._calculate_not_transformed()
+    def calculate_tasks(self) -&gt; List[ToParquetTransformTask]:
+        &#34;&#34;&#34;
 
-        return [ToParquetTransformTask(zip_file_name=zip_file_name,
-                                       zip_file_path=zip_file_path,
+        Returns:
+            List[ToParquetTransformTask]: calculates the necessary tasks that have to be executed.
+        &#34;&#34;&#34;
+        not_transformed_paths: List[str] = self._calculate_not_transformed()
+
+        return [ToParquetTransformTask(zip_file_path=zip_file_path,
                                        parquet_dir=self.parquet_dir,
                                        file_type=self.file_type,
                                        keep_zip_files=self.keep_zip_files
                                        )
-                for zip_file_name, zip_file_path in mssing_parquet_dirs]</code></pre>
+                for zip_file_path in not_transformed_paths]</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li><a title="secfsdstools.c_automation.task_framework.AbstractProcess" href="../c_automation/task_framework.html#secfsdstools.c_automation.task_framework.AbstractProcess">AbstractProcess</a></li>
 <li>abc.ABC</li>
 </ul>
+<h3>Methods</h3>
+<dl>
+<dt id="secfsdstools.c_transform.toparquettransforming_process.ToParquetTransformerProcess.calculate_tasks"><code class="name flex">
+<span>def <span class="ident">calculate_tasks</span></span>(<span>self) ‑> List[<a title="secfsdstools.c_transform.toparquettransforming_process.ToParquetTransformTask" href="#secfsdstools.c_transform.toparquettransforming_process.ToParquetTransformTask">ToParquetTransformTask</a>]</span>
+</code></dt>
+<dd>
+<div class="desc"><h2 id="returns">Returns</h2>
+<dl>
+<dt><code>List[<a title="secfsdstools.c_transform.toparquettransforming_process.ToParquetTransformTask" href="#secfsdstools.c_transform.toparquettransforming_process.ToParquetTransformTask">ToParquetTransformTask</a>]</code></dt>
+<dd>calculates the necessary tasks that have to be executed.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def calculate_tasks(self) -&gt; List[ToParquetTransformTask]:
+    &#34;&#34;&#34;
+
+    Returns:
+        List[ToParquetTransformTask]: calculates the necessary tasks that have to be executed.
+    &#34;&#34;&#34;
+    not_transformed_paths: List[str] = self._calculate_not_transformed()
+
+    return [ToParquetTransformTask(zip_file_path=zip_file_path,
+                                   parquet_dir=self.parquet_dir,
+                                   file_type=self.file_type,
+                                   keep_zip_files=self.keep_zip_files
+                                   )
+            for zip_file_path in not_transformed_paths]</code></pre>
+</details>
+</dd>
+</dl>
 <h3>Inherited members</h3>
 <ul class="hlist">
 <li><code><b><a title="secfsdstools.c_automation.task_framework.AbstractProcess" href="../c_automation/task_framework.html#secfsdstools.c_automation.task_framework.AbstractProcess">AbstractProcess</a></b></code>:
 <ul class="hlist">
-<li><code><a title="secfsdstools.c_automation.task_framework.AbstractProcess.calculate_tasks" href="../c_automation/task_framework.html#secfsdstools.c_automation.task_framework.AbstractProcess.calculate_tasks">calculate_tasks</a></code></li>
 <li><code><a title="secfsdstools.c_automation.task_framework.AbstractProcess.post_process" href="../c_automation/task_framework.html#secfsdstools.c_automation.task_framework.AbstractProcess.post_process">post_process</a></code></li>
 <li><code><a title="secfsdstools.c_automation.task_framework.AbstractProcess.process" href="../c_automation/task_framework.html#secfsdstools.c_automation.task_framework.AbstractProcess.process">process</a></code></li>
 </ul>
@@ -480,6 +540,9 @@ subfolder in the parquet dir</dd>
 </li>
 <li>
 <h4><code><a title="secfsdstools.c_transform.toparquettransforming_process.ToParquetTransformerProcess" href="#secfsdstools.c_transform.toparquettransforming_process.ToParquetTransformerProcess">ToParquetTransformerProcess</a></code></h4>
+<ul class="">
+<li><code><a title="secfsdstools.c_transform.toparquettransforming_process.ToParquetTransformerProcess.calculate_tasks" href="#secfsdstools.c_transform.toparquettransforming_process.ToParquetTransformerProcess.calculate_tasks">calculate_tasks</a></code></li>
+</ul>
 </li>
 </ul>
 </li>

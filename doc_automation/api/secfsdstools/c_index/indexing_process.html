@@ -30,21 +30,23 @@
 <pre><code class="python">&#34;&#34;&#34;Indexing the downloaded to data&#34;&#34;&#34;
 import logging
 import os
-from abc import ABC, abstractmethod
 from datetime import datetime, timezone
-from typing import List, Tuple
+from typing import List
 
 import pandas as pd
 
 from secfsdstools.a_utils.constants import SUB_TXT
 from secfsdstools.a_utils.fileutils import get_directories_in_directory
-from secfsdstools.c_automation.task_framework import AbstractProcess, Task
+from secfsdstools.c_automation.task_framework import AbstractProcess
 from secfsdstools.c_index.indexdataaccess import IndexFileProcessingState, ParquetDBIndexingAccessor
 
 LOGGER = logging.getLogger(__name__)
 
 
 class IndexingTask:
+    &#34;&#34;&#34; Indexes the content of a folder by writing the content of the sub_df file into the
+    index tables.
+    &#34;&#34;&#34;
     PROCESSED_STR: str = &#39;processed&#39;
     URL_PREFIX: str = &#39;https://www.sec.gov/Archives/edgar/data/&#39;
 
@@ -54,6 +56,14 @@ class IndexingTask:
                  file_type: str,
                  process_time: str,
                  ):
+        &#34;&#34;&#34;
+        Constructor.
+        Args:
+            dbaccessor: dbaccessor helper class
+            file_path: path to the directory with the sub_df file that has to be indexed
+            file_type: file_type, normally, this is &#34;quarter&#34;
+            process_time: process time that is used a timestamp in the created table entry
+        &#34;&#34;&#34;
         self.dbaccessor = dbaccessor
         self.file_path = file_path
         self.file_type = file_type
@@ -61,6 +71,12 @@ class IndexingTask:
         self.process_time = process_time
 
     def _get_sub_df(self) -&gt; pd.DataFrame:
+        &#34;&#34;&#34;
+        reads the content of the sub_df file into dataframe.
+        Returns:
+            pd.DataFrame
+
+        &#34;&#34;&#34;
         sub_file = os.path.join(self.file_path, f&#34;{SUB_TXT}.parquet&#34;)
         usecols = [&#39;adsh&#39;,
                    &#39;cik&#39;,
@@ -71,9 +87,12 @@ class IndexingTask:
         return pd.read_parquet(sub_file, columns=usecols)
 
     def prepare(self):
-        pass
+        &#34;&#34;&#34; prepare Task. Nothing to do.&#34;&#34;&#34;
 
     def execute(self):
+        &#34;&#34;&#34;
+            Reads the sub_df content and writes the entries to the index.
+        &#34;&#34;&#34;
         logger = logging.getLogger()
         logger.info(&#34;indexing file %s&#34;, self.file_name)
 
@@ -98,10 +117,12 @@ class IndexingTask:
                                          ))
 
     def commit(self):
+        &#34;&#34;&#34; no special commit handling. &#34;&#34;&#34;
         # no special commit necessary
         return &#34;success&#34;
 
     def exception(self, exception) -&gt; str:
+        &#34;&#34;&#34; no special exception handling. &#34;&#34;&#34;
         return f&#34;failed {exception}&#34;
 
     def __str__(self) -&gt; str:
@@ -109,11 +130,21 @@ class IndexingTask:
 
 
 class ReportParquetIndexer(AbstractProcess):
+    &#34;&#34;&#34;
+    Index the reports in parquet files.
+    &#34;&#34;&#34;
 
     def __init__(self,
                  db_dir: str,
                  file_type: str,
                  parquet_dir: str):
+        &#34;&#34;&#34;
+        Constructor.
+        Args:
+            db_dir: location of the dbfile.
+            file_type: type of the data, usually this is &#34;quarter&#34;.
+            parquet_dir: parent directory in which the transformed parquet files are.
+        &#34;&#34;&#34;
         # only use serial execution, since indexing is rather quick
         super().__init__(execute_serial=True, chunksize=0)
         self.dbaccessor = ParquetDBIndexingAccessor(db_dir=db_dir)
@@ -128,10 +159,20 @@ class ReportParquetIndexer(AbstractProcess):
         self.process_time = iso_date
 
     def get_present_files(self) -&gt; List[str]:
+        &#34;&#34;&#34;
+        returns the available folders within the parquet directory.
+        Returns:
+            List[str] list with foldernames.
+        &#34;&#34;&#34;
         return get_directories_in_directory(
             os.path.join(self.parquet_dir, self.file_type))
 
     def _calculate_not_indexed_file_paths(self) -&gt; List[str]:
+        &#34;&#34;&#34;
+            calculates which parquet files were not indexed yet.
+        Returns:
+            List[str]: list with directories which need to be indexed.
+        &#34;&#34;&#34;
         present_files = self.get_present_files()
         processed_indexfiles_df = self.dbaccessor.read_all_indexfileprocessing_df()
 
@@ -145,6 +186,11 @@ class ReportParquetIndexer(AbstractProcess):
                 for file_name in not_indexed_file_names]
 
     def calculate_tasks(self) -&gt; List[IndexingTask]:
+        &#34;&#34;&#34;
+        Calculates the tasks, which have to be executed.
+        Returns:
+            List[IndexingTasks]
+        &#34;&#34;&#34;
         not_indexed_paths: List[str] = self._calculate_not_indexed_file_paths()
 
         return [IndexingTask(dbaccessor=self.dbaccessor,
@@ -168,12 +214,28 @@ class ReportParquetIndexer(AbstractProcess):
 <span>(</span><span>dbaccessor: <a title="secfsdstools.c_index.indexdataaccess.ParquetDBIndexingAccessor" href="indexdataaccess.html#secfsdstools.c_index.indexdataaccess.ParquetDBIndexingAccessor">ParquetDBIndexingAccessor</a>, file_path: str, file_type: str, process_time: str)</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Indexes the content of a folder by writing the content of the sub_df file into the
+index tables.</p>
+<p>Constructor.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>dbaccessor</code></strong></dt>
+<dd>dbaccessor helper class</dd>
+<dt><strong><code>file_path</code></strong></dt>
+<dd>path to the directory with the sub_df file that has to be indexed</dd>
+<dt><strong><code>file_type</code></strong></dt>
+<dd>file_type, normally, this is "quarter"</dd>
+<dt><strong><code>process_time</code></strong></dt>
+<dd>process time that is used a timestamp in the created table entry</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class IndexingTask:
+    &#34;&#34;&#34; Indexes the content of a folder by writing the content of the sub_df file into the
+    index tables.
+    &#34;&#34;&#34;
     PROCESSED_STR: str = &#39;processed&#39;
     URL_PREFIX: str = &#39;https://www.sec.gov/Archives/edgar/data/&#39;
 
@@ -183,6 +245,14 @@ class ReportParquetIndexer(AbstractProcess):
                  file_type: str,
                  process_time: str,
                  ):
+        &#34;&#34;&#34;
+        Constructor.
+        Args:
+            dbaccessor: dbaccessor helper class
+            file_path: path to the directory with the sub_df file that has to be indexed
+            file_type: file_type, normally, this is &#34;quarter&#34;
+            process_time: process time that is used a timestamp in the created table entry
+        &#34;&#34;&#34;
         self.dbaccessor = dbaccessor
         self.file_path = file_path
         self.file_type = file_type
@@ -190,6 +260,12 @@ class ReportParquetIndexer(AbstractProcess):
         self.process_time = process_time
 
     def _get_sub_df(self) -&gt; pd.DataFrame:
+        &#34;&#34;&#34;
+        reads the content of the sub_df file into dataframe.
+        Returns:
+            pd.DataFrame
+
+        &#34;&#34;&#34;
         sub_file = os.path.join(self.file_path, f&#34;{SUB_TXT}.parquet&#34;)
         usecols = [&#39;adsh&#39;,
                    &#39;cik&#39;,
@@ -200,9 +276,12 @@ class ReportParquetIndexer(AbstractProcess):
         return pd.read_parquet(sub_file, columns=usecols)
 
     def prepare(self):
-        pass
+        &#34;&#34;&#34; prepare Task. Nothing to do.&#34;&#34;&#34;
 
     def execute(self):
+        &#34;&#34;&#34;
+            Reads the sub_df content and writes the entries to the index.
+        &#34;&#34;&#34;
         logger = logging.getLogger()
         logger.info(&#34;indexing file %s&#34;, self.file_name)
 
@@ -227,10 +306,12 @@ class ReportParquetIndexer(AbstractProcess):
                                          ))
 
     def commit(self):
+        &#34;&#34;&#34; no special commit handling. &#34;&#34;&#34;
         # no special commit necessary
         return &#34;success&#34;
 
     def exception(self, exception) -&gt; str:
+        &#34;&#34;&#34; no special exception handling. &#34;&#34;&#34;
         return f&#34;failed {exception}&#34;
 
     def __str__(self) -&gt; str:
@@ -253,12 +334,13 @@ class ReportParquetIndexer(AbstractProcess):
 <span>def <span class="ident">commit</span></span>(<span>self)</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>no special commit handling.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def commit(self):
+    &#34;&#34;&#34; no special commit handling. &#34;&#34;&#34;
     # no special commit necessary
     return &#34;success&#34;</code></pre>
 </details>
@@ -267,12 +349,13 @@ class ReportParquetIndexer(AbstractProcess):
 <span>def <span class="ident">exception</span></span>(<span>self, exception) ‑> str</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>no special exception handling.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def exception(self, exception) -&gt; str:
+    &#34;&#34;&#34; no special exception handling. &#34;&#34;&#34;
     return f&#34;failed {exception}&#34;</code></pre>
 </details>
 </dd>
@@ -280,12 +363,15 @@ class ReportParquetIndexer(AbstractProcess):
 <span>def <span class="ident">execute</span></span>(<span>self)</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Reads the sub_df content and writes the entries to the index.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def execute(self):
+    &#34;&#34;&#34;
+        Reads the sub_df content and writes the entries to the index.
+    &#34;&#34;&#34;
     logger = logging.getLogger()
     logger.info(&#34;indexing file %s&#34;, self.file_name)
 
@@ -314,13 +400,13 @@ class ReportParquetIndexer(AbstractProcess):
 <span>def <span class="ident">prepare</span></span>(<span>self)</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>prepare Task. Nothing to do.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def prepare(self):
-    pass</code></pre>
+    &#34;&#34;&#34; prepare Task. Nothing to do.&#34;&#34;&#34;</code></pre>
 </details>
 </dd>
 </dl>
@@ -330,17 +416,37 @@ class ReportParquetIndexer(AbstractProcess):
 <span>(</span><span>db_dir: str, file_type: str, parquet_dir: str)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Defines the Abstract process of processing tasks for a certain process.</p></div>
+<div class="desc"><p>Index the reports in parquet files.</p>
+<p>Constructor.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>db_dir</code></strong></dt>
+<dd>location of the dbfile.</dd>
+<dt><strong><code>file_type</code></strong></dt>
+<dd>type of the data, usually this is "quarter".</dd>
+<dt><strong><code>parquet_dir</code></strong></dt>
+<dd>parent directory in which the transformed parquet files are.</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class ReportParquetIndexer(AbstractProcess):
+    &#34;&#34;&#34;
+    Index the reports in parquet files.
+    &#34;&#34;&#34;
 
     def __init__(self,
                  db_dir: str,
                  file_type: str,
                  parquet_dir: str):
+        &#34;&#34;&#34;
+        Constructor.
+        Args:
+            db_dir: location of the dbfile.
+            file_type: type of the data, usually this is &#34;quarter&#34;.
+            parquet_dir: parent directory in which the transformed parquet files are.
+        &#34;&#34;&#34;
         # only use serial execution, since indexing is rather quick
         super().__init__(execute_serial=True, chunksize=0)
         self.dbaccessor = ParquetDBIndexingAccessor(db_dir=db_dir)
@@ -355,10 +461,20 @@ class ReportParquetIndexer(AbstractProcess):
         self.process_time = iso_date
 
     def get_present_files(self) -&gt; List[str]:
+        &#34;&#34;&#34;
+        returns the available folders within the parquet directory.
+        Returns:
+            List[str] list with foldernames.
+        &#34;&#34;&#34;
         return get_directories_in_directory(
             os.path.join(self.parquet_dir, self.file_type))
 
     def _calculate_not_indexed_file_paths(self) -&gt; List[str]:
+        &#34;&#34;&#34;
+            calculates which parquet files were not indexed yet.
+        Returns:
+            List[str]: list with directories which need to be indexed.
+        &#34;&#34;&#34;
         present_files = self.get_present_files()
         processed_indexfiles_df = self.dbaccessor.read_all_indexfileprocessing_df()
 
@@ -372,6 +488,11 @@ class ReportParquetIndexer(AbstractProcess):
                 for file_name in not_indexed_file_names]
 
     def calculate_tasks(self) -&gt; List[IndexingTask]:
+        &#34;&#34;&#34;
+        Calculates the tasks, which have to be executed.
+        Returns:
+            List[IndexingTasks]
+        &#34;&#34;&#34;
         not_indexed_paths: List[str] = self._calculate_not_indexed_file_paths()
 
         return [IndexingTask(dbaccessor=self.dbaccessor,
@@ -387,16 +508,49 @@ class ReportParquetIndexer(AbstractProcess):
 </ul>
 <h3>Methods</h3>
 <dl>
+<dt id="secfsdstools.c_index.indexing_process.ReportParquetIndexer.calculate_tasks"><code class="name flex">
+<span>def <span class="ident">calculate_tasks</span></span>(<span>self) ‑> List[<a title="secfsdstools.c_index.indexing_process.IndexingTask" href="#secfsdstools.c_index.indexing_process.IndexingTask">IndexingTask</a>]</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Calculates the tasks, which have to be executed.</p>
+<h2 id="returns">Returns</h2>
+<p>List[IndexingTasks]</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def calculate_tasks(self) -&gt; List[IndexingTask]:
+    &#34;&#34;&#34;
+    Calculates the tasks, which have to be executed.
+    Returns:
+        List[IndexingTasks]
+    &#34;&#34;&#34;
+    not_indexed_paths: List[str] = self._calculate_not_indexed_file_paths()
+
+    return [IndexingTask(dbaccessor=self.dbaccessor,
+                         file_path=file_path,
+                         file_type=self.file_type,
+                         process_time=self.process_time)
+            for file_path in not_indexed_paths]</code></pre>
+</details>
+</dd>
 <dt id="secfsdstools.c_index.indexing_process.ReportParquetIndexer.get_present_files"><code class="name flex">
 <span>def <span class="ident">get_present_files</span></span>(<span>self) ‑> List[str]</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>returns the available folders within the parquet directory.</p>
+<h2 id="returns">Returns</h2>
+<p>List[str] list with foldernames.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def get_present_files(self) -&gt; List[str]:
+    &#34;&#34;&#34;
+    returns the available folders within the parquet directory.
+    Returns:
+        List[str] list with foldernames.
+    &#34;&#34;&#34;
     return get_directories_in_directory(
         os.path.join(self.parquet_dir, self.file_type))</code></pre>
 </details>
@@ -406,7 +560,6 @@ class ReportParquetIndexer(AbstractProcess):
 <ul class="hlist">
 <li><code><b><a title="secfsdstools.c_automation.task_framework.AbstractProcess" href="../c_automation/task_framework.html#secfsdstools.c_automation.task_framework.AbstractProcess">AbstractProcess</a></b></code>:
 <ul class="hlist">
-<li><code><a title="secfsdstools.c_automation.task_framework.AbstractProcess.calculate_tasks" href="../c_automation/task_framework.html#secfsdstools.c_automation.task_framework.AbstractProcess.calculate_tasks">calculate_tasks</a></code></li>
 <li><code><a title="secfsdstools.c_automation.task_framework.AbstractProcess.post_process" href="../c_automation/task_framework.html#secfsdstools.c_automation.task_framework.AbstractProcess.post_process">post_process</a></code></li>
 <li><code><a title="secfsdstools.c_automation.task_framework.AbstractProcess.process" href="../c_automation/task_framework.html#secfsdstools.c_automation.task_framework.AbstractProcess.process">process</a></code></li>
 </ul>
@@ -443,6 +596,7 @@ class ReportParquetIndexer(AbstractProcess):
 <li>
 <h4><code><a title="secfsdstools.c_index.indexing_process.ReportParquetIndexer" href="#secfsdstools.c_index.indexing_process.ReportParquetIndexer">ReportParquetIndexer</a></code></h4>
 <ul class="">
+<li><code><a title="secfsdstools.c_index.indexing_process.ReportParquetIndexer.calculate_tasks" href="#secfsdstools.c_index.indexing_process.ReportParquetIndexer.calculate_tasks">calculate_tasks</a></code></li>
 <li><code><a title="secfsdstools.c_index.indexing_process.ReportParquetIndexer.get_present_files" href="#secfsdstools.c_index.indexing_process.ReportParquetIndexer.get_present_files">get_present_files</a></code></li>
 </ul>
 </li>

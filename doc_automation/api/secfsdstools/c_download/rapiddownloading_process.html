@@ -144,7 +144,14 @@ class RapidDownloadingProcess(BaseDownloadingProcess):
 
         return [entry[&#39;file&#39;] for entry in daily_entries if
                 ((entry[&#39;subscription&#39;] == &#39;basic&#39;) | (
-                        entry[&#39;subscription&#39;] == self.rapidurlbuilder.rapid_plan))]</code></pre>
+                        entry[&#39;subscription&#39;] == self.rapidurlbuilder.rapid_plan))]
+
+    def process(self):
+        try:
+            super().process()
+        except Exception as ex:  # pylint: disable=W0703
+            LOGGER.warning(&#34;Failed to get data from rapid api, please check rapid-api-key. &#34;)
+            LOGGER.warning(&#34;Only using data from Sec.gov because of: %s&#34;, ex)</code></pre>
 </details>
 </section>
 <section>
@@ -280,7 +287,14 @@ class RapidDownloadingProcess(BaseDownloadingProcess):
 
         return [entry[&#39;file&#39;] for entry in daily_entries if
                 ((entry[&#39;subscription&#39;] == &#39;basic&#39;) | (
-                        entry[&#39;subscription&#39;] == self.rapidurlbuilder.rapid_plan))]</code></pre>
+                        entry[&#39;subscription&#39;] == self.rapidurlbuilder.rapid_plan))]
+
+    def process(self):
+        try:
+            super().process()
+        except Exception as ex:  # pylint: disable=W0703
+            LOGGER.warning(&#34;Failed to get data from rapid api, please check rapid-api-key. &#34;)
+            LOGGER.warning(&#34;Only using data from Sec.gov because of: %s&#34;, ex)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">

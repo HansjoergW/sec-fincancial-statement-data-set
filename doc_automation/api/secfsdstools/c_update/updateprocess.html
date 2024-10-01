@@ -42,10 +42,10 @@ from secfsdstools.a_utils.dbutils import DBStateAcessor
 from secfsdstools.a_utils.downloadutils import UrlDownloader
 from secfsdstools.a_utils.rapiddownloadutils import RapidUrlBuilder
 from secfsdstools.b_setup.setupdb import DbCreator
-from secfsdstools.c_download.rapiddownloading import RapidZipDownloader
-from secfsdstools.c_download.secdownloading import SecZipDownloader
-from secfsdstools.c_index.indexing import ReportParquetIndexer
-from secfsdstools.c_transform.toparquettransforming import ToParquetTransformer
+from secfsdstools.c_download.rapiddownloading_process import RapidDownloadingProcess
+from secfsdstools.c_download.secdownloading_process import SecDownloadingProcess
+from secfsdstools.c_index.indexing_process import ReportParquetIndexerProcess
+from secfsdstools.c_transform.toparquettransforming_process import ToParquetTransformerProcess
 
 LOGGER = logging.getLogger(__name__)
 
@@ -114,10 +114,10 @@ class Updater:
 
         # download data from sec
         LOGGER.info(&#34;check if there are new files to download from sec.gov ...&#34;)
-        secdownloader = SecZipDownloader(zip_dir=self.dld_dir,
+        secdownloader = SecDownloadingProcess(zip_dir=self.dld_dir,
                                          parquet_root_dir=self.parquet_dir,
                                          urldownloader=urldownloader)
-        secdownloader.download()
+        secdownloader.process()
 
         # download data from rapid
         if (self.rapid_api_key is not None) &amp; (self.rapid_api_key != &#39;&#39;):
@@ -125,12 +125,12 @@ class Updater:
                 LOGGER.info(&#34;check if there are new files to download from rapid...&#34;)
                 rapidurlbuilder = RapidUrlBuilder(rapid_plan=self.rapid_api_plan,
                                                   rapid_api_key=self.rapid_api_key)
-                rapiddownloader = RapidZipDownloader(rapidurlbuilder=rapidurlbuilder,
+                rapiddownloader = RapidDownloadingProcess(rapidurlbuilder=rapidurlbuilder,
                                                      daily_zip_dir=self.daily_dld_dir,
                                                      qrtr_zip_dir=self.dld_dir,
                                                      urldownloader=urldownloader,
                                                      parquet_root_dir=self.parquet_dir)
-                rapiddownloader.download()
+                rapiddownloader.process()
                 return
             except Exception as ex:  # pylint: disable=W0703
                 LOGGER.warning(&#34;Failed to get data from rapid api, please check rapid-api-key. &#34;)
@@ -141,13 +141,13 @@ class Updater:
 
     def _do_transform(self):
         LOGGER.info(&#34;start to transform to parquet format ...&#34;)
-        qrtr_transformer = ToParquetTransformer(zip_dir=self.dld_dir,
+        qrtr_transformer = ToParquetTransformerProcess(zip_dir=self.dld_dir,
                                                 parquet_dir=self.parquet_dir,
                                                 keep_zip_files=self.keep_zip_files,
                                                 file_type=&#39;quarter&#39;)
         qrtr_transformer.process()
 
-        daily_transformer = ToParquetTransformer(zip_dir=self.daily_dld_dir,
+        daily_transformer = ToParquetTransformerProcess(zip_dir=self.daily_dld_dir,
                                                  parquet_dir=self.parquet_dir,
                                                  keep_zip_files=self.keep_zip_files,
                                                  file_type=&#39;daily&#39;)
@@ -156,12 +156,12 @@ class Updater:
     def _do_index(self):
         # create parquet index
         LOGGER.info(&#34;start to index parquet files ...&#34;)
-        qrtr_parquet_indexer = ReportParquetIndexer(db_dir=self.db_dir,
+        qrtr_parquet_indexer = ReportParquetIndexerProcess(db_dir=self.db_dir,
                                                     parquet_dir=self.parquet_dir,
                                                     file_type=&#39;quarter&#39;)
         qrtr_parquet_indexer.process()
 
-        daily_parquet_indexer = ReportParquetIndexer(db_dir=self.db_dir,
+        daily_parquet_indexer = ReportParquetIndexerProcess(db_dir=self.db_dir,
                                                      parquet_dir=self.parquet_dir,
                                                      file_type=&#39;daily&#39;)
         daily_parquet_indexer.process()
@@ -278,10 +278,10 @@ class Updater:
 
         # download data from sec
         LOGGER.info(&#34;check if there are new files to download from sec.gov ...&#34;)
-        secdownloader = SecZipDownloader(zip_dir=self.dld_dir,
+        secdownloader = SecDownloadingProcess(zip_dir=self.dld_dir,
                                          parquet_root_dir=self.parquet_dir,
                                          urldownloader=urldownloader)
-        secdownloader.download()
+        secdownloader.process()
 
         # download data from rapid
         if (self.rapid_api_key is not None) &amp; (self.rapid_api_key != &#39;&#39;):
@@ -289,12 +289,12 @@ class Updater:
                 LOGGER.info(&#34;check if there are new files to download from rapid...&#34;)
                 rapidurlbuilder = RapidUrlBuilder(rapid_plan=self.rapid_api_plan,
                                                   rapid_api_key=self.rapid_api_key)
-                rapiddownloader = RapidZipDownloader(rapidurlbuilder=rapidurlbuilder,
+                rapiddownloader = RapidDownloadingProcess(rapidurlbuilder=rapidurlbuilder,
                                                      daily_zip_dir=self.daily_dld_dir,
                                                      qrtr_zip_dir=self.dld_dir,
                                                      urldownloader=urldownloader,
                                                      parquet_root_dir=self.parquet_dir)
-                rapiddownloader.download()
+                rapiddownloader.process()
                 return
             except Exception as ex:  # pylint: disable=W0703
                 LOGGER.warning(&#34;Failed to get data from rapid api, please check rapid-api-key. &#34;)
@@ -305,13 +305,13 @@ class Updater:
 
     def _do_transform(self):
         LOGGER.info(&#34;start to transform to parquet format ...&#34;)
-        qrtr_transformer = ToParquetTransformer(zip_dir=self.dld_dir,
+        qrtr_transformer = ToParquetTransformerProcess(zip_dir=self.dld_dir,
                                                 parquet_dir=self.parquet_dir,
                                                 keep_zip_files=self.keep_zip_files,
                                                 file_type=&#39;quarter&#39;)
         qrtr_transformer.process()
 
-        daily_transformer = ToParquetTransformer(zip_dir=self.daily_dld_dir,
+        daily_transformer = ToParquetTransformerProcess(zip_dir=self.daily_dld_dir,
                                                  parquet_dir=self.parquet_dir,
                                                  keep_zip_files=self.keep_zip_files,
                                                  file_type=&#39;daily&#39;)
@@ -320,12 +320,12 @@ class Updater:
     def _do_index(self):
         # create parquet index
         LOGGER.info(&#34;start to index parquet files ...&#34;)
-        qrtr_parquet_indexer = ReportParquetIndexer(db_dir=self.db_dir,
+        qrtr_parquet_indexer = ReportParquetIndexerProcess(db_dir=self.db_dir,
                                                     parquet_dir=self.parquet_dir,
                                                     file_type=&#39;quarter&#39;)
         qrtr_parquet_indexer.process()
 
-        daily_parquet_indexer = ReportParquetIndexer(db_dir=self.db_dir,
+        daily_parquet_indexer = ReportParquetIndexerProcess(db_dir=self.db_dir,
                                                      parquet_dir=self.parquet_dir,
                                                      file_type=&#39;daily&#39;)
         daily_parquet_indexer.process()

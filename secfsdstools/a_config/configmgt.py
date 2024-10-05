@@ -73,13 +73,12 @@ class ConfigurationManager:
                 return ConfigurationManager._handle_first_start(env_config_file,
                                                                 DEFAULT_CONFIGURATION)
 
-            return ConfigurationManager._read_configuration_and_check_for_udpates(env_config_file)
+            return ConfigurationManager._read_configuration(env_config_file)
 
         current_cfg_file_path = os.path.join(os.getcwd(), DEFAULT_CONFIG_FILE)
         if os.path.isfile(current_cfg_file_path):
             LOGGER.info('found config file at %s', current_cfg_file_path)
-            return ConfigurationManager._read_configuration_and_check_for_udpates(
-                current_cfg_file_path)
+            return ConfigurationManager._read_configuration(current_cfg_file_path)
 
             # check if file exists at home directory
         home_cfg_file_path = os.path.join(os.path.expanduser('~'), DEFAULT_CONFIG_FILE)
@@ -91,7 +90,7 @@ class ConfigurationManager:
             return ConfigurationManager._handle_first_start(home_cfg_file_path,
                                                             DEFAULT_CONFIGURATION)
 
-        return ConfigurationManager._read_configuration_and_check_for_udpates(home_cfg_file_path)
+        return ConfigurationManager._read_configuration(home_cfg_file_path)
 
     @staticmethod
     def _handle_first_start(file_path: str, config: Configuration):
@@ -139,17 +138,17 @@ class ConfigurationManager:
         updater.update()
 
     @staticmethod
-    def _read_configuration_and_check_for_udpates(file_path: str) -> Configuration:
-        config: Configuration = ConfigurationManager._read_configuration(file_path)
-        ConfigurationManager._check_for_update(config)
-        return config
+    # def _read_configuration_and_check_for_udpates(file_path: str) -> Configuration:
+    #     config: Configuration = ConfigurationManager._read_configuration(file_path)
+    #     # ConfigurationManager._check_for_update(config)
+    #     return config
 
-    @staticmethod
-    def _check_for_update(config: Configuration):
-        if config.auto_update:
-            LOGGER.debug('AutoUpdate is True, so check if new zip files are available')
-            updater = Updater.get_instance(config)
-            updater.update()
+    # @staticmethod
+    # def _check_for_update(config: Configuration):
+    #     if config.auto_update:
+    #         LOGGER.debug('AutoUpdate is True, so check if new zip files are available')
+    #         updater = Updater.get_instance(config)
+    #         updater.update()
 
     @staticmethod
     def _read_configuration(file_path: str) -> Configuration:
@@ -163,7 +162,7 @@ class ConfigurationManager:
         config = configparser.ConfigParser()
         config.read(file_path)
 
-        config = Configuration(
+        secconfig = Configuration(
             download_dir=config['DEFAULT'].get('DownloadDirectory', ),
             db_dir=config['DEFAULT'].get('DbDirectory'),
             parquet_dir=config['DEFAULT'].get('ParquetDirectory'),
@@ -171,26 +170,27 @@ class ConfigurationManager:
             rapid_api_key=config['DEFAULT'].get('RapidApiKey', None),
             rapid_api_plan=config['DEFAULT'].get('RapidApiPlan', 'basic'),
             auto_update=config['DEFAULT'].getboolean('AutoUpdate', True),
-            keep_zip_files=config['DEFAULT'].getboolean('KeepZipFiles', False)
+            keep_zip_files=config['DEFAULT'].getboolean('KeepZipFiles', False),
+            config_parser=config
         )
 
-        check_messages = ConfigurationManager.check_basic_configuration(config)
+        check_messages = ConfigurationManager.check_basic_configuration(secconfig)
         if len(check_messages) > 0:
             print(
                 f"""There are problems with your configuration.
                     Please fix the following issues in {file_path}: {check_messages}""")
             raise ValueError(f'Problems with configuration in {file_path}: {check_messages}')
 
-        check_rapid_messages = ConfigurationManager.check_rapid_configuration(config)
+        check_rapid_messages = ConfigurationManager.check_rapid_configuration(secconfig)
         if len(check_rapid_messages) > 0:
             print(f'rapid configuration is invalid in {file_path}: {check_rapid_messages}')
             print('rapid configuration will be ignored.')
 
             LOGGER.warning('rapid configuration is invalid in %s: %s',
                            file_path, str(check_rapid_messages))
-            config.rapid_api_key = None
-            config.rapid_api_plan = None
-        return config
+            secconfig.rapid_api_key = None
+            secconfig.rapid_api_plan = None
+        return secconfig
 
     @staticmethod
     def _is_valid_email(email):

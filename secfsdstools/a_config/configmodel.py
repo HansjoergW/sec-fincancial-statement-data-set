@@ -5,6 +5,7 @@ Base Model for configuration.
 import os
 from dataclasses import dataclass, asdict
 from typing import Optional
+import configparser
 
 
 @dataclass
@@ -19,6 +20,7 @@ class Configuration:
     daily_download_dir: Optional[str] = None
     auto_update: Optional[bool] = True
     keep_zip_files: Optional[bool] = False
+    config_parser: Optional[configparser.ConfigParser] = None
 
     def __post_init__(self):
         self.daily_download_dir = os.path.join(self.download_dir, "daily")

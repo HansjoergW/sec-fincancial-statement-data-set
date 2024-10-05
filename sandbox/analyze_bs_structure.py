@@ -92,6 +92,9 @@ def assets_check(df: pd.DataFrame):
 
 
 if __name__ == '__main__':
+    print("starting main")
+    from secfsdstools.e_collector.reportcollecting import SingleReportCollector
+    report = SingleReportCollector.get_report_by_adsh(adsh="0001741257-19-000014")
     standardizer = BalanceSheetStandardizer()
     df_description = standardizer.get_process_description()
 

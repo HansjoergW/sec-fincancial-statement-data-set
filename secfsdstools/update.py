@@ -8,11 +8,11 @@ from secfsdstools.c_update.updateprocess import Updater
 LOGGER = logging.getLogger(__name__)
 
 
-def update(config: Configuration = None):
+def update(config: Configuration = None, force_update: bool = False):
     """
     ensures that all available zip files are downloaded and that the index is created.
     """
-    # check if a logger is active if not, make sure it logs to the console
+    # check if a logger is active if not, make sure it logs at least to the console
     if len(logging.root.handlers) == 0:
         logging.basicConfig(
             level=logging.INFO,
@@ -28,11 +28,11 @@ def update(config: Configuration = None):
 
     # create the db
     updater = Updater.get_instance(config)
-    updater.update()
+    updater.update(force_update=force_update)
 
 
 if __name__ == '__main__':
-    update()
+    update(force_update=True)
     # Configuration(
     #     db_dir='c:/ieu/projects/sec-fincancial-statement-data-set/data/db/',
     #     download_dir='c:/ieu/projects/sec-fincancial-statement-data-set/data/dld/',

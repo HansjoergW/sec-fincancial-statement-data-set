@@ -43,6 +43,7 @@ class Updater:
             parquet_dir=config.parquet_dir,
             user_agent=config.user_agent_email,
             keep_zip_files=config.keep_zip_files,
+            auto_update=config.auto_update,
             rapid_api_key=config.rapid_api_key,
             rapid_api_plan=config.rapid_api_plan
         )
@@ -54,6 +55,7 @@ class Updater:
                  parquet_dir: str,
                  user_agent: str,
                  keep_zip_files: bool,
+                 auto_update: bool,
                  rapid_api_plan: Optional[str],
                  rapid_api_key: Optional[str]):
         self.db_state_accesor = DBStateAcessor(db_dir=db_dir)
@@ -65,6 +67,7 @@ class Updater:
         self.rapid_api_plan = rapid_api_plan
         self.rapid_api_key = rapid_api_key
         self.keep_zip_files = keep_zip_files
+        self.auto_update = auto_update
 
     def _check_for_update(self) -> bool:
         """checks if a new update check should be conducted."""
@@ -132,25 +135,29 @@ class Updater:
         for process in processes:
             process.process()
 
-    def update(self):
+    def update(self, force_update: bool = False):
         """
         execute the updated process if time has come to check for new upates.
         Returns:
 
         """
+        if force_update | self.auto_update:
+            print("------------------ UPDATE CALLED -----------------------")
+            if not force_update & self.auto_update:
+                LOGGER.debug('AutoUpdate is True, so check if new zip files are available')
 
-        if not self._check_for_update():
-            LOGGER.debug(
-                'Skipping update: last check was done less than %d seconds ago',
-                Updater.CHECK_EVERY_SECONDS)
-            return
+            if not self._check_for_update():
+                LOGGER.debug(
+                    'Skipping update: last check was done less than %d seconds ago',
+                    Updater.CHECK_EVERY_SECONDS)
+                return
 
-        LOGGER.info('Check if new report zip files are available...')
-        # create db if necessary
-        DbCreator(db_dir=self.db_dir).create_db()
+            LOGGER.info('Check if new report zip files are available...')
+            # create db if necessary
+            DbCreator(db_dir=self.db_dir).create_db()
 
-        # execute the update logic
-        self._update()
+            # execute the update logic
+            self._update()
 
-        # update the timestamp of the last check
-        self.db_state_accesor.set_key(Updater.LAST_UPDATE_CHECK_KEY, str(time.time()))
+            # update the timestamp of the last check
+            self.db_state_accesor.set_key(Updater.LAST_UPDATE_CHECK_KEY, str(time.time()))

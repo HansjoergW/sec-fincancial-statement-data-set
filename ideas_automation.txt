@@ -1,7 +1,8 @@
 Fragen:
-- standard Framework verwenden, dass auch bereits parallelisierung beherrscht?
-- Alle Prozessschritte in Pipelines umwandeln, oder kann download z.B. belassen wie es ist?
-- Wie mit quarterly und daily umgehen?
+- standard Framework verwenden, dass auch bereits parallelisierung beherrscht? -> Nein
+- Alle Prozessschritte in Pipelines umwandeln, oder kann download z.B. belassen wie es ist? -> Ja
+- Wie mit quarterly und daily umgehen? -> Im Moment wie gehabt
+
 - Wie wird der Status gemanaged? Immer über Files, oder doch besser über eine Tabelle?
   -> Vorteil File -> der Ist Zustand ist immer korrekt
   -> Vorteil Status in Tabelle -> Abfrage ist immer identisch
@@ -20,30 +21,32 @@ Fragen:
 - Performance Optimierung ist nicht wirklich das Thema, da die Logik nur einmal pro Quartal läuft
 
 Schritte
-- Version der Library im code abfragbar machen
-  -> Variante impotlib.metadata -> ist aber erst ab Python 3.8 vorhanden
-- Ergebnisse Standardizer müssen concateniert werden können.
 
 - einfachste Variante:
   -> eine simple Hook Methode
 - kleines Framework
-- Umstellen der vorhanden Schritte download, index, transform
-  als Pipeline definition
+
 - Hinzufügen von customer Schritten
 
+Umbau von CheckForNewData
+- müsste eigentlich im init-py vom Root Modul gemacht werden, so dass diese Logik immer läuft
+  - dort könnte man einfach getconfiguration callen und dann den check ausführen
+  - Vorteil -> check wird immer gemacht
+  - Nachteil: wenn das aber so gemacht wird, dann ist die Frage, wie eigene Tasks registriert werden können.
+              das wäre dann eigentlich immer zu spät, ausser man macht das über das setup py
+              oder wir managen eigene Tasks separat -> eigenr check, ob sie ausgeführt werden müssen, oder nicht
 
-class Task
-  prepare() -> vorbereiten -> directory an
-  execute()
-  commit()
-  finish()
-  exception()
+    def call_function_from_string(module_function_str):
+        try:
+            module_str, function_str = module_function_str.rsplit('.', 1)
+            module = importlib.import_module(module_str)
+            function = getattr(module, function_str)
+            return function()
+        except ModuleNotFoundError:
+            print(f"Module {module_str} not found.")
+        except AttributeError:
+            print(f"Function {function_str} not found in module {module_str}.")
+- configparser.ConfigParser ist teil von Configuration, falls configfile geladen wurde
+  -> müsste als Parameter bei der callback funktion übergeben werden.
 
-
-
-class Process
-  create_tasks() List[Task]
-    # berechnet, was für arbeiten erledigt werden müssen
-    # z.B.für alle Zipfiles
-    #  oder auch nur ein einzelner Task am Ende (z.B. concatenieren zu einer einzigen Datei
 

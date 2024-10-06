@@ -74,6 +74,7 @@ class Updater:
             parquet_dir=config.parquet_dir,
             user_agent=config.user_agent_email,
             keep_zip_files=config.keep_zip_files,
+            auto_update=config.auto_update,
             rapid_api_key=config.rapid_api_key,
             rapid_api_plan=config.rapid_api_plan
         )
@@ -85,6 +86,7 @@ class Updater:
                  parquet_dir: str,
                  user_agent: str,
                  keep_zip_files: bool,
+                 auto_update: bool,
                  rapid_api_plan: Optional[str],
                  rapid_api_key: Optional[str]):
         self.db_state_accesor = DBStateAcessor(db_dir=db_dir)
@@ -96,6 +98,7 @@ class Updater:
         self.rapid_api_plan = rapid_api_plan
         self.rapid_api_key = rapid_api_key
         self.keep_zip_files = keep_zip_files
+        self.auto_update = auto_update
 
     def _check_for_update(self) -&gt; bool:
         &#34;&#34;&#34;checks if a new update check should be conducted.&#34;&#34;&#34;
@@ -151,9 +154,10 @@ class Updater:
                                                             file_type=&#39;daily&#39;))
 
         else:
-            print(&#34;No rapid-api-key is set: \n&#34;
-                  + &#34;If you are interested in daily updates, please have a look at &#34;
-                  + &#34;https://rapidapi.com/hansjoerg.wingeier/api/daily-sec-financial-statement-dataset&#34;)
+            print(
+                &#34;No rapid-api-key is set: \n&#34;
+                + &#34;If you are interested in daily updates, please have a look at &#34;
+                + &#34;https://rapidapi.com/hansjoerg.wingeier/api/daily-sec-financial-statement-dataset&#34;) # pylint: disable=C0301
 
         return process_list
 
@@ -163,28 +167,31 @@ class Updater:
         for process in processes:
             process.process()
 
-    def update(self):
+    def update(self, force_update: bool = False):
         &#34;&#34;&#34;
         execute the updated process if time has come to check for new upates.
         Returns:
 
         &#34;&#34;&#34;
+        if force_update | self.auto_update:
+            if not force_update &amp; self.auto_update:
+                LOGGER.debug(&#39;AutoUpdate is True, so check if new zip files are available&#39;)
 
-        if not self._check_for_update():
-            LOGGER.debug(
-                &#39;Skipping update: last check was done less than %d seconds ago&#39;,
-                Updater.CHECK_EVERY_SECONDS)
-            return
+            if not self._check_for_update():
+                LOGGER.debug(
+                    &#39;Skipping update: last check was done less than %d seconds ago&#39;,
+                    Updater.CHECK_EVERY_SECONDS)
+                return
 
-        LOGGER.info(&#39;Check if new report zip files are available...&#39;)
-        # create db if necessary
-        DbCreator(db_dir=self.db_dir).create_db()
+            LOGGER.info(&#39;Check if new report zip files are available...&#39;)
+            # create db if necessary
+            DbCreator(db_dir=self.db_dir).create_db()
 
-        # execute the update logic
-        self._update()
+            # execute the update logic
+            self._update()
 
-        # update the timestamp of the last check
-        self.db_state_accesor.set_key(Updater.LAST_UPDATE_CHECK_KEY, str(time.time()))</code></pre>
+            # update the timestamp of the last check
+            self.db_state_accesor.set_key(Updater.LAST_UPDATE_CHECK_KEY, str(time.time()))</code></pre>
 </details>
 </section>
 <section>
@@ -198,7 +205,7 @@ class Updater:
 <dl>
 <dt id="secfsdstools.c_update.updateprocess.Updater"><code class="flex name class">
 <span>class <span class="ident">Updater</span></span>
-<span>(</span><span>db_dir: str, dld_dir: str, daily_dld_dir: str, parquet_dir: str, user_agent: str, keep_zip_files: bool, rapid_api_plan: Optional[str], rapid_api_key: Optional[str])</span>
+<span>(</span><span>db_dir: str, dld_dir: str, daily_dld_dir: str, parquet_dir: str, user_agent: str, keep_zip_files: bool, auto_update: bool, rapid_api_plan: Optional[str], rapid_api_key: Optional[str])</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Manages the update process: download zipfiles, transform to parquet, and index the reports</p></div>
@@ -229,6 +236,7 @@ class Updater:
             parquet_dir=config.parquet_dir,
             user_agent=config.user_agent_email,
             keep_zip_files=config.keep_zip_files,
+            auto_update=config.auto_update,
             rapid_api_key=config.rapid_api_key,
             rapid_api_plan=config.rapid_api_plan
         )
@@ -240,6 +248,7 @@ class Updater:
                  parquet_dir: str,
                  user_agent: str,
                  keep_zip_files: bool,
+                 auto_update: bool,
                  rapid_api_plan: Optional[str],
                  rapid_api_key: Optional[str]):
         self.db_state_accesor = DBStateAcessor(db_dir=db_dir)
@@ -251,6 +260,7 @@ class Updater:
         self.rapid_api_plan = rapid_api_plan
         self.rapid_api_key = rapid_api_key
         self.keep_zip_files = keep_zip_files
+        self.auto_update = auto_update
 
     def _check_for_update(self) -&gt; bool:
         &#34;&#34;&#34;checks if a new update check should be conducted.&#34;&#34;&#34;
@@ -306,9 +316,10 @@ class Updater:
                                                             file_type=&#39;daily&#39;))
 
         else:
-            print(&#34;No rapid-api-key is set: \n&#34;
-                  + &#34;If you are interested in daily updates, please have a look at &#34;
-                  + &#34;https://rapidapi.com/hansjoerg.wingeier/api/daily-sec-financial-statement-dataset&#34;)
+            print(
+                &#34;No rapid-api-key is set: \n&#34;
+                + &#34;If you are interested in daily updates, please have a look at &#34;
+                + &#34;https://rapidapi.com/hansjoerg.wingeier/api/daily-sec-financial-statement-dataset&#34;) # pylint: disable=C0301
 
         return process_list
 
@@ -318,28 +329,31 @@ class Updater:
         for process in processes:
             process.process()
 
-    def update(self):
+    def update(self, force_update: bool = False):
         &#34;&#34;&#34;
         execute the updated process if time has come to check for new upates.
         Returns:
 
         &#34;&#34;&#34;
+        if force_update | self.auto_update:
+            if not force_update &amp; self.auto_update:
+                LOGGER.debug(&#39;AutoUpdate is True, so check if new zip files are available&#39;)
 
-        if not self._check_for_update():
-            LOGGER.debug(
-                &#39;Skipping update: last check was done less than %d seconds ago&#39;,
-                Updater.CHECK_EVERY_SECONDS)
-            return
+            if not self._check_for_update():
+                LOGGER.debug(
+                    &#39;Skipping update: last check was done less than %d seconds ago&#39;,
+                    Updater.CHECK_EVERY_SECONDS)
+                return
 
-        LOGGER.info(&#39;Check if new report zip files are available...&#39;)
-        # create db if necessary
-        DbCreator(db_dir=self.db_dir).create_db()
+            LOGGER.info(&#39;Check if new report zip files are available...&#39;)
+            # create db if necessary
+            DbCreator(db_dir=self.db_dir).create_db()
 
-        # execute the update logic
-        self._update()
+            # execute the update logic
+            self._update()
 
-        # update the timestamp of the last check
-        self.db_state_accesor.set_key(Updater.LAST_UPDATE_CHECK_KEY, str(time.time()))</code></pre>
+            # update the timestamp of the last check
+            self.db_state_accesor.set_key(Updater.LAST_UPDATE_CHECK_KEY, str(time.time()))</code></pre>
 </details>
 <h3>Class variables</h3>
 <dl>
@@ -391,6 +405,7 @@ def get_instance(cls, config: Configuration):
         parquet_dir=config.parquet_dir,
         user_agent=config.user_agent_email,
         keep_zip_files=config.keep_zip_files,
+        auto_update=config.auto_update,
         rapid_api_key=config.rapid_api_key,
         rapid_api_plan=config.rapid_api_plan
     )</code></pre>
@@ -400,7 +415,7 @@ def get_instance(cls, config: Configuration):
 <h3>Methods</h3>
 <dl>
 <dt id="secfsdstools.c_update.updateprocess.Updater.update"><code class="name flex">
-<span>def <span class="ident">update</span></span>(<span>self)</span>
+<span>def <span class="ident">update</span></span>(<span>self, force_update: bool = False)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>execute the updated process if time has come to check for new upates.
@@ -409,28 +424,31 @@ Returns:</p></div>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def update(self):
+<pre><code class="python">def update(self, force_update: bool = False):
     &#34;&#34;&#34;
     execute the updated process if time has come to check for new upates.
     Returns:
 
     &#34;&#34;&#34;
+    if force_update | self.auto_update:
+        if not force_update &amp; self.auto_update:
+            LOGGER.debug(&#39;AutoUpdate is True, so check if new zip files are available&#39;)
 
-    if not self._check_for_update():
-        LOGGER.debug(
-            &#39;Skipping update: last check was done less than %d seconds ago&#39;,
-            Updater.CHECK_EVERY_SECONDS)
-        return
+        if not self._check_for_update():
+            LOGGER.debug(
+                &#39;Skipping update: last check was done less than %d seconds ago&#39;,
+                Updater.CHECK_EVERY_SECONDS)
+            return
 
-    LOGGER.info(&#39;Check if new report zip files are available...&#39;)
-    # create db if necessary
-    DbCreator(db_dir=self.db_dir).create_db()
+        LOGGER.info(&#39;Check if new report zip files are available...&#39;)
+        # create db if necessary
+        DbCreator(db_dir=self.db_dir).create_db()
 
-    # execute the update logic
-    self._update()
+        # execute the update logic
+        self._update()
 
-    # update the timestamp of the last check
-    self.db_state_accesor.set_key(Updater.LAST_UPDATE_CHECK_KEY, str(time.time()))</code></pre>
+        # update the timestamp of the last check
+        self.db_state_accesor.set_key(Updater.LAST_UPDATE_CHECK_KEY, str(time.time()))</code></pre>
 </details>
 </dd>
 </dl>

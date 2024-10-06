@@ -37,11 +37,11 @@ from secfsdstools.c_update.updateprocess import Updater
 LOGGER = logging.getLogger(__name__)
 
 
-def update(config: Configuration = None):
+def update(config: Configuration = None, force_update: bool = False):
     &#34;&#34;&#34;
     ensures that all available zip files are downloaded and that the index is created.
     &#34;&#34;&#34;
-    # check if a logger is active if not, make sure it logs to the console
+    # check if a logger is active if not, make sure it logs at least to the console
     if len(logging.root.handlers) == 0:
         logging.basicConfig(
             level=logging.INFO,
@@ -57,11 +57,11 @@ def update(config: Configuration = None):
 
     # create the db
     updater = Updater.get_instance(config)
-    updater.update()
+    updater.update(force_update=force_update)
 
 
 if __name__ == &#39;__main__&#39;:
-    update()
+    update(force_update=True)
     # Configuration(
     #     db_dir=&#39;c:/ieu/projects/sec-fincancial-statement-data-set/data/db/&#39;,
     #     download_dir=&#39;c:/ieu/projects/sec-fincancial-statement-data-set/data/dld/&#39;,
@@ -77,7 +77,7 @@ if __name__ == &#39;__main__&#39;:
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
 <dt id="secfsdstools.update.update"><code class="name flex">
-<span>def <span class="ident">update</span></span>(<span>config: <a title="secfsdstools.a_config.configmodel.Configuration" href="a_config/configmodel.html#secfsdstools.a_config.configmodel.Configuration">Configuration</a> = None)</span>
+<span>def <span class="ident">update</span></span>(<span>config: <a title="secfsdstools.a_config.configmodel.Configuration" href="a_config/configmodel.html#secfsdstools.a_config.configmodel.Configuration">Configuration</a> = None, force_update: bool = False)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>ensures that all available zip files are downloaded and that the index is created.</p></div>
@@ -85,11 +85,11 @@ if __name__ == &#39;__main__&#39;:
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def update(config: Configuration = None):
+<pre><code class="python">def update(config: Configuration = None, force_update: bool = False):
     &#34;&#34;&#34;
     ensures that all available zip files are downloaded and that the index is created.
     &#34;&#34;&#34;
-    # check if a logger is active if not, make sure it logs to the console
+    # check if a logger is active if not, make sure it logs at least to the console
     if len(logging.root.handlers) == 0:
         logging.basicConfig(
             level=logging.INFO,
@@ -105,7 +105,7 @@ if __name__ == &#39;__main__&#39;:
 
     # create the db
     updater = Updater.get_instance(config)
-    updater.update()</code></pre>
+    updater.update(force_update=force_update)</code></pre>
 </details>
 </dd>
 </dl>

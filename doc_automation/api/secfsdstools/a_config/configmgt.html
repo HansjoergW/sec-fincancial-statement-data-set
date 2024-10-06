@@ -102,13 +102,12 @@ class ConfigurationManager:
                 return ConfigurationManager._handle_first_start(env_config_file,
                                                                 DEFAULT_CONFIGURATION)
 
-            return ConfigurationManager._read_configuration_and_check_for_udpates(env_config_file)
+            return ConfigurationManager._read_configuration(env_config_file)
 
         current_cfg_file_path = os.path.join(os.getcwd(), DEFAULT_CONFIG_FILE)
         if os.path.isfile(current_cfg_file_path):
             LOGGER.info(&#39;found config file at %s&#39;, current_cfg_file_path)
-            return ConfigurationManager._read_configuration_and_check_for_udpates(
-                current_cfg_file_path)
+            return ConfigurationManager._read_configuration(current_cfg_file_path)
 
             # check if file exists at home directory
         home_cfg_file_path = os.path.join(os.path.expanduser(&#39;~&#39;), DEFAULT_CONFIG_FILE)
@@ -120,7 +119,7 @@ class ConfigurationManager:
             return ConfigurationManager._handle_first_start(home_cfg_file_path,
                                                             DEFAULT_CONFIGURATION)
 
-        return ConfigurationManager._read_configuration_and_check_for_udpates(home_cfg_file_path)
+        return ConfigurationManager._read_configuration(home_cfg_file_path)
 
     @staticmethod
     def _handle_first_start(file_path: str, config: Configuration):
@@ -167,18 +166,18 @@ class ConfigurationManager:
         updater = Updater.get_instance(config)
         updater.update()
 
-    @staticmethod
-    def _read_configuration_and_check_for_udpates(file_path: str) -&gt; Configuration:
-        config: Configuration = ConfigurationManager._read_configuration(file_path)
-        ConfigurationManager._check_for_update(config)
-        return config
+    # @staticmethod
+    # def _read_configuration_and_check_for_udpates(file_path: str) -&gt; Configuration:
+    #     config: Configuration = ConfigurationManager._read_configuration(file_path)
+    #     # ConfigurationManager._check_for_update(config)
+    #     return config
 
-    @staticmethod
-    def _check_for_update(config: Configuration):
-        if config.auto_update:
-            LOGGER.debug(&#39;AutoUpdate is True, so check if new zip files are available&#39;)
-            updater = Updater.get_instance(config)
-            updater.update()
+    # @staticmethod
+    # def _check_for_update(config: Configuration):
+    #     if config.auto_update:
+    #         LOGGER.debug(&#39;AutoUpdate is True, so check if new zip files are available&#39;)
+    #         updater = Updater.get_instance(config)
+    #         updater.update()
 
     @staticmethod
     def _read_configuration(file_path: str) -&gt; Configuration:
@@ -192,7 +191,7 @@ class ConfigurationManager:
         config = configparser.ConfigParser()
         config.read(file_path)
 
-        config = Configuration(
+        secconfig = Configuration(
             download_dir=config[&#39;DEFAULT&#39;].get(&#39;DownloadDirectory&#39;, ),
             db_dir=config[&#39;DEFAULT&#39;].get(&#39;DbDirectory&#39;),
             parquet_dir=config[&#39;DEFAULT&#39;].get(&#39;ParquetDirectory&#39;),
@@ -200,26 +199,27 @@ class ConfigurationManager:
             rapid_api_key=config[&#39;DEFAULT&#39;].get(&#39;RapidApiKey&#39;, None),
             rapid_api_plan=config[&#39;DEFAULT&#39;].get(&#39;RapidApiPlan&#39;, &#39;basic&#39;),
             auto_update=config[&#39;DEFAULT&#39;].getboolean(&#39;AutoUpdate&#39;, True),
-            keep_zip_files=config[&#39;DEFAULT&#39;].getboolean(&#39;KeepZipFiles&#39;, False)
+            keep_zip_files=config[&#39;DEFAULT&#39;].getboolean(&#39;KeepZipFiles&#39;, False),
+            config_parser=config
         )
 
-        check_messages = ConfigurationManager.check_basic_configuration(config)
+        check_messages = ConfigurationManager.check_basic_configuration(secconfig)
         if len(check_messages) &gt; 0:
             print(
                 f&#34;&#34;&#34;There are problems with your configuration.
                     Please fix the following issues in {file_path}: {check_messages}&#34;&#34;&#34;)
             raise ValueError(f&#39;Problems with configuration in {file_path}: {check_messages}&#39;)
 
-        check_rapid_messages = ConfigurationManager.check_rapid_configuration(config)
+        check_rapid_messages = ConfigurationManager.check_rapid_configuration(secconfig)
         if len(check_rapid_messages) &gt; 0:
             print(f&#39;rapid configuration is invalid in {file_path}: {check_rapid_messages}&#39;)
             print(&#39;rapid configuration will be ignored.&#39;)
 
             LOGGER.warning(&#39;rapid configuration is invalid in %s: %s&#39;,
                            file_path, str(check_rapid_messages))
-            config.rapid_api_key = None
-            config.rapid_api_plan = None
-        return config
+            secconfig.rapid_api_key = None
+            secconfig.rapid_api_plan = None
+        return secconfig
 
     @staticmethod
     def _is_valid_email(email):
@@ -385,13 +385,12 @@ If the file does not exist, it will create one in the current directory</p></div
                 return ConfigurationManager._handle_first_start(env_config_file,
                                                                 DEFAULT_CONFIGURATION)
 
-            return ConfigurationManager._read_configuration_and_check_for_udpates(env_config_file)
+            return ConfigurationManager._read_configuration(env_config_file)
 
         current_cfg_file_path = os.path.join(os.getcwd(), DEFAULT_CONFIG_FILE)
         if os.path.isfile(current_cfg_file_path):
             LOGGER.info(&#39;found config file at %s&#39;, current_cfg_file_path)
-            return ConfigurationManager._read_configuration_and_check_for_udpates(
-                current_cfg_file_path)
+            return ConfigurationManager._read_configuration(current_cfg_file_path)
 
             # check if file exists at home directory
         home_cfg_file_path = os.path.join(os.path.expanduser(&#39;~&#39;), DEFAULT_CONFIG_FILE)
@@ -403,7 +402,7 @@ If the file does not exist, it will create one in the current directory</p></div
             return ConfigurationManager._handle_first_start(home_cfg_file_path,
                                                             DEFAULT_CONFIGURATION)
 
-        return ConfigurationManager._read_configuration_and_check_for_udpates(home_cfg_file_path)
+        return ConfigurationManager._read_configuration(home_cfg_file_path)
 
     @staticmethod
     def _handle_first_start(file_path: str, config: Configuration):
@@ -450,18 +449,18 @@ If the file does not exist, it will create one in the current directory</p></div
         updater = Updater.get_instance(config)
         updater.update()
 
-    @staticmethod
-    def _read_configuration_and_check_for_udpates(file_path: str) -&gt; Configuration:
-        config: Configuration = ConfigurationManager._read_configuration(file_path)
-        ConfigurationManager._check_for_update(config)
-        return config
+    # @staticmethod
+    # def _read_configuration_and_check_for_udpates(file_path: str) -&gt; Configuration:
+    #     config: Configuration = ConfigurationManager._read_configuration(file_path)
+    #     # ConfigurationManager._check_for_update(config)
+    #     return config
 
-    @staticmethod
-    def _check_for_update(config: Configuration):
-        if config.auto_update:
-            LOGGER.debug(&#39;AutoUpdate is True, so check if new zip files are available&#39;)
-            updater = Updater.get_instance(config)
-            updater.update()
+    # @staticmethod
+    # def _check_for_update(config: Configuration):
+    #     if config.auto_update:
+    #         LOGGER.debug(&#39;AutoUpdate is True, so check if new zip files are available&#39;)
+    #         updater = Updater.get_instance(config)
+    #         updater.update()
 
     @staticmethod
     def _read_configuration(file_path: str) -&gt; Configuration:
@@ -475,7 +474,7 @@ If the file does not exist, it will create one in the current directory</p></div
         config = configparser.ConfigParser()
         config.read(file_path)
 
-        config = Configuration(
+        secconfig = Configuration(
             download_dir=config[&#39;DEFAULT&#39;].get(&#39;DownloadDirectory&#39;, ),
             db_dir=config[&#39;DEFAULT&#39;].get(&#39;DbDirectory&#39;),
             parquet_dir=config[&#39;DEFAULT&#39;].get(&#39;ParquetDirectory&#39;),
@@ -483,26 +482,27 @@ If the file does not exist, it will create one in the current directory</p></div
             rapid_api_key=config[&#39;DEFAULT&#39;].get(&#39;RapidApiKey&#39;, None),
             rapid_api_plan=config[&#39;DEFAULT&#39;].get(&#39;RapidApiPlan&#39;, &#39;basic&#39;),
             auto_update=config[&#39;DEFAULT&#39;].getboolean(&#39;AutoUpdate&#39;, True),
-            keep_zip_files=config[&#39;DEFAULT&#39;].getboolean(&#39;KeepZipFiles&#39;, False)
+            keep_zip_files=config[&#39;DEFAULT&#39;].getboolean(&#39;KeepZipFiles&#39;, False),
+            config_parser=config
         )
 
-        check_messages = ConfigurationManager.check_basic_configuration(config)
+        check_messages = ConfigurationManager.check_basic_configuration(secconfig)
         if len(check_messages) &gt; 0:
             print(
                 f&#34;&#34;&#34;There are problems with your configuration.
                     Please fix the following issues in {file_path}: {check_messages}&#34;&#34;&#34;)
             raise ValueError(f&#39;Problems with configuration in {file_path}: {check_messages}&#39;)
 
-        check_rapid_messages = ConfigurationManager.check_rapid_configuration(config)
+        check_rapid_messages = ConfigurationManager.check_rapid_configuration(secconfig)
         if len(check_rapid_messages) &gt; 0:
             print(f&#39;rapid configuration is invalid in {file_path}: {check_rapid_messages}&#39;)
             print(&#39;rapid configuration will be ignored.&#39;)
 
             LOGGER.warning(&#39;rapid configuration is invalid in %s: %s&#39;,
                            file_path, str(check_rapid_messages))
-            config.rapid_api_key = None
-            config.rapid_api_plan = None
-        return config
+            secconfig.rapid_api_key = None
+            secconfig.rapid_api_plan = None
+        return secconfig
 
     @staticmethod
     def _is_valid_email(email):
@@ -787,13 +787,12 @@ def read_config_file() -&gt; Configuration:
             return ConfigurationManager._handle_first_start(env_config_file,
                                                             DEFAULT_CONFIGURATION)
 
-        return ConfigurationManager._read_configuration_and_check_for_udpates(env_config_file)
+        return ConfigurationManager._read_configuration(env_config_file)
 
     current_cfg_file_path = os.path.join(os.getcwd(), DEFAULT_CONFIG_FILE)
     if os.path.isfile(current_cfg_file_path):
         LOGGER.info(&#39;found config file at %s&#39;, current_cfg_file_path)
-        return ConfigurationManager._read_configuration_and_check_for_udpates(
-            current_cfg_file_path)
+        return ConfigurationManager._read_configuration(current_cfg_file_path)
 
         # check if file exists at home directory
     home_cfg_file_path = os.path.join(os.path.expanduser(&#39;~&#39;), DEFAULT_CONFIG_FILE)
@@ -805,7 +804,7 @@ def read_config_file() -&gt; Configuration:
         return ConfigurationManager._handle_first_start(home_cfg_file_path,
                                                         DEFAULT_CONFIGURATION)
 
-    return ConfigurationManager._read_configuration_and_check_for_udpates(home_cfg_file_path)</code></pre>
+    return ConfigurationManager._read_configuration(home_cfg_file_path)</code></pre>
 </details>
 </dd>
 </dl>

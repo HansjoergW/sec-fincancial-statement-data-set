@@ -34,6 +34,7 @@ Base Model for configuration.
 import os
 from dataclasses import dataclass, asdict
 from typing import Optional
+import configparser
 
 
 @dataclass
@@ -48,6 +49,7 @@ class Configuration:
     daily_download_dir: Optional[str] = None
     auto_update: Optional[bool] = True
     keep_zip_files: Optional[bool] = False
+    config_parser: Optional[configparser.ConfigParser] = None
 
     def __post_init__(self):
         self.daily_download_dir = os.path.join(self.download_dir, &#34;daily&#34;)
@@ -72,7 +74,7 @@ class Configuration:
 <dl>
 <dt id="secfsdstools.a_config.configmodel.Configuration"><code class="flex name class">
 <span>class <span class="ident">Configuration</span></span>
-<span>(</span><span>download_dir: str, db_dir: str, parquet_dir: str, user_agent_email: str, rapid_api_key: Optional[str] = None, rapid_api_plan: Optional[str] = 'basic', daily_download_dir: Optional[str] = None, auto_update: Optional[bool] = True, keep_zip_files: Optional[bool] = False)</span>
+<span>(</span><span>download_dir: str, db_dir: str, parquet_dir: str, user_agent_email: str, rapid_api_key: Optional[str] = None, rapid_api_plan: Optional[str] = 'basic', daily_download_dir: Optional[str] = None, auto_update: Optional[bool] = True, keep_zip_files: Optional[bool] = False, config_parser: Optional[configparser.ConfigParser] = None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Basic configuration settings</p></div>
@@ -91,6 +93,7 @@ class Configuration:
     daily_download_dir: Optional[str] = None
     auto_update: Optional[bool] = True
     keep_zip_files: Optional[bool] = False
+    config_parser: Optional[configparser.ConfigParser] = None
 
     def __post_init__(self):
         self.daily_download_dir = os.path.join(self.download_dir, &#34;daily&#34;)
@@ -106,6 +109,10 @@ class Configuration:
 <h3>Class variables</h3>
 <dl>
 <dt id="secfsdstools.a_config.configmodel.Configuration.auto_update"><code class="name">var <span class="ident">auto_update</span> : Optional[bool]</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="secfsdstools.a_config.configmodel.Configuration.config_parser"><code class="name">var <span class="ident">config_parser</span> : Optional[configparser.ConfigParser]</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -186,6 +193,7 @@ class Configuration:
 <h4><code><a title="secfsdstools.a_config.configmodel.Configuration" href="#secfsdstools.a_config.configmodel.Configuration">Configuration</a></code></h4>
 <ul class="two-column">
 <li><code><a title="secfsdstools.a_config.configmodel.Configuration.auto_update" href="#secfsdstools.a_config.configmodel.Configuration.auto_update">auto_update</a></code></li>
+<li><code><a title="secfsdstools.a_config.configmodel.Configuration.config_parser" href="#secfsdstools.a_config.configmodel.Configuration.config_parser">config_parser</a></code></li>
 <li><code><a title="secfsdstools.a_config.configmodel.Configuration.daily_download_dir" href="#secfsdstools.a_config.configmodel.Configuration.daily_download_dir">daily_download_dir</a></code></li>
 <li><code><a title="secfsdstools.a_config.configmodel.Configuration.db_dir" href="#secfsdstools.a_config.configmodel.Configuration.db_dir">db_dir</a></code></li>
 <li><code><a title="secfsdstools.a_config.configmodel.Configuration.download_dir" href="#secfsdstools.a_config.configmodel.Configuration.download_dir">download_dir</a></code></li>

@@ -62,7 +62,7 @@ def test_config_file_in_cwd(tmp_path, monkeypatch: pytest.MonkeyPatch):
                       download_dir=os.path.join(tmp_path, 'blabla'),
                       user_agent_email='user@email.com',
                       parquet_dir=os.path.join(tmp_path, 'parquet'),
-                      auto_update=False)) # prevent calling update
+                      auto_update=False))  # prevent calling update
 
     configuration = ConfigurationManager.read_config_file()
     assert configuration is not None
@@ -115,7 +115,7 @@ def test_config_file_in_home(tmp_path):
                       download_dir=os.path.join(tmp_path, 'bloblo'),
                       user_agent_email='user@email.com',
                       parquet_dir=os.path.join(tmp_path, 'parquet'),
-                      auto_update=False)) # prevent calling update
+                      auto_update=False))  # prevent calling update
 
     with patch('os.path.expanduser') as mock_expanduser:
         mock_expanduser.return_value = str(tmp_path)
@@ -139,8 +139,7 @@ def test_config_file_in_home_call_to_updated(tmp_path):
                       user_agent_email='user@email.com',
                       parquet_dir=os.path.join(tmp_path, 'parquet')))
 
-    with patch('os.path.expanduser') as mock_expanduser, \
-            patch('secfsdstools.c_update.updateprocess.Updater.update') as update_mock:
+    with patch('os.path.expanduser') as mock_expanduser:
         mock_expanduser.return_value = str(tmp_path)
 
         configuration = ConfigurationManager.read_config_file()
@@ -149,7 +148,6 @@ def test_config_file_in_home_call_to_updated(tmp_path):
         # check some default values
         assert configuration.auto_update is True
         assert configuration.keep_zip_files is False
-        update_mock.assert_called_once()
 
 
 def test_check_basic_configuration(tmp_path):

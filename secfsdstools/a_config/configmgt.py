@@ -137,7 +137,7 @@ class ConfigurationManager:
         updater = Updater.get_instance(config)
         updater.update()
 
-    @staticmethod
+    # @staticmethod
     # def _read_configuration_and_check_for_udpates(file_path: str) -> Configuration:
     #     config: Configuration = ConfigurationManager._read_configuration(file_path)
     #     # ConfigurationManager._check_for_update(config)

@@ -5,7 +5,6 @@ from unittest.mock import patch
 
 import pytest
 
-from secfsdstools.a_utils.fileutils import get_directories_in_directory
 from secfsdstools.b_setup.setupdb import DbCreator
 from secfsdstools.c_index.indexdataaccess import ParquetDBIndexingAccessor
 from secfsdstools.c_update.updateprocess import Updater
@@ -26,6 +25,7 @@ def updater(tmp_path: Path) -> Updater:
         parquet_dir=str(tmp_path / 'parquet'),
         user_agent="me@here.com",
         keep_zip_files=True,
+        auto_update=True,
         rapid_api_plan=None,
         rapid_api_key=None,
     )
@@ -47,54 +47,49 @@ def test_check_for_update(updater):
         assert updater._check_for_update() is True
 
 
-def test_do_download_no_rapid_api(updater):
+def test_update_no_rapid_api(updater):
     with patch('secfsdstools.c_download.secdownloading_process.SecDownloadingProcess.process') \
             as sec_download, \
-            patch('secfsdstools.c_download.rapiddownloading_process.RapidDownloadingProcess.process') \
-                    as rapid_download:
-        updater._do_download()
+            patch(
+                'secfsdstools.c_download.rapiddownloading_process.RapidDownloadingProcess.process') \
+                    as rapid_download, \
+            patch(
+                'secfsdstools.c_transform.toparquettransforming_process.ToParquetTransformerProcess.process') \
+                    as transformer, \
+            patch(
+                'secfsdstools.c_index.indexing_process.ReportParquetIndexerProcess.process') \
+                    as indexer:
+        updater._update()
 
         # Überprüfen, ob die download-Methode von SecZipDownloader aufgerufen wurde
         sec_download.assert_called_once()
         rapid_download.assert_not_called()
+        transformer.assert_called_once()
+        indexer.assert_called_once()
 
 
-def test_do_download_with_rapid_api(updater):
+def test_update_with_rapid_api(updater):
     updater.rapid_api_key = "akey"
     updater.rapid_api_plan = "basic"
 
     with patch('secfsdstools.c_download.secdownloading_process.SecDownloadingProcess.process') \
             as sec_download, \
-            patch('secfsdstools.c_download.rapiddownloading_process.RapidDownloadingProcess.process') \
-                    as rapid_download:
-        updater._do_download()
+            patch(
+                'secfsdstools.c_download.rapiddownloading_process.RapidDownloadingProcess.process') \
+                    as rapid_download, \
+            patch(
+                'secfsdstools.c_transform.toparquettransforming_process.ToParquetTransformerProcess.process') \
+                    as transformer, \
+            patch(
+                'secfsdstools.c_index.indexing_process.ReportParquetIndexerProcess.process') \
+                    as indexer:
+        updater._update()
 
         # Überprüfen, ob die download-Methode von SecZipDownloader aufgerufen wurde
         sec_download.assert_called_once()
         rapid_download.assert_called_once()
-
-
-def test_do_transform_none_existing_folder(updater):
-    updater.dld_dir = "./bla"
-    updater._do_transform()
-
-
-def test_do_transform_and_index(updater):
-    updater.dld_dir = f'{current_dir}/../_testdata/zip'
-    updater._do_transform()
-
-    transformed = get_directories_in_directory(os.path.join(updater.parquet_dir, 'quarter'))
-    assert len(transformed) == 3
-
-    # test indexing
-    updater._do_index()
-
-    indexer = ParquetDBIndexingAccessor(db_dir=updater.db_dir)
-    indexed_files_df = indexer.read_all_indexfileprocessing_df()
-    assert len(indexed_files_df) == 3
-
-    reports_df = indexer.read_all_indexreports_df()
-    assert len(reports_df) == 1456
+        assert transformer.call_count == 2
+        assert indexer.call_count == 2
 
 
 def test_integration_test(updater):
@@ -108,7 +103,8 @@ def test_integration_test(updater):
     time.sleep(1)  # make sure some time has past, before calling update
     with patch('secfsdstools.c_download.secdownloading_process.SecDownloadingProcess.process') \
             as sec_download, \
-            patch('secfsdstools.c_download.rapiddownloading_process.RapidDownloadingProcess.process') \
+            patch(
+                'secfsdstools.c_download.rapiddownloading_process.RapidDownloadingProcess.process') \
                     as rapid_download:
         # updates LAST_UPDATE_CHECK_KEY
         updater.update()

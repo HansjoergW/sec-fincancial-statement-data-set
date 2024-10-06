@@ -123,9 +123,10 @@ class Updater:
                                                             file_type='daily'))
 
         else:
-            print("No rapid-api-key is set: \n"
-                  + "If you are interested in daily updates, please have a look at "
-                  + "https://rapidapi.com/hansjoerg.wingeier/api/daily-sec-financial-statement-dataset")
+            print(
+                "No rapid-api-key is set: \n"
+                + "If you are interested in daily updates, please have a look at "
+                + "https://rapidapi.com/hansjoerg.wingeier/api/daily-sec-financial-statement-dataset") # pylint: disable=C0301
 
         return process_list
 
@@ -142,7 +143,6 @@ class Updater:
 
         """
         if force_update | self.auto_update:
-            print("------------------ UPDATE CALLED -----------------------")
             if not force_update & self.auto_update:
                 LOGGER.debug('AutoUpdate is True, so check if new zip files are available')
 

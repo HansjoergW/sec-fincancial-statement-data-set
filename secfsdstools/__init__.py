@@ -16,11 +16,11 @@ except PackageNotFoundError:
 
 
 def is_running_in_pytest():
+    """ Check if we are running as a test """
     return 'pytest' in sys.argv[0]
 
 
 # ensure only execute if not pytest is running
 if not is_running_in_pytest():
-    logging.getLogger().info("log: loading secfsdstools")
-    print("print: loading secfsdstools ... ")
+    logging.getLogger().info("loading secfsdstools ...")
     secfsdstools.update.update()

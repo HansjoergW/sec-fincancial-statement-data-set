@@ -22,5 +22,6 @@ def is_running_in_pytest():
 
 # ensure only execute if not pytest is running
 if not is_running_in_pytest():
+    print(sys.argv)
     logging.getLogger().info("loading secfsdstools ...")
     secfsdstools.update.update()

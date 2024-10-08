@@ -34,6 +34,18 @@ Todos:
 - in CF haben wir oft auch zusätzliche 'Cash' Tags -> benötigen wir diese im BS auch?
 - MaxQtr PrePivot Rule also for BS und IS
 
+- Standardize Oustanding Shares, resp. validate
+  (see: https://github.com/HansjoergW/sec-fincancial-statement-data-set/issues/13)
+  "But as I understand, they do not have the same exact meaning. I haven't investigated that, so I am not sure if you
+  can assume that they are the same, resp. close enough to treat them that way. In the CP, the value appears
+  as EntityCommonStockSharesOutstanding (if present), in the Balance Sheet as CommonStockSharesOutstanding,
+  and in the IncomeStatement as WeightedAverageNumberOfSharesOutstandingBasic."
+
+  -> adding EntityCommonStockSharesOutstanding from CP
+  -> adding CommonStockSharesOutstanding to BS
+  -> provide default handling of choosing which value for final "OutstandingShares"
+
+
 
 - Discord Channel?
 - evtl. sollte jede Regel noch eine "Explanation" bekommen. Ein Text, der die Regel spezifisch erklärt,

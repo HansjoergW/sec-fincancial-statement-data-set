@@ -35,7 +35,7 @@ import logging
 import os
 import pprint
 import re
-from typing import List
+from typing import List, Optional
 
 from secfsdstools.a_config.configmodel import Configuration
 from secfsdstools.a_utils.dbutils import DBStateAcessor
@@ -200,6 +200,8 @@ class ConfigurationManager:
             rapid_api_plan=config[&#39;DEFAULT&#39;].get(&#39;RapidApiPlan&#39;, &#39;basic&#39;),
             auto_update=config[&#39;DEFAULT&#39;].getboolean(&#39;AutoUpdate&#39;, True),
             keep_zip_files=config[&#39;DEFAULT&#39;].getboolean(&#39;KeepZipFiles&#39;, False),
+            post_update_hook=config[&#39;DEFAULT&#39;].get(&#39;PostUpdateHook&#39;, None),
+            post_update_processes=config[&#39;DEFAULT&#39;].get(&#39;PostUpdateProcesses&#39;, None),
             config_parser=config
         )
 
@@ -225,6 +227,85 @@ class ConfigurationManager:
     def _is_valid_email(email):
         pattern = r&#39;^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$&#39;
         return bool(re.match(pattern, email))
+
+    @staticmethod
+    def _validate_post_update_hook(function_name: Optional[str]) -&gt; List[str]:
+        if function_name is None:
+            return []
+
+        import importlib
+        import inspect
+
+        messages: List[str] = []
+        module_str = &#34;&#34;
+        function_str = &#34;&#34;
+        try:
+            module_str, function_str = function_name.rsplit(&#39;.&#39;, 1)
+            module = importlib.import_module(module_str)
+            my_function = getattr(module, function_str)
+            signature = inspect.signature(my_function)
+            params = list(signature.parameters.values())
+
+            if len(params) != 1:
+                messages.append(f&#34;Exactly one parameter is expected for {function_name}&#34;)
+
+            if not ((params[0].annotation == inspect._empty) |
+                    (params[0].annotation == Configuration)):
+                messages.append(f&#34;Parameter of function has wrong type {params[0].annotation}. &#34;
+                                &#34;It should be secfsdstools.a_config.configmodel.Configuration&#34;)
+
+        except ModuleNotFoundError:
+            messages.append(f&#34;Module {module_str} not found&#34;)
+        except AttributeError:
+            messages.append(f&#34;Function {function_str} not found in module {module_str}&#34;)
+
+        if len(messages) &gt; 0:
+            messages = [&#34;Definition of PostUpdateHook function has problems: &#34;] + messages
+
+        return messages
+
+    @staticmethod
+    def _validate_post_update_processes(function_name: Optional[str]) -&gt; List[str]:
+        if function_name is None:
+            return []
+
+        import importlib
+        import inspect
+        from secfsdstools.c_automation.task_framework import AbstractProcess
+
+        messages: List[str] = []
+        module_str = &#34;&#34;
+        function_str = &#34;&#34;
+        try:
+            module_str, function_str = function_name.rsplit(&#39;.&#39;, 1)
+            module = importlib.import_module(module_str)
+            my_function = getattr(module, function_str)
+            signature = inspect.signature(my_function)
+            params = list(signature.parameters.values())
+
+            if len(params) != 1:
+                messages.append(f&#34;Expecting exactly one parameter is expected for {function_name}&#34;)
+
+            if not ((params[0].annotation == inspect._empty) |
+                    (params[0].annotation == Configuration)):
+                messages.append(f&#34;Parameter of function has wrong type {params[0].annotation}. &#34;
+                                &#34;It should be secfsdstools.a_config.configmodel.Configuration&#34;)
+
+            if not ((signature.return_annotation != inspect._empty) |
+                    (signature.return_annotation != List[AbstractProcess])):
+                messages.append(
+                    f&#34;Return type of function has wrong type {signature.return_annotation}. &#34;
+                    &#34;It should be List[secfsdstools.c_automation.task_framework.AbstractProcess]&#34;)
+
+        except ModuleNotFoundError:
+            messages.append(f&#34;Module {module_str} not found&#34;)
+        except AttributeError:
+            messages.append(f&#34;Function {function_str} not found in module {module_str}&#34;)
+
+        if len(messages) &gt; 0:
+            messages = [&#34;Definition of PostUpdateProcesses function has problems: &#34;] + messages
+
+        return messages
 
     @staticmethod
     def check_basic_configuration(config: Configuration) -&gt; List[str]:
@@ -257,6 +338,11 @@ class ConfigurationManager:
         if not ConfigurationManager._is_valid_email(config.user_agent_email):
             messages.append(
                 f&#39;The defined UserAgentEmail is not a valid format: {config.user_agent_email}&#39;)
+
+        messages.extend(ConfigurationManager._validate_post_update_hook(config.post_update_hook))
+
+        messages.extend(
+            ConfigurationManager._validate_post_update_processes(config.post_update_processes))
 
         return messages
 
@@ -483,6 +569,8 @@ If the file does not exist, it will create one in the current directory</p></div
             rapid_api_plan=config[&#39;DEFAULT&#39;].get(&#39;RapidApiPlan&#39;, &#39;basic&#39;),
             auto_update=config[&#39;DEFAULT&#39;].getboolean(&#39;AutoUpdate&#39;, True),
             keep_zip_files=config[&#39;DEFAULT&#39;].getboolean(&#39;KeepZipFiles&#39;, False),
+            post_update_hook=config[&#39;DEFAULT&#39;].get(&#39;PostUpdateHook&#39;, None),
+            post_update_processes=config[&#39;DEFAULT&#39;].get(&#39;PostUpdateProcesses&#39;, None),
             config_parser=config
         )
 
@@ -508,6 +596,85 @@ If the file does not exist, it will create one in the current directory</p></div
     def _is_valid_email(email):
         pattern = r&#39;^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$&#39;
         return bool(re.match(pattern, email))
+
+    @staticmethod
+    def _validate_post_update_hook(function_name: Optional[str]) -&gt; List[str]:
+        if function_name is None:
+            return []
+
+        import importlib
+        import inspect
+
+        messages: List[str] = []
+        module_str = &#34;&#34;
+        function_str = &#34;&#34;
+        try:
+            module_str, function_str = function_name.rsplit(&#39;.&#39;, 1)
+            module = importlib.import_module(module_str)
+            my_function = getattr(module, function_str)
+            signature = inspect.signature(my_function)
+            params = list(signature.parameters.values())
+
+            if len(params) != 1:
+                messages.append(f&#34;Exactly one parameter is expected for {function_name}&#34;)
+
+            if not ((params[0].annotation == inspect._empty) |
+                    (params[0].annotation == Configuration)):
+                messages.append(f&#34;Parameter of function has wrong type {params[0].annotation}. &#34;
+                                &#34;It should be secfsdstools.a_config.configmodel.Configuration&#34;)
+
+        except ModuleNotFoundError:
+            messages.append(f&#34;Module {module_str} not found&#34;)
+        except AttributeError:
+            messages.append(f&#34;Function {function_str} not found in module {module_str}&#34;)
+
+        if len(messages) &gt; 0:
+            messages = [&#34;Definition of PostUpdateHook function has problems: &#34;] + messages
+
+        return messages
+
+    @staticmethod
+    def _validate_post_update_processes(function_name: Optional[str]) -&gt; List[str]:
+        if function_name is None:
+            return []
+
+        import importlib
+        import inspect
+        from secfsdstools.c_automation.task_framework import AbstractProcess
+
+        messages: List[str] = []
+        module_str = &#34;&#34;
+        function_str = &#34;&#34;
+        try:
+            module_str, function_str = function_name.rsplit(&#39;.&#39;, 1)
+            module = importlib.import_module(module_str)
+            my_function = getattr(module, function_str)
+            signature = inspect.signature(my_function)
+            params = list(signature.parameters.values())
+
+            if len(params) != 1:
+                messages.append(f&#34;Expecting exactly one parameter is expected for {function_name}&#34;)
+
+            if not ((params[0].annotation == inspect._empty) |
+                    (params[0].annotation == Configuration)):
+                messages.append(f&#34;Parameter of function has wrong type {params[0].annotation}. &#34;
+                                &#34;It should be secfsdstools.a_config.configmodel.Configuration&#34;)
+
+            if not ((signature.return_annotation != inspect._empty) |
+                    (signature.return_annotation != List[AbstractProcess])):
+                messages.append(
+                    f&#34;Return type of function has wrong type {signature.return_annotation}. &#34;
+                    &#34;It should be List[secfsdstools.c_automation.task_framework.AbstractProcess]&#34;)
+
+        except ModuleNotFoundError:
+            messages.append(f&#34;Module {module_str} not found&#34;)
+        except AttributeError:
+            messages.append(f&#34;Function {function_str} not found in module {module_str}&#34;)
+
+        if len(messages) &gt; 0:
+            messages = [&#34;Definition of PostUpdateProcesses function has problems: &#34;] + messages
+
+        return messages
 
     @staticmethod
     def check_basic_configuration(config: Configuration) -&gt; List[str]:
@@ -540,6 +707,11 @@ If the file does not exist, it will create one in the current directory</p></div
         if not ConfigurationManager._is_valid_email(config.user_agent_email):
             messages.append(
                 f&#39;The defined UserAgentEmail is not a valid format: {config.user_agent_email}&#39;)
+
+        messages.extend(ConfigurationManager._validate_post_update_hook(config.post_update_hook))
+
+        messages.extend(
+            ConfigurationManager._validate_post_update_processes(config.post_update_processes))
 
         return messages
 
@@ -663,6 +835,11 @@ def check_basic_configuration(config: Configuration) -&gt; List[str]:
     if not ConfigurationManager._is_valid_email(config.user_agent_email):
         messages.append(
             f&#39;The defined UserAgentEmail is not a valid format: {config.user_agent_email}&#39;)
+
+    messages.extend(ConfigurationManager._validate_post_update_hook(config.post_update_hook))
+
+    messages.extend(
+        ConfigurationManager._validate_post_update_processes(config.post_update_processes))
 
     return messages</code></pre>
 </details>

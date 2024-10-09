@@ -21,6 +21,8 @@ class Configuration:
     auto_update: Optional[bool] = True
     keep_zip_files: Optional[bool] = False
     config_parser: Optional[configparser.ConfigParser] = None
+    post_update_hook: Optional[str] = None
+    post_update_processes: Optional[str] = None
 
     def __post_init__(self):
         self.daily_download_dir = os.path.join(self.download_dir, "daily")

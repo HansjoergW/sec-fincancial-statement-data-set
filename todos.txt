@@ -18,7 +18,11 @@ v.1.7.0
   (previously just the collectors caused a check for updates)
  -> via __init__.py in secfsdstools module
 
+- post_update_hook definition -> called after updates with Configuration as parameter
+- post_update_processes definition -> returns processes that are executed after standard process (dld, transform, index)
+
 - hook for after updated logic
+
     - Aufbereitung der Daten für BS, IS und CF Statement möglichst direkt bei update machen,
       so, dass diese Daten schon vorbereitet und gefiltert zur Verfügung stehen.
       Vlt. auch eine Art PostDownload Hook anbieten.

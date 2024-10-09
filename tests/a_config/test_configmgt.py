@@ -1,5 +1,6 @@
 import os
 from io import StringIO
+from typing import List
 from unittest.mock import patch
 
 import pytest
@@ -8,6 +9,7 @@ from secfsdstools.a_config.configmgt import ConfigurationManager, SECFSDSTOOLS_E
     DEFAULT_CONFIG_FILE
 from secfsdstools.a_config.configmodel import Configuration
 from secfsdstools.b_setup.setupdb import DbCreator
+from secfsdstools.c_automation.task_framework import AbstractProcess
 
 CURRENT_DIR = os.path.dirname(os.path.realpath(__file__))
 NOT_EXISTING_CFG = f'{CURRENT_DIR}/config.cfg'
@@ -160,6 +162,77 @@ def test_check_basic_configuration(tmp_path):
     assert len(results) == 1
     assert 'UserAgentEmail' in results[0]
 
+
+def my_update_hook(config: Configuration):
+    pass
+
+
+def my_update_hook_no_param_type(config):
+    pass
+
+
+def my_update_hook_wrong_param_type(config: str):
+    pass
+
+
+def test__validate_post_update_hook():
+    assert len(ConfigurationManager._validate_post_update_hook(
+        "tests.a_config.test_configmgt.my_update_hook")) == 0
+    assert len(ConfigurationManager._validate_post_update_hook(
+        "tests.a_config.test_configmgt.my_update_hook_no_param_type")) == 0
+    assert len(ConfigurationManager._validate_post_update_hook(
+        "tests.a_config.test_configmgt.my_update_hook_wrong_param_type")) == 2
+
+    # wrong function name
+    assert len(ConfigurationManager._validate_post_update_hook(
+        "tests.a_config.test_configmgt.wrongfunction")) == 2
+
+    # wrong module name
+    assert len(ConfigurationManager._validate_post_update_hook(
+        "tests.unknown.test_configmgt.wrongfunction")) == 2
+
+
+
+def my_update_processfunc(config: Configuration) -> List[AbstractProcess]:
+    pass
+
+
+def my_update_processfunc_no_param_type(config) -> List[AbstractProcess]:
+    pass
+
+
+def my_update_processfunc_wrong_param_type(config: str) -> List[AbstractProcess]:
+    pass
+
+
+def my_update_processfunc_no_return_type(config: Configuration):
+    pass
+
+
+def my_update_processfunc_wrong_return_type(config: Configuration) -> List[str]:
+    pass
+
+def test__validate_post_update_processes():
+
+    assert len(ConfigurationManager._validate_post_update_processes(
+        "tests.a_config.test_configmgt.my_update_processfunc")) == 0
+    assert len(ConfigurationManager._validate_post_update_processes(
+        "tests.a_config.test_configmgt.my_update_processfunc_no_param_type")) == 0
+    assert len(ConfigurationManager._validate_post_update_processes(
+        "tests.a_config.test_configmgt.my_update_processfunc_wrong_param_type")) == 2
+    assert len(ConfigurationManager._validate_post_update_processes(
+        "tests.a_config.test_configmgt.my_update_processfunc_no_return_type")) == 2
+    assert len(ConfigurationManager._validate_post_update_processes(
+        "tests.a_config.test_configmgt.my_update_processfunc_wrong_return_type")) == 2
+
+
+    # wrong function name
+    assert len(ConfigurationManager._validate_post_update_processes(
+        "tests.a_config.test_configmgt.wrongfunction")) == 2
+
+    # wrong module name
+    assert len(ConfigurationManager._validate_post_update_processes(
+        "tests.unknown.test_configmgt.wrongfunction")) == 2
 
 def test_check_rapid_configuration(tmp_path):
     # either to mock the db calls for get_key/set_key or providing a db db

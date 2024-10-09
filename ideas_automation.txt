@@ -37,6 +37,7 @@ Umbau von CheckForNewData
               oder wir managen eigene Tasks separat -> eigenr check, ob sie ausgeführt werden müssen, oder nicht
 
     def call_function_from_string(module_function_str):
+
         try:
             module_str, function_str = module_function_str.rsplit('.', 1)
             module = importlib.import_module(module_str)

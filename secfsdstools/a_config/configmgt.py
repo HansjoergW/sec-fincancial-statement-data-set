@@ -262,8 +262,8 @@ class ConfigurationManager:
                 messages.append(f"Parameter of function has wrong type {params[0].annotation}. "
                                 "It should be secfsdstools.a_config.configmodel.Configuration")
 
-            if not ((signature.return_annotation != inspect._empty) |
-                    (signature.return_annotation != List[AbstractProcess])):
+            if not ((signature.return_annotation == inspect._empty) |
+                    (signature.return_annotation == List[AbstractProcess])):
                 messages.append(
                     f"Return type of function has wrong type {signature.return_annotation}. "
                     "It should be List[secfsdstools.c_automation.task_framework.AbstractProcess]")

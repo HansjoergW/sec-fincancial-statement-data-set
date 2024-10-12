@@ -192,7 +192,6 @@ def test__validate_post_update_hook():
         "tests.unknown.test_configmgt.wrongfunction")) == 2
 
 
-
 def my_update_processfunc(config: Configuration) -> List[AbstractProcess]:
     pass
 
@@ -212,8 +211,8 @@ def my_update_processfunc_no_return_type(config: Configuration):
 def my_update_processfunc_wrong_return_type(config: Configuration) -> List[str]:
     pass
 
-def test__validate_post_update_processes():
 
+def test__validate_post_update_processes():
     assert len(ConfigurationManager._validate_post_update_processes(
         "tests.a_config.test_configmgt.my_update_processfunc")) == 0
     assert len(ConfigurationManager._validate_post_update_processes(
@@ -221,10 +220,9 @@ def test__validate_post_update_processes():
     assert len(ConfigurationManager._validate_post_update_processes(
         "tests.a_config.test_configmgt.my_update_processfunc_wrong_param_type")) == 2
     assert len(ConfigurationManager._validate_post_update_processes(
-        "tests.a_config.test_configmgt.my_update_processfunc_no_return_type")) == 2
+        "tests.a_config.test_configmgt.my_update_processfunc_no_return_type")) == 0
     assert len(ConfigurationManager._validate_post_update_processes(
         "tests.a_config.test_configmgt.my_update_processfunc_wrong_return_type")) == 2
-
 
     # wrong function name
     assert len(ConfigurationManager._validate_post_update_processes(
@@ -233,6 +231,7 @@ def test__validate_post_update_processes():
     # wrong module name
     assert len(ConfigurationManager._validate_post_update_processes(
         "tests.unknown.test_configmgt.wrongfunction")) == 2
+
 
 def test_check_rapid_configuration(tmp_path):
     # either to mock the db calls for get_key/set_key or providing a db db

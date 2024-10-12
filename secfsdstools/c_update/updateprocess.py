@@ -4,7 +4,7 @@ into parquet format, and indexing the reports.
 """
 import logging
 import time
-from typing import Optional, List
+from typing import List
 
 from secfsdstools.a_config.configmodel import Configuration
 from secfsdstools.a_utils.dbutils import DBStateAcessor
@@ -33,41 +33,29 @@ class Updater:
             config: Configuration object
 
         Returns:
-            Updater: the instanc
+            Updater: the instance
 
         """
         return Updater(
-            db_dir=config.db_dir,
-            dld_dir=config.download_dir,
-            daily_dld_dir=config.daily_download_dir,
-            parquet_dir=config.parquet_dir,
-            user_agent=config.user_agent_email,
-            keep_zip_files=config.keep_zip_files,
-            auto_update=config.auto_update,
-            rapid_api_key=config.rapid_api_key,
-            rapid_api_plan=config.rapid_api_plan
+            config
         )
 
     def __init__(self,
-                 db_dir: str,
-                 dld_dir: str,
-                 daily_dld_dir: str,
-                 parquet_dir: str,
-                 user_agent: str,
-                 keep_zip_files: bool,
-                 auto_update: bool,
-                 rapid_api_plan: Optional[str],
-                 rapid_api_key: Optional[str]):
-        self.db_state_accesor = DBStateAcessor(db_dir=db_dir)
-        self.db_dir = db_dir
-        self.dld_dir = dld_dir
-        self.daily_dld_dir = daily_dld_dir
-        self.parquet_dir = parquet_dir
-        self.user_agent = user_agent
-        self.rapid_api_plan = rapid_api_plan
-        self.rapid_api_key = rapid_api_key
-        self.keep_zip_files = keep_zip_files
-        self.auto_update = auto_update
+                 config: Configuration):
+        self.config = config
+
+        self.db_state_accesor = DBStateAcessor(db_dir=config.db_dir)
+        self.db_dir = config.db_dir
+        self.dld_dir = config.download_dir
+        self.daily_dld_dir = config.daily_download_dir
+        self.parquet_dir = config.parquet_dir
+        self.user_agent = config.user_agent_email
+        self.rapid_api_plan = config.rapid_api_plan
+        self.rapid_api_key = config.rapid_api_key
+        self.keep_zip_files = config.keep_zip_files
+        self.auto_update = config.auto_update
+        self.post_update_hook = config.post_update_hook
+        self.post_update_processes = config.post_update_processes
 
     def _check_for_update(self) -> bool:
         """checks if a new update check should be conducted."""
@@ -126,12 +114,57 @@ class Updater:
             print(
                 "No rapid-api-key is set: \n"
                 + "If you are interested in daily updates, please have a look at "
-                + "https://rapidapi.com/hansjoerg.wingeier/api/daily-sec-financial-statement-dataset") # pylint: disable=C0301
+                + "https://rapidapi.com/hansjoerg.wingeier/api/daily-sec-financial-statement-dataset")  # pylint: disable=C0301
 
         return process_list
 
+    def _load_post_update_process(self) -> List[AbstractProcess]:
+        import importlib
+
+        if not self.post_update_processes:
+            return []
+
+        module_str, function_str = self.post_update_processes.rsplit('.', 1)
+        module = importlib.import_module(module_str)
+        post_processes_function = getattr(module, function_str)
+
+        post_processes = post_processes_function(self.config)
+
+        if not isinstance(post_processes, list):
+            LOGGER.error("A post_update_processes function was defined in the configuration: %s"
+                         ". But it does not return a list.", self.post_update_processes)
+            raise ValueError("Defined post_update_processes function does not return a list: "
+                             f"{self.post_update_processes}")
+
+        if not all(isinstance(item, AbstractProcess) for item in post_processes):
+            LOGGER.error("A post_update_processes function was defined in the configuration: %s"
+                         ". But it not all elements are of type AbstractProcess.",
+                         self.post_update_processes)
+            raise ValueError("Defined post_update_processes function does have elements that are "
+                             f"not of type AbstractPcoess: {self.post_update_processes}")
+
+        LOGGER.info("Loading %d post update processes from %s",
+                    len(post_processes), self.post_update_processes)
+
+        return post_processes
+
+    def _execute_post_update_hook(self):
+        import importlib
+
+        if not self.post_update_hook:
+            return
+
+        module_str, function_str = self.post_update_processes.rsplit('.', 1)
+        module = importlib.import_module(module_str)
+        post_update_hook = getattr(module, function_str)
+
+        LOGGER.info("Calling post_update_hook %s", self.post_update_hook)
+        post_update_hook(self.config)
+
     def _update(self):
         processes: List[AbstractProcess] = self._build_process_list()
+
+        processes.extend(self._load_post_update_process())
 
         for process in processes:
             process.process()

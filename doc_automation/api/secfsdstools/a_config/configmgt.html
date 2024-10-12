@@ -291,8 +291,8 @@ class ConfigurationManager:
                 messages.append(f&#34;Parameter of function has wrong type {params[0].annotation}. &#34;
                                 &#34;It should be secfsdstools.a_config.configmodel.Configuration&#34;)
 
-            if not ((signature.return_annotation != inspect._empty) |
-                    (signature.return_annotation != List[AbstractProcess])):
+            if not ((signature.return_annotation == inspect._empty) |
+                    (signature.return_annotation == List[AbstractProcess])):
                 messages.append(
                     f&#34;Return type of function has wrong type {signature.return_annotation}. &#34;
                     &#34;It should be List[secfsdstools.c_automation.task_framework.AbstractProcess]&#34;)
@@ -660,8 +660,8 @@ If the file does not exist, it will create one in the current directory</p></div
                 messages.append(f&#34;Parameter of function has wrong type {params[0].annotation}. &#34;
                                 &#34;It should be secfsdstools.a_config.configmodel.Configuration&#34;)
 
-            if not ((signature.return_annotation != inspect._empty) |
-                    (signature.return_annotation != List[AbstractProcess])):
+            if not ((signature.return_annotation == inspect._empty) |
+                    (signature.return_annotation == List[AbstractProcess])):
                 messages.append(
                     f&#34;Return type of function has wrong type {signature.return_annotation}. &#34;
                     &#34;It should be List[secfsdstools.c_automation.task_framework.AbstractProcess]&#34;)

@@ -144,7 +144,8 @@ class Updater:
         else:
             print(
                 &#34;No rapid-api-key is set: \n&#34;
-                + &#34;If you are interested in daily updates, please have a look at &#34;
+                + &#34;If you are interested in receiving the latest SEC filings daily and not just &#34;
+                + &#34;each quarter, please have a look at &#34;
                 + &#34;https://rapidapi.com/hansjoerg.wingeier/api/daily-sec-financial-statement-dataset&#34;)  # pylint: disable=C0301
 
         return process_list
@@ -185,7 +186,7 @@ class Updater:
         if not self.post_update_hook:
             return
 
-        module_str, function_str = self.post_update_processes.rsplit(&#39;.&#39;, 1)
+        module_str, function_str = self.post_update_hook.rsplit(&#39;.&#39;, 1)
         module = importlib.import_module(module_str)
         post_update_hook = getattr(module, function_str)
 
@@ -199,6 +200,9 @@ class Updater:
 
         for process in processes:
             process.process()
+
+        self._execute_post_update_hook()
+
 
     def update(self, force_update: bool = False):
         &#34;&#34;&#34;
@@ -339,7 +343,8 @@ class Updater:
         else:
             print(
                 &#34;No rapid-api-key is set: \n&#34;
-                + &#34;If you are interested in daily updates, please have a look at &#34;
+                + &#34;If you are interested in receiving the latest SEC filings daily and not just &#34;
+                + &#34;each quarter, please have a look at &#34;
                 + &#34;https://rapidapi.com/hansjoerg.wingeier/api/daily-sec-financial-statement-dataset&#34;)  # pylint: disable=C0301
 
         return process_list
@@ -380,7 +385,7 @@ class Updater:
         if not self.post_update_hook:
             return
 
-        module_str, function_str = self.post_update_processes.rsplit(&#39;.&#39;, 1)
+        module_str, function_str = self.post_update_hook.rsplit(&#39;.&#39;, 1)
         module = importlib.import_module(module_str)
         post_update_hook = getattr(module, function_str)
 
@@ -394,6 +399,9 @@ class Updater:
 
         for process in processes:
             process.process()
+
+        self._execute_post_update_hook()
+
 
     def update(self, force_update: bool = False):
         &#34;&#34;&#34;

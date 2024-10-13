@@ -113,7 +113,8 @@ class Updater:
         else:
             print(
                 "No rapid-api-key is set: \n"
-                + "If you are interested in daily updates, please have a look at "
+                + "If you are interested in receiving the latest SEC filings daily and not just "
+                + "each quarter, please have a look at "
                 + "https://rapidapi.com/hansjoerg.wingeier/api/daily-sec-financial-statement-dataset")  # pylint: disable=C0301
 
         return process_list
@@ -154,7 +155,7 @@ class Updater:
         if not self.post_update_hook:
             return
 
-        module_str, function_str = self.post_update_processes.rsplit('.', 1)
+        module_str, function_str = self.post_update_hook.rsplit('.', 1)
         module = importlib.import_module(module_str)
         post_update_hook = getattr(module, function_str)
 
@@ -168,6 +169,9 @@ class Updater:
 
         for process in processes:
             process.process()
+
+        self._execute_post_update_hook()
+
 
     def update(self, force_update: bool = False):
         """

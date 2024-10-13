@@ -5,6 +5,7 @@ from unittest.mock import patch
 
 import pytest
 
+from secfsdstools.a_config.configmodel import Configuration
 from secfsdstools.b_setup.setupdb import DbCreator
 from secfsdstools.c_index.indexdataaccess import ParquetDBIndexingAccessor
 from secfsdstools.c_update.updateprocess import Updater
@@ -18,17 +19,19 @@ def updater(tmp_path: Path) -> Updater:
 
     DbCreator(db_dir=db_dir).create_db()
 
-    return Updater(
+    config: Configuration = Configuration(
         db_dir=db_dir,
-        dld_dir=str(tmp_path / 'dld'),
-        daily_dld_dir=str(tmp_path / 'dlddaily'),
+        download_dir=str(tmp_path / 'dld'),
+        daily_download_dir=str(tmp_path / 'dlddaily'),
         parquet_dir=str(tmp_path / 'parquet'),
-        user_agent="me@here.com",
+        user_agent_email="me@here.com",
         keep_zip_files=True,
         auto_update=True,
         rapid_api_plan=None,
         rapid_api_key=None,
     )
+
+    return Updater(config=config)
 
 
 def test_check_for_update(updater):
@@ -124,3 +127,45 @@ def test_integration_test(updater):
         # check that
         last_check = updater.db_state_accesor.get_key(Updater.LAST_UPDATE_CHECK_KEY)
         assert start_time < float(last_check)
+
+
+def update_hook(config: Configuration):
+    print("update_hook_called")
+
+
+def update_processes_hook(config: Configuration):
+    print("update_processes_hook")
+    return []
+
+
+def test_update_hooks(tmp_path):
+    db_dir = str(tmp_path / 'db')
+
+    DbCreator(db_dir=db_dir).create_db()
+
+    config: Configuration = Configuration(
+        db_dir=db_dir,
+        download_dir=str(tmp_path / 'dld'),
+        daily_download_dir=str(tmp_path / 'dlddaily'),
+        parquet_dir=str(tmp_path / 'parquet'),
+        user_agent_email="me@here.com",
+        keep_zip_files=True,
+        auto_update=True,
+        rapid_api_plan=None,
+        rapid_api_key=None,
+        post_update_hook="tests.c_update.test_updatedprocess.update_hook",
+        post_update_processes="tests.c_update.test_updatedprocess.update_processes_hook"
+    )
+
+    updater = Updater(config=config)
+    with patch('secfsdstools.c_download.secdownloading_process.SecDownloadingProcess.process') \
+            as sec_download, \
+            patch(
+                'secfsdstools.c_download.rapiddownloading_process.RapidDownloadingProcess.process') \
+                    as rapid_download, \
+            patch('tests.c_update.test_updatedprocess.update_hook') as update_hook_patch, \
+            patch('tests.c_update.test_updatedprocess.update_processes_hook', return_value=[]) as update_processes_hook_patch:
+        updater.update()
+
+        update_hook_patch.assert_called_once()
+        update_processes_hook_patch.assert_called_once()

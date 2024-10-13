@@ -16,7 +16,7 @@ except PackageNotFoundError:
 
 
 def is_running_in_pytest_or_pdoc():
-    """ Check if we are running as a test """
+    """ Check if we are running as a test or inside the build process """
     return ('pytest' in sys.argv[0]) or ('pdoc3' in sys.argv[0])
 
 

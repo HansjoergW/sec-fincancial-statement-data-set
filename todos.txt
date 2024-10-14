@@ -16,8 +16,9 @@ New Release
 v.1.7.0
 - check for update is always executed, regardless which feature of the framework is used
   (previously just the collectors caused a check for updates)
- -> via __init__.py in secfsdstools module
+ -> via __init__.py of special c_update_check module, which is imported from the by the main modules
 
+- interface Updater classmethod has changed -> taking config-instance
 - post_update_hook definition -> called after updates with Configuration as parameter
 - post_update_processes definition -> returns processes that are executed after standard process (dld, transform, index)
 

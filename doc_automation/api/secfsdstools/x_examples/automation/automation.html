@@ -4,8 +4,10 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.10.0" />
-<title>secfsdstools.f_standardize API documentation</title>
-<meta name="description" content="" />
+<title>secfsdstools.x_examples.automation.automation API documentation</title>
+<meta name="description" content="This module shows the automation possibilities.
+These are mainly providing a hook method, which can create additional steps that are executed
+during …" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
 <link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
@@ -19,57 +21,124 @@
 <main>
 <article id="content">
 <header>
-<h1 class="title">Module <code>secfsdstools.f_standardize</code></h1>
+<h1 class="title">Module <code>secfsdstools.x_examples.automation.automation</code></h1>
 </header>
 <section id="section-intro">
+<p>This module shows the automation possibilities.
+These are mainly providing a hook method, which can create additional steps that are executed
+during the "check-for-update" (checking whether a new quarterly zip file is available), and
+providing another hook-method, that is simply called at the end of the whole update process.</p>
+<p>As a remainder, the framework executes all update steps (check and downloading new zip files,
+transforming them to parquet, indexing the reports, and any additional steps that you define
+as shown here.</p>
+<p>Usually, you would configure these methods here in the secfsdstools configuration file, like</p>
+<pre>
+[DEFAULT]
+downloaddirectory = ...
+dbdirectory = ...
+parquetdirectory = ...
+useragentemail = ...
+autoupdate = True
+keepzipfiles = False
+postppdatehook=secfsdstools.x_examples.automation.automation.after_update
+postupdateprocesses=secfsdstools.x_examples.automation.automation.define_extra_processes
+</pre>
+<p>But you can also "force" it to run, for instance using the logic that is defined in the
+<strong>main</strong> section of this module.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">import secfsdstools.c_update_check</code></pre>
+<pre><code class="python">&#34;&#34;&#34;
+This module shows the automation possibilities.
+These are mainly providing a hook method, which can create additional steps that are executed
+during the &#34;check-for-update&#34; (checking whether a new quarterly zip file is available), and
+providing another hook-method, that is simply called at the end of the whole update process.
+
+As a remainder, the framework executes all update steps (check and downloading new zip files,
+transforming them to parquet, indexing the reports, and any additional steps that you define
+as shown here.
+
+Usually, you would configure these methods here in the secfsdstools configuration file, like
+&lt;pre&gt;
+[DEFAULT]
+downloaddirectory = ...
+dbdirectory = ...
+parquetdirectory = ...
+useragentemail = ...
+autoupdate = True
+keepzipfiles = False
+postppdatehook=secfsdstools.x_examples.automation.automation.after_update
+postupdateprocesses=secfsdstools.x_examples.automation.automation.define_extra_processes
+&lt;/pre&gt;
+
+But you can also &#34;force&#34; it to run, for instance using the logic that is defined in the
+__main__ section of this module.
+&#34;&#34;&#34;
+
+from typing import List
+
+from secfsdstools.a_config.configmodel import Configuration
+from secfsdstools.c_automation.task_framework import AbstractProcess
+
+
+def define_extra_processes(config: Configuration) -&gt; List[AbstractProcess]:
+    return []
+
+
+def after_update(config: Configuration):
+    pass
+
+
+if __name__ == &#39;__main__&#39;:
+    from secfsdstools.a_config.configmgt import ConfigurationManager
+    from secfsdstools.c_update.updateprocess import Updater
+
+    config = ConfigurationManager.read_config_file()
+    config.post_update_hook = &#34;secfsdstools.x_examples.automation.automation.after_update&#34;
+    config.post_update_processes = &#34;secfsdstools.x_examples.automation.automation.define_extra_processes&#34;
+
+    updater = Updater.get_instance(config)
+    # if we call this method, we really want to run it, so we set force_update=True.
+    # this will disable the &#34;24&#34;-hour check, so it will run all update tasks everytime it is
+    # called
+    updater.update(force_update=True)</code></pre>
 </details>
 </section>
 <section>
-<h2 class="section-title" id="header-submodules">Sub-modules</h2>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
-<dt><code class="name"><a title="secfsdstools.f_standardize.base_prepivot_rules" href="base_prepivot_rules.html">secfsdstools.f_standardize.base_prepivot_rules</a></code></dt>
+<dt id="secfsdstools.x_examples.automation.automation.after_update"><code class="name flex">
+<span>def <span class="ident">after_update</span></span>(<span>config: <a title="secfsdstools.a_config.configmodel.Configuration" href="../../a_config/configmodel.html#secfsdstools.a_config.configmodel.Configuration">Configuration</a>)</span>
+</code></dt>
 <dd>
-<div class="desc"><p>Contains PrePivotRules Definitions.</p></div>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def after_update(config: Configuration):
+    pass</code></pre>
+</details>
 </dd>
-<dt><code class="name"><a title="secfsdstools.f_standardize.base_rule_framework" href="base_rule_framework.html">secfsdstools.f_standardize.base_rule_framework</a></code></dt>
+<dt id="secfsdstools.x_examples.automation.automation.define_extra_processes"><code class="name flex">
+<span>def <span class="ident">define_extra_processes</span></span>(<span>config: <a title="secfsdstools.a_config.configmodel.Configuration" href="../../a_config/configmodel.html#secfsdstools.a_config.configmodel.Configuration">Configuration</a>) ‑> List[<a title="secfsdstools.c_automation.task_framework.AbstractProcess" href="../../c_automation/task_framework.html#secfsdstools.c_automation.task_framework.AbstractProcess">AbstractProcess</a>]</span>
+</code></dt>
 <dd>
-<div class="desc"><p>This module defines a simple rule framework that allows to define concrete rules and build
-a rule hierarchy that then is used in the standardizer.</p></div>
-</dd>
-<dt><code class="name"><a title="secfsdstools.f_standardize.base_rules" href="base_rules.html">secfsdstools.f_standardize.base_rules</a></code></dt>
-<dd>
-<div class="desc"><p>This module contains the Base Rule implementations.</p></div>
-</dd>
-<dt><code class="name"><a title="secfsdstools.f_standardize.base_validation_rules" href="base_validation_rules.html">secfsdstools.f_standardize.base_validation_rules</a></code></dt>
-<dd>
-<div class="desc"><p>This module contains "Validation Rules"</p></div>
-</dd>
-<dt><code class="name"><a title="secfsdstools.f_standardize.bs_standardize" href="bs_standardize.html">secfsdstools.f_standardize.bs_standardize</a></code></dt>
-<dd>
-<div class="desc"><p>Contains the definitions to standardize balance sheets.</p></div>
-</dd>
-<dt><code class="name"><a title="secfsdstools.f_standardize.cf_standardize" href="cf_standardize.html">secfsdstools.f_standardize.cf_standardize</a></code></dt>
-<dd>
-<div class="desc"><p>Contains the definitions to standardize incaome statements.</p></div>
-</dd>
-<dt><code class="name"><a title="secfsdstools.f_standardize.is_standardize" href="is_standardize.html">secfsdstools.f_standardize.is_standardize</a></code></dt>
-<dd>
-<div class="desc"><p>Contains the definitions to standardize incaome statements.</p></div>
-</dd>
-<dt><code class="name"><a title="secfsdstools.f_standardize.standardizing" href="standardizing.html">secfsdstools.f_standardize.standardizing</a></code></dt>
-<dd>
-<div class="desc"><p>Contains the base implementation of the standardizer</p></div>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def define_extra_processes(config: Configuration) -&gt; List[AbstractProcess]:
+    return []</code></pre>
+</details>
 </dd>
 </dl>
-</section>
-<section>
-</section>
-<section>
 </section>
 <section>
 </section>
@@ -82,19 +151,13 @@ a rule hierarchy that then is used in the standardizer.</p></div>
 <ul id="index">
 <li><h3>Super-module</h3>
 <ul>
-<li><code><a title="secfsdstools" href="../index.html">secfsdstools</a></code></li>
+<li><code><a title="secfsdstools.x_examples.automation" href="index.html">secfsdstools.x_examples.automation</a></code></li>
 </ul>
 </li>
-<li><h3><a href="#header-submodules">Sub-modules</a></h3>
-<ul>
-<li><code><a title="secfsdstools.f_standardize.base_prepivot_rules" href="base_prepivot_rules.html">secfsdstools.f_standardize.base_prepivot_rules</a></code></li>
-<li><code><a title="secfsdstools.f_standardize.base_rule_framework" href="base_rule_framework.html">secfsdstools.f_standardize.base_rule_framework</a></code></li>
-<li><code><a title="secfsdstools.f_standardize.base_rules" href="base_rules.html">secfsdstools.f_standardize.base_rules</a></code></li>
-<li><code><a title="secfsdstools.f_standardize.base_validation_rules" href="base_validation_rules.html">secfsdstools.f_standardize.base_validation_rules</a></code></li>
-<li><code><a title="secfsdstools.f_standardize.bs_standardize" href="bs_standardize.html">secfsdstools.f_standardize.bs_standardize</a></code></li>
-<li><code><a title="secfsdstools.f_standardize.cf_standardize" href="cf_standardize.html">secfsdstools.f_standardize.cf_standardize</a></code></li>
-<li><code><a title="secfsdstools.f_standardize.is_standardize" href="is_standardize.html">secfsdstools.f_standardize.is_standardize</a></code></li>
-<li><code><a title="secfsdstools.f_standardize.standardizing" href="standardizing.html">secfsdstools.f_standardize.standardizing</a></code></li>
+<li><h3><a href="#header-functions">Functions</a></h3>
+<ul class="">
+<li><code><a title="secfsdstools.x_examples.automation.automation.after_update" href="#secfsdstools.x_examples.automation.automation.after_update">after_update</a></code></li>
+<li><code><a title="secfsdstools.x_examples.automation.automation.define_extra_processes" href="#secfsdstools.x_examples.automation.automation.define_extra_processes">define_extra_processes</a></code></li>
 </ul>
 </li>
 </ul>

@@ -42,18 +42,7 @@ import secfsdstools.update
 try:
     __version__ = version(&#34;secfsdstools&#34;)
 except PackageNotFoundError:
-    __version__ = &#34;0.0.0&#34;  # Fallback-Version, falls das Paket nicht installiert ist
-
-
-def is_running_in_pytest_or_pdoc():
-    &#34;&#34;&#34; Check if we are running as a test or inside the build process &#34;&#34;&#34;
-    return (&#39;pytest&#39; in sys.argv[0]) or (&#39;pdoc3&#39; in sys.argv[0])
-
-
-# ensure only execute if not pytest is running
-if not is_running_in_pytest_or_pdoc():
-    logging.getLogger().info(&#34;loading secfsdstools ...&#34;)
-    secfsdstools.update.update()</code></pre>
+    __version__ = &#34;0.0.0&#34;  # Fallback-Version, falls das Paket nicht installiert ist</code></pre>
 </details>
 </section>
 <section>
@@ -90,6 +79,12 @@ if not is_running_in_pytest_or_pdoc():
 <dt><code class="name"><a title="secfsdstools.c_update" href="c_update/index.html">secfsdstools.c_update</a></code></dt>
 <dd>
 <div class="desc"></div>
+</dd>
+<dt><code class="name"><a title="secfsdstools.c_update_check" href="c_update_check/index.html">secfsdstools.c_update_check</a></code></dt>
+<dd>
+<div class="desc"><p>check-for-update launcher.
+helping to ensure that the check is executed when main functionality is used:
+d_container, e_collector, e_filter, …</p></div>
 </dd>
 <dt><code class="name"><a title="secfsdstools.d_container" href="d_container/index.html">secfsdstools.d_container</a></code></dt>
 <dd>
@@ -128,23 +123,6 @@ if not is_running_in_pytest_or_pdoc():
 <section>
 </section>
 <section>
-<h2 class="section-title" id="header-functions">Functions</h2>
-<dl>
-<dt id="secfsdstools.is_running_in_pytest_or_pdoc"><code class="name flex">
-<span>def <span class="ident">is_running_in_pytest_or_pdoc</span></span>(<span>)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Check if we are running as a test or inside the build process</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def is_running_in_pytest_or_pdoc():
-    &#34;&#34;&#34; Check if we are running as a test or inside the build process &#34;&#34;&#34;
-    return (&#39;pytest&#39; in sys.argv[0]) or (&#39;pdoc3&#39; in sys.argv[0])</code></pre>
-</details>
-</dd>
-</dl>
 </section>
 <section>
 </section>
@@ -165,6 +143,7 @@ if not is_running_in_pytest_or_pdoc():
 <li><code><a title="secfsdstools.c_index" href="c_index/index.html">secfsdstools.c_index</a></code></li>
 <li><code><a title="secfsdstools.c_transform" href="c_transform/index.html">secfsdstools.c_transform</a></code></li>
 <li><code><a title="secfsdstools.c_update" href="c_update/index.html">secfsdstools.c_update</a></code></li>
+<li><code><a title="secfsdstools.c_update_check" href="c_update_check/index.html">secfsdstools.c_update_check</a></code></li>
 <li><code><a title="secfsdstools.d_container" href="d_container/index.html">secfsdstools.d_container</a></code></li>
 <li><code><a title="secfsdstools.e_collector" href="e_collector/index.html">secfsdstools.e_collector</a></code></li>
 <li><code><a title="secfsdstools.e_filter" href="e_filter/index.html">secfsdstools.e_filter</a></code></li>
@@ -173,11 +152,6 @@ if not is_running_in_pytest_or_pdoc():
 <li><code><a title="secfsdstools.u_usecases" href="u_usecases/index.html">secfsdstools.u_usecases</a></code></li>
 <li><code><a title="secfsdstools.update" href="update.html">secfsdstools.update</a></code></li>
 <li><code><a title="secfsdstools.x_examples" href="x_examples/index.html">secfsdstools.x_examples</a></code></li>
-</ul>
-</li>
-<li><h3><a href="#header-functions">Functions</a></h3>
-<ul class="">
-<li><code><a title="secfsdstools.is_running_in_pytest_or_pdoc" href="#secfsdstools.is_running_in_pytest_or_pdoc">is_running_in_pytest_or_pdoc</a></code></li>
 </ul>
 </li>
 </ul>

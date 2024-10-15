@@ -90,7 +90,7 @@ class ConfigurationManager:
 
         env_config_file = os.getenv(SECFSDSTOOLS_ENV_VAR_NAME)
         if env_config_file:
-            LOGGER.info(&#39;read configuration from %s&#39;, env_config_file)
+            LOGGER.info(&#39;Config file set by environment variable %s to %s&#39;, SECFSDSTOOLS_ENV_VAR_NAME, env_config_file)
             if not os.path.isfile(env_config_file):
                 LOGGER.error(&#39;environment variable %s was set.&#39;, SECFSDSTOOLS_ENV_VAR_NAME)
                 LOGGER.error(&#39;But config file is not present, creating it ...&#39;)
@@ -459,7 +459,7 @@ If the file does not exist, it will create one in the current directory</p></div
 
         env_config_file = os.getenv(SECFSDSTOOLS_ENV_VAR_NAME)
         if env_config_file:
-            LOGGER.info(&#39;read configuration from %s&#39;, env_config_file)
+            LOGGER.info(&#39;Config file set by environment variable %s to %s&#39;, SECFSDSTOOLS_ENV_VAR_NAME, env_config_file)
             if not os.path.isfile(env_config_file):
                 LOGGER.error(&#39;environment variable %s was set.&#39;, SECFSDSTOOLS_ENV_VAR_NAME)
                 LOGGER.error(&#39;But config file is not present, creating it ...&#39;)
@@ -952,7 +952,7 @@ def read_config_file() -&gt; Configuration:
 
     env_config_file = os.getenv(SECFSDSTOOLS_ENV_VAR_NAME)
     if env_config_file:
-        LOGGER.info(&#39;read configuration from %s&#39;, env_config_file)
+        LOGGER.info(&#39;Config file set by environment variable %s to %s&#39;, SECFSDSTOOLS_ENV_VAR_NAME, env_config_file)
         if not os.path.isfile(env_config_file):
             LOGGER.error(&#39;environment variable %s was set.&#39;, SECFSDSTOOLS_ENV_VAR_NAME)
             LOGGER.error(&#39;But config file is not present, creating it ...&#39;)

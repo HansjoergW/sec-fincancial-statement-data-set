@@ -214,13 +214,13 @@ class Updater:
             if not force_update &amp; self.auto_update:
                 LOGGER.debug(&#39;AutoUpdate is True, so check if new zip files are available&#39;)
 
-            if not self._check_for_update():
+            if (not force_update) &amp; (not self._check_for_update()):
                 LOGGER.debug(
                     &#39;Skipping update: last check was done less than %d seconds ago&#39;,
                     Updater.CHECK_EVERY_SECONDS)
                 return
 
-            LOGGER.info(&#39;Check if new report zip files are available...&#39;)
+            LOGGER.info(&#39;Launching data update process ...&#39;)
             # create db if necessary
             DbCreator(db_dir=self.db_dir).create_db()
 
@@ -413,13 +413,13 @@ class Updater:
             if not force_update &amp; self.auto_update:
                 LOGGER.debug(&#39;AutoUpdate is True, so check if new zip files are available&#39;)
 
-            if not self._check_for_update():
+            if (not force_update) &amp; (not self._check_for_update()):
                 LOGGER.debug(
                     &#39;Skipping update: last check was done less than %d seconds ago&#39;,
                     Updater.CHECK_EVERY_SECONDS)
                 return
 
-            LOGGER.info(&#39;Check if new report zip files are available...&#39;)
+            LOGGER.info(&#39;Launching data update process ...&#39;)
             # create db if necessary
             DbCreator(db_dir=self.db_dir).create_db()
 
@@ -500,13 +500,13 @@ Returns:</p></div>
         if not force_update &amp; self.auto_update:
             LOGGER.debug(&#39;AutoUpdate is True, so check if new zip files are available&#39;)
 
-        if not self._check_for_update():
+        if (not force_update) &amp; (not self._check_for_update()):
             LOGGER.debug(
                 &#39;Skipping update: last check was done less than %d seconds ago&#39;,
                 Updater.CHECK_EVERY_SECONDS)
             return
 
-        LOGGER.info(&#39;Check if new report zip files are available...&#39;)
+        LOGGER.info(&#39;Launching data update process ...&#39;)
         # create db if necessary
         DbCreator(db_dir=self.db_dir).create_db()
 

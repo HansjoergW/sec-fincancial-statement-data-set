@@ -94,7 +94,7 @@ class IndexingTask:
             Reads the sub_df content and writes the entries to the index.
         &#34;&#34;&#34;
         logger = logging.getLogger()
-        logger.info(&#34;indexing file %s&#34;, self.file_name)
+        logger.debug(&#34;indexing file %s&#34;, self.file_name)
 
         # todo: check if table already contains entries
         #  will fail at the moment, since the the primary key is defined
@@ -283,7 +283,7 @@ index tables.</p>
             Reads the sub_df content and writes the entries to the index.
         &#34;&#34;&#34;
         logger = logging.getLogger()
-        logger.info(&#34;indexing file %s&#34;, self.file_name)
+        logger.debug(&#34;indexing file %s&#34;, self.file_name)
 
         # todo: check if table already contains entries
         #  will fail at the moment, since the the primary key is defined
@@ -373,7 +373,7 @@ index tables.</p>
         Reads the sub_df content and writes the entries to the index.
     &#34;&#34;&#34;
     logger = logging.getLogger()
-    logger.info(&#34;indexing file %s&#34;, self.file_name)
+    logger.debug(&#34;indexing file %s&#34;, self.file_name)
 
     # todo: check if table already contains entries
     #  will fail at the moment, since the the primary key is defined

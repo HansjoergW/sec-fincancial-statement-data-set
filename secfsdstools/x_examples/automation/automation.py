@@ -8,7 +8,7 @@ As a remainder, the framework executes all update steps (check and downloading n
 transforming them to parquet, indexing the reports, and any additional steps that you define
 as shown here.
 
-Usually, you would configure these methods here in the secfsdstools configuration file, like
+Usually, you can configure these methods here in the secfsdstools configuration file, like
 <pre>
 [DEFAULT]
 downloaddirectory = ...
@@ -21,14 +21,17 @@ postppdatehook=secfsdstools.x_examples.automation.automation.after_update
 postupdateprocesses=secfsdstools.x_examples.automation.automation.define_extra_processes
 </pre>
 
-But you can also "force" it to run, for instance using the logic that is defined in the
+In this example, we have a config file "automation_config.cfg" which we are going to use in the
 __main__ section of this module.
 """
-
+import logging
+import os
 from typing import List
 
 from secfsdstools.a_config.configmodel import Configuration
 from secfsdstools.c_automation.task_framework import AbstractProcess
+
+CURRENT_DIR, _ = os.path.split(__file__)
 
 
 def define_extra_processes(config: Configuration) -> List[AbstractProcess]:
@@ -40,15 +43,28 @@ def after_update(config: Configuration):
 
 
 if __name__ == '__main__':
-    from secfsdstools.a_config.configmgt import ConfigurationManager
+    from secfsdstools.a_config.configmgt import ConfigurationManager, SECFSDSTOOLS_ENV_VAR_NAME
     from secfsdstools.c_update.updateprocess import Updater
 
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s [%(levelname)s] %(module)s  %(message)s",
+        handlers=[
+            logging.StreamHandler()
+        ]
+    )
+
+    # define which configuration file to use
+    os.environ[SECFSDSTOOLS_ENV_VAR_NAME] = f"{CURRENT_DIR}/automation_config.cfg"
+
     config = ConfigurationManager.read_config_file()
-    config.post_update_hook = "secfsdstools.x_examples.automation.automation.after_update"
-    config.post_update_processes = "secfsdstools.x_examples.automation.automation.define_extra_processes"
 
     updater = Updater.get_instance(config)
-    # if we call this method, we really want to run it, so we set force_update=True.
-    # this will disable the "24"-hour check, so it will run all update tasks everytime it is
-    # called
+
+    # We call this method mainly for demonstration purpose. Therefore, we also set
+    # force_update=True, so that update process is being executed, regardless if the last
+    # update process run less than 24 hours before.
+
+    # You could also just start to use any feature of the framework. This would also trigger the
+    # update process to run, but at most once every 24 hours.
     updater.update(force_update=True)

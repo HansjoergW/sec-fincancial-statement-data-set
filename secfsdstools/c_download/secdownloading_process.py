@@ -40,7 +40,7 @@ class SecDownloadingProcess(BaseDownloadingProcess):
     def _calculate_missing_zips(self) -> List[Tuple[str, str]]:
         downloaded_zip_files = self._get_downloaded_zips()
         transformed_parquet = self._get_transformed_parquet()
-        available_zips_to_dld_dict = self._get_available_zips()[:3]
+        available_zips_to_dld_dict = self._get_available_zips()
 
         # define which zip files don't have to be downloaded
         download_or_transformed_zips = set(downloaded_zip_files).union(set(transformed_parquet))

@@ -61,7 +61,7 @@ class ConfigurationManager:
 
         env_config_file = os.getenv(SECFSDSTOOLS_ENV_VAR_NAME)
         if env_config_file:
-            LOGGER.info('read configuration from %s', env_config_file)
+            LOGGER.info('Config file set by environment variable %s to %s', SECFSDSTOOLS_ENV_VAR_NAME, env_config_file)
             if not os.path.isfile(env_config_file):
                 LOGGER.error('environment variable %s was set.', SECFSDSTOOLS_ENV_VAR_NAME)
                 LOGGER.error('But config file is not present, creating it ...')

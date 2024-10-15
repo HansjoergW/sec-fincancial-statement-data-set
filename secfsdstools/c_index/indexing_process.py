@@ -65,7 +65,7 @@ class IndexingTask:
             Reads the sub_df content and writes the entries to the index.
         """
         logger = logging.getLogger()
-        logger.info("indexing file %s", self.file_name)
+        logger.debug("indexing file %s", self.file_name)
 
         # todo: check if table already contains entries
         #  will fail at the moment, since the the primary key is defined

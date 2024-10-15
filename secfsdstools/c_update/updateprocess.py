@@ -183,13 +183,13 @@ class Updater:
             if not force_update & self.auto_update:
                 LOGGER.debug('AutoUpdate is True, so check if new zip files are available')
 
-            if not self._check_for_update():
+            if (not force_update) & (not self._check_for_update()):
                 LOGGER.debug(
                     'Skipping update: last check was done less than %d seconds ago',
                     Updater.CHECK_EVERY_SECONDS)
                 return
 
-            LOGGER.info('Check if new report zip files are available...')
+            LOGGER.info('Launching data update process ...')
             # create db if necessary
             DbCreator(db_dir=self.db_dir).create_db()
 

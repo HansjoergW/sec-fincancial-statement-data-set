@@ -50,4 +50,40 @@ Umbau von CheckForNewData
 - configparser.ConfigParser ist teil von Configuration, falls configfile geladen wurde
   -> müsste als Parameter bei der callback funktion übergeben werden.
 
+Struktur
+--------
 
+data/dld
+data/parquet
+data/filter/quarter/
+
+   <zipname>
+       /raw /BS
+            /IS
+            /CF
+            /CP
+            /CI
+            /..
+       /joined /BS
+            /IS
+            /CF
+            /CP
+            /CI
+            /..
+
+   all      /BS
+            /..
+
+data/standardized/quarter/
+    <zipname>/BS
+             /IS
+             /CF
+    all      /BS
+             /IS
+             /CF
+
+    allcombined
+
+
+
+data/standardizedcombined

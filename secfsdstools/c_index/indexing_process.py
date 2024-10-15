@@ -129,7 +129,7 @@ class ReportParquetIndexerProcess(AbstractProcess):
 
         self.process_time = iso_date
 
-    def get_present_files(self) -> List[str]:
+    def _get_present_files(self) -> List[str]:
         """
         returns the available folders within the parquet directory.
         Returns:
@@ -144,7 +144,7 @@ class ReportParquetIndexerProcess(AbstractProcess):
         Returns:
             List[str]: list with directories which need to be indexed.
         """
-        present_files = self.get_present_files()
+        present_files = self._get_present_files()
         processed_indexfiles_df = self.dbaccessor.read_all_indexfileprocessing_df()
 
         indexed_df = processed_indexfiles_df[

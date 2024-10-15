@@ -79,6 +79,10 @@ class AbstractProcess(ABC):
             List[Tasks] : List of the tasks to be processed.
         """
 
+    def pre_process(self):
+        """ Hook method to implement logic that is executed before the whole process is finished. """
+
+
     def post_process(self):
         """ Hook method to implement logic that is executed after the whole process is finished. """
 
@@ -112,6 +116,9 @@ class AbstractProcess(ABC):
         """
         logger = logging.getLogger()
         logger.info("Starting process %s", self.__class__.__name__)
+
+        self.pre_process()
+
         executor = ThreadExecutor[Task, TaskResult, TaskResult](
             processes=3,
             max_calls_per_sec=8,

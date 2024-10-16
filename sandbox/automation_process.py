@@ -1,6 +1,6 @@
 import logging
 
-from secfsdstools.x_examples.automation.automation import FilterProcess
+from secfsdstools.x_examples.automation.filter_process import FilterProcess
 
 if __name__ == '__main__':
     logging.basicConfig(
@@ -11,7 +11,12 @@ if __name__ == '__main__':
         ]
     )
 
-    process = FilterProcess(parquet_dir="C:/data/sec/automated/parquet",
-                            filtered_dir="C:/data/sec/automated/filter")
+    import pathlib
+    path = pathlib.Path("c:/data/sec/automated/_1_filtered/")
+    results = list(path.glob("quarter/**/joined/BS"))
+    print(results)
 
-    process.process()
+    # process = FilterProcess(parquet_dir="C:/data/sec/automated/parquet",
+    #                         filtered_dir="C:/data/sec/automated/filter")
+    #
+    # process.process()

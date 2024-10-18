@@ -37,25 +37,49 @@ from secfsdstools.d_container.databagmodel import RawDataBag, JoinedDataBag
 CURRENT_DIR, _ = os.path.split(__file__)
 
 
-class AbstractCombineTask:
+class CombineTask:
 
+    # todo:
+    # wir müssen noch schauen, was für files bereits in all vorhanden sind, bzw.
+    # was das letzte war, das verarbeitet worden ist...
     def __init__(self,
                  root_path: Path,
                  filter: str,
+                 bag_type: str,  # raw or joined
                  target_path: Path):
         self.root_path = root_path
         self.filter = filter
+        self.all_dirs = list(self.root_path.glob(self.filter))
+        self.all_names = {f.name: f for f in self.all_dirs}
+
         self.target_path = target_path
+        self.bag_type = bag_type
 
         self.dir_name = target_path.name
         self.tmp_path = target_path.parent / f"tmp_{self.dir_name}"
+        self.meta_inf_file: Path = self.target_path / "meta.inf"
+
+        self.missing_paths = self.all_dirs
+
+        if self.meta_inf_file.exists():
+            meta_inf_content = self.meta_inf_file.read_text(encoding="utf-8")
+            containing_names = meta_inf_content.split("\n")
+
+            missing = set(self.all_names.keys()) - set(containing_names)
+            self.missing_paths = [self.all_names[name] for name in missing]
 
     def prepare(self):
-        """ prepare Task. Nothing to do."""
+        """ prepare Task. """
+        if len(self.missing_paths) == 0:
+            return
+
         self.tmp_path.mkdir(parents=True, exist_ok=False)
 
     def commit(self):
         """ we commit by renaming the tmp_path. """
+        if len(self.missing_paths) == 0:
+            return "success"
+
         self.tmp_path.rename(self.target_path)
         return "success"
 
@@ -67,24 +91,33 @@ class AbstractCombineTask:
     def __str__(self) -> str:
         return f"CombineTask(root_path: {self.root_path}, filter: {self.filter})"
 
-
-
-besser als type "raw" / "joined" übergeben und dann je mit RawDataBag oder JoinedDataBag
-class RawCombineTask(AbstractCombineTask):
-
     def execute(self):
-        all_dirs = self.root_path.glob(self.filter)
-        all_bags = [RawDataBag.load(str(dir)) for dir in all_dirs]
+        if len(self.missing_paths) == 0:
+            return
+
+        paths = self.missing_paths
+        if self.target_path.exists():
+            paths.append(self.target_path)
+
+        if self.bag_type.lower() == "raw":
+            self._execute_raw(paths)
+        elif self.bag_type.lower() == "joined":
+            self._execute_joined(paths)
+        else:
+            raise ValueError("bag_type must be either raw or joined")
+
+        temp_meta_inf = self.tmp_path / "meta.inf"
+        meta_inf_content = "\n".join([f.name for f in self.missing_paths])
+        temp_meta_inf.write_text(data=meta_inf_content, encoding="utf-8")
+
+    def _execute_raw(self, paths: List[Path]):
+        all_bags = [RawDataBag.load(str(path)) for path in paths]
 
         all_bag: RawDataBag = RawDataBag.concat(all_bags)
         all_bag.save(target_path=str(self.tmp_path))
 
-
-class JoinedCombineTask(AbstractCombineTask):
-
-    def execute(self):
-        all_dirs = self.root_path.glob(self.filter)
-        all_bags = [JoinedDataBag.load(str(dir)) for dir in all_dirs]
+    def _execute_joined(self, paths: List[Path]):
+        all_bags = [JoinedDataBag.load(str(path)) for path in paths]
 
         all_bag: JoinedDataBag = JoinedDataBag.concat(all_bags)
         all_bag.save(target_path=str(self.tmp_path))
@@ -94,6 +127,7 @@ class CombineProcess(AbstractProcess):
 
     def __init__(self,
                  filtered_dir: str,
+                 bag_type: str,  # raw or joined
                  file_type: str = "quarter",
                  stmts=None,
                  execute_serial: bool = False
@@ -106,19 +140,16 @@ class CombineProcess(AbstractProcess):
             self.stmts = stmts
 
         self.filtered_path = Path(filtered_dir)
+        self.bag_type = bag_type
         self.file_type = file_type
 
     def calculate_tasks(self) -> List[Task]:
-
-        -> wir müssen noch schauen, was für files bereits in all vorhanden sind, bzw.
-        was das letzte war, das verarbeitet worden ist...
-
-        return [RawCombineTask(
+        return [CombineTask(
             root_path=self.filtered_path,
-            filter=f"{self.file_type}/**/raw/{stmt}",
-            target_path=self.filtered_path / "all" / "raw" / stmt
+            bag_type=self.bag_type,
+            filter=f"{self.file_type}/**/{self.bag_type}/{stmt}",
+            target_path=self.filtered_path / "all" / self.bag_type / stmt
         ) for stmt in self.stmts]
-
 
 
 def define_extra_processes(config: Configuration) -> List[AbstractProcess]:

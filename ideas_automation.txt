@@ -52,6 +52,12 @@ Umbau von CheckForNewData
 
 Struktur
 --------
+Es stellt sich die Frage, ob ein RAW nach Stmt gefiltert wirklich Sinn macht
+-> num bleibt immer bestehen, dass diese nur beim Join effektiv gefiltered werden.
+-> besser raw nur als Filter für alle Stmts, und dann ein Joined Raw
+
+
+
 
 data/dld
 data/parquet

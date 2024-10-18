@@ -1,6 +1,7 @@
 import logging
 
 from secfsdstools.x_examples.automation.filter_process import FilterProcess
+from secfsdstools.x_examples.automation.automation import CombineProcess
 
 if __name__ == '__main__':
     logging.basicConfig(
@@ -20,3 +21,11 @@ if __name__ == '__main__':
     #                         filtered_dir="C:/data/sec/automated/filter")
     #
     # process.process()
+
+    process = CombineProcess(
+        filtered_dir="C:/data/sec/automated/_1_filtered",
+        bag_type="raw",
+        execute_serial=True
+    )
+
+    process.process()

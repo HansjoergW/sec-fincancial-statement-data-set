@@ -77,16 +77,141 @@ __main__ section of this module.
 &#34;&#34;&#34;
 import logging
 import os
+import shutil
+from pathlib import Path
 from typing import List
 
 from secfsdstools.a_config.configmodel import Configuration
-from secfsdstools.c_automation.task_framework import AbstractProcess
+from secfsdstools.c_automation.task_framework import AbstractProcess, Task
+from secfsdstools.d_container.databagmodel import RawDataBag, JoinedDataBag
 
 CURRENT_DIR, _ = os.path.split(__file__)
 
 
+class CombineTask:
+
+    # todo:
+    # wir müssen noch schauen, was für files bereits in all vorhanden sind, bzw.
+    # was das letzte war, das verarbeitet worden ist...
+    def __init__(self,
+                 root_path: Path,
+                 filter: str,
+                 bag_type: str,  # raw or joined
+                 target_path: Path):
+        self.root_path = root_path
+        self.filter = filter
+        self.all_dirs = list(self.root_path.glob(self.filter))
+        self.all_names = {f.name: f for f in self.all_dirs}
+
+        self.target_path = target_path
+        self.bag_type = bag_type
+
+        self.dir_name = target_path.name
+        self.tmp_path = target_path.parent / f&#34;tmp_{self.dir_name}&#34;
+        self.meta_inf_file: Path = self.target_path / &#34;meta.inf&#34;
+
+        self.missing_paths = self.all_dirs
+
+        if self.meta_inf_file.exists():
+            meta_inf_content = self.meta_inf_file.read_text(encoding=&#34;utf-8&#34;)
+            containing_names = meta_inf_content.split(&#34;\n&#34;)
+
+            missing = set(self.all_names.keys()) - set(containing_names)
+            self.missing_paths = [self.all_names[name] for name in missing]
+
+    def prepare(self):
+        &#34;&#34;&#34; prepare Task. &#34;&#34;&#34;
+        if len(self.missing_paths) == 0:
+            return
+
+        self.tmp_path.mkdir(parents=True, exist_ok=False)
+
+    def commit(self):
+        &#34;&#34;&#34; we commit by renaming the tmp_path. &#34;&#34;&#34;
+        if len(self.missing_paths) == 0:
+            return &#34;success&#34;
+
+        self.tmp_path.rename(self.target_path)
+        return &#34;success&#34;
+
+    def exception(self, exception) -&gt; str:
+        &#34;&#34;&#34; delete the temp folder. &#34;&#34;&#34;
+        shutil.rmtree(self.tmp_path, ignore_errors=True)
+        return f&#34;failed {exception}&#34;
+
+    def __str__(self) -&gt; str:
+        return f&#34;CombineTask(root_path: {self.root_path}, filter: {self.filter})&#34;
+
+    def execute(self):
+        if len(self.missing_paths) == 0:
+            return
+
+        paths = self.missing_paths
+        if self.target_path.exists():
+            paths.append(self.target_path)
+
+        if self.bag_type.lower() == &#34;raw&#34;:
+            self._execute_raw(paths)
+        elif self.bag_type.lower() == &#34;joined&#34;:
+            self._execute_joined(paths)
+        else:
+            raise ValueError(&#34;bag_type must be either raw or joined&#34;)
+
+        temp_meta_inf = self.tmp_path / &#34;meta.inf&#34;
+        meta_inf_content = &#34;\n&#34;.join([f.name for f in self.missing_paths])
+        temp_meta_inf.write_text(data=meta_inf_content, encoding=&#34;utf-8&#34;)
+
+    def _execute_raw(self, paths: List[Path]):
+        all_bags = [RawDataBag.load(str(path)) for path in paths]
+
+        all_bag: RawDataBag = RawDataBag.concat(all_bags)
+        all_bag.save(target_path=str(self.tmp_path))
+
+    def _execute_joined(self, paths: List[Path]):
+        all_bags = [JoinedDataBag.load(str(path)) for path in paths]
+
+        all_bag: JoinedDataBag = JoinedDataBag.concat(all_bags)
+        all_bag.save(target_path=str(self.tmp_path))
+
+
+class CombineProcess(AbstractProcess):
+
+    def __init__(self,
+                 filtered_dir: str,
+                 bag_type: str,  # raw or joined
+                 file_type: str = &#34;quarter&#34;,
+                 stmts=None,
+                 execute_serial: bool = False
+                 ):
+        super().__init__(execute_serial=execute_serial,
+                         chunksize=3)
+
+        self.stmts = [&#39;BS&#39;, &#39;IS&#39;, &#39;CF&#39;, &#39;CP&#39;, &#39;CI&#39;, &#39;EQ&#39;]
+        if stmts:
+            self.stmts = stmts
+
+        self.filtered_path = Path(filtered_dir)
+        self.bag_type = bag_type
+        self.file_type = file_type
+
+    def calculate_tasks(self) -&gt; List[Task]:
+        return [CombineTask(
+            root_path=self.filtered_path,
+            bag_type=self.bag_type,
+            filter=f&#34;{self.file_type}/**/{self.bag_type}/{stmt}&#34;,
+            target_path=self.filtered_path / &#34;all&#34; / self.bag_type / stmt
+        ) for stmt in self.stmts]
+
+
 def define_extra_processes(config: Configuration) -&gt; List[AbstractProcess]:
-    return []
+    from secfsdstools.x_examples.automation.filter_process import FilterProcess
+
+    return [FilterProcess(parquet_dir=config.parquet_dir,
+                          filtered_dir=config.config_parser.get(section=&#34;Filter&#34;,
+                                                                option=&#34;filtered_dir&#34;),
+                          execute_serial=True  # switch to false in case of memory problems
+
+                          ), ]
 
 
 def after_update(config: Configuration):
@@ -151,12 +276,255 @@ if __name__ == &#39;__main__&#39;:
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def define_extra_processes(config: Configuration) -&gt; List[AbstractProcess]:
-    return []</code></pre>
+    from secfsdstools.x_examples.automation.filter_process import FilterProcess
+
+    return [FilterProcess(parquet_dir=config.parquet_dir,
+                          filtered_dir=config.config_parser.get(section=&#34;Filter&#34;,
+                                                                option=&#34;filtered_dir&#34;),
+                          execute_serial=True  # switch to false in case of memory problems
+
+                          ), ]</code></pre>
 </details>
 </dd>
 </dl>
 </section>
 <section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="secfsdstools.x_examples.automation.automation.CombineProcess"><code class="flex name class">
+<span>class <span class="ident">CombineProcess</span></span>
+<span>(</span><span>filtered_dir: str, bag_type: str, file_type: str = 'quarter', stmts=None, execute_serial: bool = False)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Defines the Abstract process of processing tasks for a certain process.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class CombineProcess(AbstractProcess):
+
+    def __init__(self,
+                 filtered_dir: str,
+                 bag_type: str,  # raw or joined
+                 file_type: str = &#34;quarter&#34;,
+                 stmts=None,
+                 execute_serial: bool = False
+                 ):
+        super().__init__(execute_serial=execute_serial,
+                         chunksize=3)
+
+        self.stmts = [&#39;BS&#39;, &#39;IS&#39;, &#39;CF&#39;, &#39;CP&#39;, &#39;CI&#39;, &#39;EQ&#39;]
+        if stmts:
+            self.stmts = stmts
+
+        self.filtered_path = Path(filtered_dir)
+        self.bag_type = bag_type
+        self.file_type = file_type
+
+    def calculate_tasks(self) -&gt; List[Task]:
+        return [CombineTask(
+            root_path=self.filtered_path,
+            bag_type=self.bag_type,
+            filter=f&#34;{self.file_type}/**/{self.bag_type}/{stmt}&#34;,
+            target_path=self.filtered_path / &#34;all&#34; / self.bag_type / stmt
+        ) for stmt in self.stmts]</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="secfsdstools.c_automation.task_framework.AbstractProcess" href="../../c_automation/task_framework.html#secfsdstools.c_automation.task_framework.AbstractProcess">AbstractProcess</a></li>
+<li>abc.ABC</li>
+</ul>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="secfsdstools.c_automation.task_framework.AbstractProcess" href="../../c_automation/task_framework.html#secfsdstools.c_automation.task_framework.AbstractProcess">AbstractProcess</a></b></code>:
+<ul class="hlist">
+<li><code><a title="secfsdstools.c_automation.task_framework.AbstractProcess.calculate_tasks" href="../../c_automation/task_framework.html#secfsdstools.c_automation.task_framework.AbstractProcess.calculate_tasks">calculate_tasks</a></code></li>
+<li><code><a title="secfsdstools.c_automation.task_framework.AbstractProcess.post_process" href="../../c_automation/task_framework.html#secfsdstools.c_automation.task_framework.AbstractProcess.post_process">post_process</a></code></li>
+<li><code><a title="secfsdstools.c_automation.task_framework.AbstractProcess.pre_process" href="../../c_automation/task_framework.html#secfsdstools.c_automation.task_framework.AbstractProcess.pre_process">pre_process</a></code></li>
+<li><code><a title="secfsdstools.c_automation.task_framework.AbstractProcess.process" href="../../c_automation/task_framework.html#secfsdstools.c_automation.task_framework.AbstractProcess.process">process</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+<dt id="secfsdstools.x_examples.automation.automation.CombineTask"><code class="flex name class">
+<span>class <span class="ident">CombineTask</span></span>
+<span>(</span><span>root_path: pathlib.Path, filter: str, bag_type: str, target_path: pathlib.Path)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class CombineTask:
+
+    # todo:
+    # wir müssen noch schauen, was für files bereits in all vorhanden sind, bzw.
+    # was das letzte war, das verarbeitet worden ist...
+    def __init__(self,
+                 root_path: Path,
+                 filter: str,
+                 bag_type: str,  # raw or joined
+                 target_path: Path):
+        self.root_path = root_path
+        self.filter = filter
+        self.all_dirs = list(self.root_path.glob(self.filter))
+        self.all_names = {f.name: f for f in self.all_dirs}
+
+        self.target_path = target_path
+        self.bag_type = bag_type
+
+        self.dir_name = target_path.name
+        self.tmp_path = target_path.parent / f&#34;tmp_{self.dir_name}&#34;
+        self.meta_inf_file: Path = self.target_path / &#34;meta.inf&#34;
+
+        self.missing_paths = self.all_dirs
+
+        if self.meta_inf_file.exists():
+            meta_inf_content = self.meta_inf_file.read_text(encoding=&#34;utf-8&#34;)
+            containing_names = meta_inf_content.split(&#34;\n&#34;)
+
+            missing = set(self.all_names.keys()) - set(containing_names)
+            self.missing_paths = [self.all_names[name] for name in missing]
+
+    def prepare(self):
+        &#34;&#34;&#34; prepare Task. &#34;&#34;&#34;
+        if len(self.missing_paths) == 0:
+            return
+
+        self.tmp_path.mkdir(parents=True, exist_ok=False)
+
+    def commit(self):
+        &#34;&#34;&#34; we commit by renaming the tmp_path. &#34;&#34;&#34;
+        if len(self.missing_paths) == 0:
+            return &#34;success&#34;
+
+        self.tmp_path.rename(self.target_path)
+        return &#34;success&#34;
+
+    def exception(self, exception) -&gt; str:
+        &#34;&#34;&#34; delete the temp folder. &#34;&#34;&#34;
+        shutil.rmtree(self.tmp_path, ignore_errors=True)
+        return f&#34;failed {exception}&#34;
+
+    def __str__(self) -&gt; str:
+        return f&#34;CombineTask(root_path: {self.root_path}, filter: {self.filter})&#34;
+
+    def execute(self):
+        if len(self.missing_paths) == 0:
+            return
+
+        paths = self.missing_paths
+        if self.target_path.exists():
+            paths.append(self.target_path)
+
+        if self.bag_type.lower() == &#34;raw&#34;:
+            self._execute_raw(paths)
+        elif self.bag_type.lower() == &#34;joined&#34;:
+            self._execute_joined(paths)
+        else:
+            raise ValueError(&#34;bag_type must be either raw or joined&#34;)
+
+        temp_meta_inf = self.tmp_path / &#34;meta.inf&#34;
+        meta_inf_content = &#34;\n&#34;.join([f.name for f in self.missing_paths])
+        temp_meta_inf.write_text(data=meta_inf_content, encoding=&#34;utf-8&#34;)
+
+    def _execute_raw(self, paths: List[Path]):
+        all_bags = [RawDataBag.load(str(path)) for path in paths]
+
+        all_bag: RawDataBag = RawDataBag.concat(all_bags)
+        all_bag.save(target_path=str(self.tmp_path))
+
+    def _execute_joined(self, paths: List[Path]):
+        all_bags = [JoinedDataBag.load(str(path)) for path in paths]
+
+        all_bag: JoinedDataBag = JoinedDataBag.concat(all_bags)
+        all_bag.save(target_path=str(self.tmp_path))</code></pre>
+</details>
+<h3>Methods</h3>
+<dl>
+<dt id="secfsdstools.x_examples.automation.automation.CombineTask.commit"><code class="name flex">
+<span>def <span class="ident">commit</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>we commit by renaming the tmp_path.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def commit(self):
+    &#34;&#34;&#34; we commit by renaming the tmp_path. &#34;&#34;&#34;
+    if len(self.missing_paths) == 0:
+        return &#34;success&#34;
+
+    self.tmp_path.rename(self.target_path)
+    return &#34;success&#34;</code></pre>
+</details>
+</dd>
+<dt id="secfsdstools.x_examples.automation.automation.CombineTask.exception"><code class="name flex">
+<span>def <span class="ident">exception</span></span>(<span>self, exception) ‑> str</span>
+</code></dt>
+<dd>
+<div class="desc"><p>delete the temp folder.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def exception(self, exception) -&gt; str:
+    &#34;&#34;&#34; delete the temp folder. &#34;&#34;&#34;
+    shutil.rmtree(self.tmp_path, ignore_errors=True)
+    return f&#34;failed {exception}&#34;</code></pre>
+</details>
+</dd>
+<dt id="secfsdstools.x_examples.automation.automation.CombineTask.execute"><code class="name flex">
+<span>def <span class="ident">execute</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def execute(self):
+    if len(self.missing_paths) == 0:
+        return
+
+    paths = self.missing_paths
+    if self.target_path.exists():
+        paths.append(self.target_path)
+
+    if self.bag_type.lower() == &#34;raw&#34;:
+        self._execute_raw(paths)
+    elif self.bag_type.lower() == &#34;joined&#34;:
+        self._execute_joined(paths)
+    else:
+        raise ValueError(&#34;bag_type must be either raw or joined&#34;)
+
+    temp_meta_inf = self.tmp_path / &#34;meta.inf&#34;
+    meta_inf_content = &#34;\n&#34;.join([f.name for f in self.missing_paths])
+    temp_meta_inf.write_text(data=meta_inf_content, encoding=&#34;utf-8&#34;)</code></pre>
+</details>
+</dd>
+<dt id="secfsdstools.x_examples.automation.automation.CombineTask.prepare"><code class="name flex">
+<span>def <span class="ident">prepare</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>prepare Task.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def prepare(self):
+    &#34;&#34;&#34; prepare Task. &#34;&#34;&#34;
+    if len(self.missing_paths) == 0:
+        return
+
+    self.tmp_path.mkdir(parents=True, exist_ok=False)</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+</dl>
 </section>
 </article>
 <nav id="sidebar">
@@ -174,6 +542,22 @@ if __name__ == &#39;__main__&#39;:
 <ul class="">
 <li><code><a title="secfsdstools.x_examples.automation.automation.after_update" href="#secfsdstools.x_examples.automation.automation.after_update">after_update</a></code></li>
 <li><code><a title="secfsdstools.x_examples.automation.automation.define_extra_processes" href="#secfsdstools.x_examples.automation.automation.define_extra_processes">define_extra_processes</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="secfsdstools.x_examples.automation.automation.CombineProcess" href="#secfsdstools.x_examples.automation.automation.CombineProcess">CombineProcess</a></code></h4>
+</li>
+<li>
+<h4><code><a title="secfsdstools.x_examples.automation.automation.CombineTask" href="#secfsdstools.x_examples.automation.automation.CombineTask">CombineTask</a></code></h4>
+<ul class="">
+<li><code><a title="secfsdstools.x_examples.automation.automation.CombineTask.commit" href="#secfsdstools.x_examples.automation.automation.CombineTask.commit">commit</a></code></li>
+<li><code><a title="secfsdstools.x_examples.automation.automation.CombineTask.exception" href="#secfsdstools.x_examples.automation.automation.CombineTask.exception">exception</a></code></li>
+<li><code><a title="secfsdstools.x_examples.automation.automation.CombineTask.execute" href="#secfsdstools.x_examples.automation.automation.CombineTask.execute">execute</a></code></li>
+<li><code><a title="secfsdstools.x_examples.automation.automation.CombineTask.prepare" href="#secfsdstools.x_examples.automation.automation.CombineTask.prepare">prepare</a></code></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>

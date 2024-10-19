@@ -155,12 +155,22 @@ class CombineProcess(AbstractProcess):
 def define_extra_processes(config: Configuration) -> List[AbstractProcess]:
     from secfsdstools.x_examples.automation.filter_process import FilterProcess
 
-    return [FilterProcess(parquet_dir=config.parquet_dir,
-                          filtered_dir=config.config_parser.get(section="Filter",
-                                                                option="filtered_dir"),
-                          execute_serial=True  # switch to false in case of memory problems
-
-                          ), ]
+    return [
+        FilterProcess(parquet_dir=config.parquet_dir,
+                      filtered_dir=config.config_parser.get(section="Filter",
+                                                            option="filtered_dir_raw"),
+                      bag_type="raw",
+                      save_by_stmt=False,
+                      execute_serial=False  # switch to true in case of memory problems
+                      ),
+        FilterProcess(parquet_dir=config.parquet_dir,
+                      filtered_dir=config.config_parser.get(section="Filter",
+                                                            option="filtered_dir_joined"),
+                      bag_type="joined",
+                      save_by_stmt=False,
+                      execute_serial=False  # switch to true in case of memory problems
+                      ),
+    ]
 
 
 def after_update(config: Configuration):

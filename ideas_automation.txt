@@ -52,12 +52,8 @@ Umbau von CheckForNewData
 
 Struktur
 --------
-Es stellt sich die Frage, ob ein RAW nach Stmt gefiltert wirklich Sinn macht
--> num bleibt immer bestehen, dass diese nur beim Join effektiv gefiltered werden.
--> besser raw nur als Filter für alle Stmts, und dann ein Joined Raw
 
-
-
+1. Version / Idee
 
 data/dld
 data/parquet
@@ -82,6 +78,37 @@ data/filter/
              /..
         /joined /BS
                 /..
+
+data/standardized/quarter/
+    <zipname>/BS
+             /IS
+             /CF
+    all      /BS
+             /IS
+             /CF
+
+    allcombined
+
+data/standardizedcombined
+
+Ticker symbols
+outstanding shares / EPS_calc
+
+
+2. Version
+1. Version / Idee
+
+data/dld
+data/parquet
+data/filtered_raw/
+
+   /quarter/<zipname>
+       /raw
+       /joined
+
+   all
+        /raw
+        /joined
 
 data/standardized/quarter/
     <zipname>/BS

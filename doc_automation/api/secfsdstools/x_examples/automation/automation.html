@@ -206,12 +206,22 @@ class CombineProcess(AbstractProcess):
 def define_extra_processes(config: Configuration) -&gt; List[AbstractProcess]:
     from secfsdstools.x_examples.automation.filter_process import FilterProcess
 
-    return [FilterProcess(parquet_dir=config.parquet_dir,
-                          filtered_dir=config.config_parser.get(section=&#34;Filter&#34;,
-                                                                option=&#34;filtered_dir&#34;),
-                          execute_serial=True  # switch to false in case of memory problems
-
-                          ), ]
+    return [
+        FilterProcess(parquet_dir=config.parquet_dir,
+                      filtered_dir=config.config_parser.get(section=&#34;Filter&#34;,
+                                                            option=&#34;filtered_dir_raw&#34;),
+                      bag_type=&#34;raw&#34;,
+                      save_by_stmt=False,
+                      execute_serial=False  # switch to true in case of memory problems
+                      ),
+        FilterProcess(parquet_dir=config.parquet_dir,
+                      filtered_dir=config.config_parser.get(section=&#34;Filter&#34;,
+                                                            option=&#34;filtered_dir_joined&#34;),
+                      bag_type=&#34;joined&#34;,
+                      save_by_stmt=False,
+                      execute_serial=False  # switch to true in case of memory problems
+                      ),
+    ]
 
 
 def after_update(config: Configuration):
@@ -278,12 +288,22 @@ if __name__ == &#39;__main__&#39;:
 <pre><code class="python">def define_extra_processes(config: Configuration) -&gt; List[AbstractProcess]:
     from secfsdstools.x_examples.automation.filter_process import FilterProcess
 
-    return [FilterProcess(parquet_dir=config.parquet_dir,
-                          filtered_dir=config.config_parser.get(section=&#34;Filter&#34;,
-                                                                option=&#34;filtered_dir&#34;),
-                          execute_serial=True  # switch to false in case of memory problems
-
-                          ), ]</code></pre>
+    return [
+        FilterProcess(parquet_dir=config.parquet_dir,
+                      filtered_dir=config.config_parser.get(section=&#34;Filter&#34;,
+                                                            option=&#34;filtered_dir_raw&#34;),
+                      bag_type=&#34;raw&#34;,
+                      save_by_stmt=False,
+                      execute_serial=False  # switch to true in case of memory problems
+                      ),
+        FilterProcess(parquet_dir=config.parquet_dir,
+                      filtered_dir=config.config_parser.get(section=&#34;Filter&#34;,
+                                                            option=&#34;filtered_dir_joined&#34;),
+                      bag_type=&#34;joined&#34;,
+                      save_by_stmt=False,
+                      execute_serial=False  # switch to true in case of memory problems
+                      ),
+    ]</code></pre>
 </details>
 </dd>
 </dl>

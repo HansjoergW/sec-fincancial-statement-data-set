@@ -180,27 +180,25 @@ class CombineProcess(AbstractProcess):
                  filtered_dir: str,
                  bag_type: str,  # raw or joined
                  file_type: str = &#34;quarter&#34;,
-                 stmts=None,
-                 execute_serial: bool = False
                  ):
-        super().__init__(execute_serial=execute_serial,
-                         chunksize=3)
-
-        self.stmts = [&#39;BS&#39;, &#39;IS&#39;, &#39;CF&#39;, &#39;CP&#39;, &#39;CI&#39;, &#39;EQ&#39;]
-        if stmts:
-            self.stmts = stmts
+        super().__init__(execute_serial=False,
+                         chunksize=0)
 
         self.filtered_path = Path(filtered_dir)
         self.bag_type = bag_type
         self.file_type = file_type
 
     def calculate_tasks(self) -&gt; List[Task]:
-        return [CombineTask(
+        task = CombineTask(
             root_path=self.filtered_path,
             bag_type=self.bag_type,
-            filter=f&#34;{self.file_type}/**/{self.bag_type}/{stmt}&#34;,
-            target_path=self.filtered_path / &#34;all&#34; / self.bag_type / stmt
-        ) for stmt in self.stmts]
+            filter=f&#34;{self.file_type}/*&#34;,
+            target_path=self.filtered_path / &#34;all&#34;
+        )
+        # since this is a one task process, we just check if there is really something to do
+        if len(task.missing_paths) &gt; 0:
+            return [task]
+        return []
 
 
 def define_extra_processes(config: Configuration) -&gt; List[AbstractProcess]:
@@ -214,6 +212,10 @@ def define_extra_processes(config: Configuration) -&gt; List[AbstractProcess]:
                       save_by_stmt=False,
                       execute_serial=False  # switch to true in case of memory problems
                       ),
+        CombineProcess(filtered_dir=config.config_parser.get(section=&#34;Filter&#34;,
+                                                             option=&#34;filtered_dir_raw&#34;),
+                       bag_type=&#34;raw&#34;
+                       ),
         FilterProcess(parquet_dir=config.parquet_dir,
                       filtered_dir=config.config_parser.get(section=&#34;Filter&#34;,
                                                             option=&#34;filtered_dir_joined&#34;),
@@ -221,6 +223,10 @@ def define_extra_processes(config: Configuration) -&gt; List[AbstractProcess]:
                       save_by_stmt=False,
                       execute_serial=False  # switch to true in case of memory problems
                       ),
+        CombineProcess(filtered_dir=config.config_parser.get(section=&#34;Filter&#34;,
+                                                             option=&#34;filtered_dir_joined&#34;),
+                       bag_type=&#34;joined&#34;
+                       )
     ]
 
 
@@ -296,6 +302,10 @@ if __name__ == &#39;__main__&#39;:
                       save_by_stmt=False,
                       execute_serial=False  # switch to true in case of memory problems
                       ),
+        CombineProcess(filtered_dir=config.config_parser.get(section=&#34;Filter&#34;,
+                                                             option=&#34;filtered_dir_raw&#34;),
+                       bag_type=&#34;raw&#34;
+                       ),
         FilterProcess(parquet_dir=config.parquet_dir,
                       filtered_dir=config.config_parser.get(section=&#34;Filter&#34;,
                                                             option=&#34;filtered_dir_joined&#34;),
@@ -303,6 +313,10 @@ if __name__ == &#39;__main__&#39;:
                       save_by_stmt=False,
                       execute_serial=False  # switch to true in case of memory problems
                       ),
+        CombineProcess(filtered_dir=config.config_parser.get(section=&#34;Filter&#34;,
+                                                             option=&#34;filtered_dir_joined&#34;),
+                       bag_type=&#34;joined&#34;
+                       )
     ]</code></pre>
 </details>
 </dd>
@@ -313,7 +327,7 @@ if __name__ == &#39;__main__&#39;:
 <dl>
 <dt id="secfsdstools.x_examples.automation.automation.CombineProcess"><code class="flex name class">
 <span>class <span class="ident">CombineProcess</span></span>
-<span>(</span><span>filtered_dir: str, bag_type: str, file_type: str = 'quarter', stmts=None, execute_serial: bool = False)</span>
+<span>(</span><span>filtered_dir: str, bag_type: str, file_type: str = 'quarter')</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Defines the Abstract process of processing tasks for a certain process.</p></div>
@@ -327,27 +341,25 @@ if __name__ == &#39;__main__&#39;:
                  filtered_dir: str,
                  bag_type: str,  # raw or joined
                  file_type: str = &#34;quarter&#34;,
-                 stmts=None,
-                 execute_serial: bool = False
                  ):
-        super().__init__(execute_serial=execute_serial,
-                         chunksize=3)
-
-        self.stmts = [&#39;BS&#39;, &#39;IS&#39;, &#39;CF&#39;, &#39;CP&#39;, &#39;CI&#39;, &#39;EQ&#39;]
-        if stmts:
-            self.stmts = stmts
+        super().__init__(execute_serial=False,
+                         chunksize=0)
 
         self.filtered_path = Path(filtered_dir)
         self.bag_type = bag_type
         self.file_type = file_type
 
     def calculate_tasks(self) -&gt; List[Task]:
-        return [CombineTask(
+        task = CombineTask(
             root_path=self.filtered_path,
             bag_type=self.bag_type,
-            filter=f&#34;{self.file_type}/**/{self.bag_type}/{stmt}&#34;,
-            target_path=self.filtered_path / &#34;all&#34; / self.bag_type / stmt
-        ) for stmt in self.stmts]</code></pre>
+            filter=f&#34;{self.file_type}/*&#34;,
+            target_path=self.filtered_path / &#34;all&#34;
+        )
+        # since this is a one task process, we just check if there is really something to do
+        if len(task.missing_paths) &gt; 0:
+            return [task]
+        return []</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">

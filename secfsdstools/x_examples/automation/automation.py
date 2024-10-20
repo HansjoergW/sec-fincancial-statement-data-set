@@ -129,27 +129,25 @@ class CombineProcess(AbstractProcess):
                  filtered_dir: str,
                  bag_type: str,  # raw or joined
                  file_type: str = "quarter",
-                 stmts=None,
-                 execute_serial: bool = False
                  ):
-        super().__init__(execute_serial=execute_serial,
-                         chunksize=3)
-
-        self.stmts = ['BS', 'IS', 'CF', 'CP', 'CI', 'EQ']
-        if stmts:
-            self.stmts = stmts
+        super().__init__(execute_serial=False,
+                         chunksize=0)
 
         self.filtered_path = Path(filtered_dir)
         self.bag_type = bag_type
         self.file_type = file_type
 
     def calculate_tasks(self) -> List[Task]:
-        return [CombineTask(
+        task = CombineTask(
             root_path=self.filtered_path,
             bag_type=self.bag_type,
-            filter=f"{self.file_type}/**/{self.bag_type}/{stmt}",
-            target_path=self.filtered_path / "all" / self.bag_type / stmt
-        ) for stmt in self.stmts]
+            filter=f"{self.file_type}/*",
+            target_path=self.filtered_path / "all"
+        )
+        # since this is a one task process, we just check if there is really something to do
+        if len(task.missing_paths) > 0:
+            return [task]
+        return []
 
 
 def define_extra_processes(config: Configuration) -> List[AbstractProcess]:
@@ -163,6 +161,10 @@ def define_extra_processes(config: Configuration) -> List[AbstractProcess]:
                       save_by_stmt=False,
                       execute_serial=False  # switch to true in case of memory problems
                       ),
+        CombineProcess(filtered_dir=config.config_parser.get(section="Filter",
+                                                             option="filtered_dir_raw"),
+                       bag_type="raw"
+                       ),
         FilterProcess(parquet_dir=config.parquet_dir,
                       filtered_dir=config.config_parser.get(section="Filter",
                                                             option="filtered_dir_joined"),
@@ -170,6 +172,10 @@ def define_extra_processes(config: Configuration) -> List[AbstractProcess]:
                       save_by_stmt=False,
                       execute_serial=False  # switch to true in case of memory problems
                       ),
+        CombineProcess(filtered_dir=config.config_parser.get(section="Filter",
+                                                             option="filtered_dir_joined"),
+                       bag_type="joined"
+                       )
     ]
 
 

@@ -96,7 +96,6 @@ outstanding shares / EPS_calc
 
 
 2. Version
-1. Version / Idee
 
 data/dld
 data/parquet
@@ -124,3 +123,26 @@ data/standardizedcombined
 
 Ticker symbols
 outstanding shares / EPS_calc
+
+
+3. Version
+- Es braucht eine Variante, in der zuerst nach statement gefiltert wird, und zwar einzeln,
+  und dann die all dateien pro stmt erzeugt werden
+  -> Problem ist, dass Memory Verbrauch sonst für viele vermutlich zu hoch sein wird.
+
+_filtered_joined_by_stmt/
+  -> problem ist, dass wir in dem Fall pro stmt laden, was nicht sehr effizient ist
+     ansonsten funktionert die aktuelly "combine" nicht, da wir immer davon ausgehen,
+     dass die letzte Stufe den namen definiert
+
+     vlt wäre es der bessera Ansatz die Combine Methode anzupassen -> sprich einen hint for "filename"
+     evtl. eine zweiten Filter
+     dann könnte man wieder mit quarter/<zipname/tempzipname>/stmt arbeiten..
+
+  quarter/<stmt>/<zipname>
+
+  all/<stmt>/
+
+
+
+

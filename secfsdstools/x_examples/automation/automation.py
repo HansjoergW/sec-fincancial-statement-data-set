@@ -126,23 +126,21 @@ class CombineTask:
 class CombineProcess(AbstractProcess):
 
     def __init__(self,
-                 filtered_dir: str,
+                 root_dir: str,
                  bag_type: str,  # raw or joined
-                 file_type: str = "quarter",
                  ):
         super().__init__(execute_serial=False,
                          chunksize=0)
 
-        self.filtered_path = Path(filtered_dir)
+        self.root_path = Path(root_dir)
         self.bag_type = bag_type
-        self.file_type = file_type
 
     def calculate_tasks(self) -> List[Task]:
         task = CombineTask(
-            root_path=self.filtered_path,
+            root_path=self.root_path,
             bag_type=self.bag_type,
-            filter=f"{self.file_type}/*",
-            target_path=self.filtered_path / "all"
+            filter=f"*",
+            target_path=self.root_path / "all"
         )
         # since this is a one task process, we just check if there is really something to do
         if len(task.missing_paths) > 0:
@@ -153,29 +151,32 @@ class CombineProcess(AbstractProcess):
 def define_extra_processes(config: Configuration) -> List[AbstractProcess]:
     from secfsdstools.x_examples.automation.filter_process import FilterProcess
 
+    raw_dir = config.config_parser.get(section="Filter",
+                                       option="filtered_dir_raw")
+
     return [
         FilterProcess(parquet_dir=config.parquet_dir,
-                      filtered_dir=config.config_parser.get(section="Filter",
-                                                            option="filtered_dir_raw"),
+                      filtered_dir=raw_dir,
                       bag_type="raw",
                       save_by_stmt=False,
                       execute_serial=False  # switch to true in case of memory problems
                       ),
-        CombineProcess(filtered_dir=config.config_parser.get(section="Filter",
-                                                             option="filtered_dir_raw"),
+        testen -> sollte eigentlich nichts machen ...
+        etwas geht noch nicht, wie erwartet
+        CombineProcess(root_dir=f"{raw_dir}/quarter",
                        bag_type="raw"
                        ),
         FilterProcess(parquet_dir=config.parquet_dir,
                       filtered_dir=config.config_parser.get(section="Filter",
                                                             option="filtered_dir_joined"),
                       bag_type="joined",
-                      save_by_stmt=False,
+                      save_by_stmt=True,
                       execute_serial=False  # switch to true in case of memory problems
                       ),
-        CombineProcess(filtered_dir=config.config_parser.get(section="Filter",
-                                                             option="filtered_dir_joined"),
-                       bag_type="joined"
-                       )
+        # CombineProcess(filtered_dir=config.config_parser.get(section="Filter",
+        #                                                      option="filtered_dir_joined"),
+        #                bag_type="joined"
+        #                )
     ]
 
 

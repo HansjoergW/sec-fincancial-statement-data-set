@@ -31,7 +31,8 @@ v.1.7.0
     - only if flag is set to true
     - example notebook
     - configparser.ConfigParser instance wird übergeben -> Section Default ist sec settings
-
+ - Process / Task Framework sollte unabhängig von update verwendet werden können
+   -> als simple Process Engine
 
 
 Todos:

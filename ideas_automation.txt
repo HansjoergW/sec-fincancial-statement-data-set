@@ -144,5 +144,28 @@ _filtered_joined_by_stmt/
   all/<stmt>/
 
 
+Final Target
+------------
+  _1_filtered_raw
+     quarter
+       2009q2.zip
+       ...
+     all   -> memory intensiv
+
+  _1_filtered_joined
+     quarter
+       2009q2.zip
+          BS
+          IS
+          CF
+          ...
+       ...
+     all_by_stmt
+       BS
+       IS
+       CF
+       ...
+     all
+
 
 

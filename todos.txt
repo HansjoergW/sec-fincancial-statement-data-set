@@ -21,6 +21,7 @@ v.1.7.0
 - interface Updater classmethod has changed -> taking config-instance
 - post_update_hook definition -> called after updates with Configuration as parameter
 - post_update_processes definition -> returns processes that are executed after standard process (dld, transform, index)
+- concat methods have new option to dropduplicates in resulting sub_df: default is to False
 
 - hook for after updated logic
 
@@ -31,8 +32,10 @@ v.1.7.0
     - only if flag is set to true
     - example notebook
     - configparser.ConfigParser instance wird übergeben -> Section Default ist sec settings
+
  - Process / Task Framework sollte unabhängig von update verwendet werden können
    -> als simple Process Engine
+
 
 
 Todos:

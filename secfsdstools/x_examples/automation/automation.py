@@ -113,13 +113,13 @@ class CombineTask:
     def _execute_raw(self, paths: List[Path]):
         all_bags = [RawDataBag.load(str(path)) for path in paths]
 
-        all_bag: RawDataBag = RawDataBag.concat(all_bags)
+        all_bag: RawDataBag = RawDataBag.concat(all_bags, drop_duplicates_sub_df=True)
         all_bag.save(target_path=str(self.tmp_path))
 
     def _execute_joined(self, paths: List[Path]):
         all_bags = [JoinedDataBag.load(str(path)) for path in paths]
 
-        all_bag: JoinedDataBag = JoinedDataBag.concat(all_bags)
+        all_bag: JoinedDataBag = JoinedDataBag.concat(all_bags, drop_duplicates_sub_df=True)
         all_bag.save(target_path=str(self.tmp_path))
 
 
@@ -127,20 +127,24 @@ class CombineProcess(AbstractProcess):
 
     def __init__(self,
                  root_dir: str,
+                 target_dir: str,
                  bag_type: str,  # raw or joined
+                 filter: str = "*"
                  ):
         super().__init__(execute_serial=False,
                          chunksize=0)
 
         self.root_path = Path(root_dir)
+        self.target_path = Path(target_dir)
         self.bag_type = bag_type
+        self.filter = filter
 
     def calculate_tasks(self) -> List[Task]:
         task = CombineTask(
             root_path=self.root_path,
             bag_type=self.bag_type,
-            filter=f"*",
-            target_path=self.root_path / "all"
+            filter=self.filter,
+            target_path=self.target_path
         )
         # since this is a one task process, we just check if there is really something to do
         if len(task.missing_paths) > 0:
@@ -153,26 +157,79 @@ def define_extra_processes(config: Configuration) -> List[AbstractProcess]:
 
     raw_dir = config.config_parser.get(section="Filter",
                                        option="filtered_dir_raw")
+    joined_dir = config.config_parser.get(section="Filter",
+                                       option="filtered_dir_joined")
+    joined_by_stmt_dir = config.config_parser.get(section="Filter",
+                                                  option="filtered_dir_by_stmt_joined")
 
     return [
+        # raw
         FilterProcess(parquet_dir=config.parquet_dir,
-                      filtered_dir=raw_dir,
+                      target_dir=raw_dir,
                       bag_type="raw",
                       save_by_stmt=False,
                       execute_serial=False  # switch to true in case of memory problems
                       ),
-        testen -> sollte eigentlich nichts machen ...
-        etwas geht noch nicht, wie erwartet
         CombineProcess(root_dir=f"{raw_dir}/quarter",
+                       target_dir=f"{raw_dir}/all",
                        bag_type="raw"
                        ),
+
+        # joined
         FilterProcess(parquet_dir=config.parquet_dir,
-                      filtered_dir=config.config_parser.get(section="Filter",
-                                                            option="filtered_dir_joined"),
+                      target_dir=joined_dir,
                       bag_type="joined",
-                      save_by_stmt=True,
+                      save_by_stmt=False,
                       execute_serial=False  # switch to true in case of memory problems
                       ),
+        CombineProcess(root_dir=f"{joined_dir}/quarter",
+                       target_dir=f"{joined_dir}/all",
+                       bag_type="joined"
+                       ),
+
+        # joined by stmt
+        FilterProcess(parquet_dir=config.parquet_dir,
+                      target_dir=f"{joined_by_stmt_dir}",
+                      bag_type="joined",
+                      save_by_stmt=True,
+                      stmts=["BS", "CF", "CI", "CP", "EQ", "IS"],
+                      execute_serial=False,  # switch to true in case of memory problems
+                      ),
+        CombineProcess(root_dir=f"{joined_by_stmt_dir}/quarter",
+                       target_dir=f"{joined_by_stmt_dir}/all_by_stmt/BS",
+                       filter="*/BS",
+                       bag_type="joined"
+                       ),
+        CombineProcess(root_dir=f"{joined_by_stmt_dir}/quarter",
+                       target_dir=f"{joined_by_stmt_dir}/all_by_stmt/CF",
+                       filter="*/CF",
+                       bag_type="joined"
+                       ),
+        CombineProcess(root_dir=f"{joined_by_stmt_dir}/quarter",
+                       target_dir=f"{joined_by_stmt_dir}/all_by_stmt/CI",
+                       filter="*/CI",
+                       bag_type="joined"
+                       ),
+        CombineProcess(root_dir=f"{joined_by_stmt_dir}/quarter",
+                       target_dir=f"{joined_by_stmt_dir}/all_by_stmt/CP",
+                       filter="*/CP",
+                       bag_type="joined"
+                       ),
+        CombineProcess(root_dir=f"{joined_by_stmt_dir}/quarter",
+                       target_dir=f"{joined_by_stmt_dir}/all_by_stmt/EQ",
+                       filter="*/EQ",
+                       bag_type="joined"
+                       ),
+        CombineProcess(root_dir=f"{joined_by_stmt_dir}/quarter",
+                       target_dir=f"{joined_by_stmt_dir}/all_by_stmt/IS",
+                       filter="*/IS",
+                       bag_type="joined"
+                       ),
+        CombineProcess(root_dir=f"{joined_by_stmt_dir}/all_by_stmt",
+                       target_dir=f"{joined_by_stmt_dir}/all",
+                       bag_type="joined"
+                       ),
+
         # CombineProcess(filtered_dir=config.config_parser.get(section="Filter",
         #                                                      option="filtered_dir_joined"),
         #                bag_type="joined"

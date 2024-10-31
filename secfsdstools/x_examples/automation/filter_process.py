@@ -112,7 +112,7 @@ class FilterProcess(AbstractProcess):
 
     def __init__(self,
                  parquet_dir: str,
-                 filtered_dir: str,
+                 target_dir: str,
                  bag_type: str,  # raw or joined
                  file_type: str = "quarter",
                  save_by_stmt: bool = False,
@@ -127,7 +127,7 @@ class FilterProcess(AbstractProcess):
             self.stmts = stmts
 
         self.parquet_dir = parquet_dir
-        self.filtered_dir = filtered_dir
+        self.target_dir = target_dir
         self.file_type = file_type
         self.bag_type = bag_type
         self.save_by_stmt = save_by_stmt
@@ -149,7 +149,7 @@ class FilterProcess(AbstractProcess):
 
     def _get_existing_filtered(self):
         return get_directories_in_directory(
-            os.path.join(self.filtered_dir, self.file_type))
+            os.path.join(self.target_dir, self.file_type))
 
     def _delete_temp_folders(self, root_path: Path):
         """
@@ -165,7 +165,7 @@ class FilterProcess(AbstractProcess):
             shutil.rmtree(file_path, ignore_errors=True)
 
     def pre_process(self):
-        self._delete_temp_folders(root_path=Path(self.filtered_dir) / self.file_type)
+        self._delete_temp_folders(root_path=Path(self.target_dir) / self.file_type)
 
     def calculate_tasks(self) -> List[Task]:
         existing = self._get_existing_filtered()
@@ -174,14 +174,14 @@ class FilterProcess(AbstractProcess):
         missings = set(available) - set(existing)
         if self.save_by_stmt:
             return [ByStmtFilterTask(
-                filtered_path=Path(self.filtered_dir) / self.file_type / missing,
+                filtered_path=Path(self.target_dir) / self.file_type / missing,
                 stmts=self.stmts,
                 bag_type=self.bag_type
             )
                 for missing in missings]
         else:
             return [FilterTask(
-                filtered_path=Path(self.filtered_dir) / self.file_type / missing,
+                filtered_path=Path(self.target_dir) / self.file_type / missing,
                 stmts=self.stmts,
                 bag_type=self.bag_type
             )

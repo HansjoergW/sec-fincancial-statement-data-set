@@ -152,13 +152,14 @@ class JoinedDataBag(DataBagBase[JOINED]):
         return JoinedDataBag.create(sub_df=sub_df, pre_num_df=pre_num_df)
 
     @staticmethod
-    def concat(bags: List[JOINED]) -> JOINED:
+    def concat(bags: List[JOINED], drop_duplicates_sub_df: bool = False) -> JOINED:
         """
         Merges multiple Bags together into one bag.
         Note: merge does not check if DataBags with the same reports are merged together.
 
         Args:
             bags: List of bags to be merged
+            drop_duplicates_sub_df: set to True, if you want to remove duplicates in the sub_df
 
         Returns:
             JoinedDataBag: a Bag with the merged content
@@ -167,8 +168,14 @@ class JoinedDataBag(DataBagBase[JOINED]):
         sub_dfs = [db.sub_df for db in bags]
         pre_num_dfs = [db.pre_num_df for db in bags]
 
-        return JoinedDataBag.create(sub_df=pd.concat(sub_dfs),
-                                    pre_num_df=pd.concat(pre_num_dfs))
+        sub_df = pd.concat(sub_dfs, ignore_index=True)
+        pre_num_df = pd.concat(pre_num_dfs, ignore_index=True)
+
+        if drop_duplicates_sub_df:
+            sub_df.drop_duplicates(inplace=True)
+
+        return JoinedDataBag.create(sub_df=sub_df,
+                                    pre_num_df=pre_num_df)
 
 
 @dataclass
@@ -328,13 +335,14 @@ class RawDataBag(DataBagBase[RAW]):
         return RawDataBag.create(sub_df=sub_df, pre_df=pre_df, num_df=num_df)
 
     @staticmethod
-    def concat(bags: List[RAW]) -> RAW:
+    def concat(bags: List[RAW], drop_duplicates_sub_df: bool = False) -> RAW:
         """
         Merges multiple Bags together into one bag.
         Note: merge does not check if DataBags with the same reports are merged together.
 
         Args:
             bags: List of bags to be merged
+            drop_duplicates_sub_df: set to True, if you want to remove duplicates in the sub_df
 
         Returns:
             RawDataBag: a Bag with the merged content
@@ -344,8 +352,13 @@ class RawDataBag(DataBagBase[RAW]):
         pre_dfs = [db.pre_df for db in bags]
         num_dfs = [db.num_df for db in bags]
 
-        # todo: might be more efficient if the contained maps were just combined
-        #       instead of being recalculated
-        return RawDataBag.create(sub_df=pd.concat(sub_dfs, ignore_index=True),
-                                 pre_df=pd.concat(pre_dfs, ignore_index=True),
-                                 num_df=pd.concat(num_dfs, ignore_index=True))
+        sub_df = pd.concat(sub_dfs, ignore_index=True)
+        pre_df = pd.concat(pre_dfs, ignore_index=True)
+        num_df = pd.concat(num_dfs, ignore_index=True)
+
+        if drop_duplicates_sub_df:
+            sub_df.drop_duplicates(inplace=True)
+
+        return RawDataBag.create(sub_df=sub_df,
+                                 pre_df=pre_df,
+                                 num_df=num_df)

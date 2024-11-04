@@ -82,55 +82,34 @@ from pathlib import Path
 from typing import List
 
 from secfsdstools.a_config.configmodel import Configuration
-from secfsdstools.c_automation.task_framework import AbstractProcess, Task
-from secfsdstools.d_container.databagmodel import RawDataBag, JoinedDataBag
+from secfsdstools.a_utils.fileutils import get_directories_in_directory
+from secfsdstools.c_automation.task_framework import AbstractProcess, Task, delete_temp_folders
+from secfsdstools.d_container.databagmodel import JoinedDataBag
+from secfsdstools.f_standardize.bs_standardize import BalanceSheetStandardizer
+from secfsdstools.f_standardize.cf_standardize import CashFlowStandardizer
+from secfsdstools.f_standardize.is_standardize import IncomeStatementStandardizer
 
 CURRENT_DIR, _ = os.path.split(__file__)
 
 
-class CombineTask:
+class StandardizerTask:
 
-    # todo:
-    # wir müssen noch schauen, was für files bereits in all vorhanden sind, bzw.
-    # was das letzte war, das verarbeitet worden ist...
     def __init__(self,
                  root_path: Path,
-                 filter: str,
-                 bag_type: str,  # raw or joined
                  target_path: Path):
         self.root_path = root_path
-        self.filter = filter
-        self.all_dirs = list(self.root_path.glob(self.filter))
-        self.all_names = {f.name: f for f in self.all_dirs}
 
         self.target_path = target_path
-        self.bag_type = bag_type
-
         self.dir_name = target_path.name
         self.tmp_path = target_path.parent / f&#34;tmp_{self.dir_name}&#34;
-        self.meta_inf_file: Path = self.target_path / &#34;meta.inf&#34;
-
-        self.missing_paths = self.all_dirs
-
-        if self.meta_inf_file.exists():
-            meta_inf_content = self.meta_inf_file.read_text(encoding=&#34;utf-8&#34;)
-            containing_names = meta_inf_content.split(&#34;\n&#34;)
-
-            missing = set(self.all_names.keys()) - set(containing_names)
-            self.missing_paths = [self.all_names[name] for name in missing]
 
     def prepare(self):
-        &#34;&#34;&#34; prepare Task. &#34;&#34;&#34;
-        if len(self.missing_paths) == 0:
-            return
-
-        self.tmp_path.mkdir(parents=True, exist_ok=False)
+        (self.tmp_path / &#34;BS&#34;).mkdir(parents=True, exist_ok=False)
+        (self.tmp_path / &#34;IS&#34;).mkdir(parents=True, exist_ok=False)
+        (self.tmp_path / &#34;CF&#34;).mkdir(parents=True, exist_ok=False)
 
     def commit(self):
         &#34;&#34;&#34; we commit by renaming the tmp_path. &#34;&#34;&#34;
-        if len(self.missing_paths) == 0:
-            return &#34;success&#34;
-
         self.tmp_path.rename(self.target_path)
         return &#34;success&#34;
 
@@ -140,78 +119,79 @@ class CombineTask:
         return f&#34;failed {exception}&#34;
 
     def __str__(self) -&gt; str:
-        return f&#34;CombineTask(root_path: {self.root_path}, filter: {self.filter})&#34;
+        return (f&#34;StandardizerTask(root_path: {self.root_path}, &#34;
+                f&#34;target_path: {self.target_path})&#34;)
 
     def execute(self):
-        if len(self.missing_paths) == 0:
-            return
+        bs_standardizer = BalanceSheetStandardizer()
+        is_standardizer = IncomeStatementStandardizer()
+        cf_standardizer = CashFlowStandardizer()
 
-        paths = self.missing_paths
-        if self.target_path.exists():
-            paths.append(self.target_path)
+        # load data
+        joined_bag = JoinedDataBag.load(str(self.root_path))
 
-        if self.bag_type.lower() == &#34;raw&#34;:
-            self._execute_raw(paths)
-        elif self.bag_type.lower() == &#34;joined&#34;:
-            self._execute_joined(paths)
-        else:
-            raise ValueError(&#34;bag_type must be either raw or joined&#34;)
+        # standardize bs
+        # bs_standardizer.process(joined_bag.pre_num_df.copy())
+        # bs_standardizer.get_standardize_bag().save(str(self.tmp_path / &#34;BS&#34;))
 
-        temp_meta_inf = self.tmp_path / &#34;meta.inf&#34;
-        meta_inf_content = &#34;\n&#34;.join([f.name for f in self.missing_paths])
-        temp_meta_inf.write_text(data=meta_inf_content, encoding=&#34;utf-8&#34;)
+        # standardize is
+        is_standardizer.process(joined_bag.pre_num_df.copy())
+        is_standardizer.get_standardize_bag().save(str(self.tmp_path / &#34;IS&#34;))
 
-    def _execute_raw(self, paths: List[Path]):
-        all_bags = [RawDataBag.load(str(path)) for path in paths]
-
-        all_bag: RawDataBag = RawDataBag.concat(all_bags, drop_duplicates_sub_df=True)
-        all_bag.save(target_path=str(self.tmp_path))
-
-    def _execute_joined(self, paths: List[Path]):
-        all_bags = [JoinedDataBag.load(str(path)) for path in paths]
-
-        all_bag: JoinedDataBag = JoinedDataBag.concat(all_bags, drop_duplicates_sub_df=True)
-        all_bag.save(target_path=str(self.tmp_path))
+        # standardize cf
+        cf_standardizer.process(joined_bag.pre_num_df.copy())
+        cf_standardizer.get_standardize_bag().save(str(self.tmp_path / &#34;CF&#34;))
 
 
-class CombineProcess(AbstractProcess):
+class StandardizeProcess(AbstractProcess):
 
     def __init__(self,
                  root_dir: str,
                  target_dir: str,
-                 bag_type: str,  # raw or joined
-                 filter: str = &#34;*&#34;
+                 file_type: str = &#34;quarter&#34;,
+                 execute_serial: bool = False
                  ):
-        super().__init__(execute_serial=False,
+        super().__init__(execute_serial=execute_serial,
                          chunksize=0)
+        self.root_dir = root_dir
+        self.target_dir = target_dir
+        self.file_type = file_type
 
-        self.root_path = Path(root_dir)
-        self.target_path = Path(target_dir)
-        self.bag_type = bag_type
-        self.filter = filter
+    def _get_available_filtered(self):
+        return get_directories_in_directory(
+            os.path.join(self.root_dir, self.file_type))
+
+    def _get_standardized(self):
+        return get_directories_in_directory(
+            os.path.join(self.target_dir, self.file_type))
+
+    def pre_process(self):
+        delete_temp_folders(root_path=Path(self.target_dir) / self.file_type)
 
     def calculate_tasks(self) -&gt; List[Task]:
-        task = CombineTask(
-            root_path=self.root_path,
-            bag_type=self.bag_type,
-            filter=self.filter,
-            target_path=self.target_path
-        )
-        # since this is a one task process, we just check if there is really something to do
-        if len(task.missing_paths) &gt; 0:
-            return [task]
-        return []
+        filtered = self._get_available_filtered()
+        standardized = self._get_standardized()
+
+        missings = set(filtered) - set(standardized)
+
+        return [StandardizerTask(
+            root_path=Path(self.root_dir) / self.file_type / missing,
+            target_path=Path(self.target_dir) / self.file_type / missing
+        ) for missing in missings]
 
 
 def define_extra_processes(config: Configuration) -&gt; List[AbstractProcess]:
     from secfsdstools.x_examples.automation.filter_process import FilterProcess
+    from secfsdstools.x_examples.automation.combine_process import CombineProcess
 
     raw_dir = config.config_parser.get(section=&#34;Filter&#34;,
                                        option=&#34;filtered_dir_raw&#34;)
     joined_dir = config.config_parser.get(section=&#34;Filter&#34;,
-                                       option=&#34;filtered_dir_joined&#34;)
+                                          option=&#34;filtered_dir_joined&#34;)
     joined_by_stmt_dir = config.config_parser.get(section=&#34;Filter&#34;,
                                                   option=&#34;filtered_dir_by_stmt_joined&#34;)
+    standardized_dir = config.config_parser.get(section=&#34;Standardizer&#34;,
+                                                option=&#34;standardized_dir&#34;)
 
     return [
         # raw
@@ -246,6 +226,8 @@ def define_extra_processes(config: Configuration) -&gt; List[AbstractProcess]:
                       stmts=[&#34;BS&#34;, &#34;CF&#34;, &#34;CI&#34;, &#34;CP&#34;, &#34;EQ&#34;, &#34;IS&#34;],
                       execute_serial=False,  # switch to true in case of memory problems
                       ),
+
+        # building datasets with all entries by stmt
         CombineProcess(root_dir=f&#34;{joined_by_stmt_dir}/quarter&#34;,
                        target_dir=f&#34;{joined_by_stmt_dir}/all_by_stmt/BS&#34;,
                        filter=&#34;*/BS&#34;,
@@ -276,15 +258,17 @@ def define_extra_processes(config: Configuration) -&gt; List[AbstractProcess]:
                        filter=&#34;*/IS&#34;,
                        bag_type=&#34;joined&#34;
                        ),
+
+        # building an all dataset based on the all-by-stmt datasets
         CombineProcess(root_dir=f&#34;{joined_by_stmt_dir}/all_by_stmt&#34;,
                        target_dir=f&#34;{joined_by_stmt_dir}/all&#34;,
                        bag_type=&#34;joined&#34;
                        ),
 
-        # CombineProcess(filtered_dir=config.config_parser.get(section=&#34;Filter&#34;,
-        #                                                      option=&#34;filtered_dir_joined&#34;),
-        #                bag_type=&#34;joined&#34;
-        #                )
+        StandardizeProcess(root_dir=joined_dir,
+                           target_dir=standardized_dir,
+                           execute_serial=False)
+
     ]
 
 
@@ -351,13 +335,16 @@ if __name__ == &#39;__main__&#39;:
 </summary>
 <pre><code class="python">def define_extra_processes(config: Configuration) -&gt; List[AbstractProcess]:
     from secfsdstools.x_examples.automation.filter_process import FilterProcess
+    from secfsdstools.x_examples.automation.combine_process import CombineProcess
 
     raw_dir = config.config_parser.get(section=&#34;Filter&#34;,
                                        option=&#34;filtered_dir_raw&#34;)
     joined_dir = config.config_parser.get(section=&#34;Filter&#34;,
-                                       option=&#34;filtered_dir_joined&#34;)
+                                          option=&#34;filtered_dir_joined&#34;)
     joined_by_stmt_dir = config.config_parser.get(section=&#34;Filter&#34;,
                                                   option=&#34;filtered_dir_by_stmt_joined&#34;)
+    standardized_dir = config.config_parser.get(section=&#34;Standardizer&#34;,
+                                                option=&#34;standardized_dir&#34;)
 
     return [
         # raw
@@ -392,6 +379,8 @@ if __name__ == &#39;__main__&#39;:
                       stmts=[&#34;BS&#34;, &#34;CF&#34;, &#34;CI&#34;, &#34;CP&#34;, &#34;EQ&#34;, &#34;IS&#34;],
                       execute_serial=False,  # switch to true in case of memory problems
                       ),
+
+        # building datasets with all entries by stmt
         CombineProcess(root_dir=f&#34;{joined_by_stmt_dir}/quarter&#34;,
                        target_dir=f&#34;{joined_by_stmt_dir}/all_by_stmt/BS&#34;,
                        filter=&#34;*/BS&#34;,
@@ -422,15 +411,17 @@ if __name__ == &#39;__main__&#39;:
                        filter=&#34;*/IS&#34;,
                        bag_type=&#34;joined&#34;
                        ),
+
+        # building an all dataset based on the all-by-stmt datasets
         CombineProcess(root_dir=f&#34;{joined_by_stmt_dir}/all_by_stmt&#34;,
                        target_dir=f&#34;{joined_by_stmt_dir}/all&#34;,
                        bag_type=&#34;joined&#34;
                        ),
 
-        # CombineProcess(filtered_dir=config.config_parser.get(section=&#34;Filter&#34;,
-        #                                                      option=&#34;filtered_dir_joined&#34;),
-        #                bag_type=&#34;joined&#34;
-        #                )
+        StandardizeProcess(root_dir=joined_dir,
+                           target_dir=standardized_dir,
+                           execute_serial=False)
+
     ]</code></pre>
 </details>
 </dd>
@@ -439,9 +430,9 @@ if __name__ == &#39;__main__&#39;:
 <section>
 <h2 class="section-title" id="header-classes">Classes</h2>
 <dl>
-<dt id="secfsdstools.x_examples.automation.automation.CombineProcess"><code class="flex name class">
-<span>class <span class="ident">CombineProcess</span></span>
-<span>(</span><span>root_dir: str, target_dir: str, bag_type: str, filter: str = '*')</span>
+<dt id="secfsdstools.x_examples.automation.automation.StandardizeProcess"><code class="flex name class">
+<span>class <span class="ident">StandardizeProcess</span></span>
+<span>(</span><span>root_dir: str, target_dir: str, file_type: str = 'quarter', execute_serial: bool = False)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Defines the Abstract process of processing tasks for a certain process.</p></div>
@@ -449,33 +440,41 @@ if __name__ == &#39;__main__&#39;:
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class CombineProcess(AbstractProcess):
+<pre><code class="python">class StandardizeProcess(AbstractProcess):
 
     def __init__(self,
                  root_dir: str,
                  target_dir: str,
-                 bag_type: str,  # raw or joined
-                 filter: str = &#34;*&#34;
+                 file_type: str = &#34;quarter&#34;,
+                 execute_serial: bool = False
                  ):
-        super().__init__(execute_serial=False,
+        super().__init__(execute_serial=execute_serial,
                          chunksize=0)
+        self.root_dir = root_dir
+        self.target_dir = target_dir
+        self.file_type = file_type
 
-        self.root_path = Path(root_dir)
-        self.target_path = Path(target_dir)
-        self.bag_type = bag_type
-        self.filter = filter
+    def _get_available_filtered(self):
+        return get_directories_in_directory(
+            os.path.join(self.root_dir, self.file_type))
+
+    def _get_standardized(self):
+        return get_directories_in_directory(
+            os.path.join(self.target_dir, self.file_type))
+
+    def pre_process(self):
+        delete_temp_folders(root_path=Path(self.target_dir) / self.file_type)
 
     def calculate_tasks(self) -&gt; List[Task]:
-        task = CombineTask(
-            root_path=self.root_path,
-            bag_type=self.bag_type,
-            filter=self.filter,
-            target_path=self.target_path
-        )
-        # since this is a one task process, we just check if there is really something to do
-        if len(task.missing_paths) &gt; 0:
-            return [task]
-        return []</code></pre>
+        filtered = self._get_available_filtered()
+        standardized = self._get_standardized()
+
+        missings = set(filtered) - set(standardized)
+
+        return [StandardizerTask(
+            root_path=Path(self.root_dir) / self.file_type / missing,
+            target_path=Path(self.target_dir) / self.file_type / missing
+        ) for missing in missings]</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -494,9 +493,9 @@ if __name__ == &#39;__main__&#39;:
 </li>
 </ul>
 </dd>
-<dt id="secfsdstools.x_examples.automation.automation.CombineTask"><code class="flex name class">
-<span>class <span class="ident">CombineTask</span></span>
-<span>(</span><span>root_path: pathlib.Path, filter: str, bag_type: str, target_path: pathlib.Path)</span>
+<dt id="secfsdstools.x_examples.automation.automation.StandardizerTask"><code class="flex name class">
+<span>class <span class="ident">StandardizerTask</span></span>
+<span>(</span><span>root_path: pathlib.Path, target_path: pathlib.Path)</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -504,49 +503,24 @@ if __name__ == &#39;__main__&#39;:
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class CombineTask:
+<pre><code class="python">class StandardizerTask:
 
-    # todo:
-    # wir müssen noch schauen, was für files bereits in all vorhanden sind, bzw.
-    # was das letzte war, das verarbeitet worden ist...
     def __init__(self,
                  root_path: Path,
-                 filter: str,
-                 bag_type: str,  # raw or joined
                  target_path: Path):
         self.root_path = root_path
-        self.filter = filter
-        self.all_dirs = list(self.root_path.glob(self.filter))
-        self.all_names = {f.name: f for f in self.all_dirs}
 
         self.target_path = target_path
-        self.bag_type = bag_type
-
         self.dir_name = target_path.name
         self.tmp_path = target_path.parent / f&#34;tmp_{self.dir_name}&#34;
-        self.meta_inf_file: Path = self.target_path / &#34;meta.inf&#34;
-
-        self.missing_paths = self.all_dirs
-
-        if self.meta_inf_file.exists():
-            meta_inf_content = self.meta_inf_file.read_text(encoding=&#34;utf-8&#34;)
-            containing_names = meta_inf_content.split(&#34;\n&#34;)
-
-            missing = set(self.all_names.keys()) - set(containing_names)
-            self.missing_paths = [self.all_names[name] for name in missing]
 
     def prepare(self):
-        &#34;&#34;&#34; prepare Task. &#34;&#34;&#34;
-        if len(self.missing_paths) == 0:
-            return
-
-        self.tmp_path.mkdir(parents=True, exist_ok=False)
+        (self.tmp_path / &#34;BS&#34;).mkdir(parents=True, exist_ok=False)
+        (self.tmp_path / &#34;IS&#34;).mkdir(parents=True, exist_ok=False)
+        (self.tmp_path / &#34;CF&#34;).mkdir(parents=True, exist_ok=False)
 
     def commit(self):
         &#34;&#34;&#34; we commit by renaming the tmp_path. &#34;&#34;&#34;
-        if len(self.missing_paths) == 0:
-            return &#34;success&#34;
-
         self.tmp_path.rename(self.target_path)
         return &#34;success&#34;
 
@@ -556,42 +530,32 @@ if __name__ == &#39;__main__&#39;:
         return f&#34;failed {exception}&#34;
 
     def __str__(self) -&gt; str:
-        return f&#34;CombineTask(root_path: {self.root_path}, filter: {self.filter})&#34;
+        return (f&#34;StandardizerTask(root_path: {self.root_path}, &#34;
+                f&#34;target_path: {self.target_path})&#34;)
 
     def execute(self):
-        if len(self.missing_paths) == 0:
-            return
+        bs_standardizer = BalanceSheetStandardizer()
+        is_standardizer = IncomeStatementStandardizer()
+        cf_standardizer = CashFlowStandardizer()
 
-        paths = self.missing_paths
-        if self.target_path.exists():
-            paths.append(self.target_path)
+        # load data
+        joined_bag = JoinedDataBag.load(str(self.root_path))
 
-        if self.bag_type.lower() == &#34;raw&#34;:
-            self._execute_raw(paths)
-        elif self.bag_type.lower() == &#34;joined&#34;:
-            self._execute_joined(paths)
-        else:
-            raise ValueError(&#34;bag_type must be either raw or joined&#34;)
+        # standardize bs
+        # bs_standardizer.process(joined_bag.pre_num_df.copy())
+        # bs_standardizer.get_standardize_bag().save(str(self.tmp_path / &#34;BS&#34;))
 
-        temp_meta_inf = self.tmp_path / &#34;meta.inf&#34;
-        meta_inf_content = &#34;\n&#34;.join([f.name for f in self.missing_paths])
-        temp_meta_inf.write_text(data=meta_inf_content, encoding=&#34;utf-8&#34;)
+        # standardize is
+        is_standardizer.process(joined_bag.pre_num_df.copy())
+        is_standardizer.get_standardize_bag().save(str(self.tmp_path / &#34;IS&#34;))
 
-    def _execute_raw(self, paths: List[Path]):
-        all_bags = [RawDataBag.load(str(path)) for path in paths]
-
-        all_bag: RawDataBag = RawDataBag.concat(all_bags, drop_duplicates_sub_df=True)
-        all_bag.save(target_path=str(self.tmp_path))
-
-    def _execute_joined(self, paths: List[Path]):
-        all_bags = [JoinedDataBag.load(str(path)) for path in paths]
-
-        all_bag: JoinedDataBag = JoinedDataBag.concat(all_bags, drop_duplicates_sub_df=True)
-        all_bag.save(target_path=str(self.tmp_path))</code></pre>
+        # standardize cf
+        cf_standardizer.process(joined_bag.pre_num_df.copy())
+        cf_standardizer.get_standardize_bag().save(str(self.tmp_path / &#34;CF&#34;))</code></pre>
 </details>
 <h3>Methods</h3>
 <dl>
-<dt id="secfsdstools.x_examples.automation.automation.CombineTask.commit"><code class="name flex">
+<dt id="secfsdstools.x_examples.automation.automation.StandardizerTask.commit"><code class="name flex">
 <span>def <span class="ident">commit</span></span>(<span>self)</span>
 </code></dt>
 <dd>
@@ -602,14 +566,11 @@ if __name__ == &#39;__main__&#39;:
 </summary>
 <pre><code class="python">def commit(self):
     &#34;&#34;&#34; we commit by renaming the tmp_path. &#34;&#34;&#34;
-    if len(self.missing_paths) == 0:
-        return &#34;success&#34;
-
     self.tmp_path.rename(self.target_path)
     return &#34;success&#34;</code></pre>
 </details>
 </dd>
-<dt id="secfsdstools.x_examples.automation.automation.CombineTask.exception"><code class="name flex">
+<dt id="secfsdstools.x_examples.automation.automation.StandardizerTask.exception"><code class="name flex">
 <span>def <span class="ident">exception</span></span>(<span>self, exception) ‑> str</span>
 </code></dt>
 <dd>
@@ -624,7 +585,7 @@ if __name__ == &#39;__main__&#39;:
     return f&#34;failed {exception}&#34;</code></pre>
 </details>
 </dd>
-<dt id="secfsdstools.x_examples.automation.automation.CombineTask.execute"><code class="name flex">
+<dt id="secfsdstools.x_examples.automation.automation.StandardizerTask.execute"><code class="name flex">
 <span>def <span class="ident">execute</span></span>(<span>self)</span>
 </code></dt>
 <dd>
@@ -634,40 +595,39 @@ if __name__ == &#39;__main__&#39;:
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def execute(self):
-    if len(self.missing_paths) == 0:
-        return
+    bs_standardizer = BalanceSheetStandardizer()
+    is_standardizer = IncomeStatementStandardizer()
+    cf_standardizer = CashFlowStandardizer()
 
-    paths = self.missing_paths
-    if self.target_path.exists():
-        paths.append(self.target_path)
+    # load data
+    joined_bag = JoinedDataBag.load(str(self.root_path))
 
-    if self.bag_type.lower() == &#34;raw&#34;:
-        self._execute_raw(paths)
-    elif self.bag_type.lower() == &#34;joined&#34;:
-        self._execute_joined(paths)
-    else:
-        raise ValueError(&#34;bag_type must be either raw or joined&#34;)
+    # standardize bs
+    # bs_standardizer.process(joined_bag.pre_num_df.copy())
+    # bs_standardizer.get_standardize_bag().save(str(self.tmp_path / &#34;BS&#34;))
 
-    temp_meta_inf = self.tmp_path / &#34;meta.inf&#34;
-    meta_inf_content = &#34;\n&#34;.join([f.name for f in self.missing_paths])
-    temp_meta_inf.write_text(data=meta_inf_content, encoding=&#34;utf-8&#34;)</code></pre>
+    # standardize is
+    is_standardizer.process(joined_bag.pre_num_df.copy())
+    is_standardizer.get_standardize_bag().save(str(self.tmp_path / &#34;IS&#34;))
+
+    # standardize cf
+    cf_standardizer.process(joined_bag.pre_num_df.copy())
+    cf_standardizer.get_standardize_bag().save(str(self.tmp_path / &#34;CF&#34;))</code></pre>
 </details>
 </dd>
-<dt id="secfsdstools.x_examples.automation.automation.CombineTask.prepare"><code class="name flex">
+<dt id="secfsdstools.x_examples.automation.automation.StandardizerTask.prepare"><code class="name flex">
 <span>def <span class="ident">prepare</span></span>(<span>self)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>prepare Task.</p></div>
+<div class="desc"></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def prepare(self):
-    &#34;&#34;&#34; prepare Task. &#34;&#34;&#34;
-    if len(self.missing_paths) == 0:
-        return
-
-    self.tmp_path.mkdir(parents=True, exist_ok=False)</code></pre>
+    (self.tmp_path / &#34;BS&#34;).mkdir(parents=True, exist_ok=False)
+    (self.tmp_path / &#34;IS&#34;).mkdir(parents=True, exist_ok=False)
+    (self.tmp_path / &#34;CF&#34;).mkdir(parents=True, exist_ok=False)</code></pre>
 </details>
 </dd>
 </dl>
@@ -695,15 +655,15 @@ if __name__ == &#39;__main__&#39;:
 <li><h3><a href="#header-classes">Classes</a></h3>
 <ul>
 <li>
-<h4><code><a title="secfsdstools.x_examples.automation.automation.CombineProcess" href="#secfsdstools.x_examples.automation.automation.CombineProcess">CombineProcess</a></code></h4>
+<h4><code><a title="secfsdstools.x_examples.automation.automation.StandardizeProcess" href="#secfsdstools.x_examples.automation.automation.StandardizeProcess">StandardizeProcess</a></code></h4>
 </li>
 <li>
-<h4><code><a title="secfsdstools.x_examples.automation.automation.CombineTask" href="#secfsdstools.x_examples.automation.automation.CombineTask">CombineTask</a></code></h4>
+<h4><code><a title="secfsdstools.x_examples.automation.automation.StandardizerTask" href="#secfsdstools.x_examples.automation.automation.StandardizerTask">StandardizerTask</a></code></h4>
 <ul class="">
-<li><code><a title="secfsdstools.x_examples.automation.automation.CombineTask.commit" href="#secfsdstools.x_examples.automation.automation.CombineTask.commit">commit</a></code></li>
-<li><code><a title="secfsdstools.x_examples.automation.automation.CombineTask.exception" href="#secfsdstools.x_examples.automation.automation.CombineTask.exception">exception</a></code></li>
-<li><code><a title="secfsdstools.x_examples.automation.automation.CombineTask.execute" href="#secfsdstools.x_examples.automation.automation.CombineTask.execute">execute</a></code></li>
-<li><code><a title="secfsdstools.x_examples.automation.automation.CombineTask.prepare" href="#secfsdstools.x_examples.automation.automation.CombineTask.prepare">prepare</a></code></li>
+<li><code><a title="secfsdstools.x_examples.automation.automation.StandardizerTask.commit" href="#secfsdstools.x_examples.automation.automation.StandardizerTask.commit">commit</a></code></li>
+<li><code><a title="secfsdstools.x_examples.automation.automation.StandardizerTask.exception" href="#secfsdstools.x_examples.automation.automation.StandardizerTask.exception">exception</a></code></li>
+<li><code><a title="secfsdstools.x_examples.automation.automation.StandardizerTask.execute" href="#secfsdstools.x_examples.automation.automation.StandardizerTask.execute">execute</a></code></li>
+<li><code><a title="secfsdstools.x_examples.automation.automation.StandardizerTask.prepare" href="#secfsdstools.x_examples.automation.automation.StandardizerTask.prepare">prepare</a></code></li>
 </ul>
 </li>
 </ul>

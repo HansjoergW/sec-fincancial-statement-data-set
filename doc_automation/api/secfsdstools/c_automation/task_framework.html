@@ -31,12 +31,16 @@
 Base classes for the Task and Process Framework.
 &#34;&#34;&#34;
 import logging
+import shutil
 from abc import ABC, abstractmethod
 from collections import defaultdict
 from dataclasses import dataclass
 from enum import Enum
-from typing import Protocol, List, Any, Dict
+from pathlib import Path
+from typing import List
+from typing import Protocol, Any, Dict
 
+from secfsdstools.a_utils.fileutils import get_directories_in_directory
 from secfsdstools.a_utils.parallelexecution import ThreadExecutor
 
 
@@ -130,7 +134,7 @@ class AbstractProcess(ABC):
             return result
         except Exception as ex:  # pylint: disable=W0703
             # we want to catch everything here.
-            logger.info(&#34;Failed: %s&#34;, task)
+            logger.info(&#34;Failed: %s / %s &#34;, task, ex)
             return TaskResult(task=task,
                               result=task.exception(exception=ex),
                               state=TaskResultState.FAILED)
@@ -166,7 +170,20 @@ class AbstractProcess(ABC):
         for failed in self.failed_tasks:
             logger.warning(&#34;not able to process %s&#34;, failed)
 
-        self.post_process()</code></pre>
+        self.post_process()
+
+def delete_temp_folders(root_path: Path, temp_prefix: str = &#34;tmp&#34;):
+    &#34;&#34;&#34;
+    remove any existing folders starting with the tmp_prefix (folders that were not successfully completed
+
+    &#34;&#34;&#34;
+    dirs_in_filter_dir = get_directories_in_directory(str(root_path))
+
+    tmp_dirs = [d for d in dirs_in_filter_dir if d.startswith(temp_prefix)]
+
+    for tmp_dir in tmp_dirs:
+        file_path = root_path / tmp_dir
+        shutil.rmtree(file_path, ignore_errors=True)</code></pre>
 </details>
 </section>
 <section>
@@ -174,6 +191,32 @@ class AbstractProcess(ABC):
 <section>
 </section>
 <section>
+<h2 class="section-title" id="header-functions">Functions</h2>
+<dl>
+<dt id="secfsdstools.c_automation.task_framework.delete_temp_folders"><code class="name flex">
+<span>def <span class="ident">delete_temp_folders</span></span>(<span>root_path: pathlib.Path, temp_prefix: str = 'tmp')</span>
+</code></dt>
+<dd>
+<div class="desc"><p>remove any existing folders starting with the tmp_prefix (folders that were not successfully completed</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def delete_temp_folders(root_path: Path, temp_prefix: str = &#34;tmp&#34;):
+    &#34;&#34;&#34;
+    remove any existing folders starting with the tmp_prefix (folders that were not successfully completed
+
+    &#34;&#34;&#34;
+    dirs_in_filter_dir = get_directories_in_directory(str(root_path))
+
+    tmp_dirs = [d for d in dirs_in_filter_dir if d.startswith(temp_prefix)]
+
+    for tmp_dir in tmp_dirs:
+        file_path = root_path / tmp_dir
+        shutil.rmtree(file_path, ignore_errors=True)</code></pre>
+</details>
+</dd>
+</dl>
 </section>
 <section>
 <h2 class="section-title" id="header-classes">Classes</h2>
@@ -235,7 +278,7 @@ class AbstractProcess(ABC):
             return result
         except Exception as ex:  # pylint: disable=W0703
             # we want to catch everything here.
-            logger.info(&#34;Failed: %s&#34;, task)
+            logger.info(&#34;Failed: %s / %s &#34;, task, ex)
             return TaskResult(task=task,
                               result=task.exception(exception=ex),
                               state=TaskResultState.FAILED)
@@ -282,7 +325,8 @@ class AbstractProcess(ABC):
 <li><a title="secfsdstools.c_download.basedownloading_process.BaseDownloadingProcess" href="../c_download/basedownloading_process.html#secfsdstools.c_download.basedownloading_process.BaseDownloadingProcess">BaseDownloadingProcess</a></li>
 <li><a title="secfsdstools.c_index.indexing_process.ReportParquetIndexerProcess" href="../c_index/indexing_process.html#secfsdstools.c_index.indexing_process.ReportParquetIndexerProcess">ReportParquetIndexerProcess</a></li>
 <li><a title="secfsdstools.c_transform.toparquettransforming_process.ToParquetTransformerProcess" href="../c_transform/toparquettransforming_process.html#secfsdstools.c_transform.toparquettransforming_process.ToParquetTransformerProcess">ToParquetTransformerProcess</a></li>
-<li><a title="secfsdstools.x_examples.automation.automation.CombineProcess" href="../x_examples/automation/automation.html#secfsdstools.x_examples.automation.automation.CombineProcess">CombineProcess</a></li>
+<li><a title="secfsdstools.x_examples.automation.automation.StandardizeProcess" href="../x_examples/automation/automation.html#secfsdstools.x_examples.automation.automation.StandardizeProcess">StandardizeProcess</a></li>
+<li><a title="secfsdstools.x_examples.automation.combine_process.CombineProcess" href="../x_examples/automation/combine_process.html#secfsdstools.x_examples.automation.combine_process.CombineProcess">CombineProcess</a></li>
 <li><a title="secfsdstools.x_examples.automation.filter_process.FilterProcess" href="../x_examples/automation/filter_process.html#secfsdstools.x_examples.automation.filter_process.FilterProcess">FilterProcess</a></li>
 </ul>
 <h3>Methods</h3>
@@ -569,6 +613,11 @@ or exception() method.</p></div>
 <li><h3>Super-module</h3>
 <ul>
 <li><code><a title="secfsdstools.c_automation" href="index.html">secfsdstools.c_automation</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-functions">Functions</a></h3>
+<ul class="">
+<li><code><a title="secfsdstools.c_automation.task_framework.delete_temp_folders" href="#secfsdstools.c_automation.task_framework.delete_temp_folders">delete_temp_folders</a></code></li>
 </ul>
 </li>
 <li><h3><a href="#header-classes">Classes</a></h3>

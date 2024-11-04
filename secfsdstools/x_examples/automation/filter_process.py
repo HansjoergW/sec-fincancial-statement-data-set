@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import List
 
 from secfsdstools.a_utils.fileutils import get_directories_in_directory
-from secfsdstools.c_automation.task_framework import AbstractProcess, Task
+from secfsdstools.c_automation.task_framework import AbstractProcess, Task, delete_temp_folders
 from secfsdstools.d_container.databagmodel import RawDataBag
 from secfsdstools.e_collector.zipcollecting import ZipCollector
 from secfsdstools.e_filter.joinedfiltering import StmtJoinedFilter
@@ -151,21 +151,8 @@ class FilterProcess(AbstractProcess):
         return get_directories_in_directory(
             os.path.join(self.target_dir, self.file_type))
 
-    def _delete_temp_folders(self, root_path: Path):
-        """
-        remove any existing tmp folders (folders that were not successfully completed
-
-        """
-        dirs_in_filter_dir = get_directories_in_directory(str(root_path))
-
-        tmp_dirs = [d for d in dirs_in_filter_dir if d.startswith("tmp")]
-
-        for tmp_dir in tmp_dirs:
-            file_path = root_path / tmp_dir
-            shutil.rmtree(file_path, ignore_errors=True)
-
     def pre_process(self):
-        self._delete_temp_folders(root_path=Path(self.target_dir) / self.file_type)
+        delete_temp_folders(root_path=Path(self.target_dir) / self.file_type)
 
     def calculate_tasks(self) -> List[Task]:
         existing = self._get_existing_filtered()

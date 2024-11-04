@@ -2,12 +2,16 @@
 Base classes for the Task and Process Framework.
 """
 import logging
+import shutil
 from abc import ABC, abstractmethod
 from collections import defaultdict
 from dataclasses import dataclass
 from enum import Enum
-from typing import Protocol, List, Any, Dict
+from pathlib import Path
+from typing import List
+from typing import Protocol, Any, Dict
 
+from secfsdstools.a_utils.fileutils import get_directories_in_directory
 from secfsdstools.a_utils.parallelexecution import ThreadExecutor
 
 
@@ -101,7 +105,7 @@ class AbstractProcess(ABC):
             return result
         except Exception as ex:  # pylint: disable=W0703
             # we want to catch everything here.
-            logger.info("Failed: %s", task)
+            logger.info("Failed: %s / %s ", task, ex)
             return TaskResult(task=task,
                               result=task.exception(exception=ex),
                               state=TaskResultState.FAILED)
@@ -138,3 +142,16 @@ class AbstractProcess(ABC):
             logger.warning("not able to process %s", failed)
 
         self.post_process()
+
+def delete_temp_folders(root_path: Path, temp_prefix: str = "tmp"):
+    """
+    remove any existing folders starting with the tmp_prefix (folders that were not successfully completed
+
+    """
+    dirs_in_filter_dir = get_directories_in_directory(str(root_path))
+
+    tmp_dirs = [d for d in dirs_in_filter_dir if d.startswith(temp_prefix)]
+
+    for tmp_dir in tmp_dirs:
+        file_path = root_path / tmp_dir
+        shutil.rmtree(file_path, ignore_errors=True)

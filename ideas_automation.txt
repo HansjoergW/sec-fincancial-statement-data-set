@@ -81,6 +81,22 @@ Struktur
 
      all
 
+  _2_standardize
+    quarter
+      2009q2.zip
+         BS
+         IS
+         CF
+      ...
+
+    all
+       BS
+       IS
+       CF
+
+
+
+
  open
     standardisieren könnte man direkt über all oder zuerst über die einzelnen quarter machen
     data/standardized/quarter/

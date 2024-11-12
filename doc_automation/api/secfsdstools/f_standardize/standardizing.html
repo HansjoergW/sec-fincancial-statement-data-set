@@ -87,6 +87,8 @@ class StandardizedBag:
         self.result_df.to_parquet(os.path.join(target_path, &#39;result.parquet&#39;))
         self.applied_prepivot_rules_log_df.to_parquet(
             os.path.join(target_path, &#39;applied_prepivot_rules_log.parquet&#39;))
+
+        # this line causes problems when running in parallel
         self.applied_rules_log_df.to_parquet(os.path.join(target_path, &#39;applied_rules_log.parquet&#39;))
         self.stats_df.to_parquet(os.path.join(target_path, &#39;stats.parquet&#39;))
         self.applied_rules_sum_s.to_csv(os.path.join(target_path, &#39;applied_rules_sum.csv&#39;))
@@ -685,6 +687,8 @@ class Standardizer(Presenter[JoinedDataBag]):
         self.result_df.to_parquet(os.path.join(target_path, &#39;result.parquet&#39;))
         self.applied_prepivot_rules_log_df.to_parquet(
             os.path.join(target_path, &#39;applied_prepivot_rules_log.parquet&#39;))
+
+        # this line causes problems when running in parallel
         self.applied_rules_log_df.to_parquet(os.path.join(target_path, &#39;applied_rules_log.parquet&#39;))
         self.stats_df.to_parquet(os.path.join(target_path, &#39;stats.parquet&#39;))
         self.applied_rules_sum_s.to_csv(os.path.join(target_path, &#39;applied_rules_sum.csv&#39;))
@@ -970,6 +974,8 @@ will be created</dd>
     self.result_df.to_parquet(os.path.join(target_path, &#39;result.parquet&#39;))
     self.applied_prepivot_rules_log_df.to_parquet(
         os.path.join(target_path, &#39;applied_prepivot_rules_log.parquet&#39;))
+
+    # this line causes problems when running in parallel
     self.applied_rules_log_df.to_parquet(os.path.join(target_path, &#39;applied_rules_log.parquet&#39;))
     self.stats_df.to_parquet(os.path.join(target_path, &#39;stats.parquet&#39;))
     self.applied_rules_sum_s.to_csv(os.path.join(target_path, &#39;applied_rules_sum.csv&#39;))

@@ -119,7 +119,8 @@ class AbstractProcess(ABC):
     def post_process(self):
         &#34;&#34;&#34; Hook method to implement logic that is executed after the whole process is finished. &#34;&#34;&#34;
 
-    def _process_task(self, task: Task) -&gt; TaskResult:
+    @staticmethod
+    def process_task(task: Task) -&gt; TaskResult:
         &#34;&#34;&#34;
         execute a single task.
         &#34;&#34;&#34;
@@ -159,7 +160,7 @@ class AbstractProcess(ABC):
             execute_serial=self.execute_serial
         )
         executor.set_get_entries_function(self.calculate_tasks)
-        executor.set_process_element_function(self._process_task)
+        executor.set_process_element_function(self.process_task)
         executor.set_post_process_chunk_function(lambda x: x)  # no process_chunk for this purpose
 
         results_all, self.failed_tasks = executor.execute()
@@ -263,7 +264,8 @@ def delete_temp_folders(root_path: Path, temp_prefix: str = &#34;tmp&#34;):
     def post_process(self):
         &#34;&#34;&#34; Hook method to implement logic that is executed after the whole process is finished. &#34;&#34;&#34;
 
-    def _process_task(self, task: Task) -&gt; TaskResult:
+    @staticmethod
+    def process_task(task: Task) -&gt; TaskResult:
         &#34;&#34;&#34;
         execute a single task.
         &#34;&#34;&#34;
@@ -303,7 +305,7 @@ def delete_temp_folders(root_path: Path, temp_prefix: str = &#34;tmp&#34;):
             execute_serial=self.execute_serial
         )
         executor.set_get_entries_function(self.calculate_tasks)
-        executor.set_process_element_function(self._process_task)
+        executor.set_process_element_function(self.process_task)
         executor.set_post_process_chunk_function(lambda x: x)  # no process_chunk for this purpose
 
         results_all, self.failed_tasks = executor.execute()
@@ -325,10 +327,44 @@ def delete_temp_folders(root_path: Path, temp_prefix: str = &#34;tmp&#34;):
 <li><a title="secfsdstools.c_download.basedownloading_process.BaseDownloadingProcess" href="../c_download/basedownloading_process.html#secfsdstools.c_download.basedownloading_process.BaseDownloadingProcess">BaseDownloadingProcess</a></li>
 <li><a title="secfsdstools.c_index.indexing_process.ReportParquetIndexerProcess" href="../c_index/indexing_process.html#secfsdstools.c_index.indexing_process.ReportParquetIndexerProcess">ReportParquetIndexerProcess</a></li>
 <li><a title="secfsdstools.c_transform.toparquettransforming_process.ToParquetTransformerProcess" href="../c_transform/toparquettransforming_process.html#secfsdstools.c_transform.toparquettransforming_process.ToParquetTransformerProcess">ToParquetTransformerProcess</a></li>
+<li><a title="secfsdstools.g_pipelines.combine_process.CombineProcess" href="../g_pipelines/combine_process.html#secfsdstools.g_pipelines.combine_process.CombineProcess">CombineProcess</a></li>
+<li><a title="secfsdstools.g_pipelines.filter_process.FilterProcess" href="../g_pipelines/filter_process.html#secfsdstools.g_pipelines.filter_process.FilterProcess">FilterProcess</a></li>
 <li><a title="secfsdstools.x_examples.automation.automation.StandardizeProcess" href="../x_examples/automation/automation.html#secfsdstools.x_examples.automation.automation.StandardizeProcess">StandardizeProcess</a></li>
-<li><a title="secfsdstools.x_examples.automation.combine_process.CombineProcess" href="../x_examples/automation/combine_process.html#secfsdstools.x_examples.automation.combine_process.CombineProcess">CombineProcess</a></li>
-<li><a title="secfsdstools.x_examples.automation.filter_process.FilterProcess" href="../x_examples/automation/filter_process.html#secfsdstools.x_examples.automation.filter_process.FilterProcess">FilterProcess</a></li>
 </ul>
+<h3>Static methods</h3>
+<dl>
+<dt id="secfsdstools.c_automation.task_framework.AbstractProcess.process_task"><code class="name flex">
+<span>def <span class="ident">process_task</span></span>(<span>task: <a title="secfsdstools.c_automation.task_framework.Task" href="#secfsdstools.c_automation.task_framework.Task">Task</a>) ‑> <a title="secfsdstools.c_automation.task_framework.TaskResult" href="#secfsdstools.c_automation.task_framework.TaskResult">TaskResult</a></span>
+</code></dt>
+<dd>
+<div class="desc"><p>execute a single task.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@staticmethod
+def process_task(task: Task) -&gt; TaskResult:
+    &#34;&#34;&#34;
+    execute a single task.
+    &#34;&#34;&#34;
+    logger = logging.getLogger()
+    try:
+        task.prepare()
+        task.execute()
+        result = TaskResult(task=task,
+                            result=task.commit(),
+                            state=TaskResultState.SUCCESS)
+        logger.info(&#34;Success: %s&#34;, task)
+        return result
+    except Exception as ex:  # pylint: disable=W0703
+        # we want to catch everything here.
+        logger.info(&#34;Failed: %s / %s &#34;, task, ex)
+        return TaskResult(task=task,
+                          result=task.exception(exception=ex),
+                          state=TaskResultState.FAILED)</code></pre>
+</details>
+</dd>
+</dl>
 <h3>Methods</h3>
 <dl>
 <dt id="secfsdstools.c_automation.task_framework.AbstractProcess.calculate_tasks"><code class="name flex">
@@ -412,7 +448,7 @@ The execution can happen in parallel or serial.</p>
         execute_serial=self.execute_serial
     )
     executor.set_get_entries_function(self.calculate_tasks)
-    executor.set_process_element_function(self._process_task)
+    executor.set_process_element_function(self.process_task)
     executor.set_post_process_chunk_function(lambda x: x)  # no process_chunk for this purpose
 
     results_all, self.failed_tasks = executor.execute()
@@ -629,6 +665,7 @@ or exception() method.</p></div>
 <li><code><a title="secfsdstools.c_automation.task_framework.AbstractProcess.post_process" href="#secfsdstools.c_automation.task_framework.AbstractProcess.post_process">post_process</a></code></li>
 <li><code><a title="secfsdstools.c_automation.task_framework.AbstractProcess.pre_process" href="#secfsdstools.c_automation.task_framework.AbstractProcess.pre_process">pre_process</a></code></li>
 <li><code><a title="secfsdstools.c_automation.task_framework.AbstractProcess.process" href="#secfsdstools.c_automation.task_framework.AbstractProcess.process">process</a></code></li>
+<li><code><a title="secfsdstools.c_automation.task_framework.AbstractProcess.process_task" href="#secfsdstools.c_automation.task_framework.AbstractProcess.process_task">process_task</a></code></li>
 </ul>
 </li>
 <li>

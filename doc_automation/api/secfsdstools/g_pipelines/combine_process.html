@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.10.0" />
-<title>secfsdstools.x_examples.automation.combine_process API documentation</title>
+<title>secfsdstools.g_pipelines.combine_process API documentation</title>
 <meta name="description" content="" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
@@ -19,7 +19,7 @@
 <main>
 <article id="content">
 <header>
-<h1 class="title">Module <code>secfsdstools.x_examples.automation.combine_process</code></h1>
+<h1 class="title">Module <code>secfsdstools.g_pipelines.combine_process</code></h1>
 </header>
 <section id="section-intro">
 <details class="source">
@@ -56,11 +56,14 @@ class CombineTask:
         self.missing_paths = self.all_dirs
 
         if self.meta_inf_file.exists():
-            meta_inf_content = self.meta_inf_file.read_text(encoding=&#34;utf-8&#34;)
-            containing_names = meta_inf_content.split(&#34;\n&#34;)
+            containing_names = self.read_metainf_content()
 
             missing = set(self.all_names.keys()) - set(containing_names)
             self.missing_paths = [self.all_names[name] for name in missing]
+
+    def read_metainf_content(self) -&gt; List[str]:
+        meta_inf_content = self.meta_inf_file.read_text(encoding=&#34;utf-8&#34;)
+        return meta_inf_content.split(&#34;\n&#34;)
 
     def prepare(self):
         &#34;&#34;&#34; prepare Task. &#34;&#34;&#34;
@@ -73,6 +76,10 @@ class CombineTask:
         &#34;&#34;&#34; we commit by renaming the tmp_path. &#34;&#34;&#34;
         if len(self.missing_paths) == 0:
             return &#34;success&#34;
+
+        # alten Inhalt entfernen
+        if self.target_path.exists():
+            shutil.rmtree(self.target_path)
 
         self.tmp_path.rename(self.target_path)
         return &#34;success&#34;
@@ -89,7 +96,7 @@ class CombineTask:
         if len(self.missing_paths) == 0:
             return
 
-        paths = self.missing_paths
+        paths = self.missing_paths.copy()
         if self.target_path.exists():
             paths.append(self.target_path)
 
@@ -158,7 +165,7 @@ class CombineProcess(AbstractProcess):
 <section>
 <h2 class="section-title" id="header-classes">Classes</h2>
 <dl>
-<dt id="secfsdstools.x_examples.automation.combine_process.CombineProcess"><code class="flex name class">
+<dt id="secfsdstools.g_pipelines.combine_process.CombineProcess"><code class="flex name class">
 <span>class <span class="ident">CombineProcess</span></span>
 <span>(</span><span>root_dir: str, target_dir: str, bag_type: str, filter: str = '*')</span>
 </code></dt>
@@ -201,22 +208,23 @@ class CombineProcess(AbstractProcess):
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li><a title="secfsdstools.c_automation.task_framework.AbstractProcess" href="../../c_automation/task_framework.html#secfsdstools.c_automation.task_framework.AbstractProcess">AbstractProcess</a></li>
+<li><a title="secfsdstools.c_automation.task_framework.AbstractProcess" href="../c_automation/task_framework.html#secfsdstools.c_automation.task_framework.AbstractProcess">AbstractProcess</a></li>
 <li>abc.ABC</li>
 </ul>
 <h3>Inherited members</h3>
 <ul class="hlist">
-<li><code><b><a title="secfsdstools.c_automation.task_framework.AbstractProcess" href="../../c_automation/task_framework.html#secfsdstools.c_automation.task_framework.AbstractProcess">AbstractProcess</a></b></code>:
+<li><code><b><a title="secfsdstools.c_automation.task_framework.AbstractProcess" href="../c_automation/task_framework.html#secfsdstools.c_automation.task_framework.AbstractProcess">AbstractProcess</a></b></code>:
 <ul class="hlist">
-<li><code><a title="secfsdstools.c_automation.task_framework.AbstractProcess.calculate_tasks" href="../../c_automation/task_framework.html#secfsdstools.c_automation.task_framework.AbstractProcess.calculate_tasks">calculate_tasks</a></code></li>
-<li><code><a title="secfsdstools.c_automation.task_framework.AbstractProcess.post_process" href="../../c_automation/task_framework.html#secfsdstools.c_automation.task_framework.AbstractProcess.post_process">post_process</a></code></li>
-<li><code><a title="secfsdstools.c_automation.task_framework.AbstractProcess.pre_process" href="../../c_automation/task_framework.html#secfsdstools.c_automation.task_framework.AbstractProcess.pre_process">pre_process</a></code></li>
-<li><code><a title="secfsdstools.c_automation.task_framework.AbstractProcess.process" href="../../c_automation/task_framework.html#secfsdstools.c_automation.task_framework.AbstractProcess.process">process</a></code></li>
+<li><code><a title="secfsdstools.c_automation.task_framework.AbstractProcess.calculate_tasks" href="../c_automation/task_framework.html#secfsdstools.c_automation.task_framework.AbstractProcess.calculate_tasks">calculate_tasks</a></code></li>
+<li><code><a title="secfsdstools.c_automation.task_framework.AbstractProcess.post_process" href="../c_automation/task_framework.html#secfsdstools.c_automation.task_framework.AbstractProcess.post_process">post_process</a></code></li>
+<li><code><a title="secfsdstools.c_automation.task_framework.AbstractProcess.pre_process" href="../c_automation/task_framework.html#secfsdstools.c_automation.task_framework.AbstractProcess.pre_process">pre_process</a></code></li>
+<li><code><a title="secfsdstools.c_automation.task_framework.AbstractProcess.process" href="../c_automation/task_framework.html#secfsdstools.c_automation.task_framework.AbstractProcess.process">process</a></code></li>
+<li><code><a title="secfsdstools.c_automation.task_framework.AbstractProcess.process_task" href="../c_automation/task_framework.html#secfsdstools.c_automation.task_framework.AbstractProcess.process_task">process_task</a></code></li>
 </ul>
 </li>
 </ul>
 </dd>
-<dt id="secfsdstools.x_examples.automation.combine_process.CombineTask"><code class="flex name class">
+<dt id="secfsdstools.g_pipelines.combine_process.CombineTask"><code class="flex name class">
 <span>class <span class="ident">CombineTask</span></span>
 <span>(</span><span>root_path: pathlib.Path, filter: str, bag_type: str, target_path: pathlib.Path)</span>
 </code></dt>
@@ -248,11 +256,14 @@ class CombineProcess(AbstractProcess):
         self.missing_paths = self.all_dirs
 
         if self.meta_inf_file.exists():
-            meta_inf_content = self.meta_inf_file.read_text(encoding=&#34;utf-8&#34;)
-            containing_names = meta_inf_content.split(&#34;\n&#34;)
+            containing_names = self.read_metainf_content()
 
             missing = set(self.all_names.keys()) - set(containing_names)
             self.missing_paths = [self.all_names[name] for name in missing]
+
+    def read_metainf_content(self) -&gt; List[str]:
+        meta_inf_content = self.meta_inf_file.read_text(encoding=&#34;utf-8&#34;)
+        return meta_inf_content.split(&#34;\n&#34;)
 
     def prepare(self):
         &#34;&#34;&#34; prepare Task. &#34;&#34;&#34;
@@ -265,6 +276,10 @@ class CombineProcess(AbstractProcess):
         &#34;&#34;&#34; we commit by renaming the tmp_path. &#34;&#34;&#34;
         if len(self.missing_paths) == 0:
             return &#34;success&#34;
+
+        # alten Inhalt entfernen
+        if self.target_path.exists():
+            shutil.rmtree(self.target_path)
 
         self.tmp_path.rename(self.target_path)
         return &#34;success&#34;
@@ -281,7 +296,7 @@ class CombineProcess(AbstractProcess):
         if len(self.missing_paths) == 0:
             return
 
-        paths = self.missing_paths
+        paths = self.missing_paths.copy()
         if self.target_path.exists():
             paths.append(self.target_path)
 
@@ -310,7 +325,7 @@ class CombineProcess(AbstractProcess):
 </details>
 <h3>Methods</h3>
 <dl>
-<dt id="secfsdstools.x_examples.automation.combine_process.CombineTask.commit"><code class="name flex">
+<dt id="secfsdstools.g_pipelines.combine_process.CombineTask.commit"><code class="name flex">
 <span>def <span class="ident">commit</span></span>(<span>self)</span>
 </code></dt>
 <dd>
@@ -324,11 +339,15 @@ class CombineProcess(AbstractProcess):
     if len(self.missing_paths) == 0:
         return &#34;success&#34;
 
+    # alten Inhalt entfernen
+    if self.target_path.exists():
+        shutil.rmtree(self.target_path)
+
     self.tmp_path.rename(self.target_path)
     return &#34;success&#34;</code></pre>
 </details>
 </dd>
-<dt id="secfsdstools.x_examples.automation.combine_process.CombineTask.exception"><code class="name flex">
+<dt id="secfsdstools.g_pipelines.combine_process.CombineTask.exception"><code class="name flex">
 <span>def <span class="ident">exception</span></span>(<span>self, exception) ‑> str</span>
 </code></dt>
 <dd>
@@ -343,7 +362,7 @@ class CombineProcess(AbstractProcess):
     return f&#34;failed {exception}&#34;</code></pre>
 </details>
 </dd>
-<dt id="secfsdstools.x_examples.automation.combine_process.CombineTask.execute"><code class="name flex">
+<dt id="secfsdstools.g_pipelines.combine_process.CombineTask.execute"><code class="name flex">
 <span>def <span class="ident">execute</span></span>(<span>self)</span>
 </code></dt>
 <dd>
@@ -356,7 +375,7 @@ class CombineProcess(AbstractProcess):
     if len(self.missing_paths) == 0:
         return
 
-    paths = self.missing_paths
+    paths = self.missing_paths.copy()
     if self.target_path.exists():
         paths.append(self.target_path)
 
@@ -372,7 +391,7 @@ class CombineProcess(AbstractProcess):
     temp_meta_inf.write_text(data=meta_inf_content, encoding=&#34;utf-8&#34;)</code></pre>
 </details>
 </dd>
-<dt id="secfsdstools.x_examples.automation.combine_process.CombineTask.prepare"><code class="name flex">
+<dt id="secfsdstools.g_pipelines.combine_process.CombineTask.prepare"><code class="name flex">
 <span>def <span class="ident">prepare</span></span>(<span>self)</span>
 </code></dt>
 <dd>
@@ -389,6 +408,20 @@ class CombineProcess(AbstractProcess):
     self.tmp_path.mkdir(parents=True, exist_ok=False)</code></pre>
 </details>
 </dd>
+<dt id="secfsdstools.g_pipelines.combine_process.CombineTask.read_metainf_content"><code class="name flex">
+<span>def <span class="ident">read_metainf_content</span></span>(<span>self) ‑> List[str]</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def read_metainf_content(self) -&gt; List[str]:
+    meta_inf_content = self.meta_inf_file.read_text(encoding=&#34;utf-8&#34;)
+    return meta_inf_content.split(&#34;\n&#34;)</code></pre>
+</details>
+</dd>
 </dl>
 </dd>
 </dl>
@@ -402,21 +435,22 @@ class CombineProcess(AbstractProcess):
 <ul id="index">
 <li><h3>Super-module</h3>
 <ul>
-<li><code><a title="secfsdstools.x_examples.automation" href="index.html">secfsdstools.x_examples.automation</a></code></li>
+<li><code><a title="secfsdstools.g_pipelines" href="index.html">secfsdstools.g_pipelines</a></code></li>
 </ul>
 </li>
 <li><h3><a href="#header-classes">Classes</a></h3>
 <ul>
 <li>
-<h4><code><a title="secfsdstools.x_examples.automation.combine_process.CombineProcess" href="#secfsdstools.x_examples.automation.combine_process.CombineProcess">CombineProcess</a></code></h4>
+<h4><code><a title="secfsdstools.g_pipelines.combine_process.CombineProcess" href="#secfsdstools.g_pipelines.combine_process.CombineProcess">CombineProcess</a></code></h4>
 </li>
 <li>
-<h4><code><a title="secfsdstools.x_examples.automation.combine_process.CombineTask" href="#secfsdstools.x_examples.automation.combine_process.CombineTask">CombineTask</a></code></h4>
+<h4><code><a title="secfsdstools.g_pipelines.combine_process.CombineTask" href="#secfsdstools.g_pipelines.combine_process.CombineTask">CombineTask</a></code></h4>
 <ul class="">
-<li><code><a title="secfsdstools.x_examples.automation.combine_process.CombineTask.commit" href="#secfsdstools.x_examples.automation.combine_process.CombineTask.commit">commit</a></code></li>
-<li><code><a title="secfsdstools.x_examples.automation.combine_process.CombineTask.exception" href="#secfsdstools.x_examples.automation.combine_process.CombineTask.exception">exception</a></code></li>
-<li><code><a title="secfsdstools.x_examples.automation.combine_process.CombineTask.execute" href="#secfsdstools.x_examples.automation.combine_process.CombineTask.execute">execute</a></code></li>
-<li><code><a title="secfsdstools.x_examples.automation.combine_process.CombineTask.prepare" href="#secfsdstools.x_examples.automation.combine_process.CombineTask.prepare">prepare</a></code></li>
+<li><code><a title="secfsdstools.g_pipelines.combine_process.CombineTask.commit" href="#secfsdstools.g_pipelines.combine_process.CombineTask.commit">commit</a></code></li>
+<li><code><a title="secfsdstools.g_pipelines.combine_process.CombineTask.exception" href="#secfsdstools.g_pipelines.combine_process.CombineTask.exception">exception</a></code></li>
+<li><code><a title="secfsdstools.g_pipelines.combine_process.CombineTask.execute" href="#secfsdstools.g_pipelines.combine_process.CombineTask.execute">execute</a></code></li>
+<li><code><a title="secfsdstools.g_pipelines.combine_process.CombineTask.prepare" href="#secfsdstools.g_pipelines.combine_process.CombineTask.prepare">prepare</a></code></li>
+<li><code><a title="secfsdstools.g_pipelines.combine_process.CombineTask.read_metainf_content" href="#secfsdstools.g_pipelines.combine_process.CombineTask.read_metainf_content">read_metainf_content</a></code></li>
 </ul>
 </li>
 </ul>

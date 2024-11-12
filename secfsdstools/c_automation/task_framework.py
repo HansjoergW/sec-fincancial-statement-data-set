@@ -90,7 +90,8 @@ class AbstractProcess(ABC):
     def post_process(self):
         """ Hook method to implement logic that is executed after the whole process is finished. """
 
-    def _process_task(self, task: Task) -> TaskResult:
+    @staticmethod
+    def process_task(task: Task) -> TaskResult:
         """
         execute a single task.
         """
@@ -130,7 +131,7 @@ class AbstractProcess(ABC):
             execute_serial=self.execute_serial
         )
         executor.set_get_entries_function(self.calculate_tasks)
-        executor.set_process_element_function(self._process_task)
+        executor.set_process_element_function(self.process_task)
         executor.set_post_process_chunk_function(lambda x: x)  # no process_chunk for this purpose
 
         results_all, self.failed_tasks = executor.execute()

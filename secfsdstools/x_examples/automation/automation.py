@@ -80,8 +80,8 @@ class StandardizerTask:
         joined_bag = JoinedDataBag.load(str(self.root_path))
 
         # standardize bs
-        # bs_standardizer.process(joined_bag.pre_num_df.copy())
-        # bs_standardizer.get_standardize_bag().save(str(self.tmp_path / "BS"))
+        bs_standardizer.process(joined_bag.pre_num_df.copy())
+        bs_standardizer.get_standardize_bag().save(str(self.tmp_path / "BS"))
 
         # standardize is
         is_standardizer.process(joined_bag.pre_num_df.copy())
@@ -130,8 +130,8 @@ class StandardizeProcess(AbstractProcess):
 
 
 def define_extra_processes(config: Configuration) -> List[AbstractProcess]:
-    from secfsdstools.x_examples.automation.filter_process import FilterProcess
-    from secfsdstools.x_examples.automation.combine_process import CombineProcess
+    from secfsdstools.g_pipelines.filter_process import FilterProcess
+    from secfsdstools.g_pipelines.combine_process import CombineProcess
 
     raw_dir = config.config_parser.get(section="Filter",
                                        option="filtered_dir_raw")

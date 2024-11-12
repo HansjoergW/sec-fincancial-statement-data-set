@@ -58,6 +58,8 @@ class StandardizedBag:
         self.result_df.to_parquet(os.path.join(target_path, 'result.parquet'))
         self.applied_prepivot_rules_log_df.to_parquet(
             os.path.join(target_path, 'applied_prepivot_rules_log.parquet'))
+
+        # this line causes problems when running in parallel
         self.applied_rules_log_df.to_parquet(os.path.join(target_path, 'applied_rules_log.parquet'))
         self.stats_df.to_parquet(os.path.join(target_path, 'stats.parquet'))
         self.applied_rules_sum_s.to_csv(os.path.join(target_path, 'applied_rules_sum.csv'))

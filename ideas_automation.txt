@@ -79,20 +79,22 @@ Struktur
        CF
        ...
 
-     all
+     all -> memory intensiv oder nicht?
 
   _2_standardize
-    quarter
-      2009q2.zip
-         BS
-         IS
-         CF
-      ...
+    -> read all By Stmt
+       -> example für state in db
+        -> neu machen -> auch nur ein single task, der allbystmt liest
+        -> und in einen state schreibt, wenn all by stmt metainf file geänder hatchling
 
     all
        BS
        IS
        CF
+
+Error
+    all_by_stmt -> metainf file ist falsch, hat nur BS BS BS .. sw drin
+
 
 
 

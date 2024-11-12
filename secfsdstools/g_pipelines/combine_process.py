@@ -28,11 +28,14 @@ class CombineTask:
         self.missing_paths = self.all_dirs
 
         if self.meta_inf_file.exists():
-            meta_inf_content = self.meta_inf_file.read_text(encoding="utf-8")
-            containing_names = meta_inf_content.split("\n")
+            containing_names = self.read_metainf_content()
 
             missing = set(self.all_names.keys()) - set(containing_names)
             self.missing_paths = [self.all_names[name] for name in missing]
+
+    def read_metainf_content(self) -> List[str]:
+        meta_inf_content = self.meta_inf_file.read_text(encoding="utf-8")
+        return meta_inf_content.split("\n")
 
     def prepare(self):
         """ prepare Task. """
@@ -45,6 +48,10 @@ class CombineTask:
         """ we commit by renaming the tmp_path. """
         if len(self.missing_paths) == 0:
             return "success"
+
+        # alten Inhalt entfernen
+        if self.target_path.exists():
+            shutil.rmtree(self.target_path)
 
         self.tmp_path.rename(self.target_path)
         return "success"
@@ -61,7 +68,7 @@ class CombineTask:
         if len(self.missing_paths) == 0:
             return
 
-        paths = self.missing_paths
+        paths = self.missing_paths.copy()
         if self.target_path.exists():
             paths.append(self.target_path)
 

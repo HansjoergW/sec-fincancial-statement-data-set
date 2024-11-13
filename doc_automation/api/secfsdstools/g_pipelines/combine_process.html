@@ -44,7 +44,6 @@ class CombineTask:
         self.root_path = root_path
         self.filter = filter
         self.all_dirs = list(self.root_path.glob(self.filter))
-        self.all_names = {f.name: f for f in self.all_dirs}
 
         self.target_path = target_path
         self.bag_type = bag_type
@@ -55,11 +54,46 @@ class CombineTask:
 
         self.missing_paths = self.all_dirs
 
+        # filter could be something like &#34;*&#34;, or &#34;*/BS&#34;, or &#34;something/*/BS&#34;
+        # but in order to be able to file the metainf file with the names for which &#34;*&#34; iterates
+        # over, we need to know the position towards the end of the resulting path.
+        # So if the filter is just a &#34;*&#34; it is 0, if it is &#34;*/BS&#34; it would be 1
+        self.star_position = self._star_position_from_end(self.filter)
+
+        # so if we have the filter */BS and if we have the directories &#34;2010q1.zip/BS&#34;,
+        # &#34;2010q2.zip/BS&#34; in the root_path, all_names key will be 2010q1.zip, 2010q2.zip
+        self.all_names = {self._get_iterator_position_name(f, self.star_position):
+                              f for f in self.all_dirs}
+
         if self.meta_inf_file.exists():
             containing_names = self.read_metainf_content()
 
             missing = set(self.all_names.keys()) - set(containing_names)
             self.missing_paths = [self.all_names[name] for name in missing]
+
+    @staticmethod
+    def _get_iterator_position_name(path: Path, star_position: int):
+        return path.parts[::-1][star_position]
+
+    @staticmethod
+    def _star_position_from_end(path: str) -&gt; int:
+        # Split the string by &#39;/&#39; to get segments
+
+        # ignore first and last /
+        if path.startswith(&#39;/&#39;):
+            path = path[1:]
+        if path.endswith(&#39;/&#39;):
+            path = path[:-1]
+
+        segments = path.split(&#39;/&#39;)
+
+        # Iterate from the end and find the first segment containing &#39;*&#39;
+        for i, segment in enumerate(reversed(segments)):
+            if &#39;*&#39; in segment:
+                return i  # Position from the end
+
+        # If no &#39;*&#39; is found, return -1 (or any error code that suits your needs)
+        return -1
 
     def read_metainf_content(self) -&gt; List[str]:
         meta_inf_content = self.meta_inf_file.read_text(encoding=&#34;utf-8&#34;)
@@ -108,7 +142,8 @@ class CombineTask:
             raise ValueError(&#34;bag_type must be either raw or joined&#34;)
 
         temp_meta_inf = self.tmp_path / &#34;meta.inf&#34;
-        meta_inf_content = &#34;\n&#34;.join([f.name for f in self.missing_paths])
+        meta_inf_content = &#34;\n&#34;.join([self._get_iterator_position_name(f, self.star_position)
+                                      for f in self.missing_paths])
         temp_meta_inf.write_text(data=meta_inf_content, encoding=&#34;utf-8&#34;)
 
     def _execute_raw(self, paths: List[Path]):
@@ -244,7 +279,6 @@ class CombineProcess(AbstractProcess):
         self.root_path = root_path
         self.filter = filter
         self.all_dirs = list(self.root_path.glob(self.filter))
-        self.all_names = {f.name: f for f in self.all_dirs}
 
         self.target_path = target_path
         self.bag_type = bag_type
@@ -255,11 +289,46 @@ class CombineProcess(AbstractProcess):
 
         self.missing_paths = self.all_dirs
 
+        # filter could be something like &#34;*&#34;, or &#34;*/BS&#34;, or &#34;something/*/BS&#34;
+        # but in order to be able to file the metainf file with the names for which &#34;*&#34; iterates
+        # over, we need to know the position towards the end of the resulting path.
+        # So if the filter is just a &#34;*&#34; it is 0, if it is &#34;*/BS&#34; it would be 1
+        self.star_position = self._star_position_from_end(self.filter)
+
+        # so if we have the filter */BS and if we have the directories &#34;2010q1.zip/BS&#34;,
+        # &#34;2010q2.zip/BS&#34; in the root_path, all_names key will be 2010q1.zip, 2010q2.zip
+        self.all_names = {self._get_iterator_position_name(f, self.star_position):
+                              f for f in self.all_dirs}
+
         if self.meta_inf_file.exists():
             containing_names = self.read_metainf_content()
 
             missing = set(self.all_names.keys()) - set(containing_names)
             self.missing_paths = [self.all_names[name] for name in missing]
+
+    @staticmethod
+    def _get_iterator_position_name(path: Path, star_position: int):
+        return path.parts[::-1][star_position]
+
+    @staticmethod
+    def _star_position_from_end(path: str) -&gt; int:
+        # Split the string by &#39;/&#39; to get segments
+
+        # ignore first and last /
+        if path.startswith(&#39;/&#39;):
+            path = path[1:]
+        if path.endswith(&#39;/&#39;):
+            path = path[:-1]
+
+        segments = path.split(&#39;/&#39;)
+
+        # Iterate from the end and find the first segment containing &#39;*&#39;
+        for i, segment in enumerate(reversed(segments)):
+            if &#39;*&#39; in segment:
+                return i  # Position from the end
+
+        # If no &#39;*&#39; is found, return -1 (or any error code that suits your needs)
+        return -1
 
     def read_metainf_content(self) -&gt; List[str]:
         meta_inf_content = self.meta_inf_file.read_text(encoding=&#34;utf-8&#34;)
@@ -308,7 +377,8 @@ class CombineProcess(AbstractProcess):
             raise ValueError(&#34;bag_type must be either raw or joined&#34;)
 
         temp_meta_inf = self.tmp_path / &#34;meta.inf&#34;
-        meta_inf_content = &#34;\n&#34;.join([f.name for f in self.missing_paths])
+        meta_inf_content = &#34;\n&#34;.join([self._get_iterator_position_name(f, self.star_position)
+                                      for f in self.missing_paths])
         temp_meta_inf.write_text(data=meta_inf_content, encoding=&#34;utf-8&#34;)
 
     def _execute_raw(self, paths: List[Path]):
@@ -387,7 +457,8 @@ class CombineProcess(AbstractProcess):
         raise ValueError(&#34;bag_type must be either raw or joined&#34;)
 
     temp_meta_inf = self.tmp_path / &#34;meta.inf&#34;
-    meta_inf_content = &#34;\n&#34;.join([f.name for f in self.missing_paths])
+    meta_inf_content = &#34;\n&#34;.join([self._get_iterator_position_name(f, self.star_position)
+                                  for f in self.missing_paths])
     temp_meta_inf.write_text(data=meta_inf_content, encoding=&#34;utf-8&#34;)</code></pre>
 </details>
 </dd>

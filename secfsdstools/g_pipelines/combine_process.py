@@ -2,7 +2,7 @@ import shutil
 from pathlib import Path
 from typing import List
 
-from secfsdstools.c_automation.task_framework import AbstractProcess, Task, delete_temp_folders
+from secfsdstools.c_automation.task_framework import AbstractProcess, Task, delete_temp_folders, get_latest_mtime
 from secfsdstools.d_container.databagmodel import RawDataBag, JoinedDataBag
 
 
@@ -12,9 +12,11 @@ class CombineTask:
                  root_path: Path,
                  filter: str,
                  bag_type: str,  # raw or joined
-                 target_path: Path):
+                 target_path: Path,
+                 check_by_timestamp: bool):
         self.root_path = root_path
         self.filter = filter
+        self.check_by_timestamp = check_by_timestamp
         self.all_dirs = list(self.root_path.glob(self.filter))
 
         self.target_path = target_path
@@ -38,10 +40,16 @@ class CombineTask:
                               f for f in self.all_dirs}
 
         if self.meta_inf_file.exists():
-            containing_names = self.read_metainf_content()
+            containing_values = self.read_metainf_content()
 
-            missing = set(self.all_names.keys()) - set(containing_names)
-            self.missing_paths = [self.all_names[name] for name in missing]
+            if self.check_by_timestamp:
+                last_timestamp = float(containing_values[0])
+                current_timestamp = get_latest_mtime(self.root_path)
+                if current_timestamp <= last_timestamp:
+                    self.missing_paths = []
+            else:
+                missing = set(self.all_names.keys()) - set(containing_values)
+                self.missing_paths = [self.all_names[name] for name in missing]
 
     @staticmethod
     def _get_iterator_position_name(path: Path, star_position: int):
@@ -103,7 +111,12 @@ class CombineTask:
             return
 
         paths = self.missing_paths.copy()
-        if self.target_path.exists():
+
+        # if we check by timestamp, then we recreate the combined from all its part
+        # so we do not simply add elements
+        if self.target_path.exists() and not self.check_by_timestamp:
+            # if we just add new elements, then we must ensure that the current content
+            # is also part of the concatenation.
             paths.append(self.target_path)
 
         if self.bag_type.lower() == "raw":
@@ -114,8 +127,12 @@ class CombineTask:
             raise ValueError("bag_type must be either raw or joined")
 
         temp_meta_inf = self.tmp_path / "meta.inf"
-        meta_inf_content = "\n".join([self._get_iterator_position_name(f, self.star_position)
-                                      for f in self.missing_paths])
+        meta_inf_content: str = ""
+        if self.check_by_timestamp:
+            meta_inf_content = str(get_latest_mtime(self.root_path))
+        else:
+            meta_inf_content = "\n".join([self._get_iterator_position_name(f, self.star_position)
+                                          for f in self.missing_paths])
         temp_meta_inf.write_text(data=meta_inf_content, encoding="utf-8")
 
     def _execute_raw(self, paths: List[Path]):
@@ -137,7 +154,8 @@ class CombineProcess(AbstractProcess):
                  root_dir: str,
                  target_dir: str,
                  bag_type: str,  # raw or joined
-                 filter: str = "*"
+                 filter: str = "*",
+                 check_by_timestamp: bool = False
                  ):
         super().__init__(execute_serial=False,
                          chunksize=0)
@@ -146,6 +164,7 @@ class CombineProcess(AbstractProcess):
         self.target_path = Path(target_dir)
         self.bag_type = bag_type
         self.filter = filter
+        self.check_by_timestamp = check_by_timestamp
 
     def pre_process(self):
         delete_temp_folders(root_path=self.target_path.parent)
@@ -155,7 +174,8 @@ class CombineProcess(AbstractProcess):
             root_path=self.root_path,
             bag_type=self.bag_type,
             filter=self.filter,
-            target_path=self.target_path
+            target_path=self.target_path,
+            check_by_timestamp=self.check_by_timestamp
         )
         # since this is a one task process, we just check if there is really something to do
         if len(task.missing_paths) > 0:

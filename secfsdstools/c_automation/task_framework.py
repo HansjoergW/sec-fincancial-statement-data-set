@@ -1,6 +1,7 @@
 """
 Base classes for the Task and Process Framework.
 """
+import os
 import logging
 import shutil
 from abc import ABC, abstractmethod
@@ -8,7 +9,7 @@ from collections import defaultdict
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
-from typing import List
+from typing import List, Optional
 from typing import Protocol, Any, Dict
 
 from secfsdstools.a_utils.fileutils import get_directories_in_directory
@@ -156,3 +157,34 @@ def delete_temp_folders(root_path: Path, temp_prefix: str = "tmp"):
     for tmp_dir in tmp_dirs:
         file_path = root_path / tmp_dir
         shutil.rmtree(file_path, ignore_errors=True)
+
+
+def get_latest_mtime(folder: Path, skip: Optional[List[str]] = None) -> float:
+    """
+    find the latest timestamp at which an element in the folder structure was changed
+    Args:
+        folder: root folder
+
+    Returns:
+
+    """
+    if skip == None:
+        skip = []
+
+    latest_mtime = 0
+
+    for dirpath, dirnames, filenames in os.walk(folder):
+        # Prüfe alle Dateien im aktuellen Verzeichnis
+        filenames = list(set(filenames) - set(skip))
+        for filename in filenames:
+            file_path = Path(dirpath) / filename
+            mtime = file_path.stat().st_mtime  # Änderungszeitpunkt der Datei
+            latest_mtime = max(latest_mtime, mtime)
+
+        # Prüfe die Änderungszeitpunkte der Unterverzeichnisse
+        for dirname in dirnames:
+            dir_path = Path(dirpath) / dirname
+            mtime = dir_path.stat().st_mtime  # Änderungszeitpunkt des Verzeichnisses
+            latest_mtime = max(latest_mtime, mtime)
+
+    return latest_mtime

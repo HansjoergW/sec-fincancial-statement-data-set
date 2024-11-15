@@ -93,7 +93,11 @@ Struktur
        CF
 
 Error
-    all_by_stmt -> metainf file ist falsch, hat nur BS BS BS .. sw drin
+    combine über bystmt funktioniert nicht
+    -> müsste ein Flag haben, welcher bezüglich stmt folder prüft, oder innerhalb eines SubFolder das MetaInf
+       liest..
+    by standardize ist es dasselbe -> es müsste auf einen change prüfen können.
+    -> so etwas wie "find last change in folder" -> und diesen Wert müsste man sich merken
 
 
 

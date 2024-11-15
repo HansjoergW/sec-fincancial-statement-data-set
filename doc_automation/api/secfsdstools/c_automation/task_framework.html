@@ -30,6 +30,7 @@
 <pre><code class="python">&#34;&#34;&#34;
 Base classes for the Task and Process Framework.
 &#34;&#34;&#34;
+import os
 import logging
 import shutil
 from abc import ABC, abstractmethod
@@ -37,7 +38,7 @@ from collections import defaultdict
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
-from typing import List
+from typing import List, Optional
 from typing import Protocol, Any, Dict
 
 from secfsdstools.a_utils.fileutils import get_directories_in_directory
@@ -184,7 +185,38 @@ def delete_temp_folders(root_path: Path, temp_prefix: str = &#34;tmp&#34;):
 
     for tmp_dir in tmp_dirs:
         file_path = root_path / tmp_dir
-        shutil.rmtree(file_path, ignore_errors=True)</code></pre>
+        shutil.rmtree(file_path, ignore_errors=True)
+
+
+def get_latest_mtime(folder: Path, skip: Optional[List[str]] = None) -&gt; float:
+    &#34;&#34;&#34;
+    find the latest timestamp at which an element in the folder structure was changed
+    Args:
+        folder: root folder
+
+    Returns:
+
+    &#34;&#34;&#34;
+    if skip == None:
+        skip = []
+
+    latest_mtime = 0
+
+    for dirpath, dirnames, filenames in os.walk(folder):
+        # Prüfe alle Dateien im aktuellen Verzeichnis
+        filenames = list(set(filenames) - set(skip))
+        for filename in filenames:
+            file_path = Path(dirpath) / filename
+            mtime = file_path.stat().st_mtime  # Änderungszeitpunkt der Datei
+            latest_mtime = max(latest_mtime, mtime)
+
+        # Prüfe die Änderungszeitpunkte der Unterverzeichnisse
+        for dirname in dirnames:
+            dir_path = Path(dirpath) / dirname
+            mtime = dir_path.stat().st_mtime  # Änderungszeitpunkt des Verzeichnisses
+            latest_mtime = max(latest_mtime, mtime)
+
+    return latest_mtime</code></pre>
 </details>
 </section>
 <section>
@@ -215,6 +247,52 @@ def delete_temp_folders(root_path: Path, temp_prefix: str = &#34;tmp&#34;):
     for tmp_dir in tmp_dirs:
         file_path = root_path / tmp_dir
         shutil.rmtree(file_path, ignore_errors=True)</code></pre>
+</details>
+</dd>
+<dt id="secfsdstools.c_automation.task_framework.get_latest_mtime"><code class="name flex">
+<span>def <span class="ident">get_latest_mtime</span></span>(<span>folder: pathlib.Path, skip: Optional[List[str]] = None) ‑> float</span>
+</code></dt>
+<dd>
+<div class="desc"><p>find the latest timestamp at which an element in the folder structure was changed</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>folder</code></strong></dt>
+<dd>root folder</dd>
+</dl>
+<p>Returns:</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_latest_mtime(folder: Path, skip: Optional[List[str]] = None) -&gt; float:
+    &#34;&#34;&#34;
+    find the latest timestamp at which an element in the folder structure was changed
+    Args:
+        folder: root folder
+
+    Returns:
+
+    &#34;&#34;&#34;
+    if skip == None:
+        skip = []
+
+    latest_mtime = 0
+
+    for dirpath, dirnames, filenames in os.walk(folder):
+        # Prüfe alle Dateien im aktuellen Verzeichnis
+        filenames = list(set(filenames) - set(skip))
+        for filename in filenames:
+            file_path = Path(dirpath) / filename
+            mtime = file_path.stat().st_mtime  # Änderungszeitpunkt der Datei
+            latest_mtime = max(latest_mtime, mtime)
+
+        # Prüfe die Änderungszeitpunkte der Unterverzeichnisse
+        for dirname in dirnames:
+            dir_path = Path(dirpath) / dirname
+            mtime = dir_path.stat().st_mtime  # Änderungszeitpunkt des Verzeichnisses
+            latest_mtime = max(latest_mtime, mtime)
+
+    return latest_mtime</code></pre>
 </details>
 </dd>
 </dl>
@@ -654,6 +732,7 @@ or exception() method.</p></div>
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
 <li><code><a title="secfsdstools.c_automation.task_framework.delete_temp_folders" href="#secfsdstools.c_automation.task_framework.delete_temp_folders">delete_temp_folders</a></code></li>
+<li><code><a title="secfsdstools.c_automation.task_framework.get_latest_mtime" href="#secfsdstools.c_automation.task_framework.get_latest_mtime">get_latest_mtime</a></code></li>
 </ul>
 </li>
 <li><h3><a href="#header-classes">Classes</a></h3>

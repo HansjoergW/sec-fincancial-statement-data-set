@@ -262,12 +262,13 @@ def define_extra_processes(config: Configuration) -&gt; List[AbstractProcess]:
         # building an all dataset based on the all-by-stmt datasets
         CombineProcess(root_dir=f&#34;{joined_by_stmt_dir}/all_by_stmt&#34;,
                        target_dir=f&#34;{joined_by_stmt_dir}/all&#34;,
-                       bag_type=&#34;joined&#34;
+                       bag_type=&#34;joined&#34;,
+                       check_by_timestamp=True
                        ),
 
-        StandardizeProcess(root_dir=joined_dir,
-                           target_dir=standardized_dir,
-                           execute_serial=False)
+        # StandardizeProcess(root_dir=joined_dir,
+        #                    target_dir=standardized_dir,
+        #                    execute_serial=False)
 
     ]
 
@@ -415,12 +416,13 @@ if __name__ == &#39;__main__&#39;:
         # building an all dataset based on the all-by-stmt datasets
         CombineProcess(root_dir=f&#34;{joined_by_stmt_dir}/all_by_stmt&#34;,
                        target_dir=f&#34;{joined_by_stmt_dir}/all&#34;,
-                       bag_type=&#34;joined&#34;
+                       bag_type=&#34;joined&#34;,
+                       check_by_timestamp=True
                        ),
 
-        StandardizeProcess(root_dir=joined_dir,
-                           target_dir=standardized_dir,
-                           execute_serial=False)
+        # StandardizeProcess(root_dir=joined_dir,
+        #                    target_dir=standardized_dir,
+        #                    execute_serial=False)
 
     ]</code></pre>
 </details>

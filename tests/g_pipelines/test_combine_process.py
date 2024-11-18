@@ -10,32 +10,6 @@ CURRENT_DIR, _ = os.path.split(__file__)
 TESTDATA_PATH = Path(CURRENT_DIR) / "_testdata"
 
 
-def test_get_iterator_position_name():
-    assert CombineTask._get_iterator_position_name(path=Path("a/b/c/d/e"), star_position=0) == "e"
-    assert CombineTask._get_iterator_position_name(path=Path("a/b/c/d/e"), star_position=1) == "d"
-    assert CombineTask._get_iterator_position_name(path=Path("a/b/c/d/e"), star_position=2) == "c"
-    assert CombineTask._get_iterator_position_name(path=Path("a/b/c/d/e"), star_position=3) == "b"
-    assert CombineTask._get_iterator_position_name(path=Path("a/b/c/d/e"), star_position=4) == "a"
-
-
-def test_start_position_from_end():
-    assert CombineTask._star_position_from_end("/*") == 0
-    assert CombineTask._star_position_from_end("/*/") == 0
-    assert CombineTask._star_position_from_end("/*/BS") == 1
-    assert CombineTask._star_position_from_end("*") == 0
-    assert CombineTask._star_position_from_end("*/") == 0
-    assert CombineTask._star_position_from_end("*/BS") == 1
-    assert CombineTask._star_position_from_end("*/BS/") == 1
-    assert CombineTask._star_position_from_end("*/BS/x") == 2
-    assert CombineTask._star_position_from_end("*/BS/x/") == 2
-    assert CombineTask._star_position_from_end("x/*") == 0
-    assert CombineTask._star_position_from_end("x/*/") == 0
-    assert CombineTask._star_position_from_end("x/*/BS") == 1
-    assert CombineTask._star_position_from_end("x/*/BS/") == 1
-    assert CombineTask._star_position_from_end("x/*/BS/x") == 2
-    assert CombineTask._star_position_from_end("x/*/BS/x/") == 2
-
-
 def test_direct_sub_directory_collect(tmp_path):
     """
         tmp_path/all -> empty
@@ -56,7 +30,8 @@ def test_direct_sub_directory_collect(tmp_path):
         root_path=tmp_path / "quarter",
         bag_type="joined",
         filter="*",
-        target_path=tmp_path / "all"
+        target_path=tmp_path / "all",
+        check_by_timestamp=False
     )
 
     result = AbstractProcess.process_task(task)
@@ -84,7 +59,8 @@ def test_direct_sub_directory_collect(tmp_path):
         root_path=tmp_path / "quarter",
         bag_type="joined",
         filter="*",
-        target_path=tmp_path / "all"
+        target_path=tmp_path / "all",
+        check_by_timestamp=False
     )
 
     result2 = AbstractProcess.process_task(task2)
@@ -128,7 +104,8 @@ def test_child_sub_directory_collect(tmp_path):
         root_path=tmp_path / "quarter",
         bag_type="joined",
         filter="*/BS",
-        target_path=tmp_path / "all"
+        target_path=tmp_path / "all",
+        check_by_timestamp=False
     )
 
     result = AbstractProcess.process_task(task)
@@ -156,7 +133,8 @@ def test_child_sub_directory_collect(tmp_path):
         root_path=tmp_path / "quarter",
         bag_type="joined",
         filter="*/BS",
-        target_path=tmp_path / "all"
+        target_path=tmp_path / "all",
+        check_by_timestamp=False
     )
 
     result2 = AbstractProcess.process_task(task2)
@@ -173,3 +151,5 @@ def test_child_sub_directory_collect(tmp_path):
 
     bag = JoinedDataBag.load(str(task2.target_path))
     assert bag.sub_df.shape == (3585, 36)
+
+

@@ -1,8 +1,8 @@
 """
 Base classes for the Task and Process Framework.
 """
-import os
 import logging
+import os
 import shutil
 from abc import ABC, abstractmethod
 from collections import defaultdict
@@ -28,6 +28,7 @@ class Task(Protocol):
     """
     Task interface.
     """
+
     def prepare(self):
         """ Prepare everything to execute the task.
             E.g., creation or clearing a directory. """
@@ -41,7 +42,6 @@ class Task(Protocol):
          but want to update a state in a table,
          you could do the update of the state in the commit method.
          """
-
 
     def exception(self, exception) -> Any:
         """ Handle the exception. """
@@ -59,10 +59,148 @@ class TaskResult:
     state: TaskResultState
 
 
+class BaseTask:
+    """
+    Implements the basic logic to track already processed data either by folder structure of the
+    root-path (meaning that new data that appeared as a new subfolder in the root-path has to be
+    integrated in the existing content of the target path) or by
+    checking the timestamp of the latest modifications within the root-path structure (meaning
+    that the content of the target-path has to be recreated with the current content of the
+    root-path.
+
+    Both scenarios use a "meta-inf" file that either contains the name of the subfolders, or the
+    the timestamp of the latest processed modification.
+    """
+
+    def __init__(self,
+                 root_path: Path,
+                 filter: str,
+                 target_path: Path,
+                 check_by_timestamp: bool):
+
+        self.root_path = root_path
+        self.filter = filter
+        self.check_by_timestamp = check_by_timestamp
+        self.all_dirs = list(self.root_path.glob(self.filter))
+
+        self.target_path = target_path
+
+        self.tmp_path = target_path.parent / f"tmp_{target_path.name}"
+        self.meta_inf_file: Path = self.target_path / "meta.inf"
+
+        self.paths_to_process = self.all_dirs
+
+        # filter could be something like "*", or "*/BS", or "something/*/BS"
+        # but in order to be able to file the metainf file with the names for which "*" iterates
+        # over, we need to know the position towards the end of the resulting path.
+        # So if the filter is just a "*" it is 0, if it is "*/BS" it would be 1
+        self.star_position = self._star_position_from_end(self.filter)
+
+        # so if we have the filter */BS and if we have the directories "2010q1.zip/BS",
+        # "2010q2.zip/BS" in the root_path, all_names key will be 2010q1.zip, 2010q2.zip
+        self.all_names = {self._get_iterator_position_name(f, self.star_position):
+                              f for f in self.all_dirs}
+
+        if self.meta_inf_file.exists():
+            containing_values = self.read_metainf_content()
+
+            if self.check_by_timestamp:
+                last_timestamp = float(containing_values[0])
+                current_timestamp = get_latest_mtime(self.root_path)
+                if current_timestamp <= last_timestamp:
+                    self.paths_to_process = []
+            else:
+                missing = set(self.all_names.keys()) - set(containing_values)
+                self.paths_to_process = [self.all_names[name] for name in missing]
+
+    @staticmethod
+    def _get_iterator_position_name(path: Path, star_position: int):
+        return path.parts[::-1][star_position]
+
+    @staticmethod
+    def _star_position_from_end(path: str) -> int:
+        # Split the string by '/' to get segments
+
+        # ignore first and last /
+        if path.startswith('/'):
+            path = path[1:]
+        if path.endswith('/'):
+            path = path[:-1]
+
+        segments = path.split('/')
+
+        # Iterate from the end and find the first segment containing '*'
+        for i, segment in enumerate(reversed(segments)):
+            if '*' in segment:
+                return i  # Position from the end
+
+        # If no '*' is found, return -1 (or any error code that suits your needs)
+        return -1
+
+    def read_metainf_content(self) -> List[str]:
+        meta_inf_content = self.meta_inf_file.read_text(encoding="utf-8")
+        return meta_inf_content.split("\n")
+
+    def prepare(self):
+        """ prepare Task. """
+        if len(self.paths_to_process) == 0:
+            return
+
+        self.tmp_path.mkdir(parents=True, exist_ok=False)
+
+    def commit(self):
+        """ we commit by renaming the tmp_path. """
+        if len(self.paths_to_process) == 0:
+            return "success"
+
+        # alten Inhalt entfernen
+        if self.target_path.exists():
+            shutil.rmtree(self.target_path)
+
+        self.tmp_path.rename(self.target_path)
+        return "success"
+
+    def exception(self, exception) -> str:
+        """ delete the temp folder. """
+        shutil.rmtree(self.tmp_path, ignore_errors=True)
+        return f"failed {exception}"
+
+    def execute(self):
+        if len(self.paths_to_process) == 0:
+            return
+
+        paths_to_process = self.paths_to_process.copy()
+
+        # if we check by timestamp, then we recreate the combined from all its part
+        # so we do not simply add elements
+        if self.target_path.exists() and not self.check_by_timestamp:
+            # if we just add new elements, then we must ensure that the current content
+            # is also part of the concatenation.
+            paths_to_process.append(self.target_path)
+
+        self.do_execution(paths_to_process)
+
+        temp_meta_inf = self.tmp_path / "meta.inf"
+        meta_inf_content: str
+        if self.check_by_timestamp:
+            meta_inf_content = str(get_latest_mtime(self.root_path))
+        else:
+            meta_inf_content = "\n".join([self._get_iterator_position_name(f, self.star_position)
+                                          for f in self.paths_to_process])
+        temp_meta_inf.write_text(data=meta_inf_content, encoding="utf-8")
+
+    @abstractmethod
+    def do_execution(self, paths_to_process: List[Path]):
+        """
+        handles the actual execution of the task
+        """
+
+
 class AbstractProcess(ABC):
     """
     Defines the Abstract process of processing tasks for a certain process.
     """
+
     def __init__(self,
                  execute_serial: bool = False,
                  chunksize: int = 3):
@@ -86,7 +224,6 @@ class AbstractProcess(ABC):
 
     def pre_process(self):
         """ Hook method to implement logic that is executed before the whole process is finished. """
-
 
     def post_process(self):
         """ Hook method to implement logic that is executed after the whole process is finished. """
@@ -144,6 +281,7 @@ class AbstractProcess(ABC):
             logger.warning("not able to process %s", failed)
 
         self.post_process()
+
 
 def delete_temp_folders(root_path: Path, temp_prefix: str = "tmp"):
     """

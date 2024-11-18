@@ -26,15 +26,15 @@
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">import shutil
-from pathlib import Path
+<pre><code class="python">from pathlib import Path
 from typing import List
 
-from secfsdstools.c_automation.task_framework import AbstractProcess, Task, delete_temp_folders, get_latest_mtime
+from secfsdstools.c_automation.task_framework import AbstractProcess, Task, delete_temp_folders, \
+    BaseTask
 from secfsdstools.d_container.databagmodel import RawDataBag, JoinedDataBag
 
 
-class CombineTask:
+class CombineTask(BaseTask):
 
     def __init__(self,
                  root_path: Path,
@@ -42,126 +42,24 @@ class CombineTask:
                  bag_type: str,  # raw or joined
                  target_path: Path,
                  check_by_timestamp: bool):
-        self.root_path = root_path
-        self.filter = filter
-        self.check_by_timestamp = check_by_timestamp
-        self.all_dirs = list(self.root_path.glob(self.filter))
-
-        self.target_path = target_path
+        super().__init__(
+            root_path=root_path,
+            filter=filter,
+            target_path=target_path,
+            check_by_timestamp=check_by_timestamp
+        )
         self.bag_type = bag_type
-
-        self.dir_name = target_path.name
-        self.tmp_path = target_path.parent / f&#34;tmp_{self.dir_name}&#34;
-        self.meta_inf_file: Path = self.target_path / &#34;meta.inf&#34;
-
-        self.missing_paths = self.all_dirs
-
-        # filter could be something like &#34;*&#34;, or &#34;*/BS&#34;, or &#34;something/*/BS&#34;
-        # but in order to be able to file the metainf file with the names for which &#34;*&#34; iterates
-        # over, we need to know the position towards the end of the resulting path.
-        # So if the filter is just a &#34;*&#34; it is 0, if it is &#34;*/BS&#34; it would be 1
-        self.star_position = self._star_position_from_end(self.filter)
-
-        # so if we have the filter */BS and if we have the directories &#34;2010q1.zip/BS&#34;,
-        # &#34;2010q2.zip/BS&#34; in the root_path, all_names key will be 2010q1.zip, 2010q2.zip
-        self.all_names = {self._get_iterator_position_name(f, self.star_position):
-                              f for f in self.all_dirs}
-
-        if self.meta_inf_file.exists():
-            containing_values = self.read_metainf_content()
-
-            if self.check_by_timestamp:
-                last_timestamp = float(containing_values[0])
-                current_timestamp = get_latest_mtime(self.root_path)
-                if current_timestamp &lt;= last_timestamp:
-                    self.missing_paths = []
-            else:
-                missing = set(self.all_names.keys()) - set(containing_values)
-                self.missing_paths = [self.all_names[name] for name in missing]
-
-    @staticmethod
-    def _get_iterator_position_name(path: Path, star_position: int):
-        return path.parts[::-1][star_position]
-
-    @staticmethod
-    def _star_position_from_end(path: str) -&gt; int:
-        # Split the string by &#39;/&#39; to get segments
-
-        # ignore first and last /
-        if path.startswith(&#39;/&#39;):
-            path = path[1:]
-        if path.endswith(&#39;/&#39;):
-            path = path[:-1]
-
-        segments = path.split(&#39;/&#39;)
-
-        # Iterate from the end and find the first segment containing &#39;*&#39;
-        for i, segment in enumerate(reversed(segments)):
-            if &#39;*&#39; in segment:
-                return i  # Position from the end
-
-        # If no &#39;*&#39; is found, return -1 (or any error code that suits your needs)
-        return -1
-
-    def read_metainf_content(self) -&gt; List[str]:
-        meta_inf_content = self.meta_inf_file.read_text(encoding=&#34;utf-8&#34;)
-        return meta_inf_content.split(&#34;\n&#34;)
-
-    def prepare(self):
-        &#34;&#34;&#34; prepare Task. &#34;&#34;&#34;
-        if len(self.missing_paths) == 0:
-            return
-
-        self.tmp_path.mkdir(parents=True, exist_ok=False)
-
-    def commit(self):
-        &#34;&#34;&#34; we commit by renaming the tmp_path. &#34;&#34;&#34;
-        if len(self.missing_paths) == 0:
-            return &#34;success&#34;
-
-        # alten Inhalt entfernen
-        if self.target_path.exists():
-            shutil.rmtree(self.target_path)
-
-        self.tmp_path.rename(self.target_path)
-        return &#34;success&#34;
-
-    def exception(self, exception) -&gt; str:
-        &#34;&#34;&#34; delete the temp folder. &#34;&#34;&#34;
-        shutil.rmtree(self.tmp_path, ignore_errors=True)
-        return f&#34;failed {exception}&#34;
 
     def __str__(self) -&gt; str:
         return f&#34;CombineTask(root_path: {self.root_path}, filter: {self.filter})&#34;
 
-    def execute(self):
-        if len(self.missing_paths) == 0:
-            return
-
-        paths = self.missing_paths.copy()
-
-        # if we check by timestamp, then we recreate the combined from all its part
-        # so we do not simply add elements
-        if self.target_path.exists() and not self.check_by_timestamp:
-            # if we just add new elements, then we must ensure that the current content
-            # is also part of the concatenation.
-            paths.append(self.target_path)
-
+    def do_execution(self, paths_to_process: List[Path]):
         if self.bag_type.lower() == &#34;raw&#34;:
-            self._execute_raw(paths)
+            self._execute_raw(paths_to_process)
         elif self.bag_type.lower() == &#34;joined&#34;:
-            self._execute_joined(paths)
+            self._execute_joined(paths_to_process)
         else:
             raise ValueError(&#34;bag_type must be either raw or joined&#34;)
-
-        temp_meta_inf = self.tmp_path / &#34;meta.inf&#34;
-        meta_inf_content: str = &#34;&#34;
-        if self.check_by_timestamp:
-            meta_inf_content = str(get_latest_mtime(self.root_path))
-        else:
-            meta_inf_content = &#34;\n&#34;.join([self._get_iterator_position_name(f, self.star_position)
-                                          for f in self.missing_paths])
-        temp_meta_inf.write_text(data=meta_inf_content, encoding=&#34;utf-8&#34;)
 
     def _execute_raw(self, paths: List[Path]):
         all_bags = [RawDataBag.load(str(path)) for path in paths]
@@ -206,7 +104,7 @@ class CombineProcess(AbstractProcess):
             check_by_timestamp=self.check_by_timestamp
         )
         # since this is a one task process, we just check if there is really something to do
-        if len(task.missing_paths) &gt; 0:
+        if len(task.paths_to_process) &gt; 0:
             return [task]
         return []</code></pre>
 </details>
@@ -260,7 +158,7 @@ class CombineProcess(AbstractProcess):
             check_by_timestamp=self.check_by_timestamp
         )
         # since this is a one task process, we just check if there is really something to do
-        if len(task.missing_paths) &gt; 0:
+        if len(task.paths_to_process) &gt; 0:
             return [task]
         return []</code></pre>
 </details>
@@ -287,12 +185,19 @@ class CombineProcess(AbstractProcess):
 <span>(</span><span>root_path: pathlib.Path, filter: str, bag_type: str, target_path: pathlib.Path, check_by_timestamp: bool)</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Implements the basic logic to track already processed data either by folder structure of the
+root-path (meaning that new data that appeared as a new subfolder in the root-path has to be
+integrated in the existing content of the target path) or by
+checking the timestamp of the latest modifications within the root-path structure (meaning
+that the content of the target-path has to be recreated with the current content of the
+root-path.</p>
+<p>Both scenarios use a "meta-inf" file that either contains the name of the subfolders, or the
+the timestamp of the latest processed modification.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class CombineTask:
+<pre><code class="python">class CombineTask(BaseTask):
 
     def __init__(self,
                  root_path: Path,
@@ -300,126 +205,24 @@ class CombineProcess(AbstractProcess):
                  bag_type: str,  # raw or joined
                  target_path: Path,
                  check_by_timestamp: bool):
-        self.root_path = root_path
-        self.filter = filter
-        self.check_by_timestamp = check_by_timestamp
-        self.all_dirs = list(self.root_path.glob(self.filter))
-
-        self.target_path = target_path
+        super().__init__(
+            root_path=root_path,
+            filter=filter,
+            target_path=target_path,
+            check_by_timestamp=check_by_timestamp
+        )
         self.bag_type = bag_type
-
-        self.dir_name = target_path.name
-        self.tmp_path = target_path.parent / f&#34;tmp_{self.dir_name}&#34;
-        self.meta_inf_file: Path = self.target_path / &#34;meta.inf&#34;
-
-        self.missing_paths = self.all_dirs
-
-        # filter could be something like &#34;*&#34;, or &#34;*/BS&#34;, or &#34;something/*/BS&#34;
-        # but in order to be able to file the metainf file with the names for which &#34;*&#34; iterates
-        # over, we need to know the position towards the end of the resulting path.
-        # So if the filter is just a &#34;*&#34; it is 0, if it is &#34;*/BS&#34; it would be 1
-        self.star_position = self._star_position_from_end(self.filter)
-
-        # so if we have the filter */BS and if we have the directories &#34;2010q1.zip/BS&#34;,
-        # &#34;2010q2.zip/BS&#34; in the root_path, all_names key will be 2010q1.zip, 2010q2.zip
-        self.all_names = {self._get_iterator_position_name(f, self.star_position):
-                              f for f in self.all_dirs}
-
-        if self.meta_inf_file.exists():
-            containing_values = self.read_metainf_content()
-
-            if self.check_by_timestamp:
-                last_timestamp = float(containing_values[0])
-                current_timestamp = get_latest_mtime(self.root_path)
-                if current_timestamp &lt;= last_timestamp:
-                    self.missing_paths = []
-            else:
-                missing = set(self.all_names.keys()) - set(containing_values)
-                self.missing_paths = [self.all_names[name] for name in missing]
-
-    @staticmethod
-    def _get_iterator_position_name(path: Path, star_position: int):
-        return path.parts[::-1][star_position]
-
-    @staticmethod
-    def _star_position_from_end(path: str) -&gt; int:
-        # Split the string by &#39;/&#39; to get segments
-
-        # ignore first and last /
-        if path.startswith(&#39;/&#39;):
-            path = path[1:]
-        if path.endswith(&#39;/&#39;):
-            path = path[:-1]
-
-        segments = path.split(&#39;/&#39;)
-
-        # Iterate from the end and find the first segment containing &#39;*&#39;
-        for i, segment in enumerate(reversed(segments)):
-            if &#39;*&#39; in segment:
-                return i  # Position from the end
-
-        # If no &#39;*&#39; is found, return -1 (or any error code that suits your needs)
-        return -1
-
-    def read_metainf_content(self) -&gt; List[str]:
-        meta_inf_content = self.meta_inf_file.read_text(encoding=&#34;utf-8&#34;)
-        return meta_inf_content.split(&#34;\n&#34;)
-
-    def prepare(self):
-        &#34;&#34;&#34; prepare Task. &#34;&#34;&#34;
-        if len(self.missing_paths) == 0:
-            return
-
-        self.tmp_path.mkdir(parents=True, exist_ok=False)
-
-    def commit(self):
-        &#34;&#34;&#34; we commit by renaming the tmp_path. &#34;&#34;&#34;
-        if len(self.missing_paths) == 0:
-            return &#34;success&#34;
-
-        # alten Inhalt entfernen
-        if self.target_path.exists():
-            shutil.rmtree(self.target_path)
-
-        self.tmp_path.rename(self.target_path)
-        return &#34;success&#34;
-
-    def exception(self, exception) -&gt; str:
-        &#34;&#34;&#34; delete the temp folder. &#34;&#34;&#34;
-        shutil.rmtree(self.tmp_path, ignore_errors=True)
-        return f&#34;failed {exception}&#34;
 
     def __str__(self) -&gt; str:
         return f&#34;CombineTask(root_path: {self.root_path}, filter: {self.filter})&#34;
 
-    def execute(self):
-        if len(self.missing_paths) == 0:
-            return
-
-        paths = self.missing_paths.copy()
-
-        # if we check by timestamp, then we recreate the combined from all its part
-        # so we do not simply add elements
-        if self.target_path.exists() and not self.check_by_timestamp:
-            # if we just add new elements, then we must ensure that the current content
-            # is also part of the concatenation.
-            paths.append(self.target_path)
-
+    def do_execution(self, paths_to_process: List[Path]):
         if self.bag_type.lower() == &#34;raw&#34;:
-            self._execute_raw(paths)
+            self._execute_raw(paths_to_process)
         elif self.bag_type.lower() == &#34;joined&#34;:
-            self._execute_joined(paths)
+            self._execute_joined(paths_to_process)
         else:
             raise ValueError(&#34;bag_type must be either raw or joined&#34;)
-
-        temp_meta_inf = self.tmp_path / &#34;meta.inf&#34;
-        meta_inf_content: str = &#34;&#34;
-        if self.check_by_timestamp:
-            meta_inf_content = str(get_latest_mtime(self.root_path))
-        else:
-            meta_inf_content = &#34;\n&#34;.join([self._get_iterator_position_name(f, self.star_position)
-                                          for f in self.missing_paths])
-        temp_meta_inf.write_text(data=meta_inf_content, encoding=&#34;utf-8&#34;)
 
     def _execute_raw(self, paths: List[Path]):
         all_bags = [RawDataBag.load(str(path)) for path in paths]
@@ -433,116 +236,21 @@ class CombineProcess(AbstractProcess):
         all_bag: JoinedDataBag = JoinedDataBag.concat(all_bags, drop_duplicates_sub_df=True)
         all_bag.save(target_path=str(self.tmp_path))</code></pre>
 </details>
-<h3>Methods</h3>
-<dl>
-<dt id="secfsdstools.g_pipelines.combine_process.CombineTask.commit"><code class="name flex">
-<span>def <span class="ident">commit</span></span>(<span>self)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>we commit by renaming the tmp_path.</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def commit(self):
-    &#34;&#34;&#34; we commit by renaming the tmp_path. &#34;&#34;&#34;
-    if len(self.missing_paths) == 0:
-        return &#34;success&#34;
-
-    # alten Inhalt entfernen
-    if self.target_path.exists():
-        shutil.rmtree(self.target_path)
-
-    self.tmp_path.rename(self.target_path)
-    return &#34;success&#34;</code></pre>
-</details>
-</dd>
-<dt id="secfsdstools.g_pipelines.combine_process.CombineTask.exception"><code class="name flex">
-<span>def <span class="ident">exception</span></span>(<span>self, exception) ‑> str</span>
-</code></dt>
-<dd>
-<div class="desc"><p>delete the temp folder.</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def exception(self, exception) -&gt; str:
-    &#34;&#34;&#34; delete the temp folder. &#34;&#34;&#34;
-    shutil.rmtree(self.tmp_path, ignore_errors=True)
-    return f&#34;failed {exception}&#34;</code></pre>
-</details>
-</dd>
-<dt id="secfsdstools.g_pipelines.combine_process.CombineTask.execute"><code class="name flex">
-<span>def <span class="ident">execute</span></span>(<span>self)</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def execute(self):
-    if len(self.missing_paths) == 0:
-        return
-
-    paths = self.missing_paths.copy()
-
-    # if we check by timestamp, then we recreate the combined from all its part
-    # so we do not simply add elements
-    if self.target_path.exists() and not self.check_by_timestamp:
-        # if we just add new elements, then we must ensure that the current content
-        # is also part of the concatenation.
-        paths.append(self.target_path)
-
-    if self.bag_type.lower() == &#34;raw&#34;:
-        self._execute_raw(paths)
-    elif self.bag_type.lower() == &#34;joined&#34;:
-        self._execute_joined(paths)
-    else:
-        raise ValueError(&#34;bag_type must be either raw or joined&#34;)
-
-    temp_meta_inf = self.tmp_path / &#34;meta.inf&#34;
-    meta_inf_content: str = &#34;&#34;
-    if self.check_by_timestamp:
-        meta_inf_content = str(get_latest_mtime(self.root_path))
-    else:
-        meta_inf_content = &#34;\n&#34;.join([self._get_iterator_position_name(f, self.star_position)
-                                      for f in self.missing_paths])
-    temp_meta_inf.write_text(data=meta_inf_content, encoding=&#34;utf-8&#34;)</code></pre>
-</details>
-</dd>
-<dt id="secfsdstools.g_pipelines.combine_process.CombineTask.prepare"><code class="name flex">
-<span>def <span class="ident">prepare</span></span>(<span>self)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>prepare Task.</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def prepare(self):
-    &#34;&#34;&#34; prepare Task. &#34;&#34;&#34;
-    if len(self.missing_paths) == 0:
-        return
-
-    self.tmp_path.mkdir(parents=True, exist_ok=False)</code></pre>
-</details>
-</dd>
-<dt id="secfsdstools.g_pipelines.combine_process.CombineTask.read_metainf_content"><code class="name flex">
-<span>def <span class="ident">read_metainf_content</span></span>(<span>self) ‑> List[str]</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def read_metainf_content(self) -&gt; List[str]:
-    meta_inf_content = self.meta_inf_file.read_text(encoding=&#34;utf-8&#34;)
-    return meta_inf_content.split(&#34;\n&#34;)</code></pre>
-</details>
-</dd>
-</dl>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="secfsdstools.c_automation.task_framework.BaseTask" href="../c_automation/task_framework.html#secfsdstools.c_automation.task_framework.BaseTask">BaseTask</a></li>
+</ul>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="secfsdstools.c_automation.task_framework.BaseTask" href="../c_automation/task_framework.html#secfsdstools.c_automation.task_framework.BaseTask">BaseTask</a></b></code>:
+<ul class="hlist">
+<li><code><a title="secfsdstools.c_automation.task_framework.BaseTask.commit" href="../c_automation/task_framework.html#secfsdstools.c_automation.task_framework.BaseTask.commit">commit</a></code></li>
+<li><code><a title="secfsdstools.c_automation.task_framework.BaseTask.do_execution" href="../c_automation/task_framework.html#secfsdstools.c_automation.task_framework.BaseTask.do_execution">do_execution</a></code></li>
+<li><code><a title="secfsdstools.c_automation.task_framework.BaseTask.exception" href="../c_automation/task_framework.html#secfsdstools.c_automation.task_framework.BaseTask.exception">exception</a></code></li>
+<li><code><a title="secfsdstools.c_automation.task_framework.BaseTask.prepare" href="../c_automation/task_framework.html#secfsdstools.c_automation.task_framework.BaseTask.prepare">prepare</a></code></li>
+</ul>
+</li>
+</ul>
 </dd>
 </dl>
 </section>
@@ -565,13 +273,6 @@ class CombineProcess(AbstractProcess):
 </li>
 <li>
 <h4><code><a title="secfsdstools.g_pipelines.combine_process.CombineTask" href="#secfsdstools.g_pipelines.combine_process.CombineTask">CombineTask</a></code></h4>
-<ul class="">
-<li><code><a title="secfsdstools.g_pipelines.combine_process.CombineTask.commit" href="#secfsdstools.g_pipelines.combine_process.CombineTask.commit">commit</a></code></li>
-<li><code><a title="secfsdstools.g_pipelines.combine_process.CombineTask.exception" href="#secfsdstools.g_pipelines.combine_process.CombineTask.exception">exception</a></code></li>
-<li><code><a title="secfsdstools.g_pipelines.combine_process.CombineTask.execute" href="#secfsdstools.g_pipelines.combine_process.CombineTask.execute">execute</a></code></li>
-<li><code><a title="secfsdstools.g_pipelines.combine_process.CombineTask.prepare" href="#secfsdstools.g_pipelines.combine_process.CombineTask.prepare">prepare</a></code></li>
-<li><code><a title="secfsdstools.g_pipelines.combine_process.CombineTask.read_metainf_content" href="#secfsdstools.g_pipelines.combine_process.CombineTask.read_metainf_content">read_metainf_content</a></code></li>
-</ul>
 </li>
 </ul>
 </li>

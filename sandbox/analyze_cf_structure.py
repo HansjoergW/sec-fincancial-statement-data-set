@@ -2,6 +2,7 @@ import time
 from typing import List
 
 import pandas as pd
+from secfsdstools.e_filter.joinedfiltering import AdshJoinedFilter, OfficialTagsOnlyJoinedFilter
 
 from secfsdstools.d_container.databagmodel import JoinedDataBag
 from secfsdstools.e_collector.companycollecting import CompanyReportCollector
@@ -233,8 +234,30 @@ if __name__ == '__main__':
     # create_smaller_sample_CF_set()
     # prepare_all_data_set()
 
-    cf_joined_bag: JoinedDataBag = load_joined_CF_set()
-    # cf_joined_bag = cf_joined_bag.filter(AdshJoinedFilter(adshs=['0000885725-20-000036']))
+    #cf_joined_bag: JoinedDataBag = load_joined_CF_set()
+    cf_joined_bag: JoinedDataBag = JoinedDataBag.load(
+        str("C:/data/sec/automated/_1_3_filtered_by_stmt_joined/all_by_stmt/CF"))
+    cf_joined_bag = cf_joined_bag[OfficialTagsOnlyJoinedFilter()]
+
+    # df = cf_joined_bag.pre_num_df
+    #
+    # print("entries: ", len(df))
+    #
+    # from secfsdstools.f_standardize.cf_standardize import CashFlowStandardizer
+    # from secfsdstools.f_standardize.base_rule_framework import PrePivotRule
+    #
+    # duplicated_mask = df[PrePivotRule.index_cols].duplicated()
+    #
+    # print("duplicated rows: ", sum(duplicated_mask))
+    #
+    # duplicated_df = df[duplicated_mask]
+    # first_entry = duplicated_df.iloc[0]
+    #
+    # selected_df = df[(df.adsh == first_entry.adsh) & (df.tag == first_entry.tag)]
+    #
+    # print(duplicated_mask.sum())
+
+    # cf_joined_bag = cf_joined_bag.filter(AdshJoinedFilter(adshs=['0001391609-16-000491']))
     # cf_joined_bag = load_smaller_sample_IS_set()
 
     # check_df = check_signed_values(joined_bag=cf_joined_bag, tag_list=[

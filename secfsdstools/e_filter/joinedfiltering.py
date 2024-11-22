@@ -188,7 +188,7 @@ class OfficialTagsOnlyJoinedFilter(FilterBase[JoinedDataBag]):
             JoinedDataBag: the databag with the filtered data
         """
         pre_num_filtered_for_tags = databag.pre_num_df[
-            databag.pre_num_df.version.isin(databag.sub_df.adsh)]
+            ~databag.pre_num_df.version.isin(databag.sub_df.adsh)]
 
         return JoinedDataBag.create(sub_df=databag.sub_df,
                                     pre_num_df=pre_num_filtered_for_tags)

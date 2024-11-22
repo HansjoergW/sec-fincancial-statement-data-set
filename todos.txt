@@ -14,6 +14,10 @@ New Release
 
 
 v.1.7.0
+BugFix
+- OfficialTagsOnlyJoinedFilter fixed: did actually filter only inofficial tags
+
+New
 - check for update is always executed, regardless which feature of the framework is used
   (previously just the collectors caused a check for updates)
  -> via __init__.py of special c_update_check module, which is imported from the by the main modules

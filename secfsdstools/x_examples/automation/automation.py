@@ -31,9 +31,10 @@ from pathlib import Path
 from typing import List
 
 from secfsdstools.a_config.configmodel import Configuration
-from secfsdstools.a_utils.fileutils import get_directories_in_directory
-from secfsdstools.c_automation.task_framework import AbstractProcess, Task, delete_temp_folders
+from secfsdstools.c_automation.task_framework import AbstractProcess, Task, delete_temp_folders, \
+    BaseTask
 from secfsdstools.d_container.databagmodel import JoinedDataBag
+from secfsdstools.e_filter.joinedfiltering import OfficialTagsOnlyJoinedFilter
 from secfsdstools.f_standardize.bs_standardize import BalanceSheetStandardizer
 from secfsdstools.f_standardize.cf_standardize import CashFlowStandardizer
 from secfsdstools.f_standardize.is_standardize import IncomeStatementStandardizer
@@ -41,26 +42,23 @@ from secfsdstools.f_standardize.is_standardize import IncomeStatementStandardize
 CURRENT_DIR, _ = os.path.split(__file__)
 
 
-class StandardizerTask:
+class StandardizerTask(BaseTask):
 
     def __init__(self,
                  root_path: Path,
-                 target_path: Path):
-        self.root_path = root_path
-
-        self.target_path = target_path
-        self.dir_name = target_path.name
-        self.tmp_path = target_path.parent / f"tmp_{self.dir_name}"
+                 target_path: Path,
+                 ):
+        super().__init__(
+            root_path=root_path,
+            filter="*",  # can actually be ignored
+            target_path=target_path,
+            check_by_timestamp=True  # alwas true
+        )
 
     def prepare(self):
         (self.tmp_path / "BS").mkdir(parents=True, exist_ok=False)
         (self.tmp_path / "IS").mkdir(parents=True, exist_ok=False)
         (self.tmp_path / "CF").mkdir(parents=True, exist_ok=False)
-
-    def commit(self):
-        """ we commit by renaming the tmp_path. """
-        self.tmp_path.rename(self.target_path)
-        return "success"
 
     def exception(self, exception) -> str:
         """ delete the temp folder. """
@@ -71,62 +69,67 @@ class StandardizerTask:
         return (f"StandardizerTask(root_path: {self.root_path}, "
                 f"target_path: {self.target_path})")
 
-    def execute(self):
+    def do_execution(self, paths_to_process: List[Path]):
+        """
+        Args:
+            paths_to_process: can actually be ignored in this context, since we know which
+            folders have to processed (BS, IS, CF)
+
+        Returns:
+        """
         bs_standardizer = BalanceSheetStandardizer()
         is_standardizer = IncomeStatementStandardizer()
         cf_standardizer = CashFlowStandardizer()
 
-        # load data
-        joined_bag = JoinedDataBag.load(str(self.root_path))
-
         # standardize bs
-        bs_standardizer.process(joined_bag.pre_num_df.copy())
+        joined_bag_bs = (
+            JoinedDataBag.load(str(self.root_path / "BS"))
+            [OfficialTagsOnlyJoinedFilter()])
+        bs_standardizer.process(joined_bag_bs.pre_num_df.copy())
         bs_standardizer.get_standardize_bag().save(str(self.tmp_path / "BS"))
 
         # standardize is
-        is_standardizer.process(joined_bag.pre_num_df.copy())
+        joined_bag_is = (
+            JoinedDataBag.load(str(self.root_path / "IS"))
+            [OfficialTagsOnlyJoinedFilter()])
+        is_standardizer.process(joined_bag_is.pre_num_df.copy())
         is_standardizer.get_standardize_bag().save(str(self.tmp_path / "IS"))
 
         # standardize cf
-        cf_standardizer.process(joined_bag.pre_num_df.copy())
+        joined_bag_cf = (
+            JoinedDataBag.load(str(self.root_path / "CF"))
+            [OfficialTagsOnlyJoinedFilter()])
+        cf_standardizer.process(joined_bag_cf.pre_num_df.copy())
         cf_standardizer.get_standardize_bag().save(str(self.tmp_path / "CF"))
 
 
 class StandardizeProcess(AbstractProcess):
+    """
+    Expects subfolders BS, IS, CF inside the provided root_dir.
+    """
 
     def __init__(self,
                  root_dir: str,
                  target_dir: str,
-                 file_type: str = "quarter",
-                 execute_serial: bool = False
                  ):
-        super().__init__(execute_serial=execute_serial,
+        super().__init__(execute_serial=False,
                          chunksize=0)
         self.root_dir = root_dir
         self.target_dir = target_dir
-        self.file_type = file_type
-
-    def _get_available_filtered(self):
-        return get_directories_in_directory(
-            os.path.join(self.root_dir, self.file_type))
-
-    def _get_standardized(self):
-        return get_directories_in_directory(
-            os.path.join(self.target_dir, self.file_type))
 
     def pre_process(self):
-        delete_temp_folders(root_path=Path(self.target_dir) / self.file_type)
+        delete_temp_folders(root_path=Path(self.target_dir))
 
     def calculate_tasks(self) -> List[Task]:
-        filtered = self._get_available_filtered()
-        standardized = self._get_standardized()
+        task = StandardizerTask(
+            root_path=Path(self.root_dir),
+            target_path=Path(self.target_dir)
+        )
 
-        missings = set(filtered) - set(standardized)
-
-        return [StandardizerTask(
-            root_path=Path(self.root_dir) / self.file_type / missing,
-            target_path=Path(self.target_dir) / self.file_type / missing
-        ) for missing in missings]
+        # since this is a one task process, we just check if there is really something to do
+        if len(task.paths_to_process) > 0:
+            return [task]
+        return []
 
 
 def define_extra_processes(config: Configuration) -> List[AbstractProcess]:
@@ -215,9 +218,8 @@ def define_extra_processes(config: Configuration) -> List[AbstractProcess]:
                        check_by_timestamp=True
                        ),
 
-        # StandardizeProcess(root_dir=joined_dir,
-        #                    target_dir=standardized_dir,
-        #                    execute_serial=False)
+        StandardizeProcess(root_dir=f"{joined_by_stmt_dir}/all_by_stmt",
+                           target_dir=standardized_dir)
 
     ]
 

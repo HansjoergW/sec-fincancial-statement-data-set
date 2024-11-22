@@ -92,13 +92,19 @@ Struktur
        IS
        CF
 
-Error
-    combine über bystmt funktioniert nicht
-    -> müsste ein Flag haben, welcher bezüglich stmt folder prüft, oder innerhalb eines SubFolder das MetaInf
-       liest..
-    by standardize ist es dasselbe -> es müsste auf einen change prüfen können.
-    -> so etwas wie "find last change in folder" -> und diesen Wert müsste man sich merken
 
+Error
+ by CF Standardisierung
+  bereits im PRE Processing
+
+   2024-11-19 06:46:24,031 [INFO] parallelexecution      items to process: 1
+   2024-11-19 06:46:32,623 [INFO] standardizing  start PRE processing ...
+   2024-11-19 06:46:44,066 [INFO] task_framework  Failed: StandardizerTask(root_path: C:\data\sec\automated\_1_3_filtered_by_stmt_joined\all_by_stmt, target_path: C:\data\sec\automated\_2_standardized) / Index contains duplicate entries, cannot reshape
+   2024-11-19 06:46:44,814 [INFO] parallelexecution      commited chunk: 0
+   2024-11-19 06:46:44,815 [WARNING] task_framework  not able to process StandardizerTask(root_path: C:\data\sec\automated\_1_3_filtered_by_stmt_joined\all_by_stmt, target_path: C:\data\sec\automated\_2_standardized)
+
+ -> fehlt hier eventuell noch ein Filter
+    direktes testen mit diesem Datenset
 
 
 
@@ -120,6 +126,35 @@ Error
     Ticker symbols
     outstanding shares / EPS_calc
 
+
+-----------------
+Duplicates:
+    cf_joined_bag: JoinedDataBag = JoinedDataBag.load(
+        str("C:/data/sec/automated/_1_3_filtered_by_stmt_joined/all_by_stmt/CF"))
+
+
+
+    Entries: 11'471'352
+    Duplicates: 359'471 by ['adsh', 'coreg', 'report', 'ddate', 'qtrs', 'tag', 'version']
+
+vor pivot mit 'adsh', 'coreg', 'report', 'ddate', 'qtrs', 'tag']
+0001391609-16-000491,,6,20160331,1,CashAndCashEquivalentsAtCarryingValueEndOfPeriod,us-gaap/2015,36.00000,13,0
+0001391609-16-000542,,6,20160630,2,CashAndCashEquivalentsAtCarryingValueEndOfPeriod,us-gaap/2016,89.00000,14,0
+0001589728-13-000008,,5,20130930,3,CashEndOfPeriod,us-gaap/2012,4933.00000,33,0
+
+original df
+-----------
+sub_df     (322'285, 36)
+pre_num_df (9'468'009, 16)
+
+all_joined (OfficialTagsOnly)
+------------
+sub_df       (345'678, 36)
+pre_num_df (10'157'235, 16)
+
+  - no filter
+sub_df        (345'678, 36)
+pre_num_df (11'471'352, 16)
 
 
 

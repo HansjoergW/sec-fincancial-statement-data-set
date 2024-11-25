@@ -1,3 +1,7 @@
+"""
+Module that combines the content from several input folders into a single DataBag.
+It can handle either raw or joined databags.
+"""
 from pathlib import Path
 from typing import List
 
@@ -7,13 +11,74 @@ from secfsdstools.d_container.databagmodel import RawDataBag, JoinedDataBag
 
 
 class CombineTask(BaseTask):
+    """
 
+    """
     def __init__(self,
                  root_path: Path,
                  filter: str,
                  bag_type: str,  # raw or joined
                  target_path: Path,
                  check_by_timestamp: bool):
+        """
+        Takes subfolder from the root_path (with applied filter string) and concatenates them into
+        a single DataBag (either Raw or Joined, defined by the bag_type) into the target_path.
+
+        The filter string defines on which subfolder level actually does contain the data to be
+        concatenated.
+
+        E.g. if the filter is just a "*" and the root_path looks like
+        <pre>
+        root_path
+            2010q1.zip
+            2010q2.zip
+            ...
+            2024q3.zip
+        </pre>
+        it would expect that the subfolders directly contain the databags.<br>
+        If the filter is defined as "*/BS" and the root_path looks like
+        <pre>
+        root_path
+            2010q1.zip
+              BS
+              CF
+              IS
+            2010q2.zip
+              BS
+              CF
+              IS
+            ...
+            2024q3.zip
+              BS
+              CF
+              IS
+        </pre>
+
+        It would concatenate all BS subfolders into the target path.<br>
+
+        check_by_timestamp defines how changes between runs are detected. If it is False, it
+        looks for new subfolders. Meaning, if a new in the root_path appears, it will add it to
+        the already existing content in the target_path. So, if in the above examples, the
+        subfolders 2010q1.zip ... 2024q3.zip were already concatenated in a previous run into the
+        target_path and in a new run the subfolder 2024q4.zip is detected, it will load the existing
+        content in the target_path, add the content of the 2024q4.zip and writes the result back
+        into the target_path.
+        This is being done by writing the name of the processed subfolders into a meta.inf file
+        in the target_path.
+
+        If check_by_timestamp is True, it will re-concatenate, if any file or subfile has changed
+        in the root_path since the last run.
+        This is being done by writing the actual last modification timestamp of the root_path
+        into the meta.inf file of the target_path.
+
+
+        Args:
+            root_path:
+            filter:
+            bag_type:
+            target_path:
+            check_by_timestamp:
+        """
         super().__init__(
             root_path=root_path,
             filter=filter,

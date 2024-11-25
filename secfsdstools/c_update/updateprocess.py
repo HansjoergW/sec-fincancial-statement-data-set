@@ -11,7 +11,7 @@ from secfsdstools.a_utils.dbutils import DBStateAcessor
 from secfsdstools.a_utils.downloadutils import UrlDownloader
 from secfsdstools.a_utils.rapiddownloadutils import RapidUrlBuilder
 from secfsdstools.b_setup.setupdb import DbCreator
-from secfsdstools.c_automation.task_framework import AbstractProcess
+from secfsdstools.c_automation.task_framework import AbstractProcess, execute_processes
 from secfsdstools.c_download.rapiddownloading_process import RapidDownloadingProcess
 from secfsdstools.c_download.secdownloading_process import SecDownloadingProcess
 from secfsdstools.c_index.indexing_process import ReportParquetIndexerProcess
@@ -167,8 +167,7 @@ class Updater:
 
         processes.extend(self._load_post_update_process())
 
-        for process in processes:
-            process.process()
+        execute_processes(processes)
 
         self._execute_post_update_hook()
 

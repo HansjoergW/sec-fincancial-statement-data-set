@@ -283,6 +283,17 @@ class AbstractProcess(ABC):
         self.post_process()
 
 
+def execute_processes(processes: List[AbstractProcess]):
+    """
+        Execute the list of processes in serial
+    Args:
+        processes (List(AbstractProcess)): List of AbstractProcesses to be executed
+
+    """
+    for process in processes:
+        process.process()
+
+
 def delete_temp_folders(root_path: Path, temp_prefix: str = "tmp"):
     """
     remove any existing folders starting with the tmp_prefix (folders that were not successfully completed

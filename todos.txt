@@ -43,6 +43,19 @@ New
 
 
 Todos:
+- process/task execution Method in task-framework (ok)
+- standardization processes in own module (ok)
+- document automation classes
+- tests for all processes
+- successfull run tests / linting
+- base setting for parallel execution to False for "all" processes in config
+- overwrite serial execution per task
+- new notebook documentation / automation
+  - after_update hook example
+- readme -> add automation info
+  -> how to easily enable "default extended processing"
+
+
 
 - in CF haben wir oft auch zusätzliche 'Cash' Tags -> benötigen wir diese im BS auch?
 - MaxQtr PrePivot Rule also for BS und IS

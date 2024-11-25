@@ -312,6 +312,17 @@ class AbstractProcess(ABC):
         self.post_process()
 
 
+def execute_processes(processes: List[AbstractProcess]):
+    &#34;&#34;&#34;
+        Execute the list of processes in serial
+    Args:
+        processes (List(AbstractProcess)): List of AbstractProcesses to be executed
+
+    &#34;&#34;&#34;
+    for process in processes:
+        process.process()
+
+
 def delete_temp_folders(root_path: Path, temp_prefix: str = &#34;tmp&#34;):
     &#34;&#34;&#34;
     remove any existing folders starting with the tmp_prefix (folders that were not successfully completed
@@ -385,6 +396,28 @@ def get_latest_mtime(folder: Path, skip: Optional[List[str]] = None) -&gt; float
     for tmp_dir in tmp_dirs:
         file_path = root_path / tmp_dir
         shutil.rmtree(file_path, ignore_errors=True)</code></pre>
+</details>
+</dd>
+<dt id="secfsdstools.c_automation.task_framework.execute_processes"><code class="name flex">
+<span>def <span class="ident">execute_processes</span></span>(<span>processes: List[<a title="secfsdstools.c_automation.task_framework.AbstractProcess" href="#secfsdstools.c_automation.task_framework.AbstractProcess">AbstractProcess</a>])</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Execute the list of processes in serial</p>
+<h2 id="args">Args</h2>
+<p>processes (List(AbstractProcess)): List of AbstractProcesses to be executed</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def execute_processes(processes: List[AbstractProcess]):
+    &#34;&#34;&#34;
+        Execute the list of processes in serial
+    Args:
+        processes (List(AbstractProcess)): List of AbstractProcesses to be executed
+
+    &#34;&#34;&#34;
+    for process in processes:
+        process.process()</code></pre>
 </details>
 </dd>
 <dt id="secfsdstools.c_automation.task_framework.get_latest_mtime"><code class="name flex">
@@ -545,7 +578,7 @@ def get_latest_mtime(folder: Path, skip: Optional[List[str]] = None) -&gt; float
 <li><a title="secfsdstools.c_transform.toparquettransforming_process.ToParquetTransformerProcess" href="../c_transform/toparquettransforming_process.html#secfsdstools.c_transform.toparquettransforming_process.ToParquetTransformerProcess">ToParquetTransformerProcess</a></li>
 <li><a title="secfsdstools.g_pipelines.combine_process.CombineProcess" href="../g_pipelines/combine_process.html#secfsdstools.g_pipelines.combine_process.CombineProcess">CombineProcess</a></li>
 <li><a title="secfsdstools.g_pipelines.filter_process.FilterProcess" href="../g_pipelines/filter_process.html#secfsdstools.g_pipelines.filter_process.FilterProcess">FilterProcess</a></li>
-<li><a title="secfsdstools.x_examples.automation.automation.StandardizeProcess" href="../x_examples/automation/automation.html#secfsdstools.x_examples.automation.automation.StandardizeProcess">StandardizeProcess</a></li>
+<li><a title="secfsdstools.g_pipelines.standardize_process.StandardizeProcess" href="../g_pipelines/standardize_process.html#secfsdstools.g_pipelines.standardize_process.StandardizeProcess">StandardizeProcess</a></li>
 </ul>
 <h3>Static methods</h3>
 <dl>
@@ -836,7 +869,7 @@ the timestamp of the latest processed modification.</p></div>
 <h3>Subclasses</h3>
 <ul class="hlist">
 <li><a title="secfsdstools.g_pipelines.combine_process.CombineTask" href="../g_pipelines/combine_process.html#secfsdstools.g_pipelines.combine_process.CombineTask">CombineTask</a></li>
-<li><a title="secfsdstools.x_examples.automation.automation.StandardizerTask" href="../x_examples/automation/automation.html#secfsdstools.x_examples.automation.automation.StandardizerTask">StandardizerTask</a></li>
+<li><a title="secfsdstools.g_pipelines.standardize_process.StandardizerTask" href="../g_pipelines/standardize_process.html#secfsdstools.g_pipelines.standardize_process.StandardizerTask">StandardizerTask</a></li>
 </ul>
 <h3>Methods</h3>
 <dl>
@@ -1150,6 +1183,7 @@ or exception() method.</p></div>
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
 <li><code><a title="secfsdstools.c_automation.task_framework.delete_temp_folders" href="#secfsdstools.c_automation.task_framework.delete_temp_folders">delete_temp_folders</a></code></li>
+<li><code><a title="secfsdstools.c_automation.task_framework.execute_processes" href="#secfsdstools.c_automation.task_framework.execute_processes">execute_processes</a></code></li>
 <li><code><a title="secfsdstools.c_automation.task_framework.get_latest_mtime" href="#secfsdstools.c_automation.task_framework.get_latest_mtime">get_latest_mtime</a></code></li>
 </ul>
 </li>

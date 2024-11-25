@@ -5,7 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.10.0" />
 <title>secfsdstools.g_pipelines.combine_process API documentation</title>
-<meta name="description" content="" />
+<meta name="description" content="Module that combines the content from several input folders into a single DataBag.
+It can handle either raw or joined databags." />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
 <link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
@@ -22,11 +23,17 @@
 <h1 class="title">Module <code>secfsdstools.g_pipelines.combine_process</code></h1>
 </header>
 <section id="section-intro">
+<p>Module that combines the content from several input folders into a single DataBag.
+It can handle either raw or joined databags.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">from pathlib import Path
+<pre><code class="python">&#34;&#34;&#34;
+Module that combines the content from several input folders into a single DataBag.
+It can handle either raw or joined databags.
+&#34;&#34;&#34;
+from pathlib import Path
 from typing import List
 
 from secfsdstools.c_automation.task_framework import AbstractProcess, Task, delete_temp_folders, \
@@ -35,13 +42,74 @@ from secfsdstools.d_container.databagmodel import RawDataBag, JoinedDataBag
 
 
 class CombineTask(BaseTask):
+    &#34;&#34;&#34;
 
+    &#34;&#34;&#34;
     def __init__(self,
                  root_path: Path,
                  filter: str,
                  bag_type: str,  # raw or joined
                  target_path: Path,
                  check_by_timestamp: bool):
+        &#34;&#34;&#34;
+        Takes subfolder from the root_path (with applied filter string) and concatenates them into
+        a single DataBag (either Raw or Joined, defined by the bag_type) into the target_path.
+
+        The filter string defines on which subfolder level actually does contain the data to be
+        concatenated.
+
+        E.g. if the filter is just a &#34;*&#34; and the root_path looks like
+        &lt;pre&gt;
+        root_path
+            2010q1.zip
+            2010q2.zip
+            ...
+            2024q3.zip
+        &lt;/pre&gt;
+        it would expect that the subfolders directly contain the databags.&lt;br&gt;
+        If the filter is defined as &#34;*/BS&#34; and the root_path looks like
+        &lt;pre&gt;
+        root_path
+            2010q1.zip
+              BS
+              CF
+              IS
+            2010q2.zip
+              BS
+              CF
+              IS
+            ...
+            2024q3.zip
+              BS
+              CF
+              IS
+        &lt;/pre&gt;
+
+        It would concatenate all BS subfolders into the target path.&lt;br&gt;
+
+        check_by_timestamp defines how changes between runs are detected. If it is False, it
+        looks for new subfolders. Meaning, if a new in the root_path appears, it will add it to
+        the already existing content in the target_path. So, if in the above examples, the
+        subfolders 2010q1.zip ... 2024q3.zip were already concatenated in a previous run into the
+        target_path and in a new run the subfolder 2024q4.zip is detected, it will load the existing
+        content in the target_path, add the content of the 2024q4.zip and writes the result back
+        into the target_path.
+        This is being done by writing the name of the processed subfolders into a meta.inf file
+        in the target_path.
+
+        If check_by_timestamp is True, it will re-concatenate, if any file or subfile has changed
+        in the root_path since the last run.
+        This is being done by writing the actual last modification timestamp of the root_path
+        into the meta.inf file of the target_path.
+
+
+        Args:
+            root_path:
+            filter:
+            bag_type:
+            target_path:
+            check_by_timestamp:
+        &#34;&#34;&#34;
         super().__init__(
             root_path=root_path,
             filter=filter,
@@ -185,26 +253,129 @@ class CombineProcess(AbstractProcess):
 <span>(</span><span>root_path: pathlib.Path, filter: str, bag_type: str, target_path: pathlib.Path, check_by_timestamp: bool)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Implements the basic logic to track already processed data either by folder structure of the
-root-path (meaning that new data that appeared as a new subfolder in the root-path has to be
-integrated in the existing content of the target path) or by
-checking the timestamp of the latest modifications within the root-path structure (meaning
-that the content of the target-path has to be recreated with the current content of the
-root-path.</p>
-<p>Both scenarios use a "meta-inf" file that either contains the name of the subfolders, or the
-the timestamp of the latest processed modification.</p></div>
+<div class="desc"><p>Takes subfolder from the root_path (with applied filter string) and concatenates them into
+a single DataBag (either Raw or Joined, defined by the bag_type) into the target_path.</p>
+<p>The filter string defines on which subfolder level actually does contain the data to be
+concatenated.</p>
+<p>E.g. if the filter is just a "*" and the root_path looks like</p>
+<pre>
+root_path
+    2010q1.zip
+    2010q2.zip
+    ...
+    2024q3.zip
+</pre>
+<p>it would expect that the subfolders directly contain the databags.<br>
+If the filter is defined as "*/BS" and the root_path looks like</p>
+<pre>
+root_path
+    2010q1.zip
+      BS
+      CF
+      IS
+    2010q2.zip
+      BS
+      CF
+      IS
+    ...
+    2024q3.zip
+      BS
+      CF
+      IS
+</pre>
+<p>It would concatenate all BS subfolders into the target path.<br></p>
+<p>check_by_timestamp defines how changes between runs are detected. If it is False, it
+looks for new subfolders. Meaning, if a new in the root_path appears, it will add it to
+the already existing content in the target_path. So, if in the above examples, the
+subfolders 2010q1.zip &hellip; 2024q3.zip were already concatenated in a previous run into the
+target_path and in a new run the subfolder 2024q4.zip is detected, it will load the existing
+content in the target_path, add the content of the 2024q4.zip and writes the result back
+into the target_path.
+This is being done by writing the name of the processed subfolders into a meta.inf file
+in the target_path.</p>
+<p>If check_by_timestamp is True, it will re-concatenate, if any file or subfile has changed
+in the root_path since the last run.
+This is being done by writing the actual last modification timestamp of the root_path
+into the meta.inf file of the target_path.</p>
+<h2 id="args">Args</h2>
+<p>root_path:
+filter:
+bag_type:
+target_path:
+check_by_timestamp:</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class CombineTask(BaseTask):
+    &#34;&#34;&#34;
 
+    &#34;&#34;&#34;
     def __init__(self,
                  root_path: Path,
                  filter: str,
                  bag_type: str,  # raw or joined
                  target_path: Path,
                  check_by_timestamp: bool):
+        &#34;&#34;&#34;
+        Takes subfolder from the root_path (with applied filter string) and concatenates them into
+        a single DataBag (either Raw or Joined, defined by the bag_type) into the target_path.
+
+        The filter string defines on which subfolder level actually does contain the data to be
+        concatenated.
+
+        E.g. if the filter is just a &#34;*&#34; and the root_path looks like
+        &lt;pre&gt;
+        root_path
+            2010q1.zip
+            2010q2.zip
+            ...
+            2024q3.zip
+        &lt;/pre&gt;
+        it would expect that the subfolders directly contain the databags.&lt;br&gt;
+        If the filter is defined as &#34;*/BS&#34; and the root_path looks like
+        &lt;pre&gt;
+        root_path
+            2010q1.zip
+              BS
+              CF
+              IS
+            2010q2.zip
+              BS
+              CF
+              IS
+            ...
+            2024q3.zip
+              BS
+              CF
+              IS
+        &lt;/pre&gt;
+
+        It would concatenate all BS subfolders into the target path.&lt;br&gt;
+
+        check_by_timestamp defines how changes between runs are detected. If it is False, it
+        looks for new subfolders. Meaning, if a new in the root_path appears, it will add it to
+        the already existing content in the target_path. So, if in the above examples, the
+        subfolders 2010q1.zip ... 2024q3.zip were already concatenated in a previous run into the
+        target_path and in a new run the subfolder 2024q4.zip is detected, it will load the existing
+        content in the target_path, add the content of the 2024q4.zip and writes the result back
+        into the target_path.
+        This is being done by writing the name of the processed subfolders into a meta.inf file
+        in the target_path.
+
+        If check_by_timestamp is True, it will re-concatenate, if any file or subfile has changed
+        in the root_path since the last run.
+        This is being done by writing the actual last modification timestamp of the root_path
+        into the meta.inf file of the target_path.
+
+
+        Args:
+            root_path:
+            filter:
+            bag_type:
+            target_path:
+            check_by_timestamp:
+        &#34;&#34;&#34;
         super().__init__(
             root_path=root_path,
             filter=filter,

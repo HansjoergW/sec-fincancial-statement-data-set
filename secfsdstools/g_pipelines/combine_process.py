@@ -90,25 +90,25 @@ class CombineTask(BaseTask):
     def __str__(self) -> str:
         return f"CombineTask(root_path: {self.root_path}, filter: {self.filter})"
 
-    def do_execution(self, paths_to_process: List[Path]):
-        if self.bag_type.lower() == "raw":
-            self._execute_raw(paths_to_process)
-        elif self.bag_type.lower() == "joined":
-            self._execute_joined(paths_to_process)
-        else:
-            raise ValueError("bag_type must be either raw or joined")
-
-    def _execute_raw(self, paths: List[Path]):
-        all_bags = [RawDataBag.load(str(path)) for path in paths]
-
-        all_bag: RawDataBag = RawDataBag.concat(all_bags, drop_duplicates_sub_df=True)
-        all_bag.save(target_path=str(self.tmp_path))
-
-    def _execute_joined(self, paths: List[Path]):
-        all_bags = [JoinedDataBag.load(str(path)) for path in paths]
-
-        all_bag: JoinedDataBag = JoinedDataBag.concat(all_bags, drop_duplicates_sub_df=True)
-        all_bag.save(target_path=str(self.tmp_path))
+    # def do_execution(self, paths_to_process: List[Path]):
+    #     if self.bag_type.lower() == "raw":
+    #         self._execute_raw(paths_to_process)
+    #     elif self.bag_type.lower() == "joined":
+    #         self._execute_joined(paths_to_process)
+    #     else:
+    #         raise ValueError("bag_type must be either raw or joined")
+    #
+    # def _execute_raw(self, paths: List[Path]):
+    #     all_bags = [RawDataBag.load(str(path)) for path in paths]
+    #
+    #     all_bag: RawDataBag = RawDataBag.concat(all_bags, drop_duplicates_sub_df=True)
+    #     all_bag.save(target_path=str(self.tmp_path))
+    #
+    # def _execute_joined(self, paths: List[Path]):
+    #     all_bags = [JoinedDataBag.load(str(path)) for path in paths]
+    #
+    #     all_bag: JoinedDataBag = JoinedDataBag.concat(all_bags, drop_duplicates_sub_df=True)
+    #     all_bag.save(target_path=str(self.tmp_path))
 
 
 class CombineProcess(AbstractProcess):

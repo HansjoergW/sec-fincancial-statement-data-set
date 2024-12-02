@@ -14,6 +14,8 @@ from pathlib import Path
 from typing import List, Optional
 from typing import Protocol, Any, Dict
 
+from secfsdstools.d_container.databagmodel import RawDataBag, JoinedDataBag
+
 from secfsdstools.a_utils.fileutils import get_directories_in_directory
 from secfsdstools.a_utils.parallelexecution import ThreadExecutor
 
@@ -60,47 +62,22 @@ class TaskResult:
     result: Any
     state: TaskResultState
 
-
-class BaseTask:
-    """
-    Implements the basic logic to track already processed data either by folder structure of the
-    root-path (meaning that new data that appeared as a new subfolder in the root-path has to be
-    integrated in the existing content of the target path) or by
-    checking the timestamp of the latest modifications within the root-path structure (meaning
-    that the content of the target-path has to be recreated with the current content of the
-    root-path.
-
-    Both scenarios use a "meta-inf" file that either contains the name of the subfolders, or the
-    the timestamp of the latest processed modification.
-    """
-
+class AbstractTask:
     def __init__(self,
                  root_path: Path,
                  filter: str,
-                 target_path: Path,
-                 check_by_timestamp: bool):
-        """
-        Constructor of base task.
-
-        Args:
-            root_path: root path to read that from
-            filter: filter string that defines which subfolders in the root_path have to be selected
-            target_path: path to where the results have to be written
-            check_by_timestamp: defines whether selection for unprocessed data is being done
-            by timestamp within the root_path or by subfolder names within the root_path.
-        """
+                 target_path: Path):
 
         self.root_path = root_path
-        self.filter = filter
-        self.check_by_timestamp = check_by_timestamp
-        self.all_dirs = list(self.root_path.glob(self.filter))
-
         self.target_path = target_path
+        self.filter = filter
+        self.filtered_paths = list(self.root_path.glob(self.filter))
+
+        # usually, all filtered_paths have to be processed
+        self.paths_to_process = self.filtered_paths
 
         self.tmp_path = target_path.parent / f"tmp_{target_path.name}"
         self.meta_inf_file: Path = self.target_path / "meta.inf"
-
-        self.paths_to_process = self.all_dirs
 
         # filter could be something like "*", or "*/BS", or "something/*/BS"
         # but in order to be able to file the metainf file with the names for which "*" iterates
@@ -108,25 +85,23 @@ class BaseTask:
         # So if the filter is just a "*" it is 0, if it is "*/BS" it would be 1
         self.star_position = self._star_position_from_end(self.filter)
 
-        # so if we have the filter */BS and if we have the directories "2010q1.zip/BS",
-        # "2010q2.zip/BS" in the root_path, all_names key will be 2010q1.zip, 2010q2.zip
-        self.all_names = {self._get_iterator_position_name(f, self.star_position):
-                              f for f in self.all_dirs}
+        self.post_init()
 
-        if self.meta_inf_file.exists():
-            containing_values = self.read_metainf_content()
 
-            if self.check_by_timestamp:
-                last_timestamp = float(containing_values[0])
-                current_timestamp = get_latest_mtime(self.root_path)
-                if current_timestamp <= last_timestamp:
-                    self.paths_to_process = []
-            else:
-                missing = set(self.all_names.keys()) - set(containing_values)
-                self.paths_to_process = [self.all_names[name] for name in missing]
+    @abstractmethod
+    def post_init(self):
+        """
+
+        Args:
+            containing_values:
+
+        Returns:
+
+        """
+
 
     @staticmethod
-    def _get_iterator_position_name(path: Path, star_position: int):
+    def _get_iterator_position_name(path: Path, star_position: int) -> str:
         return path.parts[::-1][star_position]
 
     @staticmethod
@@ -159,12 +134,27 @@ class BaseTask:
         meta_inf_content = self.meta_inf_file.read_text(encoding="utf-8")
         return meta_inf_content.split("\n")
 
+    def exception(self, exception) -> str:
+        """
+        Basic implementation of the exception method.
+        It deletes the temp folder and returns a "failed" message.
+        """
+        shutil.rmtree(self.tmp_path, ignore_errors=True)
+        return f"failed {exception}"
+
+    def has_work_todo(self) -> bool:
+        """
+        returns true if there is actual work to do, otherwise False.
+        Can be overwritten
+        """
+        return len(self.paths_to_process) > 0
+
     def prepare(self):
         """
         basic implementation of the prepare method. Does nothing if there is nothing to process
         or does create the tmp_folder, if processing has to be done.
         """
-        if len(self.paths_to_process) == 0:
+        if not self.has_work_todo():
             return
 
         self.tmp_path.mkdir(parents=True, exist_ok=False)
@@ -177,7 +167,7 @@ class BaseTask:
         content of the tmp_path (by renaming the tmp_path to the target_path, which is an
         atomic action, which either fails, or succeeds).
         """
-        if len(self.paths_to_process) == 0:
+        if not self.has_work_todo():
             return "success"
 
         # Remove old content of target_path
@@ -188,13 +178,106 @@ class BaseTask:
         self.tmp_path.rename(self.target_path)
         return "success"
 
-    def exception(self, exception) -> str:
+    def write_meta_inf(self, content: str):
+        temp_meta_inf = self.tmp_path / "meta.inf"
+        temp_meta_inf.write_text(data=content, encoding="utf-8")
+
+
+class ConcatByCheckByTimestampBaseTask(AbstractTask):
+
+    def __init__(self,
+                 root_path: Path,
+                 filter: str,
+                 target_path: Path,
+                 bag_type: str):
+        super().__init__(
+            root_path=root_path,
+            filter=filter,
+            target_path=target_path,
+        )
+        self.bag_type = bag_type
+
+    def post_init(self):
+        if self.meta_inf_file.exists():
+            containing_values = self.read_metainf_content()
+
+            last_timestamp = float(containing_values[0])
+            current_timestamp = get_latest_mtime(self.root_path)
+            if current_timestamp <= last_timestamp:
+                self.paths_to_process = []
+
+    def execute(self):
         """
-        Basic implementation of the exception method.
-        It deletes the temp folder and returns a "failed" message.
+        Basic implementation of the execute method.
+
+        If there are "paths_to_process", what has to be done depending on "check_by_timestamp"
+        being true or not.
+
+        Returns:
+
         """
-        shutil.rmtree(self.tmp_path, ignore_errors=True)
-        return f"failed {exception}"
+        if not self.has_work_todo():
+            return
+
+        concat_bags(paths_to_concat=self.paths_to_process,
+                    bag_type=self.bag_type,
+                    target_path=self.tmp_path)
+
+
+        meta_inf_content:str = str(get_latest_mtime(self.root_path))
+        self.write_meta_inf(content=meta_inf_content)
+
+
+class ConcatByAddingNewSubfoldersBaseTask(AbstractTask):
+    """
+    Implements the basic logic to track already processed data either by folder structure of the
+    root-path (meaning that new data that appeared as a new subfolder in the root-path has to be
+    integrated in the existing content of the target path) or by
+    checking the timestamp of the latest modifications within the root-path structure (meaning
+    that the content of the target-path has to be recreated with the current content of the
+    root-path.
+
+    Both scenarios use a "meta-inf" file that either contains the name of the subfolders, or the
+    the timestamp of the latest processed modification.
+    """
+
+    def __init__(self,
+                 root_path: Path,
+                 filter: str,
+                 target_path: Path,
+                 bag_type: str):
+        """
+        Constructor of base task.
+
+        Args:
+            root_path: root path to read that from
+            filter: filter string that defines which subfolders in the root_path have to be selected
+            target_path: path to where the results have to be written
+            check_by_timestamp: defines whether selection for unprocessed data is being done
+            by timestamp within the root_path or by subfolder names within the root_path.
+        """
+        self.all_names: Dict[str, Path]
+
+        super().__init__(
+            root_path=root_path,
+            filter=filter,
+            target_path=target_path,
+        )
+        self.bag_type = bag_type
+
+
+    def post_init(self):
+        # so if we have the filter */BS and if we have the directories "2010q1.zip/BS",
+        # "2010q2.zip/BS" in the root_path, all_names key will be 2010q1.zip, 2010q2.zip
+        self.all_names = {self._get_iterator_position_name(f, self.star_position):
+                              f for f in self.paths_to_process}
+
+        if self.meta_inf_file.exists():
+            containing_values = self.read_metainf_content()
+
+            missing = set(self.all_names.keys()) - set(containing_values)
+            self.paths_to_process = [self.all_names[name] for name in missing]
+
 
     def execute(self):
         """
@@ -215,28 +298,26 @@ class BaseTask:
         # If check_by_timestamp is false, then paths_to_process contain  names of subfolders
         # that have to be added to the data in an existing target_path.
         # Therefore, if the target_path exists...
-        if self.target_path.exists() and not self.check_by_timestamp:
+        if self.target_path.exists():
             # then we want to concate the existing data and the new data together and store
             # it as a new dataset in the target_path. So we add the current target_path
             # to the list of the folders, that have to be processed.
             paths_to_process.append(self.target_path)
 
-        self.do_execution(paths_to_process)
 
-        temp_meta_inf = self.tmp_path / "meta.inf"
-        meta_inf_content: str
-        if self.check_by_timestamp:
-            meta_inf_content = str(get_latest_mtime(self.root_path))
-        else:
-            meta_inf_content = "\n".join([self._get_iterator_position_name(f, self.star_position)
+
+     das ist noch eine Stufe zu früh.. > hier sollte nur ein do_execution sein
+     concat sollte erst eine subklasse davon sein,
+
+        concat_bags(paths_to_concat=paths_to_process,
+                    bag_type=self.bag_type,
+                    target_path=self.tmp_path)
+
+        meta_inf_content: str = "\n".join([self._get_iterator_position_name(f, self.star_position)
                                           for f in self.paths_to_process])
-        temp_meta_inf.write_text(data=meta_inf_content, encoding="utf-8")
+        self.write_meta_inf(content=meta_inf_content)
 
-    @abstractmethod
-    def do_execution(self, paths_to_process: List[Path]):
-        """
-        handles the actual execution of the task
-        """
+
 
 
 class AbstractProcess(ABC):
@@ -324,6 +405,41 @@ class AbstractProcess(ABC):
             logger.warning("not able to process %s", failed)
 
         self.post_process()
+
+
+def concat_bags(paths_to_concat: List[Path], target_path: Path):
+    """
+    Concatenates all the Bags in paths_to_concatenate by using the provided bag_type
+    into the target_dir directory.
+
+    Args:
+        paths_to_concat (List[Path]) :
+        bag_type:
+        target_dir:
+
+    Returns:
+
+    """
+    if len(paths_to_concat) == 0:
+        # nothing to do
+        return
+
+    hier könnte man aufgrund des ersten Eintrags den filetyp prüfen
+    -> entweder pre_num_.. file oder num_file ->
+    dann müsste man bag_type gar nicht mitgeben
+
+    if bag_type.lower() == "raw":
+        all_bags = [RawDataBag.load(str(path)) for path in paths_to_concat]
+
+        all_bag: RawDataBag = RawDataBag.concat(all_bags, drop_duplicates_sub_df=True)
+        all_bag.save(target_path=str(target_path))
+    elif bag_type.lower() == "joined":
+        all_bags = [JoinedDataBag.load(str(path)) for path in paths_to_concat]
+
+        all_bag: JoinedDataBag = JoinedDataBag.concat(all_bags, drop_duplicates_sub_df=True)
+        all_bag.save(target_path=str(target_path))
+    else:
+        raise ValueError("bag_type must be either raw or joined")
 
 
 def execute_processes(processes: List[AbstractProcess]):

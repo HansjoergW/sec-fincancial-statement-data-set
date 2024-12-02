@@ -5,7 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.10.0" />
 <title>secfsdstools.c_automation.task_framework API documentation</title>
-<meta name="description" content="Base classes for the Task and Process Framework." />
+<meta name="description" content="Base classes for the Task and Process Framework.
+Used for downloading, transforming to parquet, and indexing of the zip files from SEC, as well
+as to …" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
 <link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
@@ -22,13 +24,17 @@
 <h1 class="title">Module <code>secfsdstools.c_automation.task_framework</code></h1>
 </header>
 <section id="section-intro">
-<p>Base classes for the Task and Process Framework.</p>
+<p>Base classes for the Task and Process Framework.
+Used for downloading, transforming to parquet, and indexing of the zip files from SEC, as well
+as to make additional automation tasks possible.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">&#34;&#34;&#34;
 Base classes for the Task and Process Framework.
+Used for downloading, transforming to parquet, and indexing of the zip files from SEC, as well
+as to make additional automation tasks possible.
 &#34;&#34;&#34;
 import logging
 import os
@@ -106,6 +112,16 @@ class BaseTask:
                  filter: str,
                  target_path: Path,
                  check_by_timestamp: bool):
+        &#34;&#34;&#34;
+        Constructor of base task.
+
+        Args:
+            root_path: root path to read that from
+            filter: filter string that defines which subfolders in the root_path have to be selected
+            target_path: path to where the results have to be written
+            check_by_timestamp: defines whether selection for unprocessed data is being done
+            by timestamp within the root_path or by subfolder names within the root_path.
+        &#34;&#34;&#34;
 
         self.root_path = root_path
         self.filter = filter
@@ -167,44 +183,75 @@ class BaseTask:
         return -1
 
     def read_metainf_content(self) -&gt; List[str]:
+        &#34;&#34;&#34;
+        reads the content from the meta.inf file in an existing target_path
+        Returns:
+            List(str): the content as list, which is either a single timestamp or the name of
+            subfolders in the target_path
+        &#34;&#34;&#34;
         meta_inf_content = self.meta_inf_file.read_text(encoding=&#34;utf-8&#34;)
         return meta_inf_content.split(&#34;\n&#34;)
 
     def prepare(self):
-        &#34;&#34;&#34; prepare Task. &#34;&#34;&#34;
+        &#34;&#34;&#34;
+        basic implementation of the prepare method. Does nothing if there is nothing to process
+        or does create the tmp_folder, if processing has to be done.
+        &#34;&#34;&#34;
         if len(self.paths_to_process) == 0:
             return
 
         self.tmp_path.mkdir(parents=True, exist_ok=False)
 
     def commit(self):
-        &#34;&#34;&#34; we commit by renaming the tmp_path. &#34;&#34;&#34;
+        &#34;&#34;&#34;
+        Basic implementation of the commit method.
+        If nothing had to be done, it simply returns &#34;success&#34;.
+        If work was done, it removes an existing target_path, and overwrites it with the
+        content of the tmp_path (by renaming the tmp_path to the target_path, which is an
+        atomic action, which either fails, or succeeds).
+        &#34;&#34;&#34;
         if len(self.paths_to_process) == 0:
             return &#34;success&#34;
 
-        # alten Inhalt entfernen
+        # Remove old content of target_path
         if self.target_path.exists():
             shutil.rmtree(self.target_path)
 
+        # rename the tmp_path, so this is like an atomic action that either fails or succeeds.
         self.tmp_path.rename(self.target_path)
         return &#34;success&#34;
 
     def exception(self, exception) -&gt; str:
-        &#34;&#34;&#34; delete the temp folder. &#34;&#34;&#34;
+        &#34;&#34;&#34;
+        Basic implementation of the exception method.
+        It deletes the temp folder and returns a &#34;failed&#34; message.
+        &#34;&#34;&#34;
         shutil.rmtree(self.tmp_path, ignore_errors=True)
         return f&#34;failed {exception}&#34;
 
     def execute(self):
+        &#34;&#34;&#34;
+        Basic implementation of the execute method.
+
+        If there are &#34;paths_to_process&#34;, what has to be done depending on &#34;check_by_timestamp&#34;
+        being true or not.
+
+
+        Returns:
+
+        &#34;&#34;&#34;
         if len(self.paths_to_process) == 0:
             return
 
         paths_to_process = self.paths_to_process.copy()
 
-        # if we check by timestamp, then we recreate the combined from all its part
-        # so we do not simply add elements
+        # If check_by_timestamp is false, then paths_to_process contain  names of subfolders
+        # that have to be added to the data in an existing target_path.
+        # Therefore, if the target_path exists...
         if self.target_path.exists() and not self.check_by_timestamp:
-            # if we just add new elements, then we must ensure that the current content
-            # is also part of the concatenation.
+            # then we want to concate the existing data and the new data together and store
+            # it as a new dataset in the target_path. So we add the current target_path
+            # to the list of the folders, that have to be processed.
             paths_to_process.append(self.target_path)
 
         self.do_execution(paths_to_process)
@@ -237,7 +284,7 @@ class AbstractProcess(ABC):
         self.chunksize = chunksize
 
         # since failed tasks are retried, results[FAILED] can contain multiple entries for
-        # a continuing failing task
+        # a tasks that is retried multiple times.
         self.results: Dict[TaskResultState, List[TaskResult]] = defaultdict(list)
 
         self.failed_tasks: List[Task] = []
@@ -325,7 +372,8 @@ def execute_processes(processes: List[AbstractProcess]):
 
 def delete_temp_folders(root_path: Path, temp_prefix: str = &#34;tmp&#34;):
     &#34;&#34;&#34;
-    remove any existing folders starting with the tmp_prefix (folders that were not successfully completed
+    Remove any existing folders starting with the tmp_prefix in the root_path
+     (these are generally folders containing data of tasks that failed)).
 
     &#34;&#34;&#34;
     dirs_in_filter_dir = get_directories_in_directory(str(root_path))
@@ -339,11 +387,12 @@ def delete_temp_folders(root_path: Path, temp_prefix: str = &#34;tmp&#34;):
 
 def get_latest_mtime(folder: Path, skip: Optional[List[str]] = None) -&gt; float:
     &#34;&#34;&#34;
-    find the latest timestamp at which an element in the folder structure was changed
+    Find the latest timestamp at which an element in the folder structure was changed
     Args:
         folder: root folder
 
     Returns:
+        the latest timestamp of a folder or file within the &#34;folder&#34; as float value.
 
     &#34;&#34;&#34;
     if skip == None:
@@ -352,17 +401,17 @@ def get_latest_mtime(folder: Path, skip: Optional[List[str]] = None) -&gt; float
     latest_mtime = 0
 
     for dirpath, dirnames, filenames in os.walk(folder):
-        # Prüfe alle Dateien im aktuellen Verzeichnis
+        # Check the modification timestamp of files
         filenames = list(set(filenames) - set(skip))
         for filename in filenames:
             file_path = Path(dirpath) / filename
-            mtime = file_path.stat().st_mtime  # Änderungszeitpunkt der Datei
+            mtime = file_path.stat().st_mtime  # modification timestamp of the file
             latest_mtime = max(latest_mtime, mtime)
 
-        # Prüfe die Änderungszeitpunkte der Unterverzeichnisse
+        # Check the modification timestamp of subfolders
         for dirname in dirnames:
             dir_path = Path(dirpath) / dirname
-            mtime = dir_path.stat().st_mtime  # Änderungszeitpunkt des Verzeichnisses
+            mtime = dir_path.stat().st_mtime  # modification timestamp of the folder
             latest_mtime = max(latest_mtime, mtime)
 
     return latest_mtime</code></pre>
@@ -379,14 +428,16 @@ def get_latest_mtime(folder: Path, skip: Optional[List[str]] = None) -&gt; float
 <span>def <span class="ident">delete_temp_folders</span></span>(<span>root_path: pathlib.Path, temp_prefix: str = 'tmp')</span>
 </code></dt>
 <dd>
-<div class="desc"><p>remove any existing folders starting with the tmp_prefix (folders that were not successfully completed</p></div>
+<div class="desc"><p>Remove any existing folders starting with the tmp_prefix in the root_path
+(these are generally folders containing data of tasks that failed)).</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def delete_temp_folders(root_path: Path, temp_prefix: str = &#34;tmp&#34;):
     &#34;&#34;&#34;
-    remove any existing folders starting with the tmp_prefix (folders that were not successfully completed
+    Remove any existing folders starting with the tmp_prefix in the root_path
+     (these are generally folders containing data of tasks that failed)).
 
     &#34;&#34;&#34;
     dirs_in_filter_dir = get_directories_in_directory(str(root_path))
@@ -424,24 +475,26 @@ def get_latest_mtime(folder: Path, skip: Optional[List[str]] = None) -&gt; float
 <span>def <span class="ident">get_latest_mtime</span></span>(<span>folder: pathlib.Path, skip: Optional[List[str]] = None) ‑> float</span>
 </code></dt>
 <dd>
-<div class="desc"><p>find the latest timestamp at which an element in the folder structure was changed</p>
+<div class="desc"><p>Find the latest timestamp at which an element in the folder structure was changed</p>
 <h2 id="args">Args</h2>
 <dl>
 <dt><strong><code>folder</code></strong></dt>
 <dd>root folder</dd>
 </dl>
-<p>Returns:</p></div>
+<h2 id="returns">Returns</h2>
+<p>the latest timestamp of a folder or file within the "folder" as float value.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def get_latest_mtime(folder: Path, skip: Optional[List[str]] = None) -&gt; float:
     &#34;&#34;&#34;
-    find the latest timestamp at which an element in the folder structure was changed
+    Find the latest timestamp at which an element in the folder structure was changed
     Args:
         folder: root folder
 
     Returns:
+        the latest timestamp of a folder or file within the &#34;folder&#34; as float value.
 
     &#34;&#34;&#34;
     if skip == None:
@@ -450,17 +503,17 @@ def get_latest_mtime(folder: Path, skip: Optional[List[str]] = None) -&gt; float
     latest_mtime = 0
 
     for dirpath, dirnames, filenames in os.walk(folder):
-        # Prüfe alle Dateien im aktuellen Verzeichnis
+        # Check the modification timestamp of files
         filenames = list(set(filenames) - set(skip))
         for filename in filenames:
             file_path = Path(dirpath) / filename
-            mtime = file_path.stat().st_mtime  # Änderungszeitpunkt der Datei
+            mtime = file_path.stat().st_mtime  # modification timestamp of the file
             latest_mtime = max(latest_mtime, mtime)
 
-        # Prüfe die Änderungszeitpunkte der Unterverzeichnisse
+        # Check the modification timestamp of subfolders
         for dirname in dirnames:
             dir_path = Path(dirpath) / dirname
-            mtime = dir_path.stat().st_mtime  # Änderungszeitpunkt des Verzeichnisses
+            mtime = dir_path.stat().st_mtime  # modification timestamp of the folder
             latest_mtime = max(latest_mtime, mtime)
 
     return latest_mtime</code></pre>
@@ -493,7 +546,7 @@ def get_latest_mtime(folder: Path, skip: Optional[List[str]] = None) -&gt; float
         self.chunksize = chunksize
 
         # since failed tasks are retried, results[FAILED] can contain multiple entries for
-        # a continuing failing task
+        # a tasks that is retried multiple times.
         self.results: Dict[TaskResultState, List[TaskResult]] = defaultdict(list)
 
         self.failed_tasks: List[Task] = []
@@ -725,7 +778,20 @@ checking the timestamp of the latest modifications within the root-path structur
 that the content of the target-path has to be recreated with the current content of the
 root-path.</p>
 <p>Both scenarios use a "meta-inf" file that either contains the name of the subfolders, or the
-the timestamp of the latest processed modification.</p></div>
+the timestamp of the latest processed modification.</p>
+<p>Constructor of base task.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>root_path</code></strong></dt>
+<dd>root path to read that from</dd>
+<dt><strong><code>filter</code></strong></dt>
+<dd>filter string that defines which subfolders in the root_path have to be selected</dd>
+<dt><strong><code>target_path</code></strong></dt>
+<dd>path to where the results have to be written</dd>
+<dt><strong><code>check_by_timestamp</code></strong></dt>
+<dd>defines whether selection for unprocessed data is being done</dd>
+</dl>
+<p>by timestamp within the root_path or by subfolder names within the root_path.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -748,6 +814,16 @@ the timestamp of the latest processed modification.</p></div>
                  filter: str,
                  target_path: Path,
                  check_by_timestamp: bool):
+        &#34;&#34;&#34;
+        Constructor of base task.
+
+        Args:
+            root_path: root path to read that from
+            filter: filter string that defines which subfolders in the root_path have to be selected
+            target_path: path to where the results have to be written
+            check_by_timestamp: defines whether selection for unprocessed data is being done
+            by timestamp within the root_path or by subfolder names within the root_path.
+        &#34;&#34;&#34;
 
         self.root_path = root_path
         self.filter = filter
@@ -809,44 +885,75 @@ the timestamp of the latest processed modification.</p></div>
         return -1
 
     def read_metainf_content(self) -&gt; List[str]:
+        &#34;&#34;&#34;
+        reads the content from the meta.inf file in an existing target_path
+        Returns:
+            List(str): the content as list, which is either a single timestamp or the name of
+            subfolders in the target_path
+        &#34;&#34;&#34;
         meta_inf_content = self.meta_inf_file.read_text(encoding=&#34;utf-8&#34;)
         return meta_inf_content.split(&#34;\n&#34;)
 
     def prepare(self):
-        &#34;&#34;&#34; prepare Task. &#34;&#34;&#34;
+        &#34;&#34;&#34;
+        basic implementation of the prepare method. Does nothing if there is nothing to process
+        or does create the tmp_folder, if processing has to be done.
+        &#34;&#34;&#34;
         if len(self.paths_to_process) == 0:
             return
 
         self.tmp_path.mkdir(parents=True, exist_ok=False)
 
     def commit(self):
-        &#34;&#34;&#34; we commit by renaming the tmp_path. &#34;&#34;&#34;
+        &#34;&#34;&#34;
+        Basic implementation of the commit method.
+        If nothing had to be done, it simply returns &#34;success&#34;.
+        If work was done, it removes an existing target_path, and overwrites it with the
+        content of the tmp_path (by renaming the tmp_path to the target_path, which is an
+        atomic action, which either fails, or succeeds).
+        &#34;&#34;&#34;
         if len(self.paths_to_process) == 0:
             return &#34;success&#34;
 
-        # alten Inhalt entfernen
+        # Remove old content of target_path
         if self.target_path.exists():
             shutil.rmtree(self.target_path)
 
+        # rename the tmp_path, so this is like an atomic action that either fails or succeeds.
         self.tmp_path.rename(self.target_path)
         return &#34;success&#34;
 
     def exception(self, exception) -&gt; str:
-        &#34;&#34;&#34; delete the temp folder. &#34;&#34;&#34;
+        &#34;&#34;&#34;
+        Basic implementation of the exception method.
+        It deletes the temp folder and returns a &#34;failed&#34; message.
+        &#34;&#34;&#34;
         shutil.rmtree(self.tmp_path, ignore_errors=True)
         return f&#34;failed {exception}&#34;
 
     def execute(self):
+        &#34;&#34;&#34;
+        Basic implementation of the execute method.
+
+        If there are &#34;paths_to_process&#34;, what has to be done depending on &#34;check_by_timestamp&#34;
+        being true or not.
+
+
+        Returns:
+
+        &#34;&#34;&#34;
         if len(self.paths_to_process) == 0:
             return
 
         paths_to_process = self.paths_to_process.copy()
 
-        # if we check by timestamp, then we recreate the combined from all its part
-        # so we do not simply add elements
+        # If check_by_timestamp is false, then paths_to_process contain  names of subfolders
+        # that have to be added to the data in an existing target_path.
+        # Therefore, if the target_path exists...
         if self.target_path.exists() and not self.check_by_timestamp:
-            # if we just add new elements, then we must ensure that the current content
-            # is also part of the concatenation.
+            # then we want to concate the existing data and the new data together and store
+            # it as a new dataset in the target_path. So we add the current target_path
+            # to the list of the folders, that have to be processed.
             paths_to_process.append(self.target_path)
 
         self.do_execution(paths_to_process)
@@ -877,20 +984,31 @@ the timestamp of the latest processed modification.</p></div>
 <span>def <span class="ident">commit</span></span>(<span>self)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>we commit by renaming the tmp_path.</p></div>
+<div class="desc"><p>Basic implementation of the commit method.
+If nothing had to be done, it simply returns "success".
+If work was done, it removes an existing target_path, and overwrites it with the
+content of the tmp_path (by renaming the tmp_path to the target_path, which is an
+atomic action, which either fails, or succeeds).</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def commit(self):
-    &#34;&#34;&#34; we commit by renaming the tmp_path. &#34;&#34;&#34;
+    &#34;&#34;&#34;
+    Basic implementation of the commit method.
+    If nothing had to be done, it simply returns &#34;success&#34;.
+    If work was done, it removes an existing target_path, and overwrites it with the
+    content of the tmp_path (by renaming the tmp_path to the target_path, which is an
+    atomic action, which either fails, or succeeds).
+    &#34;&#34;&#34;
     if len(self.paths_to_process) == 0:
         return &#34;success&#34;
 
-    # alten Inhalt entfernen
+    # Remove old content of target_path
     if self.target_path.exists():
         shutil.rmtree(self.target_path)
 
+    # rename the tmp_path, so this is like an atomic action that either fails or succeeds.
     self.tmp_path.rename(self.target_path)
     return &#34;success&#34;</code></pre>
 </details>
@@ -915,13 +1033,17 @@ def do_execution(self, paths_to_process: List[Path]):
 <span>def <span class="ident">exception</span></span>(<span>self, exception) ‑> str</span>
 </code></dt>
 <dd>
-<div class="desc"><p>delete the temp folder.</p></div>
+<div class="desc"><p>Basic implementation of the exception method.
+It deletes the temp folder and returns a "failed" message.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def exception(self, exception) -&gt; str:
-    &#34;&#34;&#34; delete the temp folder. &#34;&#34;&#34;
+    &#34;&#34;&#34;
+    Basic implementation of the exception method.
+    It deletes the temp folder and returns a &#34;failed&#34; message.
+    &#34;&#34;&#34;
     shutil.rmtree(self.tmp_path, ignore_errors=True)
     return f&#34;failed {exception}&#34;</code></pre>
 </details>
@@ -930,22 +1052,37 @@ def do_execution(self, paths_to_process: List[Path]):
 <span>def <span class="ident">execute</span></span>(<span>self)</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Basic implementation of the execute method.</p>
+<p>If there are "paths_to_process", what has to be done depending on "check_by_timestamp"
+being true or not.</p>
+<p>Returns:</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def execute(self):
+    &#34;&#34;&#34;
+    Basic implementation of the execute method.
+
+    If there are &#34;paths_to_process&#34;, what has to be done depending on &#34;check_by_timestamp&#34;
+    being true or not.
+
+
+    Returns:
+
+    &#34;&#34;&#34;
     if len(self.paths_to_process) == 0:
         return
 
     paths_to_process = self.paths_to_process.copy()
 
-    # if we check by timestamp, then we recreate the combined from all its part
-    # so we do not simply add elements
+    # If check_by_timestamp is false, then paths_to_process contain  names of subfolders
+    # that have to be added to the data in an existing target_path.
+    # Therefore, if the target_path exists...
     if self.target_path.exists() and not self.check_by_timestamp:
-        # if we just add new elements, then we must ensure that the current content
-        # is also part of the concatenation.
+        # then we want to concate the existing data and the new data together and store
+        # it as a new dataset in the target_path. So we add the current target_path
+        # to the list of the folders, that have to be processed.
         paths_to_process.append(self.target_path)
 
     self.do_execution(paths_to_process)
@@ -964,13 +1101,17 @@ def do_execution(self, paths_to_process: List[Path]):
 <span>def <span class="ident">prepare</span></span>(<span>self)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>prepare Task.</p></div>
+<div class="desc"><p>basic implementation of the prepare method. Does nothing if there is nothing to process
+or does create the tmp_folder, if processing has to be done.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def prepare(self):
-    &#34;&#34;&#34; prepare Task. &#34;&#34;&#34;
+    &#34;&#34;&#34;
+    basic implementation of the prepare method. Does nothing if there is nothing to process
+    or does create the tmp_folder, if processing has to be done.
+    &#34;&#34;&#34;
     if len(self.paths_to_process) == 0:
         return
 
@@ -981,12 +1122,21 @@ def do_execution(self, paths_to_process: List[Path]):
 <span>def <span class="ident">read_metainf_content</span></span>(<span>self) ‑> List[str]</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>reads the content from the meta.inf file in an existing target_path</p>
+<h2 id="returns">Returns</h2>
+<p>List(str): the content as list, which is either a single timestamp or the name of
+subfolders in the target_path</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def read_metainf_content(self) -&gt; List[str]:
+    &#34;&#34;&#34;
+    reads the content from the meta.inf file in an existing target_path
+    Returns:
+        List(str): the content as list, which is either a single timestamp or the name of
+        subfolders in the target_path
+    &#34;&#34;&#34;
     meta_inf_content = self.meta_inf_file.read_text(encoding=&#34;utf-8&#34;)
     return meta_inf_content.split(&#34;\n&#34;)</code></pre>
 </details>

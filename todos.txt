@@ -46,6 +46,9 @@ Todos:
 - process/task execution Method in task-framework (ok)
 - standardization processes in own module (ok)
 - document automation classes
+  task_framework (ok)
+  g_pipeline modules
+
 - tests for all processes
 - successfull run tests / linting
 - base setting for parallel execution to False for "all" processes in config
@@ -54,6 +57,15 @@ Todos:
   - after_update hook example
 - readme -> add automation info
   -> how to easily enable "default extended processing"
+
+- Die BaseTask Struktur ist etwas umständlich.
+  Besser wäre ein BaseTask, der nur tmp und target path handling enhält und
+  evtl. noch Bais funktionen für meta-inf handling enthält.
+  Das Vermischen von check_by_timestamp und check_by_subfolder name macht die
+  Erklärung etwas mühsam. Diese sollten eher in eigenen subclassen abgehandelt
+  werden -> einziger "Nachteil" wäre, dass CombineTask zwei Varianten hätte
+
+
 
 
 

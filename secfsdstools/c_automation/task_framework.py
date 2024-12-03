@@ -14,10 +14,9 @@ from pathlib import Path
 from typing import List, Optional
 from typing import Protocol, Any, Dict
 
-from secfsdstools.d_container.databagmodel import RawDataBag, JoinedDataBag
-
 from secfsdstools.a_utils.fileutils import get_directories_in_directory
 from secfsdstools.a_utils.parallelexecution import ThreadExecutor
+from secfsdstools.d_container.databagmodel import RawDataBag, JoinedDataBag
 
 
 class TaskResultState(Enum):
@@ -62,6 +61,7 @@ class TaskResult:
     result: Any
     state: TaskResultState
 
+
 class AbstractTask:
     def __init__(self,
                  root_path: Path,
@@ -74,7 +74,7 @@ class AbstractTask:
         self.filtered_paths = list(self.root_path.glob(self.filter))
 
         # usually, all filtered_paths have to be processed
-        self.paths_to_process = self.filtered_paths
+        self.paths_to_process: List[Path] = self.filtered_paths
 
         self.tmp_path = target_path.parent / f"tmp_{target_path.name}"
         self.meta_inf_file: Path = self.target_path / "meta.inf"
@@ -87,7 +87,6 @@ class AbstractTask:
 
         self.post_init()
 
-
     @abstractmethod
     def post_init(self):
         """
@@ -98,7 +97,6 @@ class AbstractTask:
         Returns:
 
         """
-
 
     @staticmethod
     def _get_iterator_position_name(path: Path, star_position: int) -> str:
@@ -183,19 +181,17 @@ class AbstractTask:
         temp_meta_inf.write_text(data=content, encoding="utf-8")
 
 
-class ConcatByCheckByTimestampBaseTask(AbstractTask):
+class CheckByTimestampBaseTask(AbstractTask):
 
     def __init__(self,
                  root_path: Path,
                  filter: str,
-                 target_path: Path,
-                 bag_type: str):
+                 target_path: Path):
         super().__init__(
             root_path=root_path,
             filter=filter,
             target_path=target_path,
         )
-        self.bag_type = bag_type
 
     def post_init(self):
         if self.meta_inf_file.exists():
@@ -219,16 +215,23 @@ class ConcatByCheckByTimestampBaseTask(AbstractTask):
         if not self.has_work_todo():
             return
 
-        concat_bags(paths_to_concat=self.paths_to_process,
-                    bag_type=self.bag_type,
-                    target_path=self.tmp_path)
+        self.do_execution(paths_to_process=self.paths_to_process,
+                          target_path=self.tmp_path)
 
-
-        meta_inf_content:str = str(get_latest_mtime(self.root_path))
+        meta_inf_content: str = str(get_latest_mtime(self.root_path))
         self.write_meta_inf(content=meta_inf_content)
 
+    @abstractmethod
+    def do_execution(self, paths_to_process: List[Path], target_path: Path):
+        """
+            defines the logic to be executed.
+        Args:
+            paths_to_process: lists of paths/folders that have to be processec
+            target_path: target path to where a result has to be written
+        """
 
-class ConcatByAddingNewSubfoldersBaseTask(AbstractTask):
+
+class CheckByNewSubfoldersBaseTask(AbstractTask):
     """
     Implements the basic logic to track already processed data either by folder structure of the
     root-path (meaning that new data that appeared as a new subfolder in the root-path has to be
@@ -244,8 +247,7 @@ class ConcatByAddingNewSubfoldersBaseTask(AbstractTask):
     def __init__(self,
                  root_path: Path,
                  filter: str,
-                 target_path: Path,
-                 bag_type: str):
+                 target_path: Path):
         """
         Constructor of base task.
 
@@ -263,8 +265,6 @@ class ConcatByAddingNewSubfoldersBaseTask(AbstractTask):
             filter=filter,
             target_path=target_path,
         )
-        self.bag_type = bag_type
-
 
     def post_init(self):
         # so if we have the filter */BS and if we have the directories "2010q1.zip/BS",
@@ -277,7 +277,6 @@ class ConcatByAddingNewSubfoldersBaseTask(AbstractTask):
 
             missing = set(self.all_names.keys()) - set(containing_values)
             self.paths_to_process = [self.all_names[name] for name in missing]
-
 
     def execute(self):
         """
@@ -304,20 +303,21 @@ class ConcatByAddingNewSubfoldersBaseTask(AbstractTask):
             # to the list of the folders, that have to be processed.
             paths_to_process.append(self.target_path)
 
-
-
-     das ist noch eine Stufe zu früh.. > hier sollte nur ein do_execution sein
-     concat sollte erst eine subklasse davon sein,
-
-        concat_bags(paths_to_concat=paths_to_process,
-                    bag_type=self.bag_type,
-                    target_path=self.tmp_path)
+        self.do_execution(paths_to_process=paths_to_process,
+                          target_path=self.tmp_path)
 
         meta_inf_content: str = "\n".join([self._get_iterator_position_name(f, self.star_position)
-                                          for f in self.paths_to_process])
+                                           for f in self.paths_to_process])
         self.write_meta_inf(content=meta_inf_content)
 
-
+    @abstractmethod
+    def do_execution(self, paths_to_process: List[Path], target_path: Path):
+        """
+            defines the logic to be executed.
+        Args:
+            paths_to_process: lists of paths/folders that have to be processec
+            target_path: target path to where a result has to be written
+        """
 
 
 class AbstractProcess(ABC):
@@ -407,6 +407,14 @@ class AbstractProcess(ABC):
         self.post_process()
 
 
+def is_rawbag_path(path: Path) -> bool:
+    return (path / "num.txt.parquet").exists()
+
+
+def is_joinedbag_path(path: Path) -> bool:
+    return (path / "pre_num.txt.parquet").exists()
+
+
 def concat_bags(paths_to_concat: List[Path], target_path: Path):
     """
     Concatenates all the Bags in paths_to_concatenate by using the provided bag_type
@@ -424,16 +432,12 @@ def concat_bags(paths_to_concat: List[Path], target_path: Path):
         # nothing to do
         return
 
-    hier könnte man aufgrund des ersten Eintrags den filetyp prüfen
-    -> entweder pre_num_.. file oder num_file ->
-    dann müsste man bag_type gar nicht mitgeben
-
-    if bag_type.lower() == "raw":
+    if is_rawbag_path(paths_to_concat[0]):
         all_bags = [RawDataBag.load(str(path)) for path in paths_to_concat]
 
         all_bag: RawDataBag = RawDataBag.concat(all_bags, drop_duplicates_sub_df=True)
         all_bag.save(target_path=str(target_path))
-    elif bag_type.lower() == "joined":
+    elif is_joinedbag_path(paths_to_concat[0]):
         all_bags = [JoinedDataBag.load(str(path)) for path in paths_to_concat]
 
         all_bag: JoinedDataBag = JoinedDataBag.concat(all_bags, drop_duplicates_sub_df=True)

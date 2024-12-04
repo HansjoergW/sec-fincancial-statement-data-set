@@ -1,7 +1,7 @@
 """
 Base classes for the Task and Process Framework.
 Used for downloading, transforming to parquet, and indexing of the zip files from SEC, as well
-as to make additional automation tasks possible.
+as to implement customized automation tasks.
 """
 import logging
 import os
@@ -63,48 +63,93 @@ class TaskResult:
 
 
 class AbstractTask:
+    """
+    Abstract Base implemenation providing some commonly used basic functionality.
+
+    It is based on reading subfolders from a root_path, which are defined by filter.
+    Then processing the content of these folders and writing the result in a target_path.
+
+    The result is created in tmp-folder and is then "commited" by renaming the tmp-folder into
+    the target-path, therefore providing an atomic-action (renaming) that acts as commit.
+
+    It also provides basic implementation of "meta.inf" file, that can be stored in the target.
+    The idea of the meta.inf file is, to give a hint of what already was processed from the
+    root_path in a previous, step.
+
+    For example, the meta.inf could contain a list of subfolder names that were already processed.
+    Therefore, if a new subfolder appears in the root_path, the task would knwow which subfolders
+    need to be process. another possibility is to store the timestamp of the data, which was
+    processed (in cases, where the content of files within the subfolders in root_path changes, but
+    not the subfolders themselves). Therefore, allowing to check whether a modification timestamp
+    of files in the root_path is newer than the timestamp stored in the meta.inf file.
+
+    """
     def __init__(self,
                  root_path: Path,
                  filter: str,
                  target_path: Path):
+        """
+        The constructor of the AbstracTask.
+
+        Args:
+            root_path: root_path of the data to be processed
+            filter: a filter string (e.g. "*"; as defined for Path.glob()) to select the
+                    subfolders, that have to be processed.
+                    filter could be something like "*", or "*/BS", or "something/*/BS".
+
+                    E.g., the following root_path structure and the filter "*/BS"
+                    would select all "BS" "sub-subfolders" within root_path:
+                    <pre>
+                       <root_path>
+                            2010a1.zip/BS
+                            2010q1.zip/IS
+                            2010q1.zip/CF
+                            ...
+                            2024a4.zip/BS
+                            2024q4.zip/IS
+                            2024q4.zip/CF
+                    </pre>
+
+            target_path: the target_path to write the results to.
+        """
 
         self.root_path = root_path
         self.target_path = target_path
         self.filter = filter
+
+        # create a list of subfolders that have to be processed defined by the filter string.
         self.filtered_paths = list(self.root_path.glob(self.filter))
 
         # usually, all filtered_paths have to be processed
         self.paths_to_process: List[Path] = self.filtered_paths
 
+        # define the tmp_path
         self.tmp_path = target_path.parent / f"tmp_{target_path.name}"
         self.meta_inf_file: Path = self.target_path / "meta.inf"
 
         # filter could be something like "*", or "*/BS", or "something/*/BS"
-        # but in order to be able to file the metainf file with the names for which "*" iterates
-        # over, we need to know the position towards the end of the resulting path.
+        # but in order to be able to fill the metainf file with the names for which "*" iterates
+        # over, we need to know the position of the "*" from the end of the resulting path.
         # So if the filter is just a "*" it is 0, if it is "*/BS" it would be 1
         self.star_position = self._star_position_from_end(self.filter)
 
-        self.post_init()
-
-    @abstractmethod
-    def post_init(self):
-        """
-
-        Args:
-            containing_values:
-
-        Returns:
-
-        """
-
-    @staticmethod
-    def _get_iterator_position_name(path: Path, star_position: int) -> str:
-        return path.parts[::-1][star_position]
 
     @staticmethod
     def _star_position_from_end(path: str) -> int:
-        # Split the string by '/' to get segments
+        """
+        Gets the position of the "*" in the provided path (counted from the end).
+
+        Examples:
+            path = "a/b/c/d/*" -> returns 0
+            path = "a/b/c/*/d" -> returns 1
+            path = "a/b/*/c/d" -> returns 2
+
+        Args:
+            path: path with a "*" as part
+
+        Returns:
+            the position of the "*" in the path, counted from the end.
+        """
 
         # ignore first and last /
         if path.startswith('/'):
@@ -112,6 +157,7 @@ class AbstractTask:
         if path.endswith('/'):
             path = path[:-1]
 
+        # Split the string by '/' to get segments
         segments = path.split('/')
 
         # Iterate from the end and find the first segment containing '*'
@@ -119,15 +165,37 @@ class AbstractTask:
             if '*' in segment:
                 return i  # Position from the end
 
-        # If no '*' is found, return -1 (or any error code that suits your needs)
+        # If no '*' is found, return -1 to indicate an error
         return -1
+
+
+    @staticmethod
+    def _get_star_position_name(path: Path, star_position: int) -> str:
+        """
+        Gets the name of the part where the "*" is positioned in the filter-string.
+
+        Example:
+             path = "a/b/c" and star_position = 0 -> returns c
+             path = "a/b/c" and star_position = 1 -> returns b
+             path = "a/b/c" and star_position = 2 -> returns c
+
+        Args:
+            path: path from which the name_part at the star_position has to be returned
+            star_position: position of the part which name has to be returned.
+
+        Returns:
+            str: name of the part defined by the star_position
+
+        """
+        # reverse list with [::-1]
+        return path.parts[::-1][star_position]
+
 
     def read_metainf_content(self) -> List[str]:
         """
         reads the content from the meta.inf file in an existing target_path
         Returns:
-            List(str): the content as list, which is either a single timestamp or the name of
-            subfolders in the target_path
+            List(str): the content by line
         """
         meta_inf_content = self.meta_inf_file.read_text(encoding="utf-8")
         return meta_inf_content.split("\n")
@@ -143,7 +211,9 @@ class AbstractTask:
     def has_work_todo(self) -> bool:
         """
         returns true if there is actual work to do, otherwise False.
-        Can be overwritten
+        Can be overwritten.
+        Default implementation just looks if the provided root_path has subfolders, that are
+        defined by the provided filter string.
         """
         return len(self.paths_to_process) > 0
 
@@ -182,24 +252,50 @@ class AbstractTask:
 
 
 class CheckByTimestampBaseTask(AbstractTask):
+    """
+    This class uses the AbstractTask to implement logic that checks if files were changed within
+    the root_path since the last processing.
+
+    It can be used as a BaseClass to implement a Task, that checks for new data to be processed
+    by looking at the modification timestamp of the files in the root_path.
+
+    It does this as follows:
+    - if there is no target_path yet, it will process the content in the root_path,
+      write the result in the target_path together with a meta.inf file that contains
+      the newest modification timestamp of all the files in the root_path.
+    - if there is a target_path, then it reads the timestamp, that is stored within the target_path.
+      It any of the files within the root_path has a newer modification timestamp, it will
+      process the data and also update the timestamp in the meta.inf file
+    """
 
     def __init__(self,
                  root_path: Path,
                  filter: str,
                  target_path: Path):
+        """
+          The constructor of the CheckByTimestampBaseTask.
+          Check also the documentation of the AbstractTask Constructor.
+        """
         super().__init__(
             root_path=root_path,
             filter=filter,
             target_path=target_path,
         )
 
-    def post_init(self):
         if self.meta_inf_file.exists():
+            # if the meta_inf file exists, we expect that the first row contains the
+            # latest modification timestamp of all files in the root_path, that was
+            # processed the last time.
             containing_values = self.read_metainf_content()
+            last_processed_timestamp = float(containing_values[0])
 
-            last_timestamp = float(containing_values[0])
+            # go and find the current latest modification timestamp of allfiles in the root_path
             current_timestamp = get_latest_mtime(self.root_path)
-            if current_timestamp <= last_timestamp:
+
+            # if the current_timestamp is equal to the last_processed_timestamp,
+            # it means that the data in the root_path weren't changed and therefore,
+            # no processing has to be done. We mark this by setting pats_to_process to an empty list
+            if current_timestamp <= last_processed_timestamp:
                 self.paths_to_process = []
 
     def execute(self):
@@ -266,11 +362,10 @@ class CheckByNewSubfoldersBaseTask(AbstractTask):
             target_path=target_path,
         )
 
-    def post_init(self):
         # so if we have the filter */BS and if we have the directories "2010q1.zip/BS",
         # "2010q2.zip/BS" in the root_path, all_names key will be 2010q1.zip, 2010q2.zip
-        self.all_names = {self._get_iterator_position_name(f, self.star_position):
-                              f for f in self.paths_to_process}
+        self.all_names = {self._get_star_position_name(path=p, star_position=self.star_position):
+                              p for p in self.paths_to_process}
 
         if self.meta_inf_file.exists():
             containing_values = self.read_metainf_content()

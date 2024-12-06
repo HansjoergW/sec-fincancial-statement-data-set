@@ -7,7 +7,7 @@ from secfsdstools.d_container.databagmodel import JoinedDataBag
 from secfsdstools.g_pipelines.combine_process import CombineTask
 
 CURRENT_DIR, _ = os.path.split(__file__)
-TESTDATA_PATH = Path(CURRENT_DIR) / "_testdata"
+TESTDATA_PATH = Path(CURRENT_DIR) / ".." / "_testdata"
 
 
 def test_direct_sub_directory_collect(tmp_path):

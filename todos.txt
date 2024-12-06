@@ -1,7 +1,7 @@
-Todos
+todos
 ------
 
-New Release
+new release
 - adapt readme
 - adapt notebooks
 - in gitpages branch
@@ -14,45 +14,45 @@ New Release
 
 
 v.1.7.0
-BugFix
-- OfficialTagsOnlyJoinedFilter fixed: did actually filter only inofficial tags
+bugfix
+- officialtagsonlyjoinedfilter fixed: did actually filter only inofficial tags
 
-New
+new
 - check for update is always executed, regardless which feature of the framework is used
   (previously just the collectors caused a check for updates)
  -> via __init__.py of special c_update_check module, which is imported from the by the main modules
 - whole data update process implemented with a simple process/task framework
-- interface Updater classmethod has changed -> taking config-instance
-- post_update_hook definition -> called after updates with Configuration as parameter
+- interface updater classmethod has changed -> taking config-instance
+- post_update_hook definition -> called after updates with configuration as parameter
 - post_update_processes definition -> returns processes that are executed after standard process (dld, transform, index)
-- concat methods have new option to dropduplicates in resulting sub_df: default is to False
+- concat methods have new option to dropduplicates in resulting sub_df: default is to false
 
 - hook for after updated logic
 
-    - Aufbereitung der Daten für BS, IS und CF Statement möglichst direkt bei update machen,
-      so, dass diese Daten schon vorbereitet und gefiltert zur Verfügung stehen.
-      Vlt. auch eine Art PostDownload Hook anbieten.
-      einfaches Pipeline Framework
+    - aufbereitung der daten für bs, is und cf statement möglichst direkt bei update machen,
+      so, dass diese daten schon vorbereitet und gefiltert zur verfügung stehen.
+      vlt. auch eine art postdownload hook anbieten.
+      einfaches pipeline framework
     - only if flag is set to true
     - example notebook
-    - configparser.ConfigParser instance wird übergeben -> Section Default ist sec settings
+    - configparser.configparser instance wird übergeben -> section default ist sec settings
 
- - Process / Task Framework sollte unabhängig von update verwendet werden können
-   -> als simple Process Engine
+ - process / task framework sollte unabhängig von update verwendet werden können
+   -> als simple process engine
 
 
 
-Todos:
-- process/task execution Method in task-framework (ok)
+todos:
+- process/task execution method in task-framework (ok)
 - standardization processes in own module (ok)
-- document automation classes
-  task_framework
-  g_pipeline modules
+- document automation classes task_framework (ok)
 - tests for task_framework
-- tests for all processes
+- document modules in g_pipeline
+- tests for modules in g_pipeline
+
 - successfull run tests / linting
 
-- base setting for parallel execution to False for "all" processes in config
+- base setting for parallel execution to false for "all" processes in config
 - overwrite serial execution per task
 - new notebook documentation / automation
   - after_update hook example
@@ -63,66 +63,66 @@ Todos:
 
 
 
-- in CF haben wir oft auch zusätzliche 'Cash' Tags -> benötigen wir diese im BS auch?
-- MaxQtr PrePivot Rule also for BS und IS
+- in cf haben wir oft auch zusätzliche 'cash' tags -> benötigen wir diese im bs auch?
+- maxqtr prepivot rule also for bs und is
 
-- Standardize Oustanding Shares, resp. validate
-  (see: https://github.com/HansjoergW/sec-fincancial-statement-data-set/issues/13)
-  "But as I understand, they do not have the same exact meaning. I haven't investigated that, so I am not sure if you
-  can assume that they are the same, resp. close enough to treat them that way. In the CP, the value appears
-  as EntityCommonStockSharesOutstanding (if present), in the Balance Sheet as CommonStockSharesOutstanding,
-  and in the IncomeStatement as WeightedAverageNumberOfSharesOutstandingBasic."
+- standardize oustanding shares, resp. validate
+  (see: https://github.com/hansjoergw/sec-fincancial-statement-data-set/issues/13)
+  "but as i understand, they do not have the same exact meaning. i haven't investigated that, so i am not sure if you
+  can assume that they are the same, resp. close enough to treat them that way. in the cp, the value appears
+  as entitycommonstocksharesoutstanding (if present), in the balance sheet as commonstocksharesoutstanding,
+  and in the incomestatement as weightedaveragenumberofsharesoutstandingbasic."
 
-  -> adding EntityCommonStockSharesOutstanding from CP
-  -> adding CommonStockSharesOutstanding to BS
-  -> provide default handling of choosing which value for final "OutstandingShares"
+  -> adding entitycommonstocksharesoutstanding from cp
+  -> adding commonstocksharesoutstanding to bs
+  -> provide default handling of choosing which value for final "outstandingshares"
 
 
 
-- Discord Channel?
-- evtl. sollte jede Regel noch eine "Explanation" bekommen. Ein Text, der die Regel spezifisch erklärt,
+- discord channel?
+- evtl. sollte jede regel noch eine "explanation" bekommen. ein text, der die regel spezifisch erklärt,
   nicht allgemein wie in description.
 
-- usecase/analyzes ausarbeiten und eigenes Notebook mit Beispielen
+- usecase/analyzes ausarbeiten und eigenes notebook mit beispielen
 
 - idea: using configuration file as parameter or as option instead of only class:
-  Input Medium Feedback:
-  "What do you think about letting update() and ConfigurationManager take config_file_name with default value ''?
-  This seems to provide more explicit control. I know this would affect many functions which take config.
-  How about replacing it by config_file_name?"
+  input medium feedback:
+  "what do you think about letting update() and configurationmanager take config_file_name with default value ''?
+  this seems to provide more explicit control. i know this would affect many functions which take config.
+  how about replacing it by config_file_name?"
 
 
-Next:
+next:
 - vlt switch um parallele verarbeitung komplett auszuschalten?
 - vlt switch maximale parallelität?
 
 - new notebook, examples
-  -> reading primary financial statements for a single report, display BS, IS, CF for a report
-  -> analyse changes in one Tag for one company
+  -> reading primary financial statements for a single report, display bs, is, cf for a report
+  -> analyse changes in one tag for one company
   -> compare basic data of two companies
 
-- Supporting Dataset with notes -> V.2
+- supporting dataset with notes -> v.2
 
-- Es wäre gut, wenn der StandardStatementPresenter noch eine Kolonne "year", noch welcher auch sortiert ist
+- es wäre gut, wenn der standardstatementpresenter noch eine kolonne "year", noch welcher auch sortiert ist
   die sortierung über adsh alleine ermöglicht keine sauber sortierung pro jahr
   man könnte hierfür auch das report year aus sub verwenden
 
-- Pipelines: einfaches Konzept um Standard Flows zu kapseln
-  z.B. Collector als Input bis zur Presentation
-  -> z.B. für selektierte ciks daten so aufbereiten, dass sie alle vorhandenen Jahre in Spalten angezeigt werden
+- pipelines: einfaches konzept um standard flows zu kapseln
+  z.b. collector als input bis zur presentation
+  -> z.b. für selektierte ciks daten so aufbereiten, dass sie alle vorhandenen jahre in spalten angezeigt werden
 
 - update des config files
-  fehlende Inhalte müssen gesetzt und auf default gesetzt werden, oder?
-  überflüssige Inhalte müssen entfernt werden
-  -> Im Moment noch nicht notwendig -> würde erst notwendig, falls
-     Optionen nicht mehr benützt werden
+  fehlende inhalte müssen gesetzt und auf default gesetzt werden, oder?
+  überflüssige inhalte müssen entfernt werden
+  -> im moment noch nicht notwendig -> würde erst notwendig, falls
+     optionen nicht mehr benützt werden
 
-- in company collector -> eine sicht für sämtlich Jahre zeigen -> mit Jahren als spalten, aber
-   - versuchen die selben Tags zu zeigen, notfalls mit null...
+- in company collector -> eine sicht für sämtlich jahre zeigen -> mit jahren als spalten, aber
+   - versuchen die selben tags zu zeigen, notfalls mit null...
    - reihenfolge könnte ein problem sein
 
 - - warning, falls daten nicht indexiert sind
-    -> Hinweis Message beim Laden der Config
+    -> hinweis message beim laden der config
     -> config for autocheck to download / autodownload
 
 
@@ -135,13 +135,13 @@ later
 build, release & docu
 - coverage report padge
 
-Checkout für Visualisierung
+checkout für visualisierung
 - https://gist.github.com/mwouts/a2de16feb90d33fd89334fb09f62742f
 - https://www.linkedin.com/pulse/interactive-dataframes-jupyter-google-colab-vs-code-pycharm-wouts/?trk=articles_directory
 - https://pbpython.com/dataframe-gui-overview.html
 
 
-Ideen
+ideen
 -----
 - export excel
 - cli

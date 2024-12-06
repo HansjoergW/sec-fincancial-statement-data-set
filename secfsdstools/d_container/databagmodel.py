@@ -4,6 +4,7 @@ Defines the container that keeps the data of sub.txt, num.txt, and  pre.txt toge
 
 import os
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Dict, List, TypeVar, Generic
 
 import pandas as pd
@@ -362,3 +363,13 @@ class RawDataBag(DataBagBase[RAW]):
         return RawDataBag.create(sub_df=sub_df,
                                  pre_df=pre_df,
                                  num_df=num_df)
+
+def is_rawbag_path(path: Path) -> bool:
+    """ Check whether the provided path contains the files of a RawDatabag. """
+    return (path / "num.txt.parquet").exists()
+
+
+def is_joinedbag_path(path: Path) -> bool:
+    """ Check whether the provided path contains the files of a JoinedDatabag. """
+    return (path / "pre_num.txt.parquet").exists()
+

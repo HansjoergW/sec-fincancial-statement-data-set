@@ -4,19 +4,17 @@ Used for downloading, transforming to parquet, and indexing of the zip files fro
 as to implement customized automation tasks.
 """
 import logging
-import os
 import shutil
 from abc import ABC, abstractmethod
 from collections import defaultdict
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
-from typing import List, Optional
+from typing import List
 from typing import Protocol, Any, Dict
 
-from secfsdstools.a_utils.fileutils import get_directories_in_directory
 from secfsdstools.a_utils.parallelexecution import ThreadExecutor
-from secfsdstools.d_container.databagmodel import RawDataBag, JoinedDataBag
+from secfsdstools.c_automation.automation_utils import get_latest_mtime
 
 
 class TaskResultState(Enum):
@@ -84,6 +82,7 @@ class AbstractTask:
     of files in the root_path is newer than the timestamp stored in the meta.inf file.
 
     """
+
     def __init__(self,
                  root_path: Path,
                  filter: str,
@@ -133,7 +132,6 @@ class AbstractTask:
         # So if the filter is just a "*" it is 0, if it is "*/BS" it would be 1
         self.star_position = self._star_position_from_end(self.filter)
 
-
     @staticmethod
     def _star_position_from_end(path: str) -> int:
         """
@@ -168,7 +166,6 @@ class AbstractTask:
         # If no '*' is found, return -1 to indicate an error
         return -1
 
-
     @staticmethod
     def _get_star_position_name(path: Path, star_position: int) -> str:
         """
@@ -189,7 +186,6 @@ class AbstractTask:
         """
         # reverse list with [::-1]
         return path.parts[::-1][star_position]
-
 
     def read_metainf_content(self) -> List[str]:
         """
@@ -312,18 +308,19 @@ class CheckByTimestampBaseTask(AbstractTask):
             return
 
         self.do_execution(paths_to_process=self.paths_to_process,
-                          target_path=self.tmp_path)
+                          tmp_path=self.tmp_path)
 
         meta_inf_content: str = str(get_latest_mtime(self.root_path))
         self.write_meta_inf(content=meta_inf_content)
 
     @abstractmethod
-    def do_execution(self, paths_to_process: List[Path], target_path: Path):
+    def do_execution(self, paths_to_process: List[Path],
+                     tmp_path: Path):
         """
             defines the logic to be executed.
         Args:
             paths_to_process: lists of paths/folders that have to be processec
-            target_path: target path to where a result has to be written
+            tmp_path: path to where a result has to be written
         """
 
 
@@ -389,29 +386,30 @@ class CheckByNewSubfoldersBaseTask(AbstractTask):
 
         paths_to_process = self.paths_to_process.copy()
 
-        # If check_by_timestamp is false, then paths_to_process contain  names of subfolders
-        # that have to be added to the data in an existing target_path.
-        # Therefore, if the target_path exists...
-        if self.target_path.exists():
-            # then we want to concate the existing data and the new data together and store
-            # it as a new dataset in the target_path. So we add the current target_path
-            # to the list of the folders, that have to be processed.
-            paths_to_process.append(self.target_path)
-
+        # depending on the use case, we need to combine new data with already
+        # existing data in the target.
+        # therefore, we provide a list "paths_to_process" which contains subfolders that are new,
+        # the processed_path (the path that contains the result of the last processing), and
+        # the target_path, where we have to store the result to (this the tmp folder)
         self.do_execution(paths_to_process=paths_to_process,
-                          target_path=self.tmp_path)
+                          target_path=self.target_path,
+                          tmp_path=self.tmp_path)
 
-        meta_inf_content: str = "\n".join([self._get_iterator_position_name(f, self.star_position)
-                                           for f in self.paths_to_process])
+        meta_inf_content: str = "\n".join([self._get_star_position_name(f, self.star_position)
+                                           for f in self.filtered_paths])
         self.write_meta_inf(content=meta_inf_content)
 
     @abstractmethod
-    def do_execution(self, paths_to_process: List[Path], target_path: Path):
+    def do_execution(self,
+                     paths_to_process: List[Path],
+                     target_path: Path,
+                     tmp_path: Path):
         """
             defines the logic to be executed.
         Args:
-            paths_to_process: lists of paths/folders that have to be processec
-            target_path: target path to where a result has to be written
+            paths_to_process: lists of paths/folders that have to be processed
+            target_path: the path where the result of the previous run was written
+            tmp_path: target path to where a result has to be written
         """
 
 
@@ -502,45 +500,6 @@ class AbstractProcess(ABC):
         self.post_process()
 
 
-def is_rawbag_path(path: Path) -> bool:
-    return (path / "num.txt.parquet").exists()
-
-
-def is_joinedbag_path(path: Path) -> bool:
-    return (path / "pre_num.txt.parquet").exists()
-
-
-def concat_bags(paths_to_concat: List[Path], target_path: Path):
-    """
-    Concatenates all the Bags in paths_to_concatenate by using the provided bag_type
-    into the target_dir directory.
-
-    Args:
-        paths_to_concat (List[Path]) :
-        bag_type:
-        target_dir:
-
-    Returns:
-
-    """
-    if len(paths_to_concat) == 0:
-        # nothing to do
-        return
-
-    if is_rawbag_path(paths_to_concat[0]):
-        all_bags = [RawDataBag.load(str(path)) for path in paths_to_concat]
-
-        all_bag: RawDataBag = RawDataBag.concat(all_bags, drop_duplicates_sub_df=True)
-        all_bag.save(target_path=str(target_path))
-    elif is_joinedbag_path(paths_to_concat[0]):
-        all_bags = [JoinedDataBag.load(str(path)) for path in paths_to_concat]
-
-        all_bag: JoinedDataBag = JoinedDataBag.concat(all_bags, drop_duplicates_sub_df=True)
-        all_bag.save(target_path=str(target_path))
-    else:
-        raise ValueError("bag_type must be either raw or joined")
-
-
 def execute_processes(processes: List[AbstractProcess]):
     """
         Execute the list of processes in serial
@@ -550,50 +509,3 @@ def execute_processes(processes: List[AbstractProcess]):
     """
     for process in processes:
         process.process()
-
-
-def delete_temp_folders(root_path: Path, temp_prefix: str = "tmp"):
-    """
-    Remove any existing folders starting with the tmp_prefix in the root_path
-     (these are generally folders containing data of tasks that failed)).
-
-    """
-    dirs_in_filter_dir = get_directories_in_directory(str(root_path))
-
-    tmp_dirs = [d for d in dirs_in_filter_dir if d.startswith(temp_prefix)]
-
-    for tmp_dir in tmp_dirs:
-        file_path = root_path / tmp_dir
-        shutil.rmtree(file_path, ignore_errors=True)
-
-
-def get_latest_mtime(folder: Path, skip: Optional[List[str]] = None) -> float:
-    """
-    Find the latest timestamp at which an element in the folder structure was changed
-    Args:
-        folder: root folder
-
-    Returns:
-        the latest timestamp of a folder or file within the "folder" as float value.
-
-    """
-    if skip == None:
-        skip = []
-
-    latest_mtime = 0
-
-    for dirpath, dirnames, filenames in os.walk(folder):
-        # Check the modification timestamp of files
-        filenames = list(set(filenames) - set(skip))
-        for filename in filenames:
-            file_path = Path(dirpath) / filename
-            mtime = file_path.stat().st_mtime  # modification timestamp of the file
-            latest_mtime = max(latest_mtime, mtime)
-
-        # Check the modification timestamp of subfolders
-        for dirname in dirnames:
-            dir_path = Path(dirpath) / dirname
-            mtime = dir_path.stat().st_mtime  # modification timestamp of the folder
-            latest_mtime = max(latest_mtime, mtime)
-
-    return latest_mtime

@@ -1,10 +1,23 @@
 import os
+from pathlib import Path
 
-from secfsdstools.d_container.databagmodel import RawDataBag, RawDataBagStats, JoinedDataBag
+from secfsdstools.d_container.databagmodel import RawDataBag, RawDataBagStats, JoinedDataBag, \
+    is_joinedbag_path, is_rawbag_path
 
 CURRENT_DIR, _ = os.path.split(__file__)
+TESTDATA_PATH = Path(CURRENT_DIR) / ".." / "_testdata"
 PATH_TO_BAG_1 = f'{CURRENT_DIR}/../_testdata/parquet/quarter/2010q1.zip'
 PATH_TO_BAG_2 = f'{CURRENT_DIR}/../_testdata/parquet/quarter/2010q2.zip'
+
+
+def test_is_rawbag():
+    assert is_rawbag_path(TESTDATA_PATH / "parquet" / "quarter" / "2010q1.zip")
+    assert not is_rawbag_path(TESTDATA_PATH / "joined" / "2010q1.zip")
+
+
+def test_is_joinedbag():
+    assert not is_joinedbag_path(TESTDATA_PATH / "parquet" / "quarter" / "2010q1.zip")
+    assert is_joinedbag_path(TESTDATA_PATH / "joined" / "2010q1.zip")
 
 
 def test_load_method():
@@ -62,7 +75,6 @@ def test_get_joined_bag():
 
     assert joined_bag.sub_df.shape == (495, 36)
     assert joined_bag.pre_num_df.shape == (165456, 16)
-
 
 
 def test_load_save_joined_bag(tmp_path):

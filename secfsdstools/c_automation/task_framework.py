@@ -10,10 +10,10 @@ from collections import defaultdict
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
-from typing import List
+from typing import List, Set, Tuple
 from typing import Protocol, Any, Dict
 
-from secfsdstools.a_utils.parallelexecution import ThreadExecutor
+from secfsdstools.a_utils.parallelexecution import ThreadExecutor, ParallelExecutor
 from secfsdstools.c_automation.automation_utils import get_latest_mtime
 
 
@@ -420,9 +420,13 @@ class AbstractProcess(ABC):
 
     def __init__(self,
                  execute_serial: bool = False,
-                 chunksize: int = 3):
+                 chunksize: int = 3,
+                 paralleltasks: int = 3,
+                 max_tasks_per_second: int = 8):
         self.execute_serial = execute_serial
         self.chunksize = chunksize
+        self.paralleltasks = paralleltasks
+        self.max_tasks_per_second = max_tasks_per_second
 
         # since failed tasks are retried, results[FAILED] can contain multiple entries for
         # a tasks that is retried multiple times.
@@ -479,17 +483,8 @@ class AbstractProcess(ABC):
 
         self.pre_process()
 
-        executor = ThreadExecutor[Task, TaskResult, TaskResult](
-            processes=3,
-            max_calls_per_sec=8,
-            chunksize=self.chunksize,
-            execute_serial=self.execute_serial
-        )
-        executor.set_get_entries_function(self.calculate_tasks)
-        executor.set_process_element_function(self.process_task)
-        executor.set_post_process_chunk_function(lambda x: x)  # no process_chunk for this purpose
-
-        results_all, self.failed_tasks = executor.execute()
+        results_all, failed_tasks = self.do_execution()
+        self.failed_tasks = failed_tasks
 
         for entry in results_all:
             self.results[entry.state].append(entry)
@@ -498,6 +493,54 @@ class AbstractProcess(ABC):
             logger.warning("not able to process %s", failed)
 
         self.post_process()
+
+    @abstractmethod
+    def do_execution(self) -> Tuple[List[TaskResult], List[Task]]:
+        """
+        handle to real execution.
+        """
+
+
+class AbstractThreadProcess(AbstractProcess):
+    """
+    Uses for the parallel execution logic a Thread-Based approach.
+    """
+
+    def do_execution(self) -> Tuple[List[TaskResult], List[Task]]:
+        """
+        Using a thread-based executor.
+        """
+        executor = ThreadExecutor[Task, TaskResult, TaskResult](
+            processes=self.paralleltasks,
+            max_calls_per_sec=self.max_tasks_per_second,
+            chunksize=self.chunksize,
+            execute_serial=self.execute_serial
+        )
+        executor.set_get_entries_function(self.calculate_tasks)
+        executor.set_process_element_function(self.process_task)
+        executor.set_post_process_chunk_function(lambda x: x)  # no process_chunk for this purpose
+        return executor.execute()
+
+
+class AbstractProcessPoolProcess(AbstractProcess):
+    """
+    Uses for the parallel execution logic a Thread-Based approach.
+    """
+
+    def do_execution(self) -> Tuple[List[TaskResult], List[Task]]:
+        """
+        Using a process-based executor.
+        """
+        executor = ParallelExecutor[Task, TaskResult, TaskResult](
+            processes=self.paralleltasks,
+            max_calls_per_sec=self.max_tasks_per_second,
+            chunksize=self.chunksize,
+            execute_serial=self.execute_serial
+        )
+        executor.set_get_entries_function(self.calculate_tasks)
+        executor.set_process_element_function(self.process_task)
+        executor.set_post_process_chunk_function(lambda x: x)  # no process_chunk for this purpose
+        return executor.execute()
 
 
 def execute_processes(processes: List[AbstractProcess]):

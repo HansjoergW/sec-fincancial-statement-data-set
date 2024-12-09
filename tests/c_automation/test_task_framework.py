@@ -3,8 +3,8 @@ import shutil
 from pathlib import Path
 from typing import List
 
-from secfsdstools.c_automation.task_framework import AbstractTask, CheckByTimestampBaseTask, \
-    AbstractProcess, CheckByNewSubfoldersBaseTask, AbstractThreadProcess, Task, TaskResultState, \
+from secfsdstools.c_automation.task_framework import AbstractTask, CheckByTimestampMergeBaseTask, \
+    AbstractProcess, CheckByNewSubfoldersMergeBaseTask, AbstractThreadProcess, Task, TaskResultState, \
     AbstractProcessPoolProcess
 
 CURRENT_DIR, _ = os.path.split(__file__)
@@ -38,8 +38,8 @@ def test_start_position_from_end():
     assert AbstractTask._star_position_from_end("x/*/BS/x/") == 2
 
 
-# --- test CheckByTimestampBaseTask -------------------------------------------------------
-class MyByTSTask(CheckByTimestampBaseTask):
+# --- test CheckByTimestampMergeBaseTask -------------------------------------------------------
+class MyByTSTask(CheckByTimestampMergeBaseTask):
     called_paths_to_process: List[Path]
     called_tmp_path: Path
 
@@ -120,8 +120,8 @@ def test_checkbytimestamptask(tmp_path):
     assert ts_changed > ts_initial
 
 
-# --- test CheckByNewSubfoldersBaseTask -------------------------------------------------------
-class MyByNewSubfoldersTask(CheckByNewSubfoldersBaseTask):
+# --- test CheckByNewSubfoldersMergeBaseTask -------------------------------------------------------
+class MyByNewSubfoldersTask(CheckByNewSubfoldersMergeBaseTask):
     called_paths_to_process: List[Path]
     caled_target_path: Path
     called_tmp_path: Path

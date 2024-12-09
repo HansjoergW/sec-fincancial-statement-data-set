@@ -6,10 +6,10 @@ from pathlib import Path
 from typing import List
 
 from secfsdstools.c_automation.task_framework import AbstractProcess, Task, delete_temp_folders, \
-    CheckByNewSubfoldersBaseTask, CheckByTimestampBaseTask, concat_bags, AbstractTask
+    CheckByNewSubfoldersMergeBaseTask, CheckByTimestampMergeBaseTask, concat_bags, AbstractTask
 
 
-class ConcatIfNewSubfolderTask(CheckByNewSubfoldersBaseTask):
+class ConcatIfNewSubfolderTask(CheckByNewSubfoldersMergeBaseTask):
     """
 
     """
@@ -82,7 +82,7 @@ class ConcatIfNewSubfolderTask(CheckByNewSubfoldersBaseTask):
         concat_bags(paths_to_concat=paths_to_process, target_path=target_path)
 
 
-class ConcatIfChangedTimestampTask(CheckByTimestampBaseTask):
+class ConcatIfChangedTimestampTask(CheckByTimestampMergeBaseTask):
     """
 
     """

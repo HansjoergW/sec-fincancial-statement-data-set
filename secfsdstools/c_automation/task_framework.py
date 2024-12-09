@@ -247,7 +247,7 @@ class AbstractTask:
         temp_meta_inf.write_text(data=content, encoding="utf-8")
 
 
-class CheckByTimestampBaseTask(AbstractTask):
+class CheckByTimestampMergeBaseTask(AbstractTask):
     """
     This class uses the AbstractTask to implement logic that checks if files were changed within
     the root_path since the last processing.
@@ -269,7 +269,7 @@ class CheckByTimestampBaseTask(AbstractTask):
                  filter: str,
                  target_path: Path):
         """
-          The constructor of the CheckByTimestampBaseTask.
+          The constructor of the CheckByTimestampMergeBaseTask.
           Check also the documentation of the AbstractTask Constructor.
         """
         super().__init__(
@@ -324,7 +324,7 @@ class CheckByTimestampBaseTask(AbstractTask):
         """
 
 
-class CheckByNewSubfoldersBaseTask(AbstractTask):
+class CheckByNewSubfoldersMergeBaseTask(AbstractTask):
     """
     Implements the basic logic to track already processed data either by folder structure of the
     root-path (meaning that new data that appeared as a new subfolder in the root-path has to be

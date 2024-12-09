@@ -1,10 +1,15 @@
+"""
+Defines pipeline steps that help with applying the same filter to mutilple subfolders
+in parallel.
+"""
 import os
 import shutil
 from pathlib import Path
 from typing import List
 
 from secfsdstools.a_utils.fileutils import get_directories_in_directory
-from secfsdstools.c_automation.task_framework import AbstractProcess, Task, delete_temp_folders
+from secfsdstools.c_automation.automation_utils import delete_temp_folders
+from secfsdstools.c_automation.task_framework import AbstractProcess, Task
 from secfsdstools.d_container.databagmodel import RawDataBag
 from secfsdstools.e_collector.zipcollecting import ZipCollector
 from secfsdstools.e_filter.joinedfiltering import StmtJoinedFilter
@@ -25,21 +30,39 @@ def postloadfilter(databag: RawDataBag) -> RawDataBag:
 
 
 class AbstractFilterTask:
+    """
+    Abstract FilterTask implementation providing some common basic implementations.
+    Uses the ZipCollector to read the raw databags.
+    """
 
     def __init__(self,
-                 filtered_path: Path,
+                 zip_file_name: str,
+                 target_path: Path,
                  bag_type: str,  # raw or joined
                  stmts: List[str]):
-        self.filtered_path = filtered_path
+        """
+
+        Args:
+            zip_file_name: name of the source file name that shall be readed by the  zipcollector
+            target_path: path to store the filtered bag to
+            bag_type: bag type (either "row" or "joined") to save the data as
+            stmts: stmts to filter for ("BS", "IS", "CF", ...)
+        """
+        self.target_path = target_path
         self.stmts = stmts
         self.bag_type = bag_type
 
-        self.file_name = filtered_path.name
-        self.tmp_path = filtered_path.parent / f"tmp_{self.file_name}"
+        self.zip_file_name = zip_file_name
+        self.target_file_name = target_path.name
+        self.tmp_path = target_path.parent / f"tmp_{self.target_file_name}"
 
     def commit(self):
-        """ we commit by renaming the tmp_path. """
-        self.tmp_path.rename(self.filtered_path)
+        """
+        we commit by renaming the tmp_path. This is an atomic action and either fails
+        or succeeds. So if there is a tmp folder, we know that something failed and therefore,
+        it is easy to recover and redo.
+        """
+        self.tmp_path.rename(self.target_path)
         return "success"
 
     def exception(self, exception) -> str:
@@ -49,14 +72,25 @@ class AbstractFilterTask:
 
 
 class FilterTask(AbstractFilterTask):
+    """
+    Basic Filter implementation which applys filters for
+    10-K and 10-Q forms, as well as
+    ReportPeriodRawFilter, MainCoregRawFilter, and USDOnlyRawFilter
+    """
 
     def prepare(self):
         """ prepare Task."""
-
         self.tmp_path.mkdir(parents=True, exist_ok=False)
 
     def execute(self):
-        raw_bag = ZipCollector.get_zip_by_name(name=self.file_name,
+        """
+        Uses the ZipCollector to read the input data and then applys the filters for
+        10-K and 10-Q forms, as well as applying the ReportPeriodRawFilter, MainCoregRawFilter,
+        and USDOnlyRawFilter.
+        Saves the result depending on the configuration either as raw or joined data bag
+
+        """
+        raw_bag = ZipCollector.get_zip_by_name(name=self.zip_file_name,
                                                forms_filter=['10-K', '10-Q'],
                                                stmt_filter=self.stmts,
                                                post_load_filter=postloadfilter).collect()
@@ -70,10 +104,19 @@ class FilterTask(AbstractFilterTask):
             raise ValueError("bag_type must be either raw or joined")
 
     def __str__(self) -> str:
-        return f"FilterTask(filtered_path: {self.filtered_path})"
+        return f"FilterTask(filtered_path: {self.target_path})"
 
 
 class ByStmtFilterTask(AbstractFilterTask):
+    """
+    Basic Filter implementation which applys filters for
+    10-K and 10-Q forms, as well as
+    ReportPeriodRawFilter, MainCoregRawFilter, and USDOnlyRawFilter.
+
+    Depending on the configuration, the results are either saved in raw or joined format.
+    Moreover, the results are split up by stmt ("BS", "IS", "CF", ...) when being saved into
+    own subfolders.
+    """
 
     def prepare(self):
         """ prepare Task."""
@@ -82,7 +125,15 @@ class ByStmtFilterTask(AbstractFilterTask):
             (self.tmp_path / stmt).mkdir(parents=True, exist_ok=False)
 
     def execute(self):
-        raw_bag = ZipCollector.get_zip_by_name(name=self.file_name,
+        """
+        Uses the ZipCollector to read the input data and then applys the filters for
+        10-K and 10-Q forms, as well as applying the ReportPeriodRawFilter, MainCoregRawFilter,
+        and USDOnlyRawFilter.
+        Saves the result depending on the configuration either as raw or joined data bag.
+        Moreover, splits the results up by stmt ("BS", "IS", "CF", ...).
+
+        """
+        raw_bag = ZipCollector.get_zip_by_name(name=self.zip_file_name,
                                                forms_filter=['10-K', '10-Q'],
                                                stmt_filter=self.stmts,
                                                post_load_filter=postloadfilter).collect()
@@ -105,10 +156,14 @@ class ByStmtFilterTask(AbstractFilterTask):
             joined_bag[StmtJoinedFilter(stmts=[stmt])].save(str(self.tmp_path / stmt))
 
     def __str__(self) -> str:
-        return f"ByStmtFilterTask(filtered_path: {self.filtered_path})"
+        return f"ByStmtFilterTask(filtered_path: {self.target_path})"
 
 
 class FilterProcess(AbstractProcess):
+
+
+    # braucht es parquet_dir wirklich? oder sollte man das aufgrund der db lesen,
+    # da eh der zipcollector verwendet wird?
 
     def __init__(self,
                  parquet_dir: str,

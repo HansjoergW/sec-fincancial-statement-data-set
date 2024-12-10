@@ -289,3 +289,13 @@ class ParquetDBIndexingAccessor(DB):
                 WHERE name like '%{name_part}%' 
                 ORDER BY name"""
         return self.execute_read_as_df(sql)
+
+    def read_filenames_by_type(self, originFileType: str) -> List[str]:
+        sql = f"""
+                 SELECT ORIGINFILE 
+                 FROM {self.index_reports_table} 
+                 WHERE ORIGINFILETYPE='{originFileType}'"""
+
+        # result  is a list of tuples with one entry, so we have to flatten it
+        result = self.execute_fetchall(sql=sql)
+        return [x[0] for x in result]

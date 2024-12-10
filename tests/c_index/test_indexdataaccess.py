@@ -45,3 +45,15 @@ def test_parquetindexprocessing(parquetindexaccessor):
     all_states_df: pd.DataFrame = parquetindexaccessor.read_all_indexfileprocessing_df()
     assert len(all_states_df) == 1
     assert all_states_df.iloc[0].fileName == '2022q1.zip'
+
+
+def test_getfilenamesbytype(parquetindexaccessor):
+    report = IndexReport(adsh='abc123', cik=1, form='10-K', name='bla', filed=20220130,
+                         period=20211231,
+                         originFile='2022q1.zip', originFileType='quarter', fullPath='', url='')
+
+    parquetindexaccessor.insert_indexreport(data=report)
+
+    names: List[str] = parquetindexaccessor.read_filenames_by_type(originFileType="quarter")
+    assert len(names) == 1
+    assert names[0] == "2022q1.zip"

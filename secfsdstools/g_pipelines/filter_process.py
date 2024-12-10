@@ -10,6 +10,7 @@ from typing import List
 from secfsdstools.a_utils.fileutils import get_directories_in_directory
 from secfsdstools.c_automation.automation_utils import delete_temp_folders
 from secfsdstools.c_automation.task_framework import AbstractProcess, Task
+from secfsdstools.c_index.indexdataaccess import ParquetDBIndexingAccessor
 from secfsdstools.d_container.databagmodel import RawDataBag
 from secfsdstools.e_collector.zipcollecting import ZipCollector
 from secfsdstools.e_filter.joinedfiltering import StmtJoinedFilter
@@ -160,13 +161,17 @@ class ByStmtFilterTask(AbstractFilterTask):
 
 
 class FilterProcess(AbstractProcess):
+    """
+    Applies basic filters on the raw indexed files and saves the result into the provided
+    target_path.
+    Does it per zip-file and can do it in parallel, depending on the parameter settings.
 
+    Applies the basic filters ReportPeriodRawFilter, MainCoregRawFilter, USDOnlyRawFilter.
+    """
 
-    # braucht es parquet_dir wirklich? oder sollte man das aufgrund der db lesen,
-    # da eh der zipcollector verwendet wird?
-
+    den filter sollte man eigentlich als Parameter übergeben können.
     def __init__(self,
-                 parquet_dir: str,
+                 db_dir: str,
                  target_dir: str,
                  bag_type: str,  # raw or joined
                  file_type: str = "quarter",
@@ -174,6 +179,19 @@ class FilterProcess(AbstractProcess):
                  stmts=None,
                  execute_serial: bool = False
                  ):
+        """
+        Constructor.
+        Args:
+            db_dir: directory of the sqlite-db file. Used to read the available zipfiles.
+            target_dir: directory to where the results have to be written
+            bag_type: either "raw" or "joined" and defines what bag-type shall be written
+            file_type: the file type to be processed, default is "quarter"
+            save_by_stmt: Flag to indicate whether the results should be split up by the stmt.
+                          If it is true, subfolders for every stmt "BS", "IS", "CF", ... will be
+                          created.
+            stmts: The list of stmts that should be filtered: "BS", "IS", "CF", ... or none
+            execute_serial: Flag to indicate whether the files should be process in serial manner.
+        """
         super().__init__(execute_serial=execute_serial,
                          chunksize=0)
         self.stmts = ['BS', 'IS', 'CF', 'CP', 'CI', 'EQ']
@@ -181,26 +199,12 @@ class FilterProcess(AbstractProcess):
         if stmts:
             self.stmts = stmts
 
-        self.parquet_dir = parquet_dir
+        self.dbaccessor = ParquetDBIndexingAccessor(db_dir=db_dir)
+
         self.target_dir = target_dir
         self.file_type = file_type
         self.bag_type = bag_type
         self.save_by_stmt = save_by_stmt
-
-    def _get_present_parquet_files(self) -> List[str]:
-        """
-        returns the available folders within the parquet directory.
-        Returns:
-            List[str] list with foldernames.
-        """
-
-        parquet_folders = get_directories_in_directory(
-            os.path.join(self.parquet_dir, self.file_type))
-
-        # 2009q1.zip is actually empty and could issues during processing, so we  simply ignore it
-        parquet_folders = [f for f in parquet_folders if f != "2009q1.zip"]
-
-        return parquet_folders
 
     def _get_existing_filtered(self):
         return get_directories_in_directory(
@@ -211,19 +215,21 @@ class FilterProcess(AbstractProcess):
 
     def calculate_tasks(self) -> List[Task]:
         existing = self._get_existing_filtered()
-        available = self._get_present_parquet_files()
+        available = self.dbaccessor.read_filenames_by_type(originFileType=self.file_type)
 
         missings = set(available) - set(existing)
         if self.save_by_stmt:
             return [ByStmtFilterTask(
-                filtered_path=Path(self.target_dir) / self.file_type / missing,
+                zip_file_name=missing,
+                target_path=Path(self.target_dir) / self.file_type / missing,
                 stmts=self.stmts,
                 bag_type=self.bag_type
             )
                 for missing in missings]
         else:
             return [FilterTask(
-                filtered_path=Path(self.target_dir) / self.file_type / missing,
+                zip_file_name=missing,
+                target_path=Path(self.target_dir) / self.file_type / missing,
                 stmts=self.stmts,
                 bag_type=self.bag_type
             )

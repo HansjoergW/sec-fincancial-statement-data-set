@@ -5,7 +5,7 @@ in parallel.
 import os
 import shutil
 from pathlib import Path
-from typing import List
+from typing import List, Callable
 
 from secfsdstools.a_utils.fileutils import get_directories_in_directory
 from secfsdstools.c_automation.automation_utils import delete_temp_folders
@@ -40,7 +40,10 @@ class AbstractFilterTask:
                  zip_file_name: str,
                  target_path: Path,
                  bag_type: str,  # raw or joined
-                 stmts: List[str]):
+                 stmts: List[str],
+                 forms_filter=None,
+                 post_load_filter: Callable[[RawDataBag], RawDataBag]=postloadfilter
+                 ):
         """
 
         Args:
@@ -48,7 +51,16 @@ class AbstractFilterTask:
             target_path: path to store the filtered bag to
             bag_type: bag type (either "row" or "joined") to save the data as
             stmts: stmts to filter for ("BS", "IS", "CF", ...)
+            forms_filter: defines which forms shall be loaded. default is ['10-K', '10-Q']
+            post_load_filter: filter method to be applied after loading of the zip file.
+                              default postloadfilter applies ReportPeriodRawFilter,
+                              MainCoregRawFilter, USDOnlyRawFilter
         """
+        if forms_filter is None:
+            forms_filter = ['10-K', '10-Q']
+        self.forms_filter = forms_filter
+        self.post_load_filter = post_load_filter
+
         self.target_path = target_path
         self.stmts = stmts
         self.bag_type = bag_type
@@ -92,9 +104,9 @@ class FilterTask(AbstractFilterTask):
 
         """
         raw_bag = ZipCollector.get_zip_by_name(name=self.zip_file_name,
-                                               forms_filter=['10-K', '10-Q'],
+                                               forms_filter=self.forms_filter,
                                                stmt_filter=self.stmts,
-                                               post_load_filter=postloadfilter).collect()
+                                               post_load_filter=self.post_load_filter).collect()
 
         if self.bag_type.lower() == "raw":
             raw_bag.save(str(self.tmp_path))
@@ -135,9 +147,9 @@ class ByStmtFilterTask(AbstractFilterTask):
 
         """
         raw_bag = ZipCollector.get_zip_by_name(name=self.zip_file_name,
-                                               forms_filter=['10-K', '10-Q'],
+                                               forms_filter=self.forms_filter,
                                                stmt_filter=self.stmts,
-                                               post_load_filter=postloadfilter).collect()
+                                               post_load_filter=self.post_load_filter).collect()
 
         if self.bag_type.lower() == "raw":
             self._execute_raw(raw_bag)
@@ -169,7 +181,6 @@ class FilterProcess(AbstractProcess):
     Applies the basic filters ReportPeriodRawFilter, MainCoregRawFilter, USDOnlyRawFilter.
     """
 
-    den filter sollte man eigentlich als Parameter übergeben können.
     def __init__(self,
                  db_dir: str,
                  target_dir: str,
@@ -177,7 +188,9 @@ class FilterProcess(AbstractProcess):
                  file_type: str = "quarter",
                  save_by_stmt: bool = False,
                  stmts=None,
-                 execute_serial: bool = False
+                 execute_serial: bool = False,
+                 forms_filter=None,
+                 post_load_filter: Callable[[RawDataBag], RawDataBag]=postloadfilter
                  ):
         """
         Constructor.
@@ -194,6 +207,11 @@ class FilterProcess(AbstractProcess):
         """
         super().__init__(execute_serial=execute_serial,
                          chunksize=0)
+        if forms_filter is None:
+            forms_filter = ['10-K', '10-Q']
+        self.forms_filter = forms_filter
+        self.post_load_filter = post_load_filter
+
         self.stmts = ['BS', 'IS', 'CF', 'CP', 'CI', 'EQ']
 
         if stmts:
@@ -223,7 +241,9 @@ class FilterProcess(AbstractProcess):
                 zip_file_name=missing,
                 target_path=Path(self.target_dir) / self.file_type / missing,
                 stmts=self.stmts,
-                bag_type=self.bag_type
+                bag_type=self.bag_type,
+                forms_filter=self.forms_filter,
+                post_load_filter=self.post_load_filter
             )
                 for missing in missings]
         else:
@@ -231,6 +251,8 @@ class FilterProcess(AbstractProcess):
                 zip_file_name=missing,
                 target_path=Path(self.target_dir) / self.file_type / missing,
                 stmts=self.stmts,
-                bag_type=self.bag_type
+                bag_type=self.bag_type,
+                forms_filter=self.forms_filter,
+                post_load_filter=self.post_load_filter
             )
                 for missing in missings]

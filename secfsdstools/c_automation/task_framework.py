@@ -314,12 +314,13 @@ class CheckByTimestampMergeBaseTask(AbstractTask):
         self.write_meta_inf(content=meta_inf_content)
 
     @abstractmethod
-    def do_execution(self, paths_to_process: List[Path],
+    def do_execution(self,
+                     paths_to_process: List[Path],
                      tmp_path: Path):
         """
             defines the logic to be executed.
         Args:
-            paths_to_process: lists of paths/folders that have to be processec
+            paths_to_process: lists of paths/folders that have to be processed
             tmp_path: path to where a result has to be written
         """
 
@@ -348,8 +349,6 @@ class CheckByNewSubfoldersMergeBaseTask(AbstractTask):
             root_path: root path to read that from
             filter: filter string that defines which subfolders in the root_path have to be selected
             target_path: path to where the results have to be written
-            check_by_timestamp: defines whether selection for unprocessed data is being done
-            by timestamp within the root_path or by subfolder names within the root_path.
         """
         self.all_names: Dict[str, Path]
 

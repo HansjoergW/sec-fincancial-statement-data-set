@@ -37,7 +37,7 @@ CURRENT_DIR, _ = os.path.split(__file__)
 
 def define_extra_processes(config: Configuration) -> List[AbstractProcess]:
     from secfsdstools.g_pipelines.filter_process import FilterProcess
-    from secfsdstools.g_pipelines.combine_process import CombineProcess
+    from secfsdstools.g_pipelines.concat_process import CombineProcess
 
     raw_dir = config.config_parser.get(section="Filter",
                                        option="filtered_dir_raw")

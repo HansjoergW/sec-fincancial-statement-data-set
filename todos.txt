@@ -48,7 +48,14 @@ todos:
 - document automation classes task_framework (ok)
 - tests for task_framework (ok)
 - adapt to changed framework and tests for modules in g_pipeline
+   - concat
+   - filter
+   - standardize
+
 - document modules in g_pipeline
+  - concat (ok)
+  - filter
+  - standardize
 
 - successfull run tests / linting
 

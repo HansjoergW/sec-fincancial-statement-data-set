@@ -4,7 +4,7 @@ from pathlib import Path
 
 from secfsdstools.c_automation.task_framework import AbstractProcess
 from secfsdstools.d_container.databagmodel import JoinedDataBag
-from secfsdstools.g_pipelines.combine_process import CombineTask
+from secfsdstools.g_pipelines.concat_process import CombineTask
 
 CURRENT_DIR, _ = os.path.split(__file__)
 TESTDATA_PATH = Path(CURRENT_DIR) / ".." / "_testdata"

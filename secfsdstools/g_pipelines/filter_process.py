@@ -47,7 +47,7 @@ class AbstractFilterTask:
         """
 
         Args:
-            zip_file_name: name of the source file name that shall be readed by the  zipcollector
+            zip_file_name: name of the source file that shall be readed by the  zipcollector
             target_path: path to store the filtered bag to
             bag_type: bag type (either "row" or "joined") to save the data as
             stmts: stmts to filter for ("BS", "IS", "CF", ...)

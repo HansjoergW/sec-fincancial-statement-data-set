@@ -49,13 +49,13 @@ todos:
 - tests for task_framework (ok)
 - adapt to changed framework and tests for modules in g_pipeline
    - concat
-   - filter
+   - filter (ok)
    - standardize
 
 - document modules in g_pipeline
   - concat (ok)
-  - filter
-  - standardize
+  - filter (ok)
+  - standardize (ok)
 
 - successfull run tests / linting
 

@@ -22,18 +22,19 @@ def postloadfilter(databag: RawDataBag) -> RawDataBag:
     """
     defines a post filter method that can be used by ZipCollectors.
     It combines the filters:
-            ReportPeriodRawFilter, MainCoregRawFilter, USDOnlyRawFilter
+            ReportPeriodRawFilter, MainCoregRawFilter, USDOnlyRawFilter, OfficialTagsOnlyRawFilter
     """
     # pylint: disable=C0415
     from secfsdstools.e_filter.rawfiltering import ReportPeriodRawFilter, MainCoregRawFilter, \
-        USDOnlyRawFilter
+        USDOnlyRawFilter, OfficialTagsOnlyRawFilter
 
-    return databag[ReportPeriodRawFilter()][MainCoregRawFilter()][USDOnlyRawFilter()]
+    return databag[ReportPeriodRawFilter()][MainCoregRawFilter()][USDOnlyRawFilter()][
+        OfficialTagsOnlyRawFilter()]
 
 
 class AbstractFilterTask:
     """
-    Abstract FilterTask implementation providing some common basic implementations.
+    Abstract FilterTask provides some common basic features.
     Uses the ZipCollector to read the raw databags.
     """
 
@@ -46,6 +47,7 @@ class AbstractFilterTask:
                  post_load_filter: Callable[[RawDataBag], RawDataBag] = postloadfilter
                  ):
         """
+        Constructor.
 
         Args:
             zip_file_name: name of the source file that shall be readed by the  zipcollector
@@ -55,7 +57,7 @@ class AbstractFilterTask:
             forms_filter: defines which forms shall be loaded. default is ['10-K', '10-Q']
             post_load_filter: filter method to be applied after loading of the zip file.
                               default postloadfilter applies ReportPeriodRawFilter,
-                              MainCoregRawFilter, USDOnlyRawFilter
+                              MainCoregRawFilter, USDOnlyRawFilter, OfficialTagsOnlyRawFilter
         """
         if forms_filter is None:
             forms_filter = ['10-K', '10-Q']
@@ -87,22 +89,19 @@ class AbstractFilterTask:
 
 class FilterTask(AbstractFilterTask):
     """
-    Basic Filter implementation which applys filters for
-    10-K and 10-Q forms, as well as
-    ReportPeriodRawFilter, MainCoregRawFilter, and USDOnlyRawFilter
+    Basic Filter implementation which applys the configured filter (as defined in the constructor).
     """
 
     def prepare(self):
-        """ prepare Task."""
+        """ prepare the task -> create the tmp_dir. """
         self.tmp_path.mkdir(parents=True, exist_ok=False)
 
     def execute(self):
         """
-        Uses the ZipCollector to read the input data and then applys the filters for
-        10-K and 10-Q forms, as well as applying the ReportPeriodRawFilter, MainCoregRawFilter,
-        and USDOnlyRawFilter.
-        Saves the result depending on the configuration either as raw or joined data bag
-
+        Uses the ZipCollector to read the input data and then applys the filters as defined
+        in the constructor.
+        Saves the result depending on the configuration either as raw or joined data bag in the
+        defined target path.
         """
         raw_bag = ZipCollector.get_zip_by_name(name=self.zip_file_name,
                                                forms_filter=self.forms_filter,
@@ -123,28 +122,27 @@ class FilterTask(AbstractFilterTask):
 
 class ByStmtFilterTask(AbstractFilterTask):
     """
-    Basic Filter implementation which applys filters for
-    10-K and 10-Q forms, as well as
-    ReportPeriodRawFilter, MainCoregRawFilter, and USDOnlyRawFilter.
+    Basic Filter implementation which applys the configured filters.
 
     Depending on the configuration, the results are either saved in raw or joined format.
-    Moreover, the results are split up by stmt ("BS", "IS", "CF", ...) when being saved into
-    own subfolders.
+
+    Moreover, the result is split up by stmt ("BS", "IS", "CF", ...) when being saved.
     """
 
     def prepare(self):
-        """ prepare Task."""
+        """ prepare Task -> create the tmp_folders with subfolders for every stmt."""
 
         for stmt in self.stmts:
             (self.tmp_path / stmt).mkdir(parents=True, exist_ok=False)
 
     def execute(self):
         """
-        Uses the ZipCollector to read the input data and then applys the filters for
-        10-K and 10-Q forms, as well as applying the ReportPeriodRawFilter, MainCoregRawFilter,
-        and USDOnlyRawFilter.
+        Uses the ZipCollector to read the input data and then applys the filters as
+        defined in the constructor.
+
         Saves the result depending on the configuration either as raw or joined data bag.
-        Moreover, splits the results up by stmt ("BS", "IS", "CF", ...).
+
+        Splits the results up by stmt ("BS", "IS", "CF", ...).
 
         """
         raw_bag = ZipCollector.get_zip_by_name(name=self.zip_file_name,
@@ -177,15 +175,16 @@ class FilterProcess(AbstractProcessPoolProcess):
     """
     Applies basic filters on the raw indexed files and saves the result into the provided
     target_path.
+
     Does it per zip-file and can do it in parallel, depending on the parameter settings.
 
-    Applies the basic filters ReportPeriodRawFilter, MainCoregRawFilter, USDOnlyRawFilter.
+    Applies the basic filters as defined.
     """
 
     def __init__(self,
                  db_dir: str,
                  target_dir: str,
-                 bag_type: str,  # raw or joined
+                 bag_type: str = "joined",  # raw or joined
                  file_type: str = "quarter",
                  save_by_stmt: bool = False,
                  stmts=None,
@@ -195,21 +194,27 @@ class FilterProcess(AbstractProcessPoolProcess):
                  ):
         """
         Constructor.
+
         Args:
             db_dir: directory of the sqlite-db file. Used to read the available zipfiles.
             target_dir: directory to where the results have to be written
-            bag_type: either "raw" or "joined" and defines what bag-type shall be written
+            bag_type: either "raw" or "joined" and defines what bag-type shall be written.
+                      default is "joined".
             file_type: the file type to be processed, default is "quarter"
             save_by_stmt: Flag to indicate whether the results should be split up by the stmt.
                           If it is true, subfolders for every stmt "BS", "IS", "CF", ... will be
                           created.
             stmts: The list of stmts that should be filtered: "BS", "IS", "CF", ... or none
             execute_serial: Flag to indicate whether the files should be process in serial manner.
+            post_load_filter: postload-filter function. Default is the defined
+                              postloadfilter-function.
+            forms_filter: defines which forms to laod (10-K, 10-Q, ...). Default is 10-K and 10-Q.
         """
         super().__init__(execute_serial=execute_serial,
                          chunksize=0)
         if forms_filter is None:
             forms_filter = ['10-K', '10-Q']
+
         self.forms_filter = forms_filter
         self.post_load_filter = post_load_filter
 
@@ -230,9 +235,19 @@ class FilterProcess(AbstractProcessPoolProcess):
             os.path.join(self.target_dir, self.file_type))
 
     def pre_process(self):
+        """
+        pre-processing: delete any existing tmpfolder in the target folder
+        """
         delete_temp_folders(root_path=Path(self.target_dir) / self.file_type)
 
     def calculate_tasks(self) -> List[Task]:
+        """
+        Defines the zipfiles that have not yet been processed and creates appropriate
+        processing FilterTasks for every unprocessed zipfile.
+
+        Returns:
+            List[Task]: List with Tasks.
+        """
         existing = self._get_existing_filtered()
         available = self.dbaccessor.read_filenames_by_type(originFileType=self.file_type)
 

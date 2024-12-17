@@ -4,7 +4,7 @@ from pathlib import Path
 
 from secfsdstools.c_automation.task_framework import AbstractProcess
 from secfsdstools.d_container.databagmodel import JoinedDataBag
-from secfsdstools.g_pipelines.concat_process import CombineTask
+from secfsdstools.g_pipelines.concat_process import ConcatIfNewSubfolderTask
 
 CURRENT_DIR, _ = os.path.split(__file__)
 TESTDATA_PATH = Path(CURRENT_DIR) / ".." / "_testdata"
@@ -26,18 +26,16 @@ def test_direct_sub_directory_collect(tmp_path):
         shutil.copytree(src=TESTDATA_PATH / "joined" / folder, dst=tmp_path / "quarter" / folder)
 
     # execute task
-    task = CombineTask(
+    task = ConcatIfNewSubfolderTask(
         root_path=tmp_path / "quarter",
-        bag_type="joined",
         filter="*",
-        target_path=tmp_path / "all",
-        check_by_timestamp=False
+        target_path=tmp_path / "all"
     )
 
     result = AbstractProcess.process_task(task)
 
     # check results
-    assert len(task.missing_paths) == 3
+    assert len(task.paths_to_process) == 3
     assert result.result == "success"
     assert task.target_path.exists()
     assert task.target_path.is_dir()
@@ -55,17 +53,15 @@ def test_direct_sub_directory_collect(tmp_path):
     shutil.copytree(src=TESTDATA_PATH / "joined" / folder, dst=tmp_path / "quarter" / folder)
 
     # execute task
-    task2 = CombineTask(
+    task2 = ConcatIfNewSubfolderTask(
         root_path=tmp_path / "quarter",
-        bag_type="joined",
         filter="*",
         target_path=tmp_path / "all",
-        check_by_timestamp=False
     )
 
     result2 = AbstractProcess.process_task(task2)
     # check results
-    assert len(task2.missing_paths) == 1
+    assert len(task2.paths_to_process) == 1
     assert result2.result == "success"
     assert task2.target_path.exists()
     assert task2.target_path.is_dir()
@@ -100,18 +96,16 @@ def test_child_sub_directory_collect(tmp_path):
                         dst=tmp_path / "quarter" / folder / "BS")
 
     # execute task
-    task = CombineTask(
+    task = ConcatIfNewSubfolderTask(
         root_path=tmp_path / "quarter",
-        bag_type="joined",
         filter="*/BS",
         target_path=tmp_path / "all",
-        check_by_timestamp=False
     )
 
     result = AbstractProcess.process_task(task)
 
     # check results
-    assert len(task.missing_paths) == 3
+    assert len(task.paths_to_process) == 3
     assert result.result == "success"
     assert task.target_path.exists()
     assert task.target_path.is_dir()
@@ -129,17 +123,15 @@ def test_child_sub_directory_collect(tmp_path):
     shutil.copytree(src=TESTDATA_PATH / "joined" / folder, dst=tmp_path / "quarter" / folder / "BS")
 
     # execute task
-    task2 = CombineTask(
+    task2 = ConcatIfNewSubfolderTask(
         root_path=tmp_path / "quarter",
-        bag_type="joined",
         filter="*/BS",
         target_path=tmp_path / "all",
-        check_by_timestamp=False
     )
 
     result2 = AbstractProcess.process_task(task2)
     # check results
-    assert len(task2.missing_paths) == 1
+    assert len(task2.paths_to_process) == 1
     assert result2.result == "success"
     assert task2.target_path.exists()
     assert task2.target_path.is_dir()
@@ -153,3 +145,5 @@ def test_child_sub_directory_collect(tmp_path):
     assert bag.sub_df.shape == (3585, 36)
 
 
+test for byTimestampConcatTask
+test for processes

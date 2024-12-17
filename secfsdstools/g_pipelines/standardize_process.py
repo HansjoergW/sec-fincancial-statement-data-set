@@ -6,8 +6,10 @@ import shutil
 from pathlib import Path
 from typing import List
 
-from secfsdstools.c_automation.task_framework import Task, delete_temp_folders, \
-    BaseTask, AbstractThreadProcess
+from secfsdstools.c_automation.automation_utils import delete_temp_folders
+
+from secfsdstools.c_automation.task_framework import Task, \
+    CheckByTimestampMergeBaseTask, AbstractThreadProcess
 from secfsdstools.d_container.databagmodel import JoinedDataBag
 from secfsdstools.e_filter.joinedfiltering import OfficialTagsOnlyJoinedFilter
 from secfsdstools.f_standardize.bs_standardize import BalanceSheetStandardizer
@@ -15,9 +17,9 @@ from secfsdstools.f_standardize.cf_standardize import CashFlowStandardizer
 from secfsdstools.f_standardize.is_standardize import IncomeStatementStandardizer
 
 
-class StandardizerTask(BaseTask):
+class StandardizerTask(CheckByTimestampMergeBaseTask):
     """
-    Standardizes the content in the root_path and writes the standardized StandardizedBags
+    Standardizes the content in the root_path and writes the StandardizedBags
     into the target_path.
 
     The root_path is expected to contain the subfolders BS, IS, and CF.
@@ -32,18 +34,15 @@ class StandardizerTask(BaseTask):
         Task that creates the standardized datasets for BS, IS, and CF.
         Expects the data already filtered as subfolders BS, IS, and CF in root_path.
 
-        Note: Will apply the OfficialTagsOnlyJoinedFilter before standardizing.
-
         Args:
             root_path: The root path, containing subfolders for BS, IS, and CF.
                        The Data has to be provided as standardized DataBags.
-            target_path:
+            target_path: the target path to write the results to
         """
         super().__init__(
             root_path=root_path,
             filter="*",  # can actually be ignored
-            target_path=target_path,
-            check_by_timestamp=True  # always true
+            target_path=target_path
         )
 
     def prepare(self):
@@ -63,7 +62,9 @@ class StandardizerTask(BaseTask):
         return (f"StandardizerTask(root_path: {self.root_path}, "
                 f"target_path: {self.target_path})")
 
-    def do_execution(self, paths_to_process: List[Path]):
+    def do_execution(self,
+                     paths_to_process: List[Path],
+                     tmp_path: Path):
         """
         executes the actual standardization, by loading the data for
         BS, IS, and CF and producing saving the StandardizedBag.
@@ -79,25 +80,19 @@ class StandardizerTask(BaseTask):
         cf_standardizer = CashFlowStandardizer()
 
         # standardize bs
-        joined_bag_bs = (
-            JoinedDataBag.load(str(self.root_path / "BS"))
-            [OfficialTagsOnlyJoinedFilter()])
+        joined_bag_bs = JoinedDataBag.load(str(self.root_path / "BS"))
         bs_standardizer.process(joined_bag_bs.pre_num_df.copy())
-        bs_standardizer.get_standardize_bag().save(str(self.tmp_path / "BS"))
+        bs_standardizer.get_standardize_bag().save(str(tmp_path / "BS"))
 
         # standardize is
-        joined_bag_is = (
-            JoinedDataBag.load(str(self.root_path / "IS"))
-            [OfficialTagsOnlyJoinedFilter()])
+        joined_bag_is = JoinedDataBag.load(str(self.root_path / "IS"))
         is_standardizer.process(joined_bag_is.pre_num_df.copy())
-        is_standardizer.get_standardize_bag().save(str(self.tmp_path / "IS"))
+        is_standardizer.get_standardize_bag().save(str(tmp_path / "IS"))
 
         # standardize cf
-        joined_bag_cf = (
-            JoinedDataBag.load(str(self.root_path / "CF"))
-            [OfficialTagsOnlyJoinedFilter()])
+        joined_bag_cf = JoinedDataBag.load(str(self.root_path / "CF"))
         cf_standardizer.process(joined_bag_cf.pre_num_df.copy())
-        cf_standardizer.get_standardize_bag().save(str(self.tmp_path / "CF"))
+        cf_standardizer.get_standardize_bag().save(str(tmp_path / "CF"))
 
 
 class StandardizeProcess(AbstractThreadProcess):

@@ -38,7 +38,7 @@ from typing import List, Tuple, Dict
 
 from secfsdstools.a_utils.downloadutils import UrlDownloader
 from secfsdstools.a_utils.fileutils import get_filenames_in_directory, get_directories_in_directory
-from secfsdstools.c_automation.task_framework import AbstractProcess
+from secfsdstools.c_automation.task_framework import AbstractThreadProcess
 
 LOGGER = logging.getLogger(__name__)
 
@@ -96,7 +96,7 @@ class DownloadTask:
         return f&#34;DownloadTask(target_path: {self.target_path})&#34;
 
 
-class BaseDownloadingProcess(AbstractProcess):
+class BaseDownloadingProcess(AbstractThreadProcess):
     &#34;&#34;&#34;
     Base implementation for downloading zip files.
     &#34;&#34;&#34;
@@ -193,7 +193,7 @@ class BaseDownloadingProcess(AbstractProcess):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class BaseDownloadingProcess(AbstractProcess):
+<pre><code class="python">class BaseDownloadingProcess(AbstractThreadProcess):
     &#34;&#34;&#34;
     Base implementation for downloading zip files.
     &#34;&#34;&#34;
@@ -260,6 +260,7 @@ class BaseDownloadingProcess(AbstractProcess):
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
+<li><a title="secfsdstools.c_automation.task_framework.AbstractThreadProcess" href="../c_automation/task_framework.html#secfsdstools.c_automation.task_framework.AbstractThreadProcess">AbstractThreadProcess</a></li>
 <li><a title="secfsdstools.c_automation.task_framework.AbstractProcess" href="../c_automation/task_framework.html#secfsdstools.c_automation.task_framework.AbstractProcess">AbstractProcess</a></li>
 <li>abc.ABC</li>
 </ul>
@@ -319,12 +320,13 @@ class BaseDownloadingProcess(AbstractProcess):
 </dl>
 <h3>Inherited members</h3>
 <ul class="hlist">
-<li><code><b><a title="secfsdstools.c_automation.task_framework.AbstractProcess" href="../c_automation/task_framework.html#secfsdstools.c_automation.task_framework.AbstractProcess">AbstractProcess</a></b></code>:
+<li><code><b><a title="secfsdstools.c_automation.task_framework.AbstractThreadProcess" href="../c_automation/task_framework.html#secfsdstools.c_automation.task_framework.AbstractThreadProcess">AbstractThreadProcess</a></b></code>:
 <ul class="hlist">
-<li><code><a title="secfsdstools.c_automation.task_framework.AbstractProcess.post_process" href="../c_automation/task_framework.html#secfsdstools.c_automation.task_framework.AbstractProcess.post_process">post_process</a></code></li>
-<li><code><a title="secfsdstools.c_automation.task_framework.AbstractProcess.pre_process" href="../c_automation/task_framework.html#secfsdstools.c_automation.task_framework.AbstractProcess.pre_process">pre_process</a></code></li>
-<li><code><a title="secfsdstools.c_automation.task_framework.AbstractProcess.process" href="../c_automation/task_framework.html#secfsdstools.c_automation.task_framework.AbstractProcess.process">process</a></code></li>
-<li><code><a title="secfsdstools.c_automation.task_framework.AbstractProcess.process_task" href="../c_automation/task_framework.html#secfsdstools.c_automation.task_framework.AbstractProcess.process_task">process_task</a></code></li>
+<li><code><a title="secfsdstools.c_automation.task_framework.AbstractThreadProcess.do_execution" href="../c_automation/task_framework.html#secfsdstools.c_automation.task_framework.AbstractThreadProcess.do_execution">do_execution</a></code></li>
+<li><code><a title="secfsdstools.c_automation.task_framework.AbstractThreadProcess.post_process" href="../c_automation/task_framework.html#secfsdstools.c_automation.task_framework.AbstractProcess.post_process">post_process</a></code></li>
+<li><code><a title="secfsdstools.c_automation.task_framework.AbstractThreadProcess.pre_process" href="../c_automation/task_framework.html#secfsdstools.c_automation.task_framework.AbstractProcess.pre_process">pre_process</a></code></li>
+<li><code><a title="secfsdstools.c_automation.task_framework.AbstractThreadProcess.process" href="../c_automation/task_framework.html#secfsdstools.c_automation.task_framework.AbstractProcess.process">process</a></code></li>
+<li><code><a title="secfsdstools.c_automation.task_framework.AbstractThreadProcess.process_task" href="../c_automation/task_framework.html#secfsdstools.c_automation.task_framework.AbstractProcess.process_task">process_task</a></code></li>
 </ul>
 </li>
 </ul>

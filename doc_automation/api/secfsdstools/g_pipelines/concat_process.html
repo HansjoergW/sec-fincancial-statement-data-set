@@ -1,0 +1,1026 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.10.0" />
+<title>secfsdstools.g_pipelines.concat_process API documentation</title>
+<meta name="description" content="Module that combines the content from several input folders into a single DataBag." />
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
+<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js" integrity="sha256-Uv3H6lx7dJmRfRvH8TH6kJD1TSK1aFcwgx+mdg3epi8=" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>secfsdstools.g_pipelines.concat_process</code></h1>
+</header>
+<section id="section-intro">
+<p>Module that combines the content from several input folders into a single DataBag.</p>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">&#34;&#34;&#34;
+Module that combines the content from several input folders into a single DataBag.
+&#34;&#34;&#34;
+from pathlib import Path
+from typing import List
+
+from secfsdstools.c_automation.automation_utils import delete_temp_folders
+from secfsdstools.c_automation.task_framework import CheckByNewSubfoldersMergeBaseTask, \
+    CheckByTimestampMergeBaseTask, AbstractTask, \
+    AbstractThreadProcess
+from secfsdstools.g_pipelines.pipeline_utils import concat_bags
+
+
+class ConcatIfNewSubfolderTask(CheckByNewSubfoldersMergeBaseTask):
+    &#34;&#34;&#34;
+        Concats subfolders in root_path if a new subfolder was added.
+    &#34;&#34;&#34;
+
+    def __init__(self,
+                 root_path: Path,
+                 filter: str,
+                 target_path: Path):
+        &#34;&#34;&#34;
+        Takes subfolders from the root_path (with applied filter string) and concatenates them into
+        a single DataBag (either Raw or Joined) into the target_path.
+
+        The filter string defines on which subfolder level actually does contain the data to be
+        concatenated.
+
+        E.g. if the filter is just a &#34;*&#34; and the root_path looks like
+        &lt;pre&gt;
+        root_path
+            2010q1.zip
+            2010q2.zip
+            ...
+            2024q3.zip
+        &lt;/pre&gt;
+        it would expect that the subfolders directly contain the databags.&lt;br&gt;
+        If the filter is defined as &#34;*/BS&#34; and the root_path looks like
+        &lt;pre&gt;
+        root_path
+            2010q1.zip
+              BS
+              CF
+              IS
+            2010q2.zip
+              BS
+              CF
+              IS
+            ...
+            2024q3.zip
+              BS
+              CF
+              IS
+        &lt;/pre&gt;
+
+        It would concatenate all BS subfolders into the target path.&lt;br&gt;
+
+        The logic is executed, if new subfolders are available.
+        Meaning, if a new folder in the root_path appears, it will add it to
+        the already existing content in the target_path. So, if in the above example the
+        subfolders 2010q1.zip ... 2024q3.zip already were concatenated in a previous run
+        and in the next run the subfolder 2024q4.zip is detected, it will add the new subfolder
+        to the existin gcontent in the target_path.
+
+        This is being done by writing the name of the processed subfolders into a meta.inf file
+        in the target_path.
+
+        Args:
+            root_path: root path to read that from
+            filter: filter string that defines which subfolders in the root_path have to be selected
+            target_path: path to where the results have to be written
+        &#34;&#34;&#34;
+        super().__init__(
+            root_path=root_path,
+            filter=filter,
+            target_path=target_path
+        )
+
+    def __str__(self) -&gt; str:
+        return f&#34;ConcatIfNewSubfolderTask(root_path: {self.root_path}, filter: {self.filter})&#34;
+
+    def do_execution(self,
+                     paths_to_process: List[Path],
+                     target_path: Path,
+                     tmp_path: Path):
+        &#34;&#34;&#34;
+            defines the logic to be executed.
+        Args:
+            paths_to_process: lists of paths/folders that have to be processed
+            target_path: the path where the result of the previous run was written
+            tmp_path: target path to where a result has to be written
+        &#34;&#34;&#34;
+        paths_to_concat = paths_to_process
+
+        # if the target path exits, it must also be concatenated into the new result
+        if target_path.exists():
+            paths_to_concat = paths_to_process + [target_path]
+
+        # concat and save to the tmp_path
+        concat_bags(paths_to_concat=paths_to_concat,
+                    target_path=tmp_path)
+
+
+class ConcatIfChangedTimestampTask(CheckByTimestampMergeBaseTask):
+    &#34;&#34;&#34;
+        Concats subfolders in root_path if something did change in any subfolder since the last
+        run.
+    &#34;&#34;&#34;
+
+    def __init__(self,
+                 root_path: Path,
+                 filter: str,
+                 target_path: Path):
+        &#34;&#34;&#34;
+        Takes subfolder from the root_path (with applied filter string) and concatenates them into
+        a single DataBag (either Raw or Joined) into the target_path.
+
+        The filter string defines on which subfolder level actually does contain the data to be
+        concatenated.
+
+        E.g. if the filter is just a &#34;*&#34; and the root_path looks like
+        &lt;pre&gt;
+        root_path
+            2010q1.zip
+            2010q2.zip
+            ...
+            2024q3.zip
+        &lt;/pre&gt;
+        it would expect that the subfolders directly contain the databags.&lt;br&gt;
+        If the filter is defined as &#34;*/BS&#34; and the root_path looks like
+        &lt;pre&gt;
+        root_path
+            2010q1.zip
+              BS
+              CF
+              IS
+            2010q2.zip
+              BS
+              CF
+              IS
+            ...
+            2024q3.zip
+              BS
+              CF
+              IS
+        &lt;/pre&gt;
+
+        It would concatenate all BS subfolders into the target path.&lt;br&gt;
+
+        The logic will be executed, if a file/folder in the root_path has changed since the
+        last processing.
+
+        This is being done by writing the actual last modification timestamp of the root_path
+        into the meta.inf file of the target_path.
+
+
+        Args:
+            root_path: root path to read that from
+            filter: filter string that defines which subfolders in the root_path have to be selected
+            target_path: path to where the results have to be written
+        &#34;&#34;&#34;
+        super().__init__(
+            root_path=root_path,
+            filter=filter,
+            target_path=target_path
+        )
+
+    def __str__(self) -&gt; str:
+        return f&#34;ConcatIfChangedTimestampTask(root_path: {self.root_path}, filter: {self.filter})&#34;
+
+    def do_execution(self,
+                     paths_to_process: List[Path],
+                     tmp_path: Path):
+        &#34;&#34;&#34;
+        concats the bags in the paths_to_process and saves it in the tmp_path.
+
+        Args:
+            paths_to_process: lists of paths/folders that have to be processed
+            tmp_path: path to where a result has to be written
+        &#34;&#34;&#34;
+        concat_bags(paths_to_concat=paths_to_process, target_path=tmp_path)
+
+
+class ConcatByChangedTimestampProcess(AbstractThreadProcess):
+    &#34;&#34;&#34;
+    Process implementation that concatenates raw or joined databigs in a root_dir
+    if something changed in any of the subfolders and saves the result in the target_dir.
+    &#34;&#34;&#34;
+
+    def __init__(self,
+                 root_dir: str,
+                 target_dir: str,
+                 filter: str = &#34;*&#34;,
+                 ):
+        &#34;&#34;&#34;
+        Constructor.
+        Args:
+            root_dir: root_dir which contains the bags to be concatenated
+            target_dir: target_dir to which the concatenated result has to be written
+            filter: filter string to apply to select the bags/subfolders to be processed.
+                    default is &#34;*&#34;.
+        &#34;&#34;&#34;
+        super().__init__(execute_serial=False,
+                         chunksize=0)
+
+        self.root_path = Path(root_dir)
+        self.target_path = Path(target_dir)
+        self.filter = filter
+
+    def pre_process(self):
+        &#34;&#34;&#34;
+        Executed before the actual process and cleans up any &#34;tmp&#34; folders within the target,
+        in case of a failing previous processing.
+        &#34;&#34;&#34;
+        delete_temp_folders(root_path=self.target_path.parent)
+
+    def calculate_tasks(self) -&gt; List[AbstractTask]:
+        &#34;&#34;&#34;
+            Calculates the tasks that actually execute the logic.
+            This is a single task process, so just a single task is being created.
+
+        Returns:
+            List[AbstractTask]: Task to be executed
+        &#34;&#34;&#34;
+        task = ConcatIfChangedTimestampTask(
+            root_path=self.root_path,
+            filter=self.filter,
+            target_path=self.target_path,
+        )
+
+        # since this is a one task process, we just check if there is really something to do
+        if len(task.paths_to_process) &gt; 0:
+            return [task]
+        return []
+
+
+class ConcatByNewSubfoldersProcess(AbstractThreadProcess):
+    &#34;&#34;&#34;
+    Process implementation that concatenates raw or joined databags in a root_dir
+    if a new bag/subfolder was added to the root_dir and saves the result in the target_dir.
+    &#34;&#34;&#34;
+
+    def __init__(self,
+                 root_dir: str,
+                 target_dir: str,
+                 filter: str = &#34;*&#34;,
+                 ):
+        &#34;&#34;&#34;
+        Constructor.
+        Args:
+            root_dir: root_dir which contains the bags to be concatenated
+            target_dir: target_dir to which the concatenated result has to be written
+            filter: filter string to apply to select the bags/subfolders to be processed.
+                    default is &#34;*&#34;.
+        &#34;&#34;&#34;
+        super().__init__(execute_serial=False,
+                         chunksize=0)
+
+        self.root_path = Path(root_dir)
+        self.target_path = Path(target_dir)
+        self.filter = filter
+
+    def pre_process(self):
+        &#34;&#34;&#34;
+        Executed before the actual process and cleans up any &#34;tmp&#34; folders within the target,
+        in case of a failing previous processing.
+        &#34;&#34;&#34;
+        delete_temp_folders(root_path=self.target_path.parent)
+
+    def calculate_tasks(self) -&gt; List[AbstractTask]:
+        &#34;&#34;&#34;
+            Calculates the tasks that actually execute the logic.
+            This is a single task process, so just a single task is being created.
+
+        Returns:
+            List[AbstractTask]: Task to be executed
+        &#34;&#34;&#34;
+        task = ConcatIfNewSubfolderTask(
+            root_path=self.root_path,
+            filter=self.filter,
+            target_path=self.target_path,
+        )
+
+        # since this is a one task process, we just check if there is really something to do
+        if len(task.paths_to_process) &gt; 0:
+            return [task]
+        return []</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="secfsdstools.g_pipelines.concat_process.ConcatByChangedTimestampProcess"><code class="flex name class">
+<span>class <span class="ident">ConcatByChangedTimestampProcess</span></span>
+<span>(</span><span>root_dir: str, target_dir: str, filter: str = '*')</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Process implementation that concatenates raw or joined databigs in a root_dir
+if something changed in any of the subfolders and saves the result in the target_dir.</p>
+<p>Constructor.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>root_dir</code></strong></dt>
+<dd>root_dir which contains the bags to be concatenated</dd>
+<dt><strong><code>target_dir</code></strong></dt>
+<dd>target_dir to which the concatenated result has to be written</dd>
+<dt><strong><code>filter</code></strong></dt>
+<dd>filter string to apply to select the bags/subfolders to be processed.
+default is "*".</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class ConcatByChangedTimestampProcess(AbstractThreadProcess):
+    &#34;&#34;&#34;
+    Process implementation that concatenates raw or joined databigs in a root_dir
+    if something changed in any of the subfolders and saves the result in the target_dir.
+    &#34;&#34;&#34;
+
+    def __init__(self,
+                 root_dir: str,
+                 target_dir: str,
+                 filter: str = &#34;*&#34;,
+                 ):
+        &#34;&#34;&#34;
+        Constructor.
+        Args:
+            root_dir: root_dir which contains the bags to be concatenated
+            target_dir: target_dir to which the concatenated result has to be written
+            filter: filter string to apply to select the bags/subfolders to be processed.
+                    default is &#34;*&#34;.
+        &#34;&#34;&#34;
+        super().__init__(execute_serial=False,
+                         chunksize=0)
+
+        self.root_path = Path(root_dir)
+        self.target_path = Path(target_dir)
+        self.filter = filter
+
+    def pre_process(self):
+        &#34;&#34;&#34;
+        Executed before the actual process and cleans up any &#34;tmp&#34; folders within the target,
+        in case of a failing previous processing.
+        &#34;&#34;&#34;
+        delete_temp_folders(root_path=self.target_path.parent)
+
+    def calculate_tasks(self) -&gt; List[AbstractTask]:
+        &#34;&#34;&#34;
+            Calculates the tasks that actually execute the logic.
+            This is a single task process, so just a single task is being created.
+
+        Returns:
+            List[AbstractTask]: Task to be executed
+        &#34;&#34;&#34;
+        task = ConcatIfChangedTimestampTask(
+            root_path=self.root_path,
+            filter=self.filter,
+            target_path=self.target_path,
+        )
+
+        # since this is a one task process, we just check if there is really something to do
+        if len(task.paths_to_process) &gt; 0:
+            return [task]
+        return []</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="secfsdstools.c_automation.task_framework.AbstractThreadProcess" href="../c_automation/task_framework.html#secfsdstools.c_automation.task_framework.AbstractThreadProcess">AbstractThreadProcess</a></li>
+<li><a title="secfsdstools.c_automation.task_framework.AbstractProcess" href="../c_automation/task_framework.html#secfsdstools.c_automation.task_framework.AbstractProcess">AbstractProcess</a></li>
+<li>abc.ABC</li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="secfsdstools.g_pipelines.concat_process.ConcatByChangedTimestampProcess.calculate_tasks"><code class="name flex">
+<span>def <span class="ident">calculate_tasks</span></span>(<span>self) ‑> List[<a title="secfsdstools.c_automation.task_framework.AbstractTask" href="../c_automation/task_framework.html#secfsdstools.c_automation.task_framework.AbstractTask">AbstractTask</a>]</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Calculates the tasks that actually execute the logic.
+This is a single task process, so just a single task is being created.</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>List[AbstractTask]</code></dt>
+<dd>Task to be executed</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def calculate_tasks(self) -&gt; List[AbstractTask]:
+    &#34;&#34;&#34;
+        Calculates the tasks that actually execute the logic.
+        This is a single task process, so just a single task is being created.
+
+    Returns:
+        List[AbstractTask]: Task to be executed
+    &#34;&#34;&#34;
+    task = ConcatIfChangedTimestampTask(
+        root_path=self.root_path,
+        filter=self.filter,
+        target_path=self.target_path,
+    )
+
+    # since this is a one task process, we just check if there is really something to do
+    if len(task.paths_to_process) &gt; 0:
+        return [task]
+    return []</code></pre>
+</details>
+</dd>
+<dt id="secfsdstools.g_pipelines.concat_process.ConcatByChangedTimestampProcess.pre_process"><code class="name flex">
+<span>def <span class="ident">pre_process</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Executed before the actual process and cleans up any "tmp" folders within the target,
+in case of a failing previous processing.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def pre_process(self):
+    &#34;&#34;&#34;
+    Executed before the actual process and cleans up any &#34;tmp&#34; folders within the target,
+    in case of a failing previous processing.
+    &#34;&#34;&#34;
+    delete_temp_folders(root_path=self.target_path.parent)</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="secfsdstools.c_automation.task_framework.AbstractThreadProcess" href="../c_automation/task_framework.html#secfsdstools.c_automation.task_framework.AbstractThreadProcess">AbstractThreadProcess</a></b></code>:
+<ul class="hlist">
+<li><code><a title="secfsdstools.c_automation.task_framework.AbstractThreadProcess.do_execution" href="../c_automation/task_framework.html#secfsdstools.c_automation.task_framework.AbstractThreadProcess.do_execution">do_execution</a></code></li>
+<li><code><a title="secfsdstools.c_automation.task_framework.AbstractThreadProcess.post_process" href="../c_automation/task_framework.html#secfsdstools.c_automation.task_framework.AbstractProcess.post_process">post_process</a></code></li>
+<li><code><a title="secfsdstools.c_automation.task_framework.AbstractThreadProcess.process" href="../c_automation/task_framework.html#secfsdstools.c_automation.task_framework.AbstractProcess.process">process</a></code></li>
+<li><code><a title="secfsdstools.c_automation.task_framework.AbstractThreadProcess.process_task" href="../c_automation/task_framework.html#secfsdstools.c_automation.task_framework.AbstractProcess.process_task">process_task</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+<dt id="secfsdstools.g_pipelines.concat_process.ConcatByNewSubfoldersProcess"><code class="flex name class">
+<span>class <span class="ident">ConcatByNewSubfoldersProcess</span></span>
+<span>(</span><span>root_dir: str, target_dir: str, filter: str = '*')</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Process implementation that concatenates raw or joined databags in a root_dir
+if a new bag/subfolder was added to the root_dir and saves the result in the target_dir.</p>
+<p>Constructor.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>root_dir</code></strong></dt>
+<dd>root_dir which contains the bags to be concatenated</dd>
+<dt><strong><code>target_dir</code></strong></dt>
+<dd>target_dir to which the concatenated result has to be written</dd>
+<dt><strong><code>filter</code></strong></dt>
+<dd>filter string to apply to select the bags/subfolders to be processed.
+default is "*".</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class ConcatByNewSubfoldersProcess(AbstractThreadProcess):
+    &#34;&#34;&#34;
+    Process implementation that concatenates raw or joined databags in a root_dir
+    if a new bag/subfolder was added to the root_dir and saves the result in the target_dir.
+    &#34;&#34;&#34;
+
+    def __init__(self,
+                 root_dir: str,
+                 target_dir: str,
+                 filter: str = &#34;*&#34;,
+                 ):
+        &#34;&#34;&#34;
+        Constructor.
+        Args:
+            root_dir: root_dir which contains the bags to be concatenated
+            target_dir: target_dir to which the concatenated result has to be written
+            filter: filter string to apply to select the bags/subfolders to be processed.
+                    default is &#34;*&#34;.
+        &#34;&#34;&#34;
+        super().__init__(execute_serial=False,
+                         chunksize=0)
+
+        self.root_path = Path(root_dir)
+        self.target_path = Path(target_dir)
+        self.filter = filter
+
+    def pre_process(self):
+        &#34;&#34;&#34;
+        Executed before the actual process and cleans up any &#34;tmp&#34; folders within the target,
+        in case of a failing previous processing.
+        &#34;&#34;&#34;
+        delete_temp_folders(root_path=self.target_path.parent)
+
+    def calculate_tasks(self) -&gt; List[AbstractTask]:
+        &#34;&#34;&#34;
+            Calculates the tasks that actually execute the logic.
+            This is a single task process, so just a single task is being created.
+
+        Returns:
+            List[AbstractTask]: Task to be executed
+        &#34;&#34;&#34;
+        task = ConcatIfNewSubfolderTask(
+            root_path=self.root_path,
+            filter=self.filter,
+            target_path=self.target_path,
+        )
+
+        # since this is a one task process, we just check if there is really something to do
+        if len(task.paths_to_process) &gt; 0:
+            return [task]
+        return []</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="secfsdstools.c_automation.task_framework.AbstractThreadProcess" href="../c_automation/task_framework.html#secfsdstools.c_automation.task_framework.AbstractThreadProcess">AbstractThreadProcess</a></li>
+<li><a title="secfsdstools.c_automation.task_framework.AbstractProcess" href="../c_automation/task_framework.html#secfsdstools.c_automation.task_framework.AbstractProcess">AbstractProcess</a></li>
+<li>abc.ABC</li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="secfsdstools.g_pipelines.concat_process.ConcatByNewSubfoldersProcess.calculate_tasks"><code class="name flex">
+<span>def <span class="ident">calculate_tasks</span></span>(<span>self) ‑> List[<a title="secfsdstools.c_automation.task_framework.AbstractTask" href="../c_automation/task_framework.html#secfsdstools.c_automation.task_framework.AbstractTask">AbstractTask</a>]</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Calculates the tasks that actually execute the logic.
+This is a single task process, so just a single task is being created.</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>List[AbstractTask]</code></dt>
+<dd>Task to be executed</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def calculate_tasks(self) -&gt; List[AbstractTask]:
+    &#34;&#34;&#34;
+        Calculates the tasks that actually execute the logic.
+        This is a single task process, so just a single task is being created.
+
+    Returns:
+        List[AbstractTask]: Task to be executed
+    &#34;&#34;&#34;
+    task = ConcatIfNewSubfolderTask(
+        root_path=self.root_path,
+        filter=self.filter,
+        target_path=self.target_path,
+    )
+
+    # since this is a one task process, we just check if there is really something to do
+    if len(task.paths_to_process) &gt; 0:
+        return [task]
+    return []</code></pre>
+</details>
+</dd>
+<dt id="secfsdstools.g_pipelines.concat_process.ConcatByNewSubfoldersProcess.pre_process"><code class="name flex">
+<span>def <span class="ident">pre_process</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Executed before the actual process and cleans up any "tmp" folders within the target,
+in case of a failing previous processing.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def pre_process(self):
+    &#34;&#34;&#34;
+    Executed before the actual process and cleans up any &#34;tmp&#34; folders within the target,
+    in case of a failing previous processing.
+    &#34;&#34;&#34;
+    delete_temp_folders(root_path=self.target_path.parent)</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="secfsdstools.c_automation.task_framework.AbstractThreadProcess" href="../c_automation/task_framework.html#secfsdstools.c_automation.task_framework.AbstractThreadProcess">AbstractThreadProcess</a></b></code>:
+<ul class="hlist">
+<li><code><a title="secfsdstools.c_automation.task_framework.AbstractThreadProcess.do_execution" href="../c_automation/task_framework.html#secfsdstools.c_automation.task_framework.AbstractThreadProcess.do_execution">do_execution</a></code></li>
+<li><code><a title="secfsdstools.c_automation.task_framework.AbstractThreadProcess.post_process" href="../c_automation/task_framework.html#secfsdstools.c_automation.task_framework.AbstractProcess.post_process">post_process</a></code></li>
+<li><code><a title="secfsdstools.c_automation.task_framework.AbstractThreadProcess.process" href="../c_automation/task_framework.html#secfsdstools.c_automation.task_framework.AbstractProcess.process">process</a></code></li>
+<li><code><a title="secfsdstools.c_automation.task_framework.AbstractThreadProcess.process_task" href="../c_automation/task_framework.html#secfsdstools.c_automation.task_framework.AbstractProcess.process_task">process_task</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+<dt id="secfsdstools.g_pipelines.concat_process.ConcatIfChangedTimestampTask"><code class="flex name class">
+<span>class <span class="ident">ConcatIfChangedTimestampTask</span></span>
+<span>(</span><span>root_path: pathlib.Path, filter: str, target_path: pathlib.Path)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Concats subfolders in root_path if something did change in any subfolder since the last
+run.</p>
+<p>Takes subfolder from the root_path (with applied filter string) and concatenates them into
+a single DataBag (either Raw or Joined) into the target_path.</p>
+<p>The filter string defines on which subfolder level actually does contain the data to be
+concatenated.</p>
+<p>E.g. if the filter is just a "*" and the root_path looks like</p>
+<pre>
+root_path
+    2010q1.zip
+    2010q2.zip
+    ...
+    2024q3.zip
+</pre>
+<p>it would expect that the subfolders directly contain the databags.<br>
+If the filter is defined as "*/BS" and the root_path looks like</p>
+<pre>
+root_path
+    2010q1.zip
+      BS
+      CF
+      IS
+    2010q2.zip
+      BS
+      CF
+      IS
+    ...
+    2024q3.zip
+      BS
+      CF
+      IS
+</pre>
+<p>It would concatenate all BS subfolders into the target path.<br></p>
+<p>The logic will be executed, if a file/folder in the root_path has changed since the
+last processing.</p>
+<p>This is being done by writing the actual last modification timestamp of the root_path
+into the meta.inf file of the target_path.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>root_path</code></strong></dt>
+<dd>root path to read that from</dd>
+<dt><strong><code>filter</code></strong></dt>
+<dd>filter string that defines which subfolders in the root_path have to be selected</dd>
+<dt><strong><code>target_path</code></strong></dt>
+<dd>path to where the results have to be written</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class ConcatIfChangedTimestampTask(CheckByTimestampMergeBaseTask):
+    &#34;&#34;&#34;
+        Concats subfolders in root_path if something did change in any subfolder since the last
+        run.
+    &#34;&#34;&#34;
+
+    def __init__(self,
+                 root_path: Path,
+                 filter: str,
+                 target_path: Path):
+        &#34;&#34;&#34;
+        Takes subfolder from the root_path (with applied filter string) and concatenates them into
+        a single DataBag (either Raw or Joined) into the target_path.
+
+        The filter string defines on which subfolder level actually does contain the data to be
+        concatenated.
+
+        E.g. if the filter is just a &#34;*&#34; and the root_path looks like
+        &lt;pre&gt;
+        root_path
+            2010q1.zip
+            2010q2.zip
+            ...
+            2024q3.zip
+        &lt;/pre&gt;
+        it would expect that the subfolders directly contain the databags.&lt;br&gt;
+        If the filter is defined as &#34;*/BS&#34; and the root_path looks like
+        &lt;pre&gt;
+        root_path
+            2010q1.zip
+              BS
+              CF
+              IS
+            2010q2.zip
+              BS
+              CF
+              IS
+            ...
+            2024q3.zip
+              BS
+              CF
+              IS
+        &lt;/pre&gt;
+
+        It would concatenate all BS subfolders into the target path.&lt;br&gt;
+
+        The logic will be executed, if a file/folder in the root_path has changed since the
+        last processing.
+
+        This is being done by writing the actual last modification timestamp of the root_path
+        into the meta.inf file of the target_path.
+
+
+        Args:
+            root_path: root path to read that from
+            filter: filter string that defines which subfolders in the root_path have to be selected
+            target_path: path to where the results have to be written
+        &#34;&#34;&#34;
+        super().__init__(
+            root_path=root_path,
+            filter=filter,
+            target_path=target_path
+        )
+
+    def __str__(self) -&gt; str:
+        return f&#34;ConcatIfChangedTimestampTask(root_path: {self.root_path}, filter: {self.filter})&#34;
+
+    def do_execution(self,
+                     paths_to_process: List[Path],
+                     tmp_path: Path):
+        &#34;&#34;&#34;
+        concats the bags in the paths_to_process and saves it in the tmp_path.
+
+        Args:
+            paths_to_process: lists of paths/folders that have to be processed
+            tmp_path: path to where a result has to be written
+        &#34;&#34;&#34;
+        concat_bags(paths_to_concat=paths_to_process, target_path=tmp_path)</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="secfsdstools.c_automation.task_framework.CheckByTimestampMergeBaseTask" href="../c_automation/task_framework.html#secfsdstools.c_automation.task_framework.CheckByTimestampMergeBaseTask">CheckByTimestampMergeBaseTask</a></li>
+<li><a title="secfsdstools.c_automation.task_framework.AbstractTask" href="../c_automation/task_framework.html#secfsdstools.c_automation.task_framework.AbstractTask">AbstractTask</a></li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="secfsdstools.g_pipelines.concat_process.ConcatIfChangedTimestampTask.do_execution"><code class="name flex">
+<span>def <span class="ident">do_execution</span></span>(<span>self, paths_to_process: List[pathlib.Path], tmp_path: pathlib.Path)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>concats the bags in the paths_to_process and saves it in the tmp_path.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>paths_to_process</code></strong></dt>
+<dd>lists of paths/folders that have to be processed</dd>
+<dt><strong><code>tmp_path</code></strong></dt>
+<dd>path to where a result has to be written</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def do_execution(self,
+                 paths_to_process: List[Path],
+                 tmp_path: Path):
+    &#34;&#34;&#34;
+    concats the bags in the paths_to_process and saves it in the tmp_path.
+
+    Args:
+        paths_to_process: lists of paths/folders that have to be processed
+        tmp_path: path to where a result has to be written
+    &#34;&#34;&#34;
+    concat_bags(paths_to_concat=paths_to_process, target_path=tmp_path)</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="secfsdstools.c_automation.task_framework.CheckByTimestampMergeBaseTask" href="../c_automation/task_framework.html#secfsdstools.c_automation.task_framework.CheckByTimestampMergeBaseTask">CheckByTimestampMergeBaseTask</a></b></code>:
+<ul class="hlist">
+<li><code><a title="secfsdstools.c_automation.task_framework.CheckByTimestampMergeBaseTask.commit" href="../c_automation/task_framework.html#secfsdstools.c_automation.task_framework.AbstractTask.commit">commit</a></code></li>
+<li><code><a title="secfsdstools.c_automation.task_framework.CheckByTimestampMergeBaseTask.exception" href="../c_automation/task_framework.html#secfsdstools.c_automation.task_framework.AbstractTask.exception">exception</a></code></li>
+<li><code><a title="secfsdstools.c_automation.task_framework.CheckByTimestampMergeBaseTask.execute" href="../c_automation/task_framework.html#secfsdstools.c_automation.task_framework.CheckByTimestampMergeBaseTask.execute">execute</a></code></li>
+<li><code><a title="secfsdstools.c_automation.task_framework.CheckByTimestampMergeBaseTask.has_work_todo" href="../c_automation/task_framework.html#secfsdstools.c_automation.task_framework.AbstractTask.has_work_todo">has_work_todo</a></code></li>
+<li><code><a title="secfsdstools.c_automation.task_framework.CheckByTimestampMergeBaseTask.prepare" href="../c_automation/task_framework.html#secfsdstools.c_automation.task_framework.AbstractTask.prepare">prepare</a></code></li>
+<li><code><a title="secfsdstools.c_automation.task_framework.CheckByTimestampMergeBaseTask.read_metainf_content" href="../c_automation/task_framework.html#secfsdstools.c_automation.task_framework.AbstractTask.read_metainf_content">read_metainf_content</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+<dt id="secfsdstools.g_pipelines.concat_process.ConcatIfNewSubfolderTask"><code class="flex name class">
+<span>class <span class="ident">ConcatIfNewSubfolderTask</span></span>
+<span>(</span><span>root_path: pathlib.Path, filter: str, target_path: pathlib.Path)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Concats subfolders in root_path if a new subfolder was added.</p>
+<p>Takes subfolders from the root_path (with applied filter string) and concatenates them into
+a single DataBag (either Raw or Joined) into the target_path.</p>
+<p>The filter string defines on which subfolder level actually does contain the data to be
+concatenated.</p>
+<p>E.g. if the filter is just a "*" and the root_path looks like</p>
+<pre>
+root_path
+    2010q1.zip
+    2010q2.zip
+    ...
+    2024q3.zip
+</pre>
+<p>it would expect that the subfolders directly contain the databags.<br>
+If the filter is defined as "*/BS" and the root_path looks like</p>
+<pre>
+root_path
+    2010q1.zip
+      BS
+      CF
+      IS
+    2010q2.zip
+      BS
+      CF
+      IS
+    ...
+    2024q3.zip
+      BS
+      CF
+      IS
+</pre>
+<p>It would concatenate all BS subfolders into the target path.<br></p>
+<p>The logic is executed, if new subfolders are available.
+Meaning, if a new folder in the root_path appears, it will add it to
+the already existing content in the target_path. So, if in the above example the
+subfolders 2010q1.zip &hellip; 2024q3.zip already were concatenated in a previous run
+and in the next run the subfolder 2024q4.zip is detected, it will add the new subfolder
+to the existin gcontent in the target_path.</p>
+<p>This is being done by writing the name of the processed subfolders into a meta.inf file
+in the target_path.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>root_path</code></strong></dt>
+<dd>root path to read that from</dd>
+<dt><strong><code>filter</code></strong></dt>
+<dd>filter string that defines which subfolders in the root_path have to be selected</dd>
+<dt><strong><code>target_path</code></strong></dt>
+<dd>path to where the results have to be written</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class ConcatIfNewSubfolderTask(CheckByNewSubfoldersMergeBaseTask):
+    &#34;&#34;&#34;
+        Concats subfolders in root_path if a new subfolder was added.
+    &#34;&#34;&#34;
+
+    def __init__(self,
+                 root_path: Path,
+                 filter: str,
+                 target_path: Path):
+        &#34;&#34;&#34;
+        Takes subfolders from the root_path (with applied filter string) and concatenates them into
+        a single DataBag (either Raw or Joined) into the target_path.
+
+        The filter string defines on which subfolder level actually does contain the data to be
+        concatenated.
+
+        E.g. if the filter is just a &#34;*&#34; and the root_path looks like
+        &lt;pre&gt;
+        root_path
+            2010q1.zip
+            2010q2.zip
+            ...
+            2024q3.zip
+        &lt;/pre&gt;
+        it would expect that the subfolders directly contain the databags.&lt;br&gt;
+        If the filter is defined as &#34;*/BS&#34; and the root_path looks like
+        &lt;pre&gt;
+        root_path
+            2010q1.zip
+              BS
+              CF
+              IS
+            2010q2.zip
+              BS
+              CF
+              IS
+            ...
+            2024q3.zip
+              BS
+              CF
+              IS
+        &lt;/pre&gt;
+
+        It would concatenate all BS subfolders into the target path.&lt;br&gt;
+
+        The logic is executed, if new subfolders are available.
+        Meaning, if a new folder in the root_path appears, it will add it to
+        the already existing content in the target_path. So, if in the above example the
+        subfolders 2010q1.zip ... 2024q3.zip already were concatenated in a previous run
+        and in the next run the subfolder 2024q4.zip is detected, it will add the new subfolder
+        to the existin gcontent in the target_path.
+
+        This is being done by writing the name of the processed subfolders into a meta.inf file
+        in the target_path.
+
+        Args:
+            root_path: root path to read that from
+            filter: filter string that defines which subfolders in the root_path have to be selected
+            target_path: path to where the results have to be written
+        &#34;&#34;&#34;
+        super().__init__(
+            root_path=root_path,
+            filter=filter,
+            target_path=target_path
+        )
+
+    def __str__(self) -&gt; str:
+        return f&#34;ConcatIfNewSubfolderTask(root_path: {self.root_path}, filter: {self.filter})&#34;
+
+    def do_execution(self,
+                     paths_to_process: List[Path],
+                     target_path: Path,
+                     tmp_path: Path):
+        &#34;&#34;&#34;
+            defines the logic to be executed.
+        Args:
+            paths_to_process: lists of paths/folders that have to be processed
+            target_path: the path where the result of the previous run was written
+            tmp_path: target path to where a result has to be written
+        &#34;&#34;&#34;
+        paths_to_concat = paths_to_process
+
+        # if the target path exits, it must also be concatenated into the new result
+        if target_path.exists():
+            paths_to_concat = paths_to_process + [target_path]
+
+        # concat and save to the tmp_path
+        concat_bags(paths_to_concat=paths_to_concat,
+                    target_path=tmp_path)</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="secfsdstools.c_automation.task_framework.CheckByNewSubfoldersMergeBaseTask" href="../c_automation/task_framework.html#secfsdstools.c_automation.task_framework.CheckByNewSubfoldersMergeBaseTask">CheckByNewSubfoldersMergeBaseTask</a></li>
+<li><a title="secfsdstools.c_automation.task_framework.AbstractTask" href="../c_automation/task_framework.html#secfsdstools.c_automation.task_framework.AbstractTask">AbstractTask</a></li>
+</ul>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="secfsdstools.c_automation.task_framework.CheckByNewSubfoldersMergeBaseTask" href="../c_automation/task_framework.html#secfsdstools.c_automation.task_framework.CheckByNewSubfoldersMergeBaseTask">CheckByNewSubfoldersMergeBaseTask</a></b></code>:
+<ul class="hlist">
+<li><code><a title="secfsdstools.c_automation.task_framework.CheckByNewSubfoldersMergeBaseTask.commit" href="../c_automation/task_framework.html#secfsdstools.c_automation.task_framework.AbstractTask.commit">commit</a></code></li>
+<li><code><a title="secfsdstools.c_automation.task_framework.CheckByNewSubfoldersMergeBaseTask.do_execution" href="../c_automation/task_framework.html#secfsdstools.c_automation.task_framework.CheckByNewSubfoldersMergeBaseTask.do_execution">do_execution</a></code></li>
+<li><code><a title="secfsdstools.c_automation.task_framework.CheckByNewSubfoldersMergeBaseTask.exception" href="../c_automation/task_framework.html#secfsdstools.c_automation.task_framework.AbstractTask.exception">exception</a></code></li>
+<li><code><a title="secfsdstools.c_automation.task_framework.CheckByNewSubfoldersMergeBaseTask.execute" href="../c_automation/task_framework.html#secfsdstools.c_automation.task_framework.CheckByNewSubfoldersMergeBaseTask.execute">execute</a></code></li>
+<li><code><a title="secfsdstools.c_automation.task_framework.CheckByNewSubfoldersMergeBaseTask.has_work_todo" href="../c_automation/task_framework.html#secfsdstools.c_automation.task_framework.AbstractTask.has_work_todo">has_work_todo</a></code></li>
+<li><code><a title="secfsdstools.c_automation.task_framework.CheckByNewSubfoldersMergeBaseTask.prepare" href="../c_automation/task_framework.html#secfsdstools.c_automation.task_framework.AbstractTask.prepare">prepare</a></code></li>
+<li><code><a title="secfsdstools.c_automation.task_framework.CheckByNewSubfoldersMergeBaseTask.read_metainf_content" href="../c_automation/task_framework.html#secfsdstools.c_automation.task_framework.AbstractTask.read_metainf_content">read_metainf_content</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+</dl>
+</section>
+</article>
+<nav id="sidebar">
+<h1>Index</h1>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="secfsdstools.g_pipelines" href="index.html">secfsdstools.g_pipelines</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="secfsdstools.g_pipelines.concat_process.ConcatByChangedTimestampProcess" href="#secfsdstools.g_pipelines.concat_process.ConcatByChangedTimestampProcess">ConcatByChangedTimestampProcess</a></code></h4>
+<ul class="">
+<li><code><a title="secfsdstools.g_pipelines.concat_process.ConcatByChangedTimestampProcess.calculate_tasks" href="#secfsdstools.g_pipelines.concat_process.ConcatByChangedTimestampProcess.calculate_tasks">calculate_tasks</a></code></li>
+<li><code><a title="secfsdstools.g_pipelines.concat_process.ConcatByChangedTimestampProcess.pre_process" href="#secfsdstools.g_pipelines.concat_process.ConcatByChangedTimestampProcess.pre_process">pre_process</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="secfsdstools.g_pipelines.concat_process.ConcatByNewSubfoldersProcess" href="#secfsdstools.g_pipelines.concat_process.ConcatByNewSubfoldersProcess">ConcatByNewSubfoldersProcess</a></code></h4>
+<ul class="">
+<li><code><a title="secfsdstools.g_pipelines.concat_process.ConcatByNewSubfoldersProcess.calculate_tasks" href="#secfsdstools.g_pipelines.concat_process.ConcatByNewSubfoldersProcess.calculate_tasks">calculate_tasks</a></code></li>
+<li><code><a title="secfsdstools.g_pipelines.concat_process.ConcatByNewSubfoldersProcess.pre_process" href="#secfsdstools.g_pipelines.concat_process.ConcatByNewSubfoldersProcess.pre_process">pre_process</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="secfsdstools.g_pipelines.concat_process.ConcatIfChangedTimestampTask" href="#secfsdstools.g_pipelines.concat_process.ConcatIfChangedTimestampTask">ConcatIfChangedTimestampTask</a></code></h4>
+<ul class="">
+<li><code><a title="secfsdstools.g_pipelines.concat_process.ConcatIfChangedTimestampTask.do_execution" href="#secfsdstools.g_pipelines.concat_process.ConcatIfChangedTimestampTask.do_execution">do_execution</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="secfsdstools.g_pipelines.concat_process.ConcatIfNewSubfolderTask" href="#secfsdstools.g_pipelines.concat_process.ConcatIfNewSubfolderTask">ConcatIfNewSubfolderTask</a></code></h4>
+</li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.10.0</a>.</p>
+</footer>
+</body>
+</html>

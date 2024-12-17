@@ -317,7 +317,17 @@ class ParquetDBIndexingAccessor(DB):
                 SELECT DISTINCT name, cik from {self.index_reports_table} 
                 WHERE name like &#39;%{name_part}%&#39; 
                 ORDER BY name&#34;&#34;&#34;
-        return self.execute_read_as_df(sql)</code></pre>
+        return self.execute_read_as_df(sql)
+
+    def read_filenames_by_type(self, originFileType: str) -&gt; List[str]:
+        sql = f&#34;&#34;&#34;
+                 SELECT ORIGINFILE 
+                 FROM {self.index_reports_table} 
+                 WHERE ORIGINFILETYPE=&#39;{originFileType}&#39;&#34;&#34;&#34;
+
+        # result  is a list of tuples with one entry, so we have to flatten it
+        result = self.execute_fetchall(sql=sql)
+        return [x[0] for x in result]</code></pre>
 </details>
 </section>
 <section>
@@ -703,7 +713,17 @@ class ParquetDBIndexingAccessor(DB):
                 SELECT DISTINCT name, cik from {self.index_reports_table} 
                 WHERE name like &#39;%{name_part}%&#39; 
                 ORDER BY name&#34;&#34;&#34;
-        return self.execute_read_as_df(sql)</code></pre>
+        return self.execute_read_as_df(sql)
+
+    def read_filenames_by_type(self, originFileType: str) -&gt; List[str]:
+        sql = f&#34;&#34;&#34;
+                 SELECT ORIGINFILE 
+                 FROM {self.index_reports_table} 
+                 WHERE ORIGINFILETYPE=&#39;{originFileType}&#39;&#34;&#34;&#34;
+
+        # result  is a list of tuples with one entry, so we have to flatten it
+        result = self.execute_fetchall(sql=sql)
+        return [x[0] for x in result]</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -981,6 +1001,26 @@ Lower and uppercase are ignored.</p>
     &#34;&#34;&#34;
     sql = f&#39;SELECT * FROM {self.index_reports_table}&#39;
     return self.execute_read_as_df(sql)</code></pre>
+</details>
+</dd>
+<dt id="secfsdstools.c_index.indexdataaccess.ParquetDBIndexingAccessor.read_filenames_by_type"><code class="name flex">
+<span>def <span class="ident">read_filenames_by_type</span></span>(<span>self, originFileType: str) ‑> List[str]</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def read_filenames_by_type(self, originFileType: str) -&gt; List[str]:
+    sql = f&#34;&#34;&#34;
+             SELECT ORIGINFILE 
+             FROM {self.index_reports_table} 
+             WHERE ORIGINFILETYPE=&#39;{originFileType}&#39;&#34;&#34;&#34;
+
+    # result  is a list of tuples with one entry, so we have to flatten it
+    result = self.execute_fetchall(sql=sql)
+    return [x[0] for x in result]</code></pre>
 </details>
 </dd>
 <dt id="secfsdstools.c_index.indexdataaccess.ParquetDBIndexingAccessor.read_index_file_for_filename"><code class="name flex">
@@ -1301,6 +1341,7 @@ forms that should be returned</p>
 <li><code><a title="secfsdstools.c_index.indexdataaccess.ParquetDBIndexingAccessor.read_all_indexfileprocessing_df" href="#secfsdstools.c_index.indexdataaccess.ParquetDBIndexingAccessor.read_all_indexfileprocessing_df">read_all_indexfileprocessing_df</a></code></li>
 <li><code><a title="secfsdstools.c_index.indexdataaccess.ParquetDBIndexingAccessor.read_all_indexreports" href="#secfsdstools.c_index.indexdataaccess.ParquetDBIndexingAccessor.read_all_indexreports">read_all_indexreports</a></code></li>
 <li><code><a title="secfsdstools.c_index.indexdataaccess.ParquetDBIndexingAccessor.read_all_indexreports_df" href="#secfsdstools.c_index.indexdataaccess.ParquetDBIndexingAccessor.read_all_indexreports_df">read_all_indexreports_df</a></code></li>
+<li><code><a title="secfsdstools.c_index.indexdataaccess.ParquetDBIndexingAccessor.read_filenames_by_type" href="#secfsdstools.c_index.indexdataaccess.ParquetDBIndexingAccessor.read_filenames_by_type">read_filenames_by_type</a></code></li>
 <li><code><a title="secfsdstools.c_index.indexdataaccess.ParquetDBIndexingAccessor.read_index_file_for_filename" href="#secfsdstools.c_index.indexdataaccess.ParquetDBIndexingAccessor.read_index_file_for_filename">read_index_file_for_filename</a></code></li>
 <li><code><a title="secfsdstools.c_index.indexdataaccess.ParquetDBIndexingAccessor.read_index_files_for_filenames" href="#secfsdstools.c_index.indexdataaccess.ParquetDBIndexingAccessor.read_index_files_for_filenames">read_index_files_for_filenames</a></code></li>
 <li><code><a title="secfsdstools.c_index.indexdataaccess.ParquetDBIndexingAccessor.read_index_report_for_adsh" href="#secfsdstools.c_index.indexdataaccess.ParquetDBIndexingAccessor.read_index_report_for_adsh">read_index_report_for_adsh</a></code></li>

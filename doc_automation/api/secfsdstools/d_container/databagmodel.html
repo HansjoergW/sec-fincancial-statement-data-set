@@ -35,6 +35,7 @@ Defines the container that keeps the data of sub.txt, num.txt, and  pre.txt toge
 
 import os
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Dict, List, TypeVar, Generic
 
 import pandas as pd
@@ -392,7 +393,16 @@ class RawDataBag(DataBagBase[RAW]):
 
         return RawDataBag.create(sub_df=sub_df,
                                  pre_df=pre_df,
-                                 num_df=num_df)</code></pre>
+                                 num_df=num_df)
+
+def is_rawbag_path(path: Path) -&gt; bool:
+    &#34;&#34;&#34; Check whether the provided path contains the files of a RawDatabag. &#34;&#34;&#34;
+    return (path / &#34;num.txt.parquet&#34;).exists()
+
+
+def is_joinedbag_path(path: Path) -&gt; bool:
+    &#34;&#34;&#34; Check whether the provided path contains the files of a JoinedDatabag. &#34;&#34;&#34;
+    return (path / &#34;pre_num.txt.parquet&#34;).exists()</code></pre>
 </details>
 </section>
 <section>
@@ -400,6 +410,37 @@ class RawDataBag(DataBagBase[RAW]):
 <section>
 </section>
 <section>
+<h2 class="section-title" id="header-functions">Functions</h2>
+<dl>
+<dt id="secfsdstools.d_container.databagmodel.is_joinedbag_path"><code class="name flex">
+<span>def <span class="ident">is_joinedbag_path</span></span>(<span>path: pathlib.Path) ‑> bool</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Check whether the provided path contains the files of a JoinedDatabag.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def is_joinedbag_path(path: Path) -&gt; bool:
+    &#34;&#34;&#34; Check whether the provided path contains the files of a JoinedDatabag. &#34;&#34;&#34;
+    return (path / &#34;pre_num.txt.parquet&#34;).exists()</code></pre>
+</details>
+</dd>
+<dt id="secfsdstools.d_container.databagmodel.is_rawbag_path"><code class="name flex">
+<span>def <span class="ident">is_rawbag_path</span></span>(<span>path: pathlib.Path) ‑> bool</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Check whether the provided path contains the files of a RawDatabag.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def is_rawbag_path(path: Path) -&gt; bool:
+    &#34;&#34;&#34; Check whether the provided path contains the files of a RawDatabag. &#34;&#34;&#34;
+    return (path / &#34;num.txt.parquet&#34;).exists()</code></pre>
+</details>
+</dd>
+</dl>
 </section>
 <section>
 <h2 class="section-title" id="header-classes">Classes</h2>
@@ -1504,6 +1545,12 @@ and num_txt will be created</dd>
 <li><h3>Super-module</h3>
 <ul>
 <li><code><a title="secfsdstools.d_container" href="index.html">secfsdstools.d_container</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-functions">Functions</a></h3>
+<ul class="">
+<li><code><a title="secfsdstools.d_container.databagmodel.is_joinedbag_path" href="#secfsdstools.d_container.databagmodel.is_joinedbag_path">is_joinedbag_path</a></code></li>
+<li><code><a title="secfsdstools.d_container.databagmodel.is_rawbag_path" href="#secfsdstools.d_container.databagmodel.is_rawbag_path">is_rawbag_path</a></code></li>
 </ul>
 </li>
 <li><h3><a href="#header-classes">Classes</a></h3>

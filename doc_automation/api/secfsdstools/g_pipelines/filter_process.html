@@ -5,7 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.10.0" />
 <title>secfsdstools.g_pipelines.filter_process API documentation</title>
-<meta name="description" content="" />
+<meta name="description" content="Defines pipeline steps that help with applying the same filter to mutilple subfolders
+in parallel." />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
 <link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
@@ -22,17 +23,26 @@
 <h1 class="title">Module <code>secfsdstools.g_pipelines.filter_process</code></h1>
 </header>
 <section id="section-intro">
+<p>Defines pipeline steps that help with applying the same filter to mutilple subfolders
+in parallel.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">import os
+<pre><code class="python">&#34;&#34;&#34;
+Defines pipeline steps that help with applying the same filter to mutilple subfolders
+in parallel.
+&#34;&#34;&#34;
+import os
 import shutil
 from pathlib import Path
-from typing import List
+from typing import List, Callable
 
 from secfsdstools.a_utils.fileutils import get_directories_in_directory
-from secfsdstools.c_automation.task_framework import AbstractProcess, Task, delete_temp_folders
+from secfsdstools.c_automation.automation_utils import delete_temp_folders
+from secfsdstools.c_automation.task_framework import Task, \
+    AbstractProcessPoolProcess
+from secfsdstools.c_index.indexdataaccess import ParquetDBIndexingAccessor
 from secfsdstools.d_container.databagmodel import RawDataBag
 from secfsdstools.e_collector.zipcollecting import ZipCollector
 from secfsdstools.e_filter.joinedfiltering import StmtJoinedFilter
@@ -43,31 +53,63 @@ def postloadfilter(databag: RawDataBag) -&gt; RawDataBag:
     &#34;&#34;&#34;
     defines a post filter method that can be used by ZipCollectors.
     It combines the filters:
-            ReportPeriodRawFilter, MainCoregRawFilter, USDOnlyRawFilter
+            ReportPeriodRawFilter, MainCoregRawFilter, USDOnlyRawFilter, OfficialTagsOnlyRawFilter
     &#34;&#34;&#34;
     # pylint: disable=C0415
     from secfsdstools.e_filter.rawfiltering import ReportPeriodRawFilter, MainCoregRawFilter, \
-        USDOnlyRawFilter
+        USDOnlyRawFilter, OfficialTagsOnlyRawFilter
 
-    return databag[ReportPeriodRawFilter()][MainCoregRawFilter()][USDOnlyRawFilter()]
+    return databag[ReportPeriodRawFilter()][MainCoregRawFilter()][USDOnlyRawFilter()][
+        OfficialTagsOnlyRawFilter()]
 
 
 class AbstractFilterTask:
+    &#34;&#34;&#34;
+    Abstract FilterTask provides some common basic features.
+    Uses the ZipCollector to read the raw databags.
+    &#34;&#34;&#34;
 
     def __init__(self,
-                 filtered_path: Path,
+                 zip_file_name: str,
+                 target_path: Path,
                  bag_type: str,  # raw or joined
-                 stmts: List[str]):
-        self.filtered_path = filtered_path
+                 stmts: List[str],
+                 forms_filter=None,
+                 post_load_filter: Callable[[RawDataBag], RawDataBag] = postloadfilter
+                 ):
+        &#34;&#34;&#34;
+        Constructor.
+
+        Args:
+            zip_file_name: name of the source file that shall be readed by the  zipcollector
+            target_path: path to store the filtered bag to
+            bag_type: bag type (either &#34;row&#34; or &#34;joined&#34;) to save the data as
+            stmts: stmts to filter for (&#34;BS&#34;, &#34;IS&#34;, &#34;CF&#34;, ...)
+            forms_filter: defines which forms shall be loaded. default is [&#39;10-K&#39;, &#39;10-Q&#39;]
+            post_load_filter: filter method to be applied after loading of the zip file.
+                              default postloadfilter applies ReportPeriodRawFilter,
+                              MainCoregRawFilter, USDOnlyRawFilter, OfficialTagsOnlyRawFilter
+        &#34;&#34;&#34;
+        if forms_filter is None:
+            forms_filter = [&#39;10-K&#39;, &#39;10-Q&#39;]
+        self.forms_filter = forms_filter
+        self.post_load_filter = post_load_filter
+
+        self.target_path = target_path
         self.stmts = stmts
         self.bag_type = bag_type
 
-        self.file_name = filtered_path.name
-        self.tmp_path = filtered_path.parent / f&#34;tmp_{self.file_name}&#34;
+        self.zip_file_name = zip_file_name
+        self.target_file_name = target_path.name
+        self.tmp_path = target_path.parent / f&#34;tmp_{self.target_file_name}&#34;
 
     def commit(self):
-        &#34;&#34;&#34; we commit by renaming the tmp_path. &#34;&#34;&#34;
-        self.tmp_path.rename(self.filtered_path)
+        &#34;&#34;&#34;
+        we commit by renaming the tmp_path. This is an atomic action and either fails
+        or succeeds. So if there is a tmp folder, we know that something failed and therefore,
+        it is easy to recover and redo.
+        &#34;&#34;&#34;
+        self.tmp_path.rename(self.target_path)
         return &#34;success&#34;
 
     def exception(self, exception) -&gt; str:
@@ -77,17 +119,25 @@ class AbstractFilterTask:
 
 
 class FilterTask(AbstractFilterTask):
+    &#34;&#34;&#34;
+    Basic Filter implementation which applys the configured filter (as defined in the constructor).
+    &#34;&#34;&#34;
 
     def prepare(self):
-        &#34;&#34;&#34; prepare Task.&#34;&#34;&#34;
-
+        &#34;&#34;&#34; prepare the task -&gt; create the tmp_dir. &#34;&#34;&#34;
         self.tmp_path.mkdir(parents=True, exist_ok=False)
 
     def execute(self):
-        raw_bag = ZipCollector.get_zip_by_name(name=self.file_name,
-                                               forms_filter=[&#39;10-K&#39;, &#39;10-Q&#39;],
+        &#34;&#34;&#34;
+        Uses the ZipCollector to read the input data and then applys the filters as defined
+        in the constructor.
+        Saves the result depending on the configuration either as raw or joined data bag in the
+        defined target path.
+        &#34;&#34;&#34;
+        raw_bag = ZipCollector.get_zip_by_name(name=self.zip_file_name,
+                                               forms_filter=self.forms_filter,
                                                stmt_filter=self.stmts,
-                                               post_load_filter=postloadfilter).collect()
+                                               post_load_filter=self.post_load_filter).collect()
 
         if self.bag_type.lower() == &#34;raw&#34;:
             raw_bag.save(str(self.tmp_path))
@@ -98,22 +148,38 @@ class FilterTask(AbstractFilterTask):
             raise ValueError(&#34;bag_type must be either raw or joined&#34;)
 
     def __str__(self) -&gt; str:
-        return f&#34;FilterTask(filtered_path: {self.filtered_path})&#34;
+        return f&#34;FilterTask(filtered_path: {self.target_path})&#34;
 
 
 class ByStmtFilterTask(AbstractFilterTask):
+    &#34;&#34;&#34;
+    Basic Filter implementation which applys the configured filters.
+
+    Depending on the configuration, the results are either saved in raw or joined format.
+
+    Moreover, the result is split up by stmt (&#34;BS&#34;, &#34;IS&#34;, &#34;CF&#34;, ...) when being saved.
+    &#34;&#34;&#34;
 
     def prepare(self):
-        &#34;&#34;&#34; prepare Task.&#34;&#34;&#34;
+        &#34;&#34;&#34; prepare Task -&gt; create the tmp_folders with subfolders for every stmt.&#34;&#34;&#34;
 
         for stmt in self.stmts:
             (self.tmp_path / stmt).mkdir(parents=True, exist_ok=False)
 
     def execute(self):
-        raw_bag = ZipCollector.get_zip_by_name(name=self.file_name,
-                                               forms_filter=[&#39;10-K&#39;, &#39;10-Q&#39;],
+        &#34;&#34;&#34;
+        Uses the ZipCollector to read the input data and then applys the filters as
+        defined in the constructor.
+
+        Saves the result depending on the configuration either as raw or joined data bag.
+
+        Splits the results up by stmt (&#34;BS&#34;, &#34;IS&#34;, &#34;CF&#34;, ...).
+
+        &#34;&#34;&#34;
+        raw_bag = ZipCollector.get_zip_by_name(name=self.zip_file_name,
+                                               forms_filter=self.forms_filter,
                                                stmt_filter=self.stmts,
-                                               post_load_filter=postloadfilter).collect()
+                                               post_load_filter=self.post_load_filter).collect()
 
         if self.bag_type.lower() == &#34;raw&#34;:
             self._execute_raw(raw_bag)
@@ -133,72 +199,108 @@ class ByStmtFilterTask(AbstractFilterTask):
             joined_bag[StmtJoinedFilter(stmts=[stmt])].save(str(self.tmp_path / stmt))
 
     def __str__(self) -&gt; str:
-        return f&#34;ByStmtFilterTask(filtered_path: {self.filtered_path})&#34;
+        return f&#34;ByStmtFilterTask(filtered_path: {self.target_path})&#34;
 
 
-class FilterProcess(AbstractProcess):
+class FilterProcess(AbstractProcessPoolProcess):
+    &#34;&#34;&#34;
+    Applies basic filters on the raw indexed files and saves the result into the provided
+    target_path.
+
+    Does it per zip-file and can do it in parallel, depending on the parameter settings.
+
+    Applies the basic filters as defined.
+    &#34;&#34;&#34;
 
     def __init__(self,
-                 parquet_dir: str,
+                 db_dir: str,
                  target_dir: str,
-                 bag_type: str,  # raw or joined
+                 bag_type: str = &#34;joined&#34;,  # raw or joined
                  file_type: str = &#34;quarter&#34;,
                  save_by_stmt: bool = False,
                  stmts=None,
-                 execute_serial: bool = False
+                 execute_serial: bool = False,
+                 forms_filter=None,
+                 post_load_filter: Callable[[RawDataBag], RawDataBag] = postloadfilter
                  ):
+        &#34;&#34;&#34;
+        Constructor.
+
+        Args:
+            db_dir: directory of the sqlite-db file. Used to read the available zipfiles.
+            target_dir: directory to where the results have to be written
+            bag_type: either &#34;raw&#34; or &#34;joined&#34; and defines what bag-type shall be written.
+                      default is &#34;joined&#34;.
+            file_type: the file type to be processed, default is &#34;quarter&#34;
+            save_by_stmt: Flag to indicate whether the results should be split up by the stmt.
+                          If it is true, subfolders for every stmt &#34;BS&#34;, &#34;IS&#34;, &#34;CF&#34;, ... will be
+                          created.
+            stmts: The list of stmts that should be filtered: &#34;BS&#34;, &#34;IS&#34;, &#34;CF&#34;, ... or none
+            execute_serial: Flag to indicate whether the files should be process in serial manner.
+            post_load_filter: postload-filter function. Default is the defined
+                              postloadfilter-function.
+            forms_filter: defines which forms to laod (10-K, 10-Q, ...). Default is 10-K and 10-Q.
+        &#34;&#34;&#34;
         super().__init__(execute_serial=execute_serial,
                          chunksize=0)
+        if forms_filter is None:
+            forms_filter = [&#39;10-K&#39;, &#39;10-Q&#39;]
+
+        self.forms_filter = forms_filter
+        self.post_load_filter = post_load_filter
+
         self.stmts = [&#39;BS&#39;, &#39;IS&#39;, &#39;CF&#39;, &#39;CP&#39;, &#39;CI&#39;, &#39;EQ&#39;]
 
         if stmts:
             self.stmts = stmts
 
-        self.parquet_dir = parquet_dir
+        self.dbaccessor = ParquetDBIndexingAccessor(db_dir=db_dir)
+
         self.target_dir = target_dir
         self.file_type = file_type
         self.bag_type = bag_type
         self.save_by_stmt = save_by_stmt
-
-    def _get_present_parquet_files(self) -&gt; List[str]:
-        &#34;&#34;&#34;
-        returns the available folders within the parquet directory.
-        Returns:
-            List[str] list with foldernames.
-        &#34;&#34;&#34;
-
-        parquet_folders = get_directories_in_directory(
-            os.path.join(self.parquet_dir, self.file_type))
-
-        # 2009q1.zip is actually empty and could issues during processing, so we  simply ignore it
-        parquet_folders = [f for f in parquet_folders if f != &#34;2009q1.zip&#34;]
-
-        return parquet_folders
 
     def _get_existing_filtered(self):
         return get_directories_in_directory(
             os.path.join(self.target_dir, self.file_type))
 
     def pre_process(self):
+        &#34;&#34;&#34;
+        pre-processing: delete any existing tmpfolder in the target folder
+        &#34;&#34;&#34;
         delete_temp_folders(root_path=Path(self.target_dir) / self.file_type)
 
     def calculate_tasks(self) -&gt; List[Task]:
+        &#34;&#34;&#34;
+        Defines the zipfiles that have not yet been processed and creates appropriate
+        processing FilterTasks for every unprocessed zipfile.
+
+        Returns:
+            List[Task]: List with Tasks.
+        &#34;&#34;&#34;
         existing = self._get_existing_filtered()
-        available = self._get_present_parquet_files()
+        available = self.dbaccessor.read_filenames_by_type(originFileType=self.file_type)
 
         missings = set(available) - set(existing)
         if self.save_by_stmt:
             return [ByStmtFilterTask(
-                filtered_path=Path(self.target_dir) / self.file_type / missing,
+                zip_file_name=missing,
+                target_path=Path(self.target_dir) / self.file_type / missing,
                 stmts=self.stmts,
-                bag_type=self.bag_type
+                bag_type=self.bag_type,
+                forms_filter=self.forms_filter,
+                post_load_filter=self.post_load_filter
             )
                 for missing in missings]
         else:
             return [FilterTask(
-                filtered_path=Path(self.target_dir) / self.file_type / missing,
+                zip_file_name=missing,
+                target_path=Path(self.target_dir) / self.file_type / missing,
                 stmts=self.stmts,
-                bag_type=self.bag_type
+                bag_type=self.bag_type,
+                forms_filter=self.forms_filter,
+                post_load_filter=self.post_load_filter
             )
                 for missing in missings]</code></pre>
 </details>
@@ -216,7 +318,7 @@ class FilterProcess(AbstractProcess):
 <dd>
 <div class="desc"><p>defines a post filter method that can be used by ZipCollectors.
 It combines the filters:
-ReportPeriodRawFilter, MainCoregRawFilter, USDOnlyRawFilter</p></div>
+ReportPeriodRawFilter, MainCoregRawFilter, USDOnlyRawFilter, OfficialTagsOnlyRawFilter</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -225,13 +327,14 @@ ReportPeriodRawFilter, MainCoregRawFilter, USDOnlyRawFilter</p></div>
     &#34;&#34;&#34;
     defines a post filter method that can be used by ZipCollectors.
     It combines the filters:
-            ReportPeriodRawFilter, MainCoregRawFilter, USDOnlyRawFilter
+            ReportPeriodRawFilter, MainCoregRawFilter, USDOnlyRawFilter, OfficialTagsOnlyRawFilter
     &#34;&#34;&#34;
     # pylint: disable=C0415
     from secfsdstools.e_filter.rawfiltering import ReportPeriodRawFilter, MainCoregRawFilter, \
-        USDOnlyRawFilter
+        USDOnlyRawFilter, OfficialTagsOnlyRawFilter
 
-    return databag[ReportPeriodRawFilter()][MainCoregRawFilter()][USDOnlyRawFilter()]</code></pre>
+    return databag[ReportPeriodRawFilter()][MainCoregRawFilter()][USDOnlyRawFilter()][
+        OfficialTagsOnlyRawFilter()]</code></pre>
 </details>
 </dd>
 </dl>
@@ -241,30 +344,81 @@ ReportPeriodRawFilter, MainCoregRawFilter, USDOnlyRawFilter</p></div>
 <dl>
 <dt id="secfsdstools.g_pipelines.filter_process.AbstractFilterTask"><code class="flex name class">
 <span>class <span class="ident">AbstractFilterTask</span></span>
-<span>(</span><span>filtered_path: pathlib.Path, bag_type: str, stmts: List[str])</span>
+<span>(</span><span>zip_file_name: str, target_path: pathlib.Path, bag_type: str, stmts: List[str], forms_filter=None, post_load_filter: Callable[[<a title="secfsdstools.d_container.databagmodel.RawDataBag" href="../d_container/databagmodel.html#secfsdstools.d_container.databagmodel.RawDataBag">RawDataBag</a>], <a title="secfsdstools.d_container.databagmodel.RawDataBag" href="../d_container/databagmodel.html#secfsdstools.d_container.databagmodel.RawDataBag">RawDataBag</a>] = &lt;function postloadfilter&gt;)</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Abstract FilterTask provides some common basic features.
+Uses the ZipCollector to read the raw databags.</p>
+<p>Constructor.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>zip_file_name</code></strong></dt>
+<dd>name of the source file that shall be readed by the
+zipcollector</dd>
+<dt><strong><code>target_path</code></strong></dt>
+<dd>path to store the filtered bag to</dd>
+<dt><strong><code>bag_type</code></strong></dt>
+<dd>bag type (either "row" or "joined") to save the data as</dd>
+<dt><strong><code>stmts</code></strong></dt>
+<dd>stmts to filter for ("BS", "IS", "CF", &hellip;)</dd>
+<dt><strong><code>forms_filter</code></strong></dt>
+<dd>defines which forms shall be loaded. default is ['10-K', '10-Q']</dd>
+<dt><strong><code>post_load_filter</code></strong></dt>
+<dd>filter method to be applied after loading of the zip file.
+default postloadfilter applies ReportPeriodRawFilter,
+MainCoregRawFilter, USDOnlyRawFilter, OfficialTagsOnlyRawFilter</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class AbstractFilterTask:
+    &#34;&#34;&#34;
+    Abstract FilterTask provides some common basic features.
+    Uses the ZipCollector to read the raw databags.
+    &#34;&#34;&#34;
 
     def __init__(self,
-                 filtered_path: Path,
+                 zip_file_name: str,
+                 target_path: Path,
                  bag_type: str,  # raw or joined
-                 stmts: List[str]):
-        self.filtered_path = filtered_path
+                 stmts: List[str],
+                 forms_filter=None,
+                 post_load_filter: Callable[[RawDataBag], RawDataBag] = postloadfilter
+                 ):
+        &#34;&#34;&#34;
+        Constructor.
+
+        Args:
+            zip_file_name: name of the source file that shall be readed by the  zipcollector
+            target_path: path to store the filtered bag to
+            bag_type: bag type (either &#34;row&#34; or &#34;joined&#34;) to save the data as
+            stmts: stmts to filter for (&#34;BS&#34;, &#34;IS&#34;, &#34;CF&#34;, ...)
+            forms_filter: defines which forms shall be loaded. default is [&#39;10-K&#39;, &#39;10-Q&#39;]
+            post_load_filter: filter method to be applied after loading of the zip file.
+                              default postloadfilter applies ReportPeriodRawFilter,
+                              MainCoregRawFilter, USDOnlyRawFilter, OfficialTagsOnlyRawFilter
+        &#34;&#34;&#34;
+        if forms_filter is None:
+            forms_filter = [&#39;10-K&#39;, &#39;10-Q&#39;]
+        self.forms_filter = forms_filter
+        self.post_load_filter = post_load_filter
+
+        self.target_path = target_path
         self.stmts = stmts
         self.bag_type = bag_type
 
-        self.file_name = filtered_path.name
-        self.tmp_path = filtered_path.parent / f&#34;tmp_{self.file_name}&#34;
+        self.zip_file_name = zip_file_name
+        self.target_file_name = target_path.name
+        self.tmp_path = target_path.parent / f&#34;tmp_{self.target_file_name}&#34;
 
     def commit(self):
-        &#34;&#34;&#34; we commit by renaming the tmp_path. &#34;&#34;&#34;
-        self.tmp_path.rename(self.filtered_path)
+        &#34;&#34;&#34;
+        we commit by renaming the tmp_path. This is an atomic action and either fails
+        or succeeds. So if there is a tmp folder, we know that something failed and therefore,
+        it is easy to recover and redo.
+        &#34;&#34;&#34;
+        self.tmp_path.rename(self.target_path)
         return &#34;success&#34;
 
     def exception(self, exception) -&gt; str:
@@ -283,14 +437,20 @@ ReportPeriodRawFilter, MainCoregRawFilter, USDOnlyRawFilter</p></div>
 <span>def <span class="ident">commit</span></span>(<span>self)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>we commit by renaming the tmp_path.</p></div>
+<div class="desc"><p>we commit by renaming the tmp_path. This is an atomic action and either fails
+or succeeds. So if there is a tmp folder, we know that something failed and therefore,
+it is easy to recover and redo.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def commit(self):
-    &#34;&#34;&#34; we commit by renaming the tmp_path. &#34;&#34;&#34;
-    self.tmp_path.rename(self.filtered_path)
+    &#34;&#34;&#34;
+    we commit by renaming the tmp_path. This is an atomic action and either fails
+    or succeeds. So if there is a tmp folder, we know that something failed and therefore,
+    it is easy to recover and redo.
+    &#34;&#34;&#34;
+    self.tmp_path.rename(self.target_path)
     return &#34;success&#34;</code></pre>
 </details>
 </dd>
@@ -313,27 +473,64 @@ ReportPeriodRawFilter, MainCoregRawFilter, USDOnlyRawFilter</p></div>
 </dd>
 <dt id="secfsdstools.g_pipelines.filter_process.ByStmtFilterTask"><code class="flex name class">
 <span>class <span class="ident">ByStmtFilterTask</span></span>
-<span>(</span><span>filtered_path: pathlib.Path, bag_type: str, stmts: List[str])</span>
+<span>(</span><span>zip_file_name: str, target_path: pathlib.Path, bag_type: str, stmts: List[str], forms_filter=None, post_load_filter: Callable[[<a title="secfsdstools.d_container.databagmodel.RawDataBag" href="../d_container/databagmodel.html#secfsdstools.d_container.databagmodel.RawDataBag">RawDataBag</a>], <a title="secfsdstools.d_container.databagmodel.RawDataBag" href="../d_container/databagmodel.html#secfsdstools.d_container.databagmodel.RawDataBag">RawDataBag</a>] = &lt;function postloadfilter&gt;)</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Basic Filter implementation which applys the configured filters.</p>
+<p>Depending on the configuration, the results are either saved in raw or joined format.</p>
+<p>Moreover, the result is split up by stmt ("BS", "IS", "CF", &hellip;) when being saved.</p>
+<p>Constructor.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>zip_file_name</code></strong></dt>
+<dd>name of the source file that shall be readed by the
+zipcollector</dd>
+<dt><strong><code>target_path</code></strong></dt>
+<dd>path to store the filtered bag to</dd>
+<dt><strong><code>bag_type</code></strong></dt>
+<dd>bag type (either "row" or "joined") to save the data as</dd>
+<dt><strong><code>stmts</code></strong></dt>
+<dd>stmts to filter for ("BS", "IS", "CF", &hellip;)</dd>
+<dt><strong><code>forms_filter</code></strong></dt>
+<dd>defines which forms shall be loaded. default is ['10-K', '10-Q']</dd>
+<dt><strong><code>post_load_filter</code></strong></dt>
+<dd>filter method to be applied after loading of the zip file.
+default postloadfilter applies ReportPeriodRawFilter,
+MainCoregRawFilter, USDOnlyRawFilter, OfficialTagsOnlyRawFilter</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class ByStmtFilterTask(AbstractFilterTask):
+    &#34;&#34;&#34;
+    Basic Filter implementation which applys the configured filters.
+
+    Depending on the configuration, the results are either saved in raw or joined format.
+
+    Moreover, the result is split up by stmt (&#34;BS&#34;, &#34;IS&#34;, &#34;CF&#34;, ...) when being saved.
+    &#34;&#34;&#34;
 
     def prepare(self):
-        &#34;&#34;&#34; prepare Task.&#34;&#34;&#34;
+        &#34;&#34;&#34; prepare Task -&gt; create the tmp_folders with subfolders for every stmt.&#34;&#34;&#34;
 
         for stmt in self.stmts:
             (self.tmp_path / stmt).mkdir(parents=True, exist_ok=False)
 
     def execute(self):
-        raw_bag = ZipCollector.get_zip_by_name(name=self.file_name,
-                                               forms_filter=[&#39;10-K&#39;, &#39;10-Q&#39;],
+        &#34;&#34;&#34;
+        Uses the ZipCollector to read the input data and then applys the filters as
+        defined in the constructor.
+
+        Saves the result depending on the configuration either as raw or joined data bag.
+
+        Splits the results up by stmt (&#34;BS&#34;, &#34;IS&#34;, &#34;CF&#34;, ...).
+
+        &#34;&#34;&#34;
+        raw_bag = ZipCollector.get_zip_by_name(name=self.zip_file_name,
+                                               forms_filter=self.forms_filter,
                                                stmt_filter=self.stmts,
-                                               post_load_filter=postloadfilter).collect()
+                                               post_load_filter=self.post_load_filter).collect()
 
         if self.bag_type.lower() == &#34;raw&#34;:
             self._execute_raw(raw_bag)
@@ -353,7 +550,7 @@ ReportPeriodRawFilter, MainCoregRawFilter, USDOnlyRawFilter</p></div>
             joined_bag[StmtJoinedFilter(stmts=[stmt])].save(str(self.tmp_path / stmt))
 
     def __str__(self) -&gt; str:
-        return f&#34;ByStmtFilterTask(filtered_path: {self.filtered_path})&#34;</code></pre>
+        return f&#34;ByStmtFilterTask(filtered_path: {self.target_path})&#34;</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -365,16 +562,28 @@ ReportPeriodRawFilter, MainCoregRawFilter, USDOnlyRawFilter</p></div>
 <span>def <span class="ident">execute</span></span>(<span>self)</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Uses the ZipCollector to read the input data and then applys the filters as
+defined in the constructor.</p>
+<p>Saves the result depending on the configuration either as raw or joined data bag.</p>
+<p>Splits the results up by stmt ("BS", "IS", "CF", &hellip;).</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def execute(self):
-    raw_bag = ZipCollector.get_zip_by_name(name=self.file_name,
-                                           forms_filter=[&#39;10-K&#39;, &#39;10-Q&#39;],
+    &#34;&#34;&#34;
+    Uses the ZipCollector to read the input data and then applys the filters as
+    defined in the constructor.
+
+    Saves the result depending on the configuration either as raw or joined data bag.
+
+    Splits the results up by stmt (&#34;BS&#34;, &#34;IS&#34;, &#34;CF&#34;, ...).
+
+    &#34;&#34;&#34;
+    raw_bag = ZipCollector.get_zip_by_name(name=self.zip_file_name,
+                                           forms_filter=self.forms_filter,
                                            stmt_filter=self.stmts,
-                                           post_load_filter=postloadfilter).collect()
+                                           post_load_filter=self.post_load_filter).collect()
 
     if self.bag_type.lower() == &#34;raw&#34;:
         self._execute_raw(raw_bag)
@@ -388,13 +597,13 @@ ReportPeriodRawFilter, MainCoregRawFilter, USDOnlyRawFilter</p></div>
 <span>def <span class="ident">prepare</span></span>(<span>self)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>prepare Task.</p></div>
+<div class="desc"><p>prepare Task -&gt; create the tmp_folders with subfolders for every stmt.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def prepare(self):
-    &#34;&#34;&#34; prepare Task.&#34;&#34;&#34;
+    &#34;&#34;&#34; prepare Task -&gt; create the tmp_folders with subfolders for every stmt.&#34;&#34;&#34;
 
     for stmt in self.stmts:
         (self.tmp_path / stmt).mkdir(parents=True, exist_ok=False)</code></pre>
@@ -413,120 +622,280 @@ ReportPeriodRawFilter, MainCoregRawFilter, USDOnlyRawFilter</p></div>
 </dd>
 <dt id="secfsdstools.g_pipelines.filter_process.FilterProcess"><code class="flex name class">
 <span>class <span class="ident">FilterProcess</span></span>
-<span>(</span><span>parquet_dir: str, target_dir: str, bag_type: str, file_type: str = 'quarter', save_by_stmt: bool = False, stmts=None, execute_serial: bool = False)</span>
+<span>(</span><span>db_dir: str, target_dir: str, bag_type: str = 'joined', file_type: str = 'quarter', save_by_stmt: bool = False, stmts=None, execute_serial: bool = False, forms_filter=None, post_load_filter: Callable[[<a title="secfsdstools.d_container.databagmodel.RawDataBag" href="../d_container/databagmodel.html#secfsdstools.d_container.databagmodel.RawDataBag">RawDataBag</a>], <a title="secfsdstools.d_container.databagmodel.RawDataBag" href="../d_container/databagmodel.html#secfsdstools.d_container.databagmodel.RawDataBag">RawDataBag</a>] = &lt;function postloadfilter&gt;)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Defines the Abstract process of processing tasks for a certain process.</p></div>
+<div class="desc"><p>Applies basic filters on the raw indexed files and saves the result into the provided
+target_path.</p>
+<p>Does it per zip-file and can do it in parallel, depending on the parameter settings.</p>
+<p>Applies the basic filters as defined.</p>
+<p>Constructor.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>db_dir</code></strong></dt>
+<dd>directory of the sqlite-db file. Used to read the available zipfiles.</dd>
+<dt><strong><code>target_dir</code></strong></dt>
+<dd>directory to where the results have to be written</dd>
+<dt><strong><code>bag_type</code></strong></dt>
+<dd>either "raw" or "joined" and defines what bag-type shall be written.
+default is "joined".</dd>
+<dt><strong><code>file_type</code></strong></dt>
+<dd>the file type to be processed, default is "quarter"</dd>
+<dt><strong><code>save_by_stmt</code></strong></dt>
+<dd>Flag to indicate whether the results should be split up by the stmt.
+If it is true, subfolders for every stmt "BS", "IS", "CF", &hellip; will be
+created.</dd>
+<dt><strong><code>stmts</code></strong></dt>
+<dd>The list of stmts that should be filtered: "BS", "IS", "CF", &hellip; or none</dd>
+<dt><strong><code>execute_serial</code></strong></dt>
+<dd>Flag to indicate whether the files should be process in serial manner.</dd>
+<dt><strong><code>post_load_filter</code></strong></dt>
+<dd>postload-filter function. Default is the defined
+postloadfilter-function.</dd>
+<dt><strong><code>forms_filter</code></strong></dt>
+<dd>defines which forms to laod (10-K, 10-Q, &hellip;). Default is 10-K and 10-Q.</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class FilterProcess(AbstractProcess):
+<pre><code class="python">class FilterProcess(AbstractProcessPoolProcess):
+    &#34;&#34;&#34;
+    Applies basic filters on the raw indexed files and saves the result into the provided
+    target_path.
+
+    Does it per zip-file and can do it in parallel, depending on the parameter settings.
+
+    Applies the basic filters as defined.
+    &#34;&#34;&#34;
 
     def __init__(self,
-                 parquet_dir: str,
+                 db_dir: str,
                  target_dir: str,
-                 bag_type: str,  # raw or joined
+                 bag_type: str = &#34;joined&#34;,  # raw or joined
                  file_type: str = &#34;quarter&#34;,
                  save_by_stmt: bool = False,
                  stmts=None,
-                 execute_serial: bool = False
+                 execute_serial: bool = False,
+                 forms_filter=None,
+                 post_load_filter: Callable[[RawDataBag], RawDataBag] = postloadfilter
                  ):
+        &#34;&#34;&#34;
+        Constructor.
+
+        Args:
+            db_dir: directory of the sqlite-db file. Used to read the available zipfiles.
+            target_dir: directory to where the results have to be written
+            bag_type: either &#34;raw&#34; or &#34;joined&#34; and defines what bag-type shall be written.
+                      default is &#34;joined&#34;.
+            file_type: the file type to be processed, default is &#34;quarter&#34;
+            save_by_stmt: Flag to indicate whether the results should be split up by the stmt.
+                          If it is true, subfolders for every stmt &#34;BS&#34;, &#34;IS&#34;, &#34;CF&#34;, ... will be
+                          created.
+            stmts: The list of stmts that should be filtered: &#34;BS&#34;, &#34;IS&#34;, &#34;CF&#34;, ... or none
+            execute_serial: Flag to indicate whether the files should be process in serial manner.
+            post_load_filter: postload-filter function. Default is the defined
+                              postloadfilter-function.
+            forms_filter: defines which forms to laod (10-K, 10-Q, ...). Default is 10-K and 10-Q.
+        &#34;&#34;&#34;
         super().__init__(execute_serial=execute_serial,
                          chunksize=0)
+        if forms_filter is None:
+            forms_filter = [&#39;10-K&#39;, &#39;10-Q&#39;]
+
+        self.forms_filter = forms_filter
+        self.post_load_filter = post_load_filter
+
         self.stmts = [&#39;BS&#39;, &#39;IS&#39;, &#39;CF&#39;, &#39;CP&#39;, &#39;CI&#39;, &#39;EQ&#39;]
 
         if stmts:
             self.stmts = stmts
 
-        self.parquet_dir = parquet_dir
+        self.dbaccessor = ParquetDBIndexingAccessor(db_dir=db_dir)
+
         self.target_dir = target_dir
         self.file_type = file_type
         self.bag_type = bag_type
         self.save_by_stmt = save_by_stmt
-
-    def _get_present_parquet_files(self) -&gt; List[str]:
-        &#34;&#34;&#34;
-        returns the available folders within the parquet directory.
-        Returns:
-            List[str] list with foldernames.
-        &#34;&#34;&#34;
-
-        parquet_folders = get_directories_in_directory(
-            os.path.join(self.parquet_dir, self.file_type))
-
-        # 2009q1.zip is actually empty and could issues during processing, so we  simply ignore it
-        parquet_folders = [f for f in parquet_folders if f != &#34;2009q1.zip&#34;]
-
-        return parquet_folders
 
     def _get_existing_filtered(self):
         return get_directories_in_directory(
             os.path.join(self.target_dir, self.file_type))
 
     def pre_process(self):
+        &#34;&#34;&#34;
+        pre-processing: delete any existing tmpfolder in the target folder
+        &#34;&#34;&#34;
         delete_temp_folders(root_path=Path(self.target_dir) / self.file_type)
 
     def calculate_tasks(self) -&gt; List[Task]:
+        &#34;&#34;&#34;
+        Defines the zipfiles that have not yet been processed and creates appropriate
+        processing FilterTasks for every unprocessed zipfile.
+
+        Returns:
+            List[Task]: List with Tasks.
+        &#34;&#34;&#34;
         existing = self._get_existing_filtered()
-        available = self._get_present_parquet_files()
+        available = self.dbaccessor.read_filenames_by_type(originFileType=self.file_type)
 
         missings = set(available) - set(existing)
         if self.save_by_stmt:
             return [ByStmtFilterTask(
-                filtered_path=Path(self.target_dir) / self.file_type / missing,
+                zip_file_name=missing,
+                target_path=Path(self.target_dir) / self.file_type / missing,
                 stmts=self.stmts,
-                bag_type=self.bag_type
+                bag_type=self.bag_type,
+                forms_filter=self.forms_filter,
+                post_load_filter=self.post_load_filter
             )
                 for missing in missings]
         else:
             return [FilterTask(
-                filtered_path=Path(self.target_dir) / self.file_type / missing,
+                zip_file_name=missing,
+                target_path=Path(self.target_dir) / self.file_type / missing,
                 stmts=self.stmts,
-                bag_type=self.bag_type
+                bag_type=self.bag_type,
+                forms_filter=self.forms_filter,
+                post_load_filter=self.post_load_filter
             )
                 for missing in missings]</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
+<li><a title="secfsdstools.c_automation.task_framework.AbstractProcessPoolProcess" href="../c_automation/task_framework.html#secfsdstools.c_automation.task_framework.AbstractProcessPoolProcess">AbstractProcessPoolProcess</a></li>
 <li><a title="secfsdstools.c_automation.task_framework.AbstractProcess" href="../c_automation/task_framework.html#secfsdstools.c_automation.task_framework.AbstractProcess">AbstractProcess</a></li>
 <li>abc.ABC</li>
 </ul>
+<h3>Methods</h3>
+<dl>
+<dt id="secfsdstools.g_pipelines.filter_process.FilterProcess.calculate_tasks"><code class="name flex">
+<span>def <span class="ident">calculate_tasks</span></span>(<span>self) ‑> List[<a title="secfsdstools.c_automation.task_framework.Task" href="../c_automation/task_framework.html#secfsdstools.c_automation.task_framework.Task">Task</a>]</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Defines the zipfiles that have not yet been processed and creates appropriate
+processing FilterTasks for every unprocessed zipfile.</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>List[Task]</code></dt>
+<dd>List with Tasks.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def calculate_tasks(self) -&gt; List[Task]:
+    &#34;&#34;&#34;
+    Defines the zipfiles that have not yet been processed and creates appropriate
+    processing FilterTasks for every unprocessed zipfile.
+
+    Returns:
+        List[Task]: List with Tasks.
+    &#34;&#34;&#34;
+    existing = self._get_existing_filtered()
+    available = self.dbaccessor.read_filenames_by_type(originFileType=self.file_type)
+
+    missings = set(available) - set(existing)
+    if self.save_by_stmt:
+        return [ByStmtFilterTask(
+            zip_file_name=missing,
+            target_path=Path(self.target_dir) / self.file_type / missing,
+            stmts=self.stmts,
+            bag_type=self.bag_type,
+            forms_filter=self.forms_filter,
+            post_load_filter=self.post_load_filter
+        )
+            for missing in missings]
+    else:
+        return [FilterTask(
+            zip_file_name=missing,
+            target_path=Path(self.target_dir) / self.file_type / missing,
+            stmts=self.stmts,
+            bag_type=self.bag_type,
+            forms_filter=self.forms_filter,
+            post_load_filter=self.post_load_filter
+        )
+            for missing in missings]</code></pre>
+</details>
+</dd>
+<dt id="secfsdstools.g_pipelines.filter_process.FilterProcess.pre_process"><code class="name flex">
+<span>def <span class="ident">pre_process</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>pre-processing: delete any existing tmpfolder in the target folder</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def pre_process(self):
+    &#34;&#34;&#34;
+    pre-processing: delete any existing tmpfolder in the target folder
+    &#34;&#34;&#34;
+    delete_temp_folders(root_path=Path(self.target_dir) / self.file_type)</code></pre>
+</details>
+</dd>
+</dl>
 <h3>Inherited members</h3>
 <ul class="hlist">
-<li><code><b><a title="secfsdstools.c_automation.task_framework.AbstractProcess" href="../c_automation/task_framework.html#secfsdstools.c_automation.task_framework.AbstractProcess">AbstractProcess</a></b></code>:
+<li><code><b><a title="secfsdstools.c_automation.task_framework.AbstractProcessPoolProcess" href="../c_automation/task_framework.html#secfsdstools.c_automation.task_framework.AbstractProcessPoolProcess">AbstractProcessPoolProcess</a></b></code>:
 <ul class="hlist">
-<li><code><a title="secfsdstools.c_automation.task_framework.AbstractProcess.calculate_tasks" href="../c_automation/task_framework.html#secfsdstools.c_automation.task_framework.AbstractProcess.calculate_tasks">calculate_tasks</a></code></li>
-<li><code><a title="secfsdstools.c_automation.task_framework.AbstractProcess.post_process" href="../c_automation/task_framework.html#secfsdstools.c_automation.task_framework.AbstractProcess.post_process">post_process</a></code></li>
-<li><code><a title="secfsdstools.c_automation.task_framework.AbstractProcess.pre_process" href="../c_automation/task_framework.html#secfsdstools.c_automation.task_framework.AbstractProcess.pre_process">pre_process</a></code></li>
-<li><code><a title="secfsdstools.c_automation.task_framework.AbstractProcess.process" href="../c_automation/task_framework.html#secfsdstools.c_automation.task_framework.AbstractProcess.process">process</a></code></li>
-<li><code><a title="secfsdstools.c_automation.task_framework.AbstractProcess.process_task" href="../c_automation/task_framework.html#secfsdstools.c_automation.task_framework.AbstractProcess.process_task">process_task</a></code></li>
+<li><code><a title="secfsdstools.c_automation.task_framework.AbstractProcessPoolProcess.do_execution" href="../c_automation/task_framework.html#secfsdstools.c_automation.task_framework.AbstractProcessPoolProcess.do_execution">do_execution</a></code></li>
+<li><code><a title="secfsdstools.c_automation.task_framework.AbstractProcessPoolProcess.post_process" href="../c_automation/task_framework.html#secfsdstools.c_automation.task_framework.AbstractProcess.post_process">post_process</a></code></li>
+<li><code><a title="secfsdstools.c_automation.task_framework.AbstractProcessPoolProcess.process" href="../c_automation/task_framework.html#secfsdstools.c_automation.task_framework.AbstractProcess.process">process</a></code></li>
+<li><code><a title="secfsdstools.c_automation.task_framework.AbstractProcessPoolProcess.process_task" href="../c_automation/task_framework.html#secfsdstools.c_automation.task_framework.AbstractProcess.process_task">process_task</a></code></li>
 </ul>
 </li>
 </ul>
 </dd>
 <dt id="secfsdstools.g_pipelines.filter_process.FilterTask"><code class="flex name class">
 <span>class <span class="ident">FilterTask</span></span>
-<span>(</span><span>filtered_path: pathlib.Path, bag_type: str, stmts: List[str])</span>
+<span>(</span><span>zip_file_name: str, target_path: pathlib.Path, bag_type: str, stmts: List[str], forms_filter=None, post_load_filter: Callable[[<a title="secfsdstools.d_container.databagmodel.RawDataBag" href="../d_container/databagmodel.html#secfsdstools.d_container.databagmodel.RawDataBag">RawDataBag</a>], <a title="secfsdstools.d_container.databagmodel.RawDataBag" href="../d_container/databagmodel.html#secfsdstools.d_container.databagmodel.RawDataBag">RawDataBag</a>] = &lt;function postloadfilter&gt;)</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Basic Filter implementation which applys the configured filter (as defined in the constructor).</p>
+<p>Constructor.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>zip_file_name</code></strong></dt>
+<dd>name of the source file that shall be readed by the
+zipcollector</dd>
+<dt><strong><code>target_path</code></strong></dt>
+<dd>path to store the filtered bag to</dd>
+<dt><strong><code>bag_type</code></strong></dt>
+<dd>bag type (either "row" or "joined") to save the data as</dd>
+<dt><strong><code>stmts</code></strong></dt>
+<dd>stmts to filter for ("BS", "IS", "CF", &hellip;)</dd>
+<dt><strong><code>forms_filter</code></strong></dt>
+<dd>defines which forms shall be loaded. default is ['10-K', '10-Q']</dd>
+<dt><strong><code>post_load_filter</code></strong></dt>
+<dd>filter method to be applied after loading of the zip file.
+default postloadfilter applies ReportPeriodRawFilter,
+MainCoregRawFilter, USDOnlyRawFilter, OfficialTagsOnlyRawFilter</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class FilterTask(AbstractFilterTask):
+    &#34;&#34;&#34;
+    Basic Filter implementation which applys the configured filter (as defined in the constructor).
+    &#34;&#34;&#34;
 
     def prepare(self):
-        &#34;&#34;&#34; prepare Task.&#34;&#34;&#34;
-
+        &#34;&#34;&#34; prepare the task -&gt; create the tmp_dir. &#34;&#34;&#34;
         self.tmp_path.mkdir(parents=True, exist_ok=False)
 
     def execute(self):
-        raw_bag = ZipCollector.get_zip_by_name(name=self.file_name,
-                                               forms_filter=[&#39;10-K&#39;, &#39;10-Q&#39;],
+        &#34;&#34;&#34;
+        Uses the ZipCollector to read the input data and then applys the filters as defined
+        in the constructor.
+        Saves the result depending on the configuration either as raw or joined data bag in the
+        defined target path.
+        &#34;&#34;&#34;
+        raw_bag = ZipCollector.get_zip_by_name(name=self.zip_file_name,
+                                               forms_filter=self.forms_filter,
                                                stmt_filter=self.stmts,
-                                               post_load_filter=postloadfilter).collect()
+                                               post_load_filter=self.post_load_filter).collect()
 
         if self.bag_type.lower() == &#34;raw&#34;:
             raw_bag.save(str(self.tmp_path))
@@ -537,7 +906,7 @@ ReportPeriodRawFilter, MainCoregRawFilter, USDOnlyRawFilter</p></div>
             raise ValueError(&#34;bag_type must be either raw or joined&#34;)
 
     def __str__(self) -&gt; str:
-        return f&#34;FilterTask(filtered_path: {self.filtered_path})&#34;</code></pre>
+        return f&#34;FilterTask(filtered_path: {self.target_path})&#34;</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -549,16 +918,25 @@ ReportPeriodRawFilter, MainCoregRawFilter, USDOnlyRawFilter</p></div>
 <span>def <span class="ident">execute</span></span>(<span>self)</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Uses the ZipCollector to read the input data and then applys the filters as defined
+in the constructor.
+Saves the result depending on the configuration either as raw or joined data bag in the
+defined target path.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def execute(self):
-    raw_bag = ZipCollector.get_zip_by_name(name=self.file_name,
-                                           forms_filter=[&#39;10-K&#39;, &#39;10-Q&#39;],
+    &#34;&#34;&#34;
+    Uses the ZipCollector to read the input data and then applys the filters as defined
+    in the constructor.
+    Saves the result depending on the configuration either as raw or joined data bag in the
+    defined target path.
+    &#34;&#34;&#34;
+    raw_bag = ZipCollector.get_zip_by_name(name=self.zip_file_name,
+                                           forms_filter=self.forms_filter,
                                            stmt_filter=self.stmts,
-                                           post_load_filter=postloadfilter).collect()
+                                           post_load_filter=self.post_load_filter).collect()
 
     if self.bag_type.lower() == &#34;raw&#34;:
         raw_bag.save(str(self.tmp_path))
@@ -573,14 +951,13 @@ ReportPeriodRawFilter, MainCoregRawFilter, USDOnlyRawFilter</p></div>
 <span>def <span class="ident">prepare</span></span>(<span>self)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>prepare Task.</p></div>
+<div class="desc"><p>prepare the task -&gt; create the tmp_dir.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def prepare(self):
-    &#34;&#34;&#34; prepare Task.&#34;&#34;&#34;
-
+    &#34;&#34;&#34; prepare the task -&gt; create the tmp_dir. &#34;&#34;&#34;
     self.tmp_path.mkdir(parents=True, exist_ok=False)</code></pre>
 </details>
 </dd>
@@ -632,6 +1009,10 @@ ReportPeriodRawFilter, MainCoregRawFilter, USDOnlyRawFilter</p></div>
 </li>
 <li>
 <h4><code><a title="secfsdstools.g_pipelines.filter_process.FilterProcess" href="#secfsdstools.g_pipelines.filter_process.FilterProcess">FilterProcess</a></code></h4>
+<ul class="">
+<li><code><a title="secfsdstools.g_pipelines.filter_process.FilterProcess.calculate_tasks" href="#secfsdstools.g_pipelines.filter_process.FilterProcess.calculate_tasks">calculate_tasks</a></code></li>
+<li><code><a title="secfsdstools.g_pipelines.filter_process.FilterProcess.pre_process" href="#secfsdstools.g_pipelines.filter_process.FilterProcess.pre_process">pre_process</a></code></li>
+</ul>
 </li>
 <li>
 <h4><code><a title="secfsdstools.g_pipelines.filter_process.FilterTask" href="#secfsdstools.g_pipelines.filter_process.FilterTask">FilterTask</a></code></h4>

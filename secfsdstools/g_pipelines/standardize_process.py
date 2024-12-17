@@ -6,8 +6,8 @@ import shutil
 from pathlib import Path
 from typing import List
 
-from secfsdstools.c_automation.task_framework import AbstractProcess, Task, delete_temp_folders, \
-    BaseTask
+from secfsdstools.c_automation.task_framework import Task, delete_temp_folders, \
+    BaseTask, AbstractThreadProcess
 from secfsdstools.d_container.databagmodel import JoinedDataBag
 from secfsdstools.e_filter.joinedfiltering import OfficialTagsOnlyJoinedFilter
 from secfsdstools.f_standardize.bs_standardize import BalanceSheetStandardizer
@@ -23,6 +23,7 @@ class StandardizerTask(BaseTask):
     The root_path is expected to contain the subfolders BS, IS, and CF.
     The data has to be present as JoinedDataBags.
     """
+
     def __init__(self,
                  root_path: Path,
                  target_path: Path,
@@ -99,7 +100,7 @@ class StandardizerTask(BaseTask):
         cf_standardizer.get_standardize_bag().save(str(self.tmp_path / "CF"))
 
 
-class StandardizeProcess(AbstractProcess):
+class StandardizeProcess(AbstractThreadProcess):
     """
     Expects subfolders BS, IS, CF inside the provided root_dir.
     The data has to be provided as JoinedDataBags.

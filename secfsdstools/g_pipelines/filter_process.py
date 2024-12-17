@@ -9,7 +9,8 @@ from typing import List, Callable
 
 from secfsdstools.a_utils.fileutils import get_directories_in_directory
 from secfsdstools.c_automation.automation_utils import delete_temp_folders
-from secfsdstools.c_automation.task_framework import AbstractProcess, Task
+from secfsdstools.c_automation.task_framework import Task, \
+    AbstractProcessPoolProcess
 from secfsdstools.c_index.indexdataaccess import ParquetDBIndexingAccessor
 from secfsdstools.d_container.databagmodel import RawDataBag
 from secfsdstools.e_collector.zipcollecting import ZipCollector
@@ -42,7 +43,7 @@ class AbstractFilterTask:
                  bag_type: str,  # raw or joined
                  stmts: List[str],
                  forms_filter=None,
-                 post_load_filter: Callable[[RawDataBag], RawDataBag]=postloadfilter
+                 post_load_filter: Callable[[RawDataBag], RawDataBag] = postloadfilter
                  ):
         """
 
@@ -172,7 +173,7 @@ class ByStmtFilterTask(AbstractFilterTask):
         return f"ByStmtFilterTask(filtered_path: {self.target_path})"
 
 
-class FilterProcess(AbstractProcess):
+class FilterProcess(AbstractProcessPoolProcess):
     """
     Applies basic filters on the raw indexed files and saves the result into the provided
     target_path.
@@ -190,7 +191,7 @@ class FilterProcess(AbstractProcess):
                  stmts=None,
                  execute_serial: bool = False,
                  forms_filter=None,
-                 post_load_filter: Callable[[RawDataBag], RawDataBag]=postloadfilter
+                 post_load_filter: Callable[[RawDataBag], RawDataBag] = postloadfilter
                  ):
         """
         Constructor.

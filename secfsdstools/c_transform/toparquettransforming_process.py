@@ -12,7 +12,7 @@ from secfsdstools.a_utils.constants import SUB_TXT, PRE_TXT, NUM_TXT, NUM_DTYPE,
     SUB_DTYPE
 from secfsdstools.a_utils.fileutils import get_directories_in_directory, \
     read_df_from_file_in_zip
-from secfsdstools.c_automation.task_framework import AbstractProcess
+from secfsdstools.c_automation.task_framework import AbstractProcess, AbstractProcessPoolProcess
 
 LOGGER = logging.getLogger(__name__)
 
@@ -101,7 +101,7 @@ class ToParquetTransformTask:
         num_df.to_parquet(target_path / f'{NUM_TXT}.parquet')
 
 
-class ToParquetTransformerProcess(AbstractProcess):
+class ToParquetTransformerProcess(AbstractProcessPoolProcess):
     """
     Transforming zip files containing the sub.txt, num.txt, and pre.txt as CSV into
     parquet format.

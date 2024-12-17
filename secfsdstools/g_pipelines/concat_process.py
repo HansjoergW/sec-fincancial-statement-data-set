@@ -5,8 +5,9 @@ from pathlib import Path
 from typing import List
 
 from secfsdstools.c_automation.automation_utils import delete_temp_folders
-from secfsdstools.c_automation.task_framework import AbstractProcess, \
-    CheckByNewSubfoldersMergeBaseTask, CheckByTimestampMergeBaseTask, AbstractTask
+from secfsdstools.c_automation.task_framework import CheckByNewSubfoldersMergeBaseTask, \
+    CheckByTimestampMergeBaseTask, AbstractTask, \
+    AbstractThreadProcess
 from secfsdstools.g_pipelines.pipeline_utils import concat_bags
 
 
@@ -181,7 +182,7 @@ class ConcatIfChangedTimestampTask(CheckByTimestampMergeBaseTask):
         concat_bags(paths_to_concat=paths_to_process, target_path=tmp_path)
 
 
-class ConcatByChangedTimestampProcess(AbstractProcess):
+class ConcatByChangedTimestampProcess(AbstractThreadProcess):
     """
     Process implementation that concatenates raw or joined databigs in a root_dir
     if something changed in any of the subfolders and saves the result in the target_dir.
@@ -234,7 +235,7 @@ class ConcatByChangedTimestampProcess(AbstractProcess):
         return []
 
 
-class ConcatByNewSubfoldersProcess(AbstractProcess):
+class ConcatByNewSubfoldersProcess(AbstractThreadProcess):
     """
     Process implementation that concatenates raw or joined databags in a root_dir
     if a new bag/subfolder was added to the root_dir and saves the result in the target_dir.

@@ -8,7 +8,7 @@ import pandas as pd
 
 from secfsdstools.a_utils.constants import SUB_TXT
 from secfsdstools.a_utils.fileutils import get_directories_in_directory
-from secfsdstools.c_automation.task_framework import AbstractProcess
+from secfsdstools.c_automation.task_framework import AbstractThreadProcess
 from secfsdstools.c_index.indexdataaccess import IndexFileProcessingState, ParquetDBIndexingAccessor
 
 LOGGER = logging.getLogger(__name__)
@@ -100,7 +100,7 @@ class IndexingTask:
         return f"IndexingTask(file_path: {self.file_path})"
 
 
-class ReportParquetIndexerProcess(AbstractProcess):
+class ReportParquetIndexerProcess(AbstractThreadProcess):
     """
     Index the reports in parquet files.
     """

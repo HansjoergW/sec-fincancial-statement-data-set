@@ -9,7 +9,7 @@ from typing import List, Tuple, Dict
 
 from secfsdstools.a_utils.downloadutils import UrlDownloader
 from secfsdstools.a_utils.fileutils import get_filenames_in_directory, get_directories_in_directory
-from secfsdstools.c_automation.task_framework import AbstractProcess
+from secfsdstools.c_automation.task_framework import AbstractThreadProcess
 
 LOGGER = logging.getLogger(__name__)
 
@@ -67,7 +67,7 @@ class DownloadTask:
         return f"DownloadTask(target_path: {self.target_path})"
 
 
-class BaseDownloadingProcess(AbstractProcess):
+class BaseDownloadingProcess(AbstractThreadProcess):
     """
     Base implementation for downloading zip files.
     """

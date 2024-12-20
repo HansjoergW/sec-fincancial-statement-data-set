@@ -1,5 +1,5 @@
 """
-This module contains some basic filter implementations on the JoinedDataBag.
+This module contains some basic pathfilter implementations on the JoinedDataBag.
 
 Note: the filters don't create new copies of the pandas dataset
 """
@@ -12,7 +12,7 @@ from secfsdstools.d_container.filter import FilterBase
 
 class AdshJoinedFilter(FilterBase[JoinedDataBag]):
     """
-    Filters the data by a list of adshs. This filter operates on the sub, pre_df and the num_df.
+    Filters the data by a list of adshs. This pathfilter operates on the sub, pre_df and the num_df.
     """
 
     def __init__(self, adshs: List[str]):
@@ -24,7 +24,7 @@ class AdshJoinedFilter(FilterBase[JoinedDataBag]):
         are contained.
 
         Args:
-            databag(JoinedDataBag) : databag to apply the filter to
+            databag(JoinedDataBag) : databag to apply the pathfilter to
 
         Returns:
             JoinedDataBag: the databag with the filtered data
@@ -39,7 +39,7 @@ class AdshJoinedFilter(FilterBase[JoinedDataBag]):
 class StmtJoinedFilter(FilterBase[JoinedDataBag]):
     """
     Filters the data by a list of statement type (BS, IS, CF, ...).
-    This filter operates on the pre_df.
+    This pathfilter operates on the pre_df.
     """
 
     def __init__(self, stmts: List[str]):
@@ -51,7 +51,7 @@ class StmtJoinedFilter(FilterBase[JoinedDataBag]):
         are contained.
 
         Args:
-            databag(JoinedDataBag) : Joineddatabag to apply the filter to
+            databag(JoinedDataBag) : Joineddatabag to apply the pathfilter to
 
         Returns:
             JoinedDataBag: the databag with the filtered data
@@ -65,15 +65,15 @@ class StmtJoinedFilter(FilterBase[JoinedDataBag]):
 class ReportPeriodJoinedFilter(FilterBase[JoinedDataBag]):
     """
     Filters the data so that only datapoints are contained which ddate-attribute equals the
-    period date of the report. Therefore, the filter operates on the num_df dataframe.
+    period date of the report. Therefore, the pathfilter operates on the num_df dataframe.
     """
 
     def filter(self, databag: JoinedDataBag) -> JoinedDataBag:
         """
-        filter the databag so that only datapoints are contained which have a ddate-attribute
+        pathfilter the databag so that only datapoints are contained which have a ddate-attribute
         that equals the period-attribute of the report.
         Args:
-            databag(JoinedDataBag) : databag to apply the filter to
+            databag(JoinedDataBag) : databag to apply the pathfilter to
 
         Returns:
             JoinedDataBag: the databag with the filtered data
@@ -93,16 +93,16 @@ class ReportPeriodAndPreviousPeriodJoinedFilter(FilterBase[JoinedDataBag]):
     """
     Filters the data so that only datapoints are contained which ddate-attribute equals the
     period date of the report or the period date of the previous (a year ago) report.
-    Therefore, the filter operates on the num_df dataframe.
+    Therefore, the pathfilter operates on the num_df dataframe.
     """
 
     def filter(self, databag: JoinedDataBag) -> JoinedDataBag:
         """
-        filter the databag so that only datapoints are contained which have a ddate-attribute
+        pathfilter the databag so that only datapoints are contained which have a ddate-attribute
         that equals the period-attribute of the report or the period of the previous (a year ago)
         report.
         Args:
-            databag(JoinedDataBag) : databag to apply the filter to
+            databag(JoinedDataBag) : databag to apply the pathfilter to
 
         Returns:
             JoinedDataBag: the databag with the filtered data
@@ -127,7 +127,7 @@ class ReportPeriodAndPreviousPeriodJoinedFilter(FilterBase[JoinedDataBag]):
 
 class TagJoinedFilter(FilterBase[JoinedDataBag]):
     """
-    Filters the data by a list of tags. This filter operates on the pre_df and the num_df.
+    Filters the data by a list of tags. This pathfilter operates on the pre_df and the num_df.
     """
 
     def __init__(self, tags: List[str]):
@@ -138,7 +138,7 @@ class TagJoinedFilter(FilterBase[JoinedDataBag]):
         filters the databag so that only datapoints are contained which have a tag-attribute
         that is in the provided list.
         Args:
-            databag(JoinedDataBag) : databag to apply the filter to
+            databag(JoinedDataBag) : databag to apply the pathfilter to
 
         Returns:
             JoinedDataBag: the databag with the filtered data
@@ -159,7 +159,7 @@ class MainCoregJoinedFilter(FilterBase[JoinedDataBag]):
         filters the databag so that only the main coreg entries are contained
         (no data subsidiaries).
         Args:
-            databag(JoinedDataBag) : databag to apply the filter to
+            databag(JoinedDataBag) : databag to apply the pathfilter to
 
         Returns:
             JoinedDataBag: the databag with the filtered data
@@ -182,7 +182,7 @@ class OfficialTagsOnlyJoinedFilter(FilterBase[JoinedDataBag]):
         filters the databag so that official tags are contained.
 
         Args:
-            databag(JoinedDataBag) : databag to apply the filter to
+            databag(JoinedDataBag) : databag to apply the pathfilter to
 
         Returns:
             JoinedDataBag: the databag with the filtered data
@@ -204,7 +204,7 @@ class USDOnlyJoinedFilter(FilterBase[JoinedDataBag]):
         Removes all currency entries in the uom colum of the pre_num_df that are not USD.
 
         Args:
-            databag(JoinedDataBag) : Joineddatabag to apply the filter to
+            databag(JoinedDataBag) : Joineddatabag to apply the pathfilter to
 
         Returns:
             JoinedDataBag: the databag with the filtered data

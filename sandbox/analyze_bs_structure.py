@@ -47,7 +47,7 @@ def check_for_equity_tags(df: pd.DataFrame):
     counts_df = get_count_tags_per_adsh(df, ['StockholdersEquity', 'PartnerCapital'])
     result = counts_df[counts_df.tag > 1]
     print(result.shape)
-    # filter where more than 1 tag with stockholdersquity and partnercapital are present
+    # pathfilter where more than 1 tag with stockholdersquity and partnercapital are present
     filterd = df[
         df.adsh.isin(result.adsh.tolist()) & df.tag.isin(['StockholdersEquity', 'PartnerCapital'])]
     # first checks shows, that only stockholderequity appears in reports where

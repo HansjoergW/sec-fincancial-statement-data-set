@@ -61,7 +61,7 @@ class BaseCollector(ABC):
         basic implementation of the collect method
 
         Args:
-            sub_df_filter: filter that applies directly on the sub.txt dataframe.
+            sub_df_filter: pathfilter that applies directly on the sub.txt dataframe.
 
         Returns:
             RawDataBag: the loaded instance of RawDataBag

@@ -60,7 +60,7 @@ def test_checkbytimestamptask(tmp_path):
     # execute task
     task = MyByTSTask(
         root_path=tmp_path / "quarter",
-        filter="*",
+        pathfilter="*",
         target_path=tmp_path / "all",
     )
 
@@ -82,7 +82,7 @@ def test_checkbytimestamptask(tmp_path):
     # Test 2: we check what happens if there was now change
     task_nochange = MyByTSTask(
         root_path=tmp_path / "quarter",
-        filter="*",
+        pathfilter="*",
         target_path=tmp_path / "all",
     )
 
@@ -96,7 +96,7 @@ def test_checkbytimestamptask(tmp_path):
 
     task_changed = MyByTSTask(
         root_path=tmp_path / "quarter",
-        filter="*",
+        pathfilter="*",
         target_path=tmp_path / "all",
     )
 
@@ -146,7 +146,7 @@ def test_checkbynewsubfoldertask(tmp_path):
     # execute task
     task = MyByNewSubfoldersTask(
         root_path=tmp_path / "quarter",
-        filter="*",
+        pathfilter="*",
         target_path=tmp_path / "all",
     )
 
@@ -168,7 +168,7 @@ def test_checkbynewsubfoldertask(tmp_path):
     # Test 2: we check what happens if there was now change
     task_nochange = MyByNewSubfoldersTask(
         root_path=tmp_path / "quarter",
-        filter="*",
+        pathfilter="*",
         target_path=tmp_path / "all",
     )
 
@@ -182,7 +182,7 @@ def test_checkbynewsubfoldertask(tmp_path):
 
     task_changed = MyByNewSubfoldersTask(
         root_path=tmp_path / "quarter",
-        filter="*",
+        pathfilter="*",
         target_path=tmp_path / "all",
     )
 
@@ -216,7 +216,7 @@ class MyThreadProcess(AbstractThreadProcess):
         task = MyByNewSubfoldersTask(
             target_path=self.base_path / "target",
             root_path=self.base_path / "root",
-            filter="*"
+            pathfilter="*"
         )
         if task.has_work_todo():
             return [task]
@@ -248,7 +248,7 @@ class MyProcessPoolProcess(AbstractProcessPoolProcess):
         task = MyByNewSubfoldersTask(
             target_path=self.base_path / "target",
             root_path=self.base_path / "root",
-            filter="*"
+            pathfilter="*"
         )
         if task.has_work_todo():
             return [task]

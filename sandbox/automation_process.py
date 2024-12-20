@@ -18,7 +18,7 @@ if __name__ == '__main__':
     print(results)
 
     # process = FilterProcess(parquet_dir="C:/data/sec/automated/parquet",
-    #                         filtered_dir="C:/data/sec/automated/filter")
+    #                         filtered_dir="C:/data/sec/automated/pathfilter")
     #
     # process.process()
 

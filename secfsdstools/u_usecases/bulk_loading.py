@@ -19,7 +19,7 @@ from secfsdstools.e_collector.zipcollecting import ZipCollector
 
 def default_postloadfilter(databag: RawDataBag) -> RawDataBag:
     """
-    defines a default post filter method that can be used ba ZipCollectors.
+    defines a default post pathfilter method that can be used ba ZipCollectors.
     It combines the filters:
             ReportPeriodRawFilter, MainCoregRawFilter, OfficialTagsOnlyRawFilter, USDOnlyRawFilter
     """
@@ -128,7 +128,7 @@ def read_all_zip_names() -> List[str]:
     configuration = ConfigurationManager.read_config_file()
     dbaccessor = ParquetDBIndexingAccessor(db_dir=configuration.db_dir)
 
-    # exclude 2009q1.zip, since this is empty and causes an error when it is read with a filter
+    # exclude 2009q1.zip, since this is empty and causes an error when it is read with a pathfilter
     return [x.fileName for x in dbaccessor.read_all_indexfileprocessing() if
             not x.fullPath.endswith("2009q1.zip")]
 

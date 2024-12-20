@@ -21,7 +21,7 @@ class IndexSearch:
         """
         Creates a IndexSearch instance.
         If no  configuration object is passed, it reads the configuration from
-        the config file.
+        the configuration file.
         Args:
             configuration (Configuration, optional, None): configuration object
 

@@ -25,11 +25,11 @@ class DataBagBase(Generic[T]):
 
     def __getitem__(self, bagfilter: FilterBase[T]) -> T:
         """
-        forwards to the filter method, so that filters can be chained in a simple syntax:
-        bag[filter1][filter2] is equal to bag.filter(filter1).filter(filter2)
+        forwards to the pathfilter method, so that filters can be chained in a simple syntax:
+        bag[filter1][filter2] is equal to bag.pathfilter(filter1).pathfilter(filter2)
 
         Args:
-            bagfilter: the filter to be applied
+            bagfilter: the pathfilter to be applied
 
         Returns:
             RawDataBag: the databag with the filtered content
@@ -39,12 +39,12 @@ class DataBagBase(Generic[T]):
 
     def filter(self, bagfilter: FilterBase[T]) -> T:
         """
-        applies a filter to the bag and produces a new bag based on the filter.
-        instead of using the filter, you can also use the "index" syntax to apply filters:
-        bag[filter1][filter2] is equal to bag.filter(filter1).filter(filter2)
+        applies a pathfilter to the bag and produces a new bag based on the pathfilter.
+        instead of using the pathfilter, you can also use the "index" syntax to apply filters:
+        bag[filter1][filter2] is equal to bag.pathfilter(filter1).pathfilter(filter2)
 
         Args:
-            bagfilter: the filter to be applied
+            bagfilter: the pathfilter to be applied
 
         Returns:
             RawDataBag: the databag with the filtered content
@@ -364,6 +364,7 @@ class RawDataBag(DataBagBase[RAW]):
                                  pre_df=pre_df,
                                  num_df=num_df)
 
+
 def is_rawbag_path(path: Path) -> bool:
     """ Check whether the provided path contains the files of a RawDatabag. """
     return (path / "num.txt.parquet").exists()
@@ -372,4 +373,3 @@ def is_rawbag_path(path: Path) -> bool:
 def is_joinedbag_path(path: Path) -> bool:
     """ Check whether the provided path contains the files of a JoinedDatabag. """
     return (path / "pre_num.txt.parquet").exists()
-

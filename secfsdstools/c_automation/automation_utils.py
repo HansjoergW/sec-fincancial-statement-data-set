@@ -1,9 +1,13 @@
+"""
+Util function that are mainly used in the context of automation.
+"""
 import os
 import shutil
 from pathlib import Path
 from typing import Optional, List
 
 from secfsdstools.a_utils.fileutils import get_directories_in_directory
+
 
 def delete_temp_folders(root_path: Path, temp_prefix: str = "tmp"):
     """
@@ -30,7 +34,7 @@ def get_latest_mtime(root_path: Path, skip: Optional[List[str]] = None) -> float
         the latest timestamp of a folder or file within the "folder" as float value.
 
     """
-    if skip == None:
+    if skip is None:
         skip = []
 
     latest_mtime = 0

@@ -21,7 +21,7 @@ class SingleReportCollector(BaseCollector):
                            configuration: Optional[Configuration] = None):
         """
         creates the ReportReader instance for a certain adsh.
-        if no configuration is passed, it reads the config from the config file
+        if no configuration is passed, it reads the configuration from the configuration file
 
         Args:
             adsh (str): unique report id

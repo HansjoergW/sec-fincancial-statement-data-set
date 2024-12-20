@@ -1,5 +1,5 @@
 """
-Defines pipeline steps that help with applying the same filter to mutilple subfolders
+Defines pipeline steps that help with applying the same pathfilter to mutilple subfolders
 in parallel.
 """
 import os
@@ -20,7 +20,7 @@ from secfsdstools.e_filter.rawfiltering import StmtRawFilter
 
 def postloadfilter(databag: RawDataBag) -> RawDataBag:
     """
-    defines a post filter method that can be used by ZipCollectors.
+    defines a post pathfilter method that can be used by ZipCollectors.
     It combines the filters:
             ReportPeriodRawFilter, MainCoregRawFilter, USDOnlyRawFilter, OfficialTagsOnlyRawFilter
     """
@@ -53,9 +53,9 @@ class AbstractFilterTask:
             zip_file_name: name of the source file that shall be readed by the  zipcollector
             target_path: path to store the filtered bag to
             bag_type: bag type (either "row" or "joined") to save the data as
-            stmts: stmts to filter for ("BS", "IS", "CF", ...)
+            stmts: stmts to pathfilter for ("BS", "IS", "CF", ...)
             forms_filter: defines which forms shall be loaded. default is ['10-K', '10-Q']
-            post_load_filter: filter method to be applied after loading of the zip file.
+            post_load_filter: pathfilter method to be applied after loading of the zip file.
                               default postloadfilter applies ReportPeriodRawFilter,
                               MainCoregRawFilter, USDOnlyRawFilter, OfficialTagsOnlyRawFilter
         """
@@ -89,7 +89,8 @@ class AbstractFilterTask:
 
 class FilterTask(AbstractFilterTask):
     """
-    Basic Filter implementation which applys the configured filter (as defined in the constructor).
+    Basic Filter implementation which applys the configured pathfilter
+    (as defined in the constructor).
     """
 
     def prepare(self):
@@ -206,7 +207,7 @@ class FilterProcess(AbstractProcessPoolProcess):
                           created.
             stmts: The list of stmts that should be filtered: "BS", "IS", "CF", ... or none
             execute_serial: Flag to indicate whether the files should be process in serial manner.
-            post_load_filter: postload-filter function. Default is the defined
+            post_load_filter: postload-pathfilter function. Default is the defined
                               postloadfilter-function.
             forms_filter: defines which forms to laod (10-K, 10-Q, ...). Default is 10-K and 10-Q.
         """
@@ -249,7 +250,7 @@ class FilterProcess(AbstractProcessPoolProcess):
             List[Task]: List with Tasks.
         """
         existing = self._get_existing_filtered()
-        available = self.dbaccessor.read_filenames_by_type(originFileType=self.file_type)
+        available = self.dbaccessor.read_filenames_by_type(origin_file_type=self.file_type)
 
         missings = set(available) - set(existing)
         if self.save_by_stmt:
@@ -262,13 +263,13 @@ class FilterProcess(AbstractProcessPoolProcess):
                 post_load_filter=self.post_load_filter
             )
                 for missing in missings]
-        else:
-            return [FilterTask(
-                zip_file_name=missing,
-                target_path=Path(self.target_dir) / self.file_type / missing,
-                stmts=self.stmts,
-                bag_type=self.bag_type,
-                forms_filter=self.forms_filter,
-                post_load_filter=self.post_load_filter
-            )
-                for missing in missings]
+
+        return [FilterTask(
+            zip_file_name=missing,
+            target_path=Path(self.target_dir) / self.file_type / missing,
+            stmts=self.stmts,
+            bag_type=self.bag_type,
+            forms_filter=self.forms_filter,
+            post_load_filter=self.post_load_filter
+        )
+            for missing in missings]

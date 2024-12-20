@@ -315,7 +315,7 @@ class BalanceSheetStandardizer(Standardizer):
 
         Args:
             prepivot_rule_tree: rules that are applied before the data is pivoted. These are rules
-                    that filter (like deduplicate) or correct values.
+                    that pathfilter (like deduplicate) or correct values.
             pre_rule_tree: rules that are applied once before the main processing. These are mainly
                     rules that try to correct existing data from obvious errors (like wrong
                     tagging)

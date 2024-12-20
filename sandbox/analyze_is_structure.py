@@ -185,7 +185,7 @@ if __name__ == '__main__':
     #                                              'CostOfGoodsSold',
     #                                              'CostOfServices']))
 
-    # is_joined_bag = is_joined_bag.filter(AdshJoinedFilter(adshs=['0000320193-23-000064'])) # expect 2 entries
+    # is_joined_bag = is_joined_bag.pathfilter(AdshJoinedFilter(adshs=['0000320193-23-000064'])) # expect 2 entries
     #
 
     # print(find_entries_with_all_tags(bag=is_joined_bag,

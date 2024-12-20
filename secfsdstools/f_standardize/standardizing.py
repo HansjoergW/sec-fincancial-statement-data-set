@@ -264,7 +264,7 @@ class Standardizer(Presenter[JoinedDataBag]):
 
         Args:
             prepivot_rule_tree: rules that are applied before the data is pivoted. These are rules
-                    that filter (like deduplicate) or correct values.
+                    that pathfilter (like deduplicate) or correct values.
             pre_rule_tree: rules that are applied once before the main processing. These are mainly
                     rules that try to correct existing data from obvious errors (like wrong
                     tagging)
@@ -366,7 +366,7 @@ class Standardizer(Presenter[JoinedDataBag]):
             list(set(cpy_pivot_df.columns.tolist()).intersection(set(self.main_statement_tags)))
         cpy_pivot_df['nan_count'] = cpy_pivot_df[available_main_statements].isna().sum(axis=1)
 
-        # filter out the entries with no main tags
+        # pathfilter out the entries with no main tags
         cpy_pivot_df = cpy_pivot_df[cpy_pivot_df.nan_count < len(available_main_statements)]
         cpy_pivot_df.sort_values(['adsh', 'coreg', 'qtrs', 'nan_count'], inplace=True)
 
@@ -471,7 +471,7 @@ class Standardizer(Presenter[JoinedDataBag]):
                         finalized_df)).round(2)}))
 
         # calculate log_df summaries
-        # filter for rule columns but making sure the order stays the same
+        # pathfilter for rule columns but making sure the order stays the same
         rule_columns = [x for x in self.applied_rules_log_df.columns if
                         x not in self.identifier_cols]
         main_post_applied_rules_sum_s = self.applied_rules_log_df[rule_columns].sum()

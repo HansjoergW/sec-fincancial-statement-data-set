@@ -10,7 +10,7 @@ from collections import defaultdict
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
-from typing import List, Set, Tuple
+from typing import List, Tuple
 from typing import Protocol, Any, Dict
 
 from secfsdstools.a_utils.parallelexecution import ThreadExecutor, ParallelExecutor
@@ -64,7 +64,7 @@ class AbstractTask:
     """
     Abstract Base implemenation providing some commonly used basic functionality.
 
-    It is based on reading subfolders from a root_path, which are defined by filter.
+    It is based on reading subfolders from a root_path, which are defined by pathfilter.
     Then processing the content of these folders and writing the result in a target_path.
 
     The result is created in tmp-folder and is then "commited" by renaming the tmp-folder into
@@ -85,18 +85,18 @@ class AbstractTask:
 
     def __init__(self,
                  root_path: Path,
-                 filter: str,
+                 pathfilter: str,
                  target_path: Path):
         """
         The constructor of the AbstracTask.
 
         Args:
             root_path: root_path of the data to be processed
-            filter: a filter string (e.g. "*"; as defined for Path.glob()) to select the
+            pathfilter: a pathfilter string (e.g. "*"; as defined for Path.glob()) to select the
                     subfolders, that have to be processed.
-                    filter could be something like "*", or "*/BS", or "something/*/BS".
+                    pathfilter could be something like "*", or "*/BS", or "something/*/BS".
 
-                    E.g., the following root_path structure and the filter "*/BS"
+                    E.g., the following root_path structure and the pathfilter "*/BS"
                     would select all "BS" "sub-subfolders" within root_path:
                     <pre>
                        <root_path>
@@ -114,9 +114,9 @@ class AbstractTask:
 
         self.root_path = root_path
         self.target_path = target_path
-        self.filter = filter
+        self.filter = pathfilter
 
-        # create a list of subfolders that have to be processed defined by the filter string.
+        # create a list of subfolders that have to be processed defined by the pathfilter string.
         self.filtered_paths = list(self.root_path.glob(self.filter))
 
         # usually, all filtered_paths have to be processed
@@ -126,10 +126,10 @@ class AbstractTask:
         self.tmp_path = target_path.parent / f"tmp_{target_path.name}"
         self.meta_inf_file: Path = self.target_path / "meta.inf"
 
-        # filter could be something like "*", or "*/BS", or "something/*/BS"
+        # pathfilter could be something like "*", or "*/BS", or "something/*/BS"
         # but in order to be able to fill the metainf file with the names for which "*" iterates
         # over, we need to know the position of the "*" from the end of the resulting path.
-        # So if the filter is just a "*" it is 0, if it is "*/BS" it would be 1
+        # So if the pathfilter is just a "*" it is 0, if it is "*/BS" it would be 1
         self.star_position = self._star_position_from_end(self.filter)
 
     @staticmethod
@@ -169,7 +169,7 @@ class AbstractTask:
     @staticmethod
     def _get_star_position_name(path: Path, star_position: int) -> str:
         """
-        Gets the name of the part where the "*" is positioned in the filter-string.
+        Gets the name of the part where the "*" is positioned in the pathfilter-string.
 
         Example:
              path = "a/b/c" and star_position = 0 -> returns c
@@ -209,7 +209,7 @@ class AbstractTask:
         returns true if there is actual work to do, otherwise False.
         Can be overwritten.
         Default implementation just looks if the provided root_path has subfolders, that are
-        defined by the provided filter string.
+        defined by the provided pathfilter string.
         """
         return len(self.paths_to_process) > 0
 
@@ -243,6 +243,11 @@ class AbstractTask:
         return "success"
 
     def write_meta_inf(self, content: str):
+        """
+        writes the provided content into the the meta_inf file in the tmp-path.
+        Args:
+            content: content to be written
+        """
         temp_meta_inf = self.tmp_path / "meta.inf"
         temp_meta_inf.write_text(data=content, encoding="utf-8")
 
@@ -266,7 +271,7 @@ class CheckByTimestampMergeBaseTask(AbstractTask):
 
     def __init__(self,
                  root_path: Path,
-                 filter: str,
+                 pathfilter: str,
                  target_path: Path):
         """
           The constructor of the CheckByTimestampMergeBaseTask.
@@ -274,7 +279,7 @@ class CheckByTimestampMergeBaseTask(AbstractTask):
         """
         super().__init__(
             root_path=root_path,
-            filter=filter,
+            pathfilter=pathfilter,
             target_path=target_path,
         )
 
@@ -340,25 +345,26 @@ class CheckByNewSubfoldersMergeBaseTask(AbstractTask):
 
     def __init__(self,
                  root_path: Path,
-                 filter: str,
+                 pathfilter: str,
                  target_path: Path):
         """
         Constructor of base task.
 
         Args:
             root_path: root path to read that from
-            filter: filter string that defines which subfolders in the root_path have to be selected
+            pathfilter: pathfilter string that defines which subfolders in the
+                        root_path have to be selected
             target_path: path to where the results have to be written
         """
         self.all_names: Dict[str, Path]
 
         super().__init__(
             root_path=root_path,
-            filter=filter,
+            pathfilter=pathfilter,
             target_path=target_path,
         )
 
-        # so if we have the filter */BS and if we have the directories "2010q1.zip/BS",
+        # so if we have the pathfilter */BS and if we have the directories "2010q1.zip/BS",
         # "2010q2.zip/BS" in the root_path, all_names key will be 2010q1.zip, 2010q2.zip
         self.all_names = {self._get_star_position_name(path=p, star_position=self.star_position):
                               p for p in self.paths_to_process}
@@ -443,7 +449,8 @@ class AbstractProcess(ABC):
         """
 
     def pre_process(self):
-        """ Hook method to implement logic that is executed before the whole process is finished. """
+        """ Hook method to implement logic that is executed before the whole process is finished.
+        """
 
     def post_process(self):
         """ Hook method to implement logic that is executed after the whole process is finished. """

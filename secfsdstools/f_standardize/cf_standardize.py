@@ -289,7 +289,7 @@ class PostFixMixedContinuingWithSum(Rule):
 
         expected_sum = data_df[self.sum_tags].sum(axis=1) + data_df['EffectOfExchangeRateFinal']
 
-        # we sum up the values for the discontinued tags, and create a filter if they are all 0
+        # we sum up the values for the discontinued tags, and create a pathfilter if they are all 0
         sum_disc = data_df[self.disc_tags].sum(axis=1)
         mask_sum_disc_not_zero = ~(sum_disc == 0)
 
@@ -965,7 +965,7 @@ class CashFlowStandardizer(Standardizer):
 
         Args:
             prepivot_rule_tree: rules that are applied before the data is pivoted. These are rules
-                    that filter (like deduplicate) or correct values.
+                    that pathfilter (like deduplicate) or correct values.
             pre_rule_tree: rules that are applied once before the main processing. These are mainly
                     rules that try to correct existing data from obvious errors (like wrong
                     tagging)

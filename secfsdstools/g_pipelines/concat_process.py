@@ -18,16 +18,16 @@ class ConcatIfNewSubfolderTask(CheckByNewSubfoldersMergeBaseTask):
 
     def __init__(self,
                  root_path: Path,
-                 filter: str,
+                 pathfilter: str,
                  target_path: Path):
         """
-        Takes subfolders from the root_path (with applied filter string) and concatenates them into
-        a single DataBag (either Raw or Joined) into the target_path.
+        Takes subfolders from the root_path (with applied pathfilter string) and
+        concatenates them into a single DataBag (either Raw or Joined) into the target_path.
 
-        The filter string defines on which subfolder level actually does contain the data to be
+        The pathfilter string defines on which subfolder level actually does contain the data to be
         concatenated.
 
-        E.g. if the filter is just a "*" and the root_path looks like
+        E.g. if the pathfilter is just a "*" and the root_path looks like
         <pre>
         root_path
             2010q1.zip
@@ -36,7 +36,7 @@ class ConcatIfNewSubfolderTask(CheckByNewSubfoldersMergeBaseTask):
             2024q3.zip
         </pre>
         it would expect that the subfolders directly contain the databags.<br>
-        If the filter is defined as "*/BS" and the root_path looks like
+        If the pathfilter is defined as "*/BS" and the root_path looks like
         <pre>
         root_path
             2010q1.zip
@@ -68,17 +68,18 @@ class ConcatIfNewSubfolderTask(CheckByNewSubfoldersMergeBaseTask):
 
         Args:
             root_path: root path to read that from
-            filter: filter string that defines which subfolders in the root_path have to be selected
+            pathfilter: pathfilter string that defines which subfolders in the root_path have
+                        to be selected
             target_path: path to where the results have to be written
         """
         super().__init__(
             root_path=root_path,
-            filter=filter,
+            pathfilter=pathfilter,
             target_path=target_path
         )
 
     def __str__(self) -> str:
-        return f"ConcatIfNewSubfolderTask(root_path: {self.root_path}, filter: {self.filter})"
+        return f"ConcatIfNewSubfolderTask(root_path: {self.root_path}, pathfilter: {self.filter})"
 
     def do_execution(self,
                      paths_to_process: List[Path],
@@ -110,16 +111,16 @@ class ConcatIfChangedTimestampTask(CheckByTimestampMergeBaseTask):
 
     def __init__(self,
                  root_path: Path,
-                 filter: str,
+                 pathfilter: str,
                  target_path: Path):
         """
-        Takes subfolder from the root_path (with applied filter string) and concatenates them into
-        a single DataBag (either Raw or Joined) into the target_path.
+        Takes subfolder from the root_path (with applied pathfilter string) and
+        concatenates them into a single DataBag (either Raw or Joined) into the target_path.
 
-        The filter string defines on which subfolder level actually does contain the data to be
+        The pathfilter string defines on which subfolder level actually does contain the data to be
         concatenated.
 
-        E.g. if the filter is just a "*" and the root_path looks like
+        E.g. if the pathfilter is just a "*" and the root_path looks like
         <pre>
         root_path
             2010q1.zip
@@ -128,7 +129,7 @@ class ConcatIfChangedTimestampTask(CheckByTimestampMergeBaseTask):
             2024q3.zip
         </pre>
         it would expect that the subfolders directly contain the databags.<br>
-        If the filter is defined as "*/BS" and the root_path looks like
+        If the pathfilter is defined as "*/BS" and the root_path looks like
         <pre>
         root_path
             2010q1.zip
@@ -157,17 +158,19 @@ class ConcatIfChangedTimestampTask(CheckByTimestampMergeBaseTask):
 
         Args:
             root_path: root path to read that from
-            filter: filter string that defines which subfolders in the root_path have to be selected
+            pathfilter: pathfilter string that defines which subfolders in the root_path
+                        have to be selected
             target_path: path to where the results have to be written
         """
         super().__init__(
             root_path=root_path,
-            filter=filter,
+            pathfilter=pathfilter,
             target_path=target_path
         )
 
     def __str__(self) -> str:
-        return f"ConcatIfChangedTimestampTask(root_path: {self.root_path}, filter: {self.filter})"
+        return f"ConcatIfChangedTimestampTask(root_path: {self.root_path}," \
+               f"pathfilter: {self.filter})"
 
     def do_execution(self,
                      paths_to_process: List[Path],
@@ -191,14 +194,14 @@ class ConcatByChangedTimestampProcess(AbstractThreadProcess):
     def __init__(self,
                  root_dir: str,
                  target_dir: str,
-                 filter: str = "*",
+                 pathfilter: str = "*",
                  ):
         """
         Constructor.
         Args:
             root_dir: root_dir which contains the bags to be concatenated
             target_dir: target_dir to which the concatenated result has to be written
-            filter: filter string to apply to select the bags/subfolders to be processed.
+            pathfilter: pathfilter string to apply to select the bags/subfolders to be processed.
                     default is "*".
         """
         super().__init__(execute_serial=False,
@@ -206,7 +209,7 @@ class ConcatByChangedTimestampProcess(AbstractThreadProcess):
 
         self.root_path = Path(root_dir)
         self.target_path = Path(target_dir)
-        self.filter = filter
+        self.filter = pathfilter
 
     def pre_process(self):
         """
@@ -225,7 +228,7 @@ class ConcatByChangedTimestampProcess(AbstractThreadProcess):
         """
         task = ConcatIfChangedTimestampTask(
             root_path=self.root_path,
-            filter=self.filter,
+            pathfilter=self.filter,
             target_path=self.target_path,
         )
 
@@ -244,14 +247,14 @@ class ConcatByNewSubfoldersProcess(AbstractThreadProcess):
     def __init__(self,
                  root_dir: str,
                  target_dir: str,
-                 filter: str = "*",
+                 pathfilter: str = "*",
                  ):
         """
         Constructor.
         Args:
             root_dir: root_dir which contains the bags to be concatenated
             target_dir: target_dir to which the concatenated result has to be written
-            filter: filter string to apply to select the bags/subfolders to be processed.
+            pathfilter: pathfilter string to apply to select the bags/subfolders to be processed.
                     default is "*".
         """
         super().__init__(execute_serial=False,
@@ -259,7 +262,7 @@ class ConcatByNewSubfoldersProcess(AbstractThreadProcess):
 
         self.root_path = Path(root_dir)
         self.target_path = Path(target_dir)
-        self.filter = filter
+        self.filter = pathfilter
 
     def pre_process(self):
         """
@@ -278,7 +281,7 @@ class ConcatByNewSubfoldersProcess(AbstractThreadProcess):
         """
         task = ConcatIfNewSubfolderTask(
             root_path=self.root_path,
-            filter=self.filter,
+            pathfilter=self.filter,
             target_path=self.target_path,
         )
 

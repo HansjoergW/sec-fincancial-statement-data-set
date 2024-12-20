@@ -7,11 +7,9 @@ from pathlib import Path
 from typing import List
 
 from secfsdstools.c_automation.automation_utils import delete_temp_folders
-
 from secfsdstools.c_automation.task_framework import Task, \
     CheckByTimestampMergeBaseTask, AbstractThreadProcess
 from secfsdstools.d_container.databagmodel import JoinedDataBag
-from secfsdstools.e_filter.joinedfiltering import OfficialTagsOnlyJoinedFilter
 from secfsdstools.f_standardize.bs_standardize import BalanceSheetStandardizer
 from secfsdstools.f_standardize.cf_standardize import CashFlowStandardizer
 from secfsdstools.f_standardize.is_standardize import IncomeStatementStandardizer
@@ -41,7 +39,7 @@ class StandardizerTask(CheckByTimestampMergeBaseTask):
         """
         super().__init__(
             root_path=root_path,
-            filter="*",  # can actually be ignored
+            pathfilter="*",  # can actually be ignored
             target_path=target_path
         )
 

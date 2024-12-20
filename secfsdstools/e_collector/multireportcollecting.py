@@ -28,7 +28,7 @@ class MultiReportCollector:
         """
         creates the MultiReportCollector instance for a certain list of adshs.
 
-        if no configuration is passed, it reads the config from the config file
+        if no configuration is passed, it reads the configuration from the configuration file
 
         Args:
             adshs (List[str]): List with unique report ids to load
@@ -92,7 +92,7 @@ class MultiReportCollector:
             RawDataBag: a single DataBag containing all the collected reports
         """
         # todo: consider optimization to group by the same source file
-        #   and use the filter option on pd.read_parquet()
+        #   and use the pathfilter option on pd.read_parquet()
         reports: List[IndexReport] = self.index_reports
 
         # organize by originfile

@@ -73,7 +73,7 @@ class IndexingTask:
 
         sub_df['fullPath'] = self.file_path
         sub_df['originFile'] = self.file_name
-        sub_df['originFileType'] = self.file_type
+        sub_df['origin_file_type'] = self.file_type
         sub_df['url'] = self.URL_PREFIX
         sub_df['url'] = sub_df['url'] + sub_df['cik'].astype(str) + '/' + \
                         sub_df['adsh'].str.replace('-', '') + '/' + sub_df['adsh'] + '-index.htm'

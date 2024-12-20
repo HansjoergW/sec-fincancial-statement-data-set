@@ -257,7 +257,7 @@ if __name__ == '__main__':
     #
     # print(duplicated_mask.sum())
 
-    # cf_joined_bag = cf_joined_bag.filter(AdshJoinedFilter(adshs=['0001391609-16-000491']))
+    # cf_joined_bag = cf_joined_bag.pathfilter(AdshJoinedFilter(adshs=['0001391609-16-000491']))
     # cf_joined_bag = load_smaller_sample_IS_set()
 
     # check_df = check_signed_values(joined_bag=cf_joined_bag, tag_list=[

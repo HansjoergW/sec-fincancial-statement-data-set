@@ -43,7 +43,7 @@ class ZipCollector:
             tag_filter (List[str], optional, None:
                 List of tags that should be read (Assets, Liabilities, ...)
 
-            post_load_filter (Callable[[RawDataBag], RawDataBag], optional, None): a filter
+            post_load_filter (Callable[[RawDataBag], RawDataBag], optional, None): a pathfilter
                 that is directly applied after a single zip has been loaded.
 
             configuration (Configuration, optional, None): configuration object
@@ -77,7 +77,7 @@ class ZipCollector:
             tag_filter (List[str], optional, None:
                 List of tags that should be read (Assets, Liabilities, ...)
 
-            post_load_filter (Callable[[RawDataBag], RawDataBag], optional, None): a filter
+            post_load_filter (Callable[[RawDataBag], RawDataBag], optional, None): a pathfilter
                 that is directly applied after a single zip has been loaded.
 
             configuration (Configuration, optional, None): configuration object
@@ -118,7 +118,7 @@ class ZipCollector:
             tag_filter (List[str], optional, None:
                 List of tags that should be read (Assets, Liabilities, ...)
 
-            post_load_filter (Callable[[RawDataBag], RawDataBag], optional, None): a filter
+            post_load_filter (Callable[[RawDataBag], RawDataBag], optional, None): a pathfilter
                 that is directly applied after a single zip has been loaded.
 
             configuration (Configuration, optional, None): configuration object
@@ -129,7 +129,7 @@ class ZipCollector:
         dbaccessor = ParquetDBIndexingAccessor(db_dir=configuration.db_dir)
 
         # exclude 2009q1.zip, since this is empty and causes and error when it is read
-        # with a filter
+        # with a pathfilter
         datapaths = [x.fullPath for x in dbaccessor.read_all_indexfileprocessing()
                      if not x.fullPath.endswith("2009q1.zip")]
 

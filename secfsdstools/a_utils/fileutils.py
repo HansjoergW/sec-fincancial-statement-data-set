@@ -12,8 +12,8 @@ import pandas as pd
 
 def get_filenames_in_directory(filter_string: str) -> List[str]:
     """
-    returns a list with files matching the filter.
-    the filter can also contain a folder structure.
+    returns a list with files matching the pathfilter.
+    the pathfilter can also contain a folder structure.
 
     Returns:
         List[str]: list files in the directory

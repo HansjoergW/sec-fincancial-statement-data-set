@@ -52,7 +52,7 @@ def test_environment_variable_with_file(tmp_path):
 
 # Tests
 def test_config_file_in_cwd(tmp_path, monkeypatch: pytest.MonkeyPatch):
-    # tests if the config file is read from the current directory if present
+    # tests if the configuration file is read from the current directory if present
 
     # patch the current working dir to a temp path
     monkeypatch.chdir(tmp_path)

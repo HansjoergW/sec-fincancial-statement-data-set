@@ -22,7 +22,7 @@ def update(config: Configuration = None, force_update: bool = False):
             ]
         )
 
-    # read config
+    # read configuration
     if config is None:
         config = ConfigurationManager.read_config_file()
 

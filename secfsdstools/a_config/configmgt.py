@@ -31,7 +31,7 @@ DEFAULT_CONFIGURATION = Configuration(
 
 class ConfigurationManager:
     """
-    Configuration Manager. Reads the configuration from the config file.
+    Configuration Manager. Reads the configuration from the configuration file.
     If the file does not exist, it will create one in the current directory
     """
 
@@ -61,14 +61,15 @@ class ConfigurationManager:
 
         env_config_file = os.getenv(SECFSDSTOOLS_ENV_VAR_NAME)
         if env_config_file:
-            LOGGER.info('Config file set by environment variable %s to %s', SECFSDSTOOLS_ENV_VAR_NAME, env_config_file)
+            LOGGER.info('Config file set by environment variable %s to %s',
+                        SECFSDSTOOLS_ENV_VAR_NAME, env_config_file)
             if not os.path.isfile(env_config_file):
                 LOGGER.error('environment variable %s was set.', SECFSDSTOOLS_ENV_VAR_NAME)
-                LOGGER.error('But config file is not present, creating it ...')
+                LOGGER.error('But configuration file is not present, creating it ...')
                 conf_dir, _ = os.path.split(env_config_file)
                 os.makedirs(conf_dir, exist_ok=True)
                 ConfigurationManager._write_configuration(env_config_file, DEFAULT_CONFIGURATION)
-                LOGGER.error('config file created at %s.', env_config_file)
+                LOGGER.error('configuration file created at %s.', env_config_file)
                 LOGGER.error('please check the content ant then restart')
                 return ConfigurationManager._handle_first_start(env_config_file,
                                                                 DEFAULT_CONFIGURATION)
@@ -77,13 +78,13 @@ class ConfigurationManager:
 
         current_cfg_file_path = os.path.join(os.getcwd(), DEFAULT_CONFIG_FILE)
         if os.path.isfile(current_cfg_file_path):
-            LOGGER.info('found config file at %s', current_cfg_file_path)
+            LOGGER.info('found configuration file at %s', current_cfg_file_path)
             return ConfigurationManager._read_configuration(current_cfg_file_path)
 
             # check if file exists at home directory
         home_cfg_file_path = os.path.join(os.path.expanduser('~'), DEFAULT_CONFIG_FILE)
         if not os.path.isfile(home_cfg_file_path):
-            LOGGER.error('No config file found at home directory %s.', home_cfg_file_path)
+            LOGGER.error('No configuration file found at home directory %s.', home_cfg_file_path)
             ConfigurationManager._write_configuration(home_cfg_file_path, DEFAULT_CONFIGURATION)
             LOGGER.error('Config file created at %s. Please check the content and then rerun.',
                          home_cfg_file_path)
@@ -139,15 +140,15 @@ class ConfigurationManager:
 
     # @staticmethod
     # def _read_configuration_and_check_for_udpates(file_path: str) -> Configuration:
-    #     config: Configuration = ConfigurationManager._read_configuration(file_path)
-    #     # ConfigurationManager._check_for_update(config)
-    #     return config
+    #     configuration: Configuration = ConfigurationManager._read_configuration(file_path)
+    #     # ConfigurationManager._check_for_update(configuration)
+    #     return configuration
 
     # @staticmethod
-    # def _check_for_update(config: Configuration):
-    #     if config.auto_update:
+    # def _check_for_update(configuration: Configuration):
+    #     if configuration.auto_update:
     #         LOGGER.debug('AutoUpdate is True, so check if new zip files are available')
-    #         updater = Updater.get_instance(config)
+    #         updater = Updater.get_instance(configuration)
     #         updater.update()
 
     @staticmethod
@@ -204,8 +205,8 @@ class ConfigurationManager:
         if function_name is None:
             return []
 
-        import importlib
-        import inspect
+        import importlib # pylint: disable=C0415
+        import inspect # pylint: disable=C0415
 
         messages: List[str] = []
         module_str = ""
@@ -220,7 +221,7 @@ class ConfigurationManager:
             if len(params) != 1:
                 messages.append(f"Exactly one parameter is expected for {function_name}")
 
-            if not ((params[0].annotation == inspect._empty) |
+            if not ((params[0].annotation == inspect._empty) | # pylint: disable=W0212
                     (params[0].annotation == Configuration)):
                 messages.append(f"Parameter of function has wrong type {params[0].annotation}. "
                                 "It should be secfsdstools.a_config.configmodel.Configuration")
@@ -240,9 +241,9 @@ class ConfigurationManager:
         if function_name is None:
             return []
 
-        import importlib
-        import inspect
-        from secfsdstools.c_automation.task_framework import AbstractProcess
+        import importlib # pylint: disable=C0415
+        import inspect # pylint: disable=C0415
+        from secfsdstools.c_automation.task_framework import AbstractProcess # pylint: disable=C0415
 
         messages: List[str] = []
         module_str = ""
@@ -257,12 +258,12 @@ class ConfigurationManager:
             if len(params) != 1:
                 messages.append(f"Expecting exactly one parameter is expected for {function_name}")
 
-            if not ((params[0].annotation == inspect._empty) |
+            if not ((params[0].annotation == inspect._empty) | # pylint: disable=W0212
                     (params[0].annotation == Configuration)):
                 messages.append(f"Parameter of function has wrong type {params[0].annotation}. "
                                 "It should be secfsdstools.a_config.configmodel.Configuration")
 
-            if not ((signature.return_annotation == inspect._empty) |
+            if not ((signature.return_annotation == inspect._empty) | # pylint: disable=W0212
                     (signature.return_annotation == List[AbstractProcess])):
                 messages.append(
                     f"Return type of function has wrong type {signature.return_annotation}. "

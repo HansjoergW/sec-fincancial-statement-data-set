@@ -33,7 +33,7 @@ def test_direct_sub_directory_collect(tmp_path):
     # execute process
     process = ConcatByNewSubfoldersProcess(
         root_dir=root_dir,
-        filter="*",
+        pathfilter="*",
         target_dir=target_dir
     )
 
@@ -63,7 +63,7 @@ def test_direct_sub_directory_collect(tmp_path):
     # execute process
     process2 = ConcatByNewSubfoldersProcess(
         root_dir=root_dir,
-        filter="*",
+        pathfilter="*",
         target_dir=target_dir
     )
 
@@ -113,7 +113,7 @@ def test_child_sub_directory_collect(tmp_path):
     # execute process
     process = ConcatByNewSubfoldersProcess(
         root_dir=root_dir,
-        filter="*/BS",
+        pathfilter="*/BS",
         target_dir=target_dir
     )
 
@@ -143,7 +143,7 @@ def test_child_sub_directory_collect(tmp_path):
     # execute process
     process2 = ConcatByNewSubfoldersProcess(
         root_dir=root_dir,
-        filter="*/BS",
+        pathfilter="*/BS",
         target_dir=target_dir
     )
 
@@ -188,7 +188,7 @@ def test_changed_content_collect(tmp_path):
     # execute process
     process = ConcatByChangedTimestampProcess(
         root_dir=root_dir,
-        filter="*",
+        pathfilter="*",
         target_dir=target_dir
     )
 
@@ -220,7 +220,7 @@ def test_changed_content_collect(tmp_path):
     # execute process
     process2 = ConcatByChangedTimestampProcess(
         root_dir=root_dir,
-        filter="*",
+        pathfilter="*",
         target_dir=target_dir
     )
 

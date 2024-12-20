@@ -26,7 +26,7 @@ class CompanyReportCollector:
         """
         creates a MultiReportCollector instance for the provided ciks and forms (e.g. 10-K..)
         If no configuration object is passed,
-        it reads the configuration from the config file.
+        it reads the configuration from the configuration file.
 
         Args:
             ciks (List[int]): a list of central identification keys which is assigned
@@ -49,7 +49,7 @@ class CompanyReportCollector:
         dbaccessor = ParquetDBIndexingAccessor(db_dir=configuration.db_dir)
 
         # todo: if daily entries are also in index, it returns mutliple matches!
-        #       probably fix directly in read_index_reports-> filter for two and check source
+        #       probably fix directly in read_index_reports-> pathfilter for two and check source
         #       prefer to use zip instead of daly?
         index_reports: List[IndexReport] = dbaccessor.read_index_reports_for_ciks(ciks,
                                                                                   forms_filter)

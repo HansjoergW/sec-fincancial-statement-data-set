@@ -54,6 +54,6 @@ def test_getfilenamesbytype(parquetindexaccessor):
 
     parquetindexaccessor.insert_indexreport(data=report)
 
-    names: List[str] = parquetindexaccessor.read_filenames_by_type(originFileType="quarter")
+    names: List[str] = parquetindexaccessor.read_filenames_by_type(origin_file_type="quarter")
     assert len(names) == 1
     assert names[0] == "2022q1.zip"

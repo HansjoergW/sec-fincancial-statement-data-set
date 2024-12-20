@@ -21,7 +21,7 @@ class CompanyIndexReader:
     def get_company_index_reader(cls, cik: int, configuration: Optional[Configuration] = None):
         """
         creates a company instance for the provided cik. If no  configuration object is passed,
-        it reads the configuration from the config file.
+        it reads the configuration from the configuration file.
 
         Args:
             cik (int): the central identification key which is assigned by the sec for every company

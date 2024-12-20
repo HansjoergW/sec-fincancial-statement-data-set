@@ -102,7 +102,7 @@ class IndexingTask:
 
         sub_df[&#39;fullPath&#39;] = self.file_path
         sub_df[&#39;originFile&#39;] = self.file_name
-        sub_df[&#39;originFileType&#39;] = self.file_type
+        sub_df[&#39;origin_file_type&#39;] = self.file_type
         sub_df[&#39;url&#39;] = self.URL_PREFIX
         sub_df[&#39;url&#39;] = sub_df[&#39;url&#39;] + sub_df[&#39;cik&#39;].astype(str) + &#39;/&#39; + \
                         sub_df[&#39;adsh&#39;].str.replace(&#39;-&#39;, &#39;&#39;) + &#39;/&#39; + sub_df[&#39;adsh&#39;] + &#39;-index.htm&#39;
@@ -291,7 +291,7 @@ index tables.</p>
 
         sub_df[&#39;fullPath&#39;] = self.file_path
         sub_df[&#39;originFile&#39;] = self.file_name
-        sub_df[&#39;originFileType&#39;] = self.file_type
+        sub_df[&#39;origin_file_type&#39;] = self.file_type
         sub_df[&#39;url&#39;] = self.URL_PREFIX
         sub_df[&#39;url&#39;] = sub_df[&#39;url&#39;] + sub_df[&#39;cik&#39;].astype(str) + &#39;/&#39; + \
                         sub_df[&#39;adsh&#39;].str.replace(&#39;-&#39;, &#39;&#39;) + &#39;/&#39; + sub_df[&#39;adsh&#39;] + &#39;-index.htm&#39;
@@ -381,7 +381,7 @@ index tables.</p>
 
     sub_df[&#39;fullPath&#39;] = self.file_path
     sub_df[&#39;originFile&#39;] = self.file_name
-    sub_df[&#39;originFileType&#39;] = self.file_type
+    sub_df[&#39;origin_file_type&#39;] = self.file_type
     sub_df[&#39;url&#39;] = self.URL_PREFIX
     sub_df[&#39;url&#39;] = sub_df[&#39;url&#39;] + sub_df[&#39;cik&#39;].astype(str) + &#39;/&#39; + \
                     sub_df[&#39;adsh&#39;].str.replace(&#39;-&#39;, &#39;&#39;) + &#39;/&#39; + sub_df[&#39;adsh&#39;] + &#39;-index.htm&#39;

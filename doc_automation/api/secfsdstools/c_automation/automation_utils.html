@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.10.0" />
 <title>secfsdstools.c_automation.automation_utils API documentation</title>
-<meta name="description" content="" />
+<meta name="description" content="Util function that are mainly used in the context of automation." />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
 <link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
@@ -22,16 +22,21 @@
 <h1 class="title">Module <code>secfsdstools.c_automation.automation_utils</code></h1>
 </header>
 <section id="section-intro">
+<p>Util function that are mainly used in the context of automation.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">import os
+<pre><code class="python">&#34;&#34;&#34;
+Util function that are mainly used in the context of automation.
+&#34;&#34;&#34;
+import os
 import shutil
 from pathlib import Path
 from typing import Optional, List
 
 from secfsdstools.a_utils.fileutils import get_directories_in_directory
+
 
 def delete_temp_folders(root_path: Path, temp_prefix: str = &#34;tmp&#34;):
     &#34;&#34;&#34;
@@ -58,7 +63,7 @@ def get_latest_mtime(root_path: Path, skip: Optional[List[str]] = None) -&gt; fl
         the latest timestamp of a folder or file within the &#34;folder&#34; as float value.
 
     &#34;&#34;&#34;
-    if skip == None:
+    if skip is None:
         skip = []
 
     latest_mtime = 0
@@ -138,7 +143,7 @@ def get_latest_mtime(root_path: Path, skip: Optional[List[str]] = None) -&gt; fl
         the latest timestamp of a folder or file within the &#34;folder&#34; as float value.
 
     &#34;&#34;&#34;
-    if skip == None:
+    if skip is None:
         skip = []
 
     latest_mtime = 0

@@ -43,8 +43,8 @@ keepzipfiles = False
 postppdatehook=secfsdstools.x_examples.automation.automation.after_update
 postupdateprocesses=secfsdstools.x_examples.automation.automation.define_extra_processes
 </pre>
-<p>In this example, we have a config file "automation_config.cfg" which we are going to use in the
-<strong>main</strong> section of this module.</p>
+<p>In this example, we have a configuration file "automation_config.cfg" which we are going
+to use in the <strong>main</strong> section of this module.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -72,8 +72,8 @@ postppdatehook=secfsdstools.x_examples.automation.automation.after_update
 postupdateprocesses=secfsdstools.x_examples.automation.automation.define_extra_processes
 &lt;/pre&gt;
 
-In this example, we have a config file &#34;automation_config.cfg&#34; which we are going to use in the
-__main__ section of this module.
+In this example, we have a configuration file &#34;automation_config.cfg&#34; which we are going
+to use in the __main__ section of this module.
 &#34;&#34;&#34;
 import logging
 import os
@@ -86,100 +86,86 @@ from secfsdstools.g_pipelines.standardize_process import StandardizeProcess
 CURRENT_DIR, _ = os.path.split(__file__)
 
 
-def define_extra_processes(config: Configuration) -&gt; List[AbstractProcess]:
-    from secfsdstools.g_pipelines.filter_process import FilterProcess
-    from secfsdstools.g_pipelines.concat_process import CombineProcess
+def define_extra_processes(configuration: Configuration) -&gt; List[AbstractProcess]:
+    &#34;&#34;&#34;
+    example definition of an additional pipeline.
+    It adds process steps that:
+    1. Filter for 10-K and 10-Q reports, als apply the filters
+       ReportPeriodRawFilter, MainCoregRawFilter, USDOnlyRawFilter, OfficialTagsOnlyRawFilter,
+       then joins the data and splits up the data by stmt (BS, IS, CF, ...)
+       This is done for every zipfile individually
+    2. concats all the stmts together, so that there is one file for every stmt containing all
+       the available data
+    3. standardizing the data for BS, IS, CF
 
-    raw_dir = config.config_parser.get(section=&#34;Filter&#34;,
-                                       option=&#34;filtered_dir_raw&#34;)
-    joined_dir = config.config_parser.get(section=&#34;Filter&#34;,
-                                          option=&#34;filtered_dir_joined&#34;)
-    joined_by_stmt_dir = config.config_parser.get(section=&#34;Filter&#34;,
-                                                  option=&#34;filtered_dir_by_stmt_joined&#34;)
-    standardized_dir = config.config_parser.get(section=&#34;Standardizer&#34;,
-                                                option=&#34;standardized_dir&#34;)
+
+    Args:
+        configuration: the configuration
+
+    Returns:
+        List[AbstractProcess]: List with the defined process steps
+
+    &#34;&#34;&#34;
+    from secfsdstools.g_pipelines.filter_process import FilterProcess  # pylint: disable=C0415
+    from secfsdstools.g_pipelines.concat_process import ConcatByNewSubfoldersProcess, \
+        ConcatByChangedTimestampProcess  # pylint: disable=C0415
+
+    joined_by_stmt_dir = configuration.config_parser.get(section=&#34;Filter&#34;,
+                                                         option=&#34;filtered_dir_by_stmt_joined&#34;)
+    concat_by_stmt_dir = configuration.config_parser.get(section=&#34;Filter&#34;,
+                                                         option=&#34;concat_dir_by_stmt_joined&#34;)
+
+    standardized_dir = configuration.config_parser.get(section=&#34;Standardizer&#34;,
+                                                       option=&#34;standardized_dir&#34;)
+
+    singlebag_dir = configuration.config_parser.get(section=&#34;SingleBag&#34;,
+                                                    option=&#34;singlebag_dir&#34;)
 
     return [
-        # raw
-        FilterProcess(parquet_dir=config.parquet_dir,
-                      target_dir=raw_dir,
-                      bag_type=&#34;raw&#34;,
-                      save_by_stmt=False,
-                      execute_serial=False  # switch to true in case of memory problems
-                      ),
-        CombineProcess(root_dir=f&#34;{raw_dir}/quarter&#34;,
-                       target_dir=f&#34;{raw_dir}/all&#34;,
-                       bag_type=&#34;raw&#34;
-                       ),
-
-        # joined
-        FilterProcess(parquet_dir=config.parquet_dir,
-                      target_dir=joined_dir,
-                      bag_type=&#34;joined&#34;,
-                      save_by_stmt=False,
-                      execute_serial=False  # switch to true in case of memory problems
-                      ),
-        CombineProcess(root_dir=f&#34;{joined_dir}/quarter&#34;,
-                       target_dir=f&#34;{joined_dir}/all&#34;,
-                       bag_type=&#34;joined&#34;
-                       ),
-
-        # joined by stmt
-        FilterProcess(parquet_dir=config.parquet_dir,
-                      target_dir=f&#34;{joined_by_stmt_dir}&#34;,
+        # 1. Filter, join, and save by stmt
+        FilterProcess(db_dir=configuration.db_dir,
+                      target_dir=joined_by_stmt_dir,
                       bag_type=&#34;joined&#34;,
                       save_by_stmt=True,
-                      stmts=[&#34;BS&#34;, &#34;CF&#34;, &#34;CI&#34;, &#34;CP&#34;, &#34;EQ&#34;, &#34;IS&#34;],
-                      execute_serial=False,  # switch to true in case of memory problems
+                      execute_serial=False  # switch to true in case of memory problems
                       ),
 
-        # building datasets with all entries by stmt
-        CombineProcess(root_dir=f&#34;{joined_by_stmt_dir}/quarter&#34;,
-                       target_dir=f&#34;{joined_by_stmt_dir}/all_by_stmt/BS&#34;,
-                       filter=&#34;*/BS&#34;,
-                       bag_type=&#34;joined&#34;
-                       ),
-        CombineProcess(root_dir=f&#34;{joined_by_stmt_dir}/quarter&#34;,
-                       target_dir=f&#34;{joined_by_stmt_dir}/all_by_stmt/CF&#34;,
-                       filter=&#34;*/CF&#34;,
-                       bag_type=&#34;joined&#34;
-                       ),
-        CombineProcess(root_dir=f&#34;{joined_by_stmt_dir}/quarter&#34;,
-                       target_dir=f&#34;{joined_by_stmt_dir}/all_by_stmt/CI&#34;,
-                       filter=&#34;*/CI&#34;,
-                       bag_type=&#34;joined&#34;
-                       ),
-        CombineProcess(root_dir=f&#34;{joined_by_stmt_dir}/quarter&#34;,
-                       target_dir=f&#34;{joined_by_stmt_dir}/all_by_stmt/CP&#34;,
-                       filter=&#34;*/CP&#34;,
-                       bag_type=&#34;joined&#34;
-                       ),
-        CombineProcess(root_dir=f&#34;{joined_by_stmt_dir}/quarter&#34;,
-                       target_dir=f&#34;{joined_by_stmt_dir}/all_by_stmt/EQ&#34;,
-                       filter=&#34;*/EQ&#34;,
-                       bag_type=&#34;joined&#34;
-                       ),
-        CombineProcess(root_dir=f&#34;{joined_by_stmt_dir}/quarter&#34;,
-                       target_dir=f&#34;{joined_by_stmt_dir}/all_by_stmt/IS&#34;,
-                       filter=&#34;*/IS&#34;,
-                       bag_type=&#34;joined&#34;
-                       ),
+        # 2. building datasets with all entries by stmt
+        ConcatByNewSubfoldersProcess(root_dir=f&#34;{joined_by_stmt_dir}/quarter&#34;,
+                                     target_dir=f&#34;{concat_by_stmt_dir}/BS&#34;,
+                                     pathfilter=&#34;*/BS&#34;
+                                     ),
+        ConcatByNewSubfoldersProcess(root_dir=f&#34;{joined_by_stmt_dir}/quarter&#34;,
+                                     target_dir=f&#34;{concat_by_stmt_dir}/CF&#34;,
+                                     pathfilter=&#34;*/CF&#34;
+                                     ),
+        ConcatByNewSubfoldersProcess(root_dir=f&#34;{joined_by_stmt_dir}/quarter&#34;,
+                                     target_dir=f&#34;{concat_by_stmt_dir}/CI&#34;,
+                                     pathfilter=&#34;*/CI&#34;
+                                     ),
+        ConcatByNewSubfoldersProcess(root_dir=f&#34;{joined_by_stmt_dir}/quarter&#34;,
+                                     target_dir=f&#34;{concat_by_stmt_dir}/CP&#34;,
+                                     pathfilter=&#34;*/CP&#34;
+                                     ),
+        ConcatByNewSubfoldersProcess(root_dir=f&#34;{joined_by_stmt_dir}/quarter&#34;,
+                                     target_dir=f&#34;{concat_by_stmt_dir}/EQ&#34;,
+                                     pathfilter=&#34;*/EQ&#34;
+                                     ),
+        ConcatByNewSubfoldersProcess(root_dir=f&#34;{joined_by_stmt_dir}/quarter&#34;,
+                                     target_dir=f&#34;{concat_by_stmt_dir}/IS&#34;,
+                                     pathfilter=&#34;*/IS&#34;
+                                     ),
 
-        # building an all dataset based on the all-by-stmt datasets
-        CombineProcess(root_dir=f&#34;{joined_by_stmt_dir}/all_by_stmt&#34;,
-                       target_dir=f&#34;{joined_by_stmt_dir}/all&#34;,
-                       bag_type=&#34;joined&#34;,
-                       check_by_timestamp=True
-                       ),
+        # 3. Standardize the data
+        StandardizeProcess(root_dir=f&#34;{concat_by_stmt_dir}&#34;,
+                           target_dir=standardized_dir),
 
-        StandardizeProcess(root_dir=f&#34;{joined_by_stmt_dir}/all_by_stmt&#34;,
-                           target_dir=standardized_dir)
-
+        # 4. create a single joined bag with all the data
+        ConcatByChangedTimestampProcess(
+            root_dir=f&#34;{concat_by_stmt_dir}/&#34;,
+            target_dir=f&#34;{singlebag_dir}/all&#34;,
+        )
     ]
-
-
-def after_update(config: Configuration):
-    pass
 
 
 if __name__ == &#39;__main__&#39;:
@@ -217,117 +203,112 @@ if __name__ == &#39;__main__&#39;:
 <section>
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
-<dt id="secfsdstools.x_examples.automation.automation.after_update"><code class="name flex">
-<span>def <span class="ident">after_update</span></span>(<span>config: <a title="secfsdstools.a_config.configmodel.Configuration" href="../../a_config/configmodel.html#secfsdstools.a_config.configmodel.Configuration">Configuration</a>)</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def after_update(config: Configuration):
-    pass</code></pre>
-</details>
-</dd>
 <dt id="secfsdstools.x_examples.automation.automation.define_extra_processes"><code class="name flex">
-<span>def <span class="ident">define_extra_processes</span></span>(<span>config: <a title="secfsdstools.a_config.configmodel.Configuration" href="../../a_config/configmodel.html#secfsdstools.a_config.configmodel.Configuration">Configuration</a>) ‑> List[<a title="secfsdstools.c_automation.task_framework.AbstractProcess" href="../../c_automation/task_framework.html#secfsdstools.c_automation.task_framework.AbstractProcess">AbstractProcess</a>]</span>
+<span>def <span class="ident">define_extra_processes</span></span>(<span>configuration: <a title="secfsdstools.a_config.configmodel.Configuration" href="../../a_config/configmodel.html#secfsdstools.a_config.configmodel.Configuration">Configuration</a>) ‑> List[<a title="secfsdstools.c_automation.task_framework.AbstractProcess" href="../../c_automation/task_framework.html#secfsdstools.c_automation.task_framework.AbstractProcess">AbstractProcess</a>]</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>example definition of an additional pipeline.
+It adds process steps that:
+1. Filter for 10-K and 10-Q reports, als apply the filters
+ReportPeriodRawFilter, MainCoregRawFilter, USDOnlyRawFilter, OfficialTagsOnlyRawFilter,
+then joins the data and splits up the data by stmt (BS, IS, CF, &hellip;)
+This is done for every zipfile individually
+2. concats all the stmts together, so that there is one file for every stmt containing all
+the available data
+3. standardizing the data for BS, IS, CF</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>configuration</code></strong></dt>
+<dd>the configuration</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>List[AbstractProcess]</code></dt>
+<dd>List with the defined process steps</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def define_extra_processes(config: Configuration) -&gt; List[AbstractProcess]:
-    from secfsdstools.g_pipelines.filter_process import FilterProcess
-    from secfsdstools.g_pipelines.concat_process import CombineProcess
+<pre><code class="python">def define_extra_processes(configuration: Configuration) -&gt; List[AbstractProcess]:
+    &#34;&#34;&#34;
+    example definition of an additional pipeline.
+    It adds process steps that:
+    1. Filter for 10-K and 10-Q reports, als apply the filters
+       ReportPeriodRawFilter, MainCoregRawFilter, USDOnlyRawFilter, OfficialTagsOnlyRawFilter,
+       then joins the data and splits up the data by stmt (BS, IS, CF, ...)
+       This is done for every zipfile individually
+    2. concats all the stmts together, so that there is one file for every stmt containing all
+       the available data
+    3. standardizing the data for BS, IS, CF
 
-    raw_dir = config.config_parser.get(section=&#34;Filter&#34;,
-                                       option=&#34;filtered_dir_raw&#34;)
-    joined_dir = config.config_parser.get(section=&#34;Filter&#34;,
-                                          option=&#34;filtered_dir_joined&#34;)
-    joined_by_stmt_dir = config.config_parser.get(section=&#34;Filter&#34;,
-                                                  option=&#34;filtered_dir_by_stmt_joined&#34;)
-    standardized_dir = config.config_parser.get(section=&#34;Standardizer&#34;,
-                                                option=&#34;standardized_dir&#34;)
+
+    Args:
+        configuration: the configuration
+
+    Returns:
+        List[AbstractProcess]: List with the defined process steps
+
+    &#34;&#34;&#34;
+    from secfsdstools.g_pipelines.filter_process import FilterProcess  # pylint: disable=C0415
+    from secfsdstools.g_pipelines.concat_process import ConcatByNewSubfoldersProcess, \
+        ConcatByChangedTimestampProcess  # pylint: disable=C0415
+
+    joined_by_stmt_dir = configuration.config_parser.get(section=&#34;Filter&#34;,
+                                                         option=&#34;filtered_dir_by_stmt_joined&#34;)
+    concat_by_stmt_dir = configuration.config_parser.get(section=&#34;Filter&#34;,
+                                                         option=&#34;concat_dir_by_stmt_joined&#34;)
+
+    standardized_dir = configuration.config_parser.get(section=&#34;Standardizer&#34;,
+                                                       option=&#34;standardized_dir&#34;)
+
+    singlebag_dir = configuration.config_parser.get(section=&#34;SingleBag&#34;,
+                                                    option=&#34;singlebag_dir&#34;)
 
     return [
-        # raw
-        FilterProcess(parquet_dir=config.parquet_dir,
-                      target_dir=raw_dir,
-                      bag_type=&#34;raw&#34;,
-                      save_by_stmt=False,
-                      execute_serial=False  # switch to true in case of memory problems
-                      ),
-        CombineProcess(root_dir=f&#34;{raw_dir}/quarter&#34;,
-                       target_dir=f&#34;{raw_dir}/all&#34;,
-                       bag_type=&#34;raw&#34;
-                       ),
-
-        # joined
-        FilterProcess(parquet_dir=config.parquet_dir,
-                      target_dir=joined_dir,
-                      bag_type=&#34;joined&#34;,
-                      save_by_stmt=False,
-                      execute_serial=False  # switch to true in case of memory problems
-                      ),
-        CombineProcess(root_dir=f&#34;{joined_dir}/quarter&#34;,
-                       target_dir=f&#34;{joined_dir}/all&#34;,
-                       bag_type=&#34;joined&#34;
-                       ),
-
-        # joined by stmt
-        FilterProcess(parquet_dir=config.parquet_dir,
-                      target_dir=f&#34;{joined_by_stmt_dir}&#34;,
+        # 1. Filter, join, and save by stmt
+        FilterProcess(db_dir=configuration.db_dir,
+                      target_dir=joined_by_stmt_dir,
                       bag_type=&#34;joined&#34;,
                       save_by_stmt=True,
-                      stmts=[&#34;BS&#34;, &#34;CF&#34;, &#34;CI&#34;, &#34;CP&#34;, &#34;EQ&#34;, &#34;IS&#34;],
-                      execute_serial=False,  # switch to true in case of memory problems
+                      execute_serial=False  # switch to true in case of memory problems
                       ),
 
-        # building datasets with all entries by stmt
-        CombineProcess(root_dir=f&#34;{joined_by_stmt_dir}/quarter&#34;,
-                       target_dir=f&#34;{joined_by_stmt_dir}/all_by_stmt/BS&#34;,
-                       filter=&#34;*/BS&#34;,
-                       bag_type=&#34;joined&#34;
-                       ),
-        CombineProcess(root_dir=f&#34;{joined_by_stmt_dir}/quarter&#34;,
-                       target_dir=f&#34;{joined_by_stmt_dir}/all_by_stmt/CF&#34;,
-                       filter=&#34;*/CF&#34;,
-                       bag_type=&#34;joined&#34;
-                       ),
-        CombineProcess(root_dir=f&#34;{joined_by_stmt_dir}/quarter&#34;,
-                       target_dir=f&#34;{joined_by_stmt_dir}/all_by_stmt/CI&#34;,
-                       filter=&#34;*/CI&#34;,
-                       bag_type=&#34;joined&#34;
-                       ),
-        CombineProcess(root_dir=f&#34;{joined_by_stmt_dir}/quarter&#34;,
-                       target_dir=f&#34;{joined_by_stmt_dir}/all_by_stmt/CP&#34;,
-                       filter=&#34;*/CP&#34;,
-                       bag_type=&#34;joined&#34;
-                       ),
-        CombineProcess(root_dir=f&#34;{joined_by_stmt_dir}/quarter&#34;,
-                       target_dir=f&#34;{joined_by_stmt_dir}/all_by_stmt/EQ&#34;,
-                       filter=&#34;*/EQ&#34;,
-                       bag_type=&#34;joined&#34;
-                       ),
-        CombineProcess(root_dir=f&#34;{joined_by_stmt_dir}/quarter&#34;,
-                       target_dir=f&#34;{joined_by_stmt_dir}/all_by_stmt/IS&#34;,
-                       filter=&#34;*/IS&#34;,
-                       bag_type=&#34;joined&#34;
-                       ),
+        # 2. building datasets with all entries by stmt
+        ConcatByNewSubfoldersProcess(root_dir=f&#34;{joined_by_stmt_dir}/quarter&#34;,
+                                     target_dir=f&#34;{concat_by_stmt_dir}/BS&#34;,
+                                     pathfilter=&#34;*/BS&#34;
+                                     ),
+        ConcatByNewSubfoldersProcess(root_dir=f&#34;{joined_by_stmt_dir}/quarter&#34;,
+                                     target_dir=f&#34;{concat_by_stmt_dir}/CF&#34;,
+                                     pathfilter=&#34;*/CF&#34;
+                                     ),
+        ConcatByNewSubfoldersProcess(root_dir=f&#34;{joined_by_stmt_dir}/quarter&#34;,
+                                     target_dir=f&#34;{concat_by_stmt_dir}/CI&#34;,
+                                     pathfilter=&#34;*/CI&#34;
+                                     ),
+        ConcatByNewSubfoldersProcess(root_dir=f&#34;{joined_by_stmt_dir}/quarter&#34;,
+                                     target_dir=f&#34;{concat_by_stmt_dir}/CP&#34;,
+                                     pathfilter=&#34;*/CP&#34;
+                                     ),
+        ConcatByNewSubfoldersProcess(root_dir=f&#34;{joined_by_stmt_dir}/quarter&#34;,
+                                     target_dir=f&#34;{concat_by_stmt_dir}/EQ&#34;,
+                                     pathfilter=&#34;*/EQ&#34;
+                                     ),
+        ConcatByNewSubfoldersProcess(root_dir=f&#34;{joined_by_stmt_dir}/quarter&#34;,
+                                     target_dir=f&#34;{concat_by_stmt_dir}/IS&#34;,
+                                     pathfilter=&#34;*/IS&#34;
+                                     ),
 
-        # building an all dataset based on the all-by-stmt datasets
-        CombineProcess(root_dir=f&#34;{joined_by_stmt_dir}/all_by_stmt&#34;,
-                       target_dir=f&#34;{joined_by_stmt_dir}/all&#34;,
-                       bag_type=&#34;joined&#34;,
-                       check_by_timestamp=True
-                       ),
+        # 3. Standardize the data
+        StandardizeProcess(root_dir=f&#34;{concat_by_stmt_dir}&#34;,
+                           target_dir=standardized_dir),
 
-        StandardizeProcess(root_dir=f&#34;{joined_by_stmt_dir}/all_by_stmt&#34;,
-                           target_dir=standardized_dir)
-
+        # 4. create a single joined bag with all the data
+        ConcatByChangedTimestampProcess(
+            root_dir=f&#34;{concat_by_stmt_dir}/&#34;,
+            target_dir=f&#34;{singlebag_dir}/all&#34;,
+        )
     ]</code></pre>
 </details>
 </dd>
@@ -349,7 +330,6 @@ if __name__ == &#39;__main__&#39;:
 </li>
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
-<li><code><a title="secfsdstools.x_examples.automation.automation.after_update" href="#secfsdstools.x_examples.automation.automation.after_update">after_update</a></code></li>
 <li><code><a title="secfsdstools.x_examples.automation.automation.define_extra_processes" href="#secfsdstools.x_examples.automation.automation.define_extra_processes">define_extra_processes</a></code></li>
 </ul>
 </li>

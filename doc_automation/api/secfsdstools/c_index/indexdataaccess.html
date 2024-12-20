@@ -319,11 +319,20 @@ class ParquetDBIndexingAccessor(DB):
                 ORDER BY name&#34;&#34;&#34;
         return self.execute_read_as_df(sql)
 
-    def read_filenames_by_type(self, originFileType: str) -&gt; List[str]:
+    def read_filenames_by_type(self, origin_file_type: str = &#34;quarter&#34;) -&gt; List[str]:
+        &#34;&#34;&#34;
+        Returns all filenames of the provided file type (usually &#34;quarter&#34;)
+        Args:
+            origin_file_type:
+
+        Returns:
+            List[str]: filenames of the type
+
+        &#34;&#34;&#34;
         sql = f&#34;&#34;&#34;
                  SELECT ORIGINFILE 
                  FROM {self.index_reports_table} 
-                 WHERE ORIGINFILETYPE=&#39;{originFileType}&#39;&#34;&#34;&#34;
+                 WHERE ORIGINFILETYPE=&#39;{origin_file_type}&#39;&#34;&#34;&#34;
 
         # result  is a list of tuples with one entry, so we have to flatten it
         result = self.execute_fetchall(sql=sql)
@@ -715,11 +724,20 @@ class ParquetDBIndexingAccessor(DB):
                 ORDER BY name&#34;&#34;&#34;
         return self.execute_read_as_df(sql)
 
-    def read_filenames_by_type(self, originFileType: str) -&gt; List[str]:
+    def read_filenames_by_type(self, origin_file_type: str = &#34;quarter&#34;) -&gt; List[str]:
+        &#34;&#34;&#34;
+        Returns all filenames of the provided file type (usually &#34;quarter&#34;)
+        Args:
+            origin_file_type:
+
+        Returns:
+            List[str]: filenames of the type
+
+        &#34;&#34;&#34;
         sql = f&#34;&#34;&#34;
                  SELECT ORIGINFILE 
                  FROM {self.index_reports_table} 
-                 WHERE ORIGINFILETYPE=&#39;{originFileType}&#39;&#34;&#34;&#34;
+                 WHERE ORIGINFILETYPE=&#39;{origin_file_type}&#39;&#34;&#34;&#34;
 
         # result  is a list of tuples with one entry, so we have to flatten it
         result = self.execute_fetchall(sql=sql)
@@ -1004,19 +1022,35 @@ Lower and uppercase are ignored.</p>
 </details>
 </dd>
 <dt id="secfsdstools.c_index.indexdataaccess.ParquetDBIndexingAccessor.read_filenames_by_type"><code class="name flex">
-<span>def <span class="ident">read_filenames_by_type</span></span>(<span>self, originFileType: str) ‑> List[str]</span>
+<span>def <span class="ident">read_filenames_by_type</span></span>(<span>self, origin_file_type: str = 'quarter') ‑> List[str]</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Returns all filenames of the provided file type (usually "quarter")</p>
+<h2 id="args">Args</h2>
+<p>origin_file_type:</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>List[str]</code></dt>
+<dd>filenames of the type</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def read_filenames_by_type(self, originFileType: str) -&gt; List[str]:
+<pre><code class="python">def read_filenames_by_type(self, origin_file_type: str = &#34;quarter&#34;) -&gt; List[str]:
+    &#34;&#34;&#34;
+    Returns all filenames of the provided file type (usually &#34;quarter&#34;)
+    Args:
+        origin_file_type:
+
+    Returns:
+        List[str]: filenames of the type
+
+    &#34;&#34;&#34;
     sql = f&#34;&#34;&#34;
              SELECT ORIGINFILE 
              FROM {self.index_reports_table} 
-             WHERE ORIGINFILETYPE=&#39;{originFileType}&#39;&#34;&#34;&#34;
+             WHERE ORIGINFILETYPE=&#39;{origin_file_type}&#39;&#34;&#34;&#34;
 
     # result  is a list of tuples with one entry, so we have to flatten it
     result = self.execute_fetchall(sql=sql)

@@ -55,7 +55,7 @@ class CompanyReportCollector:
         &#34;&#34;&#34;
         creates a MultiReportCollector instance for the provided ciks and forms (e.g. 10-K..)
         If no configuration object is passed,
-        it reads the configuration from the config file.
+        it reads the configuration from the configuration file.
 
         Args:
             ciks (List[int]): a list of central identification keys which is assigned
@@ -78,7 +78,7 @@ class CompanyReportCollector:
         dbaccessor = ParquetDBIndexingAccessor(db_dir=configuration.db_dir)
 
         # todo: if daily entries are also in index, it returns mutliple matches!
-        #       probably fix directly in read_index_reports-&gt; filter for two and check source
+        #       probably fix directly in read_index_reports-&gt; pathfilter for two and check source
         #       prefer to use zip instead of daly?
         index_reports: List[IndexReport] = dbaccessor.read_index_reports_for_ciks(ciks,
                                                                                   forms_filter)
@@ -127,7 +127,7 @@ For instance, it is a simple way to read all 10-K reports of serveral companies.
         &#34;&#34;&#34;
         creates a MultiReportCollector instance for the provided ciks and forms (e.g. 10-K..)
         If no configuration object is passed,
-        it reads the configuration from the config file.
+        it reads the configuration from the configuration file.
 
         Args:
             ciks (List[int]): a list of central identification keys which is assigned
@@ -150,7 +150,7 @@ For instance, it is a simple way to read all 10-K reports of serveral companies.
         dbaccessor = ParquetDBIndexingAccessor(db_dir=configuration.db_dir)
 
         # todo: if daily entries are also in index, it returns mutliple matches!
-        #       probably fix directly in read_index_reports-&gt; filter for two and check source
+        #       probably fix directly in read_index_reports-&gt; pathfilter for two and check source
         #       prefer to use zip instead of daly?
         index_reports: List[IndexReport] = dbaccessor.read_index_reports_for_ciks(ciks,
                                                                                   forms_filter)
@@ -168,7 +168,7 @@ For instance, it is a simple way to read all 10-K reports of serveral companies.
 <dd>
 <div class="desc"><p>creates a MultiReportCollector instance for the provided ciks and forms (e.g. 10-K..)
 If no configuration object is passed,
-it reads the configuration from the config file.</p>
+it reads the configuration from the configuration file.</p>
 <h2 id="args">Args</h2>
 <dl>
 <dt><strong><code>ciks</code></strong> :&ensp;<code>List[int]</code></dt>
@@ -202,7 +202,7 @@ def get_company_collector(
     &#34;&#34;&#34;
     creates a MultiReportCollector instance for the provided ciks and forms (e.g. 10-K..)
     If no configuration object is passed,
-    it reads the configuration from the config file.
+    it reads the configuration from the configuration file.
 
     Args:
         ciks (List[int]): a list of central identification keys which is assigned
@@ -225,7 +225,7 @@ def get_company_collector(
     dbaccessor = ParquetDBIndexingAccessor(db_dir=configuration.db_dir)
 
     # todo: if daily entries are also in index, it returns mutliple matches!
-    #       probably fix directly in read_index_reports-&gt; filter for two and check source
+    #       probably fix directly in read_index_reports-&gt; pathfilter for two and check source
     #       prefer to use zip instead of daly?
     index_reports: List[IndexReport] = dbaccessor.read_index_reports_for_ciks(ciks,
                                                                               forms_filter)

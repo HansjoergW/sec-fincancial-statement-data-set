@@ -40,11 +40,9 @@ from pathlib import Path
 from typing import List
 
 from secfsdstools.c_automation.automation_utils import delete_temp_folders
-
 from secfsdstools.c_automation.task_framework import Task, \
     CheckByTimestampMergeBaseTask, AbstractThreadProcess
 from secfsdstools.d_container.databagmodel import JoinedDataBag
-from secfsdstools.e_filter.joinedfiltering import OfficialTagsOnlyJoinedFilter
 from secfsdstools.f_standardize.bs_standardize import BalanceSheetStandardizer
 from secfsdstools.f_standardize.cf_standardize import CashFlowStandardizer
 from secfsdstools.f_standardize.is_standardize import IncomeStatementStandardizer
@@ -74,7 +72,7 @@ class StandardizerTask(CheckByTimestampMergeBaseTask):
         &#34;&#34;&#34;
         super().__init__(
             root_path=root_path,
-            filter=&#34;*&#34;,  # can actually be ignored
+            pathfilter=&#34;*&#34;,  # can actually be ignored
             target_path=target_path
         )
 
@@ -387,7 +385,7 @@ The Data has to be provided as standardized DataBags.</dd>
         &#34;&#34;&#34;
         super().__init__(
             root_path=root_path,
-            filter=&#34;*&#34;,  # can actually be ignored
+            pathfilter=&#34;*&#34;,  # can actually be ignored
             target_path=target_path
         )
 
@@ -539,6 +537,7 @@ Does apply the OfficialTagsOnlyJoinedFilter before standardizing.</p>
 <li><code><a title="secfsdstools.c_automation.task_framework.CheckByTimestampMergeBaseTask.execute" href="../c_automation/task_framework.html#secfsdstools.c_automation.task_framework.CheckByTimestampMergeBaseTask.execute">execute</a></code></li>
 <li><code><a title="secfsdstools.c_automation.task_framework.CheckByTimestampMergeBaseTask.has_work_todo" href="../c_automation/task_framework.html#secfsdstools.c_automation.task_framework.AbstractTask.has_work_todo">has_work_todo</a></code></li>
 <li><code><a title="secfsdstools.c_automation.task_framework.CheckByTimestampMergeBaseTask.read_metainf_content" href="../c_automation/task_framework.html#secfsdstools.c_automation.task_framework.AbstractTask.read_metainf_content">read_metainf_content</a></code></li>
+<li><code><a title="secfsdstools.c_automation.task_framework.CheckByTimestampMergeBaseTask.write_meta_inf" href="../c_automation/task_framework.html#secfsdstools.c_automation.task_framework.AbstractTask.write_meta_inf">write_meta_inf</a></code></li>
 </ul>
 </li>
 </ul>

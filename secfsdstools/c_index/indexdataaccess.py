@@ -290,7 +290,7 @@ class ParquetDBIndexingAccessor(DB):
                 ORDER BY name"""
         return self.execute_read_as_df(sql)
 
-    def read_filenames_by_type(self, origin_file_type: str = "quarter") -> List[str]:
+    def read_filenames_by_type(self, originFileType: str = "quarter") -> List[str]:
         """
         Returns all filenames of the provided file type (usually "quarter")
         Args:
@@ -303,7 +303,7 @@ class ParquetDBIndexingAccessor(DB):
         sql = f"""
                  SELECT ORIGINFILE 
                  FROM {self.index_reports_table} 
-                 WHERE ORIGINFILETYPE='{origin_file_type}'"""
+                 WHERE ORIGINFILETYPE='{originFileType}'"""
 
         # result  is a list of tuples with one entry, so we have to flatten it
         result = self.execute_fetchall(sql=sql)

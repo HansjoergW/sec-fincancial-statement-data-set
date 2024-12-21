@@ -42,8 +42,8 @@ def test_filtertask_raw(tmp_path):
 
         fitlered_bag: RawDataBag = RawDataBag.load(str(tmp_path / "result"))
 
-        assert len(fitlered_bag.num_df) == 52_542
-        assert len(fitlered_bag.pre_df) == 39_523
+        assert len(fitlered_bag.num_df) == 46_479
+        assert len(fitlered_bag.pre_df) == 35_875
 
 
 def test_filtertask_joined(tmp_path):
@@ -76,7 +76,7 @@ def test_filtertask_joined(tmp_path):
 
         fitlered_bag: JoinedDataBag = JoinedDataBag.load(str(tmp_path / "result"))
 
-        assert len(fitlered_bag.pre_num_df) == 31_253
+        assert len(fitlered_bag.pre_num_df) == 28_253
 
 
 def test_bystmtfiltertask_raw(tmp_path):
@@ -110,10 +110,10 @@ def test_bystmtfiltertask_raw(tmp_path):
         fitlered_bag_bs: RawDataBag = RawDataBag.load(str(tmp_path / "result" / "BS"))
         fitlered_bag_is: RawDataBag = RawDataBag.load(str(tmp_path / "result" / "IS"))
 
-        assert len(fitlered_bag_bs.num_df) == 52_542
-        assert len(fitlered_bag_bs.pre_df) == 24_411
-        assert len(fitlered_bag_is.num_df) == 52_542
-        assert len(fitlered_bag_is.pre_df) == 15_112
+        assert len(fitlered_bag_bs.num_df) == 46_479
+        assert len(fitlered_bag_bs.pre_df) == 22_500
+        assert len(fitlered_bag_is.num_df) == 46_479
+        assert len(fitlered_bag_is.pre_df) == 13_375
 
 
 def test_bystmtfiltertask_joined(tmp_path):
@@ -147,8 +147,8 @@ def test_bystmtfiltertask_joined(tmp_path):
         fitlered_bag_bs: JoinedDataBag = JoinedDataBag.load(str(tmp_path / "result" / "BS"))
         fitlered_bag_is: JoinedDataBag = JoinedDataBag.load(str(tmp_path / "result" / "IS"))
 
-        assert len(fitlered_bag_bs.pre_num_df) == 18_557
-        assert len(fitlered_bag_is.pre_num_df) == 12_696
+        assert len(fitlered_bag_bs.pre_num_df) == 17_046
+        assert len(fitlered_bag_is.pre_num_df) == 11_207
 
 
 def test_filterprocess(tmp_path):

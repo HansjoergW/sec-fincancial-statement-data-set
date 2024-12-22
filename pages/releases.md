@@ -5,7 +5,10 @@ permalink: /releasenotes/
 
 # Release Notes
 
-## Upcoming
+## 1.6.2 -> 1.7.0
+* Fix for new path to zip files on SEC.gov
+  * The SEC did change the location of the zip files and this latest version fixes the path to them
+
 ## 1.6.1 -> 1.6.2 2024-September-15
 * Major changes
   * Compatibility for Python 3.7 is no longer checked

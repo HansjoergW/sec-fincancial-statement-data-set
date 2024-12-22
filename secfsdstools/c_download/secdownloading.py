@@ -16,7 +16,7 @@ class SecZipDownloader(BaseDownloader):
     """
         Downloading the quarterly zip files of the financial statement data sets
     """
-    FIN_STAT_DATASET_URL = 'https://www.sec.gov/dera/data/financial-statement-data-sets.html'
+    FIN_STAT_DATASET_URL = 'https://www.sec.gov/data-research/sec-markets-data/financial-statement-data-sets-archive'
 
     table_re = re.compile('<TABLE.*?>.*</TABLE>', re.IGNORECASE + re.MULTILINE + re.DOTALL)
     href_re = re.compile("href=\".*?\"", re.IGNORECASE + re.MULTILINE + re.DOTALL)

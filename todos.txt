@@ -12,6 +12,10 @@ New Release
 - set tag and push tag (format vx.x.x)
 - on github -> under code releases: draft new release
 
+v.1.7.0
+- fix for new archived zip files
+- adapted / replaced all test data
+- extend known issues with info about archive
 
 v.1.6.2
 - 3.7 not checked anymore, 3.11 added

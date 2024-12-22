@@ -20,7 +20,7 @@ def seczipdownloader(tmp_path):
     os.makedirs(zip_dir)
 
     yield SecZipDownloader(zip_dir=str(zip_dir), urldownloader=url_downloader, execute_serial=True,
-                           parquet_root_dir=parquet_dir)
+                           parquet_root_dir=str(parquet_dir))
 
 
 def test_get_available_zips(seczipdownloader):

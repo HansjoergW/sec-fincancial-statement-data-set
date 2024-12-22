@@ -1,5 +1,13 @@
 # Troubleshooting
 
+**Problem:** Downloading of the zipfiles doesn't work beginning with December 2024
+
+The SEC changed its structure and the files up to 2024q3.zip were moved to a new location:
+https://www.sec.gov/data-research/sec-markets-data/financial-statement-data-sets-archive
+
+This was fixed in the main-branch at github on 22.12.2024 and in the version 1.7.0 on pypi.org.
+
+
 **Problem:** I receive error messages like the following when I try to start a script on windows:
 ````
 Traceback (most recent call last):

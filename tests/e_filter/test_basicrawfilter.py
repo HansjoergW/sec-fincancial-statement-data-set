@@ -76,6 +76,8 @@ def test_filter_ReportPeriodAndPreviousPeriodRawFilter():
 
 def test_filter_MainCoregRawFilter():
     bag1: RawDataBag = RawDataBag.load(PATH_TO_BAG_1)
+    # fix coreg as it would be loaded by the collectors
+    bag1.num_df.loc[bag1.num_df.coreg.isna(), 'coreg'] = ''
 
     filter = MainCoregRawFilter()
 

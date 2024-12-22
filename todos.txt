@@ -17,6 +17,13 @@ v.1.7.0
 - adapted / replaced all test data
 - extend known issues with info about archive
 
+problem filesize upload
+ - problem sind daten im verzeichnis bla von tests c_update -> 160Gb
+ - clean checkout
+ - build
+
+
+
 v.1.6.2
 - 3.7 not checked anymore, 3.11 added
 - version of library readable: print(secfsdstools.__version__) returns the version

@@ -75,7 +75,7 @@ def test_do_download_with_rapid_api(updater):
 
 
 def test_do_transform_none_existing_folder(updater):
-    updater.dld_dir = "./bla"
+    updater.dld_dir = f'{current_dir}/../_testdata/zip'
     updater._do_transform()
 
 

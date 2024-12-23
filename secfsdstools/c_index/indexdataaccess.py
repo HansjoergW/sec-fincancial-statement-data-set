@@ -290,6 +290,7 @@ class ParquetDBIndexingAccessor(DB):
                 ORDER BY name"""
         return self.execute_read_as_df(sql)
 
+    # pylint: disable=C0103
     def read_filenames_by_type(self, originFileType: str = "quarter") -> List[str]:
         """
         Returns all filenames of the provided file type (usually "quarter")

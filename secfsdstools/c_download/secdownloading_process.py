@@ -1,12 +1,15 @@
 """
 Downloading zip files of the financial statement data sets from the sec.
 """
+import logging
 import os
 import re
 from typing import List, Tuple
 
 from secfsdstools.a_utils.downloadutils import UrlDownloader
 from secfsdstools.c_download.basedownloading_process import BaseDownloadingProcess
+
+LOGGER = logging.getLogger(__name__)
 
 
 class SecDownloadingProcess(BaseDownloadingProcess):
@@ -34,7 +37,7 @@ class SecDownloadingProcess(BaseDownloadingProcess):
     def _get_available_zips(self) -> List[Tuple[str, str]]:
 
         # reading data from the archived page - until 2024q3.zip
-        LOGGER.info("reading table in archive: %s", self.FIN_STAT_DATASET_ARCHIVE_URL )
+        LOGGER.info("reading table in archive: %s", self.FIN_STAT_DATASET_ARCHIVE_URL)
         archive_content = self.urldownloader.get_url_content(self.FIN_STAT_DATASET_ARCHIVE_URL)
         archive_tables = self.table_re.findall(archive_content.text)
 
@@ -48,7 +51,7 @@ class SecDownloadingProcess(BaseDownloadingProcess):
             archive_hrefs = [f'https://www.sec.gov{href[6:-1]}' for href in archive_hrefs]
 
         # reading data from the main url - starting with 2024q4.zip
-        LOGGER.info("reading table in main page: %s", self.FIN_STAT_DATASET_URL )
+        LOGGER.info("reading table in main page: %s", self.FIN_STAT_DATASET_URL)
         main_content = self.urldownloader.get_url_content(self.FIN_STAT_DATASET_URL)
         main_tables = self.table_re.findall(main_content.text)
 

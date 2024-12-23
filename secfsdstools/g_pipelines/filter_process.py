@@ -250,7 +250,7 @@ class FilterProcess(AbstractProcessPoolProcess):
             List[Task]: List with Tasks.
         """
         existing = self._get_existing_filtered()
-        available = self.dbaccessor.read_filenames_by_type(origin_file_type=self.file_type)
+        available = self.dbaccessor.read_filenames_by_type(originFileType=self.file_type)
 
         missings = set(available) - set(existing)
         if self.save_by_stmt:

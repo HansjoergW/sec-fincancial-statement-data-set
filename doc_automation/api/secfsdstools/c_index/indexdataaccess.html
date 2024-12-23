@@ -319,6 +319,7 @@ class ParquetDBIndexingAccessor(DB):
                 ORDER BY name&#34;&#34;&#34;
         return self.execute_read_as_df(sql)
 
+    # pylint: disable=C0103
     def read_filenames_by_type(self, originFileType: str = &#34;quarter&#34;) -&gt; List[str]:
         &#34;&#34;&#34;
         Returns all filenames of the provided file type (usually &#34;quarter&#34;)
@@ -724,6 +725,7 @@ class ParquetDBIndexingAccessor(DB):
                 ORDER BY name&#34;&#34;&#34;
         return self.execute_read_as_df(sql)
 
+    # pylint: disable=C0103
     def read_filenames_by_type(self, originFileType: str = &#34;quarter&#34;) -&gt; List[str]:
         &#34;&#34;&#34;
         Returns all filenames of the provided file type (usually &#34;quarter&#34;)

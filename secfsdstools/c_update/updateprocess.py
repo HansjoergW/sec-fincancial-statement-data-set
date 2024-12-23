@@ -120,7 +120,7 @@ class Updater:
         return process_list
 
     def _load_post_update_process(self) -> List[AbstractProcess]:
-        import importlib # pylint: disable=C0415
+        import importlib  # pylint: disable=C0415
 
         if not self.post_update_processes:
             return []
@@ -150,7 +150,7 @@ class Updater:
         return post_processes
 
     def _execute_post_update_hook(self):
-        import importlib # pylint: disable=C0415
+        import importlib  # pylint: disable=C0415
 
         if not self.post_update_hook:
             return
@@ -164,13 +164,9 @@ class Updater:
 
     def _update(self):
         processes: List[AbstractProcess] = self._build_process_list()
-
         processes.extend(self._load_post_update_process())
-
         execute_processes(processes)
-
         self._execute_post_update_hook()
-
 
     def update(self, force_update: bool = False):
         """

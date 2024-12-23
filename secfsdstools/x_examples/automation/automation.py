@@ -30,11 +30,11 @@ from typing import List
 
 from secfsdstools.a_config.configmodel import Configuration
 from secfsdstools.c_automation.task_framework import AbstractProcess
-from secfsdstools.g_pipelines.standardize_process import StandardizeProcess
 
 CURRENT_DIR, _ = os.path.split(__file__)
 
 
+# pylint: disable=C0415
 def define_extra_processes(configuration: Configuration) -> List[AbstractProcess]:
     """
     example definition of an additional pipeline.
@@ -55,13 +55,16 @@ def define_extra_processes(configuration: Configuration) -> List[AbstractProcess
         List[AbstractProcess]: List with the defined process steps
 
     """
-    from secfsdstools.g_pipelines.filter_process import FilterProcess  # pylint: disable=C0415
+    from secfsdstools.g_pipelines.filter_process import FilterProcess
     from secfsdstools.g_pipelines.concat_process import ConcatByNewSubfoldersProcess, \
-        ConcatByChangedTimestampProcess  # pylint: disable=C0415
+        ConcatByChangedTimestampProcess
+    from secfsdstools.g_pipelines.standardize_process import StandardizeProcess
+
 
     joined_by_stmt_dir = configuration.config_parser.get(section="Filter",
                                                          option="filtered_dir_by_stmt_joined")
-    concat_by_stmt_dir = configuration.config_parser.get(section="Filter",
+
+    concat_by_stmt_dir = configuration.config_parser.get(section="Concat",
                                                          option="concat_dir_by_stmt_joined")
 
     standardized_dir = configuration.config_parser.get(section="Standardizer",

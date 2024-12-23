@@ -2,6 +2,10 @@
 # Changelog
 See the [Release Notes](https://hansjoergw.github.io/sec-fincancial-statement-data-set/releasenotes/) for details.
 
+## 1.6.2 -> 1.7.0
+* Fix for new path to zip files on SEC.gov
+  * The SEC did change the location of the zip files and this latest version fixes the path to them
+  
 
 ## 1.6.1 -> 1.6.2
 * Major changes

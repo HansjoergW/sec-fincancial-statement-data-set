@@ -17,6 +17,9 @@ APPLE_10Q_2010Q1 = '0001193125-10-012085'
 @pytest.fixture
 def bag1() -> JoinedDataBag:
     raw_bag1: RawDataBag = RawDataBag.load(PATH_TO_BAG_1)
+
+    # fix coreg as it would be loaded by the collectors
+    raw_bag1.num_df.loc[raw_bag1.num_df.coreg.isna(), 'coreg'] = ''
     return raw_bag1.join()
 
 

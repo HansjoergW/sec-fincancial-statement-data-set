@@ -108,7 +108,8 @@ class ReportParquetIndexerProcess(AbstractThreadProcess):
     def __init__(self,
                  db_dir: str,
                  file_type: str,
-                 parquet_dir: str):
+                 parquet_dir: str,
+                 execute_serial: bool=True):
         """
         Constructor.
         Args:
@@ -117,7 +118,8 @@ class ReportParquetIndexerProcess(AbstractThreadProcess):
             parquet_dir: parent directory in which the transformed parquet files are.
         """
         # only use serial execution, since indexing is rather quick
-        super().__init__(execute_serial=True, chunksize=0)
+        super().__init__(execute_serial=execute_serial,
+                         chunksize=0)
         self.dbaccessor = ParquetDBIndexingAccessor(db_dir=db_dir)
         self.file_type = file_type
         self.parquet_dir = parquet_dir

@@ -54,6 +54,7 @@ class Updater:
         self.rapid_api_key = config.rapid_api_key
         self.keep_zip_files = config.keep_zip_files
         self.auto_update = config.auto_update
+        self.no_parallel_processing = config.no_parallel_processing
         self.post_update_hook = config.post_update_hook
         self.post_update_processes = config.post_update_processes
 
@@ -77,38 +78,49 @@ class Updater:
         # download data from sec
         process_list.append(SecDownloadingProcess(zip_dir=self.dld_dir,
                                                   parquet_root_dir=self.parquet_dir,
-                                                  urldownloader=urldownloader))
+                                                  urldownloader=urldownloader,
+                                                  execute_serial=self.no_parallel_processing))
         # transform sec zip files
         process_list.append(ToParquetTransformerProcess(zip_dir=self.dld_dir,
                                                         parquet_dir=self.parquet_dir,
                                                         keep_zip_files=self.keep_zip_files,
-                                                        file_type='quarter'))
+                                                        file_type='quarter',
+                                                        execute_serial=self.no_parallel_processing
+                                                        ))
 
         # index sec zip files
         process_list.append(ReportParquetIndexerProcess(db_dir=self.db_dir,
                                                         parquet_dir=self.parquet_dir,
-                                                        file_type='quarter'))
+                                                        file_type='quarter',
+                                                        execute_serial=self.no_parallel_processing
+                                                        ))
 
         if (self.rapid_api_key is not None) & (self.rapid_api_key != ''):
             # download daily zip files
             rapidurlbuilder = RapidUrlBuilder(rapid_plan=self.rapid_api_plan,
                                               rapid_api_key=self.rapid_api_key)
-            process_list.append(RapidDownloadingProcess(rapidurlbuilder=rapidurlbuilder,
-                                                        daily_zip_dir=self.daily_dld_dir,
-                                                        qrtr_zip_dir=self.dld_dir,
-                                                        urldownloader=urldownloader,
-                                                        parquet_root_dir=self.parquet_dir))
+            process_list.append(RapidDownloadingProcess(
+                rapidurlbuilder=rapidurlbuilder,
+                daily_zip_dir=self.daily_dld_dir,
+                qrtr_zip_dir=self.dld_dir,
+                urldownloader=urldownloader,
+                parquet_root_dir=self.parquet_dir,
+                execute_serial=self.no_parallel_processing))
 
             # transform daily zip files
-            process_list.append(ToParquetTransformerProcess(zip_dir=self.daily_dld_dir,
-                                                            parquet_dir=self.parquet_dir,
-                                                            keep_zip_files=self.keep_zip_files,
-                                                            file_type='daily'))
+            process_list.append(ToParquetTransformerProcess(
+                zip_dir=self.daily_dld_dir,
+                parquet_dir=self.parquet_dir,
+                keep_zip_files=self.keep_zip_files,
+                file_type='daily',
+                execute_serial=self.no_parallel_processing))
 
             # index daily zip files
-            process_list.append(ReportParquetIndexerProcess(db_dir=self.db_dir,
-                                                            parquet_dir=self.parquet_dir,
-                                                            file_type='daily'))
+            process_list.append(ReportParquetIndexerProcess(
+                db_dir=self.db_dir,
+                parquet_dir=self.parquet_dir,
+                file_type='daily',
+                execute_serial=self.no_parallel_processing))
 
         else:
             print(

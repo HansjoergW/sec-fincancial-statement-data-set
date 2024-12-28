@@ -25,7 +25,8 @@ DEFAULT_CONFIGURATION = Configuration(
     parquet_dir=os.path.join(os.path.expanduser('~'), 'secfsdstools/data/parquet'),
     user_agent_email='your.email@goeshere.com',
     auto_update=True,
-    keep_zip_files=False
+    keep_zip_files=False,
+    no_parallel_processing=False
 )
 
 
@@ -138,18 +139,6 @@ class ConfigurationManager:
         updater = Updater.get_instance(config)
         updater.update()
 
-    # @staticmethod
-    # def _read_configuration_and_check_for_udpates(file_path: str) -> Configuration:
-    #     configuration: Configuration = ConfigurationManager._read_configuration(file_path)
-    #     # ConfigurationManager._check_for_update(configuration)
-    #     return configuration
-
-    # @staticmethod
-    # def _check_for_update(configuration: Configuration):
-    #     if configuration.auto_update:
-    #         LOGGER.debug('AutoUpdate is True, so check if new zip files are available')
-    #         updater = Updater.get_instance(configuration)
-    #         updater.update()
 
     @staticmethod
     def _read_configuration(file_path: str) -> Configuration:
@@ -172,6 +161,7 @@ class ConfigurationManager:
             rapid_api_plan=config['DEFAULT'].get('RapidApiPlan', 'basic'),
             auto_update=config['DEFAULT'].getboolean('AutoUpdate', True),
             keep_zip_files=config['DEFAULT'].getboolean('KeepZipFiles', False),
+            no_parallel_processing=config['DEFAULT'].getboolean('NoParallelProcessing', False),
             post_update_hook=config['DEFAULT'].get('PostUpdateHook', None),
             post_update_processes=config['DEFAULT'].get('PostUpdateProcesses', None),
             config_parser=config
@@ -375,6 +365,7 @@ class ConfigurationManager:
                              'ParquetDirectory': configuration.parquet_dir,
                              'UserAgentEmail': configuration.user_agent_email,
                              'AutoUpdate': configuration.auto_update,
-                             'KeepZipFiles': configuration.keep_zip_files}
+                             'KeepZipFiles': configuration.keep_zip_files,
+                             'NoParallelProcessing': configuration.no_parallel_processing}
         with open(file_path, 'w', encoding="utf8") as configfile:
             config.write(configfile)

@@ -111,7 +111,8 @@ class ToParquetTransformerProcess(AbstractProcessPoolProcess):
                  zip_dir: str,
                  parquet_dir: str,
                  file_type: str,
-                 keep_zip_files: bool):
+                 keep_zip_files: bool,
+                 execute_serial: bool = False):
         """
         Constructor.
         Args:
@@ -120,7 +121,7 @@ class ToParquetTransformerProcess(AbstractProcessPoolProcess):
             file_type: file_type, either 'quarter' or 'daily' used to define the
                        subfolder in the parquet dir
         """
-        super().__init__(execute_serial=False,
+        super().__init__(execute_serial=execute_serial,
                          chunksize=0)
 
         self.zip_dir = zip_dir

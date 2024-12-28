@@ -55,6 +55,9 @@ def define_extra_processes(configuration: Configuration) -> List[AbstractProcess
         List[AbstractProcess]: List with the defined process steps
 
     """
+    # Attention: imports that import secfsdstools classes need to be inside the function,
+    # otherwise, circular dependencies might occur due to the automated update process.
+
     from secfsdstools.g_pipelines.filter_process import FilterProcess
     from secfsdstools.g_pipelines.concat_process import ConcatByNewSubfoldersProcess, \
         ConcatByChangedTimestampProcess
@@ -79,7 +82,7 @@ def define_extra_processes(configuration: Configuration) -> List[AbstractProcess
                       target_dir=joined_by_stmt_dir,
                       bag_type="joined",
                       save_by_stmt=True,
-                      execute_serial=False  # switch to true in case of memory problems
+                      execute_serial=configuration.no_parallel_processing
                       ),
 
         # 2. building datasets with all entries by stmt

@@ -20,6 +20,8 @@ class Configuration:
     daily_download_dir: Optional[str] = None
     auto_update: Optional[bool] = True
     keep_zip_files: Optional[bool] = False
+    no_parallel_processing: Optional[bool] = False
+
     config_parser: Optional[configparser.ConfigParser] = None
     post_update_hook: Optional[str] = None
     post_update_processes: Optional[str] = None

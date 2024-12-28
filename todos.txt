@@ -12,19 +12,8 @@ new release
 - set tag and push tag (format vx.x.x)
 - on github -> under code releases: draft new release
 
-v.1.7.0
-- fix for new archived zip files
-- adapted / replaced all test data
-- extend known issues with info about archive
 
-problem filesize upload
- - problem sind daten im verzeichnis bla von tests c_update -> 160Gb
- - clean checkout
- - build
-
-
-
-v.1.7.0
+v.1.8.0
 bugfix
 - officialtagsonlyjoinedfilter fixed: did actually filter only inofficial tags
 
@@ -48,9 +37,10 @@ new
     - example notebook
     - configparser.configparser instance wird übergeben -> section default ist sec settings
 
- - process / task framework sollte unabhängig von update verwendet werden können
+- process / task framework sollte unabhängig von update verwendet werden können
    -> als simple process engine
 
+- new config self.no_parallel_processing -> if set to TRUE, all update steps will be executed in a serial manner
 
 
 todos:
@@ -68,12 +58,13 @@ todos:
   - filter (ok)
   - standardize (ok)
 
-- successfull run tests / linting
+- successfull run tests / linting (ok)
 
-- base setting for parallel execution to false for "all" processes in config
-- overwrite serial execution per task
+- base setting for parallel execution to false for "all" processes in config (ok)
+
 - new notebook documentation / automation
   - after_update hook example
+  - info about imports -> have to be inside hook methods, because of circular dependencies
 - readme -> add automation info
   -> how to easily enable "default extended processing"
 
@@ -81,6 +72,7 @@ todos:
 
 
 
+- overwrite serial execution per task
 - in cf haben wir oft auch zusätzliche 'cash' tags -> benötigen wir diese im bs auch?
 - maxqtr prepivot rule also for bs und is
 

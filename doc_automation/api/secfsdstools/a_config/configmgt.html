@@ -54,7 +54,8 @@ DEFAULT_CONFIGURATION = Configuration(
     parquet_dir=os.path.join(os.path.expanduser(&#39;~&#39;), &#39;secfsdstools/data/parquet&#39;),
     user_agent_email=&#39;your.email@goeshere.com&#39;,
     auto_update=True,
-    keep_zip_files=False
+    keep_zip_files=False,
+    no_parallel_processing=False
 )
 
 
@@ -167,18 +168,6 @@ class ConfigurationManager:
         updater = Updater.get_instance(config)
         updater.update()
 
-    # @staticmethod
-    # def _read_configuration_and_check_for_udpates(file_path: str) -&gt; Configuration:
-    #     configuration: Configuration = ConfigurationManager._read_configuration(file_path)
-    #     # ConfigurationManager._check_for_update(configuration)
-    #     return configuration
-
-    # @staticmethod
-    # def _check_for_update(configuration: Configuration):
-    #     if configuration.auto_update:
-    #         LOGGER.debug(&#39;AutoUpdate is True, so check if new zip files are available&#39;)
-    #         updater = Updater.get_instance(configuration)
-    #         updater.update()
 
     @staticmethod
     def _read_configuration(file_path: str) -&gt; Configuration:
@@ -201,6 +190,7 @@ class ConfigurationManager:
             rapid_api_plan=config[&#39;DEFAULT&#39;].get(&#39;RapidApiPlan&#39;, &#39;basic&#39;),
             auto_update=config[&#39;DEFAULT&#39;].getboolean(&#39;AutoUpdate&#39;, True),
             keep_zip_files=config[&#39;DEFAULT&#39;].getboolean(&#39;KeepZipFiles&#39;, False),
+            no_parallel_processing=config[&#39;DEFAULT&#39;].getboolean(&#39;NoParallelProcessing&#39;, False),
             post_update_hook=config[&#39;DEFAULT&#39;].get(&#39;PostUpdateHook&#39;, None),
             post_update_processes=config[&#39;DEFAULT&#39;].get(&#39;PostUpdateProcesses&#39;, None),
             config_parser=config
@@ -404,7 +394,8 @@ class ConfigurationManager:
                              &#39;ParquetDirectory&#39;: configuration.parquet_dir,
                              &#39;UserAgentEmail&#39;: configuration.user_agent_email,
                              &#39;AutoUpdate&#39;: configuration.auto_update,
-                             &#39;KeepZipFiles&#39;: configuration.keep_zip_files}
+                             &#39;KeepZipFiles&#39;: configuration.keep_zip_files,
+                             &#39;NoParallelProcessing&#39;: configuration.no_parallel_processing}
         with open(file_path, &#39;w&#39;, encoding=&#34;utf8&#34;) as configfile:
             config.write(configfile)</code></pre>
 </details>
@@ -537,18 +528,6 @@ If the file does not exist, it will create one in the current directory</p></div
         updater = Updater.get_instance(config)
         updater.update()
 
-    # @staticmethod
-    # def _read_configuration_and_check_for_udpates(file_path: str) -&gt; Configuration:
-    #     configuration: Configuration = ConfigurationManager._read_configuration(file_path)
-    #     # ConfigurationManager._check_for_update(configuration)
-    #     return configuration
-
-    # @staticmethod
-    # def _check_for_update(configuration: Configuration):
-    #     if configuration.auto_update:
-    #         LOGGER.debug(&#39;AutoUpdate is True, so check if new zip files are available&#39;)
-    #         updater = Updater.get_instance(configuration)
-    #         updater.update()
 
     @staticmethod
     def _read_configuration(file_path: str) -&gt; Configuration:
@@ -571,6 +550,7 @@ If the file does not exist, it will create one in the current directory</p></div
             rapid_api_plan=config[&#39;DEFAULT&#39;].get(&#39;RapidApiPlan&#39;, &#39;basic&#39;),
             auto_update=config[&#39;DEFAULT&#39;].getboolean(&#39;AutoUpdate&#39;, True),
             keep_zip_files=config[&#39;DEFAULT&#39;].getboolean(&#39;KeepZipFiles&#39;, False),
+            no_parallel_processing=config[&#39;DEFAULT&#39;].getboolean(&#39;NoParallelProcessing&#39;, False),
             post_update_hook=config[&#39;DEFAULT&#39;].get(&#39;PostUpdateHook&#39;, None),
             post_update_processes=config[&#39;DEFAULT&#39;].get(&#39;PostUpdateProcesses&#39;, None),
             config_parser=config
@@ -774,7 +754,8 @@ If the file does not exist, it will create one in the current directory</p></div
                              &#39;ParquetDirectory&#39;: configuration.parquet_dir,
                              &#39;UserAgentEmail&#39;: configuration.user_agent_email,
                              &#39;AutoUpdate&#39;: configuration.auto_update,
-                             &#39;KeepZipFiles&#39;: configuration.keep_zip_files}
+                             &#39;KeepZipFiles&#39;: configuration.keep_zip_files,
+                             &#39;NoParallelProcessing&#39;: configuration.no_parallel_processing}
         with open(file_path, &#39;w&#39;, encoding=&#34;utf8&#34;) as configfile:
             config.write(configfile)</code></pre>
 </details>

@@ -137,7 +137,8 @@ class ReportParquetIndexerProcess(AbstractThreadProcess):
     def __init__(self,
                  db_dir: str,
                  file_type: str,
-                 parquet_dir: str):
+                 parquet_dir: str,
+                 execute_serial: bool=True):
         &#34;&#34;&#34;
         Constructor.
         Args:
@@ -146,7 +147,8 @@ class ReportParquetIndexerProcess(AbstractThreadProcess):
             parquet_dir: parent directory in which the transformed parquet files are.
         &#34;&#34;&#34;
         # only use serial execution, since indexing is rather quick
-        super().__init__(execute_serial=True, chunksize=0)
+        super().__init__(execute_serial=execute_serial,
+                         chunksize=0)
         self.dbaccessor = ParquetDBIndexingAccessor(db_dir=db_dir)
         self.file_type = file_type
         self.parquet_dir = parquet_dir
@@ -413,7 +415,7 @@ index tables.</p>
 </dd>
 <dt id="secfsdstools.c_index.indexing_process.ReportParquetIndexerProcess"><code class="flex name class">
 <span>class <span class="ident">ReportParquetIndexerProcess</span></span>
-<span>(</span><span>db_dir: str, file_type: str, parquet_dir: str)</span>
+<span>(</span><span>db_dir: str, file_type: str, parquet_dir: str, execute_serial: bool = True)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Index the reports in parquet files.</p>
@@ -439,7 +441,8 @@ index tables.</p>
     def __init__(self,
                  db_dir: str,
                  file_type: str,
-                 parquet_dir: str):
+                 parquet_dir: str,
+                 execute_serial: bool=True):
         &#34;&#34;&#34;
         Constructor.
         Args:
@@ -448,7 +451,8 @@ index tables.</p>
             parquet_dir: parent directory in which the transformed parquet files are.
         &#34;&#34;&#34;
         # only use serial execution, since indexing is rather quick
-        super().__init__(execute_serial=True, chunksize=0)
+        super().__init__(execute_serial=execute_serial,
+                         chunksize=0)
         self.dbaccessor = ParquetDBIndexingAccessor(db_dir=db_dir)
         self.file_type = file_type
         self.parquet_dir = parquet_dir

@@ -106,6 +106,9 @@ def define_extra_processes(configuration: Configuration) -&gt; List[AbstractProc
         List[AbstractProcess]: List with the defined process steps
 
     &#34;&#34;&#34;
+    # Attention: imports that import secfsdstools classes need to be inside the function,
+    # otherwise, circular dependencies might occur due to the automated update process.
+
     from secfsdstools.g_pipelines.filter_process import FilterProcess
     from secfsdstools.g_pipelines.concat_process import ConcatByNewSubfoldersProcess, \
         ConcatByChangedTimestampProcess
@@ -130,7 +133,7 @@ def define_extra_processes(configuration: Configuration) -&gt; List[AbstractProc
                       target_dir=joined_by_stmt_dir,
                       bag_type=&#34;joined&#34;,
                       save_by_stmt=True,
-                      execute_serial=False  # switch to true in case of memory problems
+                      execute_serial=configuration.no_parallel_processing
                       ),
 
         # 2. building datasets with all entries by stmt
@@ -253,6 +256,9 @@ the available data
         List[AbstractProcess]: List with the defined process steps
 
     &#34;&#34;&#34;
+    # Attention: imports that import secfsdstools classes need to be inside the function,
+    # otherwise, circular dependencies might occur due to the automated update process.
+
     from secfsdstools.g_pipelines.filter_process import FilterProcess
     from secfsdstools.g_pipelines.concat_process import ConcatByNewSubfoldersProcess, \
         ConcatByChangedTimestampProcess
@@ -277,7 +283,7 @@ the available data
                       target_dir=joined_by_stmt_dir,
                       bag_type=&#34;joined&#34;,
                       save_by_stmt=True,
-                      execute_serial=False  # switch to true in case of memory problems
+                      execute_serial=configuration.no_parallel_processing
                       ),
 
         # 2. building datasets with all entries by stmt

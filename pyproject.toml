@@ -16,7 +16,7 @@ dependencies = [
     "pathos~=0.3",
     "pyarrow>=8.0",
     "fastparquet>=0.5",
-    "pandera==0.17"
+    "pandera==0.22.1"
 ]
 
 description = "A few python tools to analyze the SEC.gov financial statements data sets (https://www.sec.gov/dera/data/financial-statement-data-sets)"
@@ -60,7 +60,7 @@ keywords=[
 
 [project.optional-dependencies]
 test = [
-    "pytest~=7.2",
+    "pytest~=8.3",
     "pylint~=2.13",
     "coverage~=7.0",
     "typing_extensions~=4.0",

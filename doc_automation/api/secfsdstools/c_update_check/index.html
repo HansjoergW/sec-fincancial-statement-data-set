@@ -47,8 +47,17 @@ def is_running_in_pytest_or_pdoc():
     return (&#39;pytest&#39; in sys.argv[0]) or (&#39;pdoc3&#39; in sys.argv[0])
 
 
+def is_function_in_call_stack(function_name):
+    import inspect
+
+    stack = inspect.stack()
+    return any(frame.function == function_name for frame in stack)
+
+
+
+
 # ensure only execute if not pytest is running
-if not is_running_in_pytest_or_pdoc():
+if not is_running_in_pytest_or_pdoc() and not is_function_in_call_stack(&#34;update&#34;):
     import logging
     import secfsdstools
 
@@ -63,6 +72,22 @@ if not is_running_in_pytest_or_pdoc():
 <section>
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
+<dt id="secfsdstools.c_update_check.is_function_in_call_stack"><code class="name flex">
+<span>def <span class="ident">is_function_in_call_stack</span></span>(<span>function_name)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def is_function_in_call_stack(function_name):
+    import inspect
+
+    stack = inspect.stack()
+    return any(frame.function == function_name for frame in stack)</code></pre>
+</details>
+</dd>
 <dt id="secfsdstools.c_update_check.is_running_in_pytest_or_pdoc"><code class="name flex">
 <span>def <span class="ident">is_running_in_pytest_or_pdoc</span></span>(<span>)</span>
 </code></dt>
@@ -95,6 +120,7 @@ if not is_running_in_pytest_or_pdoc():
 </li>
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
+<li><code><a title="secfsdstools.c_update_check.is_function_in_call_stack" href="#secfsdstools.c_update_check.is_function_in_call_stack">is_function_in_call_stack</a></code></li>
 <li><code><a title="secfsdstools.c_update_check.is_running_in_pytest_or_pdoc" href="#secfsdstools.c_update_check.is_running_in_pytest_or_pdoc">is_running_in_pytest_or_pdoc</a></code></li>
 </ul>
 </li>

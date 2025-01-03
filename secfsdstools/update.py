@@ -1,9 +1,7 @@
 """ Getting everything ready to work with the data. """
 import logging
 
-from secfsdstools.a_config.configmgt import ConfigurationManager
 from secfsdstools.a_config.configmodel import Configuration
-from secfsdstools.c_update.updateprocess import Updater
 
 LOGGER = logging.getLogger(__name__)
 
@@ -12,6 +10,9 @@ def update(config: Configuration = None, force_update: bool = False):
     """
     ensures that all available zip files are downloaded and that the index is created.
     """
+    from secfsdstools.c_update.updateprocess import Updater
+    from secfsdstools.a_config.configmgt import ConfigurationManager
+
     # check if a logger is active if not, make sure it logs at least to the console
     if len(logging.root.handlers) == 0:
         logging.basicConfig(

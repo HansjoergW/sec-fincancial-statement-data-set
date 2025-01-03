@@ -63,7 +63,6 @@ def define_extra_processes(configuration: Configuration) -> List[AbstractProcess
         ConcatByChangedTimestampProcess
     from secfsdstools.g_pipelines.standardize_process import StandardizeProcess
 
-
     joined_by_stmt_dir = configuration.config_parser.get(section="Filter",
                                                          option="filtered_dir_by_stmt_joined")
 
@@ -74,9 +73,10 @@ def define_extra_processes(configuration: Configuration) -> List[AbstractProcess
                                                        option="standardized_dir")
 
     singlebag_dir = configuration.config_parser.get(section="SingleBag",
-                                                    option="singlebag_dir")
+                                                    option="singlebag_dir",
+                                                    fallback="")
 
-    return [
+    processes: List[AbstractProcess] = [
         # 1. Filter, join, and save by stmt
         FilterProcess(db_dir=configuration.db_dir,
                       target_dir=joined_by_stmt_dir,
@@ -115,12 +115,18 @@ def define_extra_processes(configuration: Configuration) -> List[AbstractProcess
         StandardizeProcess(root_dir=f"{concat_by_stmt_dir}",
                            target_dir=standardized_dir),
 
-        # 4. create a single joined bag with all the data
-        ConcatByChangedTimestampProcess(
-            root_dir=f"{concat_by_stmt_dir}/",
-            target_dir=f"{singlebag_dir}/all",
-        )
     ]
+
+    # 4. create a single joined bag with all the data, if it is defined
+    if singlebag_dir != "":
+        processes.append(
+            ConcatByChangedTimestampProcess(
+                root_dir=f"{concat_by_stmt_dir}/",
+                target_dir=f"{singlebag_dir}/all",
+            )
+        )
+
+    return processes
 
 
 if __name__ == '__main__':

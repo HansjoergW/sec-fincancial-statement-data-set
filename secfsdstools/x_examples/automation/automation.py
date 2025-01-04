@@ -1,14 +1,11 @@
 """
-This module shows the automation possibilities.
-These are mainly providing a hook method, which can create additional steps that are executed
-during the "check-for-update" (checking whether a new quarterly zip file is available), and
-providing another hook-method, that is simply called at the end of the whole update process.
+This module shows the automation to add additional steps after the usual update process
+(downloading new zip files, transforming them to parquet, indexding them).
 
-As a remainder, the framework executes all update steps (check and downloading new zip files,
-transforming them to parquet, indexing the reports, and any additional steps that you define
-as shown here.
+You can configure this function in the secfsdstools configuration file, by adding
+a postupdateprocesses definition. For instance, if you want to use this example,
+just add the postupdateprocesses definition as shown below:
 
-Usually, you can configure these methods here in the secfsdstools configuration file, like
 <pre>
 [DEFAULT]
 downloaddirectory = ...
@@ -17,24 +14,65 @@ parquetdirectory = ...
 useragentemail = ...
 autoupdate = True
 keepzipfiles = False
-postppdatehook=secfsdstools.x_examples.automation.automation.after_update
 postupdateprocesses=secfsdstools.x_examples.automation.automation.define_extra_processes
 </pre>
 
-In this example, we have a configuration file "automation_config.cfg" which we are going
-to use in the __main__ section of this module.
+This example also needs some additional configuration entries as shown in the
+example automation_config.cfg file which is in the same package as this module:
+
+<pre>
+[Filter]
+filtered_dir_by_stmt_joined = C:/data/sec/automated/_1_filtered_by_stmt_joined
+
+[Concat]
+concat_dir_by_stmt_joined = C:/data/sec/automated/_2_concat_by_stmt_joined
+
+[Standardizer]
+standardized_dir = C:/data/sec/automated/_3_standardized
+
+; [SingleBag]
+; singlebag_dir = C:/data/sec/automated/_4_single_bag
+</pre>
+
+This example adds 4 main steps to the usual updated process.
+
+First, it creates a joined bag for every zip file, filters it for 10-K and 10-Q reports only
+and also applies the filters  ReportPeriodRawFilter, MainCoregRawFilter, USDOnlyRawFilter,
+OfficialTagsOnlyRawFilter. The filtered joined bag is stored under the path defined as
+filtered_dir_by_stmt_joined.
+
+Second, it creates a single joined bag for every statement (balance sheet, income statement,
+cash flow, cover page, ...) that contains the data from all zip files, resp from all the
+available quarters. These bags are stored under the path defined as concat_dir_by_stmt_joined.
+
+Third, it standardizes the data for balance sheet, income statement, and cash flow and stores
+the standardized bags under the path that is defined as standardized_dir.
+
+The fourth step is optional and is only executed if the configuration file contains an entry
+for singlebag_dir. If it does, it will create a single joined bag concatenating all the bags
+created in the second step, so basically creating a single bag that contains all the data from
+all the available zip files, resp. quarters. This step uses more memory than the others, so it
+might not be running on every system.
+
+All this steps use basic implementations of the AbstractProcess class from the
+secfsdstools.g_pipeline package.
+
+Furthermore, all these steps check if something changed since the last run and are only executed
+if something did change (for instance, if a new zip file became available).
+
+Have also a look at the notebook 08_00_automation_basics.
+
 """
-import logging
-import os
 from typing import List
 
 from secfsdstools.a_config.configmodel import Configuration
 from secfsdstools.c_automation.task_framework import AbstractProcess
+from secfsdstools.g_pipelines.concat_process import ConcatByNewSubfoldersProcess, \
+    ConcatByChangedTimestampProcess
+from secfsdstools.g_pipelines.filter_process import FilterProcess
+from secfsdstools.g_pipelines.standardize_process import StandardizeProcess
 
-CURRENT_DIR, _ = os.path.split(__file__)
 
-
-# pylint: disable=C0415
 def define_extra_processes(configuration: Configuration) -> List[AbstractProcess]:
     """
     example definition of an additional pipeline.
@@ -46,7 +84,10 @@ def define_extra_processes(configuration: Configuration) -> List[AbstractProcess
     2. concats all the stmts together, so that there is one file for every stmt containing all
        the available data
     3. standardizing the data for BS, IS, CF
+    4. optional and only executed if the singlebag_dir is configured in the configuration.
+       it concats all the bags from step 2 together into a single bag.
 
+    Please have a look at the notebook 08_00_automation_basics for further details.
 
     Args:
         configuration: the configuration
@@ -55,14 +96,6 @@ def define_extra_processes(configuration: Configuration) -> List[AbstractProcess
         List[AbstractProcess]: List with the defined process steps
 
     """
-    # Attention: imports that import secfsdstools classes need to be inside the function,
-    # otherwise, circular dependencies might occur due to the automated update process.
-
-    from secfsdstools.g_pipelines.filter_process import FilterProcess
-    from secfsdstools.g_pipelines.concat_process import ConcatByNewSubfoldersProcess, \
-        ConcatByChangedTimestampProcess
-    from secfsdstools.g_pipelines.standardize_process import StandardizeProcess
-
     joined_by_stmt_dir = configuration.config_parser.get(section="Filter",
                                                          option="filtered_dir_by_stmt_joined")
 
@@ -127,31 +160,3 @@ def define_extra_processes(configuration: Configuration) -> List[AbstractProcess
         )
 
     return processes
-
-
-if __name__ == '__main__':
-    from secfsdstools.a_config.configmgt import ConfigurationManager, SECFSDSTOOLS_ENV_VAR_NAME
-    from secfsdstools.c_update.updateprocess import Updater
-
-    logging.basicConfig(
-        level=logging.INFO,
-        format="%(asctime)s [%(levelname)s] %(module)s  %(message)s",
-        handlers=[
-            logging.StreamHandler()
-        ]
-    )
-
-    # define which configuration file to use
-    os.environ[SECFSDSTOOLS_ENV_VAR_NAME] = f"{CURRENT_DIR}/automation_config.cfg"
-
-    config = ConfigurationManager.read_config_file()
-
-    updater = Updater.get_instance(config)
-
-    # We call this method mainly for demonstration purpose. Therefore, we also set
-    # force_update=True, so that update process is being executed, regardless if the last
-    # update process run less than 24 hours before.
-
-    # You could also just start to use any feature of the framework. This would also trigger the
-    # update process to run, but at most once every 24 hours.
-    updater.update(force_update=True)

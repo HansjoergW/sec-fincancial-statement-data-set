@@ -65,6 +65,8 @@ todos:
 - new notebook documentation / automation
   - after_update hook example
   - info about imports -> have to be inside hook methods, because of circular dependencies
+
+- commented config for example update-process
 - readme -> add automation info
   -> how to easily enable "default extended processing"
 

@@ -6,6 +6,7 @@ This is simply done by importing this module in the __init__.py of the above men
 """
 
 import sys
+from inspect import FrameInfo
 
 
 def is_running_in_pytest_or_pdoc():
@@ -13,17 +14,25 @@ def is_running_in_pytest_or_pdoc():
     return ('pytest' in sys.argv[0]) or ('pdoc3' in sys.argv[0])
 
 
-def is_function_in_call_stack(function_name):
+def is_update_frame(frameinfo: FrameInfo):
+    return (frameinfo.function == "update") and (frameinfo.filename.endswith("updateprocess.py"))
+
+
+def is_check_configuration(frameinfo: FrameInfo):
+    return ((frameinfo.function == "check_basic_configuration") and
+            (frameinfo.filename.endswith("configmgt.py")))
+
+
+def is_already_in_update_or_check_config_process():
     import inspect
 
     stack = inspect.stack()
-    return any(frame.function == function_name for frame in stack)
+    return any(is_update_frame(frame) or is_check_configuration(frame) for frame in stack)
 
 
-
-
-# ensure only execute if not pytest is running
-if not is_running_in_pytest_or_pdoc() and not is_function_in_call_stack("update"):
+# ensure only execute if not pytest is running or if we are already in
+# the update process or the check_config_process
+if not is_running_in_pytest_or_pdoc() and not is_already_in_update_or_check_config_process():
     import logging
     import secfsdstools
 

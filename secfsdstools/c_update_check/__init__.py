@@ -14,17 +14,29 @@ def is_running_in_pytest_or_pdoc():
     return ('pytest' in sys.argv[0]) or ('pdoc3' in sys.argv[0])
 
 
-def is_update_frame(frameinfo: FrameInfo):
+def is_update_frame(frameinfo: FrameInfo) -> bool:
+    """
+    check if the call is done in the context of the udpate process.
+    this could cause a circular import looping
+    """
     return (frameinfo.function == "update") and (frameinfo.filename.endswith("updateprocess.py"))
 
 
-def is_check_configuration(frameinfo: FrameInfo):
+def is_check_configuration(frameinfo: FrameInfo) -> bool:
+    """
+    check if the call is done in the context of checking the configuration.
+    this could cause a circular import looping
+    """
     return ((frameinfo.function == "check_basic_configuration") and
             (frameinfo.filename.endswith("configmgt.py")))
 
 
-def is_already_in_update_or_check_config_process():
-    import inspect
+def is_already_in_update_or_check_config_process() -> bool:
+    """
+    check if the call is made in the context of checking the configuration or the
+    update process, since this would cause a circular import loop.
+    """
+    import inspect # pylint: disable=C0415
 
     stack = inspect.stack()
     return any(is_update_frame(frame) or is_check_configuration(frame) for frame in stack)

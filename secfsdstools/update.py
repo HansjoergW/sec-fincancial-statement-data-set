@@ -6,6 +6,7 @@ from secfsdstools.a_config.configmodel import Configuration
 LOGGER = logging.getLogger(__name__)
 
 
+# pylint: disable=C0415
 def update(config: Configuration = None, force_update: bool = False):
     """
     ensures that all available zip files are downloaded and that the index is created.

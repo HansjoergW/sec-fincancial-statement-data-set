@@ -192,15 +192,19 @@ def define_extra_processes(configuration: Configuration) -&gt; List[AbstractProc
                                                     option=&#34;singlebag_dir&#34;,
                                                     fallback=&#34;&#34;)
 
-    processes: List[AbstractProcess] = [
+    processes: List[AbstractProcess] = []
+
+    processes.append(
         # 1. Filter, join, and save by stmt
         FilterProcess(db_dir=configuration.db_dir,
                       target_dir=joined_by_stmt_dir,
                       bag_type=&#34;joined&#34;,
                       save_by_stmt=True,
                       execute_serial=configuration.no_parallel_processing
-                      ),
+                      )
+    )
 
+    processes.extend([
         # 2. building datasets with all entries by stmt
         ConcatByNewSubfoldersProcess(root_dir=f&#34;{joined_by_stmt_dir}/quarter&#34;,
                                      target_dir=f&#34;{concat_by_stmt_dir}/BS&#34;,
@@ -225,13 +229,14 @@ def define_extra_processes(configuration: Configuration) -&gt; List[AbstractProc
         ConcatByNewSubfoldersProcess(root_dir=f&#34;{joined_by_stmt_dir}/quarter&#34;,
                                      target_dir=f&#34;{concat_by_stmt_dir}/IS&#34;,
                                      pathfilter=&#34;*/IS&#34;
-                                     ),
+                                     )
+    ])
 
+    processes.append(
         # 3. Standardize the data
         StandardizeProcess(root_dir=f&#34;{concat_by_stmt_dir}&#34;,
                            target_dir=standardized_dir),
-
-    ]
+    )
 
     # 4. create a single joined bag with all the data, if it is defined
     if singlebag_dir != &#34;&#34;:
@@ -318,15 +323,19 @@ it concats all the bags from step 2 together into a single bag.</p>
                                                     option=&#34;singlebag_dir&#34;,
                                                     fallback=&#34;&#34;)
 
-    processes: List[AbstractProcess] = [
+    processes: List[AbstractProcess] = []
+
+    processes.append(
         # 1. Filter, join, and save by stmt
         FilterProcess(db_dir=configuration.db_dir,
                       target_dir=joined_by_stmt_dir,
                       bag_type=&#34;joined&#34;,
                       save_by_stmt=True,
                       execute_serial=configuration.no_parallel_processing
-                      ),
+                      )
+    )
 
+    processes.extend([
         # 2. building datasets with all entries by stmt
         ConcatByNewSubfoldersProcess(root_dir=f&#34;{joined_by_stmt_dir}/quarter&#34;,
                                      target_dir=f&#34;{concat_by_stmt_dir}/BS&#34;,
@@ -351,13 +360,14 @@ it concats all the bags from step 2 together into a single bag.</p>
         ConcatByNewSubfoldersProcess(root_dir=f&#34;{joined_by_stmt_dir}/quarter&#34;,
                                      target_dir=f&#34;{concat_by_stmt_dir}/IS&#34;,
                                      pathfilter=&#34;*/IS&#34;
-                                     ),
+                                     )
+    ])
 
+    processes.append(
         # 3. Standardize the data
         StandardizeProcess(root_dir=f&#34;{concat_by_stmt_dir}&#34;,
                            target_dir=standardized_dir),
-
-    ]
+    )
 
     # 4. create a single joined bag with all the data, if it is defined
     if singlebag_dir != &#34;&#34;:

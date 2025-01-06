@@ -1,6 +1,6 @@
 """
 This module shows the automation to add additional steps after the usual update process
-(downloading new zip files, transforming them to parquet, indexding them).
+(which is downloading new zip files, transforming them to parquet, indexding them).
 
 You can configure this function in the secfsdstools configuration file, by adding
 a postupdateprocesses definition. For instance, if you want to use this example,
@@ -17,8 +17,7 @@ keepzipfiles = False
 postupdateprocesses=secfsdstools.x_examples.automation.automation.define_extra_processes
 </pre>
 
-This example also needs some additional configuration entries as shown in the
-example automation_config.cfg file which is in the same package as this module:
+If you want to use it, you also need to add additional configuration entries as shown below:
 
 <pre>
 [Filter]
@@ -34,12 +33,15 @@ standardized_dir = C:/data/sec/automated/_3_standardized
 ; singlebag_dir = C:/data/sec/automated/_4_single_bag
 </pre>
 
+(A complete configuration file using the "define_extra_processes" function is available in the file
+ automation_config.cfg which is in the same package as this module here.)
+
 This example adds 4 main steps to the usual updated process.
 
 First, it creates a joined bag for every zip file, filters it for 10-K and 10-Q reports only
 and also applies the filters  ReportPeriodRawFilter, MainCoregRawFilter, USDOnlyRawFilter,
 OfficialTagsOnlyRawFilter. The filtered joined bag is stored under the path defined as
-filtered_dir_by_stmt_joined.
+filtered_dir_by_stmt_joined. Furthermore, the data will also be split by stmt.
 
 Second, it creates a single joined bag for every statement (balance sheet, income statement,
 cash flow, cover page, ...) that contains the data from all zip files, resp from all the

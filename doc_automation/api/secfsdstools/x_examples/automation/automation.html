@@ -6,7 +6,7 @@
 <meta name="generator" content="pdoc 0.10.0" />
 <title>secfsdstools.x_examples.automation.automation API documentation</title>
 <meta name="description" content="This module shows the automation to add additional steps after the usual update process
-(downloading new zip files, transforming them to parquet, …" />
+(which is downloading new zip files, transforming them to …" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
 <link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
@@ -24,7 +24,7 @@
 </header>
 <section id="section-intro">
 <p>This module shows the automation to add additional steps after the usual update process
-(downloading new zip files, transforming them to parquet, indexding them).</p>
+(which is downloading new zip files, transforming them to parquet, indexding them).</p>
 <p>You can configure this function in the secfsdstools configuration file, by adding
 a postupdateprocesses definition. For instance, if you want to use this example,
 just add the postupdateprocesses definition as shown below:</p>
@@ -38,8 +38,7 @@ autoupdate = True
 keepzipfiles = False
 postupdateprocesses=secfsdstools.x_examples.automation.automation.define_extra_processes
 </pre>
-<p>This example also needs some additional configuration entries as shown in the
-example automation_config.cfg file which is in the same package as this module:</p>
+<p>If you want to use it, you also need to add additional configuration entries as shown below:</p>
 <pre>
 [Filter]
 filtered_dir_by_stmt_joined = C:/data/sec/automated/_1_filtered_by_stmt_joined
@@ -53,12 +52,14 @@ standardized_dir = C:/data/sec/automated/_3_standardized
 ; [SingleBag]
 ; singlebag_dir = C:/data/sec/automated/_4_single_bag
 </pre>
+<p>(A complete configuration file using the "define_extra_processes" function is available in the file
+automation_config.cfg which is in the same package as this module here.)</p>
 <p>This example adds 4 main steps to the usual updated process.</p>
 <p>First, it creates a joined bag for every zip file, filters it for 10-K and 10-Q reports only
 and also applies the filters
 ReportPeriodRawFilter, MainCoregRawFilter, USDOnlyRawFilter,
 OfficialTagsOnlyRawFilter. The filtered joined bag is stored under the path defined as
-filtered_dir_by_stmt_joined.</p>
+filtered_dir_by_stmt_joined. Furthermore, the data will also be split by stmt.</p>
 <p>Second, it creates a single joined bag for every statement (balance sheet, income statement,
 cash flow, cover page, &hellip;) that contains the data from all zip files, resp from all the
 available quarters. These bags are stored under the path defined as concat_dir_by_stmt_joined.</p>
@@ -80,7 +81,7 @@ if something did change (for instance, if a new zip file became available).</p>
 </summary>
 <pre><code class="python">&#34;&#34;&#34;
 This module shows the automation to add additional steps after the usual update process
-(downloading new zip files, transforming them to parquet, indexding them).
+(which is downloading new zip files, transforming them to parquet, indexding them).
 
 You can configure this function in the secfsdstools configuration file, by adding
 a postupdateprocesses definition. For instance, if you want to use this example,
@@ -97,8 +98,7 @@ keepzipfiles = False
 postupdateprocesses=secfsdstools.x_examples.automation.automation.define_extra_processes
 &lt;/pre&gt;
 
-This example also needs some additional configuration entries as shown in the
-example automation_config.cfg file which is in the same package as this module:
+If you want to use it, you also need to add additional configuration entries as shown below:
 
 &lt;pre&gt;
 [Filter]
@@ -114,12 +114,15 @@ standardized_dir = C:/data/sec/automated/_3_standardized
 ; singlebag_dir = C:/data/sec/automated/_4_single_bag
 &lt;/pre&gt;
 
+(A complete configuration file using the &#34;define_extra_processes&#34; function is available in the file
+ automation_config.cfg which is in the same package as this module here.)
+
 This example adds 4 main steps to the usual updated process.
 
 First, it creates a joined bag for every zip file, filters it for 10-K and 10-Q reports only
 and also applies the filters  ReportPeriodRawFilter, MainCoregRawFilter, USDOnlyRawFilter,
 OfficialTagsOnlyRawFilter. The filtered joined bag is stored under the path defined as
-filtered_dir_by_stmt_joined.
+filtered_dir_by_stmt_joined. Furthermore, the data will also be split by stmt.
 
 Second, it creates a single joined bag for every statement (balance sheet, income statement,
 cash flow, cover page, ...) that contains the data from all zip files, resp from all the

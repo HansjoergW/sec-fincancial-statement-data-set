@@ -49,6 +49,12 @@ def test_environment_variable_with_file(tmp_path):
         assert configuration is not None
         assert configuration.db_dir.endswith('blublu')
 
+    # read file directly
+    with open(config_file, "r") as c_file:
+        content = c_file.read()
+        # test if the additional commented line is present
+        assert "# [Filter]" in content
+
 
 # Tests
 def test_config_file_in_cwd(tmp_path, monkeypatch: pytest.MonkeyPatch):

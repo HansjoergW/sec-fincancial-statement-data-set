@@ -17,15 +17,19 @@ v.1.8.0
 bugfix
 - officialtagsonlyjoinedfilter fixed: did actually filter only inofficial tags
 
-new
+changes
 - check for update is always executed, regardless which feature of the framework is used
   (previously just the collectors caused a check for updates)
  -> via __init__.py of special c_update_check module, which is imported from the by the main modules
 - whole data update process implemented with a simple process/task framework
 - interface updater classmethod has changed -> taking config-instance
+- concat methods have new option to dropduplicates in resulting sub_df: default is to false
+  -> usecase concat BS and IS together into a single bag
+
+new
+- new config self.no_parallel_processing -> if set to TRUE, all update steps will be executed in a serial manner
 - post_update_hook definition -> called after updates with configuration as parameter
 - post_update_processes definition -> returns processes that are executed after standard process (dld, transform, index)
-- concat methods have new option to dropduplicates in resulting sub_df: default is to false
 
 - hook for after updated logic
 
@@ -40,7 +44,6 @@ new
 - process / task framework sollte unabhängig von update verwendet werden können
    -> als simple process engine
 
-- new config self.no_parallel_processing -> if set to TRUE, all update steps will be executed in a serial manner
 
 
 todos:
@@ -62,14 +65,19 @@ todos:
 
 - base setting for parallel execution to false for "all" processes in config (ok)
 
-- new notebook documentation / automation
-  - after_update hook example
-  - info about imports -> have to be inside hook methods, because of circular dependencies
+- commented config for example update-process (ok)
 
-- commented config for example update-process
+
+- new notebook documentation / automation (ok)
+
+- remark notebook bulkloading -> directly in the update process
+
 - readme -> add automation info
   -> how to easily enable "default extended processing"
 
+- executed only on archived datasets
+
+----------
 
 
 

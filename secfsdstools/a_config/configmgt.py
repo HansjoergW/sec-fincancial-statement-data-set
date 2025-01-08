@@ -29,6 +29,28 @@ DEFAULT_CONFIGURATION = Configuration(
     no_parallel_processing=False
 )
 
+DEFAULT_COMMENTED_LINES = f"""# If you want to add additional processing steps being
+# automatically executed when new data is available, just uncomment the following 
+# config lines.
+# For more details about these additional steps, have a look at the 
+# 08_00_automation_basics notebook.
+
+# postupdateprocesses=secfsdstools.x_examples.automation.automation.define_extra_processes
+
+# [Filter]
+# filtered_dir_by_stmt_joined = secfsdstools/pipeline/_1_filtered_by_stmt_joined
+ 
+# [Concat]
+# concat_dir_by_stmt_joined = secfsdstools/pipeline/_2_concat_by_stmt_joined
+
+# [Standardizer]
+# standardized_dir = secfsdstools/pipeline/_3_standardized
+
+# Note: this is an optional step which needs a significant amount of memory. Leave it commented
+# in case of memory problems.
+# [SingleBag]
+# singlebag_dir = secfsdstools/pipeline/_4_single_bag
+"""
 
 class ConfigurationManager:
     """
@@ -367,5 +389,9 @@ class ConfigurationManager:
                              'AutoUpdate': configuration.auto_update,
                              'KeepZipFiles': configuration.keep_zip_files,
                              'NoParallelProcessing': configuration.no_parallel_processing}
+
+
+
         with open(file_path, 'w', encoding="utf8") as configfile:
             config.write(configfile)
+            configfile.write(DEFAULT_COMMENTED_LINES)

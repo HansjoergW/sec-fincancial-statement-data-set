@@ -58,6 +58,28 @@ DEFAULT_CONFIGURATION = Configuration(
     no_parallel_processing=False
 )
 
+DEFAULT_COMMENTED_LINES = f&#34;&#34;&#34;# If you want to add additional processing steps being
+# automatically executed when new data is available, just uncomment the following 
+# config lines.
+# For more details about these additional steps, have a look at the 
+# 08_00_automation_basics notebook.
+
+# postupdateprocesses=secfsdstools.x_examples.automation.automation.define_extra_processes
+
+# [Filter]
+# filtered_dir_by_stmt_joined = secfsdstools/pipeline/_1_filtered_by_stmt_joined
+ 
+# [Concat]
+# concat_dir_by_stmt_joined = secfsdstools/pipeline/_2_concat_by_stmt_joined
+
+# [Standardizer]
+# standardized_dir = secfsdstools/pipeline/_3_standardized
+
+# Note: this is an optional step which needs a significant amount of memory. Leave it commented
+# in case of memory problems.
+# [SingleBag]
+# singlebag_dir = secfsdstools/pipeline/_4_single_bag
+&#34;&#34;&#34;
 
 class ConfigurationManager:
     &#34;&#34;&#34;
@@ -396,8 +418,12 @@ class ConfigurationManager:
                              &#39;AutoUpdate&#39;: configuration.auto_update,
                              &#39;KeepZipFiles&#39;: configuration.keep_zip_files,
                              &#39;NoParallelProcessing&#39;: configuration.no_parallel_processing}
+
+
+
         with open(file_path, &#39;w&#39;, encoding=&#34;utf8&#34;) as configfile:
-            config.write(configfile)</code></pre>
+            config.write(configfile)
+            configfile.write(DEFAULT_COMMENTED_LINES)</code></pre>
 </details>
 </section>
 <section>
@@ -756,8 +782,12 @@ If the file does not exist, it will create one in the current directory</p></div
                              &#39;AutoUpdate&#39;: configuration.auto_update,
                              &#39;KeepZipFiles&#39;: configuration.keep_zip_files,
                              &#39;NoParallelProcessing&#39;: configuration.no_parallel_processing}
+
+
+
         with open(file_path, &#39;w&#39;, encoding=&#34;utf8&#34;) as configfile:
-            config.write(configfile)</code></pre>
+            config.write(configfile)
+            configfile.write(DEFAULT_COMMENTED_LINES)</code></pre>
 </details>
 <h3>Class variables</h3>
 <dl>

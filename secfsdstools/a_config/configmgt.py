@@ -29,7 +29,7 @@ DEFAULT_CONFIGURATION = Configuration(
     no_parallel_processing=False
 )
 
-DEFAULT_COMMENTED_LINES = f"""# If you want to add additional processing steps being
+DEFAULT_COMMENTED_LINES = """# If you want to add additional processing steps being
 # automatically executed when new data is available, just uncomment the following 
 # config lines.
 # For more details about these additional steps, have a look at the 

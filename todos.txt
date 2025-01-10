@@ -70,7 +70,7 @@ todos:
 
 - new notebook documentation / automation (ok)
 
-- remark notebook bulkloading -> directly in the update process
+- remark notebook bulkloading -> directly in the update process (ok)
 
 - readme -> add automation info
   -> how to easily enable "default extended processing"

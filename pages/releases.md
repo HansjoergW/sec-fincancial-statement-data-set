@@ -5,7 +5,38 @@ permalink: /releasenotes/
 
 # Release Notes
 
-## 1.6.2 -> 1.7.0
+## 1.7.0 -> 1.8.0 2025-January-10
+* Fix in OfficialTagsOnlyJoinedFilter: did only filter unofficial tags instead of vice versa
+
+* Major changes
+  * Check for update is always executed regardless which feature of the framework is being used.
+    Previously, this just happened if a collector had been used.
+
+* Minor changes
+  * The interface of the classmethod  Updater.get_instance was changed and takes now a
+    Configuration instance instead of the individual attributes of the object.
+  * The concat methods of the JoineDataBag and RawDataBag classes have a new parameter "drop_duplicates_sub_df", which
+    drops duplicated entries from the sub_df dataframe. Default is set to False. This is being used when
+    concatenating data from the same reports. E.g., if you have a bag with all the balance sheet data and another bag with
+    all the income sheet data, but from the same reports, you should set that parameter to True, otherwise you would
+    have duplicated entries in the sub_df.
+
+* New
+  * Introducing automation pipeline framework in package secfsdestools.c_automation.
+    This framework can be used as standalone, or it can be used to implement additional steps that can be added to the
+    update process.
+    * Checkout the documentation for the package secfsdstools.c_automation
+    * Checkout example implementations of pipeline steps that can be directly used in your own pipelines:
+      secfsdstools.g_pipeline
+    * Checkout the example implementation on how you can add additional processing step to the default update process:
+      see package secfsdstools.x_examples.automation and notebook 08_automation_basics.
+  * Two hook function that can be implemented and configured that run after the default update process.
+    * One hook function to provide additional processing steps that are implemented with the automation pipeline framework described above
+    * One hook function that is called at the end of the update process and were you can freely implement any logic you want
+    * Both hook functions are configured in the configuration file. Have a look at the notebook 08_00_automation_basics.
+
+
+## 1.6.2 -> 1.7.0 2024-December-22
 * Fix for new path to zip files on SEC.gov
   * The SEC did change the location of the zip files and this latest version fixes the path to them
 

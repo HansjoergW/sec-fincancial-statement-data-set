@@ -35,17 +35,18 @@ into parquet format, and indexing the reports.
 &#34;&#34;&#34;
 import logging
 import time
-from typing import Optional
+from typing import List
 
 from secfsdstools.a_config.configmodel import Configuration
 from secfsdstools.a_utils.dbutils import DBStateAcessor
 from secfsdstools.a_utils.downloadutils import UrlDownloader
 from secfsdstools.a_utils.rapiddownloadutils import RapidUrlBuilder
 from secfsdstools.b_setup.setupdb import DbCreator
-from secfsdstools.c_download.rapiddownloading import RapidZipDownloader
-from secfsdstools.c_download.secdownloading import SecZipDownloader
-from secfsdstools.c_index.indexing import ReportParquetIndexer
-from secfsdstools.c_transform.toparquettransforming import ToParquetTransformer
+from secfsdstools.c_automation.task_framework import AbstractProcess, execute_processes
+from secfsdstools.c_download.rapiddownloading_process import RapidDownloadingProcess
+from secfsdstools.c_download.secdownloading_process import SecDownloadingProcess
+from secfsdstools.c_index.indexing_process import ReportParquetIndexerProcess
+from secfsdstools.c_transform.toparquettransforming_process import ToParquetTransformerProcess
 
 LOGGER = logging.getLogger(__name__)
 
@@ -63,38 +64,30 @@ class Updater:
             config: Configuration object
 
         Returns:
-            Updater: the instanc
+            Updater: the instance
 
         &#34;&#34;&#34;
         return Updater(
-            db_dir=config.db_dir,
-            dld_dir=config.download_dir,
-            daily_dld_dir=config.daily_download_dir,
-            parquet_dir=config.parquet_dir,
-            user_agent=config.user_agent_email,
-            keep_zip_files=config.keep_zip_files,
-            rapid_api_key=config.rapid_api_key,
-            rapid_api_plan=config.rapid_api_plan
+            config
         )
 
     def __init__(self,
-                 db_dir: str,
-                 dld_dir: str,
-                 daily_dld_dir: str,
-                 parquet_dir: str,
-                 user_agent: str,
-                 keep_zip_files: bool,
-                 rapid_api_plan: Optional[str],
-                 rapid_api_key: Optional[str]):
-        self.db_state_accesor = DBStateAcessor(db_dir=db_dir)
-        self.db_dir = db_dir
-        self.dld_dir = dld_dir
-        self.daily_dld_dir = daily_dld_dir
-        self.parquet_dir = parquet_dir
-        self.user_agent = user_agent
-        self.rapid_api_plan = rapid_api_plan
-        self.rapid_api_key = rapid_api_key
-        self.keep_zip_files = keep_zip_files
+                 config: Configuration):
+        self.config = config
+
+        self.db_state_accesor = DBStateAcessor(db_dir=config.db_dir)
+        self.db_dir = config.db_dir
+        self.dld_dir = config.download_dir
+        self.daily_dld_dir = config.daily_download_dir
+        self.parquet_dir = config.parquet_dir
+        self.user_agent = config.user_agent_email
+        self.rapid_api_plan = config.rapid_api_plan
+        self.rapid_api_key = config.rapid_api_key
+        self.keep_zip_files = config.keep_zip_files
+        self.auto_update = config.auto_update
+        self.no_parallel_processing = config.no_parallel_processing
+        self.post_update_hook = config.post_update_hook
+        self.post_update_processes = config.post_update_processes
 
     def _check_for_update(self) -&gt; bool:
         &#34;&#34;&#34;checks if a new update check should be conducted.&#34;&#34;&#34;
@@ -109,90 +102,140 @@ class Updater:
 
         return float(last_check) + Updater.CHECK_EVERY_SECONDS &lt; time.time()
 
-    def _do_download(self):
+    def _build_process_list(self) -&gt; List[AbstractProcess]:
+        process_list: List[AbstractProcess] = []
         urldownloader = UrlDownloader(user_agent=self.user_agent)
 
         # download data from sec
-        LOGGER.info(&#34;check if there are new files to download from sec.gov ...&#34;)
-        secdownloader = SecZipDownloader(zip_dir=self.dld_dir,
-                                         parquet_root_dir=self.parquet_dir,
-                                         urldownloader=urldownloader)
-        secdownloader.download()
+        process_list.append(SecDownloadingProcess(zip_dir=self.dld_dir,
+                                                  parquet_root_dir=self.parquet_dir,
+                                                  urldownloader=urldownloader,
+                                                  execute_serial=self.no_parallel_processing))
+        # transform sec zip files
+        process_list.append(ToParquetTransformerProcess(zip_dir=self.dld_dir,
+                                                        parquet_dir=self.parquet_dir,
+                                                        keep_zip_files=self.keep_zip_files,
+                                                        file_type=&#39;quarter&#39;,
+                                                        execute_serial=self.no_parallel_processing
+                                                        ))
 
-        # download data from rapid
+        # index sec zip files
+        process_list.append(ReportParquetIndexerProcess(db_dir=self.db_dir,
+                                                        parquet_dir=self.parquet_dir,
+                                                        file_type=&#39;quarter&#39;,
+                                                        execute_serial=self.no_parallel_processing
+                                                        ))
+
         if (self.rapid_api_key is not None) &amp; (self.rapid_api_key != &#39;&#39;):
-            try:
-                LOGGER.info(&#34;check if there are new files to download from rapid...&#34;)
-                rapidurlbuilder = RapidUrlBuilder(rapid_plan=self.rapid_api_plan,
-                                                  rapid_api_key=self.rapid_api_key)
-                rapiddownloader = RapidZipDownloader(rapidurlbuilder=rapidurlbuilder,
-                                                     daily_zip_dir=self.daily_dld_dir,
-                                                     qrtr_zip_dir=self.dld_dir,
-                                                     urldownloader=urldownloader,
-                                                     parquet_root_dir=self.parquet_dir)
-                rapiddownloader.download()
-                return
-            except Exception as ex:  # pylint: disable=W0703
-                LOGGER.warning(&#34;Failed to get data from rapid api, please check rapid-api-key. &#34;)
-                LOGGER.warning(&#34;Only using data from Sec.gov because of: %s&#34;, ex)
-        print(&#34;No rapid-api-key is set: \n&#34;
-              + &#34;If you are interested in daily updates, please have a look at &#34;
-              + &#34;https://rapidapi.com/hansjoerg.wingeier/api/daily-sec-financial-statement-dataset&#34;)
+            # download daily zip files
+            rapidurlbuilder = RapidUrlBuilder(rapid_plan=self.rapid_api_plan,
+                                              rapid_api_key=self.rapid_api_key)
+            process_list.append(RapidDownloadingProcess(
+                rapidurlbuilder=rapidurlbuilder,
+                daily_zip_dir=self.daily_dld_dir,
+                qrtr_zip_dir=self.dld_dir,
+                urldownloader=urldownloader,
+                parquet_root_dir=self.parquet_dir,
+                execute_serial=self.no_parallel_processing))
 
-    def _do_transform(self):
-        LOGGER.info(&#34;start to transform to parquet format ...&#34;)
-        qrtr_transformer = ToParquetTransformer(zip_dir=self.dld_dir,
-                                                parquet_dir=self.parquet_dir,
-                                                keep_zip_files=self.keep_zip_files,
-                                                file_type=&#39;quarter&#39;)
-        qrtr_transformer.process()
+            # transform daily zip files
+            process_list.append(ToParquetTransformerProcess(
+                zip_dir=self.daily_dld_dir,
+                parquet_dir=self.parquet_dir,
+                keep_zip_files=self.keep_zip_files,
+                file_type=&#39;daily&#39;,
+                execute_serial=self.no_parallel_processing))
 
-        daily_transformer = ToParquetTransformer(zip_dir=self.daily_dld_dir,
-                                                 parquet_dir=self.parquet_dir,
-                                                 keep_zip_files=self.keep_zip_files,
-                                                 file_type=&#39;daily&#39;)
-        daily_transformer.process()
+            # index daily zip files
+            process_list.append(ReportParquetIndexerProcess(
+                db_dir=self.db_dir,
+                parquet_dir=self.parquet_dir,
+                file_type=&#39;daily&#39;,
+                execute_serial=self.no_parallel_processing))
 
-    def _do_index(self):
-        # create parquet index
-        LOGGER.info(&#34;start to index parquet files ...&#34;)
-        qrtr_parquet_indexer = ReportParquetIndexer(db_dir=self.db_dir,
-                                                    parquet_dir=self.parquet_dir,
-                                                    file_type=&#39;quarter&#39;)
-        qrtr_parquet_indexer.process()
+        else:
+            print(
+                &#34;No rapid-api-key is set: \n&#34;
+                + &#34;If you are interested in receiving the latest SEC filings daily and not just &#34;
+                + &#34;each quarter, please have a look at &#34;
+                + &#34;https://rapidapi.com/hansjoerg.wingeier/api/daily-sec-financial-statement-dataset&#34;)  # pylint: disable=C0301
 
-        daily_parquet_indexer = ReportParquetIndexer(db_dir=self.db_dir,
-                                                     parquet_dir=self.parquet_dir,
-                                                     file_type=&#39;daily&#39;)
-        daily_parquet_indexer.process()
+        return process_list
+
+    def _load_post_update_process(self) -&gt; List[AbstractProcess]:
+        import importlib  # pylint: disable=C0415
+
+        if not self.post_update_processes:
+            return []
+
+        module_str, function_str = self.post_update_processes.rsplit(&#39;.&#39;, 1)
+        module = importlib.import_module(module_str)
+        post_processes_function = getattr(module, function_str)
+
+        post_processes = post_processes_function(self.config)
+
+        if not isinstance(post_processes, list):
+            LOGGER.error(&#34;A post_update_processes function was defined in the configuration: %s&#34;
+                         &#34;. But it does not return a list.&#34;, self.post_update_processes)
+            raise ValueError(&#34;Defined post_update_processes function does not return a list: &#34;
+                             f&#34;{self.post_update_processes}&#34;)
+
+        if not all(isinstance(item, AbstractProcess) for item in post_processes):
+            LOGGER.error(&#34;A post_update_processes function was defined in the configuration: %s&#34;
+                         &#34;. But it not all elements are of type AbstractProcess.&#34;,
+                         self.post_update_processes)
+            raise ValueError(&#34;Defined post_update_processes function does have elements that are &#34;
+                             f&#34;not of type AbstractPcoess: {self.post_update_processes}&#34;)
+
+        LOGGER.info(&#34;Loading %d post update processes from %s&#34;,
+                    len(post_processes), self.post_update_processes)
+
+        return post_processes
+
+    def _execute_post_update_hook(self):
+        import importlib  # pylint: disable=C0415
+
+        if not self.post_update_hook:
+            return
+
+        module_str, function_str = self.post_update_hook.rsplit(&#39;.&#39;, 1)
+        module = importlib.import_module(module_str)
+        post_update_hook = getattr(module, function_str)
+
+        LOGGER.info(&#34;Calling post_update_hook %s&#34;, self.post_update_hook)
+        post_update_hook(self.config)
 
     def _update(self):
-        self._do_download()
-        self._do_transform()
-        self._do_index()
+        processes: List[AbstractProcess] = self._build_process_list()
+        processes.extend(self._load_post_update_process())
+        execute_processes(processes)
+        self._execute_post_update_hook()
 
-    def update(self):
+    def update(self, force_update: bool = False):
         &#34;&#34;&#34;
         execute the updated process if time has come to check for new upates.
         Returns:
 
         &#34;&#34;&#34;
+        if force_update | self.auto_update:
+            if not force_update &amp; self.auto_update:
+                LOGGER.debug(&#39;AutoUpdate is True, so check if new zip files are available&#39;)
 
-        if not self._check_for_update():
-            LOGGER.debug(
-                &#39;Skipping update: last check was done less than %d seconds ago&#39;,
-                Updater.CHECK_EVERY_SECONDS)
-            return
+            if (not force_update) &amp; (not self._check_for_update()):
+                LOGGER.debug(
+                    &#39;Skipping update: last check was done less than %d seconds ago&#39;,
+                    Updater.CHECK_EVERY_SECONDS)
+                return
 
-        LOGGER.info(&#39;Check if new report zip files are available...&#39;)
-        # create db if necessary
-        DbCreator(db_dir=self.db_dir).create_db()
+            LOGGER.info(&#39;Launching data update process ...&#39;)
+            # create db if necessary
+            DbCreator(db_dir=self.db_dir).create_db()
 
-        # execute the update logic
-        self._update()
+            # execute the update logic
+            self._update()
 
-        # update the timestamp of the last check
-        self.db_state_accesor.set_key(Updater.LAST_UPDATE_CHECK_KEY, str(time.time()))</code></pre>
+            # update the timestamp of the last check
+            self.db_state_accesor.set_key(Updater.LAST_UPDATE_CHECK_KEY, str(time.time()))</code></pre>
 </details>
 </section>
 <section>
@@ -206,7 +249,7 @@ class Updater:
 <dl>
 <dt id="secfsdstools.c_update.updateprocess.Updater"><code class="flex name class">
 <span>class <span class="ident">Updater</span></span>
-<span>(</span><span>db_dir: str, dld_dir: str, daily_dld_dir: str, parquet_dir: str, user_agent: str, keep_zip_files: bool, rapid_api_plan: Optional[str], rapid_api_key: Optional[str])</span>
+<span>(</span><span>config: <a title="secfsdstools.a_config.configmodel.Configuration" href="../a_config/configmodel.html#secfsdstools.a_config.configmodel.Configuration">Configuration</a>)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Manages the update process: download zipfiles, transform to parquet, and index the reports</p></div>
@@ -227,38 +270,30 @@ class Updater:
             config: Configuration object
 
         Returns:
-            Updater: the instanc
+            Updater: the instance
 
         &#34;&#34;&#34;
         return Updater(
-            db_dir=config.db_dir,
-            dld_dir=config.download_dir,
-            daily_dld_dir=config.daily_download_dir,
-            parquet_dir=config.parquet_dir,
-            user_agent=config.user_agent_email,
-            keep_zip_files=config.keep_zip_files,
-            rapid_api_key=config.rapid_api_key,
-            rapid_api_plan=config.rapid_api_plan
+            config
         )
 
     def __init__(self,
-                 db_dir: str,
-                 dld_dir: str,
-                 daily_dld_dir: str,
-                 parquet_dir: str,
-                 user_agent: str,
-                 keep_zip_files: bool,
-                 rapid_api_plan: Optional[str],
-                 rapid_api_key: Optional[str]):
-        self.db_state_accesor = DBStateAcessor(db_dir=db_dir)
-        self.db_dir = db_dir
-        self.dld_dir = dld_dir
-        self.daily_dld_dir = daily_dld_dir
-        self.parquet_dir = parquet_dir
-        self.user_agent = user_agent
-        self.rapid_api_plan = rapid_api_plan
-        self.rapid_api_key = rapid_api_key
-        self.keep_zip_files = keep_zip_files
+                 config: Configuration):
+        self.config = config
+
+        self.db_state_accesor = DBStateAcessor(db_dir=config.db_dir)
+        self.db_dir = config.db_dir
+        self.dld_dir = config.download_dir
+        self.daily_dld_dir = config.daily_download_dir
+        self.parquet_dir = config.parquet_dir
+        self.user_agent = config.user_agent_email
+        self.rapid_api_plan = config.rapid_api_plan
+        self.rapid_api_key = config.rapid_api_key
+        self.keep_zip_files = config.keep_zip_files
+        self.auto_update = config.auto_update
+        self.no_parallel_processing = config.no_parallel_processing
+        self.post_update_hook = config.post_update_hook
+        self.post_update_processes = config.post_update_processes
 
     def _check_for_update(self) -&gt; bool:
         &#34;&#34;&#34;checks if a new update check should be conducted.&#34;&#34;&#34;
@@ -273,90 +308,140 @@ class Updater:
 
         return float(last_check) + Updater.CHECK_EVERY_SECONDS &lt; time.time()
 
-    def _do_download(self):
+    def _build_process_list(self) -&gt; List[AbstractProcess]:
+        process_list: List[AbstractProcess] = []
         urldownloader = UrlDownloader(user_agent=self.user_agent)
 
         # download data from sec
-        LOGGER.info(&#34;check if there are new files to download from sec.gov ...&#34;)
-        secdownloader = SecZipDownloader(zip_dir=self.dld_dir,
-                                         parquet_root_dir=self.parquet_dir,
-                                         urldownloader=urldownloader)
-        secdownloader.download()
+        process_list.append(SecDownloadingProcess(zip_dir=self.dld_dir,
+                                                  parquet_root_dir=self.parquet_dir,
+                                                  urldownloader=urldownloader,
+                                                  execute_serial=self.no_parallel_processing))
+        # transform sec zip files
+        process_list.append(ToParquetTransformerProcess(zip_dir=self.dld_dir,
+                                                        parquet_dir=self.parquet_dir,
+                                                        keep_zip_files=self.keep_zip_files,
+                                                        file_type=&#39;quarter&#39;,
+                                                        execute_serial=self.no_parallel_processing
+                                                        ))
 
-        # download data from rapid
+        # index sec zip files
+        process_list.append(ReportParquetIndexerProcess(db_dir=self.db_dir,
+                                                        parquet_dir=self.parquet_dir,
+                                                        file_type=&#39;quarter&#39;,
+                                                        execute_serial=self.no_parallel_processing
+                                                        ))
+
         if (self.rapid_api_key is not None) &amp; (self.rapid_api_key != &#39;&#39;):
-            try:
-                LOGGER.info(&#34;check if there are new files to download from rapid...&#34;)
-                rapidurlbuilder = RapidUrlBuilder(rapid_plan=self.rapid_api_plan,
-                                                  rapid_api_key=self.rapid_api_key)
-                rapiddownloader = RapidZipDownloader(rapidurlbuilder=rapidurlbuilder,
-                                                     daily_zip_dir=self.daily_dld_dir,
-                                                     qrtr_zip_dir=self.dld_dir,
-                                                     urldownloader=urldownloader,
-                                                     parquet_root_dir=self.parquet_dir)
-                rapiddownloader.download()
-                return
-            except Exception as ex:  # pylint: disable=W0703
-                LOGGER.warning(&#34;Failed to get data from rapid api, please check rapid-api-key. &#34;)
-                LOGGER.warning(&#34;Only using data from Sec.gov because of: %s&#34;, ex)
-        print(&#34;No rapid-api-key is set: \n&#34;
-              + &#34;If you are interested in daily updates, please have a look at &#34;
-              + &#34;https://rapidapi.com/hansjoerg.wingeier/api/daily-sec-financial-statement-dataset&#34;)
+            # download daily zip files
+            rapidurlbuilder = RapidUrlBuilder(rapid_plan=self.rapid_api_plan,
+                                              rapid_api_key=self.rapid_api_key)
+            process_list.append(RapidDownloadingProcess(
+                rapidurlbuilder=rapidurlbuilder,
+                daily_zip_dir=self.daily_dld_dir,
+                qrtr_zip_dir=self.dld_dir,
+                urldownloader=urldownloader,
+                parquet_root_dir=self.parquet_dir,
+                execute_serial=self.no_parallel_processing))
 
-    def _do_transform(self):
-        LOGGER.info(&#34;start to transform to parquet format ...&#34;)
-        qrtr_transformer = ToParquetTransformer(zip_dir=self.dld_dir,
-                                                parquet_dir=self.parquet_dir,
-                                                keep_zip_files=self.keep_zip_files,
-                                                file_type=&#39;quarter&#39;)
-        qrtr_transformer.process()
+            # transform daily zip files
+            process_list.append(ToParquetTransformerProcess(
+                zip_dir=self.daily_dld_dir,
+                parquet_dir=self.parquet_dir,
+                keep_zip_files=self.keep_zip_files,
+                file_type=&#39;daily&#39;,
+                execute_serial=self.no_parallel_processing))
 
-        daily_transformer = ToParquetTransformer(zip_dir=self.daily_dld_dir,
-                                                 parquet_dir=self.parquet_dir,
-                                                 keep_zip_files=self.keep_zip_files,
-                                                 file_type=&#39;daily&#39;)
-        daily_transformer.process()
+            # index daily zip files
+            process_list.append(ReportParquetIndexerProcess(
+                db_dir=self.db_dir,
+                parquet_dir=self.parquet_dir,
+                file_type=&#39;daily&#39;,
+                execute_serial=self.no_parallel_processing))
 
-    def _do_index(self):
-        # create parquet index
-        LOGGER.info(&#34;start to index parquet files ...&#34;)
-        qrtr_parquet_indexer = ReportParquetIndexer(db_dir=self.db_dir,
-                                                    parquet_dir=self.parquet_dir,
-                                                    file_type=&#39;quarter&#39;)
-        qrtr_parquet_indexer.process()
+        else:
+            print(
+                &#34;No rapid-api-key is set: \n&#34;
+                + &#34;If you are interested in receiving the latest SEC filings daily and not just &#34;
+                + &#34;each quarter, please have a look at &#34;
+                + &#34;https://rapidapi.com/hansjoerg.wingeier/api/daily-sec-financial-statement-dataset&#34;)  # pylint: disable=C0301
 
-        daily_parquet_indexer = ReportParquetIndexer(db_dir=self.db_dir,
-                                                     parquet_dir=self.parquet_dir,
-                                                     file_type=&#39;daily&#39;)
-        daily_parquet_indexer.process()
+        return process_list
+
+    def _load_post_update_process(self) -&gt; List[AbstractProcess]:
+        import importlib  # pylint: disable=C0415
+
+        if not self.post_update_processes:
+            return []
+
+        module_str, function_str = self.post_update_processes.rsplit(&#39;.&#39;, 1)
+        module = importlib.import_module(module_str)
+        post_processes_function = getattr(module, function_str)
+
+        post_processes = post_processes_function(self.config)
+
+        if not isinstance(post_processes, list):
+            LOGGER.error(&#34;A post_update_processes function was defined in the configuration: %s&#34;
+                         &#34;. But it does not return a list.&#34;, self.post_update_processes)
+            raise ValueError(&#34;Defined post_update_processes function does not return a list: &#34;
+                             f&#34;{self.post_update_processes}&#34;)
+
+        if not all(isinstance(item, AbstractProcess) for item in post_processes):
+            LOGGER.error(&#34;A post_update_processes function was defined in the configuration: %s&#34;
+                         &#34;. But it not all elements are of type AbstractProcess.&#34;,
+                         self.post_update_processes)
+            raise ValueError(&#34;Defined post_update_processes function does have elements that are &#34;
+                             f&#34;not of type AbstractPcoess: {self.post_update_processes}&#34;)
+
+        LOGGER.info(&#34;Loading %d post update processes from %s&#34;,
+                    len(post_processes), self.post_update_processes)
+
+        return post_processes
+
+    def _execute_post_update_hook(self):
+        import importlib  # pylint: disable=C0415
+
+        if not self.post_update_hook:
+            return
+
+        module_str, function_str = self.post_update_hook.rsplit(&#39;.&#39;, 1)
+        module = importlib.import_module(module_str)
+        post_update_hook = getattr(module, function_str)
+
+        LOGGER.info(&#34;Calling post_update_hook %s&#34;, self.post_update_hook)
+        post_update_hook(self.config)
 
     def _update(self):
-        self._do_download()
-        self._do_transform()
-        self._do_index()
+        processes: List[AbstractProcess] = self._build_process_list()
+        processes.extend(self._load_post_update_process())
+        execute_processes(processes)
+        self._execute_post_update_hook()
 
-    def update(self):
+    def update(self, force_update: bool = False):
         &#34;&#34;&#34;
         execute the updated process if time has come to check for new upates.
         Returns:
 
         &#34;&#34;&#34;
+        if force_update | self.auto_update:
+            if not force_update &amp; self.auto_update:
+                LOGGER.debug(&#39;AutoUpdate is True, so check if new zip files are available&#39;)
 
-        if not self._check_for_update():
-            LOGGER.debug(
-                &#39;Skipping update: last check was done less than %d seconds ago&#39;,
-                Updater.CHECK_EVERY_SECONDS)
-            return
+            if (not force_update) &amp; (not self._check_for_update()):
+                LOGGER.debug(
+                    &#39;Skipping update: last check was done less than %d seconds ago&#39;,
+                    Updater.CHECK_EVERY_SECONDS)
+                return
 
-        LOGGER.info(&#39;Check if new report zip files are available...&#39;)
-        # create db if necessary
-        DbCreator(db_dir=self.db_dir).create_db()
+            LOGGER.info(&#39;Launching data update process ...&#39;)
+            # create db if necessary
+            DbCreator(db_dir=self.db_dir).create_db()
 
-        # execute the update logic
-        self._update()
+            # execute the update logic
+            self._update()
 
-        # update the timestamp of the last check
-        self.db_state_accesor.set_key(Updater.LAST_UPDATE_CHECK_KEY, str(time.time()))</code></pre>
+            # update the timestamp of the last check
+            self.db_state_accesor.set_key(Updater.LAST_UPDATE_CHECK_KEY, str(time.time()))</code></pre>
 </details>
 <h3>Class variables</h3>
 <dl>
@@ -384,7 +469,7 @@ class Updater:
 <h2 id="returns">Returns</h2>
 <dl>
 <dt><code><a title="secfsdstools.c_update.updateprocess.Updater" href="#secfsdstools.c_update.updateprocess.Updater">Updater</a></code></dt>
-<dd>the instanc</dd>
+<dd>the instance</dd>
 </dl></div>
 <details class="source">
 <summary>
@@ -398,18 +483,11 @@ def get_instance(cls, config: Configuration):
         config: Configuration object
 
     Returns:
-        Updater: the instanc
+        Updater: the instance
 
     &#34;&#34;&#34;
     return Updater(
-        db_dir=config.db_dir,
-        dld_dir=config.download_dir,
-        daily_dld_dir=config.daily_download_dir,
-        parquet_dir=config.parquet_dir,
-        user_agent=config.user_agent_email,
-        keep_zip_files=config.keep_zip_files,
-        rapid_api_key=config.rapid_api_key,
-        rapid_api_plan=config.rapid_api_plan
+        config
     )</code></pre>
 </details>
 </dd>
@@ -417,7 +495,7 @@ def get_instance(cls, config: Configuration):
 <h3>Methods</h3>
 <dl>
 <dt id="secfsdstools.c_update.updateprocess.Updater.update"><code class="name flex">
-<span>def <span class="ident">update</span></span>(<span>self)</span>
+<span>def <span class="ident">update</span></span>(<span>self, force_update: bool = False)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>execute the updated process if time has come to check for new upates.
@@ -426,28 +504,31 @@ Returns:</p></div>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def update(self):
+<pre><code class="python">def update(self, force_update: bool = False):
     &#34;&#34;&#34;
     execute the updated process if time has come to check for new upates.
     Returns:
 
     &#34;&#34;&#34;
+    if force_update | self.auto_update:
+        if not force_update &amp; self.auto_update:
+            LOGGER.debug(&#39;AutoUpdate is True, so check if new zip files are available&#39;)
 
-    if not self._check_for_update():
-        LOGGER.debug(
-            &#39;Skipping update: last check was done less than %d seconds ago&#39;,
-            Updater.CHECK_EVERY_SECONDS)
-        return
+        if (not force_update) &amp; (not self._check_for_update()):
+            LOGGER.debug(
+                &#39;Skipping update: last check was done less than %d seconds ago&#39;,
+                Updater.CHECK_EVERY_SECONDS)
+            return
 
-    LOGGER.info(&#39;Check if new report zip files are available...&#39;)
-    # create db if necessary
-    DbCreator(db_dir=self.db_dir).create_db()
+        LOGGER.info(&#39;Launching data update process ...&#39;)
+        # create db if necessary
+        DbCreator(db_dir=self.db_dir).create_db()
 
-    # execute the update logic
-    self._update()
+        # execute the update logic
+        self._update()
 
-    # update the timestamp of the last check
-    self.db_state_accesor.set_key(Updater.LAST_UPDATE_CHECK_KEY, str(time.time()))</code></pre>
+        # update the timestamp of the last check
+        self.db_state_accesor.set_key(Updater.LAST_UPDATE_CHECK_KEY, str(time.time()))</code></pre>
 </details>
 </dd>
 </dl>

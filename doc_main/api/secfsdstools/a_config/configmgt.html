@@ -35,7 +35,7 @@ import logging
 import os
 import pprint
 import re
-from typing import List
+from typing import List, Optional
 
 from secfsdstools.a_config.configmodel import Configuration
 from secfsdstools.a_utils.dbutils import DBStateAcessor
@@ -54,13 +54,36 @@ DEFAULT_CONFIGURATION = Configuration(
     parquet_dir=os.path.join(os.path.expanduser(&#39;~&#39;), &#39;secfsdstools/data/parquet&#39;),
     user_agent_email=&#39;your.email@goeshere.com&#39;,
     auto_update=True,
-    keep_zip_files=False
+    keep_zip_files=False,
+    no_parallel_processing=False
 )
 
+DEFAULT_COMMENTED_LINES = &#34;&#34;&#34;# If you want to add additional processing steps being
+# automatically executed when new data is available, just uncomment the following 
+# config lines.
+# For more details about these additional steps, have a look at the 
+# 08_00_automation_basics notebook.
+
+# postupdateprocesses=secfsdstools.x_examples.automation.automation.define_extra_processes
+
+# [Filter]
+# filtered_dir_by_stmt_joined = secfsdstools/pipeline/_1_filtered_by_stmt_joined
+ 
+# [Concat]
+# concat_dir_by_stmt_joined = secfsdstools/pipeline/_2_concat_by_stmt_joined
+
+# [Standardizer]
+# standardized_dir = secfsdstools/pipeline/_3_standardized
+
+# Note: this is an optional step which needs a significant amount of memory. Leave it commented
+# in case of memory problems.
+# [SingleBag]
+# singlebag_dir = secfsdstools/pipeline/_4_single_bag
+&#34;&#34;&#34;
 
 class ConfigurationManager:
     &#34;&#34;&#34;
-    Configuration Manager. Reads the configuration from the config file.
+    Configuration Manager. Reads the configuration from the configuration file.
     If the file does not exist, it will create one in the current directory
     &#34;&#34;&#34;
 
@@ -90,37 +113,37 @@ class ConfigurationManager:
 
         env_config_file = os.getenv(SECFSDSTOOLS_ENV_VAR_NAME)
         if env_config_file:
-            LOGGER.info(&#39;read configuration from %s&#39;, env_config_file)
+            LOGGER.info(&#39;Config file set by environment variable %s to %s&#39;,
+                        SECFSDSTOOLS_ENV_VAR_NAME, env_config_file)
             if not os.path.isfile(env_config_file):
                 LOGGER.error(&#39;environment variable %s was set.&#39;, SECFSDSTOOLS_ENV_VAR_NAME)
-                LOGGER.error(&#39;But config file is not present, creating it ...&#39;)
+                LOGGER.error(&#39;But configuration file is not present, creating it ...&#39;)
                 conf_dir, _ = os.path.split(env_config_file)
                 os.makedirs(conf_dir, exist_ok=True)
                 ConfigurationManager._write_configuration(env_config_file, DEFAULT_CONFIGURATION)
-                LOGGER.error(&#39;config file created at %s.&#39;, env_config_file)
+                LOGGER.error(&#39;configuration file created at %s.&#39;, env_config_file)
                 LOGGER.error(&#39;please check the content ant then restart&#39;)
                 return ConfigurationManager._handle_first_start(env_config_file,
                                                                 DEFAULT_CONFIGURATION)
 
-            return ConfigurationManager._read_configuration_and_check_for_udpates(env_config_file)
+            return ConfigurationManager._read_configuration(env_config_file)
 
         current_cfg_file_path = os.path.join(os.getcwd(), DEFAULT_CONFIG_FILE)
         if os.path.isfile(current_cfg_file_path):
-            LOGGER.info(&#39;found config file at %s&#39;, current_cfg_file_path)
-            return ConfigurationManager._read_configuration_and_check_for_udpates(
-                current_cfg_file_path)
+            LOGGER.info(&#39;found configuration file at %s&#39;, current_cfg_file_path)
+            return ConfigurationManager._read_configuration(current_cfg_file_path)
 
             # check if file exists at home directory
         home_cfg_file_path = os.path.join(os.path.expanduser(&#39;~&#39;), DEFAULT_CONFIG_FILE)
         if not os.path.isfile(home_cfg_file_path):
-            LOGGER.error(&#39;No config file found at home directory %s.&#39;, home_cfg_file_path)
+            LOGGER.error(&#39;No configuration file found at home directory %s.&#39;, home_cfg_file_path)
             ConfigurationManager._write_configuration(home_cfg_file_path, DEFAULT_CONFIGURATION)
             LOGGER.error(&#39;Config file created at %s. Please check the content and then rerun.&#39;,
                          home_cfg_file_path)
             return ConfigurationManager._handle_first_start(home_cfg_file_path,
                                                             DEFAULT_CONFIGURATION)
 
-        return ConfigurationManager._read_configuration_and_check_for_udpates(home_cfg_file_path)
+        return ConfigurationManager._read_configuration(home_cfg_file_path)
 
     @staticmethod
     def _handle_first_start(file_path: str, config: Configuration):
@@ -131,8 +154,8 @@ class ConfigurationManager:
         print(&#39; created at that location. It contains fhe following default values: \n&#39;)
         pprint.pprint(config.get_dict())
         print(&#39;&#39;)
-        print(&#39; If you want to change the settings, you can exit and and change the settings &#39;)
-        print(&#39; and restart. This will then trigger the initial update process as described.&#39;)
+        print(&#39; If you want to change the settings, you can exit, change the settings &#39;)
+        print(&#39; and restart. This will trigger the initial update process as described.&#39;)
         print(&#39; below.&#39;)
         print(&#39; If you are ok with the settings, you can directly press y or Y and the initial &#39;)
         print(&#39; update process will start immediately. \n&#39;)
@@ -142,12 +165,12 @@ class ConfigurationManager:
         print(f&#39;    into the folder {config.download_dir}&#39;)
         print(&#39; 2. It will transform the CSV files inside the zipfiles into parquet format and&#39;)
         print(f&#39;    store them under {config.parquet_dir}&#39;)
-        print(&#39; 3. The original zip file will be deleted depending on your configuration&#39;)
+        print(&#39; 3. The original zip files will be deleted depending on your configuration&#39;)
         print(&#39; 4. The content of the SUB.TXT parquet files will be indexed in a simple &#39;)
         print(f&#39;    sqlite database file (placed at {config.db_dir})&#39;)
         print(&#39;&#39;)
         print(&#39; Note: The downloaded data will use about 2GB on your disk, the size doubles, if &#39;)
-        print(&#39;        choose to keep the ZIP-files after transformation. &#39;)
+        print(&#39;       you choose to keep the ZIP-files after transformation. &#39;)
         print(&#39; Note: The initial update process will take several minutes.&#39;)
         print(&#39;&#39;)
 
@@ -167,18 +190,6 @@ class ConfigurationManager:
         updater = Updater.get_instance(config)
         updater.update()
 
-    @staticmethod
-    def _read_configuration_and_check_for_udpates(file_path: str) -&gt; Configuration:
-        config: Configuration = ConfigurationManager._read_configuration(file_path)
-        ConfigurationManager._check_for_update(config)
-        return config
-
-    @staticmethod
-    def _check_for_update(config: Configuration):
-        if config.auto_update:
-            LOGGER.debug(&#39;AutoUpdate is True, so check if new zip files are available&#39;)
-            updater = Updater.get_instance(config)
-            updater.update()
 
     @staticmethod
     def _read_configuration(file_path: str) -&gt; Configuration:
@@ -192,7 +203,7 @@ class ConfigurationManager:
         config = configparser.ConfigParser()
         config.read(file_path)
 
-        config = Configuration(
+        secconfig = Configuration(
             download_dir=config[&#39;DEFAULT&#39;].get(&#39;DownloadDirectory&#39;, ),
             db_dir=config[&#39;DEFAULT&#39;].get(&#39;DbDirectory&#39;),
             parquet_dir=config[&#39;DEFAULT&#39;].get(&#39;ParquetDirectory&#39;),
@@ -200,31 +211,114 @@ class ConfigurationManager:
             rapid_api_key=config[&#39;DEFAULT&#39;].get(&#39;RapidApiKey&#39;, None),
             rapid_api_plan=config[&#39;DEFAULT&#39;].get(&#39;RapidApiPlan&#39;, &#39;basic&#39;),
             auto_update=config[&#39;DEFAULT&#39;].getboolean(&#39;AutoUpdate&#39;, True),
-            keep_zip_files=config[&#39;DEFAULT&#39;].getboolean(&#39;KeepZipFiles&#39;, False)
+            keep_zip_files=config[&#39;DEFAULT&#39;].getboolean(&#39;KeepZipFiles&#39;, False),
+            no_parallel_processing=config[&#39;DEFAULT&#39;].getboolean(&#39;NoParallelProcessing&#39;, False),
+            post_update_hook=config[&#39;DEFAULT&#39;].get(&#39;PostUpdateHook&#39;, None),
+            post_update_processes=config[&#39;DEFAULT&#39;].get(&#39;PostUpdateProcesses&#39;, None),
+            config_parser=config
         )
 
-        check_messages = ConfigurationManager.check_basic_configuration(config)
+        check_messages = ConfigurationManager.check_basic_configuration(secconfig)
         if len(check_messages) &gt; 0:
             print(
                 f&#34;&#34;&#34;There are problems with your configuration.
                     Please fix the following issues in {file_path}: {check_messages}&#34;&#34;&#34;)
             raise ValueError(f&#39;Problems with configuration in {file_path}: {check_messages}&#39;)
 
-        check_rapid_messages = ConfigurationManager.check_rapid_configuration(config)
+        check_rapid_messages = ConfigurationManager.check_rapid_configuration(secconfig)
         if len(check_rapid_messages) &gt; 0:
             print(f&#39;rapid configuration is invalid in {file_path}: {check_rapid_messages}&#39;)
             print(&#39;rapid configuration will be ignored.&#39;)
 
             LOGGER.warning(&#39;rapid configuration is invalid in %s: %s&#39;,
                            file_path, str(check_rapid_messages))
-            config.rapid_api_key = None
-            config.rapid_api_plan = None
-        return config
+            secconfig.rapid_api_key = None
+            secconfig.rapid_api_plan = None
+        return secconfig
 
     @staticmethod
     def _is_valid_email(email):
         pattern = r&#39;^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$&#39;
         return bool(re.match(pattern, email))
+
+    @staticmethod
+    def _validate_post_update_hook(function_name: Optional[str]) -&gt; List[str]:
+        if function_name is None:
+            return []
+
+        import importlib # pylint: disable=C0415
+        import inspect # pylint: disable=C0415
+
+        messages: List[str] = []
+        module_str = &#34;&#34;
+        function_str = &#34;&#34;
+        try:
+            module_str, function_str = function_name.rsplit(&#39;.&#39;, 1)
+            module = importlib.import_module(module_str)
+            my_function = getattr(module, function_str)
+            signature = inspect.signature(my_function)
+            params = list(signature.parameters.values())
+
+            if len(params) != 1:
+                messages.append(f&#34;Exactly one parameter is expected for {function_name}&#34;)
+
+            if not ((params[0].annotation == inspect._empty) | # pylint: disable=W0212
+                    (params[0].annotation == Configuration)):
+                messages.append(f&#34;Parameter of function has wrong type {params[0].annotation}. &#34;
+                                &#34;It should be secfsdstools.a_config.configmodel.Configuration&#34;)
+
+        except ModuleNotFoundError:
+            messages.append(f&#34;Module {module_str} not found&#34;)
+        except AttributeError:
+            messages.append(f&#34;Function {function_str} not found in module {module_str}&#34;)
+
+        if len(messages) &gt; 0:
+            messages = [&#34;Definition of PostUpdateHook function has problems: &#34;] + messages
+
+        return messages
+
+    @staticmethod
+    def _validate_post_update_processes(function_name: Optional[str]) -&gt; List[str]:
+        if function_name is None:
+            return []
+
+        import importlib # pylint: disable=C0415
+        import inspect # pylint: disable=C0415
+        from secfsdstools.c_automation.task_framework import AbstractProcess # pylint: disable=C0415
+
+        messages: List[str] = []
+        module_str = &#34;&#34;
+        function_str = &#34;&#34;
+        try:
+            module_str, function_str = function_name.rsplit(&#39;.&#39;, 1)
+            module = importlib.import_module(module_str)
+            my_function = getattr(module, function_str)
+            signature = inspect.signature(my_function)
+            params = list(signature.parameters.values())
+
+            if len(params) != 1:
+                messages.append(f&#34;Expecting exactly one parameter is expected for {function_name}&#34;)
+
+            if not ((params[0].annotation == inspect._empty) | # pylint: disable=W0212
+                    (params[0].annotation == Configuration)):
+                messages.append(f&#34;Parameter of function has wrong type {params[0].annotation}. &#34;
+                                &#34;It should be secfsdstools.a_config.configmodel.Configuration&#34;)
+
+            if not ((signature.return_annotation == inspect._empty) | # pylint: disable=W0212
+                    (signature.return_annotation == List[AbstractProcess])):
+                messages.append(
+                    f&#34;Return type of function has wrong type {signature.return_annotation}. &#34;
+                    &#34;It should be List[secfsdstools.c_automation.task_framework.AbstractProcess]&#34;)
+
+        except ModuleNotFoundError:
+            messages.append(f&#34;Module {module_str} not found&#34;)
+        except AttributeError:
+            messages.append(f&#34;Function {function_str} not found in module {module_str}&#34;)
+
+        if len(messages) &gt; 0:
+            messages = [&#34;Definition of PostUpdateProcesses function has problems: &#34;] + messages
+
+        return messages
 
     @staticmethod
     def check_basic_configuration(config: Configuration) -&gt; List[str]:
@@ -257,6 +351,11 @@ class ConfigurationManager:
         if not ConfigurationManager._is_valid_email(config.user_agent_email):
             messages.append(
                 f&#39;The defined UserAgentEmail is not a valid format: {config.user_agent_email}&#39;)
+
+        messages.extend(ConfigurationManager._validate_post_update_hook(config.post_update_hook))
+
+        messages.extend(
+            ConfigurationManager._validate_post_update_processes(config.post_update_processes))
 
         return messages
 
@@ -317,9 +416,14 @@ class ConfigurationManager:
                              &#39;ParquetDirectory&#39;: configuration.parquet_dir,
                              &#39;UserAgentEmail&#39;: configuration.user_agent_email,
                              &#39;AutoUpdate&#39;: configuration.auto_update,
-                             &#39;KeepZipFiles&#39;: configuration.keep_zip_files}
+                             &#39;KeepZipFiles&#39;: configuration.keep_zip_files,
+                             &#39;NoParallelProcessing&#39;: configuration.no_parallel_processing}
+
+
+
         with open(file_path, &#39;w&#39;, encoding=&#34;utf8&#34;) as configfile:
-            config.write(configfile)</code></pre>
+            config.write(configfile)
+            configfile.write(DEFAULT_COMMENTED_LINES)</code></pre>
 </details>
 </section>
 <section>
@@ -335,7 +439,7 @@ class ConfigurationManager:
 <span>class <span class="ident">ConfigurationManager</span></span>
 </code></dt>
 <dd>
-<div class="desc"><p>Configuration Manager. Reads the configuration from the config file.
+<div class="desc"><p>Configuration Manager. Reads the configuration from the configuration file.
 If the file does not exist, it will create one in the current directory</p></div>
 <details class="source">
 <summary>
@@ -343,7 +447,7 @@ If the file does not exist, it will create one in the current directory</p></div
 </summary>
 <pre><code class="python">class ConfigurationManager:
     &#34;&#34;&#34;
-    Configuration Manager. Reads the configuration from the config file.
+    Configuration Manager. Reads the configuration from the configuration file.
     If the file does not exist, it will create one in the current directory
     &#34;&#34;&#34;
 
@@ -373,37 +477,37 @@ If the file does not exist, it will create one in the current directory</p></div
 
         env_config_file = os.getenv(SECFSDSTOOLS_ENV_VAR_NAME)
         if env_config_file:
-            LOGGER.info(&#39;read configuration from %s&#39;, env_config_file)
+            LOGGER.info(&#39;Config file set by environment variable %s to %s&#39;,
+                        SECFSDSTOOLS_ENV_VAR_NAME, env_config_file)
             if not os.path.isfile(env_config_file):
                 LOGGER.error(&#39;environment variable %s was set.&#39;, SECFSDSTOOLS_ENV_VAR_NAME)
-                LOGGER.error(&#39;But config file is not present, creating it ...&#39;)
+                LOGGER.error(&#39;But configuration file is not present, creating it ...&#39;)
                 conf_dir, _ = os.path.split(env_config_file)
                 os.makedirs(conf_dir, exist_ok=True)
                 ConfigurationManager._write_configuration(env_config_file, DEFAULT_CONFIGURATION)
-                LOGGER.error(&#39;config file created at %s.&#39;, env_config_file)
+                LOGGER.error(&#39;configuration file created at %s.&#39;, env_config_file)
                 LOGGER.error(&#39;please check the content ant then restart&#39;)
                 return ConfigurationManager._handle_first_start(env_config_file,
                                                                 DEFAULT_CONFIGURATION)
 
-            return ConfigurationManager._read_configuration_and_check_for_udpates(env_config_file)
+            return ConfigurationManager._read_configuration(env_config_file)
 
         current_cfg_file_path = os.path.join(os.getcwd(), DEFAULT_CONFIG_FILE)
         if os.path.isfile(current_cfg_file_path):
-            LOGGER.info(&#39;found config file at %s&#39;, current_cfg_file_path)
-            return ConfigurationManager._read_configuration_and_check_for_udpates(
-                current_cfg_file_path)
+            LOGGER.info(&#39;found configuration file at %s&#39;, current_cfg_file_path)
+            return ConfigurationManager._read_configuration(current_cfg_file_path)
 
             # check if file exists at home directory
         home_cfg_file_path = os.path.join(os.path.expanduser(&#39;~&#39;), DEFAULT_CONFIG_FILE)
         if not os.path.isfile(home_cfg_file_path):
-            LOGGER.error(&#39;No config file found at home directory %s.&#39;, home_cfg_file_path)
+            LOGGER.error(&#39;No configuration file found at home directory %s.&#39;, home_cfg_file_path)
             ConfigurationManager._write_configuration(home_cfg_file_path, DEFAULT_CONFIGURATION)
             LOGGER.error(&#39;Config file created at %s. Please check the content and then rerun.&#39;,
                          home_cfg_file_path)
             return ConfigurationManager._handle_first_start(home_cfg_file_path,
                                                             DEFAULT_CONFIGURATION)
 
-        return ConfigurationManager._read_configuration_and_check_for_udpates(home_cfg_file_path)
+        return ConfigurationManager._read_configuration(home_cfg_file_path)
 
     @staticmethod
     def _handle_first_start(file_path: str, config: Configuration):
@@ -414,8 +518,8 @@ If the file does not exist, it will create one in the current directory</p></div
         print(&#39; created at that location. It contains fhe following default values: \n&#39;)
         pprint.pprint(config.get_dict())
         print(&#39;&#39;)
-        print(&#39; If you want to change the settings, you can exit and and change the settings &#39;)
-        print(&#39; and restart. This will then trigger the initial update process as described.&#39;)
+        print(&#39; If you want to change the settings, you can exit, change the settings &#39;)
+        print(&#39; and restart. This will trigger the initial update process as described.&#39;)
         print(&#39; below.&#39;)
         print(&#39; If you are ok with the settings, you can directly press y or Y and the initial &#39;)
         print(&#39; update process will start immediately. \n&#39;)
@@ -425,12 +529,12 @@ If the file does not exist, it will create one in the current directory</p></div
         print(f&#39;    into the folder {config.download_dir}&#39;)
         print(&#39; 2. It will transform the CSV files inside the zipfiles into parquet format and&#39;)
         print(f&#39;    store them under {config.parquet_dir}&#39;)
-        print(&#39; 3. The original zip file will be deleted depending on your configuration&#39;)
+        print(&#39; 3. The original zip files will be deleted depending on your configuration&#39;)
         print(&#39; 4. The content of the SUB.TXT parquet files will be indexed in a simple &#39;)
         print(f&#39;    sqlite database file (placed at {config.db_dir})&#39;)
         print(&#39;&#39;)
         print(&#39; Note: The downloaded data will use about 2GB on your disk, the size doubles, if &#39;)
-        print(&#39;        choose to keep the ZIP-files after transformation. &#39;)
+        print(&#39;       you choose to keep the ZIP-files after transformation. &#39;)
         print(&#39; Note: The initial update process will take several minutes.&#39;)
         print(&#39;&#39;)
 
@@ -450,18 +554,6 @@ If the file does not exist, it will create one in the current directory</p></div
         updater = Updater.get_instance(config)
         updater.update()
 
-    @staticmethod
-    def _read_configuration_and_check_for_udpates(file_path: str) -&gt; Configuration:
-        config: Configuration = ConfigurationManager._read_configuration(file_path)
-        ConfigurationManager._check_for_update(config)
-        return config
-
-    @staticmethod
-    def _check_for_update(config: Configuration):
-        if config.auto_update:
-            LOGGER.debug(&#39;AutoUpdate is True, so check if new zip files are available&#39;)
-            updater = Updater.get_instance(config)
-            updater.update()
 
     @staticmethod
     def _read_configuration(file_path: str) -&gt; Configuration:
@@ -475,7 +567,7 @@ If the file does not exist, it will create one in the current directory</p></div
         config = configparser.ConfigParser()
         config.read(file_path)
 
-        config = Configuration(
+        secconfig = Configuration(
             download_dir=config[&#39;DEFAULT&#39;].get(&#39;DownloadDirectory&#39;, ),
             db_dir=config[&#39;DEFAULT&#39;].get(&#39;DbDirectory&#39;),
             parquet_dir=config[&#39;DEFAULT&#39;].get(&#39;ParquetDirectory&#39;),
@@ -483,31 +575,114 @@ If the file does not exist, it will create one in the current directory</p></div
             rapid_api_key=config[&#39;DEFAULT&#39;].get(&#39;RapidApiKey&#39;, None),
             rapid_api_plan=config[&#39;DEFAULT&#39;].get(&#39;RapidApiPlan&#39;, &#39;basic&#39;),
             auto_update=config[&#39;DEFAULT&#39;].getboolean(&#39;AutoUpdate&#39;, True),
-            keep_zip_files=config[&#39;DEFAULT&#39;].getboolean(&#39;KeepZipFiles&#39;, False)
+            keep_zip_files=config[&#39;DEFAULT&#39;].getboolean(&#39;KeepZipFiles&#39;, False),
+            no_parallel_processing=config[&#39;DEFAULT&#39;].getboolean(&#39;NoParallelProcessing&#39;, False),
+            post_update_hook=config[&#39;DEFAULT&#39;].get(&#39;PostUpdateHook&#39;, None),
+            post_update_processes=config[&#39;DEFAULT&#39;].get(&#39;PostUpdateProcesses&#39;, None),
+            config_parser=config
         )
 
-        check_messages = ConfigurationManager.check_basic_configuration(config)
+        check_messages = ConfigurationManager.check_basic_configuration(secconfig)
         if len(check_messages) &gt; 0:
             print(
                 f&#34;&#34;&#34;There are problems with your configuration.
                     Please fix the following issues in {file_path}: {check_messages}&#34;&#34;&#34;)
             raise ValueError(f&#39;Problems with configuration in {file_path}: {check_messages}&#39;)
 
-        check_rapid_messages = ConfigurationManager.check_rapid_configuration(config)
+        check_rapid_messages = ConfigurationManager.check_rapid_configuration(secconfig)
         if len(check_rapid_messages) &gt; 0:
             print(f&#39;rapid configuration is invalid in {file_path}: {check_rapid_messages}&#39;)
             print(&#39;rapid configuration will be ignored.&#39;)
 
             LOGGER.warning(&#39;rapid configuration is invalid in %s: %s&#39;,
                            file_path, str(check_rapid_messages))
-            config.rapid_api_key = None
-            config.rapid_api_plan = None
-        return config
+            secconfig.rapid_api_key = None
+            secconfig.rapid_api_plan = None
+        return secconfig
 
     @staticmethod
     def _is_valid_email(email):
         pattern = r&#39;^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$&#39;
         return bool(re.match(pattern, email))
+
+    @staticmethod
+    def _validate_post_update_hook(function_name: Optional[str]) -&gt; List[str]:
+        if function_name is None:
+            return []
+
+        import importlib # pylint: disable=C0415
+        import inspect # pylint: disable=C0415
+
+        messages: List[str] = []
+        module_str = &#34;&#34;
+        function_str = &#34;&#34;
+        try:
+            module_str, function_str = function_name.rsplit(&#39;.&#39;, 1)
+            module = importlib.import_module(module_str)
+            my_function = getattr(module, function_str)
+            signature = inspect.signature(my_function)
+            params = list(signature.parameters.values())
+
+            if len(params) != 1:
+                messages.append(f&#34;Exactly one parameter is expected for {function_name}&#34;)
+
+            if not ((params[0].annotation == inspect._empty) | # pylint: disable=W0212
+                    (params[0].annotation == Configuration)):
+                messages.append(f&#34;Parameter of function has wrong type {params[0].annotation}. &#34;
+                                &#34;It should be secfsdstools.a_config.configmodel.Configuration&#34;)
+
+        except ModuleNotFoundError:
+            messages.append(f&#34;Module {module_str} not found&#34;)
+        except AttributeError:
+            messages.append(f&#34;Function {function_str} not found in module {module_str}&#34;)
+
+        if len(messages) &gt; 0:
+            messages = [&#34;Definition of PostUpdateHook function has problems: &#34;] + messages
+
+        return messages
+
+    @staticmethod
+    def _validate_post_update_processes(function_name: Optional[str]) -&gt; List[str]:
+        if function_name is None:
+            return []
+
+        import importlib # pylint: disable=C0415
+        import inspect # pylint: disable=C0415
+        from secfsdstools.c_automation.task_framework import AbstractProcess # pylint: disable=C0415
+
+        messages: List[str] = []
+        module_str = &#34;&#34;
+        function_str = &#34;&#34;
+        try:
+            module_str, function_str = function_name.rsplit(&#39;.&#39;, 1)
+            module = importlib.import_module(module_str)
+            my_function = getattr(module, function_str)
+            signature = inspect.signature(my_function)
+            params = list(signature.parameters.values())
+
+            if len(params) != 1:
+                messages.append(f&#34;Expecting exactly one parameter is expected for {function_name}&#34;)
+
+            if not ((params[0].annotation == inspect._empty) | # pylint: disable=W0212
+                    (params[0].annotation == Configuration)):
+                messages.append(f&#34;Parameter of function has wrong type {params[0].annotation}. &#34;
+                                &#34;It should be secfsdstools.a_config.configmodel.Configuration&#34;)
+
+            if not ((signature.return_annotation == inspect._empty) | # pylint: disable=W0212
+                    (signature.return_annotation == List[AbstractProcess])):
+                messages.append(
+                    f&#34;Return type of function has wrong type {signature.return_annotation}. &#34;
+                    &#34;It should be List[secfsdstools.c_automation.task_framework.AbstractProcess]&#34;)
+
+        except ModuleNotFoundError:
+            messages.append(f&#34;Module {module_str} not found&#34;)
+        except AttributeError:
+            messages.append(f&#34;Function {function_str} not found in module {module_str}&#34;)
+
+        if len(messages) &gt; 0:
+            messages = [&#34;Definition of PostUpdateProcesses function has problems: &#34;] + messages
+
+        return messages
 
     @staticmethod
     def check_basic_configuration(config: Configuration) -&gt; List[str]:
@@ -540,6 +715,11 @@ If the file does not exist, it will create one in the current directory</p></div
         if not ConfigurationManager._is_valid_email(config.user_agent_email):
             messages.append(
                 f&#39;The defined UserAgentEmail is not a valid format: {config.user_agent_email}&#39;)
+
+        messages.extend(ConfigurationManager._validate_post_update_hook(config.post_update_hook))
+
+        messages.extend(
+            ConfigurationManager._validate_post_update_processes(config.post_update_processes))
 
         return messages
 
@@ -600,9 +780,14 @@ If the file does not exist, it will create one in the current directory</p></div
                              &#39;ParquetDirectory&#39;: configuration.parquet_dir,
                              &#39;UserAgentEmail&#39;: configuration.user_agent_email,
                              &#39;AutoUpdate&#39;: configuration.auto_update,
-                             &#39;KeepZipFiles&#39;: configuration.keep_zip_files}
+                             &#39;KeepZipFiles&#39;: configuration.keep_zip_files,
+                             &#39;NoParallelProcessing&#39;: configuration.no_parallel_processing}
+
+
+
         with open(file_path, &#39;w&#39;, encoding=&#34;utf8&#34;) as configfile:
-            config.write(configfile)</code></pre>
+            config.write(configfile)
+            configfile.write(DEFAULT_COMMENTED_LINES)</code></pre>
 </details>
 <h3>Class variables</h3>
 <dl>
@@ -663,6 +848,11 @@ def check_basic_configuration(config: Configuration) -&gt; List[str]:
     if not ConfigurationManager._is_valid_email(config.user_agent_email):
         messages.append(
             f&#39;The defined UserAgentEmail is not a valid format: {config.user_agent_email}&#39;)
+
+    messages.extend(ConfigurationManager._validate_post_update_hook(config.post_update_hook))
+
+    messages.extend(
+        ConfigurationManager._validate_post_update_processes(config.post_update_processes))
 
     return messages</code></pre>
 </details>
@@ -775,37 +965,37 @@ def read_config_file() -&gt; Configuration:
 
     env_config_file = os.getenv(SECFSDSTOOLS_ENV_VAR_NAME)
     if env_config_file:
-        LOGGER.info(&#39;read configuration from %s&#39;, env_config_file)
+        LOGGER.info(&#39;Config file set by environment variable %s to %s&#39;,
+                    SECFSDSTOOLS_ENV_VAR_NAME, env_config_file)
         if not os.path.isfile(env_config_file):
             LOGGER.error(&#39;environment variable %s was set.&#39;, SECFSDSTOOLS_ENV_VAR_NAME)
-            LOGGER.error(&#39;But config file is not present, creating it ...&#39;)
+            LOGGER.error(&#39;But configuration file is not present, creating it ...&#39;)
             conf_dir, _ = os.path.split(env_config_file)
             os.makedirs(conf_dir, exist_ok=True)
             ConfigurationManager._write_configuration(env_config_file, DEFAULT_CONFIGURATION)
-            LOGGER.error(&#39;config file created at %s.&#39;, env_config_file)
+            LOGGER.error(&#39;configuration file created at %s.&#39;, env_config_file)
             LOGGER.error(&#39;please check the content ant then restart&#39;)
             return ConfigurationManager._handle_first_start(env_config_file,
                                                             DEFAULT_CONFIGURATION)
 
-        return ConfigurationManager._read_configuration_and_check_for_udpates(env_config_file)
+        return ConfigurationManager._read_configuration(env_config_file)
 
     current_cfg_file_path = os.path.join(os.getcwd(), DEFAULT_CONFIG_FILE)
     if os.path.isfile(current_cfg_file_path):
-        LOGGER.info(&#39;found config file at %s&#39;, current_cfg_file_path)
-        return ConfigurationManager._read_configuration_and_check_for_udpates(
-            current_cfg_file_path)
+        LOGGER.info(&#39;found configuration file at %s&#39;, current_cfg_file_path)
+        return ConfigurationManager._read_configuration(current_cfg_file_path)
 
         # check if file exists at home directory
     home_cfg_file_path = os.path.join(os.path.expanduser(&#39;~&#39;), DEFAULT_CONFIG_FILE)
     if not os.path.isfile(home_cfg_file_path):
-        LOGGER.error(&#39;No config file found at home directory %s.&#39;, home_cfg_file_path)
+        LOGGER.error(&#39;No configuration file found at home directory %s.&#39;, home_cfg_file_path)
         ConfigurationManager._write_configuration(home_cfg_file_path, DEFAULT_CONFIGURATION)
         LOGGER.error(&#39;Config file created at %s. Please check the content and then rerun.&#39;,
                      home_cfg_file_path)
         return ConfigurationManager._handle_first_start(home_cfg_file_path,
                                                         DEFAULT_CONFIGURATION)
 
-    return ConfigurationManager._read_configuration_and_check_for_udpates(home_cfg_file_path)</code></pre>
+    return ConfigurationManager._read_configuration(home_cfg_file_path)</code></pre>
 </details>
 </dd>
 </dl>

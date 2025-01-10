@@ -20,7 +20,9 @@ The main features include:
 [07_01_BS_standardizer.ipynb](notebooks/07_01_BS_standardizer.ipynb), 
 [07_01_BS_standardizer.ipynb](notebooks/07_01_BS_standardizer.ipynb), and
 [07_03_CF_standardizer.ipynb](notebooks/07_03_CF_standardizer.ipynb))
-
+- automate processing and standardizing by configuring customized process steps that are executed whenever a new 
+  data file is detected on sec.gov (see [08_00_automation_basics.ipynb](notebooks/08_00_automation_basics.ipynb))
+ 
 # Principles
 
 The goal is to be able to do bulk processing of the data without the need to do countless API calls to sec.gov. Therefore, the quarterly zip files are downloaded and indexed using a SQLite database table.
@@ -798,6 +800,14 @@ implementations (module `secfsdstools.e_presenter.presenting`):
     ````
   ![NetCashOperating Compare](https://github.com/HansjoergW/sec-fincancial-statement-data-set/raw/main/docs/images/netcashoperating_compare.png)
 
+
+## Automate processing
+The framework provides two hook methods, that are called whenever the default update process is being executed.
+This way, you can implement additional processing steps that are executed, after a new data file from the sec.gov was 
+downloaded, transformed to parquet, and index.
+
+Have a look at [08_00_automation_basics](notebooks/08_00_automation_basics.ipynb)
+
 # Links 
 * [For a detail description of the content and the structure of the dataset](https://www.sec.gov/files/aqfs.pdf)
 * [Release Notes](https://hansjoergw.github.io/sec-fincancial-statement-data-set/releasenotes/)
@@ -816,5 +826,6 @@ implementations (module `secfsdstools.e_presenter.presenting`):
 * [standardize the balance sheets and make them comparable](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/07_01_BS_standardizer.ipynb)
 * [standardize the income statements and make them comparable](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/07_02_IS_standardizer.ipynb)
 * [standardize the cash flow statements and make them comparable](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/07_03_CF_standardizer.ipynb)
+* [automate additional processing steps that are executed after new data is discovered](notebooks/08_00_automation_basics.ipynb)
 * [Trouble hssting and known issues](KNOWN_ISSUES.md)
 * [Changelog](CHANGELOG.md)

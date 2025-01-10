@@ -72,10 +72,8 @@ todos:
 
 - remark notebook bulkloading -> directly in the update process (ok)
 
-- readme -> add automation info
+- readme -> add automation info (ok)
   -> how to easily enable "default extended processing"
-
-- executed only on archived datasets
 
 ----------
 

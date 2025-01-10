@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.10.0" />
-<title>secfsdstools.c_download.secdownloading API documentation</title>
+<title>secfsdstools.c_download.secdownloading_process API documentation</title>
 <meta name="description" content="Downloading zip files of the financial statement data sets from the sec." />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
@@ -19,7 +19,7 @@
 <main>
 <article id="content">
 <header>
-<h1 class="title">Module <code>secfsdstools.c_download.secdownloading</code></h1>
+<h1 class="title">Module <code>secfsdstools.c_download.secdownloading_process</code></h1>
 </header>
 <section id="section-intro">
 <p>Downloading zip files of the financial statement data sets from the sec.</p>
@@ -36,12 +36,12 @@ import re
 from typing import List, Tuple
 
 from secfsdstools.a_utils.downloadutils import UrlDownloader
-from secfsdstools.c_download.basedownloading import BaseDownloader
+from secfsdstools.c_download.basedownloading_process import BaseDownloadingProcess
 
 LOGGER = logging.getLogger(__name__)
 
 
-class SecZipDownloader(BaseDownloader):
+class SecDownloadingProcess(BaseDownloadingProcess):
     &#34;&#34;&#34;
         Downloading the quarterly zip files of the financial statement data sets
     &#34;&#34;&#34;
@@ -52,16 +52,21 @@ class SecZipDownloader(BaseDownloader):
     table_re = re.compile(&#39;&lt;TABLE.*?&gt;.*&lt;/TABLE&gt;&#39;, re.IGNORECASE + re.MULTILINE + re.DOTALL)
     href_re = re.compile(&#34;href=\&#34;.*?\&#34;&#34;, re.IGNORECASE + re.MULTILINE + re.DOTALL)
 
-    def __init__(self, zip_dir: str, parquet_root_dir: str,
-                 urldownloader: UrlDownloader, execute_serial: bool = False):
-        super().__init__(zip_dir=zip_dir, urldownloader=urldownloader,
-                         parquet_dir_typed=os.path.join(parquet_root_dir, &#39;quarter&#39;),
-                         execute_serial=execute_serial)
+    def __init__(self,
+                 zip_dir: str,
+                 parquet_root_dir: str,
+                 urldownloader: UrlDownloader,
+                 execute_serial: bool = False):
+        super().__init__(zip_dir=zip_dir,
+                         urldownloader=urldownloader,
+                         parquet_dir=os.path.join(parquet_root_dir, &#39;quarter&#39;),
+                         execute_serial=execute_serial
+                         )
 
     def _get_available_zips(self) -&gt; List[Tuple[str, str]]:
 
         # reading data from the archived page - until 2024q3.zip
-        LOGGER.info(&#34;reading table in archive: %s&#34;, self.FIN_STAT_DATASET_ARCHIVE_URL )
+        LOGGER.info(&#34;reading table in archive: %s&#34;, self.FIN_STAT_DATASET_ARCHIVE_URL)
         archive_content = self.urldownloader.get_url_content(self.FIN_STAT_DATASET_ARCHIVE_URL)
         archive_tables = self.table_re.findall(archive_content.text)
 
@@ -75,7 +80,7 @@ class SecZipDownloader(BaseDownloader):
             archive_hrefs = [f&#39;https://www.sec.gov{href[6:-1]}&#39; for href in archive_hrefs]
 
         # reading data from the main url - starting with 2024q4.zip
-        LOGGER.info(&#34;reading table in main page: %s&#34;, self.FIN_STAT_DATASET_URL )
+        LOGGER.info(&#34;reading table in main page: %s&#34;, self.FIN_STAT_DATASET_URL)
         main_content = self.urldownloader.get_url_content(self.FIN_STAT_DATASET_URL)
         main_tables = self.table_re.findall(main_content.text)
 
@@ -115,17 +120,29 @@ class SecZipDownloader(BaseDownloader):
 <section>
 <h2 class="section-title" id="header-classes">Classes</h2>
 <dl>
-<dt id="secfsdstools.c_download.secdownloading.SecZipDownloader"><code class="flex name class">
-<span>class <span class="ident">SecZipDownloader</span></span>
+<dt id="secfsdstools.c_download.secdownloading_process.SecDownloadingProcess"><code class="flex name class">
+<span>class <span class="ident">SecDownloadingProcess</span></span>
 <span>(</span><span>zip_dir: str, parquet_root_dir: str, urldownloader: <a title="secfsdstools.a_utils.downloadutils.UrlDownloader" href="../a_utils/downloadutils.html#secfsdstools.a_utils.downloadutils.UrlDownloader">UrlDownloader</a>, execute_serial: bool = False)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Downloading the quarterly zip files of the financial statement data sets</p></div>
+<div class="desc"><p>Downloading the quarterly zip files of the financial statement data sets</p>
+<p>Constructor.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>zip_dir</code></strong></dt>
+<dd>target folder to store downloaded files to.</dd>
+<dt><strong><code>parquet_dir</code></strong></dt>
+<dd>directory where the transformed content of zip files are</dd>
+<dt><strong><code>urldownloader</code></strong></dt>
+<dd>UrlDownloader instance</dd>
+<dt><strong><code>execute_serial</code></strong></dt>
+<dd>whether to execute it in parallel or serial</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class SecZipDownloader(BaseDownloader):
+<pre><code class="python">class SecDownloadingProcess(BaseDownloadingProcess):
     &#34;&#34;&#34;
         Downloading the quarterly zip files of the financial statement data sets
     &#34;&#34;&#34;
@@ -136,16 +153,21 @@ class SecZipDownloader(BaseDownloader):
     table_re = re.compile(&#39;&lt;TABLE.*?&gt;.*&lt;/TABLE&gt;&#39;, re.IGNORECASE + re.MULTILINE + re.DOTALL)
     href_re = re.compile(&#34;href=\&#34;.*?\&#34;&#34;, re.IGNORECASE + re.MULTILINE + re.DOTALL)
 
-    def __init__(self, zip_dir: str, parquet_root_dir: str,
-                 urldownloader: UrlDownloader, execute_serial: bool = False):
-        super().__init__(zip_dir=zip_dir, urldownloader=urldownloader,
-                         parquet_dir_typed=os.path.join(parquet_root_dir, &#39;quarter&#39;),
-                         execute_serial=execute_serial)
+    def __init__(self,
+                 zip_dir: str,
+                 parquet_root_dir: str,
+                 urldownloader: UrlDownloader,
+                 execute_serial: bool = False):
+        super().__init__(zip_dir=zip_dir,
+                         urldownloader=urldownloader,
+                         parquet_dir=os.path.join(parquet_root_dir, &#39;quarter&#39;),
+                         execute_serial=execute_serial
+                         )
 
     def _get_available_zips(self) -&gt; List[Tuple[str, str]]:
 
         # reading data from the archived page - until 2024q3.zip
-        LOGGER.info(&#34;reading table in archive: %s&#34;, self.FIN_STAT_DATASET_ARCHIVE_URL )
+        LOGGER.info(&#34;reading table in archive: %s&#34;, self.FIN_STAT_DATASET_ARCHIVE_URL)
         archive_content = self.urldownloader.get_url_content(self.FIN_STAT_DATASET_ARCHIVE_URL)
         archive_tables = self.table_re.findall(archive_content.text)
 
@@ -159,7 +181,7 @@ class SecZipDownloader(BaseDownloader):
             archive_hrefs = [f&#39;https://www.sec.gov{href[6:-1]}&#39; for href in archive_hrefs]
 
         # reading data from the main url - starting with 2024q4.zip
-        LOGGER.info(&#34;reading table in main page: %s&#34;, self.FIN_STAT_DATASET_URL )
+        LOGGER.info(&#34;reading table in main page: %s&#34;, self.FIN_STAT_DATASET_URL)
         main_content = self.urldownloader.get_url_content(self.FIN_STAT_DATASET_URL)
         main_tables = self.table_re.findall(main_content.text)
 
@@ -191,33 +213,41 @@ class SecZipDownloader(BaseDownloader):
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li><a title="secfsdstools.c_download.basedownloading.BaseDownloader" href="basedownloading.html#secfsdstools.c_download.basedownloading.BaseDownloader">BaseDownloader</a></li>
+<li><a title="secfsdstools.c_download.basedownloading_process.BaseDownloadingProcess" href="basedownloading_process.html#secfsdstools.c_download.basedownloading_process.BaseDownloadingProcess">BaseDownloadingProcess</a></li>
+<li><a title="secfsdstools.c_automation.task_framework.AbstractThreadProcess" href="../c_automation/task_framework.html#secfsdstools.c_automation.task_framework.AbstractThreadProcess">AbstractThreadProcess</a></li>
+<li><a title="secfsdstools.c_automation.task_framework.AbstractProcess" href="../c_automation/task_framework.html#secfsdstools.c_automation.task_framework.AbstractProcess">AbstractProcess</a></li>
 <li>abc.ABC</li>
 </ul>
 <h3>Class variables</h3>
 <dl>
-<dt id="secfsdstools.c_download.secdownloading.SecZipDownloader.FIN_STAT_DATASET_ARCHIVE_URL"><code class="name">var <span class="ident">FIN_STAT_DATASET_ARCHIVE_URL</span></code></dt>
+<dt id="secfsdstools.c_download.secdownloading_process.SecDownloadingProcess.FIN_STAT_DATASET_ARCHIVE_URL"><code class="name">var <span class="ident">FIN_STAT_DATASET_ARCHIVE_URL</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="secfsdstools.c_download.secdownloading.SecZipDownloader.FIN_STAT_DATASET_URL"><code class="name">var <span class="ident">FIN_STAT_DATASET_URL</span></code></dt>
+<dt id="secfsdstools.c_download.secdownloading_process.SecDownloadingProcess.FIN_STAT_DATASET_URL"><code class="name">var <span class="ident">FIN_STAT_DATASET_URL</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="secfsdstools.c_download.secdownloading.SecZipDownloader.href_re"><code class="name">var <span class="ident">href_re</span></code></dt>
+<dt id="secfsdstools.c_download.secdownloading_process.SecDownloadingProcess.href_re"><code class="name">var <span class="ident">href_re</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="secfsdstools.c_download.secdownloading.SecZipDownloader.table_re"><code class="name">var <span class="ident">table_re</span></code></dt>
+<dt id="secfsdstools.c_download.secdownloading_process.SecDownloadingProcess.table_re"><code class="name">var <span class="ident">table_re</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
 </dl>
 <h3>Inherited members</h3>
 <ul class="hlist">
-<li><code><b><a title="secfsdstools.c_download.basedownloading.BaseDownloader" href="basedownloading.html#secfsdstools.c_download.basedownloading.BaseDownloader">BaseDownloader</a></b></code>:
+<li><code><b><a title="secfsdstools.c_download.basedownloading_process.BaseDownloadingProcess" href="basedownloading_process.html#secfsdstools.c_download.basedownloading_process.BaseDownloadingProcess">BaseDownloadingProcess</a></b></code>:
 <ul class="hlist">
-<li><code><a title="secfsdstools.c_download.basedownloading.BaseDownloader.download" href="basedownloading.html#secfsdstools.c_download.basedownloading.BaseDownloader.download">download</a></code></li>
+<li><code><a title="secfsdstools.c_download.basedownloading_process.BaseDownloadingProcess.calculate_tasks" href="basedownloading_process.html#secfsdstools.c_download.basedownloading_process.BaseDownloadingProcess.calculate_tasks">calculate_tasks</a></code></li>
+<li><code><a title="secfsdstools.c_download.basedownloading_process.BaseDownloadingProcess.do_execution" href="../c_automation/task_framework.html#secfsdstools.c_automation.task_framework.AbstractThreadProcess.do_execution">do_execution</a></code></li>
+<li><code><a title="secfsdstools.c_download.basedownloading_process.BaseDownloadingProcess.get_headers" href="basedownloading_process.html#secfsdstools.c_download.basedownloading_process.BaseDownloadingProcess.get_headers">get_headers</a></code></li>
+<li><code><a title="secfsdstools.c_download.basedownloading_process.BaseDownloadingProcess.post_process" href="../c_automation/task_framework.html#secfsdstools.c_automation.task_framework.AbstractProcess.post_process">post_process</a></code></li>
+<li><code><a title="secfsdstools.c_download.basedownloading_process.BaseDownloadingProcess.pre_process" href="../c_automation/task_framework.html#secfsdstools.c_automation.task_framework.AbstractProcess.pre_process">pre_process</a></code></li>
+<li><code><a title="secfsdstools.c_download.basedownloading_process.BaseDownloadingProcess.process" href="../c_automation/task_framework.html#secfsdstools.c_automation.task_framework.AbstractProcess.process">process</a></code></li>
+<li><code><a title="secfsdstools.c_download.basedownloading_process.BaseDownloadingProcess.process_task" href="../c_automation/task_framework.html#secfsdstools.c_automation.task_framework.AbstractProcess.process_task">process_task</a></code></li>
 </ul>
 </li>
 </ul>
@@ -239,12 +269,12 @@ class SecZipDownloader(BaseDownloader):
 <li><h3><a href="#header-classes">Classes</a></h3>
 <ul>
 <li>
-<h4><code><a title="secfsdstools.c_download.secdownloading.SecZipDownloader" href="#secfsdstools.c_download.secdownloading.SecZipDownloader">SecZipDownloader</a></code></h4>
+<h4><code><a title="secfsdstools.c_download.secdownloading_process.SecDownloadingProcess" href="#secfsdstools.c_download.secdownloading_process.SecDownloadingProcess">SecDownloadingProcess</a></code></h4>
 <ul class="">
-<li><code><a title="secfsdstools.c_download.secdownloading.SecZipDownloader.FIN_STAT_DATASET_ARCHIVE_URL" href="#secfsdstools.c_download.secdownloading.SecZipDownloader.FIN_STAT_DATASET_ARCHIVE_URL">FIN_STAT_DATASET_ARCHIVE_URL</a></code></li>
-<li><code><a title="secfsdstools.c_download.secdownloading.SecZipDownloader.FIN_STAT_DATASET_URL" href="#secfsdstools.c_download.secdownloading.SecZipDownloader.FIN_STAT_DATASET_URL">FIN_STAT_DATASET_URL</a></code></li>
-<li><code><a title="secfsdstools.c_download.secdownloading.SecZipDownloader.href_re" href="#secfsdstools.c_download.secdownloading.SecZipDownloader.href_re">href_re</a></code></li>
-<li><code><a title="secfsdstools.c_download.secdownloading.SecZipDownloader.table_re" href="#secfsdstools.c_download.secdownloading.SecZipDownloader.table_re">table_re</a></code></li>
+<li><code><a title="secfsdstools.c_download.secdownloading_process.SecDownloadingProcess.FIN_STAT_DATASET_ARCHIVE_URL" href="#secfsdstools.c_download.secdownloading_process.SecDownloadingProcess.FIN_STAT_DATASET_ARCHIVE_URL">FIN_STAT_DATASET_ARCHIVE_URL</a></code></li>
+<li><code><a title="secfsdstools.c_download.secdownloading_process.SecDownloadingProcess.FIN_STAT_DATASET_URL" href="#secfsdstools.c_download.secdownloading_process.SecDownloadingProcess.FIN_STAT_DATASET_URL">FIN_STAT_DATASET_URL</a></code></li>
+<li><code><a title="secfsdstools.c_download.secdownloading_process.SecDownloadingProcess.href_re" href="#secfsdstools.c_download.secdownloading_process.SecDownloadingProcess.href_re">href_re</a></code></li>
+<li><code><a title="secfsdstools.c_download.secdownloading_process.SecDownloadingProcess.table_re" href="#secfsdstools.c_download.secdownloading_process.SecDownloadingProcess.table_re">table_re</a></code></li>
 </ul>
 </li>
 </ul>

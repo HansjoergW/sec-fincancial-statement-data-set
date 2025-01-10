@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.10.0" />
-<title>secfsdstools.d_container.filter API documentation</title>
-<meta name="description" content="Base class for Filter implementations." />
+<title>secfsdstools.c_automation.automation_utils API documentation</title>
+<meta name="description" content="Util function that are mainly used in the context of automation." />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
 <link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
@@ -19,139 +19,155 @@
 <main>
 <article id="content">
 <header>
-<h1 class="title">Module <code>secfsdstools.d_container.filter</code></h1>
+<h1 class="title">Module <code>secfsdstools.c_automation.automation_utils</code></h1>
 </header>
 <section id="section-intro">
-<p>Base class for Filter implementations.</p>
+<p>Util function that are mainly used in the context of automation.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">&#34;&#34;&#34;
-Base class for Filter implementations.
+Util function that are mainly used in the context of automation.
 &#34;&#34;&#34;
-from abc import abstractmethod
+import os
+import shutil
+from pathlib import Path
+from typing import Optional, List
 
-from typing import TypeVar, Generic
-
-T = TypeVar(&#39;T&#39;)
+from secfsdstools.a_utils.fileutils import get_directories_in_directory
 
 
-class FilterBase(Generic[T]):
+def delete_temp_folders(root_path: Path, temp_prefix: str = &#34;tmp&#34;):
     &#34;&#34;&#34;
-    Basic pathfilter definition.
+    Remove any existing folders starting with the tmp_prefix in the root_path
+     (these are generally folders containing data of tasks that failed)).
+
     &#34;&#34;&#34;
+    dirs_in_filter_dir = get_directories_in_directory(str(root_path))
 
-    @abstractmethod
-    def filter(self, databag: T) -&gt; T:
-        &#34;&#34;&#34;
-        implements a simple pathfilter on the RawDataBag and produces a new databag
-        Args:
-            databag (T): the bag to apply the pathfilter to
+    tmp_dirs = [d for d in dirs_in_filter_dir if d.startswith(temp_prefix)]
 
-        Returns:
-            T: the new  bag with the filtered content
+    for tmp_dir in tmp_dirs:
+        file_path = root_path / tmp_dir
+        shutil.rmtree(file_path, ignore_errors=True)
 
-        &#34;&#34;&#34;</code></pre>
-</details>
-</section>
-<section>
-</section>
-<section>
-</section>
-<section>
-</section>
-<section>
-<h2 class="section-title" id="header-classes">Classes</h2>
-<dl>
-<dt id="secfsdstools.d_container.filter.FilterBase"><code class="flex name class">
-<span>class <span class="ident">FilterBase</span></span>
-<span>(</span><span>*args, **kwds)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Basic pathfilter definition.</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">class FilterBase(Generic[T]):
+
+def get_latest_mtime(root_path: Path, skip: Optional[List[str]] = None) -&gt; float:
     &#34;&#34;&#34;
-    Basic pathfilter definition.
-    &#34;&#34;&#34;
-
-    @abstractmethod
-    def filter(self, databag: T) -&gt; T:
-        &#34;&#34;&#34;
-        implements a simple pathfilter on the RawDataBag and produces a new databag
-        Args:
-            databag (T): the bag to apply the pathfilter to
-
-        Returns:
-            T: the new  bag with the filtered content
-
-        &#34;&#34;&#34;</code></pre>
-</details>
-<h3>Ancestors</h3>
-<ul class="hlist">
-<li>typing.Generic</li>
-</ul>
-<h3>Subclasses</h3>
-<ul class="hlist">
-<li><a title="secfsdstools.e_filter.joinedfiltering.AdshJoinedFilter" href="../e_filter/joinedfiltering.html#secfsdstools.e_filter.joinedfiltering.AdshJoinedFilter">AdshJoinedFilter</a></li>
-<li><a title="secfsdstools.e_filter.joinedfiltering.MainCoregJoinedFilter" href="../e_filter/joinedfiltering.html#secfsdstools.e_filter.joinedfiltering.MainCoregJoinedFilter">MainCoregJoinedFilter</a></li>
-<li><a title="secfsdstools.e_filter.joinedfiltering.OfficialTagsOnlyJoinedFilter" href="../e_filter/joinedfiltering.html#secfsdstools.e_filter.joinedfiltering.OfficialTagsOnlyJoinedFilter">OfficialTagsOnlyJoinedFilter</a></li>
-<li><a title="secfsdstools.e_filter.joinedfiltering.ReportPeriodAndPreviousPeriodJoinedFilter" href="../e_filter/joinedfiltering.html#secfsdstools.e_filter.joinedfiltering.ReportPeriodAndPreviousPeriodJoinedFilter">ReportPeriodAndPreviousPeriodJoinedFilter</a></li>
-<li><a title="secfsdstools.e_filter.joinedfiltering.ReportPeriodJoinedFilter" href="../e_filter/joinedfiltering.html#secfsdstools.e_filter.joinedfiltering.ReportPeriodJoinedFilter">ReportPeriodJoinedFilter</a></li>
-<li><a title="secfsdstools.e_filter.joinedfiltering.StmtJoinedFilter" href="../e_filter/joinedfiltering.html#secfsdstools.e_filter.joinedfiltering.StmtJoinedFilter">StmtJoinedFilter</a></li>
-<li><a title="secfsdstools.e_filter.joinedfiltering.TagJoinedFilter" href="../e_filter/joinedfiltering.html#secfsdstools.e_filter.joinedfiltering.TagJoinedFilter">TagJoinedFilter</a></li>
-<li><a title="secfsdstools.e_filter.joinedfiltering.USDOnlyJoinedFilter" href="../e_filter/joinedfiltering.html#secfsdstools.e_filter.joinedfiltering.USDOnlyJoinedFilter">USDOnlyJoinedFilter</a></li>
-<li><a title="secfsdstools.e_filter.rawfiltering.AdshRawFilter" href="../e_filter/rawfiltering.html#secfsdstools.e_filter.rawfiltering.AdshRawFilter">AdshRawFilter</a></li>
-<li><a title="secfsdstools.e_filter.rawfiltering.MainCoregRawFilter" href="../e_filter/rawfiltering.html#secfsdstools.e_filter.rawfiltering.MainCoregRawFilter">MainCoregRawFilter</a></li>
-<li><a title="secfsdstools.e_filter.rawfiltering.OfficialTagsOnlyRawFilter" href="../e_filter/rawfiltering.html#secfsdstools.e_filter.rawfiltering.OfficialTagsOnlyRawFilter">OfficialTagsOnlyRawFilter</a></li>
-<li><a title="secfsdstools.e_filter.rawfiltering.ReportPeriodAndPreviousPeriodRawFilter" href="../e_filter/rawfiltering.html#secfsdstools.e_filter.rawfiltering.ReportPeriodAndPreviousPeriodRawFilter">ReportPeriodAndPreviousPeriodRawFilter</a></li>
-<li><a title="secfsdstools.e_filter.rawfiltering.ReportPeriodRawFilter" href="../e_filter/rawfiltering.html#secfsdstools.e_filter.rawfiltering.ReportPeriodRawFilter">ReportPeriodRawFilter</a></li>
-<li><a title="secfsdstools.e_filter.rawfiltering.StmtRawFilter" href="../e_filter/rawfiltering.html#secfsdstools.e_filter.rawfiltering.StmtRawFilter">StmtRawFilter</a></li>
-<li><a title="secfsdstools.e_filter.rawfiltering.TagRawFilter" href="../e_filter/rawfiltering.html#secfsdstools.e_filter.rawfiltering.TagRawFilter">TagRawFilter</a></li>
-<li><a title="secfsdstools.e_filter.rawfiltering.USDOnlyRawFilter" href="../e_filter/rawfiltering.html#secfsdstools.e_filter.rawfiltering.USDOnlyRawFilter">USDOnlyRawFilter</a></li>
-</ul>
-<h3>Methods</h3>
-<dl>
-<dt id="secfsdstools.d_container.filter.FilterBase.filter"><code class="name flex">
-<span>def <span class="ident">filter</span></span>(<span>self, databag: ~T) ‑> ~T</span>
-</code></dt>
-<dd>
-<div class="desc"><p>implements a simple pathfilter on the RawDataBag and produces a new databag</p>
-<h2 id="args">Args</h2>
-<dl>
-<dt><strong><code>databag</code></strong> :&ensp;<code>T</code></dt>
-<dd>the bag to apply the pathfilter to</dd>
-</dl>
-<h2 id="returns">Returns</h2>
-<dl>
-<dt><code>T</code></dt>
-<dd>the new
-bag with the filtered content</dd>
-</dl></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">@abstractmethod
-def filter(self, databag: T) -&gt; T:
-    &#34;&#34;&#34;
-    implements a simple pathfilter on the RawDataBag and produces a new databag
+    Find the latest timestamp at which an element in the folder structure was changed
     Args:
-        databag (T): the bag to apply the pathfilter to
+        root_path: root folder
 
     Returns:
-        T: the new  bag with the filtered content
+        the latest timestamp of a folder or file within the &#34;folder&#34; as float value.
 
-    &#34;&#34;&#34;</code></pre>
+    &#34;&#34;&#34;
+    if skip is None:
+        skip = []
+
+    latest_mtime = 0
+
+    for dirpath, dirnames, filenames in os.walk(root_path):
+        # Check the modification timestamp of files
+        filenames = list(set(filenames) - set(skip))
+        for filename in filenames:
+            file_path = Path(dirpath) / filename
+            mtime = file_path.stat().st_mtime  # modification timestamp of the file
+            latest_mtime = max(latest_mtime, mtime)
+
+        # Check the modification timestamp of subfolders
+        for dirname in dirnames:
+            dir_path = Path(dirpath) / dirname
+            mtime = dir_path.stat().st_mtime  # modification timestamp of the folder
+            latest_mtime = max(latest_mtime, mtime)
+
+    return latest_mtime</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-functions">Functions</h2>
+<dl>
+<dt id="secfsdstools.c_automation.automation_utils.delete_temp_folders"><code class="name flex">
+<span>def <span class="ident">delete_temp_folders</span></span>(<span>root_path: pathlib.Path, temp_prefix: str = 'tmp')</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Remove any existing folders starting with the tmp_prefix in the root_path
+(these are generally folders containing data of tasks that failed)).</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def delete_temp_folders(root_path: Path, temp_prefix: str = &#34;tmp&#34;):
+    &#34;&#34;&#34;
+    Remove any existing folders starting with the tmp_prefix in the root_path
+     (these are generally folders containing data of tasks that failed)).
+
+    &#34;&#34;&#34;
+    dirs_in_filter_dir = get_directories_in_directory(str(root_path))
+
+    tmp_dirs = [d for d in dirs_in_filter_dir if d.startswith(temp_prefix)]
+
+    for tmp_dir in tmp_dirs:
+        file_path = root_path / tmp_dir
+        shutil.rmtree(file_path, ignore_errors=True)</code></pre>
+</details>
+</dd>
+<dt id="secfsdstools.c_automation.automation_utils.get_latest_mtime"><code class="name flex">
+<span>def <span class="ident">get_latest_mtime</span></span>(<span>root_path: pathlib.Path, skip: Optional[List[str]] = None) ‑> float</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Find the latest timestamp at which an element in the folder structure was changed</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>root_path</code></strong></dt>
+<dd>root folder</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<p>the latest timestamp of a folder or file within the "folder" as float value.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_latest_mtime(root_path: Path, skip: Optional[List[str]] = None) -&gt; float:
+    &#34;&#34;&#34;
+    Find the latest timestamp at which an element in the folder structure was changed
+    Args:
+        root_path: root folder
+
+    Returns:
+        the latest timestamp of a folder or file within the &#34;folder&#34; as float value.
+
+    &#34;&#34;&#34;
+    if skip is None:
+        skip = []
+
+    latest_mtime = 0
+
+    for dirpath, dirnames, filenames in os.walk(root_path):
+        # Check the modification timestamp of files
+        filenames = list(set(filenames) - set(skip))
+        for filename in filenames:
+            file_path = Path(dirpath) / filename
+            mtime = file_path.stat().st_mtime  # modification timestamp of the file
+            latest_mtime = max(latest_mtime, mtime)
+
+        # Check the modification timestamp of subfolders
+        for dirname in dirnames:
+            dir_path = Path(dirpath) / dirname
+            mtime = dir_path.stat().st_mtime  # modification timestamp of the folder
+            latest_mtime = max(latest_mtime, mtime)
+
+    return latest_mtime</code></pre>
 </details>
 </dd>
 </dl>
-</dd>
-</dl>
+</section>
+<section>
 </section>
 </article>
 <nav id="sidebar">
@@ -162,17 +178,13 @@ def filter(self, databag: T) -&gt; T:
 <ul id="index">
 <li><h3>Super-module</h3>
 <ul>
-<li><code><a title="secfsdstools.d_container" href="index.html">secfsdstools.d_container</a></code></li>
+<li><code><a title="secfsdstools.c_automation" href="index.html">secfsdstools.c_automation</a></code></li>
 </ul>
 </li>
-<li><h3><a href="#header-classes">Classes</a></h3>
-<ul>
-<li>
-<h4><code><a title="secfsdstools.d_container.filter.FilterBase" href="#secfsdstools.d_container.filter.FilterBase">FilterBase</a></code></h4>
+<li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
-<li><code><a title="secfsdstools.d_container.filter.FilterBase.filter" href="#secfsdstools.d_container.filter.FilterBase.filter">filter</a></code></li>
-</ul>
-</li>
+<li><code><a title="secfsdstools.c_automation.automation_utils.delete_temp_folders" href="#secfsdstools.c_automation.automation_utils.delete_temp_folders">delete_temp_folders</a></code></li>
+<li><code><a title="secfsdstools.c_automation.automation_utils.get_latest_mtime" href="#secfsdstools.c_automation.automation_utils.get_latest_mtime">get_latest_mtime</a></code></li>
 </ul>
 </li>
 </ul>

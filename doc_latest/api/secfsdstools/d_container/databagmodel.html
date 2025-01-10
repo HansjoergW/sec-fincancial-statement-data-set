@@ -35,6 +35,7 @@ Defines the container that keeps the data of sub.txt, num.txt, and  pre.txt toge
 
 import os
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Dict, List, TypeVar, Generic
 
 import pandas as pd
@@ -55,11 +56,11 @@ class DataBagBase(Generic[T]):
 
     def __getitem__(self, bagfilter: FilterBase[T]) -&gt; T:
         &#34;&#34;&#34;
-        forwards to the filter method, so that filters can be chained in a simple syntax:
-        bag[filter1][filter2] is equal to bag.filter(filter1).filter(filter2)
+        forwards to the pathfilter method, so that filters can be chained in a simple syntax:
+        bag[filter1][filter2] is equal to bag.pathfilter(filter1).pathfilter(filter2)
 
         Args:
-            bagfilter: the filter to be applied
+            bagfilter: the pathfilter to be applied
 
         Returns:
             RawDataBag: the databag with the filtered content
@@ -69,12 +70,12 @@ class DataBagBase(Generic[T]):
 
     def filter(self, bagfilter: FilterBase[T]) -&gt; T:
         &#34;&#34;&#34;
-        applies a filter to the bag and produces a new bag based on the filter.
-        instead of using the filter, you can also use the &#34;index&#34; syntax to apply filters:
-        bag[filter1][filter2] is equal to bag.filter(filter1).filter(filter2)
+        applies a pathfilter to the bag and produces a new bag based on the pathfilter.
+        instead of using the pathfilter, you can also use the &#34;index&#34; syntax to apply filters:
+        bag[filter1][filter2] is equal to bag.pathfilter(filter1).pathfilter(filter2)
 
         Args:
-            bagfilter: the filter to be applied
+            bagfilter: the pathfilter to be applied
 
         Returns:
             RawDataBag: the databag with the filtered content
@@ -183,13 +184,14 @@ class JoinedDataBag(DataBagBase[JOINED]):
         return JoinedDataBag.create(sub_df=sub_df, pre_num_df=pre_num_df)
 
     @staticmethod
-    def concat(bags: List[JOINED]) -&gt; JOINED:
+    def concat(bags: List[JOINED], drop_duplicates_sub_df: bool = False) -&gt; JOINED:
         &#34;&#34;&#34;
         Merges multiple Bags together into one bag.
         Note: merge does not check if DataBags with the same reports are merged together.
 
         Args:
             bags: List of bags to be merged
+            drop_duplicates_sub_df: set to True, if you want to remove duplicates in the sub_df
 
         Returns:
             JoinedDataBag: a Bag with the merged content
@@ -198,8 +200,14 @@ class JoinedDataBag(DataBagBase[JOINED]):
         sub_dfs = [db.sub_df for db in bags]
         pre_num_dfs = [db.pre_num_df for db in bags]
 
-        return JoinedDataBag.create(sub_df=pd.concat(sub_dfs),
-                                    pre_num_df=pd.concat(pre_num_dfs))
+        sub_df = pd.concat(sub_dfs, ignore_index=True)
+        pre_num_df = pd.concat(pre_num_dfs, ignore_index=True)
+
+        if drop_duplicates_sub_df:
+            sub_df.drop_duplicates(inplace=True)
+
+        return JoinedDataBag.create(sub_df=sub_df,
+                                    pre_num_df=pre_num_df)
 
 
 @dataclass
@@ -359,13 +367,14 @@ class RawDataBag(DataBagBase[RAW]):
         return RawDataBag.create(sub_df=sub_df, pre_df=pre_df, num_df=num_df)
 
     @staticmethod
-    def concat(bags: List[RAW]) -&gt; RAW:
+    def concat(bags: List[RAW], drop_duplicates_sub_df: bool = False) -&gt; RAW:
         &#34;&#34;&#34;
         Merges multiple Bags together into one bag.
         Note: merge does not check if DataBags with the same reports are merged together.
 
         Args:
             bags: List of bags to be merged
+            drop_duplicates_sub_df: set to True, if you want to remove duplicates in the sub_df
 
         Returns:
             RawDataBag: a Bag with the merged content
@@ -375,11 +384,26 @@ class RawDataBag(DataBagBase[RAW]):
         pre_dfs = [db.pre_df for db in bags]
         num_dfs = [db.num_df for db in bags]
 
-        # todo: might be more efficient if the contained maps were just combined
-        #       instead of being recalculated
-        return RawDataBag.create(sub_df=pd.concat(sub_dfs, ignore_index=True),
-                                 pre_df=pd.concat(pre_dfs, ignore_index=True),
-                                 num_df=pd.concat(num_dfs, ignore_index=True))</code></pre>
+        sub_df = pd.concat(sub_dfs, ignore_index=True)
+        pre_df = pd.concat(pre_dfs, ignore_index=True)
+        num_df = pd.concat(num_dfs, ignore_index=True)
+
+        if drop_duplicates_sub_df:
+            sub_df.drop_duplicates(inplace=True)
+
+        return RawDataBag.create(sub_df=sub_df,
+                                 pre_df=pre_df,
+                                 num_df=num_df)
+
+
+def is_rawbag_path(path: Path) -&gt; bool:
+    &#34;&#34;&#34; Check whether the provided path contains the files of a RawDatabag. &#34;&#34;&#34;
+    return (path / &#34;num.txt.parquet&#34;).exists()
+
+
+def is_joinedbag_path(path: Path) -&gt; bool:
+    &#34;&#34;&#34; Check whether the provided path contains the files of a JoinedDatabag. &#34;&#34;&#34;
+    return (path / &#34;pre_num.txt.parquet&#34;).exists()</code></pre>
 </details>
 </section>
 <section>
@@ -387,6 +411,37 @@ class RawDataBag(DataBagBase[RAW]):
 <section>
 </section>
 <section>
+<h2 class="section-title" id="header-functions">Functions</h2>
+<dl>
+<dt id="secfsdstools.d_container.databagmodel.is_joinedbag_path"><code class="name flex">
+<span>def <span class="ident">is_joinedbag_path</span></span>(<span>path: pathlib.Path) ‑> bool</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Check whether the provided path contains the files of a JoinedDatabag.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def is_joinedbag_path(path: Path) -&gt; bool:
+    &#34;&#34;&#34; Check whether the provided path contains the files of a JoinedDatabag. &#34;&#34;&#34;
+    return (path / &#34;pre_num.txt.parquet&#34;).exists()</code></pre>
+</details>
+</dd>
+<dt id="secfsdstools.d_container.databagmodel.is_rawbag_path"><code class="name flex">
+<span>def <span class="ident">is_rawbag_path</span></span>(<span>path: pathlib.Path) ‑> bool</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Check whether the provided path contains the files of a RawDatabag.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def is_rawbag_path(path: Path) -&gt; bool:
+    &#34;&#34;&#34; Check whether the provided path contains the files of a RawDatabag. &#34;&#34;&#34;
+    return (path / &#34;num.txt.parquet&#34;).exists()</code></pre>
+</details>
+</dd>
+</dl>
 </section>
 <section>
 <h2 class="section-title" id="header-classes">Classes</h2>
@@ -408,11 +463,11 @@ class RawDataBag(DataBagBase[RAW]):
 
     def __getitem__(self, bagfilter: FilterBase[T]) -&gt; T:
         &#34;&#34;&#34;
-        forwards to the filter method, so that filters can be chained in a simple syntax:
-        bag[filter1][filter2] is equal to bag.filter(filter1).filter(filter2)
+        forwards to the pathfilter method, so that filters can be chained in a simple syntax:
+        bag[filter1][filter2] is equal to bag.pathfilter(filter1).pathfilter(filter2)
 
         Args:
-            bagfilter: the filter to be applied
+            bagfilter: the pathfilter to be applied
 
         Returns:
             RawDataBag: the databag with the filtered content
@@ -422,12 +477,12 @@ class RawDataBag(DataBagBase[RAW]):
 
     def filter(self, bagfilter: FilterBase[T]) -&gt; T:
         &#34;&#34;&#34;
-        applies a filter to the bag and produces a new bag based on the filter.
-        instead of using the filter, you can also use the &#34;index&#34; syntax to apply filters:
-        bag[filter1][filter2] is equal to bag.filter(filter1).filter(filter2)
+        applies a pathfilter to the bag and produces a new bag based on the pathfilter.
+        instead of using the pathfilter, you can also use the &#34;index&#34; syntax to apply filters:
+        bag[filter1][filter2] is equal to bag.pathfilter(filter1).pathfilter(filter2)
 
         Args:
-            bagfilter: the filter to be applied
+            bagfilter: the pathfilter to be applied
 
         Returns:
             RawDataBag: the databag with the filtered content
@@ -455,13 +510,13 @@ class RawDataBag(DataBagBase[RAW]):
 <span>def <span class="ident">filter</span></span>(<span>self, bagfilter: <a title="secfsdstools.d_container.filter.FilterBase" href="filter.html#secfsdstools.d_container.filter.FilterBase">FilterBase</a>[~T]) ‑> ~T</span>
 </code></dt>
 <dd>
-<div class="desc"><p>applies a filter to the bag and produces a new bag based on the filter.
-instead of using the filter, you can also use the "index" syntax to apply filters:
-bag[filter1][filter2] is equal to bag.filter(filter1).filter(filter2)</p>
+<div class="desc"><p>applies a pathfilter to the bag and produces a new bag based on the pathfilter.
+instead of using the pathfilter, you can also use the "index" syntax to apply filters:
+bag[filter1][filter2] is equal to bag.pathfilter(filter1).pathfilter(filter2)</p>
 <h2 id="args">Args</h2>
 <dl>
 <dt><strong><code>bagfilter</code></strong></dt>
-<dd>the filter to be applied</dd>
+<dd>the pathfilter to be applied</dd>
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
@@ -474,12 +529,12 @@ bag[filter1][filter2] is equal to bag.filter(filter1).filter(filter2)</p>
 </summary>
 <pre><code class="python">def filter(self, bagfilter: FilterBase[T]) -&gt; T:
     &#34;&#34;&#34;
-    applies a filter to the bag and produces a new bag based on the filter.
-    instead of using the filter, you can also use the &#34;index&#34; syntax to apply filters:
-    bag[filter1][filter2] is equal to bag.filter(filter1).filter(filter2)
+    applies a pathfilter to the bag and produces a new bag based on the pathfilter.
+    instead of using the pathfilter, you can also use the &#34;index&#34; syntax to apply filters:
+    bag[filter1][filter2] is equal to bag.pathfilter(filter1).pathfilter(filter2)
 
     Args:
-        bagfilter: the filter to be applied
+        bagfilter: the pathfilter to be applied
 
     Returns:
         RawDataBag: the databag with the filtered content
@@ -619,13 +674,14 @@ adsh, tag, and version.</p>
         return JoinedDataBag.create(sub_df=sub_df, pre_num_df=pre_num_df)
 
     @staticmethod
-    def concat(bags: List[JOINED]) -&gt; JOINED:
+    def concat(bags: List[JOINED], drop_duplicates_sub_df: bool = False) -&gt; JOINED:
         &#34;&#34;&#34;
         Merges multiple Bags together into one bag.
         Note: merge does not check if DataBags with the same reports are merged together.
 
         Args:
             bags: List of bags to be merged
+            drop_duplicates_sub_df: set to True, if you want to remove duplicates in the sub_df
 
         Returns:
             JoinedDataBag: a Bag with the merged content
@@ -634,8 +690,14 @@ adsh, tag, and version.</p>
         sub_dfs = [db.sub_df for db in bags]
         pre_num_dfs = [db.pre_num_df for db in bags]
 
-        return JoinedDataBag.create(sub_df=pd.concat(sub_dfs),
-                                    pre_num_df=pd.concat(pre_num_dfs))</code></pre>
+        sub_df = pd.concat(sub_dfs, ignore_index=True)
+        pre_num_df = pd.concat(pre_num_dfs, ignore_index=True)
+
+        if drop_duplicates_sub_df:
+            sub_df.drop_duplicates(inplace=True)
+
+        return JoinedDataBag.create(sub_df=sub_df,
+                                    pre_num_df=pre_num_df)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -645,7 +707,7 @@ adsh, tag, and version.</p>
 <h3>Static methods</h3>
 <dl>
 <dt id="secfsdstools.d_container.databagmodel.JoinedDataBag.concat"><code class="name flex">
-<span>def <span class="ident">concat</span></span>(<span>bags: List[~JOINED]) ‑> ~JOINED</span>
+<span>def <span class="ident">concat</span></span>(<span>bags: List[~JOINED], drop_duplicates_sub_df: bool = False) ‑> ~JOINED</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Merges multiple Bags together into one bag.
@@ -654,6 +716,8 @@ Note: merge does not check if DataBags with the same reports are merged together
 <dl>
 <dt><strong><code>bags</code></strong></dt>
 <dd>List of bags to be merged</dd>
+<dt><strong><code>drop_duplicates_sub_df</code></strong></dt>
+<dd>set to True, if you want to remove duplicates in the sub_df</dd>
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
@@ -665,13 +729,14 @@ Note: merge does not check if DataBags with the same reports are merged together
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@staticmethod
-def concat(bags: List[JOINED]) -&gt; JOINED:
+def concat(bags: List[JOINED], drop_duplicates_sub_df: bool = False) -&gt; JOINED:
     &#34;&#34;&#34;
     Merges multiple Bags together into one bag.
     Note: merge does not check if DataBags with the same reports are merged together.
 
     Args:
         bags: List of bags to be merged
+        drop_duplicates_sub_df: set to True, if you want to remove duplicates in the sub_df
 
     Returns:
         JoinedDataBag: a Bag with the merged content
@@ -680,8 +745,14 @@ def concat(bags: List[JOINED]) -&gt; JOINED:
     sub_dfs = [db.sub_df for db in bags]
     pre_num_dfs = [db.pre_num_df for db in bags]
 
-    return JoinedDataBag.create(sub_df=pd.concat(sub_dfs),
-                                pre_num_df=pd.concat(pre_num_dfs))</code></pre>
+    sub_df = pd.concat(sub_dfs, ignore_index=True)
+    pre_num_df = pd.concat(pre_num_dfs, ignore_index=True)
+
+    if drop_duplicates_sub_df:
+        sub_df.drop_duplicates(inplace=True)
+
+    return JoinedDataBag.create(sub_df=sub_df,
+                                pre_num_df=pre_num_df)</code></pre>
 </details>
 </dd>
 <dt id="secfsdstools.d_container.databagmodel.JoinedDataBag.create"><code class="name flex">
@@ -1035,13 +1106,14 @@ will be created</dd>
         return RawDataBag.create(sub_df=sub_df, pre_df=pre_df, num_df=num_df)
 
     @staticmethod
-    def concat(bags: List[RAW]) -&gt; RAW:
+    def concat(bags: List[RAW], drop_duplicates_sub_df: bool = False) -&gt; RAW:
         &#34;&#34;&#34;
         Merges multiple Bags together into one bag.
         Note: merge does not check if DataBags with the same reports are merged together.
 
         Args:
             bags: List of bags to be merged
+            drop_duplicates_sub_df: set to True, if you want to remove duplicates in the sub_df
 
         Returns:
             RawDataBag: a Bag with the merged content
@@ -1051,11 +1123,16 @@ will be created</dd>
         pre_dfs = [db.pre_df for db in bags]
         num_dfs = [db.num_df for db in bags]
 
-        # todo: might be more efficient if the contained maps were just combined
-        #       instead of being recalculated
-        return RawDataBag.create(sub_df=pd.concat(sub_dfs, ignore_index=True),
-                                 pre_df=pd.concat(pre_dfs, ignore_index=True),
-                                 num_df=pd.concat(num_dfs, ignore_index=True))</code></pre>
+        sub_df = pd.concat(sub_dfs, ignore_index=True)
+        pre_df = pd.concat(pre_dfs, ignore_index=True)
+        num_df = pd.concat(num_dfs, ignore_index=True)
+
+        if drop_duplicates_sub_df:
+            sub_df.drop_duplicates(inplace=True)
+
+        return RawDataBag.create(sub_df=sub_df,
+                                 pre_df=pre_df,
+                                 num_df=num_df)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -1065,7 +1142,7 @@ will be created</dd>
 <h3>Static methods</h3>
 <dl>
 <dt id="secfsdstools.d_container.databagmodel.RawDataBag.concat"><code class="name flex">
-<span>def <span class="ident">concat</span></span>(<span>bags: List[~RAW]) ‑> ~RAW</span>
+<span>def <span class="ident">concat</span></span>(<span>bags: List[~RAW], drop_duplicates_sub_df: bool = False) ‑> ~RAW</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Merges multiple Bags together into one bag.
@@ -1074,6 +1151,8 @@ Note: merge does not check if DataBags with the same reports are merged together
 <dl>
 <dt><strong><code>bags</code></strong></dt>
 <dd>List of bags to be merged</dd>
+<dt><strong><code>drop_duplicates_sub_df</code></strong></dt>
+<dd>set to True, if you want to remove duplicates in the sub_df</dd>
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
@@ -1085,13 +1164,14 @@ Note: merge does not check if DataBags with the same reports are merged together
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@staticmethod
-def concat(bags: List[RAW]) -&gt; RAW:
+def concat(bags: List[RAW], drop_duplicates_sub_df: bool = False) -&gt; RAW:
     &#34;&#34;&#34;
     Merges multiple Bags together into one bag.
     Note: merge does not check if DataBags with the same reports are merged together.
 
     Args:
         bags: List of bags to be merged
+        drop_duplicates_sub_df: set to True, if you want to remove duplicates in the sub_df
 
     Returns:
         RawDataBag: a Bag with the merged content
@@ -1101,11 +1181,16 @@ def concat(bags: List[RAW]) -&gt; RAW:
     pre_dfs = [db.pre_df for db in bags]
     num_dfs = [db.num_df for db in bags]
 
-    # todo: might be more efficient if the contained maps were just combined
-    #       instead of being recalculated
-    return RawDataBag.create(sub_df=pd.concat(sub_dfs, ignore_index=True),
-                             pre_df=pd.concat(pre_dfs, ignore_index=True),
-                             num_df=pd.concat(num_dfs, ignore_index=True))</code></pre>
+    sub_df = pd.concat(sub_dfs, ignore_index=True)
+    pre_df = pd.concat(pre_dfs, ignore_index=True)
+    num_df = pd.concat(num_dfs, ignore_index=True)
+
+    if drop_duplicates_sub_df:
+        sub_df.drop_duplicates(inplace=True)
+
+    return RawDataBag.create(sub_df=sub_df,
+                             pre_df=pre_df,
+                             num_df=num_df)</code></pre>
 </details>
 </dd>
 <dt id="secfsdstools.d_container.databagmodel.RawDataBag.create"><code class="name flex">
@@ -1461,6 +1546,12 @@ and num_txt will be created</dd>
 <li><h3>Super-module</h3>
 <ul>
 <li><code><a title="secfsdstools.d_container" href="index.html">secfsdstools.d_container</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-functions">Functions</a></h3>
+<ul class="">
+<li><code><a title="secfsdstools.d_container.databagmodel.is_joinedbag_path" href="#secfsdstools.d_container.databagmodel.is_joinedbag_path">is_joinedbag_path</a></code></li>
+<li><code><a title="secfsdstools.d_container.databagmodel.is_rawbag_path" href="#secfsdstools.d_container.databagmodel.is_rawbag_path">is_rawbag_path</a></code></li>
 </ul>
 </li>
 <li><h3><a href="#header-classes">Classes</a></h3>

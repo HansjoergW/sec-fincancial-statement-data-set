@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.10.0" />
-<title>secfsdstools.c_download.rapiddownloading API documentation</title>
-<meta name="description" content="Logic to download the zipfiles from the rapid api." />
+<title>secfsdstools.c_download.rapiddownloading_process API documentation</title>
+<meta name="description" content="Downloading zip files of the financial statement data sets from the sec." />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
 <link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
@@ -19,18 +19,17 @@
 <main>
 <article id="content">
 <header>
-<h1 class="title">Module <code>secfsdstools.c_download.rapiddownloading</code></h1>
+<h1 class="title">Module <code>secfsdstools.c_download.rapiddownloading_process</code></h1>
 </header>
 <section id="section-intro">
-<p>Logic to download the zipfiles from the rapid api.</p>
+<p>Downloading zip files of the financial statement data sets from the sec.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">&#34;&#34;&#34;
-Logic to download the zipfiles from the rapid api.
+Downloading zip files of the financial statement data sets from the sec.
 &#34;&#34;&#34;
-
 import json
 import logging
 import os
@@ -39,18 +38,19 @@ from typing import List, Tuple, Dict
 from secfsdstools.a_utils.downloadutils import UrlDownloader
 from secfsdstools.a_utils.fileutils import get_filenames_in_directory
 from secfsdstools.a_utils.rapiddownloadutils import RapidUrlBuilder
-from secfsdstools.c_download.basedownloading import BaseDownloader
+from secfsdstools.c_download.basedownloading_process import BaseDownloadingProcess
 
 LOGGER = logging.getLogger(__name__)
 
 
-class RapidZipDownloader(BaseDownloader):
+class RapidDownloadingProcess(BaseDownloadingProcess):
     &#34;&#34;&#34;
     Class which coordinates downloading form the rapidapi api
     https://rapidapi.com/hansjoerg.wingeier/api/daily-sec-financial-statement-dataset
     &#34;&#34;&#34;
 
-    def __init__(self, rapidurlbuilder: RapidUrlBuilder,
+    def __init__(self,
+                 rapidurlbuilder: RapidUrlBuilder,
                  daily_zip_dir: str,
                  qrtr_zip_dir: str,
                  parquet_root_dir: str,
@@ -58,22 +58,22 @@ class RapidZipDownloader(BaseDownloader):
                  execute_serial: bool = False):
         super().__init__(zip_dir=daily_zip_dir,
                          urldownloader=urldownloader,
-                         execute_serial=execute_serial,
-                         parquet_dir_typed=os.path.join(parquet_root_dir, &#39;quarter&#39;))
+                         parquet_dir=os.path.join(parquet_root_dir, &#39;quarter&#39;),
+                         execute_serial=execute_serial
+                         )
         self.rapidurlbuilder = rapidurlbuilder
-
         self.qrtr_zip_dir = qrtr_zip_dir
 
         if not os.path.isdir(self.zip_dir):
             LOGGER.info(&#34;creating download folder: %s&#34;, self.zip_dir)
             os.makedirs(self.zip_dir)
 
-    def _get_headers(self) -&gt; Dict[str, str]:
+    def get_headers(self) -&gt; Dict[str, str]:
         return self.rapidurlbuilder.get_headers()
 
     def _get_content(self) -&gt; str:
         response = self.urldownloader.get_url_content(self.rapidurlbuilder.get_content_url(),
-                                                      headers=self._get_headers())
+                                                      headers=self.get_headers())
         return response.text
 
     def _get_latest_quarter_file_name(self):
@@ -144,7 +144,14 @@ class RapidZipDownloader(BaseDownloader):
 
         return [entry[&#39;file&#39;] for entry in daily_entries if
                 ((entry[&#39;subscription&#39;] == &#39;basic&#39;) | (
-                        entry[&#39;subscription&#39;] == self.rapidurlbuilder.rapid_plan))]</code></pre>
+                        entry[&#39;subscription&#39;] == self.rapidurlbuilder.rapid_plan))]
+
+    def process(self):
+        try:
+            super().process()
+        except Exception as ex:  # pylint: disable=W0703
+            LOGGER.warning(&#34;Failed to get data from rapid api, please check rapid-api-key. &#34;)
+            LOGGER.warning(&#34;Only using data from Sec.gov because of: %s&#34;, ex)</code></pre>
 </details>
 </section>
 <section>
@@ -156,24 +163,37 @@ class RapidZipDownloader(BaseDownloader):
 <section>
 <h2 class="section-title" id="header-classes">Classes</h2>
 <dl>
-<dt id="secfsdstools.c_download.rapiddownloading.RapidZipDownloader"><code class="flex name class">
-<span>class <span class="ident">RapidZipDownloader</span></span>
+<dt id="secfsdstools.c_download.rapiddownloading_process.RapidDownloadingProcess"><code class="flex name class">
+<span>class <span class="ident">RapidDownloadingProcess</span></span>
 <span>(</span><span>rapidurlbuilder: <a title="secfsdstools.a_utils.rapiddownloadutils.RapidUrlBuilder" href="../a_utils/rapiddownloadutils.html#secfsdstools.a_utils.rapiddownloadutils.RapidUrlBuilder">RapidUrlBuilder</a>, daily_zip_dir: str, qrtr_zip_dir: str, parquet_root_dir: str, urldownloader: <a title="secfsdstools.a_utils.downloadutils.UrlDownloader" href="../a_utils/downloadutils.html#secfsdstools.a_utils.downloadutils.UrlDownloader">UrlDownloader</a>, execute_serial: bool = False)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Class which coordinates downloading form the rapidapi api
-<a href="https://rapidapi.com/hansjoerg.wingeier/api/daily-sec-financial-statement-dataset">https://rapidapi.com/hansjoerg.wingeier/api/daily-sec-financial-statement-dataset</a></p></div>
+<a href="https://rapidapi.com/hansjoerg.wingeier/api/daily-sec-financial-statement-dataset">https://rapidapi.com/hansjoerg.wingeier/api/daily-sec-financial-statement-dataset</a></p>
+<p>Constructor.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>zip_dir</code></strong></dt>
+<dd>target folder to store downloaded files to.</dd>
+<dt><strong><code>parquet_dir</code></strong></dt>
+<dd>directory where the transformed content of zip files are</dd>
+<dt><strong><code>urldownloader</code></strong></dt>
+<dd>UrlDownloader instance</dd>
+<dt><strong><code>execute_serial</code></strong></dt>
+<dd>whether to execute it in parallel or serial</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class RapidZipDownloader(BaseDownloader):
+<pre><code class="python">class RapidDownloadingProcess(BaseDownloadingProcess):
     &#34;&#34;&#34;
     Class which coordinates downloading form the rapidapi api
     https://rapidapi.com/hansjoerg.wingeier/api/daily-sec-financial-statement-dataset
     &#34;&#34;&#34;
 
-    def __init__(self, rapidurlbuilder: RapidUrlBuilder,
+    def __init__(self,
+                 rapidurlbuilder: RapidUrlBuilder,
                  daily_zip_dir: str,
                  qrtr_zip_dir: str,
                  parquet_root_dir: str,
@@ -181,22 +201,22 @@ class RapidZipDownloader(BaseDownloader):
                  execute_serial: bool = False):
         super().__init__(zip_dir=daily_zip_dir,
                          urldownloader=urldownloader,
-                         execute_serial=execute_serial,
-                         parquet_dir_typed=os.path.join(parquet_root_dir, &#39;quarter&#39;))
+                         parquet_dir=os.path.join(parquet_root_dir, &#39;quarter&#39;),
+                         execute_serial=execute_serial
+                         )
         self.rapidurlbuilder = rapidurlbuilder
-
         self.qrtr_zip_dir = qrtr_zip_dir
 
         if not os.path.isdir(self.zip_dir):
             LOGGER.info(&#34;creating download folder: %s&#34;, self.zip_dir)
             os.makedirs(self.zip_dir)
 
-    def _get_headers(self) -&gt; Dict[str, str]:
+    def get_headers(self) -&gt; Dict[str, str]:
         return self.rapidurlbuilder.get_headers()
 
     def _get_content(self) -&gt; str:
         response = self.urldownloader.get_url_content(self.rapidurlbuilder.get_content_url(),
-                                                      headers=self._get_headers())
+                                                      headers=self.get_headers())
         return response.text
 
     def _get_latest_quarter_file_name(self):
@@ -267,18 +287,33 @@ class RapidZipDownloader(BaseDownloader):
 
         return [entry[&#39;file&#39;] for entry in daily_entries if
                 ((entry[&#39;subscription&#39;] == &#39;basic&#39;) | (
-                        entry[&#39;subscription&#39;] == self.rapidurlbuilder.rapid_plan))]</code></pre>
+                        entry[&#39;subscription&#39;] == self.rapidurlbuilder.rapid_plan))]
+
+    def process(self):
+        try:
+            super().process()
+        except Exception as ex:  # pylint: disable=W0703
+            LOGGER.warning(&#34;Failed to get data from rapid api, please check rapid-api-key. &#34;)
+            LOGGER.warning(&#34;Only using data from Sec.gov because of: %s&#34;, ex)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li><a title="secfsdstools.c_download.basedownloading.BaseDownloader" href="basedownloading.html#secfsdstools.c_download.basedownloading.BaseDownloader">BaseDownloader</a></li>
+<li><a title="secfsdstools.c_download.basedownloading_process.BaseDownloadingProcess" href="basedownloading_process.html#secfsdstools.c_download.basedownloading_process.BaseDownloadingProcess">BaseDownloadingProcess</a></li>
+<li><a title="secfsdstools.c_automation.task_framework.AbstractThreadProcess" href="../c_automation/task_framework.html#secfsdstools.c_automation.task_framework.AbstractThreadProcess">AbstractThreadProcess</a></li>
+<li><a title="secfsdstools.c_automation.task_framework.AbstractProcess" href="../c_automation/task_framework.html#secfsdstools.c_automation.task_framework.AbstractProcess">AbstractProcess</a></li>
 <li>abc.ABC</li>
 </ul>
 <h3>Inherited members</h3>
 <ul class="hlist">
-<li><code><b><a title="secfsdstools.c_download.basedownloading.BaseDownloader" href="basedownloading.html#secfsdstools.c_download.basedownloading.BaseDownloader">BaseDownloader</a></b></code>:
+<li><code><b><a title="secfsdstools.c_download.basedownloading_process.BaseDownloadingProcess" href="basedownloading_process.html#secfsdstools.c_download.basedownloading_process.BaseDownloadingProcess">BaseDownloadingProcess</a></b></code>:
 <ul class="hlist">
-<li><code><a title="secfsdstools.c_download.basedownloading.BaseDownloader.download" href="basedownloading.html#secfsdstools.c_download.basedownloading.BaseDownloader.download">download</a></code></li>
+<li><code><a title="secfsdstools.c_download.basedownloading_process.BaseDownloadingProcess.calculate_tasks" href="basedownloading_process.html#secfsdstools.c_download.basedownloading_process.BaseDownloadingProcess.calculate_tasks">calculate_tasks</a></code></li>
+<li><code><a title="secfsdstools.c_download.basedownloading_process.BaseDownloadingProcess.do_execution" href="../c_automation/task_framework.html#secfsdstools.c_automation.task_framework.AbstractThreadProcess.do_execution">do_execution</a></code></li>
+<li><code><a title="secfsdstools.c_download.basedownloading_process.BaseDownloadingProcess.get_headers" href="basedownloading_process.html#secfsdstools.c_download.basedownloading_process.BaseDownloadingProcess.get_headers">get_headers</a></code></li>
+<li><code><a title="secfsdstools.c_download.basedownloading_process.BaseDownloadingProcess.post_process" href="../c_automation/task_framework.html#secfsdstools.c_automation.task_framework.AbstractProcess.post_process">post_process</a></code></li>
+<li><code><a title="secfsdstools.c_download.basedownloading_process.BaseDownloadingProcess.pre_process" href="../c_automation/task_framework.html#secfsdstools.c_automation.task_framework.AbstractProcess.pre_process">pre_process</a></code></li>
+<li><code><a title="secfsdstools.c_download.basedownloading_process.BaseDownloadingProcess.process" href="../c_automation/task_framework.html#secfsdstools.c_automation.task_framework.AbstractProcess.process">process</a></code></li>
+<li><code><a title="secfsdstools.c_download.basedownloading_process.BaseDownloadingProcess.process_task" href="../c_automation/task_framework.html#secfsdstools.c_automation.task_framework.AbstractProcess.process_task">process_task</a></code></li>
 </ul>
 </li>
 </ul>
@@ -300,7 +335,7 @@ class RapidZipDownloader(BaseDownloader):
 <li><h3><a href="#header-classes">Classes</a></h3>
 <ul>
 <li>
-<h4><code><a title="secfsdstools.c_download.rapiddownloading.RapidZipDownloader" href="#secfsdstools.c_download.rapiddownloading.RapidZipDownloader">RapidZipDownloader</a></code></h4>
+<h4><code><a title="secfsdstools.c_download.rapiddownloading_process.RapidDownloadingProcess" href="#secfsdstools.c_download.rapiddownloading_process.RapidDownloadingProcess">RapidDownloadingProcess</a></code></h4>
 </li>
 </ul>
 </li>

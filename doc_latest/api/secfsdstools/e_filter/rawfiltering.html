@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.10.0" />
 <title>secfsdstools.e_filter.rawfiltering API documentation</title>
-<meta name="description" content="This module contains some basic filter implementations on the RawDataBag …" />
+<meta name="description" content="This module contains some basic pathfilter implementations on the RawDataBag …" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
 <link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
@@ -22,14 +22,14 @@
 <h1 class="title">Module <code>secfsdstools.e_filter.rawfiltering</code></h1>
 </header>
 <section id="section-intro">
-<p>This module contains some basic filter implementations on the RawDataBag.</p>
+<p>This module contains some basic pathfilter implementations on the RawDataBag.</p>
 <p>Note: the filters don't create new copies of the pandas dataset</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">&#34;&#34;&#34;
-This module contains some basic filter implementations on the RawDataBag.
+This module contains some basic pathfilter implementations on the RawDataBag.
 
 Note: the filters don&#39;t create new copies of the pandas dataset
 &#34;&#34;&#34;
@@ -42,7 +42,7 @@ from secfsdstools.d_container.filter import FilterBase
 
 class AdshRawFilter(FilterBase[RawDataBag]):
     &#34;&#34;&#34;
-    Filters the data by a list of adshs. This filter operates on the sub, pre_df and the num_df.
+    Filters the data by a list of adshs. This pathfilter operates on the sub, pre_df and the num_df.
     &#34;&#34;&#34;
 
     def __init__(self, adshs: List[str]):
@@ -54,7 +54,7 @@ class AdshRawFilter(FilterBase[RawDataBag]):
         are contained.
 
         Args:
-            databag(RawDataBag) : rawdatabag to apply the filter to
+            databag(RawDataBag) : rawdatabag to apply the pathfilter to
 
         Returns:
             RawDataBag: the databag with the filtered data
@@ -71,7 +71,7 @@ class AdshRawFilter(FilterBase[RawDataBag]):
 class StmtRawFilter(FilterBase[RawDataBag]):
     &#34;&#34;&#34;
     Filters the data by a list of statement type (BS, IS, CF, ...).
-    This filter operates on the pre_df.
+    This pathfilter operates on the pre_df.
     &#34;&#34;&#34;
 
     def __init__(self, stmts: List[str]):
@@ -83,7 +83,7 @@ class StmtRawFilter(FilterBase[RawDataBag]):
         are contained.
 
         Args:
-            databag(RawDataBag) : rawdatabag to apply the filter to
+            databag(RawDataBag) : rawdatabag to apply the pathfilter to
 
         Returns:
             RawDataBag: the databag with the filtered data
@@ -98,15 +98,15 @@ class StmtRawFilter(FilterBase[RawDataBag]):
 class ReportPeriodRawFilter(FilterBase[RawDataBag]):
     &#34;&#34;&#34;
     Filters the data so that only datapoints are contained which ddate-attribute equals the
-    period date of the report. Therefore, the filter operates on the num_df dataframe.
+    period date of the report. Therefore, the pathfilter operates on the num_df dataframe.
     &#34;&#34;&#34;
 
     def filter(self, databag: RawDataBag) -&gt; RawDataBag:
         &#34;&#34;&#34;
-        filter the databag so that only datapoints are contained which have a ddate-attribute
+        pathfilter the databag so that only datapoints are contained which have a ddate-attribute
         that equals the period-attribute of the report.
         Args:
-            databag(RawDataBag) : rawdatabag to apply the filter to
+            databag(RawDataBag) : rawdatabag to apply the pathfilter to
 
         Returns:
             RawDataBag: the databag with the filtered data
@@ -127,16 +127,16 @@ class ReportPeriodAndPreviousPeriodRawFilter(FilterBase[RawDataBag]):
     &#34;&#34;&#34;
     Filters the data so that only datapoints are contained which ddate-attribute equals the
     period date of the report or the period date of the previous (a year ago) report.
-    Therefore, the filter operates on the num_df dataframe.
+    Therefore, the pathfilter operates on the num_df dataframe.
     &#34;&#34;&#34;
 
     def filter(self, databag: RawDataBag) -&gt; RawDataBag:
         &#34;&#34;&#34;
-        filter the databag so that only datapoints are contained which have a ddate-attribute
+        pathfilter the databag so that only datapoints are contained which have a ddate-attribute
         that equals the period-attribute of the report or the period of the previous (a year ago)
         report.
         Args:
-            databag(RawDataBag) : rawdatabag to apply the filter to
+            databag(RawDataBag) : rawdatabag to apply the pathfilter to
 
         Returns:
             RawDataBag: the databag with the filtered data
@@ -161,7 +161,7 @@ class ReportPeriodAndPreviousPeriodRawFilter(FilterBase[RawDataBag]):
 
 class TagRawFilter(FilterBase[RawDataBag]):
     &#34;&#34;&#34;
-    Filters the data by a list of tags. This filter operates on the pre_df and the num_df.
+    Filters the data by a list of tags. This pathfilter operates on the pre_df and the num_df.
     &#34;&#34;&#34;
 
     def __init__(self, tags: List[str]):
@@ -172,7 +172,7 @@ class TagRawFilter(FilterBase[RawDataBag]):
         filters the databag so that only datapoints are contained which have a tag-attribute
         that is in the provided list.
         Args:
-            databag(RawDataBag) : rawdatabag to apply the filter to
+            databag(RawDataBag) : rawdatabag to apply the pathfilter to
 
         Returns:
             RawDataBag: the databag with the filtered data
@@ -195,7 +195,7 @@ class MainCoregRawFilter(FilterBase[RawDataBag]):
         filters the databag so that only the main coreg entries are contained
         (no data subsidiaries).
         Args:
-            databag(RawDataBag) : rawdatabag to apply the filter to
+            databag(RawDataBag) : rawdatabag to apply the pathfilter to
 
         Returns:
             RawDataBag: the databag with the filtered data
@@ -219,12 +219,12 @@ class OfficialTagsOnlyRawFilter(FilterBase[RawDataBag]):
         filters the databag so that official tags are contained.
 
         Args:
-            databag(RawDataBag) : rawdatabag to apply the filter to
+            databag(RawDataBag) : rawdatabag to apply the pathfilter to
 
         Returns:
             RawDataBag: the databag with the filtered data
         &#34;&#34;&#34;
-        # using isin is performant, so we just make sure to filter the rows
+        # using isin is performant, so we just make sure to pathfilter the rows
         # which do not have an adsh as version
         pre_filtered_for_tags = databag.pre_df[~databag.pre_df.version.isin(databag.sub_df.adsh)]
         num_filtered_for_tags = databag.num_df[~databag.num_df.version.isin(databag.sub_df.adsh)]
@@ -244,7 +244,7 @@ class USDOnlyRawFilter(FilterBase[RawDataBag]):
         Removes all currency entries in the uom colum of the num_df that are not USD.
 
         Args:
-            databag(RawDataBag) : rawdatabag to apply the filter to
+            databag(RawDataBag) : rawdatabag to apply the pathfilter to
 
         Returns:
             RawDataBag: the databag with the filtered data
@@ -282,14 +282,14 @@ class USDOnlyRawFilter(FilterBase[RawDataBag]):
 <span>(</span><span>adshs: List[str])</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Filters the data by a list of adshs. This filter operates on the sub, pre_df and the num_df.</p></div>
+<div class="desc"><p>Filters the data by a list of adshs. This pathfilter operates on the sub, pre_df and the num_df.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class AdshRawFilter(FilterBase[RawDataBag]):
     &#34;&#34;&#34;
-    Filters the data by a list of adshs. This filter operates on the sub, pre_df and the num_df.
+    Filters the data by a list of adshs. This pathfilter operates on the sub, pre_df and the num_df.
     &#34;&#34;&#34;
 
     def __init__(self, adshs: List[str]):
@@ -301,7 +301,7 @@ class USDOnlyRawFilter(FilterBase[RawDataBag]):
         are contained.
 
         Args:
-            databag(RawDataBag) : rawdatabag to apply the filter to
+            databag(RawDataBag) : rawdatabag to apply the pathfilter to
 
         Returns:
             RawDataBag: the databag with the filtered data
@@ -328,7 +328,7 @@ class USDOnlyRawFilter(FilterBase[RawDataBag]):
 <div class="desc"><p>filters the databag so that only datapoints of reports defined by the adshs list
 are contained.</p>
 <h2 id="args">Args</h2>
-<p>databag(RawDataBag) : rawdatabag to apply the filter to</p>
+<p>databag(RawDataBag) : rawdatabag to apply the pathfilter to</p>
 <h2 id="returns">Returns</h2>
 <dl>
 <dt><code>RawDataBag</code></dt>
@@ -344,7 +344,7 @@ are contained.</p>
     are contained.
 
     Args:
-        databag(RawDataBag) : rawdatabag to apply the filter to
+        databag(RawDataBag) : rawdatabag to apply the pathfilter to
 
     Returns:
         RawDataBag: the databag with the filtered data
@@ -380,7 +380,7 @@ are contained.</p>
         filters the databag so that only the main coreg entries are contained
         (no data subsidiaries).
         Args:
-            databag(RawDataBag) : rawdatabag to apply the filter to
+            databag(RawDataBag) : rawdatabag to apply the pathfilter to
 
         Returns:
             RawDataBag: the databag with the filtered data
@@ -405,7 +405,7 @@ are contained.</p>
 <div class="desc"><p>filters the databag so that only the main coreg entries are contained
 (no data subsidiaries).</p>
 <h2 id="args">Args</h2>
-<p>databag(RawDataBag) : rawdatabag to apply the filter to</p>
+<p>databag(RawDataBag) : rawdatabag to apply the pathfilter to</p>
 <h2 id="returns">Returns</h2>
 <dl>
 <dt><code>RawDataBag</code></dt>
@@ -420,7 +420,7 @@ are contained.</p>
     filters the databag so that only the main coreg entries are contained
     (no data subsidiaries).
     Args:
-        databag(RawDataBag) : rawdatabag to apply the filter to
+        databag(RawDataBag) : rawdatabag to apply the pathfilter to
 
     Returns:
         RawDataBag: the databag with the filtered data
@@ -458,12 +458,12 @@ the version column containing the value of the adsh.</p></div>
         filters the databag so that official tags are contained.
 
         Args:
-            databag(RawDataBag) : rawdatabag to apply the filter to
+            databag(RawDataBag) : rawdatabag to apply the pathfilter to
 
         Returns:
             RawDataBag: the databag with the filtered data
         &#34;&#34;&#34;
-        # using isin is performant, so we just make sure to filter the rows
+        # using isin is performant, so we just make sure to pathfilter the rows
         # which do not have an adsh as version
         pre_filtered_for_tags = databag.pre_df[~databag.pre_df.version.isin(databag.sub_df.adsh)]
         num_filtered_for_tags = databag.num_df[~databag.num_df.version.isin(databag.sub_df.adsh)]
@@ -485,7 +485,7 @@ the version column containing the value of the adsh.</p></div>
 <dd>
 <div class="desc"><p>filters the databag so that official tags are contained.</p>
 <h2 id="args">Args</h2>
-<p>databag(RawDataBag) : rawdatabag to apply the filter to</p>
+<p>databag(RawDataBag) : rawdatabag to apply the pathfilter to</p>
 <h2 id="returns">Returns</h2>
 <dl>
 <dt><code>RawDataBag</code></dt>
@@ -500,12 +500,12 @@ the version column containing the value of the adsh.</p></div>
     filters the databag so that official tags are contained.
 
     Args:
-        databag(RawDataBag) : rawdatabag to apply the filter to
+        databag(RawDataBag) : rawdatabag to apply the pathfilter to
 
     Returns:
         RawDataBag: the databag with the filtered data
     &#34;&#34;&#34;
-    # using isin is performant, so we just make sure to filter the rows
+    # using isin is performant, so we just make sure to pathfilter the rows
     # which do not have an adsh as version
     pre_filtered_for_tags = databag.pre_df[~databag.pre_df.version.isin(databag.sub_df.adsh)]
     num_filtered_for_tags = databag.num_df[~databag.num_df.version.isin(databag.sub_df.adsh)]
@@ -524,7 +524,7 @@ the version column containing the value of the adsh.</p></div>
 <dd>
 <div class="desc"><p>Filters the data so that only datapoints are contained which ddate-attribute equals the
 period date of the report or the period date of the previous (a year ago) report.
-Therefore, the filter operates on the num_df dataframe.</p></div>
+Therefore, the pathfilter operates on the num_df dataframe.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -533,16 +533,16 @@ Therefore, the filter operates on the num_df dataframe.</p></div>
     &#34;&#34;&#34;
     Filters the data so that only datapoints are contained which ddate-attribute equals the
     period date of the report or the period date of the previous (a year ago) report.
-    Therefore, the filter operates on the num_df dataframe.
+    Therefore, the pathfilter operates on the num_df dataframe.
     &#34;&#34;&#34;
 
     def filter(self, databag: RawDataBag) -&gt; RawDataBag:
         &#34;&#34;&#34;
-        filter the databag so that only datapoints are contained which have a ddate-attribute
+        pathfilter the databag so that only datapoints are contained which have a ddate-attribute
         that equals the period-attribute of the report or the period of the previous (a year ago)
         report.
         Args:
-            databag(RawDataBag) : rawdatabag to apply the filter to
+            databag(RawDataBag) : rawdatabag to apply the pathfilter to
 
         Returns:
             RawDataBag: the databag with the filtered data
@@ -575,11 +575,11 @@ Therefore, the filter operates on the num_df dataframe.</p></div>
 <span>def <span class="ident">filter</span></span>(<span>self, databag: <a title="secfsdstools.d_container.databagmodel.RawDataBag" href="../d_container/databagmodel.html#secfsdstools.d_container.databagmodel.RawDataBag">RawDataBag</a>) ‑> <a title="secfsdstools.d_container.databagmodel.RawDataBag" href="../d_container/databagmodel.html#secfsdstools.d_container.databagmodel.RawDataBag">RawDataBag</a></span>
 </code></dt>
 <dd>
-<div class="desc"><p>filter the databag so that only datapoints are contained which have a ddate-attribute
+<div class="desc"><p>pathfilter the databag so that only datapoints are contained which have a ddate-attribute
 that equals the period-attribute of the report or the period of the previous (a year ago)
 report.</p>
 <h2 id="args">Args</h2>
-<p>databag(RawDataBag) : rawdatabag to apply the filter to</p>
+<p>databag(RawDataBag) : rawdatabag to apply the pathfilter to</p>
 <h2 id="returns">Returns</h2>
 <dl>
 <dt><code>RawDataBag</code></dt>
@@ -591,11 +591,11 @@ report.</p>
 </summary>
 <pre><code class="python">def filter(self, databag: RawDataBag) -&gt; RawDataBag:
     &#34;&#34;&#34;
-    filter the databag so that only datapoints are contained which have a ddate-attribute
+    pathfilter the databag so that only datapoints are contained which have a ddate-attribute
     that equals the period-attribute of the report or the period of the previous (a year ago)
     report.
     Args:
-        databag(RawDataBag) : rawdatabag to apply the filter to
+        databag(RawDataBag) : rawdatabag to apply the pathfilter to
 
     Returns:
         RawDataBag: the databag with the filtered data
@@ -626,7 +626,7 @@ report.</p>
 </code></dt>
 <dd>
 <div class="desc"><p>Filters the data so that only datapoints are contained which ddate-attribute equals the
-period date of the report. Therefore, the filter operates on the num_df dataframe.</p></div>
+period date of the report. Therefore, the pathfilter operates on the num_df dataframe.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -634,15 +634,15 @@ period date of the report. Therefore, the filter operates on the num_df datafram
 <pre><code class="python">class ReportPeriodRawFilter(FilterBase[RawDataBag]):
     &#34;&#34;&#34;
     Filters the data so that only datapoints are contained which ddate-attribute equals the
-    period date of the report. Therefore, the filter operates on the num_df dataframe.
+    period date of the report. Therefore, the pathfilter operates on the num_df dataframe.
     &#34;&#34;&#34;
 
     def filter(self, databag: RawDataBag) -&gt; RawDataBag:
         &#34;&#34;&#34;
-        filter the databag so that only datapoints are contained which have a ddate-attribute
+        pathfilter the databag so that only datapoints are contained which have a ddate-attribute
         that equals the period-attribute of the report.
         Args:
-            databag(RawDataBag) : rawdatabag to apply the filter to
+            databag(RawDataBag) : rawdatabag to apply the pathfilter to
 
         Returns:
             RawDataBag: the databag with the filtered data
@@ -669,10 +669,10 @@ period date of the report. Therefore, the filter operates on the num_df datafram
 <span>def <span class="ident">filter</span></span>(<span>self, databag: <a title="secfsdstools.d_container.databagmodel.RawDataBag" href="../d_container/databagmodel.html#secfsdstools.d_container.databagmodel.RawDataBag">RawDataBag</a>) ‑> <a title="secfsdstools.d_container.databagmodel.RawDataBag" href="../d_container/databagmodel.html#secfsdstools.d_container.databagmodel.RawDataBag">RawDataBag</a></span>
 </code></dt>
 <dd>
-<div class="desc"><p>filter the databag so that only datapoints are contained which have a ddate-attribute
+<div class="desc"><p>pathfilter the databag so that only datapoints are contained which have a ddate-attribute
 that equals the period-attribute of the report.</p>
 <h2 id="args">Args</h2>
-<p>databag(RawDataBag) : rawdatabag to apply the filter to</p>
+<p>databag(RawDataBag) : rawdatabag to apply the pathfilter to</p>
 <h2 id="returns">Returns</h2>
 <dl>
 <dt><code>RawDataBag</code></dt>
@@ -684,10 +684,10 @@ that equals the period-attribute of the report.</p>
 </summary>
 <pre><code class="python">def filter(self, databag: RawDataBag) -&gt; RawDataBag:
     &#34;&#34;&#34;
-    filter the databag so that only datapoints are contained which have a ddate-attribute
+    pathfilter the databag so that only datapoints are contained which have a ddate-attribute
     that equals the period-attribute of the report.
     Args:
-        databag(RawDataBag) : rawdatabag to apply the filter to
+        databag(RawDataBag) : rawdatabag to apply the pathfilter to
 
     Returns:
         RawDataBag: the databag with the filtered data
@@ -712,7 +712,7 @@ that equals the period-attribute of the report.</p>
 </code></dt>
 <dd>
 <div class="desc"><p>Filters the data by a list of statement type (BS, IS, CF, &hellip;).
-This filter operates on the pre_df.</p></div>
+This pathfilter operates on the pre_df.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -720,7 +720,7 @@ This filter operates on the pre_df.</p></div>
 <pre><code class="python">class StmtRawFilter(FilterBase[RawDataBag]):
     &#34;&#34;&#34;
     Filters the data by a list of statement type (BS, IS, CF, ...).
-    This filter operates on the pre_df.
+    This pathfilter operates on the pre_df.
     &#34;&#34;&#34;
 
     def __init__(self, stmts: List[str]):
@@ -732,7 +732,7 @@ This filter operates on the pre_df.</p></div>
         are contained.
 
         Args:
-            databag(RawDataBag) : rawdatabag to apply the filter to
+            databag(RawDataBag) : rawdatabag to apply the pathfilter to
 
         Returns:
             RawDataBag: the databag with the filtered data
@@ -757,7 +757,7 @@ This filter operates on the pre_df.</p></div>
 <div class="desc"><p>filters the databag so that only datapoints of reports defined by the adshs list
 are contained.</p>
 <h2 id="args">Args</h2>
-<p>databag(RawDataBag) : rawdatabag to apply the filter to</p>
+<p>databag(RawDataBag) : rawdatabag to apply the pathfilter to</p>
 <h2 id="returns">Returns</h2>
 <dl>
 <dt><code>RawDataBag</code></dt>
@@ -773,7 +773,7 @@ are contained.</p>
     are contained.
 
     Args:
-        databag(RawDataBag) : rawdatabag to apply the filter to
+        databag(RawDataBag) : rawdatabag to apply the pathfilter to
 
     Returns:
         RawDataBag: the databag with the filtered data
@@ -792,14 +792,14 @@ are contained.</p>
 <span>(</span><span>tags: List[str])</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Filters the data by a list of tags. This filter operates on the pre_df and the num_df.</p></div>
+<div class="desc"><p>Filters the data by a list of tags. This pathfilter operates on the pre_df and the num_df.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class TagRawFilter(FilterBase[RawDataBag]):
     &#34;&#34;&#34;
-    Filters the data by a list of tags. This filter operates on the pre_df and the num_df.
+    Filters the data by a list of tags. This pathfilter operates on the pre_df and the num_df.
     &#34;&#34;&#34;
 
     def __init__(self, tags: List[str]):
@@ -810,7 +810,7 @@ are contained.</p>
         filters the databag so that only datapoints are contained which have a tag-attribute
         that is in the provided list.
         Args:
-            databag(RawDataBag) : rawdatabag to apply the filter to
+            databag(RawDataBag) : rawdatabag to apply the pathfilter to
 
         Returns:
             RawDataBag: the databag with the filtered data
@@ -836,7 +836,7 @@ are contained.</p>
 <div class="desc"><p>filters the databag so that only datapoints are contained which have a tag-attribute
 that is in the provided list.</p>
 <h2 id="args">Args</h2>
-<p>databag(RawDataBag) : rawdatabag to apply the filter to</p>
+<p>databag(RawDataBag) : rawdatabag to apply the pathfilter to</p>
 <h2 id="returns">Returns</h2>
 <dl>
 <dt><code>RawDataBag</code></dt>
@@ -851,7 +851,7 @@ that is in the provided list.</p>
     filters the databag so that only datapoints are contained which have a tag-attribute
     that is in the provided list.
     Args:
-        databag(RawDataBag) : rawdatabag to apply the filter to
+        databag(RawDataBag) : rawdatabag to apply the pathfilter to
 
     Returns:
         RawDataBag: the databag with the filtered data
@@ -886,7 +886,7 @@ that is in the provided list.</p>
         Removes all currency entries in the uom colum of the num_df that are not USD.
 
         Args:
-            databag(RawDataBag) : rawdatabag to apply the filter to
+            databag(RawDataBag) : rawdatabag to apply the pathfilter to
 
         Returns:
             RawDataBag: the databag with the filtered data
@@ -922,7 +922,7 @@ that is in the provided list.</p>
 <dd>
 <div class="desc"><p>Removes all currency entries in the uom colum of the num_df that are not USD.</p>
 <h2 id="args">Args</h2>
-<p>databag(RawDataBag) : rawdatabag to apply the filter to</p>
+<p>databag(RawDataBag) : rawdatabag to apply the pathfilter to</p>
 <h2 id="returns">Returns</h2>
 <dl>
 <dt><code>RawDataBag</code></dt>
@@ -937,7 +937,7 @@ that is in the provided list.</p>
     Removes all currency entries in the uom colum of the num_df that are not USD.
 
     Args:
-        databag(RawDataBag) : rawdatabag to apply the filter to
+        databag(RawDataBag) : rawdatabag to apply the pathfilter to
 
     Returns:
         RawDataBag: the databag with the filtered data

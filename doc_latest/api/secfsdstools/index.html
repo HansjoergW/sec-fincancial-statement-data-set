@@ -33,7 +33,11 @@ main __init__.py
 
 Defines the version attribut of the library
 &#34;&#34;&#34;
+import logging
+import sys
 from importlib.metadata import version, PackageNotFoundError
+
+import secfsdstools.update
 
 try:
     __version__ = version(&#34;secfsdstools&#34;)
@@ -56,6 +60,10 @@ except PackageNotFoundError:
 <dd>
 <div class="desc"></div>
 </dd>
+<dt><code class="name"><a title="secfsdstools.c_automation" href="c_automation/index.html">secfsdstools.c_automation</a></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
 <dt><code class="name"><a title="secfsdstools.c_download" href="c_download/index.html">secfsdstools.c_download</a></code></dt>
 <dd>
 <div class="desc"></div>
@@ -72,23 +80,33 @@ except PackageNotFoundError:
 <dd>
 <div class="desc"></div>
 </dd>
+<dt><code class="name"><a title="secfsdstools.c_update_check" href="c_update_check/index.html">secfsdstools.c_update_check</a></code></dt>
+<dd>
+<div class="desc"><p>check-for-update launcher.
+helping to ensure that the check is executed when main functionality is used:
+d_container, e_collector, e_filter, …</p></div>
+</dd>
 <dt><code class="name"><a title="secfsdstools.d_container" href="d_container/index.html">secfsdstools.d_container</a></code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>force import of update_check</p></div>
 </dd>
 <dt><code class="name"><a title="secfsdstools.e_collector" href="e_collector/index.html">secfsdstools.e_collector</a></code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>force import of update_check</p></div>
 </dd>
 <dt><code class="name"><a title="secfsdstools.e_filter" href="e_filter/index.html">secfsdstools.e_filter</a></code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>force import of update_check</p></div>
 </dd>
 <dt><code class="name"><a title="secfsdstools.e_presenter" href="e_presenter/index.html">secfsdstools.e_presenter</a></code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>force import of update_check</p></div>
 </dd>
 <dt><code class="name"><a title="secfsdstools.f_standardize" href="f_standardize/index.html">secfsdstools.f_standardize</a></code></dt>
+<dd>
+<div class="desc"><p>force import of update_check</p></div>
+</dd>
+<dt><code class="name"><a title="secfsdstools.g_pipelines" href="g_pipelines/index.html">secfsdstools.g_pipelines</a></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -124,15 +142,18 @@ except PackageNotFoundError:
 <li><code><a title="secfsdstools.a_config" href="a_config/index.html">secfsdstools.a_config</a></code></li>
 <li><code><a title="secfsdstools.a_utils" href="a_utils/index.html">secfsdstools.a_utils</a></code></li>
 <li><code><a title="secfsdstools.b_setup" href="b_setup/index.html">secfsdstools.b_setup</a></code></li>
+<li><code><a title="secfsdstools.c_automation" href="c_automation/index.html">secfsdstools.c_automation</a></code></li>
 <li><code><a title="secfsdstools.c_download" href="c_download/index.html">secfsdstools.c_download</a></code></li>
 <li><code><a title="secfsdstools.c_index" href="c_index/index.html">secfsdstools.c_index</a></code></li>
 <li><code><a title="secfsdstools.c_transform" href="c_transform/index.html">secfsdstools.c_transform</a></code></li>
 <li><code><a title="secfsdstools.c_update" href="c_update/index.html">secfsdstools.c_update</a></code></li>
+<li><code><a title="secfsdstools.c_update_check" href="c_update_check/index.html">secfsdstools.c_update_check</a></code></li>
 <li><code><a title="secfsdstools.d_container" href="d_container/index.html">secfsdstools.d_container</a></code></li>
 <li><code><a title="secfsdstools.e_collector" href="e_collector/index.html">secfsdstools.e_collector</a></code></li>
 <li><code><a title="secfsdstools.e_filter" href="e_filter/index.html">secfsdstools.e_filter</a></code></li>
 <li><code><a title="secfsdstools.e_presenter" href="e_presenter/index.html">secfsdstools.e_presenter</a></code></li>
 <li><code><a title="secfsdstools.f_standardize" href="f_standardize/index.html">secfsdstools.f_standardize</a></code></li>
+<li><code><a title="secfsdstools.g_pipelines" href="g_pipelines/index.html">secfsdstools.g_pipelines</a></code></li>
 <li><code><a title="secfsdstools.u_usecases" href="u_usecases/index.html">secfsdstools.u_usecases</a></code></li>
 <li><code><a title="secfsdstools.update" href="update.html">secfsdstools.update</a></code></li>
 <li><code><a title="secfsdstools.x_examples" href="x_examples/index.html">secfsdstools.x_examples</a></code></li>

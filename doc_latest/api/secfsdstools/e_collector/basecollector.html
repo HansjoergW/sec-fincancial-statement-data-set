@@ -90,7 +90,7 @@ class BaseCollector(ABC):
         basic implementation of the collect method
 
         Args:
-            sub_df_filter: filter that applies directly on the sub.txt dataframe.
+            sub_df_filter: pathfilter that applies directly on the sub.txt dataframe.
 
         Returns:
             RawDataBag: the loaded instance of RawDataBag
@@ -112,7 +112,7 @@ class BaseCollector(ABC):
             file=NUM_TXT, filters=num_filter if num_filter else None
         )
 
-        # pandas pivot works better if coreg is not nan, so we set it here to a simple dash
+        # pandas pivot works better if coreg is not nan, so we set it here to an empty string
         num_df.loc[num_df.coreg.isna(), &#39;coreg&#39;] = &#39;&#39;
 
         return RawDataBag.create(sub_df=sub_df, pre_df=pre_df, num_df=num_df)
@@ -196,7 +196,7 @@ class BaseCollector(ABC):
         basic implementation of the collect method
 
         Args:
-            sub_df_filter: filter that applies directly on the sub.txt dataframe.
+            sub_df_filter: pathfilter that applies directly on the sub.txt dataframe.
 
         Returns:
             RawDataBag: the loaded instance of RawDataBag
@@ -218,7 +218,7 @@ class BaseCollector(ABC):
             file=NUM_TXT, filters=num_filter if num_filter else None
         )
 
-        # pandas pivot works better if coreg is not nan, so we set it here to a simple dash
+        # pandas pivot works better if coreg is not nan, so we set it here to an empty string
         num_df.loc[num_df.coreg.isna(), &#39;coreg&#39;] = &#39;&#39;
 
         return RawDataBag.create(sub_df=sub_df, pre_df=pre_df, num_df=num_df)
@@ -250,7 +250,7 @@ class BaseCollector(ABC):
 <h2 id="args">Args</h2>
 <dl>
 <dt><strong><code>sub_df_filter</code></strong></dt>
-<dd>filter that applies directly on the sub.txt dataframe.</dd>
+<dd>pathfilter that applies directly on the sub.txt dataframe.</dd>
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
@@ -266,7 +266,7 @@ class BaseCollector(ABC):
     basic implementation of the collect method
 
     Args:
-        sub_df_filter: filter that applies directly on the sub.txt dataframe.
+        sub_df_filter: pathfilter that applies directly on the sub.txt dataframe.
 
     Returns:
         RawDataBag: the loaded instance of RawDataBag
@@ -288,7 +288,7 @@ class BaseCollector(ABC):
         file=NUM_TXT, filters=num_filter if num_filter else None
     )
 
-    # pandas pivot works better if coreg is not nan, so we set it here to a simple dash
+    # pandas pivot works better if coreg is not nan, so we set it here to an empty string
     num_df.loc[num_df.coreg.isna(), &#39;coreg&#39;] = &#39;&#39;
 
     return RawDataBag.create(sub_df=sub_df, pre_df=pre_df, num_df=num_df)</code></pre>

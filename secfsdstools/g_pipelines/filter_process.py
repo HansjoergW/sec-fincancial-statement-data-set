@@ -10,7 +10,7 @@ from typing import List, Callable
 from secfsdstools.a_utils.fileutils import get_directories_in_directory
 from secfsdstools.c_automation.automation_utils import delete_temp_folders
 from secfsdstools.c_automation.task_framework import Task, \
-    AbstractProcessPoolProcess, AbstractThreadProcess
+    AbstractThreadProcess
 from secfsdstools.c_index.indexdataaccess import ParquetDBIndexingAccessor
 from secfsdstools.d_container.databagmodel import RawDataBag
 from secfsdstools.e_collector.zipcollecting import ZipCollector
@@ -172,7 +172,7 @@ class ByStmtFilterTask(AbstractFilterTask):
         return f"ByStmtFilterTask(filtered_path: {self.target_path})"
 
 
-class FilterProcess(AbstractThreadProcess):
+class FilterProcess(AbstractProcessPoolProcess):
     """
     Applies basic filters on the raw indexed files and saves the result into the provided
     target_path.

@@ -4,6 +4,8 @@ permalink: /releasenotes/
 
 
 # Release Notes
+## 1.8.0 -> 1.8.1 2025-January-12
+* Fix problem with circular import when using the new FilterProcess module in secfsdstools.g_pipeline
 
 ## 1.7.0 -> 1.8.0 2025-January-10
 * Fix in OfficialTagsOnlyJoinedFilter: did only filter unofficial tags instead of vice versa

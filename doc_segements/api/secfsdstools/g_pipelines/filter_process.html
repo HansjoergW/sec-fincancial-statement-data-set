@@ -41,7 +41,7 @@ from typing import List, Callable
 from secfsdstools.a_utils.fileutils import get_directories_in_directory
 from secfsdstools.c_automation.automation_utils import delete_temp_folders
 from secfsdstools.c_automation.task_framework import Task, \
-    AbstractProcessPoolProcess
+    AbstractProcessPoolProcess, AbstractThreadProcess
 from secfsdstools.c_index.indexdataaccess import ParquetDBIndexingAccessor
 from secfsdstools.d_container.databagmodel import RawDataBag
 from secfsdstools.e_collector.zipcollecting import ZipCollector
@@ -203,7 +203,7 @@ class ByStmtFilterTask(AbstractFilterTask):
         return f&#34;ByStmtFilterTask(filtered_path: {self.target_path})&#34;
 
 
-class FilterProcess(AbstractProcessPoolProcess):
+class FilterProcess(AbstractThreadProcess):
     &#34;&#34;&#34;
     Applies basic filters on the raw indexed files and saves the result into the provided
     target_path.
@@ -660,7 +660,7 @@ postloadfilter-function.</dd>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class FilterProcess(AbstractProcessPoolProcess):
+<pre><code class="python">class FilterProcess(AbstractThreadProcess):
     &#34;&#34;&#34;
     Applies basic filters on the raw indexed files and saves the result into the provided
     target_path.
@@ -764,7 +764,7 @@ postloadfilter-function.</dd>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li><a title="secfsdstools.c_automation.task_framework.AbstractProcessPoolProcess" href="../c_automation/task_framework.html#secfsdstools.c_automation.task_framework.AbstractProcessPoolProcess">AbstractProcessPoolProcess</a></li>
+<li><a title="secfsdstools.c_automation.task_framework.AbstractThreadProcess" href="../c_automation/task_framework.html#secfsdstools.c_automation.task_framework.AbstractThreadProcess">AbstractThreadProcess</a></li>
 <li><a title="secfsdstools.c_automation.task_framework.AbstractProcess" href="../c_automation/task_framework.html#secfsdstools.c_automation.task_framework.AbstractProcess">AbstractProcess</a></li>
 <li>abc.ABC</li>
 </ul>
@@ -838,12 +838,12 @@ processing FilterTasks for every unprocessed zipfile.</p>
 </dl>
 <h3>Inherited members</h3>
 <ul class="hlist">
-<li><code><b><a title="secfsdstools.c_automation.task_framework.AbstractProcessPoolProcess" href="../c_automation/task_framework.html#secfsdstools.c_automation.task_framework.AbstractProcessPoolProcess">AbstractProcessPoolProcess</a></b></code>:
+<li><code><b><a title="secfsdstools.c_automation.task_framework.AbstractThreadProcess" href="../c_automation/task_framework.html#secfsdstools.c_automation.task_framework.AbstractThreadProcess">AbstractThreadProcess</a></b></code>:
 <ul class="hlist">
-<li><code><a title="secfsdstools.c_automation.task_framework.AbstractProcessPoolProcess.do_execution" href="../c_automation/task_framework.html#secfsdstools.c_automation.task_framework.AbstractProcessPoolProcess.do_execution">do_execution</a></code></li>
-<li><code><a title="secfsdstools.c_automation.task_framework.AbstractProcessPoolProcess.post_process" href="../c_automation/task_framework.html#secfsdstools.c_automation.task_framework.AbstractProcess.post_process">post_process</a></code></li>
-<li><code><a title="secfsdstools.c_automation.task_framework.AbstractProcessPoolProcess.process" href="../c_automation/task_framework.html#secfsdstools.c_automation.task_framework.AbstractProcess.process">process</a></code></li>
-<li><code><a title="secfsdstools.c_automation.task_framework.AbstractProcessPoolProcess.process_task" href="../c_automation/task_framework.html#secfsdstools.c_automation.task_framework.AbstractProcess.process_task">process_task</a></code></li>
+<li><code><a title="secfsdstools.c_automation.task_framework.AbstractThreadProcess.do_execution" href="../c_automation/task_framework.html#secfsdstools.c_automation.task_framework.AbstractThreadProcess.do_execution">do_execution</a></code></li>
+<li><code><a title="secfsdstools.c_automation.task_framework.AbstractThreadProcess.post_process" href="../c_automation/task_framework.html#secfsdstools.c_automation.task_framework.AbstractProcess.post_process">post_process</a></code></li>
+<li><code><a title="secfsdstools.c_automation.task_framework.AbstractThreadProcess.process" href="../c_automation/task_framework.html#secfsdstools.c_automation.task_framework.AbstractProcess.process">process</a></code></li>
+<li><code><a title="secfsdstools.c_automation.task_framework.AbstractThreadProcess.process_task" href="../c_automation/task_framework.html#secfsdstools.c_automation.task_framework.AbstractProcess.process_task">process_task</a></code></li>
 </ul>
 </li>
 </ul>

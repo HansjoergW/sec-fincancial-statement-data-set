@@ -2,6 +2,9 @@
 # Changelog
 See the [Release Notes](https://hansjoergw.github.io/sec-fincancial-statement-data-set/releasenotes/) for details.
 
+## 1.8.0 -> 1.8.1
+* Fix problem with circular import when using the new FilterProcess module in secfsdstools.g_pipeline
+
 ## 1.7.0 -> 1.8.0
 * Fix in OfficialTagsOnlyJoinedFilter: did only filter unofficial tags instead of vice versa
 

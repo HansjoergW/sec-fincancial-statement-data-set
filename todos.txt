@@ -13,72 +13,18 @@ new release
 - on github -> under code releases: draft new release
 
 
-v.1.8.0
-bugfix
-- officialtagsonlyjoinedfilter fixed: did actually filter only inofficial tags
+v.1.9.0
+- only load new datasets (ok)
+- ensure new dataset version can be downloaded and processed
+- add check which zip has new dataset
+  -> provide message, if that is not there
 
-changes
-- check for update is always executed, regardless which feature of the framework is used
-  (previously just the collectors caused a check for updates)
- -> via __init__.py of special c_update_check module, which is imported from the by the main modules
-- whole data update process implemented with a simple process/task framework
-- interface updater classmethod has changed -> taking config-instance
-- concat methods have new option to dropduplicates in resulting sub_df: default is to false
-  -> usecase concat BS and IS together into a single bag
+- remove (temporary) rapid-api support
+- provide new filter possibilities
+- think about having a new databag
 
-new
-- new config self.no_parallel_processing -> if set to TRUE, all update steps will be executed in a serial manner
-- post_update_hook definition -> called after updates with configuration as parameter
-- post_update_processes definition -> returns processes that are executed after standard process (dld, transform, index)
-
-- hook for after updated logic
-
-    - aufbereitung der daten für bs, is und cf statement möglichst direkt bei update machen,
-      so, dass diese daten schon vorbereitet und gefiltert zur verfügung stehen.
-      vlt. auch eine art postdownload hook anbieten.
-      einfaches pipeline framework
-    - only if flag is set to true
-    - example notebook
-    - configparser.configparser instance wird übergeben -> section default ist sec settings
-
-- process / task framework sollte unabhängig von update verwendet werden können
-   -> als simple process engine
-
-
-
-todos:
-- process/task execution method in task-framework (ok)
-- standardization processes in own module (ok)
-- document automation classes task_framework (ok)
-- tests for task_framework (ok)
-- adapt to changed framework and tests for modules in g_pipeline
-   - concat (ok)
-   - filter (ok)
-   - standardize (ok)
-
-- document modules in g_pipeline
-  - concat (ok)
-  - filter (ok)
-  - standardize (ok)
-
-- successfull run tests / linting (ok)
-
-- base setting for parallel execution to false for "all" processes in config (ok)
-
-- commented config for example update-process (ok)
-
-
-- new notebook documentation / automation (ok)
-
-- remark notebook bulkloading -> directly in the update process (ok)
-
-- readme -> add automation info (ok)
-  -> how to easily enable "default extended processing"
 
 ----------
-
-
-
 
 - overwrite serial execution per task
 - in cf haben wir oft auch zusätzliche 'cash' tags -> benötigen wir diese im bs auch?

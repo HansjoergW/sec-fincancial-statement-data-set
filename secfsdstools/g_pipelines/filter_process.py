@@ -172,7 +172,7 @@ class ByStmtFilterTask(AbstractFilterTask):
         return f"ByStmtFilterTask(filtered_path: {self.target_path})"
 
 
-class FilterProcess(AbstractProcessPoolProcess):
+class FilterProcess(AbstractThreadProcess):
     """
     Applies basic filters on the raw indexed files and saves the result into the provided
     target_path.

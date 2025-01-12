@@ -39,15 +39,15 @@ T = TypeVar(&#39;T&#39;)
 
 class FilterBase(Generic[T]):
     &#34;&#34;&#34;
-    Basic filter definition.
+    Basic pathfilter definition.
     &#34;&#34;&#34;
 
     @abstractmethod
     def filter(self, databag: T) -&gt; T:
         &#34;&#34;&#34;
-        implements a simple filter on the RawDataBag and produces a new databag
+        implements a simple pathfilter on the RawDataBag and produces a new databag
         Args:
-            databag (T): the bag to apply the filter to
+            databag (T): the bag to apply the pathfilter to
 
         Returns:
             T: the new  bag with the filtered content
@@ -69,22 +69,22 @@ class FilterBase(Generic[T]):
 <span>(</span><span>*args, **kwds)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Basic filter definition.</p></div>
+<div class="desc"><p>Basic pathfilter definition.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class FilterBase(Generic[T]):
     &#34;&#34;&#34;
-    Basic filter definition.
+    Basic pathfilter definition.
     &#34;&#34;&#34;
 
     @abstractmethod
     def filter(self, databag: T) -&gt; T:
         &#34;&#34;&#34;
-        implements a simple filter on the RawDataBag and produces a new databag
+        implements a simple pathfilter on the RawDataBag and produces a new databag
         Args:
-            databag (T): the bag to apply the filter to
+            databag (T): the bag to apply the pathfilter to
 
         Returns:
             T: the new  bag with the filtered content
@@ -120,11 +120,11 @@ class FilterBase(Generic[T]):
 <span>def <span class="ident">filter</span></span>(<span>self, databag: ~T) ‑> ~T</span>
 </code></dt>
 <dd>
-<div class="desc"><p>implements a simple filter on the RawDataBag and produces a new databag</p>
+<div class="desc"><p>implements a simple pathfilter on the RawDataBag and produces a new databag</p>
 <h2 id="args">Args</h2>
 <dl>
 <dt><strong><code>databag</code></strong> :&ensp;<code>T</code></dt>
-<dd>the bag to apply the filter to</dd>
+<dd>the bag to apply the pathfilter to</dd>
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
@@ -139,9 +139,9 @@ bag with the filtered content</dd>
 <pre><code class="python">@abstractmethod
 def filter(self, databag: T) -&gt; T:
     &#34;&#34;&#34;
-    implements a simple filter on the RawDataBag and produces a new databag
+    implements a simple pathfilter on the RawDataBag and produces a new databag
     Args:
-        databag (T): the bag to apply the filter to
+        databag (T): the bag to apply the pathfilter to
 
     Returns:
         T: the new  bag with the filtered content

@@ -344,7 +344,7 @@ class BalanceSheetStandardizer(Standardizer):
 
         Args:
             prepivot_rule_tree: rules that are applied before the data is pivoted. These are rules
-                    that filter (like deduplicate) or correct values.
+                    that pathfilter (like deduplicate) or correct values.
             pre_rule_tree: rules that are applied once before the main processing. These are mainly
                     rules that try to correct existing data from obvious errors (like wrong
                     tagging)
@@ -433,7 +433,7 @@ LiabilitiesAndEquity</p>
 <dl>
 <dt><strong><code>prepivot_rule_tree</code></strong></dt>
 <dd>rules that are applied before the data is pivoted. These are rules
-that filter (like deduplicate) or correct values.</dd>
+that pathfilter (like deduplicate) or correct values.</dd>
 <dt><strong><code>pre_rule_tree</code></strong></dt>
 <dd>rules that are applied once before the main processing. These are mainly
 rules that try to correct existing data from obvious errors (like wrong
@@ -781,7 +781,7 @@ dataframe. Additional tags can be added via this parameter. Default is None.</p>
 
         Args:
             prepivot_rule_tree: rules that are applied before the data is pivoted. These are rules
-                    that filter (like deduplicate) or correct values.
+                    that pathfilter (like deduplicate) or correct values.
             pre_rule_tree: rules that are applied once before the main processing. These are mainly
                     rules that try to correct existing data from obvious errors (like wrong
                     tagging)

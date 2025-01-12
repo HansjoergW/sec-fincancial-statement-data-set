@@ -23,6 +23,12 @@ v.1.9.0
 - provide new filter possibilities
 - think about having a new databag
 
+Todos:
+- circular, wenn aus der sandbox gestartet
+  - geht es, wenn über normale konfiguration?
+  - offensichtlich erst, wenn als subprocess?
+
+
 
 ----------
 

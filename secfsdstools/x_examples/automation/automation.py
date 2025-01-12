@@ -98,6 +98,7 @@ def define_extra_processes(configuration: Configuration) -> List[AbstractProcess
         List[AbstractProcess]: List with the defined process steps
 
     """
+
     joined_by_stmt_dir = configuration.config_parser.get(section="Filter",
                                                          option="filtered_dir_by_stmt_joined")
 

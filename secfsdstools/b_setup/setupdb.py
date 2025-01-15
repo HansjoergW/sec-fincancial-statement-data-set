@@ -5,6 +5,7 @@ Creation of the database.
 import glob
 import logging
 import os
+import sqlite3
 from typing import Dict
 
 from secfsdstools.a_utils.dbutils import DB
@@ -22,6 +23,18 @@ class DbCreator(DB):
 
     def __init__(self, db_dir: str):
         super().__init__(db_dir=db_dir)
+
+    def add_column_if_not_exists(self, conn, table_name, column_name, data_type):
+        try:
+            cursor = conn.cursor()
+            cursor.execute(f"ALTER TABLE {table_name} ADD COLUMN {column_name} {data_type}")
+            conn.commit()
+            print(f"Column '{column_name}' added successfully.")
+        except sqlite3.OperationalError as e:
+            if "duplicate column name" in str(e):
+                print(f"Column '{column_name}' already exists.")
+            else:
+                print(f"An error occurred: {e}")
 
     def create_db(self):
         """
@@ -50,5 +63,11 @@ class DbCreator(DB):
                 script = scriptfile.read()
                 LOGGER.debug("execute creation script %s", sqlfile)
                 curr.executescript(script)
+
             conn.commit()
+
+        # adding columns that do not exist
+        self.add_column_if_not_exists(conn=conn, table_name="index_parquet_processing_state",
+                                      column_name="hasSegments", data_type="TEXT")
+
         conn.close()

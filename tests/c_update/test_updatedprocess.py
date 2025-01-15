@@ -122,7 +122,7 @@ def test_integration_test(updater):
         assert len(indexed_files_df) == 3
 
         reports_df = indexer.read_all_indexreports_df()
-        assert len(reports_df) == 1456
+        assert len(reports_df) == 1452
 
         # check that
         last_check = updater.db_state_accesor.get_key(Updater.LAST_UPDATE_CHECK_KEY)

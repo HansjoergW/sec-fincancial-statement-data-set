@@ -7,7 +7,8 @@ PRE_TXT = "pre.txt"
 SUB_TXT = "sub.txt"
 PRE_NUM_TXT = "pre_num.txt"
 
-NUM_COLS = ['adsh', 'tag', 'version', 'coreg', 'ddate', 'qtrs', 'uom', 'value', 'footnote']
+NUM_COLS = ['adsh', 'tag', 'version', 'coreg', 'ddate', 'qtrs', 'uom',
+            'segments', 'value', 'footnote']
 PRE_COLS = ['adsh', 'report', 'line', 'stmt', 'inpth', 'rfile',
             'tag', 'version', 'plabel', 'negating']
 
@@ -35,6 +36,7 @@ NUM_DTYPE = {'adsh': str,
              'ddate': int,
              'qtrs': int,
              'uom': str,
+             'segments': str,
              'value': str, # daily files can also contain ticker name and stockexchange as strings
              'footnote': str}
 

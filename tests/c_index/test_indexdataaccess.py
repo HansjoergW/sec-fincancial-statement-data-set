@@ -33,7 +33,8 @@ def test_parquetindexreports(parquetindexaccessor):
 
 def test_parquetindexprocessing(parquetindexaccessor):
     processing_state = IndexFileProcessingState(fileName='2022q1.zip', status='processed',
-                                                processTime='', fullPath='full', entries=1)
+                                                processTime='', fullPath='full', entries=1,
+                                                hasSegments='yes')
 
     parquetindexaccessor.insert_indexfileprocessing(data=processing_state)
 

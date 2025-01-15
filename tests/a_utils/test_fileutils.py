@@ -28,7 +28,7 @@ def test_read_df_from_file_in_zip():
     file = 'sub.txt'
     no_options_df = read_df_from_file_in_zip(zip_file=zip_file, file_to_extract=file)
 
-    assert len(no_options_df) == 439
+    assert len(no_options_df) == 435
     assert len(no_options_df.columns) == 36
     assert no_options_df['cik'].dtype == np.int64
 

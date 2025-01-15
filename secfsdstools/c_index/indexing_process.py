@@ -4,9 +4,10 @@ import os
 from datetime import datetime, timezone
 from typing import List
 
+import fastparquet
 import pandas as pd
 
-from secfsdstools.a_utils.constants import SUB_TXT
+from secfsdstools.a_utils.constants import SUB_TXT, NUM_TXT
 from secfsdstools.a_utils.fileutils import get_directories_in_directory
 from secfsdstools.c_automation.task_framework import AbstractThreadProcess
 from secfsdstools.c_index.indexdataaccess import IndexFileProcessingState, ParquetDBIndexingAccessor
@@ -40,6 +41,11 @@ class IndexingTask:
         self.file_type = file_type
         self.file_name = os.path.basename(file_path)
         self.process_time = process_time
+
+    def _check_for_has_segments_column(self) -> bool:
+        num_file = os.path.join(self.file_path, f"{NUM_TXT}.parquet")
+        pf = fastparquet.ParquetFile(num_file)
+        return "segments" in pf.columns
 
     def _get_sub_df(self) -> pd.DataFrame:
         """
@@ -78,13 +84,16 @@ class IndexingTask:
         sub_df['url'] = sub_df['url'] + sub_df['cik'].astype(str) + '/' + \
                         sub_df['adsh'].str.replace('-', '') + '/' + sub_df['adsh'] + '-index.htm'
 
+        has_segments = "yes" if self._check_for_has_segments_column() else None
+
         self.dbaccessor.add_index_report(sub_df,
                                          IndexFileProcessingState(
                                              fileName=self.file_name,
                                              fullPath=self.file_path,
                                              status=self.PROCESSED_STR,
                                              entries=len(sub_df),
-                                             processTime=self.process_time
+                                             processTime=self.process_time,
+                                             hasSegments=has_segments
                                          ))
 
     def commit(self):
@@ -109,7 +118,7 @@ class ReportParquetIndexerProcess(AbstractThreadProcess):
                  db_dir: str,
                  file_type: str,
                  parquet_dir: str,
-                 execute_serial: bool=True):
+                 execute_serial: bool = True):
         """
         Constructor.
         Args:

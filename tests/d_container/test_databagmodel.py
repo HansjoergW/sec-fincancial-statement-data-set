@@ -6,17 +6,17 @@ from secfsdstools.d_container.databagmodel import RawDataBag, RawDataBagStats, J
 
 CURRENT_DIR, _ = os.path.split(__file__)
 TESTDATA_PATH = Path(CURRENT_DIR) / ".." / "_testdata"
-PATH_TO_BAG_1 = f'{CURRENT_DIR}/../_testdata/parquet/quarter/2010q1.zip'
-PATH_TO_BAG_2 = f'{CURRENT_DIR}/../_testdata/parquet/quarter/2010q2.zip'
+PATH_TO_BAG_1 = f'{CURRENT_DIR}/../_testdata/parquet_new/quarter/2010q1.zip'
+PATH_TO_BAG_2 = f'{CURRENT_DIR}/../_testdata/parquet_new/quarter/2010q2.zip'
 
 
 def test_is_rawbag():
-    assert is_rawbag_path(TESTDATA_PATH / "parquet" / "quarter" / "2010q1.zip")
+    assert is_rawbag_path(TESTDATA_PATH / "parquet_new" / "quarter" / "2010q1.zip")
     assert not is_rawbag_path(TESTDATA_PATH / "joined" / "2010q1.zip")
 
 
 def test_is_joinedbag():
-    assert not is_joinedbag_path(TESTDATA_PATH / "parquet" / "quarter" / "2010q1.zip")
+    assert not is_joinedbag_path(TESTDATA_PATH / "parquet_new" / "quarter" / "2010q1.zip")
     assert is_joinedbag_path(TESTDATA_PATH / "joined" / "2010q1.zip")
 
 

@@ -37,7 +37,7 @@ def test_transformation(tmp_path):
     pre_1_df = pd.read_parquet(tmp_path / 'quarter' / '2010q1.zip' / 'pre.txt.parquet')
     num_1_df = pd.read_parquet(tmp_path / 'quarter' / '2010q1.zip' / 'num.txt.parquet')
 
-    assert num_1_df.shape == (151692, 9)
+    assert num_1_df.shape == (194741, 10)
     assert pre_1_df.shape == (88378, 10)
     assert sub_1_df.shape == (495, 36)
 
@@ -64,7 +64,7 @@ def test_transformation_removefiles(tmp_path):
     pre_1_df = pd.read_parquet(tmp_path / 'quarter' / '2010q1.zip' / 'pre.txt.parquet')
     num_1_df = pd.read_parquet(tmp_path / 'quarter' / '2010q1.zip' / 'num.txt.parquet')
 
-    assert num_1_df.shape == (151692, 9)
+    assert num_1_df.shape == (194741, 10)
     assert pre_1_df.shape == (88378, 10)
     assert sub_1_df.shape == (495, 36)
 

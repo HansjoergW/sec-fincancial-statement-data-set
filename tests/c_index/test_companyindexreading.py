@@ -4,7 +4,7 @@ from secfsdstools.c_index.companyindexreading import CompanyIndexReader
 from secfsdstools.c_index.indexdataaccess import IndexReport
 
 CURRENT_DIR, _ = os.path.split(__file__)
-PATH_TO_PARQUET = f'{CURRENT_DIR}/../_testdata/parquet/'
+PATH_TO_PARQUET = f'{CURRENT_DIR}/../_testdata/parquet_new/'
 
 
 def test_get_latest_company_information_parquet(basicconf):

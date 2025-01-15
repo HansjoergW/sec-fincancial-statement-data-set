@@ -13,20 +13,33 @@ new release
 - on github -> under code releases: draft new release
 
 
-v.1.9.0
+v.1.9.0 -> goal: ensure segment information is available
 - only load new datasets (ok)
-- ensure new dataset version can be downloaded and processed
+- ensure new dataset version can be downloaded and processed (ok)
+- add new has_segments column (ok)
+
+- add info when storing data of processed file has_segments exists (ok)
+- adapt testdata to use new datasets (ok)
+
+
+- fix tests so that new datasets are supported
 - add check which zip has new dataset
-  -> provide message, if that is not there
+  -> display warning message, if not all zip files contain the new column
+
+- ensure new files are there with segments info and the info is available in the bags
+- ensure output in StandardPresenter is ok
+- ensure data in searching notebook is presented correctly
+
+- ensure frameworks work with old files? or better to force that new data is downloaded?
+- update testdata
 
 - remove (temporary) rapid-api support
-- provide new filter possibilities
-- think about having a new databag
 
-Todos:
-- circular, wenn aus der sandbox gestartet
-  - geht es, wenn über normale konfiguration?
-  - offensichtlich erst, wenn als subprocess?
+-----
+1.9.1
+- provide new filter possibilities
+- think about having a new databag -> segmentbag
+
 
 
 

@@ -34,6 +34,7 @@ Creation of the database.
 import glob
 import logging
 import os
+import sqlite3
 from typing import Dict
 
 from secfsdstools.a_utils.dbutils import DB
@@ -51,6 +52,18 @@ class DbCreator(DB):
 
     def __init__(self, db_dir: str):
         super().__init__(db_dir=db_dir)
+
+    def add_column_if_not_exists(self, conn, table_name, column_name, data_type):
+        try:
+            cursor = conn.cursor()
+            cursor.execute(f&#34;ALTER TABLE {table_name} ADD COLUMN {column_name} {data_type}&#34;)
+            conn.commit()
+            print(f&#34;Column &#39;{column_name}&#39; added successfully.&#34;)
+        except sqlite3.OperationalError as e:
+            if &#34;duplicate column name&#34; in str(e):
+                print(f&#34;Column &#39;{column_name}&#39; already exists.&#34;)
+            else:
+                print(f&#34;An error occurred: {e}&#34;)
 
     def create_db(self):
         &#34;&#34;&#34;
@@ -79,7 +92,13 @@ class DbCreator(DB):
                 script = scriptfile.read()
                 LOGGER.debug(&#34;execute creation script %s&#34;, sqlfile)
                 curr.executescript(script)
+
             conn.commit()
+
+        # adding columns that do not exist
+        self.add_column_if_not_exists(conn=conn, table_name=&#34;index_parquet_processing_state&#34;,
+                                      column_name=&#34;hasSegments&#34;, data_type=&#34;TEXT&#34;)
+
         conn.close()</code></pre>
 </details>
 </section>
@@ -111,6 +130,18 @@ create the database.</p></div>
     def __init__(self, db_dir: str):
         super().__init__(db_dir=db_dir)
 
+    def add_column_if_not_exists(self, conn, table_name, column_name, data_type):
+        try:
+            cursor = conn.cursor()
+            cursor.execute(f&#34;ALTER TABLE {table_name} ADD COLUMN {column_name} {data_type}&#34;)
+            conn.commit()
+            print(f&#34;Column &#39;{column_name}&#39; added successfully.&#34;)
+        except sqlite3.OperationalError as e:
+            if &#34;duplicate column name&#34; in str(e):
+                print(f&#34;Column &#39;{column_name}&#39; already exists.&#34;)
+            else:
+                print(f&#34;An error occurred: {e}&#34;)
+
     def create_db(self):
         &#34;&#34;&#34;
         reads the ddl files from the ddl directory and creates the tables
@@ -138,7 +169,13 @@ create the database.</p></div>
                 script = scriptfile.read()
                 LOGGER.debug(&#34;execute creation script %s&#34;, sqlfile)
                 curr.executescript(script)
+
             conn.commit()
+
+        # adding columns that do not exist
+        self.add_column_if_not_exists(conn=conn, table_name=&#34;index_parquet_processing_state&#34;,
+                                      column_name=&#34;hasSegments&#34;, data_type=&#34;TEXT&#34;)
+
         conn.close()</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -148,6 +185,28 @@ create the database.</p></div>
 </ul>
 <h3>Methods</h3>
 <dl>
+<dt id="secfsdstools.b_setup.setupdb.DbCreator.add_column_if_not_exists"><code class="name flex">
+<span>def <span class="ident">add_column_if_not_exists</span></span>(<span>self, conn, table_name, column_name, data_type)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def add_column_if_not_exists(self, conn, table_name, column_name, data_type):
+    try:
+        cursor = conn.cursor()
+        cursor.execute(f&#34;ALTER TABLE {table_name} ADD COLUMN {column_name} {data_type}&#34;)
+        conn.commit()
+        print(f&#34;Column &#39;{column_name}&#39; added successfully.&#34;)
+    except sqlite3.OperationalError as e:
+        if &#34;duplicate column name&#34; in str(e):
+            print(f&#34;Column &#39;{column_name}&#39; already exists.&#34;)
+        else:
+            print(f&#34;An error occurred: {e}&#34;)</code></pre>
+</details>
+</dd>
 <dt id="secfsdstools.b_setup.setupdb.DbCreator.create_db"><code class="name flex">
 <span>def <span class="ident">create_db</span></span>(<span>self)</span>
 </code></dt>
@@ -184,7 +243,13 @@ create the database.</p></div>
             script = scriptfile.read()
             LOGGER.debug(&#34;execute creation script %s&#34;, sqlfile)
             curr.executescript(script)
+
         conn.commit()
+
+    # adding columns that do not exist
+    self.add_column_if_not_exists(conn=conn, table_name=&#34;index_parquet_processing_state&#34;,
+                                  column_name=&#34;hasSegments&#34;, data_type=&#34;TEXT&#34;)
+
     conn.close()</code></pre>
 </details>
 </dd>
@@ -226,6 +291,7 @@ create the database.</p></div>
 <li>
 <h4><code><a title="secfsdstools.b_setup.setupdb.DbCreator" href="#secfsdstools.b_setup.setupdb.DbCreator">DbCreator</a></code></h4>
 <ul class="">
+<li><code><a title="secfsdstools.b_setup.setupdb.DbCreator.add_column_if_not_exists" href="#secfsdstools.b_setup.setupdb.DbCreator.add_column_if_not_exists">add_column_if_not_exists</a></code></li>
 <li><code><a title="secfsdstools.b_setup.setupdb.DbCreator.create_db" href="#secfsdstools.b_setup.setupdb.DbCreator.create_db">create_db</a></code></li>
 </ul>
 </li>

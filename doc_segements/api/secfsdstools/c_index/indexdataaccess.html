@@ -60,6 +60,7 @@ class IndexFileProcessingState:
     status: str
     entries: int
     processTime: str  # pylint: disable=C0103
+    hasSegments: str  # pylint: disable=C0103
 
 
 class ParquetDBIndexingAccessor(DB):
@@ -351,7 +352,7 @@ class ParquetDBIndexingAccessor(DB):
 <dl>
 <dt id="secfsdstools.c_index.indexdataaccess.IndexFileProcessingState"><code class="flex name class">
 <span>class <span class="ident">IndexFileProcessingState</span></span>
-<span>(</span><span>fileName: str, fullPath: str, status: str, entries: int, processTime: str)</span>
+<span>(</span><span>fileName: str, fullPath: str, status: str, entries: int, processTime: str, hasSegments: str)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>dataclass for index_file_processing_state table</p></div>
@@ -365,7 +366,8 @@ class ParquetDBIndexingAccessor(DB):
     fullPath: str  # pylint: disable=C0103
     status: str
     entries: int
-    processTime: str  # pylint: disable=C0103</code></pre>
+    processTime: str  # pylint: disable=C0103
+    hasSegments: str  # pylint: disable=C0103</code></pre>
 </details>
 <h3>Class variables</h3>
 <dl>
@@ -378,6 +380,10 @@ class ParquetDBIndexingAccessor(DB):
 <div class="desc"></div>
 </dd>
 <dt id="secfsdstools.c_index.indexdataaccess.IndexFileProcessingState.fullPath"><code class="name">var <span class="ident">fullPath</span> : str</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="secfsdstools.c_index.indexdataaccess.IndexFileProcessingState.hasSegments"><code class="name">var <span class="ident">hasSegments</span> : str</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -1340,10 +1346,11 @@ forms that should be returned</p>
 <ul>
 <li>
 <h4><code><a title="secfsdstools.c_index.indexdataaccess.IndexFileProcessingState" href="#secfsdstools.c_index.indexdataaccess.IndexFileProcessingState">IndexFileProcessingState</a></code></h4>
-<ul class="">
+<ul class="two-column">
 <li><code><a title="secfsdstools.c_index.indexdataaccess.IndexFileProcessingState.entries" href="#secfsdstools.c_index.indexdataaccess.IndexFileProcessingState.entries">entries</a></code></li>
 <li><code><a title="secfsdstools.c_index.indexdataaccess.IndexFileProcessingState.fileName" href="#secfsdstools.c_index.indexdataaccess.IndexFileProcessingState.fileName">fileName</a></code></li>
 <li><code><a title="secfsdstools.c_index.indexdataaccess.IndexFileProcessingState.fullPath" href="#secfsdstools.c_index.indexdataaccess.IndexFileProcessingState.fullPath">fullPath</a></code></li>
+<li><code><a title="secfsdstools.c_index.indexdataaccess.IndexFileProcessingState.hasSegments" href="#secfsdstools.c_index.indexdataaccess.IndexFileProcessingState.hasSegments">hasSegments</a></code></li>
 <li><code><a title="secfsdstools.c_index.indexdataaccess.IndexFileProcessingState.processTime" href="#secfsdstools.c_index.indexdataaccess.IndexFileProcessingState.processTime">processTime</a></code></li>
 <li><code><a title="secfsdstools.c_index.indexdataaccess.IndexFileProcessingState.status" href="#secfsdstools.c_index.indexdataaccess.IndexFileProcessingState.status">status</a></code></li>
 </ul>

@@ -21,8 +21,8 @@ v.1.9.0 -> goal: ensure segment information is available
 - add info when storing data of processed file has_segments exists (ok)
 - adapt testdata to use new datasets (ok)
 
-
 - fix tests so that new datasets are supported
+
 - add check which zip has new dataset
   -> display warning message, if not all zip files contain the new column
 
@@ -40,6 +40,9 @@ v.1.9.0 -> goal: ensure segment information is available
 - provide new filter possibilities
 - think about having a new databag -> segmentbag
 
+
+1.9.2
+- adapt standardizer, use segment infos
 
 
 

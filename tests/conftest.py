@@ -13,7 +13,7 @@ def basicconf() -> Configuration:
     return Configuration(
         download_dir=f"{CURRENT_DIR}/_testdata/zip",
         db_dir=CURRENT_DIR,
-        parquet_dir=f"{CURRENT_DIR}/_testdata/parquet",
+        parquet_dir=f"{CURRENT_DIR}/_testdata/parquet_new",
         user_agent_email="me@home.com",
         rapid_api_key=None,
         rapid_api_plan="basic",

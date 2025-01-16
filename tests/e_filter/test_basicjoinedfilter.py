@@ -9,7 +9,7 @@ from secfsdstools.e_filter.joinedfiltering import ReportPeriodJoinedFilter, Adsh
     OfficialTagsOnlyJoinedFilter, USDOnlyJoinedFilter
 
 CURRENT_DIR, _ = os.path.split(__file__)
-PATH_TO_BAG_1 = f'{CURRENT_DIR}/../_testdata/parquet/quarter/2010q1.zip'
+PATH_TO_BAG_1 = f'{CURRENT_DIR}/../_testdata/parquet_new/quarter/2010q1.zip'
 
 APPLE_10Q_2010Q1 = '0001193125-10-012085'
 
@@ -29,7 +29,7 @@ def test_filter_StmtsJoinedFilter(bag1):
     filtered_bag = filter.filter(bag1)
 
     assert filtered_bag.sub_df.shape == bag1.sub_df.shape
-    assert filtered_bag.pre_num_df.shape == (43632, 16)
+    assert filtered_bag.pre_num_df.shape == (54898, 17)
 
     pre_stmts = filtered_bag.pre_num_df.stmt.unique()
     assert len(pre_stmts) == 1
@@ -42,7 +42,7 @@ def test_filter_AdshJoinedFilter(bag1):
     filtered_bag = filter.filter(bag1)
 
     assert filtered_bag.sub_df.shape == (1, 36)
-    assert filtered_bag.pre_num_df.shape == (154, 16)
+    assert filtered_bag.pre_num_df.shape == (154, 17)
 
     pre_num_adshs = filtered_bag.pre_num_df.adsh.unique()
     assert len(pre_num_adshs) == 1
@@ -55,7 +55,7 @@ def test_filter_ReportPeriodJoinedFilter(bag1):
     filtered_bag = filter.filter(bag1)
 
     assert filtered_bag.sub_df.shape == bag1.sub_df.shape
-    assert filtered_bag.pre_num_df.shape == (62444, 16)
+    assert filtered_bag.pre_num_df.shape == (84075, 17)
 
     # we expect only one ddate for every adsh, so the len has to match the len of sub_df
     assert len(filtered_bag.pre_num_df[['adsh', 'ddate']].value_counts()) == len(bag1.sub_df)
@@ -67,7 +67,7 @@ def test_filter_ReportPeriodAndPreviousPeriodJoinedFilter(bag1):
     filtered_bag = filter.filter(bag1)
 
     assert filtered_bag.sub_df.shape == bag1.sub_df.shape
-    assert filtered_bag.pre_num_df.shape == (122239, 16)
+    assert filtered_bag.pre_num_df.shape == (165501, 17)
 
     # we expect two ddate entries for every adsh, so the len has to be twice the len of sub_df
     assert len(filtered_bag.pre_num_df[['adsh', 'ddate']].value_counts()) == 2 * len(bag1.sub_df)
@@ -79,7 +79,7 @@ def test_filter_MainCoregRawFilter(bag1):
     filtered_bag = filter.filter(bag1)
 
     assert filtered_bag.sub_df.shape == bag1.sub_df.shape
-    assert filtered_bag.pre_num_df.shape == (157809, 16)
+    assert filtered_bag.pre_num_df.shape == (230074, 17)
 
     coregs = filtered_bag.pre_num_df.coreg.unique()
     assert len(coregs) == 1
@@ -92,7 +92,7 @@ def test_filter_TagJoinedFilter(bag1):
     filtered_bag = filter.filter(bag1)
 
     assert filtered_bag.sub_df.shape == bag1.sub_df.shape
-    assert filtered_bag.pre_num_df.shape == (1656, 16)
+    assert filtered_bag.pre_num_df.shape == (1718, 17)
 
     assert len(filtered_bag.pre_num_df.tag.unique()) == 2
 
@@ -115,17 +115,17 @@ def test_concatenation(bag1):
 
     filtered_bag = bag1.filter(filter1).filter(filter2)
     assert filtered_bag.sub_df.shape == bag1.sub_df.shape
-    assert filtered_bag.pre_num_df.shape == (822, 16)
+    assert filtered_bag.pre_num_df.shape == (853, 17)
 
     # using index operator
     filtered_bag = bag1[filter1][filter2]
     assert filtered_bag.sub_df.shape == bag1.sub_df.shape
-    assert filtered_bag.pre_num_df.shape == (822, 16)
+    assert filtered_bag.pre_num_df.shape == (853, 17)
 
 
 def test_USDOnlyFilter(bag1):
     filter = USDOnlyJoinedFilter()
     filtered_bag = bag1.filter(filter)
 
-    assert bag1.pre_num_df.shape == (165456, 16)
-    assert filtered_bag.pre_num_df.shape == (163706, 16)
+    assert bag1.pre_num_df.shape == (237716, 17)
+    assert filtered_bag.pre_num_df.shape == (235027, 17)

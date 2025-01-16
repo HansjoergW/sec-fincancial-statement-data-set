@@ -18,10 +18,10 @@ MSFT_ADSH_10K_2010_Q3 = '0001193125-10-171791'
 MSFT_ADSH_10Q_2010_Q4 = '0001193125-10-239825'
 
 CURRENT_DIR, _ = os.path.split(__file__)
-PATH_TO_PARQUET_Q1 = f'{CURRENT_DIR}/../_testdata/parquet/quarter/2010q1.zip'
-PATH_TO_PARQUET_Q2 = f'{CURRENT_DIR}/../_testdata/parquet/quarter/2010q2.zip'
-PATH_TO_PARQUET_Q3 = f'{CURRENT_DIR}/../_testdata/parquet/quarter/2010q3.zip'
-PATH_TO_PARQUET_Q4 = f'{CURRENT_DIR}/../_testdata/parquet/quarter/2010q4.zip'
+PATH_TO_PARQUET_Q1 = f'{CURRENT_DIR}/../_testdata/parquet_new/quarter/2010q1.zip'
+PATH_TO_PARQUET_Q2 = f'{CURRENT_DIR}/../_testdata/parquet_new/quarter/2010q2.zip'
+PATH_TO_PARQUET_Q3 = f'{CURRENT_DIR}/../_testdata/parquet_new/quarter/2010q3.zip'
+PATH_TO_PARQUET_Q4 = f'{CURRENT_DIR}/../_testdata/parquet_new/quarter/2010q4.zip'
 
 
 @pytest.fixture
@@ -58,14 +58,14 @@ def test_cm_get_report_by_adshs(basicconf):
             adshs=[APPLE_ADSH_10Q_2010_Q1, APPLE_ADSH_10Q_2010_Q2],
             configuration=basicconf)
         bag = collector.collect()
-        assert bag.num_df.shape == (321, 9)
+        assert bag.num_df.shape == (319, 10)
 
 
 def test_read_raw_data(multireportcollector):
     databag: RawDataBag = multireportcollector.collect()
     assert databag.sub_df.shape == (2, 36)
-    assert databag.num_df.shape == (321, 9)
-    assert databag.pre_df.shape == (211, 10)
+    assert databag.num_df.shape == (319, 10)
+    assert databag.pre_df.shape == (149, 10)
 
 
 def test_optimized_load(basicconf, caplog):

@@ -9,7 +9,7 @@ from secfsdstools.c_index.indexdataaccess import IndexFileProcessingState
 from secfsdstools.e_collector.zipcollecting import ZipCollector
 
 CURRENT_DIR, _ = os.path.split(__file__)
-PATH_TO_ZIP = f'{CURRENT_DIR}/../_testdata/parquet/quarter/2010q1.zip'
+PATH_TO_ZIP = f'{CURRENT_DIR}/../_testdata/parquet_new/quarter/2010q1.zip'
 
 
 @pytest.fixture
@@ -19,9 +19,9 @@ def zipcollector():
     return zipcollector
 
 
-def test_cm_get_zip_by_name():
+def test_cm_get_zip_by_name(zipcollector):
     instances = [IndexFileProcessingState(fileName="", status="", entries=0, processTime="",
-                                        fullPath=PATH_TO_ZIP)]
+                                        fullPath=PATH_TO_ZIP, hasSegments="yes")]
 
     with patch(
             "secfsdstools.c_index.indexdataaccess.ParquetDBIndexingAccessor.read_index_files_for_filenames",
@@ -31,12 +31,12 @@ def test_cm_get_zip_by_name():
                                                                                 download_dir="",
                                                                                 user_agent_email="",
                                                                                 parquet_dir=""))
-        assert zipcollector.collect().num_df.shape == (151692, 9)
+        assert zipcollector.collect().num_df.shape == (194741, 10)
 
 
 def test_read_raw_data(zipcollector):
-    assert zipcollector.collect().num_df.shape == (151692, 9)
-    assert zipcollector.collect().pre_df.shape == (88378, 10)
+    assert zipcollector.collect().num_df.shape == (194741, 10)
+    assert zipcollector.collect().pre_df.shape == (64151, 10)
     assert zipcollector.collect().sub_df.shape == (495, 36)
 
 

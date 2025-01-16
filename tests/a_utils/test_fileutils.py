@@ -34,13 +34,13 @@ def test_read_df_from_file_in_zip():
 
     # test reading with a certain type
     cik_as_str_df = read_df_from_file_in_zip(zip_file=zip_file, file_to_extract=file, dtype={'cik': str})
-    assert len(cik_as_str_df) == 439
+    assert len(cik_as_str_df) == 435
     assert len(cik_as_str_df.columns) == 36
     assert cik_as_str_df['cik'].dtype == object
 
     # test reading only certain columns
     cik_as_str_df = read_df_from_file_in_zip(zip_file=zip_file, file_to_extract=file, usecols=['adsh', 'cik'])
-    assert len(cik_as_str_df) == 439
+    assert len(cik_as_str_df) == 435
     assert len(cik_as_str_df.columns) == 2
 
 

@@ -17,7 +17,7 @@ def test_standardizer_process(tmp_path):
     target_path = tmp_path / "target"
 
     joined_input_bag = ZipCollector(
-        datapaths=[str(TESTDATA_PATH / "parquet" / "quarter" / "2021q1.zip")],
+        datapaths=[str(TESTDATA_PATH / "parquet_new" / "quarter" / "2021q1.zip")],
         forms_filter=["10-K", "10-Q"],
         stmt_filter=["BS", "IS", "CF"],
         tag_filter=None,
@@ -41,6 +41,6 @@ def test_standardizer_process(tmp_path):
     std_is_bag = StandardizedBag.load(str(target_path / "IS"))
     std_cf_bag = StandardizedBag.load(str(target_path / "CF"))
 
-    assert len(std_bs_bag.result_df) == 5435
-    assert len(std_is_bag.result_df) == 7802
-    assert len(std_cf_bag.result_df) == 5387
+    assert len(std_bs_bag.result_df) == 5441
+    assert len(std_is_bag.result_df) == 7847
+    assert len(std_cf_bag.result_df) == 5394

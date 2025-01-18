@@ -8,7 +8,7 @@ from secfsdstools.e_filter.rawfiltering import AdshRawFilter, ReportPeriodRawFil
 from secfsdstools.e_presenter.presenting import StandardStatementPresenter
 
 CURRENT_DIR, _ = os.path.split(__file__)
-PATH_TO_BAG_1 = f'{CURRENT_DIR}/../_testdata/parquet/quarter/2010q1.zip'
+PATH_TO_BAG_1 = f'{CURRENT_DIR}/../_testdata/parquet_new/quarter/2010q1.zip'
 
 APPLE_10Q_2010Q1 = '0001193125-10-012085'
 

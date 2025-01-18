@@ -13,14 +13,14 @@ TESTDATA_PATH = Path(CURRENT_DIR) / ".." / "_testdata"
 
 
 def test_filtertask_raw(tmp_path):
-    raw_bag: RawDataBag = RawDataBag.load(str(TESTDATA_PATH / "parquet" / "quarter" / "2010q1.zip"))
+    raw_bag: RawDataBag = RawDataBag.load(str(TESTDATA_PATH / "parquet_new" / "quarter" / "2010q1.zip"))
 
     # check expected unfiltered counts
-    assert len(raw_bag.num_df) == 151_692
-    assert len(raw_bag.pre_df) == 88_378
+    assert len(raw_bag.num_df) == 194_741
+    assert len(raw_bag.pre_df) == 64_151
 
     return_value = ZipCollector(
-        datapaths=[str(TESTDATA_PATH / "parquet" / "quarter" / "2010q1.zip")],
+        datapaths=[str(TESTDATA_PATH / "parquet_new" / "quarter" / "2010q1.zip")],
         forms_filter=["10-K", "10-Q"],
         stmt_filter=["BS", "IS"],
         tag_filter=None,
@@ -42,19 +42,19 @@ def test_filtertask_raw(tmp_path):
 
         fitlered_bag: RawDataBag = RawDataBag.load(str(tmp_path / "result"))
 
-        assert len(fitlered_bag.num_df) == 46_479
-        assert len(fitlered_bag.pre_df) == 35_875
+        assert len(fitlered_bag.num_df) == 57_433
+        assert len(fitlered_bag.pre_df) == 28_404
 
 
 def test_filtertask_joined(tmp_path):
-    raw_bag: RawDataBag = RawDataBag.load(str(TESTDATA_PATH / "parquet" / "quarter" / "2010q1.zip"))
+    raw_bag: RawDataBag = RawDataBag.load(str(TESTDATA_PATH / "parquet_new" / "quarter" / "2010q1.zip"))
 
     # check expected unfiltered counts
-    assert len(raw_bag.num_df) == 151_692
-    assert len(raw_bag.pre_df) == 88_378
+    assert len(raw_bag.num_df) == 194_741
+    assert len(raw_bag.pre_df) == 64_151
 
     return_value = ZipCollector(
-        datapaths=[str(TESTDATA_PATH / "parquet" / "quarter" / "2010q1.zip")],
+        datapaths=[str(TESTDATA_PATH / "parquet_new" / "quarter" / "2010q1.zip")],
         forms_filter=["10-K", "10-Q"],
         stmt_filter=["BS", "IS"],
         tag_filter=None,
@@ -76,18 +76,18 @@ def test_filtertask_joined(tmp_path):
 
         fitlered_bag: JoinedDataBag = JoinedDataBag.load(str(tmp_path / "result"))
 
-        assert len(fitlered_bag.pre_num_df) == 28_253
+        assert len(fitlered_bag.pre_num_df) == 32_223
 
 
 def test_bystmtfiltertask_raw(tmp_path):
-    raw_bag: RawDataBag = RawDataBag.load(str(TESTDATA_PATH / "parquet" / "quarter" / "2010q1.zip"))
+    raw_bag: RawDataBag = RawDataBag.load(str(TESTDATA_PATH / "parquet_new" / "quarter" / "2010q1.zip"))
 
     # check expected unfiltered counts
-    assert len(raw_bag.num_df) == 151_692
-    assert len(raw_bag.pre_df) == 88_378
+    assert len(raw_bag.num_df) == 194_741
+    assert len(raw_bag.pre_df) == 64_151
 
     return_value = ZipCollector(
-        datapaths=[str(TESTDATA_PATH / "parquet" / "quarter" / "2010q1.zip")],
+        datapaths=[str(TESTDATA_PATH / "parquet_new" / "quarter" / "2010q1.zip")],
         forms_filter=["10-K", "10-Q"],
         stmt_filter=["BS", "IS"],
         tag_filter=None,
@@ -110,21 +110,21 @@ def test_bystmtfiltertask_raw(tmp_path):
         fitlered_bag_bs: RawDataBag = RawDataBag.load(str(tmp_path / "result" / "BS"))
         fitlered_bag_is: RawDataBag = RawDataBag.load(str(tmp_path / "result" / "IS"))
 
-        assert len(fitlered_bag_bs.num_df) == 46_479
-        assert len(fitlered_bag_bs.pre_df) == 22_500
-        assert len(fitlered_bag_is.num_df) == 46_479
-        assert len(fitlered_bag_is.pre_df) == 13_375
+        assert len(fitlered_bag_bs.num_df) == 57_433
+        assert len(fitlered_bag_bs.pre_df) == 17_729
+        assert len(fitlered_bag_is.num_df) == 57_433
+        assert len(fitlered_bag_is.pre_df) == 10_675
 
 
 def test_bystmtfiltertask_joined(tmp_path):
-    raw_bag: RawDataBag = RawDataBag.load(str(TESTDATA_PATH / "parquet" / "quarter" / "2010q1.zip"))
+    raw_bag: RawDataBag = RawDataBag.load(str(TESTDATA_PATH / "parquet_new" / "quarter" / "2010q1.zip"))
 
     # check expected unfiltered counts
-    assert len(raw_bag.num_df) == 151_692
-    assert len(raw_bag.pre_df) == 88_378
+    assert len(raw_bag.num_df) == 194_741
+    assert len(raw_bag.pre_df) == 64_151
 
     return_value = ZipCollector(
-        datapaths=[str(TESTDATA_PATH / "parquet" / "quarter" / "2010q1.zip")],
+        datapaths=[str(TESTDATA_PATH / "parquet_new" / "quarter" / "2010q1.zip")],
         forms_filter=["10-K", "10-Q"],
         stmt_filter=["BS", "IS"],
         tag_filter=None,
@@ -147,8 +147,8 @@ def test_bystmtfiltertask_joined(tmp_path):
         fitlered_bag_bs: JoinedDataBag = JoinedDataBag.load(str(tmp_path / "result" / "BS"))
         fitlered_bag_is: JoinedDataBag = JoinedDataBag.load(str(tmp_path / "result" / "IS"))
 
-        assert len(fitlered_bag_bs.pre_num_df) == 17_046
-        assert len(fitlered_bag_is.pre_num_df) == 11_207
+        assert len(fitlered_bag_bs.pre_num_df) == 19_958
+        assert len(fitlered_bag_is.pre_num_df) == 12_265
 
 
 def test_filterprocess(tmp_path):

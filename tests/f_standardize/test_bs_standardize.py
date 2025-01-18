@@ -8,7 +8,7 @@ from secfsdstools.f_standardize.bs_standardize import BalanceSheetStandardizer
 from secfsdstools.u_usecases.bulk_loading import default_postloadfilter
 
 CURRENT_DIR, _ = os.path.split(__file__)
-PATH_TO_PARQUET_2021_Q1 = f'{CURRENT_DIR}/../_testdata/parquet/quarter/2021q1.zip'
+PATH_TO_PARQUET_2021_Q1 = f'{CURRENT_DIR}/../_testdata/parquet_new/quarter/2021q1.zip'
 
 
 @pytest.fixture
@@ -25,7 +25,7 @@ def test_standardizing(joined_bag):
     standardizer = BalanceSheetStandardizer()
 
     print("number of loaded reports: ", len(joined_bag.sub_df))
-    assert len(joined_bag.sub_df) == 5470
+    assert len(joined_bag.sub_df) == 5465
 
     result = standardizer.present(joined_bag)
     assert len(result) > 5400  # we expect that most reports could be processed

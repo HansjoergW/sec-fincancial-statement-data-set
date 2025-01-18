@@ -53,7 +53,7 @@ def test_direct_sub_directory_collect(tmp_path):
     assert len(set(meta_inf_content) - {"2010q1.zip", "2010q2.zip", "2010q3.zip"}) == 0
 
     bag = JoinedDataBag.load(str(task.target_path))
-    assert bag.sub_df.shape == (2171, 36)
+    assert bag.sub_df.shape == (2429, 36)
 
     # Second Part: Add another folder
     # prepare for second step -> copy new folder to temp folder
@@ -84,7 +84,7 @@ def test_direct_sub_directory_collect(tmp_path):
         set(meta_inf_content) - {"2010q1.zip", "2010q2.zip", "2010q3.zip", "2010q4.zip"}) == 0
 
     bag = JoinedDataBag.load(str(task2.target_path))
-    assert bag.sub_df.shape == (3585, 36)
+    assert bag.sub_df.shape == (3903, 36)
 
 
 def test_child_sub_directory_collect(tmp_path):
@@ -133,7 +133,7 @@ def test_child_sub_directory_collect(tmp_path):
     assert len(set(meta_inf_content) - {"2010q1.zip", "2010q2.zip", "2010q3.zip"}) == 0
 
     bag = JoinedDataBag.load(str(task.target_path))
-    assert bag.sub_df.shape == (2171, 36)
+    assert bag.sub_df.shape == (2429, 36)
 
     # Second Part: Add another folder
     # prepare for second step -> copy new folder to temp folder
@@ -164,7 +164,7 @@ def test_child_sub_directory_collect(tmp_path):
         set(meta_inf_content) - {"2010q1.zip", "2010q2.zip", "2010q3.zip", "2010q4.zip"}) == 0
 
     bag = JoinedDataBag.load(str(task2.target_path))
-    assert bag.sub_df.shape == (3585, 36)
+    assert bag.sub_df.shape == (3903, 36)
 
 
 def test_changed_content_collect(tmp_path):
@@ -209,7 +209,7 @@ def test_changed_content_collect(tmp_path):
     ts_initial: float = float(meta_inf_content[0])
 
     bag = JoinedDataBag.load(str(task.target_path))
-    assert bag.sub_df.shape == (2171, 36)
+    assert bag.sub_df.shape == (2429, 36)
 
     # second part: change the content
     # we overwrite the content of the 2010q3 with q4, to simulate an update in the folder
@@ -243,4 +243,4 @@ def test_changed_content_collect(tmp_path):
     assert ts_changed > ts_initial
 
     bag = JoinedDataBag.load(str(task2.target_path))
-    assert bag.sub_df.shape == (2353, 36)
+    assert bag.sub_df.shape == (2491, 36)

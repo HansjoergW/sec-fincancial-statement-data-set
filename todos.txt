@@ -21,17 +21,20 @@ v.1.9.0 -> goal: ensure segment information is available
 - add info when storing data of processed file has_segments exists (ok)
 - adapt testdata to use new datasets (ok)
 
-- fix tests so that new datasets are supported
+- update testdata (ok)
+- fix tests so that new datasets are supported (ok)
 
 - add check which zip has new dataset
   -> display warning message, if not all zip files contain the new column
 
-- ensure new files are there with segments info and the info is available in the bags
+- ensure new files are there with segments info and the info is available in the bags (ok)
+
 - ensure output in StandardPresenter is ok
 - ensure data in searching notebook is presented correctly
+- wie behandeln wir join mit segments?
+- fix standardizer
 
 - ensure frameworks work with old files? or better to force that new data is downloaded?
-- update testdata
 
 - remove (temporary) rapid-api support
 

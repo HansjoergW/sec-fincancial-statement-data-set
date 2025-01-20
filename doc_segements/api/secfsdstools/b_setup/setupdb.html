@@ -104,9 +104,7 @@ class DbCreator(DB):
 
             conn.commit()
 
-        # adding columns that do not exist
-        self.add_column_if_not_exists(conn=conn, table_name=&#34;index_parquet_processing_state&#34;,
-                                      column_name=&#34;hasSegments&#34;, data_type=&#34;TEXT&#34;)
+        # adding columns that do not exist - so far none are needed
 
         conn.close()</code></pre>
 </details>
@@ -190,9 +188,7 @@ create the database.</p></div>
 
             conn.commit()
 
-        # adding columns that do not exist
-        self.add_column_if_not_exists(conn=conn, table_name=&#34;index_parquet_processing_state&#34;,
-                                      column_name=&#34;hasSegments&#34;, data_type=&#34;TEXT&#34;)
+        # adding columns that do not exist - so far none are needed
 
         conn.close()</code></pre>
 </details>
@@ -284,9 +280,7 @@ create the database.</p></div>
 
         conn.commit()
 
-    # adding columns that do not exist
-    self.add_column_if_not_exists(conn=conn, table_name=&#34;index_parquet_processing_state&#34;,
-                                  column_name=&#34;hasSegments&#34;, data_type=&#34;TEXT&#34;)
+    # adding columns that do not exist - so far none are needed
 
     conn.close()</code></pre>
 </details>

@@ -45,7 +45,6 @@ class SecDownloadingProcess(BaseDownloadingProcess):
     &#34;&#34;&#34;
         Downloading the quarterly zip files of the financial statement data sets
     &#34;&#34;&#34;
-    FIN_STAT_DATASET_URL = &#39;https://www.sec.gov/dera/data/financial-statement-data-sets.html&#39;
     FIN_STAT_DATASET_ARCHIVE_URL = \
         &#39;https://www.sec.gov/data-research/sec-markets-data/financial-statement-data-sets-archive&#39;
 
@@ -79,21 +78,8 @@ class SecDownloadingProcess(BaseDownloadingProcess):
             archive_hrefs = self.href_re.findall(archive_first_table)
             archive_hrefs = [f&#39;https://www.sec.gov{href[6:-1]}&#39; for href in archive_hrefs]
 
-        # reading data from the main url - starting with 2024q4.zip
-        LOGGER.info(&#34;reading table in main page: %s&#34;, self.FIN_STAT_DATASET_URL)
-        main_content = self.urldownloader.get_url_content(self.FIN_STAT_DATASET_URL)
-        main_tables = self.table_re.findall(main_content.text)
 
-        main_hrefs: List[str] = []
-
-        if len(main_tables) == 0:
-            LOGGER.warning(&#34;No table found at: %s&#34;, self.FIN_STAT_DATASET_URL)
-        else:
-            main_first_table = main_tables[0]
-            main_hrefs = self.href_re.findall(main_first_table)
-            main_hrefs = [f&#39;https://www.sec.gov{href[6:-1]}&#39; for href in main_hrefs]
-
-        hrefs = archive_hrefs + main_hrefs
+        hrefs = archive_hrefs
         return_value: List[Tuple[str, str]] = [(os.path.basename(href), href) for href in hrefs]
 
         return_value = [(n.replace(&#34;-archive&#34;, &#34;&#34;), p) for n, p in return_value]
@@ -146,7 +132,6 @@ class SecDownloadingProcess(BaseDownloadingProcess):
     &#34;&#34;&#34;
         Downloading the quarterly zip files of the financial statement data sets
     &#34;&#34;&#34;
-    FIN_STAT_DATASET_URL = &#39;https://www.sec.gov/dera/data/financial-statement-data-sets.html&#39;
     FIN_STAT_DATASET_ARCHIVE_URL = \
         &#39;https://www.sec.gov/data-research/sec-markets-data/financial-statement-data-sets-archive&#39;
 
@@ -180,21 +165,8 @@ class SecDownloadingProcess(BaseDownloadingProcess):
             archive_hrefs = self.href_re.findall(archive_first_table)
             archive_hrefs = [f&#39;https://www.sec.gov{href[6:-1]}&#39; for href in archive_hrefs]
 
-        # reading data from the main url - starting with 2024q4.zip
-        LOGGER.info(&#34;reading table in main page: %s&#34;, self.FIN_STAT_DATASET_URL)
-        main_content = self.urldownloader.get_url_content(self.FIN_STAT_DATASET_URL)
-        main_tables = self.table_re.findall(main_content.text)
 
-        main_hrefs: List[str] = []
-
-        if len(main_tables) == 0:
-            LOGGER.warning(&#34;No table found at: %s&#34;, self.FIN_STAT_DATASET_URL)
-        else:
-            main_first_table = main_tables[0]
-            main_hrefs = self.href_re.findall(main_first_table)
-            main_hrefs = [f&#39;https://www.sec.gov{href[6:-1]}&#39; for href in main_hrefs]
-
-        hrefs = archive_hrefs + main_hrefs
+        hrefs = archive_hrefs
         return_value: List[Tuple[str, str]] = [(os.path.basename(href), href) for href in hrefs]
 
         return_value = [(n.replace(&#34;-archive&#34;, &#34;&#34;), p) for n, p in return_value]
@@ -221,10 +193,6 @@ class SecDownloadingProcess(BaseDownloadingProcess):
 <h3>Class variables</h3>
 <dl>
 <dt id="secfsdstools.c_download.secdownloading_process.SecDownloadingProcess.FIN_STAT_DATASET_ARCHIVE_URL"><code class="name">var <span class="ident">FIN_STAT_DATASET_ARCHIVE_URL</span></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt id="secfsdstools.c_download.secdownloading_process.SecDownloadingProcess.FIN_STAT_DATASET_URL"><code class="name">var <span class="ident">FIN_STAT_DATASET_URL</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -272,7 +240,6 @@ class SecDownloadingProcess(BaseDownloadingProcess):
 <h4><code><a title="secfsdstools.c_download.secdownloading_process.SecDownloadingProcess" href="#secfsdstools.c_download.secdownloading_process.SecDownloadingProcess">SecDownloadingProcess</a></code></h4>
 <ul class="">
 <li><code><a title="secfsdstools.c_download.secdownloading_process.SecDownloadingProcess.FIN_STAT_DATASET_ARCHIVE_URL" href="#secfsdstools.c_download.secdownloading_process.SecDownloadingProcess.FIN_STAT_DATASET_ARCHIVE_URL">FIN_STAT_DATASET_ARCHIVE_URL</a></code></li>
-<li><code><a title="secfsdstools.c_download.secdownloading_process.SecDownloadingProcess.FIN_STAT_DATASET_URL" href="#secfsdstools.c_download.secdownloading_process.SecDownloadingProcess.FIN_STAT_DATASET_URL">FIN_STAT_DATASET_URL</a></code></li>
 <li><code><a title="secfsdstools.c_download.secdownloading_process.SecDownloadingProcess.href_re" href="#secfsdstools.c_download.secdownloading_process.SecDownloadingProcess.href_re">href_re</a></code></li>
 <li><code><a title="secfsdstools.c_download.secdownloading_process.SecDownloadingProcess.table_re" href="#secfsdstools.c_download.secdownloading_process.SecDownloadingProcess.table_re">table_re</a></code></li>
 </ul>

@@ -2,6 +2,15 @@
 # Changelog
 See the [Release Notes](https://hansjoergw.github.io/sec-fincancial-statement-data-set/releasenotes/) for details.
 
+## 1.8.1. -> 1.8.2
+* Fix
+  The new segment column in the num.txt dataframew does not work with the current version of the framework.
+  Therefore, data that was downloaded and transformed with framework version 1.7.x and 1.8.x lead to wrong 
+  results joining and standardizing them.
+  This version ensures, that only compatible data from the archive of the sec are being used and also
+  checks if incompatible data is present.
+  Note: a version supporting the new segment column is in progress.
+
 ## 1.8.0 -> 1.8.1
 * Fix problem with circular import when using the new FilterProcess module in secfsdstools.g_pipeline
 

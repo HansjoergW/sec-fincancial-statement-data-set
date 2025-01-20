@@ -4,11 +4,15 @@ into parquet format, and indexing the reports.
 """
 import logging
 import time
+from pathlib import Path
 from typing import List
+
+import fastparquet
 
 from secfsdstools.a_config.configmodel import Configuration
 from secfsdstools.a_utils.dbutils import DBStateAcessor
 from secfsdstools.a_utils.downloadutils import UrlDownloader
+from secfsdstools.a_utils.fileutils import get_directories_in_directory
 from secfsdstools.a_utils.rapiddownloadutils import RapidUrlBuilder
 from secfsdstools.b_setup.setupdb import DbCreator
 from secfsdstools.c_automation.task_framework import AbstractProcess, execute_processes
@@ -180,12 +184,43 @@ class Updater:
         execute_processes(processes)
         self._execute_post_update_hook()
 
+    def check_for_new_format_quaterfiles(self):
+
+        zipdirs = get_directories_in_directory(f"{self.parquet_dir}/quarter")
+        with_segments: List[str] = []
+        for zipdir in zipdirs:
+            num_path = Path(self.parquet_dir) / "quarter" / zipdir / "num.txt.parquet"
+            columns = fastparquet.ParquetFile(num_path).columns
+            if "segments" in columns:
+                with_segments.append(zipdir)
+
+        if len(with_segments) > 0:
+            LOGGER.info("-------------- ATTENTION -----------------------")
+            LOGGER.info("Found downloaded data with new 'segment' column in num.txt dataframes.")
+            LOGGER.info("This is not yet supported in this version 1.8.x of the framework and ")
+            LOGGER.info("using this data leads to wrong results.")
+            LOGGER.info("                 ----                        ")
+            LOGGER.info("Please delete all the content in:            ")
+            LOGGER.info(f"- {self.db_dir}  ")
+            LOGGER.info(f"- {self.dld_dir} ")
+            LOGGER.info(f"- {self.parquet_dir} ")
+            LOGGER.info("                 ----                        ")
+            LOGGER.info("After that, you can start again and only compatible versions of the data ")
+            LOGGER.info("will be downloaded. ")
+            LOGGER.info("                 ----                        ")
+            LOGGER.info("A new version of the framework supporting the 'segment' column")
+            LOGGER.info("is in work and should be available in February 2025.")
+            exit(1)
+
     def update(self, force_update: bool = False):
         """
         execute the updated process if time has come to check for new upates.
         Returns:
 
         """
+
+        self.check_for_new_format_quaterfiles()
+
         if force_update | self.auto_update:
             if not force_update & self.auto_update:
                 LOGGER.debug('AutoUpdate is True, so check if new zip files are available')

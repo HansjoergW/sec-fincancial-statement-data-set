@@ -236,3 +236,24 @@ class USDOnlyRawFilter(FilterBase[RawDataBag]):
         return RawDataBag.create(sub_df=databag.sub_df,
                                  pre_df=databag.pre_df,
                                  num_df=num_filtered_for_usd)
+
+class NoSegmentInfoRawFilter(FilterBase[RawDataBag]):
+    """
+    Filters only for the entries in num.txt that don't have a value in the segments column.)
+    """
+
+    def filter(self, databag: RawDataBag) -> RawDataBag:
+        """
+        filters the databag so that only entries are contained that don't have segments info.
+
+        Args:
+            databag(RawDataBag) : rawdatabag to apply the pathfilter to
+
+        Returns:
+            RawDataBag: the databag with the filtered data
+        """
+        num_filtered_for_main_coreg = databag.num_df[databag.num_df.segments.isna()]
+
+        return RawDataBag.create(sub_df=databag.sub_df,
+                                 pre_df=databag.pre_df,
+                                 num_df=num_filtered_for_main_coreg)

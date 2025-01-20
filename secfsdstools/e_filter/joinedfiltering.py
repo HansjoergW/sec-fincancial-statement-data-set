@@ -220,3 +220,23 @@ class USDOnlyJoinedFilter(FilterBase[JoinedDataBag]):
 
         return JoinedDataBag.create(sub_df=databag.sub_df,
                                     pre_num_df=prenum_filtered_for_usd)
+
+class NoSegmentInfoJoinedFilter(FilterBase[JoinedDataBag]):
+    """
+    Filters only for the main coreg entries (coreg == '')
+    """
+
+    def filter(self, databag: JoinedDataBag) -> JoinedDataBag:
+        """
+        filters the databag so that only the main coreg entries are contained
+        (no data subsidiaries).
+        Args:
+            databag(JoinedDataBag) : databag to apply the pathfilter to
+
+        Returns:
+            JoinedDataBag: the databag with the filtered data
+        """
+        pre_num_filtered_for_main_coreg = databag.pre_num_df[databag.pre_num_df.segments.isna()]
+
+        return JoinedDataBag.create(sub_df=databag.sub_df,
+                                    pre_num_df=pre_num_filtered_for_main_coreg)

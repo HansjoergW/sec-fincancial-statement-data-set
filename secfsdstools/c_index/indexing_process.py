@@ -44,8 +44,8 @@ class IndexingTask:
 
     def _check_for_has_segments_column(self) -> bool:
         num_file = os.path.join(self.file_path, f"{NUM_TXT}.parquet")
-        pf = fastparquet.ParquetFile(num_file)
-        return "segments" in pf.columns
+        p_file = fastparquet.ParquetFile(num_file)
+        return "segments" in p_file.columns
 
     def _get_sub_df(self) -> pd.DataFrame:
         """

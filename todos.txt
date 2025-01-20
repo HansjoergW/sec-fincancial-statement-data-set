@@ -13,25 +13,30 @@ new release
 - on github -> under code releases: draft new release
 
 
-v.1.9.0 -> goal: ensure segment information is available
-- only load new datasets (ok)
-- ensure new dataset version can be downloaded and processed (ok)
-- add new has_segments column (ok)
+v.2.0.0 -> goal: ensure segment information is available
+- (ok) only load new datasets
+- (ok) ensure new dataset version can be downloaded and processed
+- (ok) add new has_segments column
 
-- add info when storing data of processed file has_segments exists (ok)
-- adapt testdata to use new datasets (ok)
+- (ok) add info when storing data of processed file has_segments exists
+- (ok) adapt testdata to use new datasets
 
-- update testdata (ok)
-- fix tests so that new datasets are supported (ok)
+- (ok) update testdata
+- (ok) fix tests so that new datasets are supported
 
-- add check which zip has new dataset
-  -> display warning message, if not all zip files contain the new column
+- (ok) ensure new files are there with segments info and the info is available in the bags
+- (ok) add check which zip has new dataset
+       -> display warning message, if not all zip files contain the new column
 
-- ensure new files are there with segments info and the info is available in the bags (ok)
+- (ok) no_segmentinfo filter for raw and joined
+
+
+- wie behandeln wir join mit segments -> kein outer join ->
+  -> eher ein join, aber mit löschen von einträgen, die kein pre haben.
+
+- ensure data in searching notebook is presented correctly
 
 - ensure output in StandardPresenter is ok
-- ensure data in searching notebook is presented correctly
-- wie behandeln wir join mit segments?
 - fix standardizer
 
 - ensure frameworks work with old files? or better to force that new data is downloaded?
@@ -41,12 +46,12 @@ v.1.9.0 -> goal: ensure segment information is available
 - adapt article medium
 
 -----
-1.9.1
+2.0.1
 - provide new filter possibilities
 - think about having a new databag -> segmentbag
 
 
-1.9.2
+2.0.2
 - adapt standardizer, use segment infos
 
 

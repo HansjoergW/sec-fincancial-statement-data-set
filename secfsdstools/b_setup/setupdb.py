@@ -25,16 +25,25 @@ class DbCreator(DB):
         super().__init__(db_dir=db_dir)
 
     def add_column_if_not_exists(self, conn, table_name, column_name, data_type):
+        """
+        adds a column to an existing table, if the column does not exist
+
+        Args:
+            conn: connection
+            table_name:  table_name
+            column_name:  column_name to add
+            data_type: data type of the column
+        """
         try:
             cursor = conn.cursor()
             cursor.execute(f"ALTER TABLE {table_name} ADD COLUMN {column_name} {data_type}")
             conn.commit()
             print(f"Column '{column_name}' added successfully.")
-        except sqlite3.OperationalError as e:
-            if "duplicate column name" in str(e):
+        except sqlite3.OperationalError as exc:
+            if "duplicate column name" in str(exc):
                 print(f"Column '{column_name}' already exists.")
             else:
-                print(f"An error occurred: {e}")
+                print(f"An error occurred: {exc}")
 
     def create_db(self):
         """

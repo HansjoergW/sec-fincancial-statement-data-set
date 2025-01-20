@@ -3,8 +3,14 @@ this module contains the update logic. This means downloading new zipfiles, tran
 into parquet format, and indexing the reports.
 """
 import logging
+import sys
 import time
+from pathlib import Path
 from typing import List
+
+import fastparquet
+
+from secfsdstools.a_utils.fileutils import get_directories_in_directory
 
 from secfsdstools.a_config.configmodel import Configuration
 from secfsdstools.a_utils.dbutils import DBStateAcessor
@@ -180,12 +186,48 @@ class Updater:
         execute_processes(processes)
         self._execute_post_update_hook()
 
+
+    def check_for_old_format_quaterfiles(self):
+        """
+        check if old incompatible datasets without segments column inside num.txt were downloaded.
+        """
+
+        zipdirs = get_directories_in_directory(f"{self.parquet_dir}/quarter")
+        without_segments: List[str] = []
+        for zipdir in zipdirs:
+            num_path = Path(self.parquet_dir) / "quarter" / zipdir / "num.txt.parquet"
+            columns = fastparquet.ParquetFile(num_path).columns
+            if "segments" not in columns:
+                without_segments.append(zipdir)
+
+        if len(without_segments) > 0:
+            LOGGER.info("-------------- ATTENTION -----------------------")
+            LOGGER.info("Found downloaded datasets without new 'segments' column in num.txt")
+            LOGGER.info("dataframes. This is not supported anymore in this version of the ")
+            LOGGER.info("framework. If you want to use the old, smaller datasets which are ")
+            LOGGER.info("still available at https://www.sec.gov/data-research/sec-markets-data/financial-statement-data-sets-archive") # pylint: disable=C0301
+            LOGGER.info("you have to use version 1.8.2 of the framework.")
+            LOGGER.info("                 ----                        ")
+            LOGGER.info("If you want to use the datasets with the segments column, you have to ")
+            LOGGER.info("delete the content in: ")
+            LOGGER.info("- %s", self.db_dir)
+            LOGGER.info("- %s", self.dld_dir)
+            LOGGER.info("- %s", self.parquet_dir)
+            LOGGER.info("                 ----                        ")
+            LOGGER.info("After that, you can run again and only compatible versions of the data ")
+            LOGGER.info("will be downloaded. ")
+            LOGGER.info("                 ----                        ")
+            sys.exit(1)
+
+
     def update(self, force_update: bool = False):
         """
         execute the updated process if time has come to check for new upates.
         Returns:
-
         """
+
+        self.check_for_old_format_quaterfiles()
+
         if force_update | self.auto_update:
             if not force_update & self.auto_update:
                 LOGGER.debug('AutoUpdate is True, so check if new zip files are available')

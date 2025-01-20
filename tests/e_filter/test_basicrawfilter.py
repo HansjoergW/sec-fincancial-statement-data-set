@@ -3,7 +3,7 @@ import os
 from secfsdstools.d_container.databagmodel import RawDataBag
 from secfsdstools.e_filter.rawfiltering import ReportPeriodRawFilter, AdshRawFilter, \
     ReportPeriodAndPreviousPeriodRawFilter, TagRawFilter, MainCoregRawFilter, StmtRawFilter, \
-    OfficialTagsOnlyRawFilter, USDOnlyRawFilter
+    OfficialTagsOnlyRawFilter, USDOnlyRawFilter, NoSegmentInfoRawFilter
 
 CURRENT_DIR, _ = os.path.split(__file__)
 PATH_TO_BAG_1 = f'{CURRENT_DIR}/../_testdata/parquet_new/quarter/2010q1.zip'
@@ -147,3 +147,14 @@ def test_USDOnlyFilter():
 
     assert bag1.num_df.shape == (194741, 10)
     assert filtered_bag.num_df.shape == (192629, 10)
+
+def test_filter_NoSegmentInfoRawFilter():
+    bag1: RawDataBag = RawDataBag.load(PATH_TO_BAG_1)
+
+    filter = NoSegmentInfoRawFilter()
+
+    filtered_bag = filter.filter(bag1)
+
+    assert filtered_bag.sub_df.shape == bag1.sub_df.shape
+    assert filtered_bag.pre_df.shape == bag1.pre_df.shape
+    assert filtered_bag.num_df.shape == (142929, 10)

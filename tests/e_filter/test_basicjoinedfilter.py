@@ -6,7 +6,7 @@ from secfsdstools.d_container.databagmodel import JoinedDataBag, RawDataBag
 from secfsdstools.e_filter.joinedfiltering import ReportPeriodJoinedFilter, AdshJoinedFilter, \
     ReportPeriodAndPreviousPeriodJoinedFilter, TagJoinedFilter, MainCoregJoinedFilter, \
     StmtJoinedFilter, \
-    OfficialTagsOnlyJoinedFilter, USDOnlyJoinedFilter
+    OfficialTagsOnlyJoinedFilter, USDOnlyJoinedFilter, NoSegmentInfoJoinedFilter
 
 CURRENT_DIR, _ = os.path.split(__file__)
 PATH_TO_BAG_1 = f'{CURRENT_DIR}/../_testdata/parquet_new/quarter/2010q1.zip'
@@ -73,7 +73,7 @@ def test_filter_ReportPeriodAndPreviousPeriodJoinedFilter(bag1):
     assert len(filtered_bag.pre_num_df[['adsh', 'ddate']].value_counts()) == 2 * len(bag1.sub_df)
 
 
-def test_filter_MainCoregRawFilter(bag1):
+def test_filter_MainCoregJoinedFilter(bag1):
     filter = MainCoregJoinedFilter()
 
     filtered_bag = filter.filter(bag1)
@@ -129,3 +129,11 @@ def test_USDOnlyFilter(bag1):
 
     assert bag1.pre_num_df.shape == (237716, 17)
     assert filtered_bag.pre_num_df.shape == (235027, 17)
+
+def test_filter_NoSegmentInfoJoinedFilter(bag1):
+    filter = NoSegmentInfoJoinedFilter()
+
+    filtered_bag = filter.filter(bag1)
+
+    assert filtered_bag.sub_df.shape == bag1.sub_df.shape
+    assert filtered_bag.pre_num_df.shape == (156896, 17)

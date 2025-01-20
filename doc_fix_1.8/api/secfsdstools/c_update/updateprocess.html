@@ -34,6 +34,7 @@ this module contains the update logic. This means downloading new zipfiles, tran
 into parquet format, and indexing the reports.
 &#34;&#34;&#34;
 import logging
+import sys
 import time
 from pathlib import Path
 from typing import List
@@ -216,6 +217,11 @@ class Updater:
         self._execute_post_update_hook()
 
     def check_for_new_format_quaterfiles(self):
+        &#34;&#34;&#34;
+        check if new incompatible datasets with segments column inside num.txt were downloaded.
+        Returns:
+
+        &#34;&#34;&#34;
 
         zipdirs = get_directories_in_directory(f&#34;{self.parquet_dir}/quarter&#34;)
         with_segments: List[str] = []
@@ -232,16 +238,16 @@ class Updater:
             LOGGER.info(&#34;using this data leads to wrong results.&#34;)
             LOGGER.info(&#34;                 ----                        &#34;)
             LOGGER.info(&#34;Please delete all the content in:            &#34;)
-            LOGGER.info(f&#34;- {self.db_dir}  &#34;)
-            LOGGER.info(f&#34;- {self.dld_dir} &#34;)
-            LOGGER.info(f&#34;- {self.parquet_dir} &#34;)
+            LOGGER.info(&#34;- %s&#34;, self.db_dir)
+            LOGGER.info(&#34;- %s&#34;, self.dld_dir)
+            LOGGER.info(&#34;- %s&#34;, self.parquet_dir)
             LOGGER.info(&#34;                 ----                        &#34;)
             LOGGER.info(&#34;After that, you can start again and only compatible versions of the data &#34;)
             LOGGER.info(&#34;will be downloaded. &#34;)
             LOGGER.info(&#34;                 ----                        &#34;)
             LOGGER.info(&#34;A new version of the framework supporting the &#39;segment&#39; column&#34;)
             LOGGER.info(&#34;is in work and should be available in February 2025.&#34;)
-            exit(1)
+            sys.exit(1)
 
     def update(self, force_update: bool = False):
         &#34;&#34;&#34;
@@ -453,6 +459,11 @@ class Updater:
         self._execute_post_update_hook()
 
     def check_for_new_format_quaterfiles(self):
+        &#34;&#34;&#34;
+        check if new incompatible datasets with segments column inside num.txt were downloaded.
+        Returns:
+
+        &#34;&#34;&#34;
 
         zipdirs = get_directories_in_directory(f&#34;{self.parquet_dir}/quarter&#34;)
         with_segments: List[str] = []
@@ -469,16 +480,16 @@ class Updater:
             LOGGER.info(&#34;using this data leads to wrong results.&#34;)
             LOGGER.info(&#34;                 ----                        &#34;)
             LOGGER.info(&#34;Please delete all the content in:            &#34;)
-            LOGGER.info(f&#34;- {self.db_dir}  &#34;)
-            LOGGER.info(f&#34;- {self.dld_dir} &#34;)
-            LOGGER.info(f&#34;- {self.parquet_dir} &#34;)
+            LOGGER.info(&#34;- %s&#34;, self.db_dir)
+            LOGGER.info(&#34;- %s&#34;, self.dld_dir)
+            LOGGER.info(&#34;- %s&#34;, self.parquet_dir)
             LOGGER.info(&#34;                 ----                        &#34;)
             LOGGER.info(&#34;After that, you can start again and only compatible versions of the data &#34;)
             LOGGER.info(&#34;will be downloaded. &#34;)
             LOGGER.info(&#34;                 ----                        &#34;)
             LOGGER.info(&#34;A new version of the framework supporting the &#39;segment&#39; column&#34;)
             LOGGER.info(&#34;is in work and should be available in February 2025.&#34;)
-            exit(1)
+            sys.exit(1)
 
     def update(self, force_update: bool = False):
         &#34;&#34;&#34;
@@ -564,12 +575,18 @@ def get_instance(cls, config: Configuration):
 <span>def <span class="ident">check_for_new_format_quaterfiles</span></span>(<span>self)</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>check if new incompatible datasets with segments column inside num.txt were downloaded.
+Returns:</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def check_for_new_format_quaterfiles(self):
+    &#34;&#34;&#34;
+    check if new incompatible datasets with segments column inside num.txt were downloaded.
+    Returns:
+
+    &#34;&#34;&#34;
 
     zipdirs = get_directories_in_directory(f&#34;{self.parquet_dir}/quarter&#34;)
     with_segments: List[str] = []
@@ -586,16 +603,16 @@ def get_instance(cls, config: Configuration):
         LOGGER.info(&#34;using this data leads to wrong results.&#34;)
         LOGGER.info(&#34;                 ----                        &#34;)
         LOGGER.info(&#34;Please delete all the content in:            &#34;)
-        LOGGER.info(f&#34;- {self.db_dir}  &#34;)
-        LOGGER.info(f&#34;- {self.dld_dir} &#34;)
-        LOGGER.info(f&#34;- {self.parquet_dir} &#34;)
+        LOGGER.info(&#34;- %s&#34;, self.db_dir)
+        LOGGER.info(&#34;- %s&#34;, self.dld_dir)
+        LOGGER.info(&#34;- %s&#34;, self.parquet_dir)
         LOGGER.info(&#34;                 ----                        &#34;)
         LOGGER.info(&#34;After that, you can start again and only compatible versions of the data &#34;)
         LOGGER.info(&#34;will be downloaded. &#34;)
         LOGGER.info(&#34;                 ----                        &#34;)
         LOGGER.info(&#34;A new version of the framework supporting the &#39;segment&#39; column&#34;)
         LOGGER.info(&#34;is in work and should be available in February 2025.&#34;)
-        exit(1)</code></pre>
+        sys.exit(1)</code></pre>
 </details>
 </dd>
 <dt id="secfsdstools.c_update.updateprocess.Updater.update"><code class="name flex">

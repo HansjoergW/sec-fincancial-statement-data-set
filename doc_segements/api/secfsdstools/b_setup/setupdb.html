@@ -54,16 +54,25 @@ class DbCreator(DB):
         super().__init__(db_dir=db_dir)
 
     def add_column_if_not_exists(self, conn, table_name, column_name, data_type):
+        &#34;&#34;&#34;
+        adds a column to an existing table, if the column does not exist
+
+        Args:
+            conn: connection
+            table_name:  table_name
+            column_name:  column_name to add
+            data_type: data type of the column
+        &#34;&#34;&#34;
         try:
             cursor = conn.cursor()
             cursor.execute(f&#34;ALTER TABLE {table_name} ADD COLUMN {column_name} {data_type}&#34;)
             conn.commit()
             print(f&#34;Column &#39;{column_name}&#39; added successfully.&#34;)
-        except sqlite3.OperationalError as e:
-            if &#34;duplicate column name&#34; in str(e):
+        except sqlite3.OperationalError as exc:
+            if &#34;duplicate column name&#34; in str(exc):
                 print(f&#34;Column &#39;{column_name}&#39; already exists.&#34;)
             else:
-                print(f&#34;An error occurred: {e}&#34;)
+                print(f&#34;An error occurred: {exc}&#34;)
 
     def create_db(self):
         &#34;&#34;&#34;
@@ -131,16 +140,25 @@ create the database.</p></div>
         super().__init__(db_dir=db_dir)
 
     def add_column_if_not_exists(self, conn, table_name, column_name, data_type):
+        &#34;&#34;&#34;
+        adds a column to an existing table, if the column does not exist
+
+        Args:
+            conn: connection
+            table_name:  table_name
+            column_name:  column_name to add
+            data_type: data type of the column
+        &#34;&#34;&#34;
         try:
             cursor = conn.cursor()
             cursor.execute(f&#34;ALTER TABLE {table_name} ADD COLUMN {column_name} {data_type}&#34;)
             conn.commit()
             print(f&#34;Column &#39;{column_name}&#39; added successfully.&#34;)
-        except sqlite3.OperationalError as e:
-            if &#34;duplicate column name&#34; in str(e):
+        except sqlite3.OperationalError as exc:
+            if &#34;duplicate column name&#34; in str(exc):
                 print(f&#34;Column &#39;{column_name}&#39; already exists.&#34;)
             else:
-                print(f&#34;An error occurred: {e}&#34;)
+                print(f&#34;An error occurred: {exc}&#34;)
 
     def create_db(self):
         &#34;&#34;&#34;
@@ -189,22 +207,42 @@ create the database.</p></div>
 <span>def <span class="ident">add_column_if_not_exists</span></span>(<span>self, conn, table_name, column_name, data_type)</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>adds a column to an existing table, if the column does not exist</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>conn</code></strong></dt>
+<dd>connection</dd>
+<dt><strong><code>table_name</code></strong></dt>
+<dd>table_name</dd>
+<dt><strong><code>column_name</code></strong></dt>
+<dd>column_name to add</dd>
+<dt><strong><code>data_type</code></strong></dt>
+<dd>data type of the column</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def add_column_if_not_exists(self, conn, table_name, column_name, data_type):
+    &#34;&#34;&#34;
+    adds a column to an existing table, if the column does not exist
+
+    Args:
+        conn: connection
+        table_name:  table_name
+        column_name:  column_name to add
+        data_type: data type of the column
+    &#34;&#34;&#34;
     try:
         cursor = conn.cursor()
         cursor.execute(f&#34;ALTER TABLE {table_name} ADD COLUMN {column_name} {data_type}&#34;)
         conn.commit()
         print(f&#34;Column &#39;{column_name}&#39; added successfully.&#34;)
-    except sqlite3.OperationalError as e:
-        if &#34;duplicate column name&#34; in str(e):
+    except sqlite3.OperationalError as exc:
+        if &#34;duplicate column name&#34; in str(exc):
             print(f&#34;Column &#39;{column_name}&#39; already exists.&#34;)
         else:
-            print(f&#34;An error occurred: {e}&#34;)</code></pre>
+            print(f&#34;An error occurred: {exc}&#34;)</code></pre>
 </details>
 </dd>
 <dt id="secfsdstools.b_setup.setupdb.DbCreator.create_db"><code class="name flex">

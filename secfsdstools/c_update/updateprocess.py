@@ -3,6 +3,7 @@ this module contains the update logic. This means downloading new zipfiles, tran
 into parquet format, and indexing the reports.
 """
 import logging
+import sys
 import time
 from pathlib import Path
 from typing import List
@@ -185,6 +186,11 @@ class Updater:
         self._execute_post_update_hook()
 
     def check_for_new_format_quaterfiles(self):
+        """
+        check if new incompatible datasets with segments column inside num.txt were downloaded.
+        Returns:
+
+        """
 
         zipdirs = get_directories_in_directory(f"{self.parquet_dir}/quarter")
         with_segments: List[str] = []
@@ -201,16 +207,16 @@ class Updater:
             LOGGER.info("using this data leads to wrong results.")
             LOGGER.info("                 ----                        ")
             LOGGER.info("Please delete all the content in:            ")
-            LOGGER.info(f"- {self.db_dir}  ")
-            LOGGER.info(f"- {self.dld_dir} ")
-            LOGGER.info(f"- {self.parquet_dir} ")
+            LOGGER.info("- %s", self.db_dir)
+            LOGGER.info("- %s", self.dld_dir)
+            LOGGER.info("- %s", self.parquet_dir)
             LOGGER.info("                 ----                        ")
             LOGGER.info("After that, you can start again and only compatible versions of the data ")
             LOGGER.info("will be downloaded. ")
             LOGGER.info("                 ----                        ")
             LOGGER.info("A new version of the framework supporting the 'segment' column")
             LOGGER.info("is in work and should be available in February 2025.")
-            exit(1)
+            sys.exit(1)
 
     def update(self, force_update: bool = False):
         """

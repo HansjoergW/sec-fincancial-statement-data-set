@@ -21,7 +21,7 @@ def zipcollector():
 
 def test_cm_get_zip_by_name(zipcollector):
     instances = [IndexFileProcessingState(fileName="", status="", entries=0, processTime="",
-                                        fullPath=PATH_TO_ZIP, hasSegments="yes")]
+                                        fullPath=PATH_TO_ZIP)]
 
     with patch(
             "secfsdstools.c_index.indexdataaccess.ParquetDBIndexingAccessor.read_index_files_for_filenames",

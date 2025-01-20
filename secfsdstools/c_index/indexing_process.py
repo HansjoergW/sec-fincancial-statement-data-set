@@ -42,11 +42,6 @@ class IndexingTask:
         self.file_name = os.path.basename(file_path)
         self.process_time = process_time
 
-    def _check_for_has_segments_column(self) -> bool:
-        num_file = os.path.join(self.file_path, f"{NUM_TXT}.parquet")
-        p_file = fastparquet.ParquetFile(num_file)
-        return "segments" in p_file.columns
-
     def _get_sub_df(self) -> pd.DataFrame:
         """
         reads the content of the sub_df file into dataframe.
@@ -84,16 +79,13 @@ class IndexingTask:
         sub_df['url'] = sub_df['url'] + sub_df['cik'].astype(str) + '/' + \
                         sub_df['adsh'].str.replace('-', '') + '/' + sub_df['adsh'] + '-index.htm'
 
-        has_segments = "yes" if self._check_for_has_segments_column() else None
-
         self.dbaccessor.add_index_report(sub_df,
                                          IndexFileProcessingState(
                                              fileName=self.file_name,
                                              fullPath=self.file_path,
                                              status=self.PROCESSED_STR,
                                              entries=len(sub_df),
-                                             processTime=self.process_time,
-                                             hasSegments=has_segments
+                                             processTime=self.process_time
                                          ))
 
     def commit(self):

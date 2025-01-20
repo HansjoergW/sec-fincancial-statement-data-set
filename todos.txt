@@ -16,7 +16,6 @@ new release
 v.2.0.0 -> goal: ensure segment information is available
 - (ok) only load new datasets
 - (ok) ensure new dataset version can be downloaded and processed
-- (ok) add new has_segments column
 
 - (ok) add info when storing data of processed file has_segments exists
 - (ok) adapt testdata to use new datasets
@@ -29,7 +28,6 @@ v.2.0.0 -> goal: ensure segment information is available
        -> display warning message, if not all zip files contain the new column
 
 - (ok) no_segmentinfo filter for raw and joined
-
 
 - wie behandeln wir join mit segments -> kein outer join ->
   -> eher ein join, aber mit löschen von einträgen, die kein pre haben.

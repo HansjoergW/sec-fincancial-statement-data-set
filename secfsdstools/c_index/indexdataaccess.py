@@ -31,7 +31,6 @@ class IndexFileProcessingState:
     status: str
     entries: int
     processTime: str  # pylint: disable=C0103
-    hasSegments: str  # pylint: disable=C0103
 
 
 class ParquetDBIndexingAccessor(DB):

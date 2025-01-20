@@ -75,8 +75,6 @@ class DbCreator(DB):
 
             conn.commit()
 
-        # adding columns that do not exist
-        self.add_column_if_not_exists(conn=conn, table_name="index_parquet_processing_state",
-                                      column_name="hasSegments", data_type="TEXT")
+        # adding columns that do not exist - so far none are needed
 
         conn.close()

@@ -83,8 +83,10 @@ class BaseCollector(ABC):
             file=NUM_TXT, filters=num_filter if num_filter else None
         )
 
-        # pandas pivot works better if coreg is not nan, so we set it here to an empty string
+        # pandas pivot works better if coreg and segments are not nan, so we set None values of
+        # them to empty strings
         num_df.loc[num_df.coreg.isna(), 'coreg'] = ''
+        num_df.loc[num_df.segments.isna(), 'segments'] = ''
 
         return RawDataBag.create(sub_df=sub_df, pre_df=pre_df, num_df=num_df)
 

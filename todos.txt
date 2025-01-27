@@ -27,26 +27,38 @@ v.2.0.0 -> goal: ensure segment information is available
 - (ok) add check which zip has new dataset
        -> display warning message, if not all zip files contain the new column
 
-- (ok) no_segmentinfo filter for raw and joined
+- (ok) new no_segmentinfo filter for raw and joined
 
-- wie behandeln wir join mit segments -> kein outer join ->
-  -> eher ein join, aber mit löschen von einträgen, die kein pre haben.
+- (ok) ensure join works correctly
+       pre_num_df = joined_bag.pre_num_df[joined_bag.pre_num_df.stmt=='BS']
+       sorted_pre_num_df = pre_num_df.sort_values(['adsh', 'ddate', 'report', 'line'])[['adsh','ddate', 'report', 'line', 'coreg', 'segments','tag', 'version', 'uom','value','plabel']]
 
-- ensure data in searching notebook is presented correctly
+- notebook quickstart / readme
+  - [ok] ensure output in StandardPresenter is ok
+    -> show_segments flag -> if False -> filters out segments
+  - ensure Standardizer is working
+    - fix standardizer by always applying NoSegmentsInfo Filter before pivot
 
-- ensure output in StandardPresenter is ok
-- fix standardizer
+- [ok] ensure data in searching notebook is presented correctly
+    -> show_segments option in explore notebook
 
-- ensure frameworks work with old files? or better to force that new data is downloaded?
+- ensure deep-dive bulk-data
 
 - remove (temporary) rapid-api support
+
+- check all notebooks if texts are still correct
+- maybe introduce a first notebook explaining segments and what they show with examples
+- check pipelines
 
 - adapt article medium
 
 -----
 2.0.1
-- provide new filter possibilities
-- think about having a new databag -> segmentbag
+- maybe also provide segmentsinfo per Tag?
+- Flatten Segments -> general, which axis, per tag,
+   - think about having a new databag -> segmentbag
+   - would we need some special metadata?
+   - for instance if you want to join a dataset?
 
 
 2.0.2

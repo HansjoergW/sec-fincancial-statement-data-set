@@ -5,6 +5,7 @@ import pandas as pd
 
 from secfsdstools.d_container.databagmodel import JoinedDataBag
 from secfsdstools.d_container.presentation import Presenter
+from secfsdstools.e_filter.joinedfiltering import NoSegmentInfoJoinedFilter
 
 
 class StandardStatementPresenter(Presenter[JoinedDataBag]):
@@ -14,7 +15,7 @@ class StandardStatementPresenter(Presenter[JoinedDataBag]):
     """
 
     def __init__(self, flatten_index: bool = True, add_form_column: bool = False,
-                 invert_negating: bool = False):
+                 invert_negating: bool = False, show_segments: bool = False):
         """
 
         Args:
@@ -31,11 +32,14 @@ class StandardStatementPresenter(Presenter[JoinedDataBag]):
                              to 1 is inverted. A typical case is "paiddividends" where the value
                              is shown as positive but from a calculating point of view it should
                              be negative.
+            show_segments: if True, the segments information is also shown. If False,
+                           the NoSegmentInfoJoinedFilter is applied
         """
 
         self.flatten_index = flatten_index
         self.add_form_column = add_form_column
         self.invert_negating = invert_negating
+        self.show_segments = show_segments
 
     def present(self, databag: JoinedDataBag) -> pd.DataFrame:
         """
@@ -53,15 +57,19 @@ class StandardStatementPresenter(Presenter[JoinedDataBag]):
         Returns:
             pd.DataFrame: the dataframe with the final presentation
         """
+        pre_num_df: pd.DataFrame
+        if self.show_segments:
+            pre_num_df = databag.pre_num_df
+        else:
+            pre_num_df = databag[NoSegmentInfoJoinedFilter()].pre_num_df
 
-        pre_num_df = databag.pre_num_df
         if self.invert_negating:
             pre_num_df = pre_num_df.copy()
             pre_num_df.loc[pre_num_df.negating == 1, 'value'] = -pre_num_df.value
 
         num_pre_pivot_df = pre_num_df.pivot_table(
             index=['adsh', 'coreg', 'tag', 'version', 'stmt',
-                   'report', 'line', 'uom', 'negating', 'inpth'],
+                   'report', 'line', 'segments', 'uom', 'negating', 'inpth'],
             columns=['qtrs', 'ddate'], # we need to pivot by qtrs and ddate
             values='value'
         )

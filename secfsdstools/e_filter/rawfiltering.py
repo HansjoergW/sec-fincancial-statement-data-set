@@ -252,7 +252,7 @@ class NoSegmentInfoRawFilter(FilterBase[RawDataBag]):
         Returns:
             RawDataBag: the databag with the filtered data
         """
-        num_filtered_for_main_coreg = databag.num_df[databag.num_df.segments.isna()]
+        num_filtered_for_main_coreg = databag.num_df[databag.num_df.segments == '']
 
         return RawDataBag.create(sub_df=databag.sub_df,
                                  pre_df=databag.pre_df,

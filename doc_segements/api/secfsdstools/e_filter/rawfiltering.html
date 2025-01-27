@@ -282,7 +282,7 @@ class NoSegmentInfoRawFilter(FilterBase[RawDataBag]):
         Returns:
             RawDataBag: the databag with the filtered data
         &#34;&#34;&#34;
-        num_filtered_for_main_coreg = databag.num_df[databag.num_df.segments.isna()]
+        num_filtered_for_main_coreg = databag.num_df[databag.num_df.segments == &#39;&#39;]
 
         return RawDataBag.create(sub_df=databag.sub_df,
                                  pre_df=databag.pre_df,
@@ -480,7 +480,7 @@ are contained.</p>
         Returns:
             RawDataBag: the databag with the filtered data
         &#34;&#34;&#34;
-        num_filtered_for_main_coreg = databag.num_df[databag.num_df.segments.isna()]
+        num_filtered_for_main_coreg = databag.num_df[databag.num_df.segments == &#39;&#39;]
 
         return RawDataBag.create(sub_df=databag.sub_df,
                                  pre_df=databag.pre_df,
@@ -519,7 +519,7 @@ are contained.</p>
     Returns:
         RawDataBag: the databag with the filtered data
     &#34;&#34;&#34;
-    num_filtered_for_main_coreg = databag.num_df[databag.num_df.segments.isna()]
+    num_filtered_for_main_coreg = databag.num_df[databag.num_df.segments == &#39;&#39;]
 
     return RawDataBag.create(sub_df=databag.sub_df,
                              pre_df=databag.pre_df,

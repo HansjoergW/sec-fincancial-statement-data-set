@@ -524,6 +524,10 @@ class Standardizer(Presenter[JoinedDataBag]):
             pd.DataFrame: the standardized results
 
         &#34;&#34;&#34;
+
+        # ensure that there are no segments information in the data
+        data_df = data_df[(data_df.segments == &#39;&#39;) | data_df.segments.isna()]
+
         LOGGER.info(&#34;start PRE processing ...&#34;)
         ready_df = self._preprocess(data_df)
         LOGGER.info(&#34;start MAIN processing ...&#34;)
@@ -1302,6 +1306,10 @@ dataframe. Additional tags can be added via this parameter. Default is None.</p>
             pd.DataFrame: the standardized results
 
         &#34;&#34;&#34;
+
+        # ensure that there are no segments information in the data
+        data_df = data_df[(data_df.segments == &#39;&#39;) | data_df.segments.isna()]
+
         LOGGER.info(&#34;start PRE processing ...&#34;)
         ready_df = self._preprocess(data_df)
         LOGGER.info(&#34;start MAIN processing ...&#34;)
@@ -1597,6 +1605,10 @@ creates a date column based on the ddated value.</p>
         pd.DataFrame: the standardized results
 
     &#34;&#34;&#34;
+
+    # ensure that there are no segments information in the data
+    data_df = data_df[(data_df.segments == &#39;&#39;) | data_df.segments.isna()]
+
     LOGGER.info(&#34;start PRE processing ...&#34;)
     ready_df = self._preprocess(data_df)
     LOGGER.info(&#34;start MAIN processing ...&#34;)

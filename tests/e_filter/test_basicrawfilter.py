@@ -150,6 +150,7 @@ def test_USDOnlyFilter():
 
 def test_filter_NoSegmentInfoRawFilter():
     bag1: RawDataBag = RawDataBag.load(PATH_TO_BAG_1)
+    bag1.num_df.loc[bag1.num_df.segments.isna(), 'segments'] = ''
 
     filter = NoSegmentInfoRawFilter()
 

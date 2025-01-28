@@ -36,13 +36,19 @@ v.2.0.0 -> goal: ensure segment information is available
 - notebook quickstart / readme
   - [ok] ensure output in StandardPresenter is ok
     -> show_segments flag -> if False -> filters out segments
-  - ensure Standardizer is working
+  - [ok] ensure Standardizer is working
     - fix standardizer by always applying NoSegmentsInfo Filter before pivot
 
 - [ok] ensure data in searching notebook is presented correctly
     -> show_segments option in explore notebook
 
-- ensure deep-dive bulk-data
+- ensure tests are green
+  -> it looks as if the current downloaded data have the hasSegments columns in the sqlite table.
+     -> Tests example is failing: test_collector/testexamples.py fails when zip collector is tested
+
+
+
+- ensure deep-dive bulk-data -> Memory Usage..
 
 - remove (temporary) rapid-api support
 

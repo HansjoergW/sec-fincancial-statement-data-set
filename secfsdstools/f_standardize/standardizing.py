@@ -495,6 +495,10 @@ class Standardizer(Presenter[JoinedDataBag]):
             pd.DataFrame: the standardized results
 
         """
+
+        # ensure that there are no segments information in the data
+        data_df = data_df[(data_df.segments == '') | data_df.segments.isna()]
+
         LOGGER.info("start PRE processing ...")
         ready_df = self._preprocess(data_df)
         LOGGER.info("start MAIN processing ...")

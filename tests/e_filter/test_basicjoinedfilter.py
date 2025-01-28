@@ -20,6 +20,8 @@ def bag1() -> JoinedDataBag:
 
     # fix coreg as it would be loaded by the collectors
     raw_bag1.num_df.loc[raw_bag1.num_df.coreg.isna(), 'coreg'] = ''
+    raw_bag1.num_df.loc[raw_bag1.num_df.segments.isna(), 'segments'] = ''
+
     return raw_bag1.join()
 
 

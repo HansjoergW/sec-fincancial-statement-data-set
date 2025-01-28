@@ -41,6 +41,6 @@ def test_standardizer_process(tmp_path):
     std_is_bag = StandardizedBag.load(str(target_path / "IS"))
     std_cf_bag = StandardizedBag.load(str(target_path / "CF"))
 
-    assert len(std_bs_bag.result_df) == 5441
-    assert len(std_is_bag.result_df) == 7847
-    assert len(std_cf_bag.result_df) == 5394
+    assert len(std_bs_bag.result_df) == 5435
+    assert len(std_is_bag.result_df) == 7802
+    assert len(std_cf_bag.result_df) == 5387

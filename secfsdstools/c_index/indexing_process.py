@@ -4,10 +4,9 @@ import os
 from datetime import datetime, timezone
 from typing import List
 
-import fastparquet
 import pandas as pd
 
-from secfsdstools.a_utils.constants import SUB_TXT, NUM_TXT
+from secfsdstools.a_utils.constants import SUB_TXT
 from secfsdstools.a_utils.fileutils import get_directories_in_directory
 from secfsdstools.c_automation.task_framework import AbstractThreadProcess
 from secfsdstools.c_index.indexdataaccess import IndexFileProcessingState, ParquetDBIndexingAccessor

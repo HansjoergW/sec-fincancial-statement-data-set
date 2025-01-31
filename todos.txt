@@ -42,7 +42,7 @@ v.2.0.0 -> goal: ensure segment information is available
 - [ok] ensure data in searching notebook is presented correctly
     -> show_segments option in explore notebook
 
-- ensure tests are green
+- ensure tests and linting is ok
   -> it looks as if the current downloaded data have the hasSegments columns in the sqlite table.
      -> Tests example is failing: test_collector/testexamples.py fails when zip collector is tested
 
@@ -60,7 +60,9 @@ v.2.0.0 -> goal: ensure segment information is available
 
 -----
 2.0.1
-- maybe also provide segmentsinfo per Tag?
+- maybe also provide segmentsinfo per Tag? kind of overview
+- improve concat logic -> directly use fastparquet to concat files, not using pandas
+- maybe special "concat files to file"
 - Flatten Segments -> general, which axis, per tag,
    - think about having a new databag -> segmentbag
    - would we need some special metadata?

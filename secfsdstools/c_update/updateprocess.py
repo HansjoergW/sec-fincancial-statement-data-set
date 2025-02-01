@@ -10,15 +10,12 @@ from typing import List
 
 import fastparquet
 
-from secfsdstools.a_utils.fileutils import get_directories_in_directory
-
 from secfsdstools.a_config.configmodel import Configuration
 from secfsdstools.a_utils.dbutils import DBStateAcessor
 from secfsdstools.a_utils.downloadutils import UrlDownloader
-from secfsdstools.a_utils.rapiddownloadutils import RapidUrlBuilder
+from secfsdstools.a_utils.fileutils import get_directories_in_directory
 from secfsdstools.b_setup.setupdb import DbCreator
 from secfsdstools.c_automation.task_framework import AbstractProcess, execute_processes
-from secfsdstools.c_download.rapiddownloading_process import RapidDownloadingProcess
 from secfsdstools.c_download.secdownloading_process import SecDownloadingProcess
 from secfsdstools.c_index.indexing_process import ReportParquetIndexerProcess
 from secfsdstools.c_transform.toparquettransforming_process import ToParquetTransformerProcess
@@ -101,40 +98,6 @@ class Updater:
                                                         execute_serial=self.no_parallel_processing
                                                         ))
 
-        if (self.rapid_api_key is not None) & (self.rapid_api_key != ''):
-            # download daily zip files
-            rapidurlbuilder = RapidUrlBuilder(rapid_plan=self.rapid_api_plan,
-                                              rapid_api_key=self.rapid_api_key)
-            process_list.append(RapidDownloadingProcess(
-                rapidurlbuilder=rapidurlbuilder,
-                daily_zip_dir=self.daily_dld_dir,
-                qrtr_zip_dir=self.dld_dir,
-                urldownloader=urldownloader,
-                parquet_root_dir=self.parquet_dir,
-                execute_serial=self.no_parallel_processing))
-
-            # transform daily zip files
-            process_list.append(ToParquetTransformerProcess(
-                zip_dir=self.daily_dld_dir,
-                parquet_dir=self.parquet_dir,
-                keep_zip_files=self.keep_zip_files,
-                file_type='daily',
-                execute_serial=self.no_parallel_processing))
-
-            # index daily zip files
-            process_list.append(ReportParquetIndexerProcess(
-                db_dir=self.db_dir,
-                parquet_dir=self.parquet_dir,
-                file_type='daily',
-                execute_serial=self.no_parallel_processing))
-
-        else:
-            print(
-                "No rapid-api-key is set: \n"
-                + "If you are interested in receiving the latest SEC filings daily and not just "
-                + "each quarter, please have a look at "
-                + "https://rapidapi.com/hansjoerg.wingeier/api/daily-sec-financial-statement-dataset")  # pylint: disable=C0301
-
         return process_list
 
     def _load_post_update_process(self) -> List[AbstractProcess]:
@@ -186,7 +149,6 @@ class Updater:
         execute_processes(processes)
         self._execute_post_update_hook()
 
-
     def check_for_old_format_quaterfiles(self):
         """
         check if old incompatible datasets without segments column inside num.txt were downloaded.
@@ -205,7 +167,8 @@ class Updater:
             LOGGER.info("Found downloaded datasets without new 'segments' column in num.txt")
             LOGGER.info("dataframes. This is not supported anymore in this version of the ")
             LOGGER.info("framework. If you want to use the old, smaller datasets which are ")
-            LOGGER.info("still available at https://www.sec.gov/data-research/sec-markets-data/financial-statement-data-sets-archive") # pylint: disable=C0301
+            LOGGER.info(
+                "still available at https://www.sec.gov/data-research/sec-markets-data/financial-statement-data-sets-archive")  # pylint: disable=C0301
             LOGGER.info("you have to use version 1.8.2 of the framework.")
             LOGGER.info("                 ----                        ")
             LOGGER.info("If you want to use the datasets with the segments column, you have to ")
@@ -218,7 +181,6 @@ class Updater:
             LOGGER.info("will be downloaded. ")
             LOGGER.info("                 ----                        ")
             sys.exit(1)
-
 
     def update(self, force_update: bool = False):
         """

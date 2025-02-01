@@ -71,30 +71,6 @@ def test_update_no_rapid_api(updater):
         indexer.assert_called_once()
 
 
-def test_update_with_rapid_api(updater):
-    updater.rapid_api_key = "akey"
-    updater.rapid_api_plan = "basic"
-
-    with patch('secfsdstools.c_download.secdownloading_process.SecDownloadingProcess.process') \
-            as sec_download, \
-            patch(
-                'secfsdstools.c_download.rapiddownloading_process.RapidDownloadingProcess.process') \
-                    as rapid_download, \
-            patch(
-                'secfsdstools.c_transform.toparquettransforming_process.ToParquetTransformerProcess.process') \
-                    as transformer, \
-            patch(
-                'secfsdstools.c_index.indexing_process.ReportParquetIndexerProcess.process') \
-                    as indexer:
-        updater._update()
-
-        # Überprüfen, ob die download-Methode von SecZipDownloader aufgerufen wurde
-        sec_download.assert_called_once()
-        rapid_download.assert_called_once()
-        assert transformer.call_count == 2
-        assert indexer.call_count == 2
-
-
 def test_integration_test(updater):
     updater.dld_dir = f'{current_dir}/../_testdata/zip'
 
@@ -164,7 +140,8 @@ def test_update_hooks(tmp_path):
                 'secfsdstools.c_download.rapiddownloading_process.RapidDownloadingProcess.process') \
                     as rapid_download, \
             patch('tests.c_update.test_updatedprocess.update_hook') as update_hook_patch, \
-            patch('tests.c_update.test_updatedprocess.update_processes_hook', return_value=[]) as update_processes_hook_patch:
+            patch('tests.c_update.test_updatedprocess.update_processes_hook',
+                  return_value=[]) as update_processes_hook_patch:
         updater.update()
 
         update_hook_patch.assert_called_once()

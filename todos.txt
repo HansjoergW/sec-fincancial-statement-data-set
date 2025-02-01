@@ -42,19 +42,34 @@ v.2.0.0 -> goal: ensure segment information is available
 - [ok] ensure data in searching notebook is presented correctly
     -> show_segments option in explore notebook
 
-- ensure tests and linting is ok
+- [ok] ensure tests and linting is ok
   -> it looks as if the current downloaded data have the hasSegments columns in the sqlite table.
      -> Tests example is failing: test_collector/testexamples.py fails when zip collector is tested
 
+- [ok] remove (temporary) rapid-api support
 
+- check notebooks
+  - [ok] 01_quickstart
+  - [ok] 03_explore_..
+    -> added show_segments flag when showing details of a single report
+  - [ok] 04_collector_deep_dive
+  - 05_filter_deep_dive
+  - 06_bulk_data_..
+  - 07_00_standardizer_basics
+  - 07_01_BS..
+  - 07_02_IS..
+  - 07_03_CF..
+  - 07_04_customize
+  - 08_00_automation
 
-- ensure deep-dive bulk-data -> Memory Usage..
+- overwork Readme
 
-- remove (temporary) rapid-api support
+- add specific test for StandardPresenter and standardizer
+  -> check results against real report
 
-- check all notebooks if texts are still correct
 - maybe introduce a first notebook explaining segments and what they show with examples
-- check pipelines
+
+- check pipelines with larget datasets / memory usage
 
 - adapt article medium
 

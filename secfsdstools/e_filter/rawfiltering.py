@@ -237,6 +237,7 @@ class USDOnlyRawFilter(FilterBase[RawDataBag]):
                                  pre_df=databag.pre_df,
                                  num_df=num_filtered_for_usd)
 
+
 class NoSegmentInfoRawFilter(FilterBase[RawDataBag]):
     """
     Filters only for the entries in num.txt that don't have a value in the segments column.)

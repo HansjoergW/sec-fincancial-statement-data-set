@@ -813,7 +813,6 @@ Have a look at [08_00_automation_basics](notebooks/08_00_automation_basics.ipynb
 * [Release Notes](https://hansjoergw.github.io/sec-fincancial-statement-data-set/releasenotes/)
 * [Documentation](https://hansjoergw.github.io/sec-fincancial-statement-data-set/)
 * [QuickStart Jupyter Notebook](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/01_quickstart.ipynb)
-* [Connect to the daily-sec-financial-statement-dataset Notebook](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/02_connect_rapidapi.ipynb)
 * [Explore the data with an interactive Notebook](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/03_explore_with_interactive_notebook.ipynb)
 * [collector_deep_dive Notebook](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/04_collector_deep_dive.ipynb)
 * [filter_deep_dive Notebook](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/05_filter_deep_dive.ipynb).

@@ -53,7 +53,7 @@ v.2.0.0 -> goal: ensure segment information is available
   - [ok] 03_explore_..
     -> added show_segments flag when showing details of a single report
   - [ok] 04_collector_deep_dive
-  - 05_filter_deep_dive
+  - [ok] 05_filter_deep_dive
   - 06_bulk_data_..
   - 07_00_standardizer_basics
   - 07_01_BS..

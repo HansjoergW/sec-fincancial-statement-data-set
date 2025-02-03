@@ -56,7 +56,7 @@ v.2.0.0 -> goal: ensure segment information is available
   - [ok] 05_filter_deep_dive
   - [ok] 06_bulk_data_..
     -> not less data than before > only a few hundred entries for dei / SharesOutstanding
-  - 07_00_standardizer_basics
+  - [ok] 07_00_standardizer_basics
   - 07_01_BS..
   - 07_02_IS..
   - 07_03_CF..

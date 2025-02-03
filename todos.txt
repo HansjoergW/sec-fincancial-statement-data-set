@@ -54,7 +54,8 @@ v.2.0.0 -> goal: ensure segment information is available
     -> added show_segments flag when showing details of a single report
   - [ok] 04_collector_deep_dive
   - [ok] 05_filter_deep_dive
-  - 06_bulk_data_..
+  - [ok] 06_bulk_data_..
+    -> not less data than before > only a few hundred entries for dei / SharesOutstanding
   - 07_00_standardizer_basics
   - 07_01_BS..
   - 07_02_IS..

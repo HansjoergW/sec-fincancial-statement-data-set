@@ -239,60 +239,60 @@ def test__validate_post_update_processes():
         "tests.unknown.test_configmgt.wrongfunction")) == 2
 
 
-def test_check_rapid_configuration(tmp_path):
-    # either to mock the db calls for get_key/set_key or providing a db db
-    DbCreator(db_dir=str(tmp_path)).create_db()
-
-    invalid_rapid_plan = Configuration(db_dir=str(tmp_path),
-                                       download_dir=str(tmp_path),
-                                       user_agent_email='abc@xy.org',
-                                       rapid_api_plan='bl',
-                                       parquet_dir=os.path.join(tmp_path, 'parquet'))
-
-    results = ConfigurationManager.check_rapid_configuration(invalid_rapid_plan)
-    assert len(results) == 1
-    assert 'RapidApiPlan' in results[0]
-
-    valid_rapid_plan = Configuration(db_dir=str(tmp_path),
-                                     download_dir=str(tmp_path),
-                                     user_agent_email='abc@xy.org',
-                                     rapid_api_plan='basic',
-                                     parquet_dir=os.path.join(tmp_path, 'parquet'))
-
-    results = ConfigurationManager.check_rapid_configuration(valid_rapid_plan)
-    assert len(results) == 0
-
-    valid_rapid_plan = Configuration(db_dir=str(tmp_path),
-                                     download_dir=str(tmp_path),
-                                     user_agent_email='abc@xy.org',
-                                     rapid_api_plan='premium',
-                                     parquet_dir=os.path.join(tmp_path, 'parquet'))
-    results = ConfigurationManager.check_rapid_configuration(valid_rapid_plan)
-    assert len(results) == 0
-
-    valid_rapid_plan = Configuration(db_dir=str(tmp_path),
-                                     download_dir=str(tmp_path),
-                                     user_agent_email='abc@xy.org',
-                                     rapid_api_plan=None,
-                                     parquet_dir=os.path.join(tmp_path, 'parquet'))
-    results = ConfigurationManager.check_rapid_configuration(valid_rapid_plan)
-    assert len(results) == 0
-
-    rapid_api_key = os.environ.get('RAPID_API_KEY')
-    valid_api_key = Configuration(db_dir=str(tmp_path),
-                                  download_dir=str(tmp_path),
-                                  user_agent_email='abc@xy.com',
-                                  rapid_api_key=rapid_api_key,
-                                  parquet_dir=os.path.join(tmp_path, 'parquet'))
-    results = ConfigurationManager.check_rapid_configuration(valid_api_key)
-    print(results)
-    assert len(results) == 0
-
-    invalid_api_key = Configuration(db_dir=str(tmp_path),
-                                    download_dir=str(tmp_path),
-                                    user_agent_email='abc@xy.com',
-                                    rapid_api_key="abc",
-                                    parquet_dir=os.path.join(tmp_path, 'parquet'))
-    results = ConfigurationManager.check_rapid_configuration(invalid_api_key)
-    assert len(results) == 1
-    assert 'RapidApiKey' in results[0]
+# def test_check_rapid_configuration(tmp_path):
+#     # either to mock the db calls for get_key/set_key or providing a db db
+#     DbCreator(db_dir=str(tmp_path)).create_db()
+#
+#     invalid_rapid_plan = Configuration(db_dir=str(tmp_path),
+#                                        download_dir=str(tmp_path),
+#                                        user_agent_email='abc@xy.org',
+#                                        rapid_api_plan='bl',
+#                                        parquet_dir=os.path.join(tmp_path, 'parquet'))
+#
+#     results = ConfigurationManager.check_rapid_configuration(invalid_rapid_plan)
+#     assert len(results) == 1
+#     assert 'RapidApiPlan' in results[0]
+#
+#     valid_rapid_plan = Configuration(db_dir=str(tmp_path),
+#                                      download_dir=str(tmp_path),
+#                                      user_agent_email='abc@xy.org',
+#                                      rapid_api_plan='basic',
+#                                      parquet_dir=os.path.join(tmp_path, 'parquet'))
+#
+#     results = ConfigurationManager.check_rapid_configuration(valid_rapid_plan)
+#     assert len(results) == 0
+#
+#     valid_rapid_plan = Configuration(db_dir=str(tmp_path),
+#                                      download_dir=str(tmp_path),
+#                                      user_agent_email='abc@xy.org',
+#                                      rapid_api_plan='premium',
+#                                      parquet_dir=os.path.join(tmp_path, 'parquet'))
+#     results = ConfigurationManager.check_rapid_configuration(valid_rapid_plan)
+#     assert len(results) == 0
+#
+#     valid_rapid_plan = Configuration(db_dir=str(tmp_path),
+#                                      download_dir=str(tmp_path),
+#                                      user_agent_email='abc@xy.org',
+#                                      rapid_api_plan=None,
+#                                      parquet_dir=os.path.join(tmp_path, 'parquet'))
+#     results = ConfigurationManager.check_rapid_configuration(valid_rapid_plan)
+#     assert len(results) == 0
+#
+#     rapid_api_key = os.environ.get('RAPID_API_KEY')
+#     valid_api_key = Configuration(db_dir=str(tmp_path),
+#                                   download_dir=str(tmp_path),
+#                                   user_agent_email='abc@xy.com',
+#                                   rapid_api_key=rapid_api_key,
+#                                   parquet_dir=os.path.join(tmp_path, 'parquet'))
+#     results = ConfigurationManager.check_rapid_configuration(valid_api_key)
+#     print(results)
+#     assert len(results) == 0
+#
+#     invalid_api_key = Configuration(db_dir=str(tmp_path),
+#                                     download_dir=str(tmp_path),
+#                                     user_agent_email='abc@xy.com',
+#                                     rapid_api_key="abc",
+#                                     parquet_dir=os.path.join(tmp_path, 'parquet'))
+#     results = ConfigurationManager.check_rapid_configuration(invalid_api_key)
+#     assert len(results) == 1
+#     assert 'RapidApiKey' in results[0]

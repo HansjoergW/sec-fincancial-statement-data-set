@@ -1,4 +1,4 @@
-# sec-fincancial-statement-data-set
+# sec-fincancial-statement-data-set tools (SFSDSTools 2)
 
 Helper tools to analyze the [Financial Statement Data Sets](https://www.sec.gov/dera/data/financial-statement-data-sets) from the U.S. securities and exchange commission (sec.gov).
 The SEC releases quarterly zip files, each containing four CSV files with numerical data from all financial reports filed within that quarter. However, accessing data from the past 12 years can be time-consuming due to the large amount of data - over 120 million data points in over 2GB of zip files by 2023.
@@ -22,11 +22,13 @@ The main features include:
 [07_03_CF_standardizer.ipynb](notebooks/07_03_CF_standardizer.ipynb))
 - automate processing and standardizing by configuring customized process steps that are executed whenever a new 
   data file is detected on sec.gov (see [08_00_automation_basics.ipynb](notebooks/08_00_automation_basics.ipynb))
- 
+- Version 2 supports the new "segments" column that was added in December 2024  
+
 # Principles
 
-The goal is to be able to do bulk processing of the data without the need to do countless API calls to sec.gov. Therefore, the quarterly zip files are downloaded and indexed using a SQLite database table.
-The index table contains information on all filed reports since about 2010, over 500,000 in total. The first
+The goal is to be able to do bulk processing of the data without the need to do countless API calls to sec.gov. 
+Therefore, the quarterly zip files are downloaded and indexed using a SQLite database table.
+The index table contains information on all filed reports since about 2010 - over 500,000 in total. The first
 download will take a couple of minutes but after that, all the data is on your local harddisk.
 
 Using the index in the sqlite db allows for direct extraction of data for a specific report from the
@@ -34,12 +36,12 @@ appropriate zip file, reducing the need to open and search through each zip file
 Moreover, the downloaded zip files are converted to the parquet format which provides faster read access
 to the data compared to reading the csv files inside the zip files.
 
-The library is designed to have a low memory footprint, only parsing and reading the data for a specific report into pandas dataframe tables.
+The library is designed to have a low memory footprint.
 
 
 # Installation and basic usage
 
-The library has been tested for python version 3.7, 3.8, 3.9, and 3.10.
+The library has been tested for python version 3.8, 3.9, 3.10 and 3.11.
 The project is published on [pypi.org](https://pypi.org/project/secfsdstools/). Simply use the following command to install the latest version:
 
 ```
@@ -48,12 +50,14 @@ pip install secfsdstools
 
 
 
-If you want to contribute, just clone the project and use a python 3.7 environment.
+If you want to contribute, just clone the project and use a python 3.8 environment.
 The dependencies are defined in the requirements.txt file or use the pyproject.toml to install them.
 
-It is possible to write standalone python script but I recommend to first start with interactive jupyter notebooks [01_quickstart.ipynb](notebooks/01_quickstart.ipynb) and [03_explore_with_interactive_notebook.ipynb](notebooks/03_explore_with_interactive_notebook.ipynb) that are located in `notebooks` directory.
+To have a first glance at the library, check out the interactive jupyter notebooks [01_quickstart.ipynb](notebooks/01_quickstart.ipynb) 
+and [03_explore_with_interactive_notebook.ipynb](notebooks/03_explore_with_interactive_notebook.ipynb) that are located in `notebooks` directory in the github repo.
 
-Upon using the library for the first time, it downloads the data files and creates the index by calling the `update()` method. You can manually trigger the update using the following code:
+Upon using the library for the first time, it downloads the data files and creates the index by calling the `update()`
+method. You can manually trigger the update using the following code:
 
 ```
 from secfsdstools.update import update
@@ -64,7 +68,7 @@ if __name__ == '__main__':
 
 The following tasks will be executed:
 1. All currently available zip-files are downloaded form sec.gov (these are over 50 files that will need over 2 GB of space on your local drive)
-2. All the zipfiles are transformed and stored as parquet files. Per default, the zipfile is deleted afterwards. If you want to keep the zip files, set the parameter 'KeepZipFiles' in the config file to True.
+2. All the zipfiles are transformed and stored as parquet files. Per default, the zipfile is deleted afterward. If you want to keep the zip files, set the parameter 'KeepZipFiles' in the config file to True.
 3. An index inside a sqlite db file is created
 
 
@@ -86,52 +90,18 @@ dbdirectory = c:/users/me/secfsdstools/data/db
 useragentemail = your.email@goeshere.com
 ```
 
-
-
 The `downloaddirectory` is the place where quarterly zip files from the sec.gov are downloaded to.
 The `parquetdirectory` is the folder where the data is stored in parquet format.
 The `dbdirectory` is the directory in which the sqllite db is created.
 The `useragentemail` is used in the requests made to the sec.gov website. Since we only make limited calls to the sec.gov,
 you can leave the example "your.email@goeshere.com". 
 
-## Viewing metadata
-
-The recommend way to view and use the metadata is using `secfsdstools` library functions as described in [notebooks/01_quickstart.ipynb](notebooks/01_quickstart.ipynb)  
-
-The "index of reports" that was created in the previous step can be viewed using a database viewer that supports the SQLite format,
-such as [DB Browser for SQLite](https://sqlitebrowser.org/).
-
-(The location of the SQLite database file is specified in the `dbdirectory` field of the config file, which is set to
-`<home>/secfsdstools/data/db` in the default configuration. The database file is named `secfsdstools.db`.)
-
-There are only two relevant tables in the database: `index_parquet_reports` and `index_parquet_processing_state`.
-
-The `index_parquet_reports` table provides an overview of all available reports in the downloaded
-data and includes the following relevant columns:
-
-* **adsh** : The unique id of the report (a string).
-* **cik** : The unique id of the company (an int).
-* **name** : The name of the company in uppercases.
-* **form** : The type of the report (e.g.: annual: 10-K, quarterly: 10-Q).
-* **filed** : The date when the report has been filed in the format YYYYMMDD (stored as a integer number).
-* **period** : The date for which the report was create. this is the date on the balancesheet.(stored as a integer number) 
-* **fullPath** : The path to the downloaded zip files that contains the details of that report.
-* **url** : The url which takes you directly to the filing of this report on the sec.gov website.
-
-For instance, if you want to have an overview of all reports that Apple has filed since 2010,
-just search for "%APPLE INC%" in the name column.
-
-Searching for "%APPLE INC%" will also reveal its cik: 320193
-
-If you accidentally delete data in the database file, don't worry. Just delete the database file
-and run `update()` again (see previous chapter).
-
-
-
-
 ## A first simple example
 Goal: present the information in the balance sheet of Apple's 2022 10-K report in the same way as it appears in the
 original report on page 31 ("CONSOLIDATED BALANCE SHEETS"): https://www.sec.gov/ix?doc=/Archives/edgar/data/320193/000032019322000108/aapl-20220924.htm
+
+**Note:** Version 2 of the framework supports now the `segments` that was introduced in January 2025. By adjusting the 
+parameter `show_segments` you can define whether the segments information are shown or not
 
 ````
 from secfsdstools.e_collector.reportcollecting import SingleReportCollector
@@ -156,9 +126,43 @@ if __name__ == '__main__':
                        # join the the content of the pre_txt and num_txt together
                        .join()  
                        # format the data in the same way as it appears in the report
-                       .present(StandardStatementPresenter())) 
+                       .present(StandardStatementPresenter(show_segments=False))) 
     print(bs_df) 
 ````
+
+
+## Viewing metadata
+
+The recommend way to view and use the metadata is using `secfsdstools` library functions as described in [notebooks/01_quickstart.ipynb](notebooks/01_quickstart.ipynb)  
+
+Of course, the created "index of reports" can be viewed also using a database viewer that supports the SQLite format,
+such as [DB Browser for SQLite](https://sqlitebrowser.org/).
+
+(The location of the SQLite database file is specified in the `dbdirectory` field of the config file, which is set to
+`<home>/secfsdstools/data/db` in the default configuration. The name of the database file is `secfsdstools.db`.)
+
+There are only two relevant tables in the database: `index_parquet_reports` and `index_parquet_processing_state`.
+
+The `index_parquet_reports` table provides an overview of all available reports in the downloaded
+data and includes the following relevant columns:
+
+* **adsh** : The unique id of the report (a string).
+* **cik** : The unique id of the company (an int).
+* **name** : The name of the company in uppercases.
+* **form** : The type of the report (e.g.: annual: 10-K, quarterly: 10-Q).
+* **filed** : The date when the report has been filed in the format YYYYMMDD (stored as a integer number).
+* **period** : The date for which the report was create. this is the date on the balancesheet.(stored as a integer number) 
+* **fullPath** : The path to the downloaded zip files that contains the details of that report.
+* **url** : The url which takes you directly to the filing of this report on the sec.gov website.
+
+For instance, if you want to have an overview of all reports that Apple has filed since 2010,
+just search for "%APPLE INC%" in the name column.
+
+Searching for "%APPLE INC%" will also reveal its cik: 320193
+
+If you accidentally delete data in the database file, don't worry. Just delete the database file
+and run `update()` again (see previous chapter).
+
 
 ## Overview
 The following diagram gives an overview on SECFSDSTools library.
@@ -185,135 +189,61 @@ filtered, concatenated, directly saved and loaded.
 
 The diagramm also shows the main classes with which a user interacts. The use of them  is described in the following chapters.
 
-## General
-Most of the classes you can interact with have a factory method which name starts with `get_`. All this factory method
-take at least one **optional** parameter called configuration which is of type `Configuration`.
 
-If you do not provide this parameter, the class will read the configuration info from you configuration file in your home
-directory. If, for whatever reason, you do want to provide an alternative configuration, you can overwrite it.
+## Feature Overview
 
-However, normally you do not have to provide the `configuration` parameter.
+This section shows some example code of the different features. Have a look at the [notebooks/01_quickstart.ipynb](notebooks/01_quickstart.ipynb)
+notebook and all other notebooks to get more details on how to use the framework.
 
-## Index: working with the index
-The first class that interacts with the index is the `IndexSearch` class. It provides a single method `find_company_by_name`
-which executes a SQL Like search on the name of the available companies and returns a pandas dataframe with the columns
-`name` and `cik` (the central index key, or the unique id of a company in the financial statements data sets).
-The main purpose of this class is to find the cik for a company (of course, you can also directly search the cik on https://www.sec.gov/edgar/searchedgar/companysearch).
+### Working with the Index
 
+* Access the index in the slite database to find the CIK (central index key) for a company:
+  ```
+  from secfsdstools.c_index.searching import IndexSearch
+  
+  index_search = IndexSearch.get_index_search()
+  results = index_search.find_company_by_name("apple")
+  print(results)
+  ```
 
-```
-from secfsdstools.c_index.searching import IndexSearch
+* Get the information on the latest filing of a company:
+  ````
+  from secfsdstools.c_index.companyindexreading import CompanyIndexReader
+  
+  apple_cik = 320193
+  apple_index_reader = CompanyIndexReader.get_company_index_reader(cik=apple_cik)
+  print(apple_index_reader.get_latest_company_filing())
+  ````
 
-index_search = IndexSearch.get_index_search()
-results = index_search.find_company_by_name("apple")
-print(results)
-```
+* Show all annual reports of company by using its CIK number:
+  ````
+  from secfsdstools.c_index.companyindexreading import CompanyIndexReader
+  
+  apple_cik = 320193
+  apple_index_reader = CompanyIndexReader.get_company_index_reader(cik=apple_cik)
+  
+  # only show the annual reports of apple
+  print(apple_index_reader.get_all_company_reports_df(forms=["10-K"]))
+  ````
 
-*Output:*
-````
-                           name      cik
-      APPLE GREEN HOLDING, INC.  1510976
-   APPLE HOSPITALITY REIT, INC.  1418121
-                      APPLE INC   320193
-         APPLE REIT EIGHT, INC.  1387361
-          APPLE REIT NINE, INC.  1418121
-         APPLE REIT SEVEN, INC.  1329011
-             APPLE REIT SIX INC  1277151
-           APPLE REIT TEN, INC.  1498864
-         APPLETON PAPERS INC/WI  1144326
-  DR PEPPER SNAPPLE GROUP, INC.  1418135
-   MAUI LAND & PINEAPPLE CO INC    63330
-          PINEAPPLE ENERGY INC.    22701
-  PINEAPPLE EXPRESS CANNABIS CO  1710495
-        PINEAPPLE EXPRESS, INC.  1654672
-       PINEAPPLE HOLDINGS, INC.    22701
-                PINEAPPLE, INC.  1654672
-````
-
-
-Once you have the cik of a company, you can use the `CompanyIndexReader` to get information on available reports of a company.
-To get an instance of the class, you use the get `get_company_index_reader` method and provide the cik parameter.
-
-````
-from secfsdstools.c_index.companyindexreading import CompanyIndexReader
-
-apple_cik = 320193
-apple_index_reader = CompanyIndexReader.get_company_index_reader(cik=apple_cik)
-````
-
-First, you could use the method `get_latest_company_filing` which returns a dictionary with the latest filing of the company:
-
-````
-print(apple_index_reader.get_latest_company_filing())
-````
-*Output:*
-````
-{'adsh': '0001140361-23-023909', 'cik': 320193, 'name': 'APPLE INC', 'sic': 3571.0, 'countryba': 'US', 'stprba': 'CA', 'cityba': 'CUPERTINO', 
-'zipba': '95014', 'bas1': 'ONE APPLE PARK WAY', 'bas2': None, 'baph': '(408) 996-1010', 'countryma': 'US', 'stprma': 'CA', 
-'cityma': 'CUPERTINO', 'zipma': '95014', 'mas1': 'ONE APPLE PARK WAY', 'mas2': None, 'countryinc': 'US', 'stprinc': 'CA', 
-'ein': 942404110, 'former': 'APPLE INC', 'changed': 20070109.0, 'afs': '1-LAF', 'wksi': 0, 'fye': '0930', 'form': '8-K', 
-'period': 20230430, 'fy': nan, 'fp': None, 'filed': 20230510, 'accepted': '2023-05-10 16:31:00.0', 'prevrpt': 0, 'detail': 0, 
-'instance': 'ny20007635x4_8k_htm.xml', 'nciks': 1, 'aciks': None}
-````
-
-Next there are two methods which return the metadata of the reports that a company has filed. The result is either
-returned as a list of `IndexReport` instances, if you use the method `get_all_company_reports` or as pandas dataframe if
-you use the method `get_all_company_reports_df`. Both method can take an optional parameter forms, which defines the
-type of the report that shall be returned. For instance, if you are only interested in the annual and quarterly report,
-set forms to `["10-K", "10-Q"]`.
-
-````
-# only show the annual reports of apple
-print(apple_index_reader.get_all_company_reports_df(forms=["10-K"]))
-````
-
-*Output:*
-````
-                 adsh     cik       name  form     filed    period                                           fullPath  originFile originFileType                                                url
- 0000320193-22-000108  320193  APPLE INC  10-K  20221028  20220930  C:\Users\hansj\secfsdstools\data\parquet\quart...  2022q4.zip        quarter  https://www.sec.gov/Archives/edgar/data/320193...
- 0000320193-21-000105  320193  APPLE INC  10-K  20211029  20210930  C:\Users\hansj\secfsdstools\data\parquet\quart...  2021q4.zip        quarter  https://www.sec.gov/Archives/edgar/data/320193...
- 0000320193-20-000096  320193  APPLE INC  10-K  20201030  20200930  C:\Users\hansj\secfsdstools\data\parquet\quart...  2020q4.zip        quarter  https://www.sec.gov/Archives/edgar/data/320193...
- 0000320193-19-000119  320193  APPLE INC  10-K  20191031  20190930  C:\Users\hansj\secfsdstools\data\parquet\quart...  2019q4.zip        quarter  https://www.sec.gov/Archives/edgar/data/320193...
- 0000320193-18-000145  320193  APPLE INC  10-K  20181105  20180930  C:\Users\hansj\secfsdstools\data\parquet\quart...  2018q4.zip        quarter  https://www.sec.gov/Archives/edgar/data/320193...
- 0000320193-17-000070  320193  APPLE INC  10-K  20171103  20170930  C:\Users\hansj\secfsdstools\data\parquet\quart...  2017q4.zip        quarter  https://www.sec.gov/Archives/edgar/data/320193...
- 0001628280-16-020309  320193  APPLE INC  10-K  20161026  20160930  C:\Users\hansj\secfsdstools\data\parquet\quart...  2016q4.zip        quarter  https://www.sec.gov/Archives/edgar/data/320193...
- 0001193125-15-356351  320193  APPLE INC  10-K  20151028  20150930  C:\Users\hansj\secfsdstools\data\parquet\quart...  2015q4.zip        quarter  https://www.sec.gov/Archives/edgar/data/320193...
- 0001193125-14-383437  320193  APPLE INC  10-K  20141027  20140930  C:\Users\hansj\secfsdstools\data\parquet\quart...  2014q4.zip        quarter  https://www.sec.gov/Archives/edgar/data/320193...
- 0001193125-13-416534  320193  APPLE INC  10-K  20131030  20130930  C:\Users\hansj\secfsdstools\data\parquet\quart...  2013q4.zip        quarter  https://www.sec.gov/Archives/edgar/data/320193...
- 0001193125-12-444068  320193  APPLE INC  10-K  20121031  20120930  C:\Users\hansj\secfsdstools\data\parquet\quart...  2012q4.zip        quarter  https://www.sec.gov/Archives/edgar/data/320193...
- 0001193125-11-282113  320193  APPLE INC  10-K  20111026  20110930  C:\Users\hansj\secfsdstools\data\parquet\quart...  2011q4.zip        quarter  https://www.sec.gov/Archives/edgar/data/320193...
- 0001193125-10-238044  320193  APPLE INC  10-K  20101027  20100930  C:\Users\hansj\secfsdstools\data\parquet\quart...  2010q4.zip        quarter  https://www.sec.gov/Archives/edgar/data/320193...
- 0001193125-09-214859  320193  APPLE INC  10-K  20091027  20090930  C:\Users\hansj\secfsdstools\data\parquet\quart...  2009q4.zip        quarter  https://www.sec.gov/Archives/edgar/data/320193...
-````
-
-## Collect: collecting the data for reports
+### Loading Data
 The previously introduced `IndexSearch` and `CompanyIndexReader` let you know what data is available, but they do not
 return the real data of the financial statements. This is what the `Collector` classes are used for.
 
-All the `Collector` classes have their own factory method(s) which instantiates the class. Most of these factory methods
-also provide parameters to filter the data directly when being loaded from the parquet files.
-These are
-* the `forms_filter` <br> lets you select which report type should be loaded (e.g. "10-K" or "10-Q").<br>
-  Note: the fomrs filter affects all dataframes (sub, pre, num).
-* the `stmt_filter` <br> defines the statements that should be loaded (e.g., "BS" if only "Balance Sheet" data should be loaded) <br>
-  Note: the stmt filter only affects the pre dataframe.
-* the `tag_filter` <br> defines the tags, that should be loaded (e.g., "Assets" if only the "Assets" tag should be loaded) <br>
-  Note: the tag filter affects the pre and num dataframes.
+All the `Collector` classes have their own factory method(s) which instantiates the class. 
 
-It is also possible to apply filter for these attributes after the data is loaded, but since the `Collector` classes
-apply this filters directly during the load process from the parquet files (which means that fewer data is loaded from
-the disk) this is generally more efficient.
+Most of these factory methods
+also provide parameters to filter the data directly when being loaded from the parquet files.
+These are the `forms_filter` (which type of reports you want to read, for instance "10-K"), the `stmt_filter`
+(which statements you want to read, for instance the balance sheet), and the `tag_filter` (which defines the tags
+you want to read, for instance "Assets"). Of course, such filters could also be applied afterward, but it is slightly
+more efficient to apply them directly when loading.
 
 All `Collector` classes have a `collect` method which then loads the data from the parquet files and returns an instance
 of `RawDataBag`. The `RawDataBag` instance contains then a pandas dataframe for the `sub` (subscription) data,
 `pre` (presentation) data, and `num` (the numeric values) data.
 
-The framework provides the following collectors:
-* `SingleReportCollector` <br> As the name suggests, this `Collector` returns the data of a single report. It is 
-  instantiated by providing the `adsh` of the desired report as parameter of the `get_report_by_adsh` factory method, 
-  or by using an instance of the `IndexReport` as parameter of the `get_report_by_indexreport`. (As a reminder: 
-  instances of `IndexReport` are returned by the `CompanyIndexReader` class).
-  <br><br>*Example:*
+* Load a single report using the `SingleReportCollector`:
     ````
     from secfsdstools.e_collector.reportcollecting import SingleReportCollector
 
@@ -328,21 +258,7 @@ The framework provides the following collectors:
     print(rawdatabag.pre_df.shape)
     print(rawdatabag.num_df.shape)
     ````
-    <br>*Output*:
-    ````
-                       adsh     cik       name     sic countryba stprba     cityba  ...
-    0  0000320193-22-000108  320193  APPLE INC  3571.0        US     CA  CUPERTINO  ...
-    (185, 10)
-    (503, 9)  
-    ````
-    <br>
-
-* `MultiReportCollector` <br> Contrary to the `SingleReportCollector`, this `Collector` can collect data from several
-  reports. Moreover, the data of the reports are loaded in parallel, this  especially improves the performance if the
-  reports are from different quarters (resp. are in different zip files). The class provides the factory methods 
-  `get_reports_by_adshs` and `get_reports_by_indexreports`. The first takes a list of adsh strings, the second a list
-  of `IndexReport` instances.
-  <br><br>*Example:*
+* Load multiple reports with the `MultiReportCollector`:
     ````
     from secfsdstools.e_collector.multireportcollecting import MultiReportCollector
     apple_10k_2022_adsh = "0000320193-22-000108"
@@ -360,25 +276,8 @@ The framework provides the following collectors:
         print(rawdatabag.sub_df)
         print(rawdatabag.num_df)  
     ```` 
-  <br>*Output*:
-    ````
-                       adsh     cik       name     sic countryba stprba     cityba  ...          
-    0  0000320193-22-000108  320193  APPLE INC  3571.0        US     CA  CUPERTINO  ...
-    1  0001193125-12-444068  320193  APPLE INC  3571.0        US     CA  CUPERTINO  ...
-    
-                       adsh     tag       version coreg     ddate  qtrs  uom         value footnote
-    0  0000320193-22-000108  Assets  us-gaap/2022        20210930     0  USD  3.510020e+11     None
-    1  0000320193-22-000108  Assets  us-gaap/2022        20220930     0  USD  3.527550e+11     None
-    2  0001193125-12-444068  Assets  us-gaap/2012        20110930     0  USD  1.163710e+11     None
-    3  0001193125-12-444068  Assets  us-gaap/2012        20120930     0  USD  1.760640e+11     None  
-    ````
-    <br>
-* `ZipCollector` <br> This `Collector` collects the data of one or more zip (resp. the folders that contain the parquet
-  files of this zip files). And since every of the original zip files contains the data for one quarter, the names you provide
-  in the `get_zip_by_name` or `get_zip_by_names` factory methods reflect the quarter which data you want to load: 
-  e.g. `2022q1.zip`.
- 
-  <br><br>*Example:*
+
+* Load all data for one or multiple quarters using the `ZipCollector`:
     ````
     from secfsdstools.e_collector.zipcollecting import ZipCollector
 
@@ -397,12 +296,12 @@ The framework provides the following collectors:
         print(rawdatabag.pre_df.shape)
         print(rawdatabag.num_df.shape)    
     ```` 
-  <br>*Output*:
-    ````
-    (4875, 36)
-    (232863, 10)
-    (2404949, 9)
-    ````
+
+
+
+# continue
+
+
 
 * `CompanyReportCollector` <br> This class returns reports for one or more companies. The factory method 
   `get_company_collector` provides the parameter `ciks` which takes a list of cik numbers.

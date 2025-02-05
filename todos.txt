@@ -33,7 +33,7 @@ v.2.0.0 -> goal: ensure segment information is available
        pre_num_df = joined_bag.pre_num_df[joined_bag.pre_num_df.stmt=='BS']
        sorted_pre_num_df = pre_num_df.sort_values(['adsh', 'ddate', 'report', 'line'])[['adsh','ddate', 'report', 'line', 'coreg', 'segments','tag', 'version', 'uom','value','plabel']]
 
-- notebook quickstart / readme
+- [ok] notebook quickstart
   - [ok] ensure output in StandardPresenter is ok
     -> show_segments flag -> if False -> filters out segments
   - [ok] ensure Standardizer is working
@@ -48,7 +48,7 @@ v.2.0.0 -> goal: ensure segment information is available
 
 - [ok] remove (temporary) rapid-api support
 
-- check notebooks
+- [ok] check notebooks
   - [ok] 01_quickstart
   - [ok] 03_explore_..
     -> added show_segments flag when showing details of a single report
@@ -60,22 +60,21 @@ v.2.0.0 -> goal: ensure segment information is available
   - [ok] 07_01_BS..
   - [ok] 07_02_IS..
   - [ok] 07_03_CF..
-  - 07_04_customize
-  - 08_00_automation
+  - [ok] 07_04_customize
+  - [ok] 08_00_automation
 
 - overwork Readme
 
 - add specific test for StandardPresenter and standardizer
   -> check results against real report
 
-- maybe introduce a first notebook explaining segments and what they show with examples
-
-- check pipelines with larget datasets / memory usage
+- check pipelines with larger datasets / memory usage
 
 - adapt article medium
 
 -----
 2.0.1
+- maybe introduce a first notebook explaining segments and what they show with examples
 - maybe also provide segmentsinfo per Tag? kind of overview
 - improve concat logic -> directly use fastparquet to concat files, not using pandas
 - maybe special "concat files to file"

@@ -63,10 +63,11 @@ v.2.0.0 -> goal: ensure segment information is available
   - [ok] 07_04_customize
   - [ok] 08_00_automation
 
-- overwork Readme
+- [ok] overwork Readme
 
-- add specific test for StandardPresenter and standardizer
-  -> check results against real report
+- add specific tests for
+  - [ok] StandardPresenter and
+  - Standardizer
 
 - check pipelines with larger datasets / memory usage
 

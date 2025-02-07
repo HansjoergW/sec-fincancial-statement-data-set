@@ -297,15 +297,7 @@ of `RawDataBag`. The `RawDataBag` instance contains then a pandas dataframe for 
         print(rawdatabag.num_df.shape)    
     ```` 
 
-
-
-# continue
-
-
-
-* `CompanyReportCollector` <br> This class returns reports for one or more companies. The factory method 
-  `get_company_collector` provides the parameter `ciks` which takes a list of cik numbers.
-  <br><br>*Example:*
+* Load all data for a single company or multiple companies
     ````
     from secfsdstools.e_collector.companycollecting import CompanyReportCollector
     
@@ -322,129 +314,105 @@ of `RawDataBag`. The `RawDataBag` instance contains then a pandas dataframe for 
         print(rawdatabag.pre_df.shape)
         print(rawdatabag.num_df.shape)    
     ```` 
-  <br>*Output*:
-    ````
-                        adsh     cik       name     sic ...
-    0   0000320193-22-000108  320193  APPLE INC  3571.0 ...
-    1   0000320193-21-000105  320193  APPLE INC  3571.0 ...
-    2   0000320193-20-000096  320193  APPLE INC  3571.0 ...
-    3   0000320193-19-000119  320193  APPLE INC  3571.0 ...
-    4   0000320193-18-000145  320193  APPLE INC  3571.0 ...
-    5   0000320193-17-000070  320193  APPLE INC  3571.0 ...
-    6   0001628280-16-020309  320193  APPLE INC  3571.0 ...
-    7   0001193125-15-356351  320193  APPLE INC  3571.0 ...
-    8   0001193125-14-383437  320193  APPLE INC  3571.0 ...
-    9   0001193125-13-416534  320193  APPLE INC  3571.0 ...
-    10  0001193125-12-444068  320193  APPLE INC  3571.0 ...
-    11  0001193125-11-282113  320193  APPLE INC  3571.0 ...
-    12  0001193125-10-238044  320193  APPLE INC  3571.0 ...
-    13  0001193125-09-214859  320193  APPLE INC  3571.0 ...
-    (2246, 10)
-    (7925, 9)
-    Process finished with exit code 0  
-    ````
 
 Have a look at the [collector_deep_dive notebook](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/04_collector_deep_dive.ipynb).
 
-
-
-## Raw Processing: working with the raw data
+### Working with raw data
 When the `collect` method of a `Collector` class is called, the data for the sub, pre, and num dataframes are loaded
 and being stored in the sub_df, pre_df, and num_df attributes inside an instance of `RawDataBag`.
 
-The `RawDataBag` provides the following methods:
-* `save`, `load`<br> The content of a `RawDataBag` can be saved into a directory. Within that directory, 
-   parquet files are stored for the content of the sub_df, pre_df, and num_df. In order to load this 
-   data directly, the static method `RawDataBag.load()` can be used.
-* `concat`<br> Several instances of a `RawDataBag` can be concatenated into one single instance. In order to do 
-   that, the static method `RawDataBag.concat()` takes a list of RawDataBag as parameter.
-* `join` <br> This method produces a `JoinedRawDataBag` by joining the content of the pre_df and num_df
+* `save` and `load`
+    ````
+    from secfsdstools.e_collector.reportcollecting import SingleReportCollector
+
+    # read data
+    apple_10k_2022_adsh = "0000320193-22-000108"
+    collector: SingleReportCollector = SingleReportCollector.get_report_by_adsh(adsh=apple_10k_2022_adsh)
+    rawdatabag = collector.collect()
+
+    # save it
+    rawdatabag.save("<path>")
+    
+    # load it back
+    RawDataBag.load("<path") 
+
+*  `concat` multiple instances of `RawDataBag`
+    ````
+    concat_bag = RawDataBag.concat(list_of_rawdatabags)    
+    ````
+
+* `join` produces a `JoinedRawDataBag` by joining the content of the pre_df and num_df
    based on the columns adsh, tag, and version. It is an inner join. The joined dataframe appears as pre_num_df in
    the `JoinedRawDataBag`.
-* `filter` <br> The filter method takes a parameter of the type `FilterRaw`, applies it to the data and
-   produces a new instance of `RawDataBag` with the filtered data. Therefore, filters can also be chained like
-   `a_filtered_RawDataBag = a_RawDataBag.filter(filter1).filter(filter2)`. Moreover, the `__get__item` method
-   is forwarded to the filter method, so you can also write `a_filtered_RawDataBag = a_RawDataBag[filter1][filter2]`.
+    ````
+    from secfsdstools.e_collector.reportcollecting import SingleReportCollector
 
-It is simple to write your own filters, just get some inspiration from the once that are already present in the
-Framework (module `secfsdstools.e_filter.rawfiltering`:
+    # read data
+    apple_10k_2022_adsh = "0000320193-22-000108"
+    collector: SingleReportCollector = SingleReportCollector.get_report_by_adsh(adsh=apple_10k_2022_adsh)
+    rawdatabag = collector.collect()
 
-* `AdshRawFilter` <br> Filters the `RawDataBag` instance based on the list of adshs that were provided in the constructor. <br>
+    joineddatabag = rawdatabag.join()
+  
+    print(joineddatabag.pre_num_df)
+    ```
+
+*  Use filters to `filter` the data. There are many predefined filters, but it is also easy to write your own.
    ````
+   
+   # Note, instead of using a_RawDataBag.filter(<myFilter>) you could also use a_RawDataBag[<myFilter>]
+   
+   # Filters the `RawDataBag` instance based on the list of adshs that were provided in the constructor. 
    a_filtered_RawDataBag = a_RawDataBag.filter(AdshRawFilter(adshs=['0001193125-09-214859', '0001193125-10-238044']))
-   ````
-* `StmtRawFilter` <br> Filters the `RawDataBag`instance based on the list of statements ('BS', 'CF', 'IS', ...). <br>
-   ````
+
+   # Filters the `RawDataBag`instance based on the list of statements ('BS', 'CF', 'IS', ...). <br>
    a_filtered_RawDataBag = a_RawDataBag.filter(StmtRawFilter(stmts=['BS', 'CF']))
-   ````
-* `TagRawFilter` <br> Filters the `RawDataBag`instance based on the list of tags that is provided. <br>
-   ````
+
+   # Filters the `RawDataBag`instance based on the list of tags that is provided. <br>
    a_filtered_RawDataBag = a_RawDataBag.filter(TagRawFilter(tags=['Assets', 'Liabilities']))
-   ````
-* `MainCoregRawFilter` <br> Filters the `RawDataBag` so that data of subsidiaries are removed.
-   ````
+
+   # Filters the `RawDataBag` so that data of subsidiaries are removed.
    a_filtered_RawDataBag = a_RawDataBag.filter(MainCoregRawFilter()) 
-   ````
-* `ReportPeriodAndPreviousPeriodRawFilter` <br> The data of a report usually also contains data from previous years.
-  However, often you want just to analyze the data of the current and the previous year. This filter ensures that
-  only data for the current period and the previous period are contained in the data.
-   ````
+
+   # The data of a report usually also contains data from previous years.
+   # However, often you want just to analyze the data of the current and the previous year. This filter ensures that
+   # only data for the current period and the previous period are contained in the data.
    a_filtered_RawDataBag = a_RawDataBag.filter(ReportPeriodAndPreviousPeriodRawFilter()) 
-   ````
-* `ReportPeriodRawFilter` <br> If you are just interested in the data of a report that is from the current period
-  of the report then you can use this filter. For instance, if you use a `CompanyReportCollector` to collect all
-  10-K reports of this company, you want to ensure that every report only contains data for its own period and not for
-  previous periods.
-   ````
+
+   # If you are just interested in the data of a report that is from the current period
+   # of the report then you can use this filter.
    a_filtered_RawDataBag = a_RawDataBag.filter(ReportPeriodRawFilter()) 
-   ````
-* `OfficialTagsOnlyRawFilter` <br> Sometimes company provide their own tags, which are not defined by the us-gaap XBRL
-  definition. In such cases, the version columns contains the value of the adsh instead of something like us-gab/2022.
-  This filter removes unofficial tags.
-   ````
+
+   # Sometimes company provide their own tags, which are not defined by the us-gaap XBRL
+   # definition. In such cases, the version columns contains the value of the adsh instead of something like us-gab/2022.
+   # This filter removes unofficial tags.
    a_filtered_RawDataBag = a_RawDataBag.filter(OfficialTagsOnlyRawFilter()) 
-   ````  
-* `USDOnlyRawFilter` <br> Reports often also contain datapoints in other currency than USD. So it might happen that
-  the same datapoint in a balance sheet is present in different currencies. If you are just interested in the USD
-  currency, then we can use this filter.
-   ````
+
+   # Reports often also contain datapoints or also the same datapint in other currencies than USD.
+   # This filters ensures that only USD  datapoints are kept  
    a_filtered_RawDataBag = a_RawDataBag.filter(USDOnlyRawFilter()) 
+
+   # If you dont care about Segments information, you can use this filter.
+   a_filtered_RawDataBag = a_RawDataBag.filter(NoSegmentInfoRawFilter()) 
+   
    ````  
 
-Have a look at the [filter_deep_dive notebook](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/05_filter_deep_dive.ipynb).
+   Have a look at the [filter_deep_dive notebook](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/05_filter_deep_dive.ipynb).
 
+### Workin with joined data
+When the `join` method of a `RawDataBag` instance is called an instance of `JoinedDataBag` is returned.
 
+The `JoinedDataBag` provides `save`, `load`, and `concat` in the same manner as the `RawDataBag`does.
+More over, also `filter` is possible and the same filters are available. They jost go by the name
+`...JoinedFilter` instead of `...RawFilter`.
 
-## Joined Processing: working with joined data
-When the `join` method of a `RawDataBag` instance is called an instance of `JoinedDataBag` is returned. The returned
-instance contains an attribute sub_df, which is a reference to the same sub_df that is in the `RawDataBag`.
-In addition to that, the `JoinedDataBag` contains an attribut pre_num_df, which is an inner join of the pre_df and 
-the num_df based on the columns adsh, tag, and version. Note that an entry in the pre_df can be joined with more than 
-one entry in the num_df.
-
-The `JoinedDataBag` provides the following methods:
-* `save`, `load`<br> The content of a `JoinedDataBag` can be saved into a directory. Within that directory,
-  parquet files are stored for the content of the sub_df, pre_df, and num_df. In order to load this
-  data directly, the static method `JoinedDataBag.save()` can be used.
-* `concat`<br> Several instances of a `JoinedDataBag` can be concatenated in one single instance. In order to do
-  that, the static method `JoinedDataBag.concat()` takes a list of RawDataBag as parameter.
-* `filter` <br> The filter method takes a parameter of the type `FilterJoined`, applies it to the data and
-  produces a new instance of `JoinedDataBag` with the filtered data. Therefore, filters can also be chained like
-  `a_filtered_JoinedDataBag = a_JoinedDataBag.filter(filter1).filter(filter2)`. Moreover, the `__get__item` method
-  is forwarded to the filter method, so you can also write `a_filtered_JoinedDataBag = a_JoinedDataBag[filter1][filter2]`.
-  **Note**: The same filters that are present for the `RawDataBag` are also available for the `JoinedDataBag`. Just
-  look into the module `secfsdstools.e_filter.joinedfiltering`
-* `present` <br> The idea of the present method is to make a final presentation of the data as pandas dataframe. 
-  The method has a parameter presenter of type Presenter.
-
-## Present
+`present` The idea of the present method is to make a final presentation of the data as pandas dataframe. 
+The method has a parameter presenter of type Presenter.
 It is simple to write your own presenter classes. So far, the framework provides the following Presenter 
 implementations (module `secfsdstools.e_presenter.presenting`):
 
-* `StandardStatementPresenter` <br> This presenter provides the data in the same form, as you are used to see in
-  the reports itself. For instance, the primary financial statements balance sheet, income statement, and cash flow
-  display the different positions in rows and the columns contain the different dates/periods of the data.
-  Let us say you want to recreate the BS information of the apples 10-K report of 2022, you would write:
+* `StandardStatementPresenter` <br> This presenter provides the data in the same form, as you see in
+  the reports itself.
   ````
   apple_10k_2022_adsh = "0000320193-22-000108"
 
@@ -457,47 +425,9 @@ implementations (module `secfsdstools.e_presenter.presenting`):
                     .join()
                     .present(StandardStatementPresenter())
   print(bs_df) 
-  ````
-  <br>*Output*:
-  ````  
-                        adsh coreg                                              tag       version stmt  report  line     uom  negating  inpth  qrtrs_0/20220930  qrtrs_0/20210930
-   0   0000320193-22-000108                  CashAndCashEquivalentsAtCarryingValue  us-gaap/2022   BS       5     3     USD         0      0        2.364600e+10        3.494000e+10
-   1   0000320193-22-000108                            MarketableSecuritiesCurrent  us-gaap/2022   BS       5     4     USD         0      0        2.465800e+10        2.769900e+10
-   2   0000320193-22-000108                           AccountsReceivableNetCurrent  us-gaap/2022   BS       5     5     USD         0      0        2.818400e+10        2.627800e+10
-   3   0000320193-22-000108                                           InventoryNet  us-gaap/2022   BS       5     6     USD         0      0        4.946000e+09        6.580000e+09
-   4   0000320193-22-000108                             NontradeReceivablesCurrent  us-gaap/2022   BS       5     7     USD         0      0        3.274800e+10        2.522800e+10
-   5   0000320193-22-000108                                     OtherAssetsCurrent  us-gaap/2022   BS       5     8     USD         0      0        2.122300e+10        1.411100e+10
-   6   0000320193-22-000108                                          AssetsCurrent  us-gaap/2022   BS       5     9     USD         0      0        1.354050e+11        1.348360e+11
-   7   0000320193-22-000108                         MarketableSecuritiesNoncurrent  us-gaap/2022   BS       5    11     USD         0      0        1.208050e+11        1.278770e+11
-   8   0000320193-22-000108                           PropertyPlantAndEquipmentNet  us-gaap/2022   BS       5    12     USD         0      0        4.211700e+10        3.944000e+10
-   9   0000320193-22-000108                                  OtherAssetsNoncurrent  us-gaap/2022   BS       5    13     USD         0      0        5.442800e+10        4.884900e+10
-   10  0000320193-22-000108                                       AssetsNoncurrent  us-gaap/2022   BS       5    14     USD         0      0        2.173500e+11        2.161660e+11
-   11  0000320193-22-000108                                                 Assets  us-gaap/2022   BS       5    15     USD         0      0        3.527550e+11        3.510020e+11
-   12  0000320193-22-000108                                 AccountsPayableCurrent  us-gaap/2022   BS       5    18     USD         0      0        6.411500e+10        5.476300e+10
-   13  0000320193-22-000108                                OtherLiabilitiesCurrent  us-gaap/2022   BS       5    19     USD         0      0        6.084500e+10        4.749300e+10
-   14  0000320193-22-000108                   ContractWithCustomerLiabilityCurrent  us-gaap/2022   BS       5    20     USD         0      0        7.912000e+09        7.612000e+09
-   15  0000320193-22-000108                                        CommercialPaper  us-gaap/2022   BS       5    21     USD         0      0        9.982000e+09        6.000000e+09
-   16  0000320193-22-000108                                    LongTermDebtCurrent  us-gaap/2022   BS       5    22     USD         0      0        1.112800e+10        9.613000e+09
-   17  0000320193-22-000108                                     LiabilitiesCurrent  us-gaap/2022   BS       5    23     USD         0      0        1.539820e+11        1.254810e+11
-   18  0000320193-22-000108                                 LongTermDebtNoncurrent  us-gaap/2022   BS       5    25     USD         0      0        9.895900e+10        1.091060e+11
-   19  0000320193-22-000108                             OtherLiabilitiesNoncurrent  us-gaap/2022   BS       5    26     USD         0      0        4.914200e+10        5.332500e+10
-   20  0000320193-22-000108                                  LiabilitiesNoncurrent  us-gaap/2022   BS       5    27     USD         0      0        1.481010e+11        1.624310e+11
-   21  0000320193-22-000108                                            Liabilities  us-gaap/2022   BS       5    28     USD         0      0        3.020830e+11        2.879120e+11
-   22  0000320193-22-000108           CommonStocksIncludingAdditionalPaidInCapital  us-gaap/2022   BS       5    31     USD         0      0        6.484900e+10        5.736500e+10
-   23  0000320193-22-000108                     RetainedEarningsAccumulatedDeficit  us-gaap/2022   BS       5    32     USD         0      0       -3.068000e+09        5.562000e+09
-   24  0000320193-22-000108        AccumulatedOtherComprehensiveIncomeLossNetOfTax  us-gaap/2022   BS       5    33     USD         0      0       -1.110900e+10        1.630000e+08
-   25  0000320193-22-000108                                     StockholdersEquity  us-gaap/2022   BS       5    34     USD         0      0        5.067200e+10        6.309000e+10
-   26  0000320193-22-000108                       LiabilitiesAndStockholdersEquity  us-gaap/2022   BS       5    35     USD         0      0        3.527550e+11        3.510020e+11
-   27  0000320193-22-000108                    CommonStockParOrStatedValuePerShare  us-gaap/2022   BS       6     1     USD         0      1        0.000000e+00        0.000000e+00
-   28  0000320193-22-000108                            CommonStockSharesAuthorized  us-gaap/2022   BS       6     2  shares         0      1        5.040000e+10        5.040000e+10
-   29  0000320193-22-000108                                CommonStockSharesIssued  us-gaap/2022   BS       6     3  shares         0      1        1.594342e+10        1.642679e+10
-   30  0000320193-22-000108                           CommonStockSharesOutstanding  us-gaap/2022   BS       6     4  shares         0      1        1.594342e+10        1.642679e+10  
-  ````  
-  If you compare this with the real report at https://www.sec.gov/ix?doc=/Archives/edgar/data/320193/000032019322000108/aapl-20220924.htm
-  you will notice, that order of the tags and the values are the same.
+  ```` 
 
-
-* `Standardizer` <br>
+### Stanardize financial data
   Even if xbrl is a standard on how to tag positions and numbers in financial statements, that doesn't mean that financial
   statements can then be compared easily. For instance, there are over 3000 tags which can be used in a balance sheet.
   Moreover, some tags can mean similar things or can be grouped behind a "parent" tag, which itself might not be present.
@@ -507,7 +437,12 @@ implementations (module `secfsdstools.e_presenter.presenting`):
   The standardizer helps to solve these problems by unifying the information of financial statements.<br> <br>
   With the standardized financial statements, you can then actually compare the statements between different
   companies or different years, and you can use the dataset for ML. <br><br>
-  Have a look at [standardizer_basics](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/07_00_standardizer_basics.ipynb) which explains it in more details.<br><br>
+  For details, have a look at the following notebooks:
+  * [standardizer_basics](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/07_00_standardizer_basics.ipynb)
+  * [standardize the balance sheets and make them comparable](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/07_01_BS_standardizer.ipynb)
+  * [standardize the income statements and make them comparable](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/07_02_IS_standardizer.ipynb)
+  * [standardize the cash flow statements and make them comparable](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/07_03_CF_standardizer.ipynb)
+
 
   * `BalanceSheetStandardizer` <br>
   The `BalanceSheetStandardizer` collects and/or calculates the following positions of balance sheets:  
@@ -717,13 +652,10 @@ Have a look at [08_00_automation_basics](notebooks/08_00_automation_basics.ipynb
 * [filter_deep_dive Notebook](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/05_filter_deep_dive.ipynb).
 * [bulk_data_processing_deep_dive Notebook](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/06_bulk_data_processing_deep_dive.ipynb)
 * [standardizer_basics](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/07_00_standardizer_basics.ipynb)
-* [BS_standardizer](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/07_01_BS_standardizer.ipynb)
-* [IS_standardizer](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/07_02_IS_standardizer.ipynb)
-* [CF_standardizer](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/07_03_CF_standardizer.ipynb)
-* [checkout the `u_usecases` package](https://hansjoergw.github.io/sec-fincancial-statement-data-set/doc_latest/api/secfsdstools/u_usecases/index.html)
 * [standardize the balance sheets and make them comparable](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/07_01_BS_standardizer.ipynb)
 * [standardize the income statements and make them comparable](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/07_02_IS_standardizer.ipynb)
 * [standardize the cash flow statements and make them comparable](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/07_03_CF_standardizer.ipynb)
+* [checkout the `u_usecases` package](https://hansjoergw.github.io/sec-fincancial-statement-data-set/doc_latest/api/secfsdstools/u_usecases/index.html)
 * [automate additional processing steps that are executed after new data is discovered](notebooks/08_00_automation_basics.ipynb)
 * [Trouble hssting and known issues](KNOWN_ISSUES.md)
 * [Changelog](CHANGELOG.md)

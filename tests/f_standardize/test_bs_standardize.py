@@ -1,14 +1,18 @@
 import os
 
+import pandas as pd
 import pytest
 
 from secfsdstools.d_container.databagmodel import JoinedDataBag
 from secfsdstools.e_collector.zipcollecting import ZipCollector
+from secfsdstools.e_filter.joinedfiltering import AdshJoinedFilter
 from secfsdstools.f_standardize.bs_standardize import BalanceSheetStandardizer
 from secfsdstools.u_usecases.bulk_loading import default_postloadfilter
 
 CURRENT_DIR, _ = os.path.split(__file__)
 PATH_TO_PARQUET_2021_Q1 = f'{CURRENT_DIR}/../_testdata/parquet_new/quarter/2021q1.zip'
+
+APPLE_10Q_2021Q1 = '0000320193-21-000010'
 
 
 @pytest.fixture
@@ -75,4 +79,39 @@ def test_options_standardizing(joined_bag):
     assert 'zipba' in result_df.columns.to_list()
 
 
+def test_real_values(joined_bag):
+    standardizer = BalanceSheetStandardizer()
 
+    filterd_bag = joined_bag[AdshJoinedFilter(adshs=[APPLE_10Q_2021Q1])]
+
+    result: pd.DataFrame = standardizer.present(filterd_bag)
+
+    # flatten result to series
+    bs_series = result.loc[0]
+    print(bs_series)
+
+    assert bs_series.adsh == "0000320193-21-000010"
+    assert bs_series.cik == 320193
+    assert bs_series["name"] == "APPLE INC"  # name is also an internal value of a Series
+    assert bs_series.form == "10-Q"
+    assert bs_series.fye == "0930"
+    assert bs_series.fy == 2021.0
+    assert bs_series.fp == "Q1"
+    assert bs_series.filed == 20210128
+    assert bs_series.ddate == 20201231
+    assert bs_series.qtrs == 0
+    assert bs_series.Assets == 354054000000.0
+    assert bs_series.AssetsCurrent == 154106000000.0
+    assert bs_series.Cash == 36010000000.0
+    assert bs_series.AssetsNoncurrent == 199948000000.0
+    assert bs_series.Liabilities == 287830000000.0
+    assert bs_series.LiabilitiesCurrent == 132507000000.0
+    assert bs_series.LiabilitiesNoncurrent == 155323000000.0
+    assert bs_series.Equity == 66224000000.0
+    assert bs_series.HolderEquity == 66224000000.0
+    assert bs_series.RetainedEarnings == 14301000000.0
+    assert bs_series.AdditionalPaidInCapital == 0.0
+    assert bs_series.TreasuryStockValue == 0.0
+    assert bs_series.TemporaryEquity == 0.0
+    assert bs_series.RedeemableEquity == 0.0
+    assert bs_series.LiabilitiesAndEquity == 354054000000.0

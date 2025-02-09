@@ -1,14 +1,18 @@
 import os
 
+import pandas as pd
 import pytest
 
 from secfsdstools.d_container.databagmodel import JoinedDataBag
 from secfsdstools.e_collector.zipcollecting import ZipCollector
+from secfsdstools.e_filter.joinedfiltering import AdshJoinedFilter
 from secfsdstools.f_standardize.is_standardize import IncomeStatementStandardizer
 from secfsdstools.u_usecases.bulk_loading import default_postloadfilter
 
 CURRENT_DIR, _ = os.path.split(__file__)
 PATH_TO_PARQUET_2021_Q1 = f'{CURRENT_DIR}/../_testdata/parquet_new/quarter/2021q1.zip'
+
+APPLE_10Q_2021Q1 = '0000320193-21-000010'
 
 
 @pytest.fixture
@@ -71,3 +75,40 @@ def test_standardizing(joined_bag):
              'NetIncomeLoss_cat',
              'EPS_error',
              'EPS_cat'])
+
+
+def test_real_values(joined_bag):
+    standardizer = IncomeStatementStandardizer()
+
+    filterd_bag = joined_bag[AdshJoinedFilter(adshs=[APPLE_10Q_2021Q1])]
+
+    result: pd.DataFrame = standardizer.present(filterd_bag)
+
+    # flatten result to series
+    is_series = result.loc[0]
+    print(is_series)
+
+    assert is_series.adsh == "0000320193-21-000010"
+    assert is_series.cik == 320193
+    assert is_series["name"] == "APPLE INC"
+    assert is_series.form == "10-Q"
+    assert is_series.fye == "0930"
+    assert is_series.fy == 2021.0
+    assert is_series.fp == "Q1"
+    assert is_series.filed == 20210128
+    assert is_series.ddate == 20201231
+    assert is_series.qtrs == 1
+    assert is_series.Revenues == 111439000000.0
+    assert is_series.CostOfRevenue == 67111000000.0
+    assert is_series.GrossProfit == 44328000000.0
+    assert is_series.OperatingExpenses == 10794000000.0
+    assert is_series.OperatingIncomeLoss == 33534000000.0
+    assert is_series.IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit == 33579000000.0
+    assert is_series.AllIncomeTaxExpenseBenefit == 4824000000.0
+    assert is_series.IncomeLossFromContinuingOperations == 28755000000.0
+    assert is_series.IncomeLossFromDiscontinuedOperationsNetOfTax == 0.0
+    assert is_series.ProfitLoss == 28755000000.0
+    assert is_series.NetIncomeLossAttributableToNoncontrollingInterest == 0.0
+    assert is_series.NetIncomeLoss == 28755000000.0
+    assert is_series.OutstandingShares == 16935119000.0
+    assert is_series.EarningsPerShare == 1.7

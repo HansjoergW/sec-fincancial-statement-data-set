@@ -46,7 +46,7 @@ v.2.0.0 -> goal: ensure segment information is available
   -> it looks as if the current downloaded data have the hasSegments columns in the sqlite table.
      -> Tests example is failing: test_collector/testexamples.py fails when zip collector is tested
 
-- [ok] remove (temporary) rapid-api support
+- [ok] remove rapid-api support
 
 - [ok] check notebooks
   - [ok] 01_quickstart
@@ -65,9 +65,9 @@ v.2.0.0 -> goal: ensure segment information is available
 
 - [ok] overwork Readme
 
-- add specific tests for
+- [ok] add specific tests for
   - [ok] StandardPresenter and
-  - Standardizer
+  - [ok] Standardizer
 
 - check pipelines with larger datasets / memory usage
 
@@ -161,9 +161,6 @@ later
 -correct quarter naming -> was meine ich damit?
 -db-version for updates
 
-
-build, release & docu
-- coverage report padge
 
 checkout für visualisierung
 - https://gist.github.com/mwouts/a2de16feb90d33fd89334fb09f62742f

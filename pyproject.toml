@@ -66,3 +66,20 @@ test = [
     "typing_extensions~=4.0",
     "pdoc3~=0.10"
 ]
+
+
+[tool.hatch.build.targets.sdist]
+exclude = [
+    "/tests",
+    "/docs",
+    "/notebooks",
+    "/sandbox"
+]
+
+[tool.hatch.build.targets.wheel]
+exclude = [
+    "/tests",
+    "/docs",
+    "/notebooks",
+    "/sandbox"
+]

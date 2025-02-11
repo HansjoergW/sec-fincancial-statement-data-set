@@ -265,7 +265,29 @@ class USDOnlyRawFilter(FilterBase[RawDataBag]):
 
         return RawDataBag.create(sub_df=databag.sub_df,
                                  pre_df=databag.pre_df,
-                                 num_df=num_filtered_for_usd)</code></pre>
+                                 num_df=num_filtered_for_usd)
+
+
+class NoSegmentInfoRawFilter(FilterBase[RawDataBag]):
+    &#34;&#34;&#34;
+    Filters only for the entries in num.txt that don&#39;t have a value in the segments column.)
+    &#34;&#34;&#34;
+
+    def filter(self, databag: RawDataBag) -&gt; RawDataBag:
+        &#34;&#34;&#34;
+        filters the databag so that only entries are contained that don&#39;t have segments info.
+
+        Args:
+            databag(RawDataBag) : rawdatabag to apply the pathfilter to
+
+        Returns:
+            RawDataBag: the databag with the filtered data
+        &#34;&#34;&#34;
+        num_filtered_for_main_coreg = databag.num_df[databag.num_df.segments == &#39;&#39;]
+
+        return RawDataBag.create(sub_df=databag.sub_df,
+                                 pre_df=databag.pre_df,
+                                 num_df=num_filtered_for_main_coreg)</code></pre>
 </details>
 </section>
 <section>
@@ -426,6 +448,79 @@ are contained.</p>
         RawDataBag: the databag with the filtered data
     &#34;&#34;&#34;
     num_filtered_for_main_coreg = databag.num_df[databag.num_df.coreg == &#39;&#39;]
+
+    return RawDataBag.create(sub_df=databag.sub_df,
+                             pre_df=databag.pre_df,
+                             num_df=num_filtered_for_main_coreg)</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+<dt id="secfsdstools.e_filter.rawfiltering.NoSegmentInfoRawFilter"><code class="flex name class">
+<span>class <span class="ident">NoSegmentInfoRawFilter</span></span>
+<span>(</span><span>*args, **kwds)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Filters only for the entries in num.txt that don't have a value in the segments column.)</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class NoSegmentInfoRawFilter(FilterBase[RawDataBag]):
+    &#34;&#34;&#34;
+    Filters only for the entries in num.txt that don&#39;t have a value in the segments column.)
+    &#34;&#34;&#34;
+
+    def filter(self, databag: RawDataBag) -&gt; RawDataBag:
+        &#34;&#34;&#34;
+        filters the databag so that only entries are contained that don&#39;t have segments info.
+
+        Args:
+            databag(RawDataBag) : rawdatabag to apply the pathfilter to
+
+        Returns:
+            RawDataBag: the databag with the filtered data
+        &#34;&#34;&#34;
+        num_filtered_for_main_coreg = databag.num_df[databag.num_df.segments == &#39;&#39;]
+
+        return RawDataBag.create(sub_df=databag.sub_df,
+                                 pre_df=databag.pre_df,
+                                 num_df=num_filtered_for_main_coreg)</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="secfsdstools.d_container.filter.FilterBase" href="../d_container/filter.html#secfsdstools.d_container.filter.FilterBase">FilterBase</a></li>
+<li>typing.Generic</li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="secfsdstools.e_filter.rawfiltering.NoSegmentInfoRawFilter.filter"><code class="name flex">
+<span>def <span class="ident">filter</span></span>(<span>self, databag: <a title="secfsdstools.d_container.databagmodel.RawDataBag" href="../d_container/databagmodel.html#secfsdstools.d_container.databagmodel.RawDataBag">RawDataBag</a>) ‑> <a title="secfsdstools.d_container.databagmodel.RawDataBag" href="../d_container/databagmodel.html#secfsdstools.d_container.databagmodel.RawDataBag">RawDataBag</a></span>
+</code></dt>
+<dd>
+<div class="desc"><p>filters the databag so that only entries are contained that don't have segments info.</p>
+<h2 id="args">Args</h2>
+<p>databag(RawDataBag) : rawdatabag to apply the pathfilter to</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>RawDataBag</code></dt>
+<dd>the databag with the filtered data</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def filter(self, databag: RawDataBag) -&gt; RawDataBag:
+    &#34;&#34;&#34;
+    filters the databag so that only entries are contained that don&#39;t have segments info.
+
+    Args:
+        databag(RawDataBag) : rawdatabag to apply the pathfilter to
+
+    Returns:
+        RawDataBag: the databag with the filtered data
+    &#34;&#34;&#34;
+    num_filtered_for_main_coreg = databag.num_df[databag.num_df.segments == &#39;&#39;]
 
     return RawDataBag.create(sub_df=databag.sub_df,
                              pre_df=databag.pre_df,
@@ -989,6 +1084,12 @@ that is in the provided list.</p>
 <h4><code><a title="secfsdstools.e_filter.rawfiltering.MainCoregRawFilter" href="#secfsdstools.e_filter.rawfiltering.MainCoregRawFilter">MainCoregRawFilter</a></code></h4>
 <ul class="">
 <li><code><a title="secfsdstools.e_filter.rawfiltering.MainCoregRawFilter.filter" href="#secfsdstools.e_filter.rawfiltering.MainCoregRawFilter.filter">filter</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="secfsdstools.e_filter.rawfiltering.NoSegmentInfoRawFilter" href="#secfsdstools.e_filter.rawfiltering.NoSegmentInfoRawFilter">NoSegmentInfoRawFilter</a></code></h4>
+<ul class="">
+<li><code><a title="secfsdstools.e_filter.rawfiltering.NoSegmentInfoRawFilter.filter" href="#secfsdstools.e_filter.rawfiltering.NoSegmentInfoRawFilter.filter">filter</a></code></li>
 </ul>
 </li>
 <li>

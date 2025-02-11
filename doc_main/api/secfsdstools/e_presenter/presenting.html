@@ -34,6 +34,7 @@ import pandas as pd
 
 from secfsdstools.d_container.databagmodel import JoinedDataBag
 from secfsdstools.d_container.presentation import Presenter
+from secfsdstools.e_filter.joinedfiltering import NoSegmentInfoJoinedFilter
 
 
 class StandardStatementPresenter(Presenter[JoinedDataBag]):
@@ -43,7 +44,7 @@ class StandardStatementPresenter(Presenter[JoinedDataBag]):
     &#34;&#34;&#34;
 
     def __init__(self, flatten_index: bool = True, add_form_column: bool = False,
-                 invert_negating: bool = False):
+                 invert_negating: bool = False, show_segments: bool = False):
         &#34;&#34;&#34;
 
         Args:
@@ -60,11 +61,14 @@ class StandardStatementPresenter(Presenter[JoinedDataBag]):
                              to 1 is inverted. A typical case is &#34;paiddividends&#34; where the value
                              is shown as positive but from a calculating point of view it should
                              be negative.
+            show_segments: if True, the segments information is also shown. If False,
+                           the NoSegmentInfoJoinedFilter is applied
         &#34;&#34;&#34;
 
         self.flatten_index = flatten_index
         self.add_form_column = add_form_column
         self.invert_negating = invert_negating
+        self.show_segments = show_segments
 
     def present(self, databag: JoinedDataBag) -&gt; pd.DataFrame:
         &#34;&#34;&#34;
@@ -82,15 +86,19 @@ class StandardStatementPresenter(Presenter[JoinedDataBag]):
         Returns:
             pd.DataFrame: the dataframe with the final presentation
         &#34;&#34;&#34;
+        pre_num_df: pd.DataFrame
+        if self.show_segments:
+            pre_num_df = databag.pre_num_df
+        else:
+            pre_num_df = databag[NoSegmentInfoJoinedFilter()].pre_num_df
 
-        pre_num_df = databag.pre_num_df
         if self.invert_negating:
             pre_num_df = pre_num_df.copy()
             pre_num_df.loc[pre_num_df.negating == 1, &#39;value&#39;] = -pre_num_df.value
 
         num_pre_pivot_df = pre_num_df.pivot_table(
             index=[&#39;adsh&#39;, &#39;coreg&#39;, &#39;tag&#39;, &#39;version&#39;, &#39;stmt&#39;,
-                   &#39;report&#39;, &#39;line&#39;, &#39;uom&#39;, &#39;negating&#39;, &#39;inpth&#39;],
+                   &#39;report&#39;, &#39;line&#39;, &#39;segments&#39;, &#39;uom&#39;, &#39;negating&#39;, &#39;inpth&#39;],
             columns=[&#39;qtrs&#39;, &#39;ddate&#39;], # we need to pivot by qtrs and ddate
             values=&#39;value&#39;
         )
@@ -130,7 +138,7 @@ class StandardStatementPresenter(Presenter[JoinedDataBag]):
 <dl>
 <dt id="secfsdstools.e_presenter.presenting.StandardStatementPresenter"><code class="flex name class">
 <span>class <span class="ident">StandardStatementPresenter</span></span>
-<span>(</span><span>flatten_index: bool = True, add_form_column: bool = False, invert_negating: bool = False)</span>
+<span>(</span><span>flatten_index: bool = True, add_form_column: bool = False, invert_negating: bool = False, show_segments: bool = False)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Reformats the data so that the presentation and order reflects the way how the basic
@@ -153,6 +161,9 @@ When this flag is true, the value of such tags where negating is set
 to 1 is inverted. A typical case is "paiddividends" where the value
 is shown as positive but from a calculating point of view it should
 be negative.</dd>
+<dt><strong><code>show_segments</code></strong></dt>
+<dd>if True, the segments information is also shown. If False,
+the NoSegmentInfoJoinedFilter is applied</dd>
 </dl></div>
 <details class="source">
 <summary>
@@ -165,7 +176,7 @@ be negative.</dd>
     &#34;&#34;&#34;
 
     def __init__(self, flatten_index: bool = True, add_form_column: bool = False,
-                 invert_negating: bool = False):
+                 invert_negating: bool = False, show_segments: bool = False):
         &#34;&#34;&#34;
 
         Args:
@@ -182,11 +193,14 @@ be negative.</dd>
                              to 1 is inverted. A typical case is &#34;paiddividends&#34; where the value
                              is shown as positive but from a calculating point of view it should
                              be negative.
+            show_segments: if True, the segments information is also shown. If False,
+                           the NoSegmentInfoJoinedFilter is applied
         &#34;&#34;&#34;
 
         self.flatten_index = flatten_index
         self.add_form_column = add_form_column
         self.invert_negating = invert_negating
+        self.show_segments = show_segments
 
     def present(self, databag: JoinedDataBag) -&gt; pd.DataFrame:
         &#34;&#34;&#34;
@@ -204,15 +218,19 @@ be negative.</dd>
         Returns:
             pd.DataFrame: the dataframe with the final presentation
         &#34;&#34;&#34;
+        pre_num_df: pd.DataFrame
+        if self.show_segments:
+            pre_num_df = databag.pre_num_df
+        else:
+            pre_num_df = databag[NoSegmentInfoJoinedFilter()].pre_num_df
 
-        pre_num_df = databag.pre_num_df
         if self.invert_negating:
             pre_num_df = pre_num_df.copy()
             pre_num_df.loc[pre_num_df.negating == 1, &#39;value&#39;] = -pre_num_df.value
 
         num_pre_pivot_df = pre_num_df.pivot_table(
             index=[&#39;adsh&#39;, &#39;coreg&#39;, &#39;tag&#39;, &#39;version&#39;, &#39;stmt&#39;,
-                   &#39;report&#39;, &#39;line&#39;, &#39;uom&#39;, &#39;negating&#39;, &#39;inpth&#39;],
+                   &#39;report&#39;, &#39;line&#39;, &#39;segments&#39;, &#39;uom&#39;, &#39;negating&#39;, &#39;inpth&#39;],
             columns=[&#39;qtrs&#39;, &#39;ddate&#39;], # we need to pivot by qtrs and ddate
             values=&#39;value&#39;
         )
@@ -285,15 +303,19 @@ Cash Flow).
     Returns:
         pd.DataFrame: the dataframe with the final presentation
     &#34;&#34;&#34;
+    pre_num_df: pd.DataFrame
+    if self.show_segments:
+        pre_num_df = databag.pre_num_df
+    else:
+        pre_num_df = databag[NoSegmentInfoJoinedFilter()].pre_num_df
 
-    pre_num_df = databag.pre_num_df
     if self.invert_negating:
         pre_num_df = pre_num_df.copy()
         pre_num_df.loc[pre_num_df.negating == 1, &#39;value&#39;] = -pre_num_df.value
 
     num_pre_pivot_df = pre_num_df.pivot_table(
         index=[&#39;adsh&#39;, &#39;coreg&#39;, &#39;tag&#39;, &#39;version&#39;, &#39;stmt&#39;,
-               &#39;report&#39;, &#39;line&#39;, &#39;uom&#39;, &#39;negating&#39;, &#39;inpth&#39;],
+               &#39;report&#39;, &#39;line&#39;, &#39;segments&#39;, &#39;uom&#39;, &#39;negating&#39;, &#39;inpth&#39;],
         columns=[&#39;qtrs&#39;, &#39;ddate&#39;], # we need to pivot by qtrs and ddate
         values=&#39;value&#39;
     )

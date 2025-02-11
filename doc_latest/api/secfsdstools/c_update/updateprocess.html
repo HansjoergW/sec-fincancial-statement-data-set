@@ -45,10 +45,8 @@ from secfsdstools.a_config.configmodel import Configuration
 from secfsdstools.a_utils.dbutils import DBStateAcessor
 from secfsdstools.a_utils.downloadutils import UrlDownloader
 from secfsdstools.a_utils.fileutils import get_directories_in_directory
-from secfsdstools.a_utils.rapiddownloadutils import RapidUrlBuilder
 from secfsdstools.b_setup.setupdb import DbCreator
 from secfsdstools.c_automation.task_framework import AbstractProcess, execute_processes
-from secfsdstools.c_download.rapiddownloading_process import RapidDownloadingProcess
 from secfsdstools.c_download.secdownloading_process import SecDownloadingProcess
 from secfsdstools.c_index.indexing_process import ReportParquetIndexerProcess
 from secfsdstools.c_transform.toparquettransforming_process import ToParquetTransformerProcess
@@ -131,40 +129,6 @@ class Updater:
                                                         execute_serial=self.no_parallel_processing
                                                         ))
 
-        if (self.rapid_api_key is not None) &amp; (self.rapid_api_key != &#39;&#39;):
-            # download daily zip files
-            rapidurlbuilder = RapidUrlBuilder(rapid_plan=self.rapid_api_plan,
-                                              rapid_api_key=self.rapid_api_key)
-            process_list.append(RapidDownloadingProcess(
-                rapidurlbuilder=rapidurlbuilder,
-                daily_zip_dir=self.daily_dld_dir,
-                qrtr_zip_dir=self.dld_dir,
-                urldownloader=urldownloader,
-                parquet_root_dir=self.parquet_dir,
-                execute_serial=self.no_parallel_processing))
-
-            # transform daily zip files
-            process_list.append(ToParquetTransformerProcess(
-                zip_dir=self.daily_dld_dir,
-                parquet_dir=self.parquet_dir,
-                keep_zip_files=self.keep_zip_files,
-                file_type=&#39;daily&#39;,
-                execute_serial=self.no_parallel_processing))
-
-            # index daily zip files
-            process_list.append(ReportParquetIndexerProcess(
-                db_dir=self.db_dir,
-                parquet_dir=self.parquet_dir,
-                file_type=&#39;daily&#39;,
-                execute_serial=self.no_parallel_processing))
-
-        else:
-            print(
-                &#34;No rapid-api-key is set: \n&#34;
-                + &#34;If you are interested in receiving the latest SEC filings daily and not just &#34;
-                + &#34;each quarter, please have a look at &#34;
-                + &#34;https://rapidapi.com/hansjoerg.wingeier/api/daily-sec-financial-statement-dataset&#34;)  # pylint: disable=C0301
-
         return process_list
 
     def _load_post_update_process(self) -&gt; List[AbstractProcess]:
@@ -216,47 +180,46 @@ class Updater:
         execute_processes(processes)
         self._execute_post_update_hook()
 
-    def check_for_new_format_quaterfiles(self):
+    def check_for_old_format_quaterfiles(self):
         &#34;&#34;&#34;
-        check if new incompatible datasets with segments column inside num.txt were downloaded.
-        Returns:
-
+        check if old incompatible datasets without segments column inside num.txt were downloaded.
         &#34;&#34;&#34;
 
         zipdirs = get_directories_in_directory(f&#34;{self.parquet_dir}/quarter&#34;)
-        with_segments: List[str] = []
+        without_segments: List[str] = []
         for zipdir in zipdirs:
             num_path = Path(self.parquet_dir) / &#34;quarter&#34; / zipdir / &#34;num.txt.parquet&#34;
             columns = fastparquet.ParquetFile(num_path).columns
-            if &#34;segments&#34; in columns:
-                with_segments.append(zipdir)
+            if &#34;segments&#34; not in columns:
+                without_segments.append(zipdir)
 
-        if len(with_segments) &gt; 0:
+        if len(without_segments) &gt; 0:
             LOGGER.info(&#34;-------------- ATTENTION -----------------------&#34;)
-            LOGGER.info(&#34;Found downloaded data with new &#39;segment&#39; column in num.txt dataframes.&#34;)
-            LOGGER.info(&#34;This is not yet supported in this version 1.8.x of the framework and &#34;)
-            LOGGER.info(&#34;using this data leads to wrong results.&#34;)
+            LOGGER.info(&#34;Found downloaded datasets without new &#39;segments&#39; column in num.txt&#34;)
+            LOGGER.info(&#34;dataframes. This is not supported anymore in this version of the &#34;)
+            LOGGER.info(&#34;framework. If you want to use the old, smaller datasets which are &#34;)
+            LOGGER.info(
+                &#34;still available at https://www.sec.gov/data-research/sec-markets-data/financial-statement-data-sets-archive&#34;)  # pylint: disable=C0301
+            LOGGER.info(&#34;you have to use version 1.8.2 of the framework.&#34;)
             LOGGER.info(&#34;                 ----                        &#34;)
-            LOGGER.info(&#34;Please delete all the content in:            &#34;)
+            LOGGER.info(&#34;If you want to use the datasets with the segments column, you have to &#34;)
+            LOGGER.info(&#34;delete the content in: &#34;)
             LOGGER.info(&#34;- %s&#34;, self.db_dir)
             LOGGER.info(&#34;- %s&#34;, self.dld_dir)
             LOGGER.info(&#34;- %s&#34;, self.parquet_dir)
             LOGGER.info(&#34;                 ----                        &#34;)
-            LOGGER.info(&#34;After that, you can start again and only compatible versions of the data &#34;)
+            LOGGER.info(&#34;After that, you can run again and only compatible versions of the data &#34;)
             LOGGER.info(&#34;will be downloaded. &#34;)
             LOGGER.info(&#34;                 ----                        &#34;)
-            LOGGER.info(&#34;A new version of the framework supporting the &#39;segment&#39; column&#34;)
-            LOGGER.info(&#34;is in work and should be available in February 2025.&#34;)
             sys.exit(1)
 
     def update(self, force_update: bool = False):
         &#34;&#34;&#34;
         execute the updated process if time has come to check for new upates.
         Returns:
-
         &#34;&#34;&#34;
 
-        self.check_for_new_format_quaterfiles()
+        self.check_for_old_format_quaterfiles()
 
         if force_update | self.auto_update:
             if not force_update &amp; self.auto_update:
@@ -373,40 +336,6 @@ class Updater:
                                                         execute_serial=self.no_parallel_processing
                                                         ))
 
-        if (self.rapid_api_key is not None) &amp; (self.rapid_api_key != &#39;&#39;):
-            # download daily zip files
-            rapidurlbuilder = RapidUrlBuilder(rapid_plan=self.rapid_api_plan,
-                                              rapid_api_key=self.rapid_api_key)
-            process_list.append(RapidDownloadingProcess(
-                rapidurlbuilder=rapidurlbuilder,
-                daily_zip_dir=self.daily_dld_dir,
-                qrtr_zip_dir=self.dld_dir,
-                urldownloader=urldownloader,
-                parquet_root_dir=self.parquet_dir,
-                execute_serial=self.no_parallel_processing))
-
-            # transform daily zip files
-            process_list.append(ToParquetTransformerProcess(
-                zip_dir=self.daily_dld_dir,
-                parquet_dir=self.parquet_dir,
-                keep_zip_files=self.keep_zip_files,
-                file_type=&#39;daily&#39;,
-                execute_serial=self.no_parallel_processing))
-
-            # index daily zip files
-            process_list.append(ReportParquetIndexerProcess(
-                db_dir=self.db_dir,
-                parquet_dir=self.parquet_dir,
-                file_type=&#39;daily&#39;,
-                execute_serial=self.no_parallel_processing))
-
-        else:
-            print(
-                &#34;No rapid-api-key is set: \n&#34;
-                + &#34;If you are interested in receiving the latest SEC filings daily and not just &#34;
-                + &#34;each quarter, please have a look at &#34;
-                + &#34;https://rapidapi.com/hansjoerg.wingeier/api/daily-sec-financial-statement-dataset&#34;)  # pylint: disable=C0301
-
         return process_list
 
     def _load_post_update_process(self) -&gt; List[AbstractProcess]:
@@ -458,47 +387,46 @@ class Updater:
         execute_processes(processes)
         self._execute_post_update_hook()
 
-    def check_for_new_format_quaterfiles(self):
+    def check_for_old_format_quaterfiles(self):
         &#34;&#34;&#34;
-        check if new incompatible datasets with segments column inside num.txt were downloaded.
-        Returns:
-
+        check if old incompatible datasets without segments column inside num.txt were downloaded.
         &#34;&#34;&#34;
 
         zipdirs = get_directories_in_directory(f&#34;{self.parquet_dir}/quarter&#34;)
-        with_segments: List[str] = []
+        without_segments: List[str] = []
         for zipdir in zipdirs:
             num_path = Path(self.parquet_dir) / &#34;quarter&#34; / zipdir / &#34;num.txt.parquet&#34;
             columns = fastparquet.ParquetFile(num_path).columns
-            if &#34;segments&#34; in columns:
-                with_segments.append(zipdir)
+            if &#34;segments&#34; not in columns:
+                without_segments.append(zipdir)
 
-        if len(with_segments) &gt; 0:
+        if len(without_segments) &gt; 0:
             LOGGER.info(&#34;-------------- ATTENTION -----------------------&#34;)
-            LOGGER.info(&#34;Found downloaded data with new &#39;segment&#39; column in num.txt dataframes.&#34;)
-            LOGGER.info(&#34;This is not yet supported in this version 1.8.x of the framework and &#34;)
-            LOGGER.info(&#34;using this data leads to wrong results.&#34;)
+            LOGGER.info(&#34;Found downloaded datasets without new &#39;segments&#39; column in num.txt&#34;)
+            LOGGER.info(&#34;dataframes. This is not supported anymore in this version of the &#34;)
+            LOGGER.info(&#34;framework. If you want to use the old, smaller datasets which are &#34;)
+            LOGGER.info(
+                &#34;still available at https://www.sec.gov/data-research/sec-markets-data/financial-statement-data-sets-archive&#34;)  # pylint: disable=C0301
+            LOGGER.info(&#34;you have to use version 1.8.2 of the framework.&#34;)
             LOGGER.info(&#34;                 ----                        &#34;)
-            LOGGER.info(&#34;Please delete all the content in:            &#34;)
+            LOGGER.info(&#34;If you want to use the datasets with the segments column, you have to &#34;)
+            LOGGER.info(&#34;delete the content in: &#34;)
             LOGGER.info(&#34;- %s&#34;, self.db_dir)
             LOGGER.info(&#34;- %s&#34;, self.dld_dir)
             LOGGER.info(&#34;- %s&#34;, self.parquet_dir)
             LOGGER.info(&#34;                 ----                        &#34;)
-            LOGGER.info(&#34;After that, you can start again and only compatible versions of the data &#34;)
+            LOGGER.info(&#34;After that, you can run again and only compatible versions of the data &#34;)
             LOGGER.info(&#34;will be downloaded. &#34;)
             LOGGER.info(&#34;                 ----                        &#34;)
-            LOGGER.info(&#34;A new version of the framework supporting the &#39;segment&#39; column&#34;)
-            LOGGER.info(&#34;is in work and should be available in February 2025.&#34;)
             sys.exit(1)
 
     def update(self, force_update: bool = False):
         &#34;&#34;&#34;
         execute the updated process if time has come to check for new upates.
         Returns:
-
         &#34;&#34;&#34;
 
-        self.check_for_new_format_quaterfiles()
+        self.check_for_old_format_quaterfiles()
 
         if force_update | self.auto_update:
             if not force_update &amp; self.auto_update:
@@ -571,47 +499,46 @@ def get_instance(cls, config: Configuration):
 </dl>
 <h3>Methods</h3>
 <dl>
-<dt id="secfsdstools.c_update.updateprocess.Updater.check_for_new_format_quaterfiles"><code class="name flex">
-<span>def <span class="ident">check_for_new_format_quaterfiles</span></span>(<span>self)</span>
+<dt id="secfsdstools.c_update.updateprocess.Updater.check_for_old_format_quaterfiles"><code class="name flex">
+<span>def <span class="ident">check_for_old_format_quaterfiles</span></span>(<span>self)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>check if new incompatible datasets with segments column inside num.txt were downloaded.
-Returns:</p></div>
+<div class="desc"><p>check if old incompatible datasets without segments column inside num.txt were downloaded.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def check_for_new_format_quaterfiles(self):
+<pre><code class="python">def check_for_old_format_quaterfiles(self):
     &#34;&#34;&#34;
-    check if new incompatible datasets with segments column inside num.txt were downloaded.
-    Returns:
-
+    check if old incompatible datasets without segments column inside num.txt were downloaded.
     &#34;&#34;&#34;
 
     zipdirs = get_directories_in_directory(f&#34;{self.parquet_dir}/quarter&#34;)
-    with_segments: List[str] = []
+    without_segments: List[str] = []
     for zipdir in zipdirs:
         num_path = Path(self.parquet_dir) / &#34;quarter&#34; / zipdir / &#34;num.txt.parquet&#34;
         columns = fastparquet.ParquetFile(num_path).columns
-        if &#34;segments&#34; in columns:
-            with_segments.append(zipdir)
+        if &#34;segments&#34; not in columns:
+            without_segments.append(zipdir)
 
-    if len(with_segments) &gt; 0:
+    if len(without_segments) &gt; 0:
         LOGGER.info(&#34;-------------- ATTENTION -----------------------&#34;)
-        LOGGER.info(&#34;Found downloaded data with new &#39;segment&#39; column in num.txt dataframes.&#34;)
-        LOGGER.info(&#34;This is not yet supported in this version 1.8.x of the framework and &#34;)
-        LOGGER.info(&#34;using this data leads to wrong results.&#34;)
+        LOGGER.info(&#34;Found downloaded datasets without new &#39;segments&#39; column in num.txt&#34;)
+        LOGGER.info(&#34;dataframes. This is not supported anymore in this version of the &#34;)
+        LOGGER.info(&#34;framework. If you want to use the old, smaller datasets which are &#34;)
+        LOGGER.info(
+            &#34;still available at https://www.sec.gov/data-research/sec-markets-data/financial-statement-data-sets-archive&#34;)  # pylint: disable=C0301
+        LOGGER.info(&#34;you have to use version 1.8.2 of the framework.&#34;)
         LOGGER.info(&#34;                 ----                        &#34;)
-        LOGGER.info(&#34;Please delete all the content in:            &#34;)
+        LOGGER.info(&#34;If you want to use the datasets with the segments column, you have to &#34;)
+        LOGGER.info(&#34;delete the content in: &#34;)
         LOGGER.info(&#34;- %s&#34;, self.db_dir)
         LOGGER.info(&#34;- %s&#34;, self.dld_dir)
         LOGGER.info(&#34;- %s&#34;, self.parquet_dir)
         LOGGER.info(&#34;                 ----                        &#34;)
-        LOGGER.info(&#34;After that, you can start again and only compatible versions of the data &#34;)
+        LOGGER.info(&#34;After that, you can run again and only compatible versions of the data &#34;)
         LOGGER.info(&#34;will be downloaded. &#34;)
         LOGGER.info(&#34;                 ----                        &#34;)
-        LOGGER.info(&#34;A new version of the framework supporting the &#39;segment&#39; column&#34;)
-        LOGGER.info(&#34;is in work and should be available in February 2025.&#34;)
         sys.exit(1)</code></pre>
 </details>
 </dd>
@@ -629,10 +556,9 @@ Returns:</p></div>
     &#34;&#34;&#34;
     execute the updated process if time has come to check for new upates.
     Returns:
-
     &#34;&#34;&#34;
 
-    self.check_for_new_format_quaterfiles()
+    self.check_for_old_format_quaterfiles()
 
     if force_update | self.auto_update:
         if not force_update &amp; self.auto_update:
@@ -678,7 +604,7 @@ Returns:</p></div>
 <ul class="">
 <li><code><a title="secfsdstools.c_update.updateprocess.Updater.CHECK_EVERY_SECONDS" href="#secfsdstools.c_update.updateprocess.Updater.CHECK_EVERY_SECONDS">CHECK_EVERY_SECONDS</a></code></li>
 <li><code><a title="secfsdstools.c_update.updateprocess.Updater.LAST_UPDATE_CHECK_KEY" href="#secfsdstools.c_update.updateprocess.Updater.LAST_UPDATE_CHECK_KEY">LAST_UPDATE_CHECK_KEY</a></code></li>
-<li><code><a title="secfsdstools.c_update.updateprocess.Updater.check_for_new_format_quaterfiles" href="#secfsdstools.c_update.updateprocess.Updater.check_for_new_format_quaterfiles">check_for_new_format_quaterfiles</a></code></li>
+<li><code><a title="secfsdstools.c_update.updateprocess.Updater.check_for_old_format_quaterfiles" href="#secfsdstools.c_update.updateprocess.Updater.check_for_old_format_quaterfiles">check_for_old_format_quaterfiles</a></code></li>
 <li><code><a title="secfsdstools.c_update.updateprocess.Updater.get_instance" href="#secfsdstools.c_update.updateprocess.Updater.get_instance">get_instance</a></code></li>
 <li><code><a title="secfsdstools.c_update.updateprocess.Updater.update" href="#secfsdstools.c_update.updateprocess.Updater.update">update</a></code></li>
 </ul>

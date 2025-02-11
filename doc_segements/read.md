@@ -22,7 +22,7 @@ The main features include:
 [07_03_CF_standardizer.ipynb](notebooks/07_03_CF_standardizer.ipynb))
 - automate processing and standardizing by configuring customized process steps that are executed whenever a new 
   data file is detected on sec.gov (see [08_00_automation_basics.ipynb](notebooks/08_00_automation_basics.ipynb))
-- Version 2 supports the new "segments" column that was added in December 2024  
+- **version 2 supports the new "segments" column that was added in December 2024**  
 
 # Principles
 

@@ -4,6 +4,20 @@ permalink: /releasenotes/
 
 
 # Release Notes
+## 1.8.2 -> 2.0.0 2025-February-11
+Introducing the new version of the datasets that includes the "segments" column in then num tables.
+The main purpose of this version is to ensure that the new "segments" colomn does not interfere with existing logic.
+
+The following did change:
+* Checks during starting if only data from the new datasets is present. If not, data have to be reloaded
+* New NoSegmentInfo filter for raw and joined bags: removes datapoints with non-empty `segment` info
+* `StandardPresenter` has a new `show_segments` flag. If True, datapoints with segments information are displayed as well
+* Notebook 03_explore_with_interactive_notebook has new option `show_segments` for displaying the details of a report
+* Support for Daily-Datasets has been removed
+
+## 1.8.1 -> 1.8.2 2025-January-20
+* Ensures data is read only from the archived version of the datasets without the segments column in num.
+
 ## 1.8.0 -> 1.8.1 2025-January-12
 * Fix problem with circular import when using the new FilterProcess module in secfsdstools.g_pipeline
 

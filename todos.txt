@@ -75,8 +75,10 @@ v.2.0.0 -> goal: ensure segment information is available
 
 -----
 2.0.1
-- maybe introduce a first notebook explaining segments and what they show with examples
 - maybe also provide segmentsinfo per Tag? kind of overview
+  value count, damit prioritäten definiert wredne können.
+
+- maybe introduce a first notebook explaining segments and what they show with examples
 - improve concat logic -> directly use fastparquet to concat files, not using pandas
 - maybe special "concat files to file"
 - Flatten Segments -> general, which axis, per tag,

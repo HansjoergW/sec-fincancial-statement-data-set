@@ -39,7 +39,7 @@ from pathlib import Path
 from typing import Dict, List, TypeVar, Generic
 
 import pandas as pd
-
+from secfsdstools.a_utils.fileutils import check_dir
 from secfsdstools.a_utils.constants import SUB_TXT, PRE_TXT, NUM_TXT, PRE_NUM_TXT
 from secfsdstools.d_container.filter import FilterBase
 from secfsdstools.d_container.presentation import Presenter
@@ -158,11 +158,7 @@ class JoinedDataBag(DataBagBase[JOINED]):
                   will be created
 
         &#34;&#34;&#34;
-        if not os.path.isdir(target_path):
-            raise ValueError(f&#34;the path {target_path} does not exist&#34;)
-
-        if len(os.listdir(target_path)) &gt; 0:
-            raise ValueError(f&#34;the target_path {target_path} is not empty&#34;)
+        check_dir(target_path)
 
         self.sub_df.to_parquet(os.path.join(target_path, f&#39;{SUB_TXT}.parquet&#39;))
         self.pre_num_df.to_parquet(os.path.join(target_path, f&#39;{PRE_NUM_TXT}.parquet&#39;))
@@ -336,13 +332,8 @@ class RawDataBag(DataBagBase[RAW]):
         Args:
             target_path: the directory under which three parquet files for sub_txt, pre_text,
                   and num_txt will be created
-
         &#34;&#34;&#34;
-        if not os.path.isdir(target_path):
-            raise ValueError(f&#34;the path {target_path} does not exist&#34;)
-
-        if len(os.listdir(target_path)) &gt; 0:
-            raise ValueError(f&#34;the target_path {target_path} is not empty&#34;)
+        check_dir(target_path)
 
         self.sub_df.to_parquet(os.path.join(target_path, f&#39;{SUB_TXT}.parquet&#39;))
         self.pre_df.to_parquet(os.path.join(target_path, f&#39;{PRE_TXT}.parquet&#39;))
@@ -648,11 +639,7 @@ adsh, tag, and version.</p>
                   will be created
 
         &#34;&#34;&#34;
-        if not os.path.isdir(target_path):
-            raise ValueError(f&#34;the path {target_path} does not exist&#34;)
-
-        if len(os.listdir(target_path)) &gt; 0:
-            raise ValueError(f&#34;the target_path {target_path} is not empty&#34;)
+        check_dir(target_path)
 
         self.sub_df.to_parquet(os.path.join(target_path, f&#39;{SUB_TXT}.parquet&#39;))
         self.pre_num_df.to_parquet(os.path.join(target_path, f&#39;{PRE_NUM_TXT}.parquet&#39;))
@@ -930,11 +917,7 @@ will be created</dd>
               will be created
 
     &#34;&#34;&#34;
-    if not os.path.isdir(target_path):
-        raise ValueError(f&#34;the path {target_path} does not exist&#34;)
-
-    if len(os.listdir(target_path)) &gt; 0:
-        raise ValueError(f&#34;the target_path {target_path} is not empty&#34;)
+    check_dir(target_path)
 
     self.sub_df.to_parquet(os.path.join(target_path, f&#39;{SUB_TXT}.parquet&#39;))
     self.pre_num_df.to_parquet(os.path.join(target_path, f&#39;{PRE_NUM_TXT}.parquet&#39;))</code></pre>
@@ -1075,13 +1058,8 @@ will be created</dd>
         Args:
             target_path: the directory under which three parquet files for sub_txt, pre_text,
                   and num_txt will be created
-
         &#34;&#34;&#34;
-        if not os.path.isdir(target_path):
-            raise ValueError(f&#34;the path {target_path} does not exist&#34;)
-
-        if len(os.listdir(target_path)) &gt; 0:
-            raise ValueError(f&#34;the target_path {target_path} is not empty&#34;)
+        check_dir(target_path)
 
         self.sub_df.to_parquet(os.path.join(target_path, f&#39;{SUB_TXT}.parquet&#39;))
         self.pre_df.to_parquet(os.path.join(target_path, f&#39;{PRE_TXT}.parquet&#39;))
@@ -1420,13 +1398,8 @@ and num_txt will be created</dd>
     Args:
         target_path: the directory under which three parquet files for sub_txt, pre_text,
               and num_txt will be created
-
     &#34;&#34;&#34;
-    if not os.path.isdir(target_path):
-        raise ValueError(f&#34;the path {target_path} does not exist&#34;)
-
-    if len(os.listdir(target_path)) &gt; 0:
-        raise ValueError(f&#34;the target_path {target_path} is not empty&#34;)
+    check_dir(target_path)
 
     self.sub_df.to_parquet(os.path.join(target_path, f&#39;{SUB_TXT}.parquet&#39;))
     self.pre_df.to_parquet(os.path.join(target_path, f&#39;{PRE_TXT}.parquet&#39;))

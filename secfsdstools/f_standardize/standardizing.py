@@ -6,6 +6,7 @@ from typing import List, Optional, Set, TypeVar
 import numpy as np
 import pandas as pd
 
+from secfsdstools.a_utils.fileutils import check_dir
 from secfsdstools.d_container.databagmodel import JoinedDataBag
 from secfsdstools.e_presenter.presenting import Presenter
 from secfsdstools.f_standardize.base_rule_framework import RuleGroup, DescriptionEntry, PrePivotRule
@@ -49,11 +50,7 @@ class StandardizedBag:
                   will be created
 
         """
-        if not os.path.isdir(target_path):
-            raise ValueError(f"the path {target_path} does not exist")
-
-        if len(os.listdir(target_path)) > 0:
-            raise ValueError(f"the target_path {target_path} is not empty")
+        check_dir(target_path)
 
         self.result_df.to_parquet(os.path.join(target_path, 'result.parquet'))
         self.applied_prepivot_rules_log_df.to_parquet(

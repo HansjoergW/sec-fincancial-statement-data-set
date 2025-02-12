@@ -8,7 +8,7 @@ from pathlib import Path
 from typing import Dict, List, TypeVar, Generic
 
 import pandas as pd
-
+from secfsdstools.a_utils.fileutils import check_dir
 from secfsdstools.a_utils.constants import SUB_TXT, PRE_TXT, NUM_TXT, PRE_NUM_TXT
 from secfsdstools.d_container.filter import FilterBase
 from secfsdstools.d_container.presentation import Presenter
@@ -127,11 +127,7 @@ class JoinedDataBag(DataBagBase[JOINED]):
                   will be created
 
         """
-        if not os.path.isdir(target_path):
-            raise ValueError(f"the path {target_path} does not exist")
-
-        if len(os.listdir(target_path)) > 0:
-            raise ValueError(f"the target_path {target_path} is not empty")
+        check_dir(target_path)
 
         self.sub_df.to_parquet(os.path.join(target_path, f'{SUB_TXT}.parquet'))
         self.pre_num_df.to_parquet(os.path.join(target_path, f'{PRE_NUM_TXT}.parquet'))
@@ -305,13 +301,8 @@ class RawDataBag(DataBagBase[RAW]):
         Args:
             target_path: the directory under which three parquet files for sub_txt, pre_text,
                   and num_txt will be created
-
         """
-        if not os.path.isdir(target_path):
-            raise ValueError(f"the path {target_path} does not exist")
-
-        if len(os.listdir(target_path)) > 0:
-            raise ValueError(f"the target_path {target_path} is not empty")
+        check_dir(target_path)
 
         self.sub_df.to_parquet(os.path.join(target_path, f'{SUB_TXT}.parquet'))
         self.pre_df.to_parquet(os.path.join(target_path, f'{PRE_TXT}.parquet'))

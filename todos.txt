@@ -15,11 +15,12 @@ new release
 
 -----
 2.0.1
-- save -> create folder if not exists
-- maybe special "concat files to file"
-- improve concat logic -> directly use fastparquet to concat files, not using pandas
-  -> input list of inputfolders und outputfolder
+- [ok] save -> create folder if not exists
+- [ok] special "concat files to file" helper function
+- improve concat logic, don't load files, instead use helper function
+
 - load functions mit filter, der direkt beim Laden verwendet wird
+  -> wie bei Collector
 
 - maybe introduce a first notebook explaining segments and what they show with examples
 - maybe also provide segmentsinfo per Tag? kind of overview

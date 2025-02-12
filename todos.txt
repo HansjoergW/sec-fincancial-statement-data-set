@@ -13,82 +13,28 @@ new release
 - on github -> under code releases: draft new release
 
 
-v.2.0.0 -> goal: ensure segment information is available
-- (ok) only load new datasets
-- (ok) ensure new dataset version can be downloaded and processed
-
-- (ok) add info when storing data of processed file has_segments exists
-- (ok) adapt testdata to use new datasets
-
-- (ok) update testdata
-- (ok) fix tests so that new datasets are supported
-
-- (ok) ensure new files are there with segments info and the info is available in the bags
-- (ok) add check which zip has new dataset
-       -> display warning message, if not all zip files contain the new column
-
-- (ok) new no_segmentinfo filter for raw and joined
-
-- (ok) ensure join works correctly
-       pre_num_df = joined_bag.pre_num_df[joined_bag.pre_num_df.stmt=='BS']
-       sorted_pre_num_df = pre_num_df.sort_values(['adsh', 'ddate', 'report', 'line'])[['adsh','ddate', 'report', 'line', 'coreg', 'segments','tag', 'version', 'uom','value','plabel']]
-
-- [ok] notebook quickstart
-  - [ok] ensure output in StandardPresenter is ok
-    -> show_segments flag -> if False -> filters out segments
-  - [ok] ensure Standardizer is working
-    - fix standardizer by always applying NoSegmentsInfo Filter before pivot
-
-- [ok] ensure data in searching notebook is presented correctly
-    -> show_segments option in explore notebook
-
-- [ok] ensure tests and linting is ok
-  -> it looks as if the current downloaded data have the hasSegments columns in the sqlite table.
-     -> Tests example is failing: test_collector/testexamples.py fails when zip collector is tested
-
-- [ok] remove rapid-api support
-
-- [ok] check notebooks
-  - [ok] 01_quickstart
-  - [ok] 03_explore_..
-    -> added show_segments flag when showing details of a single report
-  - [ok] 04_collector_deep_dive
-  - [ok] 05_filter_deep_dive
-  - [ok] 06_bulk_data_..
-    -> note: less data than before for CP> only a few hundred entries for dei / SharesOutstanding
-  - [ok] 07_00_standardizer_basics
-  - [ok] 07_01_BS..
-  - [ok] 07_02_IS..
-  - [ok] 07_03_CF..
-  - [ok] 07_04_customize
-  - [ok] 08_00_automation
-
-- [ok] overwork Readme
-
-- [ok] add specific tests for
-  - [ok] StandardPresenter and
-  - [ok] Standardizer
-
-- [ok] check pipelines with larger datasets / memory usage
-
-- [ok] adapt article medium
-
 -----
 2.0.1
+- save -> create folder if not exists
+- maybe special "concat files to file"
+- improve concat logic -> directly use fastparquet to concat files, not using pandas
+  -> input list of inputfolders und outputfolder
+- load functions mit filter, der direkt beim Laden verwendet wird
+
+- maybe introduce a first notebook explaining segments and what they show with examples
 - maybe also provide segmentsinfo per Tag? kind of overview
   value count, damit prioritäten definiert wredne können.
 
-- maybe introduce a first notebook explaining segments and what they show with examples
-- improve concat logic -> directly use fastparquet to concat files, not using pandas
-- maybe special "concat files to file"
 - Flatten Segments -> general, which axis, per tag,
    - think about having a new databag -> segmentbag
    - would we need some special metadata?
-   - for instance if you want to join a dataset?
+   - for instance if you want to concat bags?
+
 
 
 2.0.2
-- adapt standardizer, use segment infos
+- spezieller segmentfilter -> z.B. nur ProductOrService Filter mit spezifischen Values?
+- adapt standardizer, use specific segment infos
 
 
 

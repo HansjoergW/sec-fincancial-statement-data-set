@@ -8,7 +8,7 @@ from typing import List, Optional, Tuple, Union
 import pandas as pd
 
 from secfsdstools.a_utils.constants import NUM_TXT, PRE_TXT, SUB_TXT
-from secfsdstools.d_container.databagmodel import RawDataBag
+from secfsdstools.d_container.databagmodel import RawDataBag, get_pre_num_filters
 
 
 class BaseCollector(ABC):
@@ -33,29 +33,6 @@ class BaseCollector(ABC):
             print("Error reading file:", self.datapath, file, ex)
             raise ex
 
-
-    def _get_pre_num_filters(self,
-                             adshs: Optional[List[str]],
-                             stmts: Optional[List[str]],
-                             tags: Optional[List[str]]):
-        pre_filter = []
-        num_filter = []
-
-        if adshs:
-            adsh_filter_expression = ('adsh', 'in', adshs)
-            pre_filter.append(adsh_filter_expression)
-            num_filter.append(adsh_filter_expression)
-
-        if stmts:
-            pre_filter.append(('stmt', 'in', stmts))
-
-        if tags:
-            tag_filter_expression = ('tag', 'in', tags)
-            pre_filter.append(tag_filter_expression)
-            num_filter.append(tag_filter_expression)
-
-        return pre_filter, num_filter
-
     def basecollect(self, sub_df_filter: Tuple[str, str, Union[str, List[str]]]) -> RawDataBag:
         """
         basic implementation of the collect method
@@ -71,9 +48,9 @@ class BaseCollector(ABC):
         sub_df = self._read_df_from_raw_parquet(file=SUB_TXT,
                                                 filters=[sub_df_filter] if sub_df_filter else None)
         adshs = sub_df.adsh.to_list()
-        pre_filter, num_filter = self._get_pre_num_filters(adshs=adshs,
-                                                           stmts=self.stmt_filter,
-                                                           tags=self.tag_filter)
+        pre_filter, num_filter = get_pre_num_filters(adshs=adshs,
+                                                     stmts=self.stmt_filter,
+                                                     tags=self.tag_filter)
 
         pre_df = self._read_df_from_raw_parquet(
             file=PRE_TXT, filters=pre_filter if pre_filter else None

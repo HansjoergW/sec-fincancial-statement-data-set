@@ -17,14 +17,14 @@ new release
 2.0.1
 - [ok] save -> create folder if not exists
 - [ok] special "concat files to file" helper function
-- improve concat logic, don't load files, instead use helper function
+- [ok] filterload functions for  Raw/JoinedBag directly apply filters during the load process
 
-- load functions mit filter, der direkt beim Laden verwendet wird
-  -> wie bei Collector
+- improve concat logic, don't load files, instead use helper function
+- Notebook -> low memory usage
 
 - maybe introduce a first notebook explaining segments and what they show with examples
 - maybe also provide segmentsinfo per Tag? kind of overview
-  value count, damit prioritäten definiert wredne können.
+  value count, damit prioritäten definiert werden können.
 
 - Flatten Segments -> general, which axis, per tag,
    - think about having a new databag -> segmentbag

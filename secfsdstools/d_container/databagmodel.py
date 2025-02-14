@@ -1,21 +1,48 @@
 """
 Defines the container that keeps the data of sub.txt, num.txt, and  pre.txt together.
 """
-
+import logging
 import os
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Dict, List, TypeVar, Generic
+from typing import Dict, List, TypeVar, Generic, Optional
 
 import pandas as pd
-from secfsdstools.a_utils.fileutils import check_dir
+
 from secfsdstools.a_utils.constants import SUB_TXT, PRE_TXT, NUM_TXT, PRE_NUM_TXT
+from secfsdstools.a_utils.fileutils import check_dir
 from secfsdstools.d_container.filter import FilterBase
 from secfsdstools.d_container.presentation import Presenter
 
 RAW = TypeVar('RAW', bound='RawDataBag')
 JOINED = TypeVar('JOINED', bound='JoinedDataBag')
 T = TypeVar('T')
+
+LOGGER = logging.getLogger(__name__)
+
+
+def get_pre_num_filters(adshs: Optional[List[str]],
+                        stmts: Optional[List[str]],
+                        tags: Optional[List[str]]):
+    """ creates filter definitions to be directly applied to num and pre files. """
+
+    pre_filter = []
+    num_filter = []
+
+    if adshs:
+        adsh_filter_expression = ('adsh', 'in', adshs)
+        pre_filter.append(adsh_filter_expression)
+        num_filter.append(adsh_filter_expression)
+
+    if stmts:
+        pre_filter.append(('stmt', 'in', stmts))
+
+    if tags:
+        tag_filter_expression = ('tag', 'in', tags)
+        pre_filter.append(tag_filter_expression)
+        num_filter.append(tag_filter_expression)
+
+    return pre_filter, num_filter
 
 
 class DataBagBase(Generic[T]):
@@ -56,6 +83,37 @@ class DataBagBase(Generic[T]):
         apply a presenter
         """
         return presenter.present(self)
+
+    @staticmethod
+    def load_sub_df_by_filter(target_path: str,
+                              adshs: Optional[List[str]] = None,
+                              forms: Optional[List[str]] = None) -> pd.DataFrame:
+        """
+        loads the sub_txt datafrome from the target_path by directly applying the
+        adshs or the froms filter.
+
+        Args:
+            target_path: root_path with the parquet files for sub, pre, and num
+            forms: optional list of forms (10-K, 10-Q) to filter for during loading
+            adshs: optional list of adhs to filter during the laoding
+
+        Returns:
+            pd.DataFrame the loaded sub_df content
+        """
+
+        sub_filter = None
+        if adshs:
+            sub_filter = ('adsh', 'in', adshs)
+        elif forms:
+            sub_filter = ('form', 'in', forms)
+
+        if sub_filter:
+            LOGGER.info("apply sub_df filter: %s", sub_filter)
+
+        sub_df = pd.read_parquet(os.path.join(target_path, f'{SUB_TXT}.parquet'),
+                                 filters=[sub_filter] if sub_filter else None)
+
+        return sub_df
 
 
 class JoinedDataBag(DataBagBase[JOINED]):
@@ -145,6 +203,55 @@ class JoinedDataBag(DataBagBase[JOINED]):
         """
         sub_df = pd.read_parquet(os.path.join(target_path, f'{SUB_TXT}.parquet'))
         pre_num_df = pd.read_parquet(os.path.join(target_path, f'{PRE_NUM_TXT}.parquet'))
+
+        return JoinedDataBag.create(sub_df=sub_df, pre_num_df=pre_num_df)
+
+    @staticmethod
+    def filterload(target_path: str,
+                   adshs: Optional[List[str]] = None,
+                   forms: Optional[List[str]] = None,
+                   stmts: Optional[List[str]] = None,
+                   tags: Optional[List[str]] = None) -> RAW:
+        """
+            loads the data by directly using the filter during the load process,
+            hence using a less memory than loading the whole data and filtering afterward.
+
+            note: the adsh are mutally exclusive and adsh has the higher precedence.
+
+        Args:
+            target_path: root_path with the parquet files for sub, pre, and num
+            forms: optional list of forms (10-K, 10-Q) to filter for during loading
+            adshs: optional list of adhs to filter during the laoding
+            stmts: optional list of stmts (BS, IS, CF, ..) to filter during the loading
+            tags: optional list of tags to filter during the loading
+
+        Returns:
+            RawDataBag: the loaded Databag
+        """
+        sub_df = DataBagBase.load_sub_df_by_filter(
+            target_path=target_path, adshs=adshs, forms=forms
+        )
+
+        # if the forms filter was applied, overwrite the adshs list, since this is the list
+        # we should then filter for
+        if not adshs and forms:
+            adshs = sub_df.adsh.to_list()
+
+        pre_num_filter = []
+
+        if adshs:
+            pre_num_filter.append(('adsh', 'in', adshs))
+
+        if stmts:
+            pre_num_filter.append(('stmt', 'in', stmts))
+
+        if tags:
+            pre_num_filter.append(('tag', 'in', tags))
+
+        LOGGER.info("apply pre_num_df filter: %s", pre_num_filter)
+
+        pre_num_df = pd.read_parquet(os.path.join(target_path, f'{PRE_NUM_TXT}.parquet'),
+                                     filters=pre_num_filter if pre_num_filter else None)
 
         return JoinedDataBag.create(sub_df=sub_df, pre_num_df=pre_num_df)
 
@@ -323,6 +430,52 @@ class RawDataBag(DataBagBase[RAW]):
         sub_df = pd.read_parquet(os.path.join(target_path, f'{SUB_TXT}.parquet'))
         pre_df = pd.read_parquet(os.path.join(target_path, f'{PRE_TXT}.parquet'))
         num_df = pd.read_parquet(os.path.join(target_path, f'{NUM_TXT}.parquet'))
+
+        return RawDataBag.create(sub_df=sub_df, pre_df=pre_df, num_df=num_df)
+
+    @staticmethod
+    def filterload(target_path: str,
+                   adshs: Optional[List[str]] = None,
+                   forms: Optional[List[str]] = None,
+                   stmts: Optional[List[str]] = None,
+                   tags: Optional[List[str]] = None) -> RAW:
+        """
+            loads the data by directly using the filter during the load process,
+            hence using a less memory than loading the whole data and filtering afterward.
+
+            note: the adsh are mutally exclusive and adsh has the higher precedence.
+
+        Args:
+            target_path: root_path with the parquet files for sub, pre, and num
+            forms: optional list of forms (10-K, 10-Q) to filter for during loading
+            adshs: optional list of adhs to filter during the laoding
+            stmts: optional list of stmts (BS, IS, CF, ..) to filter during the loading
+            tags: optional list of tags to filter during the loading
+
+        Returns:
+            RawDataBag: the loaded Databag
+        """
+        sub_df = DataBagBase.load_sub_df_by_filter(
+            target_path=target_path, adshs=adshs, forms=forms
+        )
+
+        # if the forms filter was applied, overwrite the adshs list, since this is the list
+        # we should then filter for
+        if not adshs and forms:
+            adshs = sub_df.adsh.to_list()
+
+        pre_filter, num_filter = get_pre_num_filters(adshs=adshs,
+                                                     stmts=stmts,
+                                                     tags=tags)
+
+        LOGGER.info("apply num_df filter: %s", num_filter)
+        LOGGER.info("apply pre_df filter: %s", pre_filter)
+
+        pre_df = pd.read_parquet(os.path.join(target_path, f'{PRE_TXT}.parquet'),
+                                 filters=pre_filter if pre_filter else None)
+
+        num_df = pd.read_parquet(os.path.join(target_path, f'{NUM_TXT}.parquet'),
+                                 filters=num_filter if num_filter else None)
 
         return RawDataBag.create(sub_df=sub_df, pre_df=pre_df, num_df=num_df)
 

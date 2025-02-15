@@ -3,7 +3,6 @@ from pathlib import Path
 from typing import List
 
 from secfsdstools.d_container.databagmodel import JoinedDataBag
-
 from secfsdstools.g_pipelines.pipeline_utils import concat_bags, concat_bags_file_based
 
 CURRENT_DIR, _ = os.path.split(__file__)
@@ -29,7 +28,7 @@ def test_concat_bags_by_file(tmp_path):
     parts: List[Path] = [
         TESTDATA_PATH / "joined" / "2010q1.zip",
         TESTDATA_PATH / "joined" / "2010q2.zip",
-        ]
+    ]
 
     concat_bags_file_based(paths_to_concat=parts, target_path=tmp_path)
 
@@ -39,11 +38,12 @@ def test_concat_bags_by_file(tmp_path):
     assert bag.sub_df.shape == (1017, 36)
     assert bag.pre_num_df.shape == (398781, 17)
 
+
 def test_concat_bags_by_file_drop_duplicates(tmp_path):
     parts: List[Path] = [
         TESTDATA_PATH / "joined" / "2010q1.zip",
         TESTDATA_PATH / "joined" / "2010q2.zip",
-        ]
+    ]
 
     concat_bags_file_based(paths_to_concat=parts, target_path=tmp_path, drop_duplicates_sub_df=True)
 
@@ -53,12 +53,13 @@ def test_concat_bags_by_file_drop_duplicates(tmp_path):
     assert bag.sub_df.shape == (1017, 36)
     assert bag.pre_num_df.shape == (398781, 17)
 
+
 def test_concat_bags_by_file_drop_duplicates_2(tmp_path):
     """ read the same file twice, so the sub_df should be different"""
     parts: List[Path] = [
         TESTDATA_PATH / "joined" / "2010q1.zip",
         TESTDATA_PATH / "joined" / "2010q1.zip",
-        ]
+    ]
 
     concat_bags_file_based(paths_to_concat=parts, target_path=tmp_path, drop_duplicates_sub_df=True)
 

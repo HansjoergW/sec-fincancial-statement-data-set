@@ -190,33 +190,24 @@ class JoinedDataBag(DataBagBase[JOINED]):
         self.sub_df.to_parquet(os.path.join(target_path, f'{SUB_TXT}.parquet'))
         self.pre_num_df.to_parquet(os.path.join(target_path, f'{PRE_NUM_TXT}.parquet'))
 
-    @staticmethod
-    def load(target_path: str) -> JOINED:
-        """
-        Loads the content of the current bag at the specified location.
-
-        Args:
-            target_path: the directory which contains the parquet files for sub and pre_num
-
-        Returns:
-            JoinedDataBag: the loaded Databag
-        """
-        sub_df = pd.read_parquet(os.path.join(target_path, f'{SUB_TXT}.parquet'))
-        pre_num_df = pd.read_parquet(os.path.join(target_path, f'{PRE_NUM_TXT}.parquet'))
-
-        return JoinedDataBag.create(sub_df=sub_df, pre_num_df=pre_num_df)
 
     @staticmethod
-    def filterload(target_path: str,
+    def load(target_path: str,
                    adshs: Optional[List[str]] = None,
                    forms: Optional[List[str]] = None,
                    stmts: Optional[List[str]] = None,
-                   tags: Optional[List[str]] = None) -> RAW:
+                   tags: Optional[List[str]] = None) -> JOINED:
         """
-            loads the data by directly using the filter during the load process,
-            hence using a less memory than loading the whole data and filtering afterward.
+            Loads the content of the current bag at the specified location.
 
-            note: the adsh are mutally exclusive and adsh has the higher precedence.
+            There are optional filters for adshs, forms, stmts and tags, that are
+            applied directly during the load process and hence are more efficient and
+            less memory consuming than loading the data and then applying filters.
+
+            This makes especially sense, when you concatenated together data from different
+            zip files.
+
+            Note: the adsh are mutally exclusive and adsh has the higher precedence.
 
         Args:
             target_path: root_path with the parquet files for sub, pre, and num
@@ -232,23 +223,34 @@ class JoinedDataBag(DataBagBase[JOINED]):
             target_path=target_path, adshs=adshs, forms=forms
         )
 
-        # if the forms filter was applied, overwrite the adshs list, since this is the list
-        # we should then filter for
+        # if the forms filter was applied, overwrite the adshs list, since this are adshs
+        # values that we should filter for in the pre_num dataframe
         if not adshs and forms:
             adshs = sub_df.adsh.to_list()
 
         pre_num_filter = []
 
+        filter_log_str: List[str] = []
+
         if adshs:
             pre_num_filter.append(('adsh', 'in', adshs))
 
+            # the list of adshs could be quite huge, so we trim the message that we log
+            # to max 100 characters
+            log_part = str(('adsh', 'in', adshs))
+            if len(log_part) > 100:
+                log_part = log_part[:100] + "...)"
+            filter_log_str.append(log_part)
+
         if stmts:
             pre_num_filter.append(('stmt', 'in', stmts))
+            filter_log_str.append(str(('stmt', 'in', stmts)))
 
         if tags:
             pre_num_filter.append(('tag', 'in', tags))
+            filter_log_str.append(str(('tag', 'in', tags)))
 
-        LOGGER.info("apply pre_num_df filter: %s", pre_num_filter)
+        LOGGER.info("apply pre_num_df filter: %s", filter_log_str)
 
         pre_num_df = pd.read_parquet(os.path.join(target_path, f'{PRE_NUM_TXT}.parquet'),
                                      filters=pre_num_filter if pre_num_filter else None)
@@ -415,35 +417,24 @@ class RawDataBag(DataBagBase[RAW]):
         self.pre_df.to_parquet(os.path.join(target_path, f'{PRE_TXT}.parquet'))
         self.num_df.to_parquet(os.path.join(target_path, f'{NUM_TXT}.parquet'))
 
-    @staticmethod
-    def load(target_path: str) -> RAW:
-        """
-        Loads the content of the current bag at the specified location.
-
-        Args:
-            target_path: the directory which contains the three parquet files for sub_txt, pre_txt,
-             and num_txt
-
-        Returns:
-            RawDataBag: the loaded Databag
-        """
-        sub_df = pd.read_parquet(os.path.join(target_path, f'{SUB_TXT}.parquet'))
-        pre_df = pd.read_parquet(os.path.join(target_path, f'{PRE_TXT}.parquet'))
-        num_df = pd.read_parquet(os.path.join(target_path, f'{NUM_TXT}.parquet'))
-
-        return RawDataBag.create(sub_df=sub_df, pre_df=pre_df, num_df=num_df)
 
     @staticmethod
-    def filterload(target_path: str,
+    def load(target_path: str,
                    adshs: Optional[List[str]] = None,
                    forms: Optional[List[str]] = None,
                    stmts: Optional[List[str]] = None,
                    tags: Optional[List[str]] = None) -> RAW:
         """
-            loads the data by directly using the filter during the load process,
-            hence using a less memory than loading the whole data and filtering afterward.
+            Loads the content of the current bag at the specified location.
 
-            note: the adsh are mutally exclusive and adsh has the higher precedence.
+            There are optional filters for adshs, forms, stmts and tags, that are
+            applied directly during the load process and hence are more efficient and
+            less memory consuming than loading the data and then applying filters.
+
+            This makes especially sense, when you concatenated together data from different
+            zip files.
+
+            Note: the adsh are mutally exclusive and adsh has the higher precedence.
 
         Args:
             target_path: root_path with the parquet files for sub, pre, and num

@@ -33,10 +33,6 @@ Util functions used in pipeline tasks
 from pathlib import Path
 from typing import List
 
-import pandas as pd
-
-from secfsdstools.a_utils.constants import SUB_TXT, NUM_TXT, PRE_TXT, PRE_NUM_TXT
-from secfsdstools.a_utils.fileutils import concat_parquet_files
 from secfsdstools.d_container.databagmodel import RawDataBag, JoinedDataBag, is_rawbag_path, \
     is_joinedbag_path
 
@@ -72,31 +68,7 @@ def concat_bags(paths_to_concat: List[Path], target_path: Path):
         raise ValueError(&#34;bag_type must be either raw or joined&#34;)
 
 
-def _concat_bags_file_based_internal(paths_to_concat: List[Path],
-                                     target_path: Path,
-                                     file_list: List[str],
-                                     drop_duplicates_sub_df: bool = False):
-    target_path.mkdir(parents=True, exist_ok=True)
-    if not drop_duplicates_sub_df:
-        file_list.append(SUB_TXT)
-
-    for file_name in file_list:
-        target_path_file = str(target_path / f&#39;{file_name}.parquet&#39;)
-        paths_to_concat_file = [str(p / f&#39;{file_name}.parquet&#39;) for p in paths_to_concat]
-        concat_parquet_files(paths_to_concat_file, target_path_file)
-
-    # if we have to drop the duplicates, we need to read the data for the sub into memory
-    if drop_duplicates_sub_df:
-        sub_dfs: List[pd.DataFrame] = []
-        for path_to_concat in paths_to_concat:
-            sub_dfs.append(pd.read_parquet(path_to_concat / f&#39;{SUB_TXT}.parquet&#39;))
-
-        sub_df = pd.concat(sub_dfs, ignore_index=True)
-        sub_df.drop_duplicates(inplace=True)
-        sub_df.to_parquet(target_path / f&#39;{SUB_TXT}.parquet&#39;)
-
-
-def concat_bags_file_based(paths_to_concat: List[Path],
+def concat_bags_filebased(paths_to_concat: List[Path],
                            target_path: Path,
                            drop_duplicates_sub_df: bool = False):
     &#34;&#34;&#34;
@@ -118,21 +90,14 @@ def concat_bags_file_based(paths_to_concat: List[Path],
         return
 
     if is_rawbag_path(paths_to_concat[0]):
-        file_list = [NUM_TXT, PRE_TXT]
-        _concat_bags_file_based_internal(
-            paths_to_concat=paths_to_concat,
-            target_path=target_path,
-            file_list=file_list,
-            drop_duplicates_sub_df=drop_duplicates_sub_df
-        )
+        RawDataBag.concat_filebased(paths_to_concat=paths_to_concat,
+                                    target_path=target_path,
+                                    drop_duplicates_sub_df=drop_duplicates_sub_df)
+
     elif is_joinedbag_path(paths_to_concat[0]):
-        file_list = [PRE_NUM_TXT]
-        _concat_bags_file_based_internal(
-            paths_to_concat=paths_to_concat,
-            target_path=target_path,
-            file_list=file_list,
-            drop_duplicates_sub_df=drop_duplicates_sub_df
-        )
+        JoinedDataBag.concat_filebased(paths_to_concat=paths_to_concat,
+                                       target_path=target_path,
+                                       drop_duplicates_sub_df=drop_duplicates_sub_df)
     else:
         raise ValueError(&#34;bag_type must be either raw or joined&#34;)</code></pre>
 </details>
@@ -190,8 +155,8 @@ target_path (Path) : path to write the concatenated data to</p></div>
         raise ValueError(&#34;bag_type must be either raw or joined&#34;)</code></pre>
 </details>
 </dd>
-<dt id="secfsdstools.g_pipelines.pipeline_utils.concat_bags_file_based"><code class="name flex">
-<span>def <span class="ident">concat_bags_file_based</span></span>(<span>paths_to_concat: List[pathlib.Path], target_path: pathlib.Path, drop_duplicates_sub_df: bool = False)</span>
+<dt id="secfsdstools.g_pipelines.pipeline_utils.concat_bags_filebased"><code class="name flex">
+<span>def <span class="ident">concat_bags_filebased</span></span>(<span>paths_to_concat: List[pathlib.Path], target_path: pathlib.Path, drop_duplicates_sub_df: bool = False)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Concatenates all the Bags in paths_to_concatenate by using the provided bag_type
@@ -207,7 +172,7 @@ Returns:</p></div>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def concat_bags_file_based(paths_to_concat: List[Path],
+<pre><code class="python">def concat_bags_filebased(paths_to_concat: List[Path],
                            target_path: Path,
                            drop_duplicates_sub_df: bool = False):
     &#34;&#34;&#34;
@@ -229,21 +194,14 @@ Returns:</p></div>
         return
 
     if is_rawbag_path(paths_to_concat[0]):
-        file_list = [NUM_TXT, PRE_TXT]
-        _concat_bags_file_based_internal(
-            paths_to_concat=paths_to_concat,
-            target_path=target_path,
-            file_list=file_list,
-            drop_duplicates_sub_df=drop_duplicates_sub_df
-        )
+        RawDataBag.concat_filebased(paths_to_concat=paths_to_concat,
+                                    target_path=target_path,
+                                    drop_duplicates_sub_df=drop_duplicates_sub_df)
+
     elif is_joinedbag_path(paths_to_concat[0]):
-        file_list = [PRE_NUM_TXT]
-        _concat_bags_file_based_internal(
-            paths_to_concat=paths_to_concat,
-            target_path=target_path,
-            file_list=file_list,
-            drop_duplicates_sub_df=drop_duplicates_sub_df
-        )
+        JoinedDataBag.concat_filebased(paths_to_concat=paths_to_concat,
+                                       target_path=target_path,
+                                       drop_duplicates_sub_df=drop_duplicates_sub_df)
     else:
         raise ValueError(&#34;bag_type must be either raw or joined&#34;)</code></pre>
 </details>
@@ -267,7 +225,7 @@ Returns:</p></div>
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
 <li><code><a title="secfsdstools.g_pipelines.pipeline_utils.concat_bags" href="#secfsdstools.g_pipelines.pipeline_utils.concat_bags">concat_bags</a></code></li>
-<li><code><a title="secfsdstools.g_pipelines.pipeline_utils.concat_bags_file_based" href="#secfsdstools.g_pipelines.pipeline_utils.concat_bags_file_based">concat_bags_file_based</a></code></li>
+<li><code><a title="secfsdstools.g_pipelines.pipeline_utils.concat_bags_filebased" href="#secfsdstools.g_pipelines.pipeline_utils.concat_bags_filebased">concat_bags_filebased</a></code></li>
 </ul>
 </li>
 </ul>

@@ -19,13 +19,17 @@ new release
 
 - [ok] save -> create folder if not exists
 - [ok] special "concat files to file" helper function
-- [ok] filterload functions for  Raw/JoinedBag directly apply filters during the load process
+       -> static method in Ra/JoinedBag concat_filebased
+- [ok] load functions for  Raw/JoinedBag can directly apply filters during the load process
 - [ok] check performance of filterload function
 
 - improve concat logic, don't load files, instead use helper function
   -> check and compare performance / memory usage
+  -> alt und neu vergleichen
 
 - also use load with filters when reading data for standardization
+  -> memory bedarf ist hier am grössten. Geht zwischen den einzelnen
+     Schritten auch nicht ganz zurück.
 
 
 - Notebook -> low memory usage
@@ -60,6 +64,8 @@ new release
 
 
 ----------
+- use of str and Path is inconsistence. it would be nice if both could be used
+
 
 - overwrite serial execution per task
 - in cf haben wir oft auch zusätzliche 'cash' tags -> benötigen wir diese im bs auch?

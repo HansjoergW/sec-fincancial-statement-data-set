@@ -8,7 +8,7 @@ from secfsdstools.c_automation.automation_utils import delete_temp_folders
 from secfsdstools.c_automation.task_framework import CheckByNewSubfoldersMergeBaseTask, \
     CheckByTimestampMergeBaseTask, AbstractTask, \
     AbstractThreadProcess
-from secfsdstools.g_pipelines.pipeline_utils import concat_bags
+from secfsdstools.g_pipelines.pipeline_utils import concat_bags_filebased
 
 
 class ConcatIfNewSubfolderTask(CheckByNewSubfoldersMergeBaseTask):
@@ -99,8 +99,9 @@ class ConcatIfNewSubfolderTask(CheckByNewSubfoldersMergeBaseTask):
             paths_to_concat = paths_to_process + [target_path]
 
         # concat and save to the tmp_path
-        concat_bags(paths_to_concat=paths_to_concat,
-                    target_path=tmp_path)
+        concat_bags_filebased(paths_to_concat=paths_to_concat,
+                              target_path=tmp_path,
+                              drop_duplicates_sub_df=True)
 
 
 class ConcatIfChangedTimestampTask(CheckByTimestampMergeBaseTask):
@@ -182,7 +183,10 @@ class ConcatIfChangedTimestampTask(CheckByTimestampMergeBaseTask):
             paths_to_process: lists of paths/folders that have to be processed
             tmp_path: path to where a result has to be written
         """
-        concat_bags(paths_to_concat=paths_to_process, target_path=tmp_path)
+        concat_bags_filebased(paths_to_concat=paths_to_process,
+                              target_path=tmp_path,
+                              drop_duplicates_sub_df=True)
+
 
 
 class ConcatByChangedTimestampProcess(AbstractThreadProcess):

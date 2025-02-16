@@ -10,7 +10,7 @@ from typing import Dict, List, TypeVar, Generic, Optional
 import pandas as pd
 
 from secfsdstools.a_utils.constants import SUB_TXT, PRE_TXT, NUM_TXT, PRE_NUM_TXT
-from secfsdstools.a_utils.fileutils import check_dir
+from secfsdstools.a_utils.fileutils import check_dir, concat_parquet_files
 from secfsdstools.d_container.filter import FilterBase
 from secfsdstools.d_container.presentation import Presenter
 
@@ -43,6 +43,49 @@ def get_pre_num_filters(adshs: Optional[List[str]],
         num_filter.append(tag_filter_expression)
 
     return pre_filter, num_filter
+
+
+def concat_bags_file_based_internal(paths_to_concat: List[Path],
+                                    target_path: Path,
+                                    file_list: List[str],
+                                    drop_duplicates_sub_df: bool = False):
+    """
+    Helper method to concat files of multiple bags into a new bag-directory without actually
+    loading the data and therefore having a low memory footprint.
+
+    Args:
+        paths_to_concat: list of paths that we want to concat
+        target_path:  target path to where the concat data will be stored. the necessary directories
+                      will be created
+        file_list:  list of filenames to be concatenated without SUB_TXT. So this is either
+                    ['pre.txt', 'num.txt'] or ['pre_num.txt'].
+        drop_duplicates_sub_df: indicates whether drop duplicates has to be applied on the sub_df.
+                                if true, the data for the sub.txt files must be read into memory.
+                                This has to be true, for instance if you have separate bags
+                                for BS, IS, and CF and want to concat them. In this case, they
+                                all have the same data in sub.txt.
+
+
+    """
+
+    target_path.mkdir(parents=True, exist_ok=True)
+    if not drop_duplicates_sub_df:
+        file_list.append(SUB_TXT)
+
+    for file_name in file_list:
+        target_path_file = str(target_path / f'{file_name}.parquet')
+        paths_to_concat_file = [str(p / f'{file_name}.parquet') for p in paths_to_concat]
+        concat_parquet_files(paths_to_concat_file, target_path_file)
+
+    # if we have to drop the duplicates, we need to read the data for the sub_df into memory
+    if drop_duplicates_sub_df:
+        sub_dfs: List[pd.DataFrame] = []
+        for path_to_concat in paths_to_concat:
+            sub_dfs.append(pd.read_parquet(path_to_concat / f'{SUB_TXT}.parquet'))
+
+        sub_df = pd.concat(sub_dfs, ignore_index=True)
+        sub_df.drop_duplicates(inplace=True)
+        sub_df.to_parquet(target_path / f'{SUB_TXT}.parquet')
 
 
 class DataBagBase(Generic[T]):
@@ -190,13 +233,12 @@ class JoinedDataBag(DataBagBase[JOINED]):
         self.sub_df.to_parquet(os.path.join(target_path, f'{SUB_TXT}.parquet'))
         self.pre_num_df.to_parquet(os.path.join(target_path, f'{PRE_NUM_TXT}.parquet'))
 
-
     @staticmethod
     def load(target_path: str,
-                   adshs: Optional[List[str]] = None,
-                   forms: Optional[List[str]] = None,
-                   stmts: Optional[List[str]] = None,
-                   tags: Optional[List[str]] = None) -> JOINED:
+             adshs: Optional[List[str]] = None,
+             forms: Optional[List[str]] = None,
+             stmts: Optional[List[str]] = None,
+             tags: Optional[List[str]] = None) -> JOINED:
         """
             Loads the content of the current bag at the specified location.
 
@@ -282,6 +324,39 @@ class JoinedDataBag(DataBagBase[JOINED]):
 
         return JoinedDataBag.create(sub_df=sub_df,
                                     pre_num_df=pre_num_df)
+
+    @staticmethod
+    def concat_filebased(paths_to_concat: List[Path],
+                         target_path: Path,
+                         drop_duplicates_sub_df: bool = False):
+        """
+        Concatenates all the Bags in paths_to_concatenate into the target_dir directory.
+
+        It is directly working on the files and does not load the data into the memory.
+
+
+        Args:
+            paths_to_concat (List[Path]) : List with paths to read the datafrome
+            target_path (Path) : path to write the concatenated data to
+            drop_duplicates_sub_df (bool, False): indicates whether drop duplicates
+                                has to be applied on the sub_df.
+                                if true, the data for the sub.txt files must be read into memory.
+                                This has to be true, for instance if you have separate bags
+                                for BS, IS, and CF and want to concat them. In this case, they
+                                all have the same data in sub.txt.
+
+        Returns:
+        """
+        if len(paths_to_concat) == 0:
+            # nothing to do
+            return
+
+        concat_bags_file_based_internal(
+            paths_to_concat=paths_to_concat,
+            target_path=target_path,
+            file_list=[PRE_NUM_TXT],
+            drop_duplicates_sub_df=drop_duplicates_sub_df
+        )
 
 
 @dataclass
@@ -417,13 +492,12 @@ class RawDataBag(DataBagBase[RAW]):
         self.pre_df.to_parquet(os.path.join(target_path, f'{PRE_TXT}.parquet'))
         self.num_df.to_parquet(os.path.join(target_path, f'{NUM_TXT}.parquet'))
 
-
     @staticmethod
     def load(target_path: str,
-                   adshs: Optional[List[str]] = None,
-                   forms: Optional[List[str]] = None,
-                   stmts: Optional[List[str]] = None,
-                   tags: Optional[List[str]] = None) -> RAW:
+             adshs: Optional[List[str]] = None,
+             forms: Optional[List[str]] = None,
+             stmts: Optional[List[str]] = None,
+             tags: Optional[List[str]] = None) -> RAW:
         """
             Loads the content of the current bag at the specified location.
 
@@ -498,6 +572,39 @@ class RawDataBag(DataBagBase[RAW]):
         return RawDataBag.create(sub_df=sub_df,
                                  pre_df=pre_df,
                                  num_df=num_df)
+
+    @staticmethod
+    def concat_filebased(paths_to_concat: List[Path],
+                         target_path: Path,
+                         drop_duplicates_sub_df: bool = False):
+        """
+        Concatenates all the Bags in paths_to_concatenate into the target_dir directory.
+
+        It is directly working on the files and does not load the data into the memory.
+
+
+        Args:
+            paths_to_concat (List[Path]) : List with paths to read the datafrome
+            target_path (Path) : path to write the concatenated data to
+            drop_duplicates_sub_df (bool, False): indicates whether drop duplicates
+                                has to be applied on the sub_df.
+                                if true, the data for the sub.txt files must be read into memory.
+                                This has to be true, for instance if you have separate bags
+                                for BS, IS, and CF and want to concat them. In this case, they
+                                all have the same data in sub.txt.
+
+        Returns:
+        """
+        if len(paths_to_concat) == 0:
+            # nothing to do
+            return
+
+        concat_bags_file_based_internal(
+            paths_to_concat=paths_to_concat,
+            target_path=target_path,
+            file_list=[PRE_TXT, NUM_TXT],
+            drop_duplicates_sub_df=drop_duplicates_sub_df
+        )
 
 
 def is_rawbag_path(path: Path) -> bool:

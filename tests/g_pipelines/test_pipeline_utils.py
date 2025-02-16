@@ -3,7 +3,7 @@ from pathlib import Path
 from typing import List
 
 from secfsdstools.d_container.databagmodel import JoinedDataBag
-from secfsdstools.g_pipelines.pipeline_utils import concat_bags, concat_bags_file_based
+from secfsdstools.g_pipelines.pipeline_utils import concat_bags, concat_bags_filebased
 
 CURRENT_DIR, _ = os.path.split(__file__)
 TESTDATA_PATH = Path(CURRENT_DIR) / ".." / "_testdata"
@@ -30,7 +30,7 @@ def test_concat_bags_by_file(tmp_path):
         TESTDATA_PATH / "joined" / "2010q2.zip",
     ]
 
-    concat_bags_file_based(paths_to_concat=parts, target_path=tmp_path)
+    concat_bags_filebased(paths_to_concat=parts, target_path=tmp_path)
 
     bag = JoinedDataBag.load(target_path=str(tmp_path))
     # simply check if data were successful stored and loaded
@@ -45,7 +45,7 @@ def test_concat_bags_by_file_drop_duplicates(tmp_path):
         TESTDATA_PATH / "joined" / "2010q2.zip",
     ]
 
-    concat_bags_file_based(paths_to_concat=parts, target_path=tmp_path, drop_duplicates_sub_df=True)
+    concat_bags_filebased(paths_to_concat=parts, target_path=tmp_path, drop_duplicates_sub_df=True)
 
     bag = JoinedDataBag.load(target_path=str(tmp_path))
     # simply check if data were successful stored and loaded
@@ -61,7 +61,7 @@ def test_concat_bags_by_file_drop_duplicates_2(tmp_path):
         TESTDATA_PATH / "joined" / "2010q1.zip",
     ]
 
-    concat_bags_file_based(paths_to_concat=parts, target_path=tmp_path, drop_duplicates_sub_df=True)
+    concat_bags_filebased(paths_to_concat=parts, target_path=tmp_path, drop_duplicates_sub_df=True)
 
     bag = JoinedDataBag.load(target_path=str(tmp_path))
     # simply check if data were successful stored and loaded

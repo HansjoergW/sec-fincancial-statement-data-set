@@ -11,6 +11,8 @@ from typing import List, Optional, Dict
 import pandas as pd
 import pyarrow.parquet as pq
 
+from secfsdstools.a_utils.constants import PA_SCHEMA_MAP
+
 LOGGER = logging.getLogger(__name__)
 
 
@@ -24,22 +26,26 @@ def concat_parquet_files(input_files: List[str], output_file: str):
         output_file (str): Path to the output merged Parquet file.
     """
 
+    file_type = os.path.basename(output_file)
+    file_type = file_type.replace(".parquet", "")
+    schema = PA_SCHEMA_MAP[file_type]
+
     writer = None  # Writer is created only when a non-empty file is found
 
     for file in input_files:
         if not os.path.exists(file) or os.path.getsize(file) == 0:
-            LOGGER.info("ingnore empty file: %s", file)
-            continue
+            print(f"Skipping empty file: {file}")
+            continue  # Ignore empty files
 
+        # Read Parquet file
         table = pq.read_table(file)
 
-        if table.num_rows == 0:
-            LOGGER.info("Ignore files without rows: %s", file)
-            continue
+        # Ensure the table conforms to the fixed schema
+        table = table.cast(schema)
 
         if writer is None:
-            # create writer if first non-empty file was found
-            writer = pq.ParquetWriter(output_file, table.schema)
+            # Create writer with predefined schema
+            writer = pq.ParquetWriter(output_file, schema)
 
         writer.write_table(table)
 

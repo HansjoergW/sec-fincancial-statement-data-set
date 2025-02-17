@@ -16,14 +16,14 @@ def filter_all_BS():
 def filter_load_all_BS():
     file_path = Path("c:/data/sec/automated/_4_single_bag/all")
 
-    joined = JoinedDataBag.load(target_path=str(file_path), stmts=['BS'])
+    joined = JoinedDataBag.load(target_path=str(file_path), stmt_filter=['BS'])
     print(joined.pre_num_df.shape)
 
 
 def filter_load_all_10Q():
     file_path = Path("c:/data/sec/automated/_4_single_bag/all")
 
-    joined = JoinedDataBag.load(target_path=str(file_path), forms=['10-Q'])
+    joined = JoinedDataBag.load(target_path=str(file_path), forms_filter=['10-Q'])
     print(joined.pre_num_df.shape)
 
 
@@ -31,8 +31,8 @@ def filter_load_all_BS_10Q():
     file_path = Path("c:/data/sec/automated/_4_single_bag/all")
 
     joined = JoinedDataBag.load(target_path=str(file_path),
-                                      stmts=['BS'],
-                                      forms=['10-Q'])
+                                stmt_filter=['BS'],
+                                forms_filter=['10-Q'])
     print(joined.pre_num_df.shape)
 
 
@@ -49,6 +49,7 @@ if __name__ == '__main__':
                              2.  5 GB / 13 seconds / (14_486_608, 17) (form then stmt)
     """
     import pyarrow.parquet as pq
+
     file_path = Path("c:/data/sec/automated/old_4_single_bag/all/sub.txt.parquet")
     parquet_file = pq.ParquetFile(file_path)
 

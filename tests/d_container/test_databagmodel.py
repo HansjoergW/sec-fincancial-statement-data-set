@@ -52,35 +52,35 @@ def test_load_method():
 
 def test_load_with_filters():
     bag_by_forms: RawDataBag = RawDataBag.load(target_path=PATH_TO_BAG_1,
-                                               forms=["10-Q"])
+                                               forms_filter=["10-Q"])
     assert bag_by_forms.num_df.shape == (17555, 10)
     assert bag_by_forms.pre_df.shape == (7597, 10)
     assert bag_by_forms.sub_df.shape == (80, 36)
 
     bag_by_adshs: RawDataBag = RawDataBag.load(target_path=PATH_TO_BAG_1,
-                                               adshs=BAG_1_ADSHS)
+                                               adshs_filter=BAG_1_ADSHS)
 
     assert bag_by_adshs.num_df.shape == (384, 10)
     assert bag_by_adshs.pre_df.shape == (180, 10)
     assert bag_by_adshs.sub_df.shape == (2, 36)
 
     bag_by_stmt: RawDataBag = RawDataBag.load(target_path=PATH_TO_BAG_1,
-                                              stmts=["BS"])
+                                              stmt_filter=["BS"])
 
     assert bag_by_stmt.num_df.shape == (194741, 10)
     assert bag_by_stmt.pre_df.shape == (20373, 10)
     assert bag_by_stmt.sub_df.shape == (495, 36)
 
     bag_by_tag: RawDataBag = RawDataBag.load(target_path=PATH_TO_BAG_1,
-                                             tags=["Assets"])
+                                             tag_filter=["Assets"])
 
     assert bag_by_tag.num_df.shape == (1062, 10)
     assert bag_by_tag.pre_df.shape == (494, 10)
     assert bag_by_tag.sub_df.shape == (495, 36)
 
     bag_by_combined: RawDataBag = RawDataBag.load(target_path=PATH_TO_BAG_1,
-                                                  forms=["10-Q"],
-                                                  tags=["Assets"])
+                                                  forms_filter=["10-Q"],
+                                                  tag_filter=["Assets"])
     assert bag_by_combined.num_df.shape == (167, 10)
     assert bag_by_combined.pre_df.shape == (80, 10)
     assert bag_by_combined.sub_df.shape == (80, 36)
@@ -181,30 +181,30 @@ def test_concat_filebased_joined(tmp_path):
 
 def test_joined_load_with_filters():
     bag_by_forms: JoinedDataBag = JoinedDataBag.load(target_path=PATH_TO_JOINED_BAG_1,
-                                                     forms=["10-Q"])
+                                                     forms_filter=["10-Q"])
     assert bag_by_forms.pre_num_df.shape == (19611, 17)
     assert bag_by_forms.sub_df.shape == (80, 36)
 
     bag_by_adshs: JoinedDataBag = JoinedDataBag.load(target_path=PATH_TO_JOINED_BAG_1,
-                                                     adshs=BAG_1_ADSHS)
+                                                     adshs_filter=BAG_1_ADSHS)
 
     assert bag_by_adshs.pre_num_df.shape == (414, 17)
     assert bag_by_adshs.sub_df.shape == (2, 36)
 
     bag_by_stmt: JoinedDataBag = JoinedDataBag.load(target_path=PATH_TO_JOINED_BAG_1,
-                                                    stmts=["BS"])
+                                                    stmt_filter=["BS"])
 
     assert bag_by_stmt.pre_num_df.shape == (54898, 17)
     assert bag_by_stmt.sub_df.shape == (495, 36)
 
     bag_by_tag: JoinedDataBag = JoinedDataBag.load(target_path=PATH_TO_JOINED_BAG_1,
-                                                   tags=["Assets"])
+                                                   tag_filter=["Assets"])
 
     assert bag_by_tag.pre_num_df.shape == (1066, 17)
     assert bag_by_tag.sub_df.shape == (495, 36)
 
     bag_by_combined: JoinedDataBag = JoinedDataBag.load(target_path=PATH_TO_JOINED_BAG_1,
-                                                        forms=["10-Q"],
-                                                        tags=["Assets"])
+                                                        forms_filter=["10-Q"],
+                                                        tag_filter=["Assets"])
     assert bag_by_combined.pre_num_df.shape == (167, 17)
     assert bag_by_combined.sub_df.shape == (80, 36)

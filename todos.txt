@@ -27,7 +27,7 @@ new release
   -> [ok] check and compare performance / memory usage
   -> [ok] anzahl rows alt und neu vergleichen
 
-- Notebook -> low memory usage
+- Notebook -> low memory usage _6_1_
   - use filters in collectors
   - use filters in load function
       data:
@@ -38,10 +38,9 @@ new release
   - concatenate directly on the files
     -> examples where that is being used in pipelines
 
+
 -- maybe make cut here for 2.0.1 ?
 
-- standardized bag concat sollte auch file variante erhalten.
-  - dann könnte demo pipeline auch quarters einzeln standardisieren und am Ende zusammen concaten
 
 
 
@@ -54,6 +53,8 @@ new release
    - would we need some special metadata?
    - for instance if you want to concat bags?
 
+- standardized bag concat sollte auch file variante erhalten.
+  - dann könnte demo pipeline auch quarters einzeln standardisieren und am Ende zusammen concaten
 
 
 2.2.0

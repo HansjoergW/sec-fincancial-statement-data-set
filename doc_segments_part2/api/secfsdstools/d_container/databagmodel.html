@@ -323,7 +323,8 @@ class JoinedDataBag(DataBagBase[JOINED]):
             pre_num_filter.append((&#39;tag&#39;, &#39;in&#39;, tags))
             filter_log_str.append(str((&#39;tag&#39;, &#39;in&#39;, tags)))
 
-        LOGGER.info(&#34;apply pre_num_df filter: %s&#34;, filter_log_str)
+        if len(pre_num_filter) &gt; 0:
+            LOGGER.info(&#34;apply pre_num_df filter: %s&#34;, filter_log_str)
 
         pre_num_df = pd.read_parquet(os.path.join(target_path, f&#39;{PRE_NUM_TXT}.parquet&#39;),
                                      filters=pre_num_filter if pre_num_filter else None)
@@ -564,8 +565,11 @@ class RawDataBag(DataBagBase[RAW]):
                                                      stmts=stmts,
                                                      tags=tags)
 
-        LOGGER.info(&#34;apply num_df filter: %s&#34;, num_filter)
-        LOGGER.info(&#34;apply pre_df filter: %s&#34;, pre_filter)
+        if len(num_filter) &gt; 0:
+            LOGGER.info(&#34;apply num_df filter: %s&#34;, num_filter)
+
+        if len(pre_filter) &gt; 0:
+            LOGGER.info(&#34;apply pre_df filter: %s&#34;, pre_filter)
 
         pre_df = pd.read_parquet(os.path.join(target_path, f&#39;{PRE_TXT}.parquet&#39;),
                                  filters=pre_filter if pre_filter else None)
@@ -1144,7 +1148,8 @@ adsh, tag, and version.</p>
             pre_num_filter.append((&#39;tag&#39;, &#39;in&#39;, tags))
             filter_log_str.append(str((&#39;tag&#39;, &#39;in&#39;, tags)))
 
-        LOGGER.info(&#34;apply pre_num_df filter: %s&#34;, filter_log_str)
+        if len(pre_num_filter) &gt; 0:
+            LOGGER.info(&#34;apply pre_num_df filter: %s&#34;, filter_log_str)
 
         pre_num_df = pd.read_parquet(os.path.join(target_path, f&#39;{PRE_NUM_TXT}.parquet&#39;),
                                      filters=pre_num_filter if pre_num_filter else None)
@@ -1455,7 +1460,8 @@ def load(target_path: str,
         pre_num_filter.append((&#39;tag&#39;, &#39;in&#39;, tags))
         filter_log_str.append(str((&#39;tag&#39;, &#39;in&#39;, tags)))
 
-    LOGGER.info(&#34;apply pre_num_df filter: %s&#34;, filter_log_str)
+    if len(pre_num_filter) &gt; 0:
+        LOGGER.info(&#34;apply pre_num_df filter: %s&#34;, filter_log_str)
 
     pre_num_df = pd.read_parquet(os.path.join(target_path, f&#39;{PRE_NUM_TXT}.parquet&#39;),
                                  filters=pre_num_filter if pre_num_filter else None)
@@ -1755,8 +1761,11 @@ will be created</dd>
                                                      stmts=stmts,
                                                      tags=tags)
 
-        LOGGER.info(&#34;apply num_df filter: %s&#34;, num_filter)
-        LOGGER.info(&#34;apply pre_df filter: %s&#34;, pre_filter)
+        if len(num_filter) &gt; 0:
+            LOGGER.info(&#34;apply num_df filter: %s&#34;, num_filter)
+
+        if len(pre_filter) &gt; 0:
+            LOGGER.info(&#34;apply pre_df filter: %s&#34;, pre_filter)
 
         pre_df = pd.read_parquet(os.path.join(target_path, f&#39;{PRE_TXT}.parquet&#39;),
                                  filters=pre_filter if pre_filter else None)
@@ -2051,8 +2060,11 @@ def load(target_path: str,
                                                  stmts=stmts,
                                                  tags=tags)
 
-    LOGGER.info(&#34;apply num_df filter: %s&#34;, num_filter)
-    LOGGER.info(&#34;apply pre_df filter: %s&#34;, pre_filter)
+    if len(num_filter) &gt; 0:
+        LOGGER.info(&#34;apply num_df filter: %s&#34;, num_filter)
+
+    if len(pre_filter) &gt; 0:
+        LOGGER.info(&#34;apply pre_df filter: %s&#34;, pre_filter)
 
     pre_df = pd.read_parquet(os.path.join(target_path, f&#39;{PRE_TXT}.parquet&#39;),
                              filters=pre_filter if pre_filter else None)

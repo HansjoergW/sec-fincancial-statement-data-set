@@ -2,6 +2,7 @@
 Module that contains the AbstractProcess implementation that can standardize
 JoinedDataBags for BalanceSheet, IncomeStatement, and  CashFlow.
 """
+import logging
 import shutil
 from pathlib import Path
 from typing import List
@@ -13,6 +14,38 @@ from secfsdstools.d_container.databagmodel import JoinedDataBag
 from secfsdstools.f_standardize.bs_standardize import BalanceSheetStandardizer
 from secfsdstools.f_standardize.cf_standardize import CashFlowStandardizer
 from secfsdstools.f_standardize.is_standardize import IncomeStatementStandardizer
+
+LOGGER = logging.getLogger(__name__)
+
+
+def _bs_standardization(root_path: Path, tmp_path: Path):
+    # standardize bs
+    bs_standardizer = BalanceSheetStandardizer()
+
+    logging.info("create standardized BS dataset")
+    joined_bag_bs = JoinedDataBag.load(str(root_path / "BS"))
+    bs_standardizer.process(joined_bag_bs.pre_num_df)
+    bs_standardizer.get_standardize_bag().save(str(tmp_path / "BS"))
+
+
+def _is_standardization(root_path: Path, tmp_path: Path):
+    # standardize is
+    is_standardizer = IncomeStatementStandardizer()
+
+    logging.info("create standardized IS dataset")
+    joined_bag_is = JoinedDataBag.load(str(root_path / "IS"))
+    is_standardizer.process(joined_bag_is.pre_num_df)
+    is_standardizer.get_standardize_bag().save(str(tmp_path / "IS"))
+
+
+def _cf_standardization(root_path: Path, tmp_path: Path):
+    # standardize cf
+    cf_standardizer = CashFlowStandardizer()
+
+    logging.info("create standardized CF dataset")
+    joined_bag_cf = JoinedDataBag.load(str(root_path / "CF"))
+    cf_standardizer.process(joined_bag_cf.pre_num_df)
+    cf_standardizer.get_standardize_bag().save(str(tmp_path / "CF"))
 
 
 class StandardizerTask(CheckByTimestampMergeBaseTask):
@@ -71,26 +104,15 @@ class StandardizerTask(CheckByTimestampMergeBaseTask):
         Args:
             paths_to_process: can actually be ignored in this context, since we know which
             folders have to processed (BS, IS, CF)
-
+            tmp_path: target path to write the result to
         """
-        bs_standardizer = BalanceSheetStandardizer()
-        is_standardizer = IncomeStatementStandardizer()
-        cf_standardizer = CashFlowStandardizer()
-
-        # standardize bs
-        joined_bag_bs = JoinedDataBag.load(str(self.root_path / "BS"))
-        bs_standardizer.process(joined_bag_bs.pre_num_df.copy())
-        bs_standardizer.get_standardize_bag().save(str(tmp_path / "BS"))
-
-        # standardize is
-        joined_bag_is = JoinedDataBag.load(str(self.root_path / "IS"))
-        is_standardizer.process(joined_bag_is.pre_num_df.copy())
-        is_standardizer.get_standardize_bag().save(str(tmp_path / "IS"))
-
-        # standardize cf
-        joined_bag_cf = JoinedDataBag.load(str(self.root_path / "CF"))
-        cf_standardizer.process(joined_bag_cf.pre_num_df.copy())
-        cf_standardizer.get_standardize_bag().save(str(tmp_path / "CF"))
+        import gc
+        _bs_standardization(root_path=self.root_path, tmp_path=tmp_path)
+        gc.collect()
+        _is_standardization(root_path=self.root_path, tmp_path=tmp_path)
+        gc.collect()
+        _cf_standardization(root_path=self.root_path, tmp_path=tmp_path)
+        gc.collect()
 
 
 class StandardizeProcess(AbstractThreadProcess):

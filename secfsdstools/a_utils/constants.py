@@ -91,8 +91,6 @@ PA_SCHEMA_MAP: Dict[str, pa.Schema] = {
         ('instance', pa.string()),
         ('nciks', pa.int64()),
         ('aciks', pa.string()),
-        ('__index__level_0__', pa.int64())
-
     ]),
     PRE_TXT: pa.schema([
         ("adsh", pa.string()),
@@ -105,7 +103,6 @@ PA_SCHEMA_MAP: Dict[str, pa.Schema] = {
         ("rfile", pa.string()),
         ("plabel", pa.string()),
         ("negating", pa.int32()),
-        ('__index__level_0__', pa.int64())
     ]),
     NUM_TXT: pa.schema([
         ("adsh", pa.string()),
@@ -117,7 +114,7 @@ PA_SCHEMA_MAP: Dict[str, pa.Schema] = {
         ("segments", pa.string()),
         ("coreg", pa.string()),
         ("value", pa.float64()),
-        ('__index__level_0__', pa.int64())
+        ("footnote", pa.string()),
     ]),
     PRE_NUM_TXT: pa.schema([
         ("adsh", pa.string()),
@@ -137,6 +134,5 @@ PA_SCHEMA_MAP: Dict[str, pa.Schema] = {
         ("rfile", pa.string()),
         ("plabel", pa.string()),
         ("negating", pa.int32()),
-        ('__index_level_0__', pa.int64())
     ])
 }

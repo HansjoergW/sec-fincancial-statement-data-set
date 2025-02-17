@@ -74,7 +74,7 @@ def test_file_merge(tmp_path):
 
     print(total_rows)
 
-    output_path = tmp_path / "merged.parquet"
+    output_path = tmp_path / "sub.txt.parquet"
 
     concat_parquet_files(input_files=input_files, output_file=str(output_path))
 

@@ -14,7 +14,7 @@ new release
 
 
 -----
-2.0.1
+2.1.0
 - add "check release notes" link in readme somewhere at the top in a prominent manner
 
 - [ok] save -> create folder if not exists
@@ -23,28 +23,27 @@ new release
 - [ok] load functions for  Raw/JoinedBag can directly apply filters during the load process
 - [ok] check performance of filterload function
 
-- improve concat logic, don't load files, instead use helper function
-  -> check and compare performance / memory usage
-  -> alt und neu vergleichen
-
-- also use load with filters when reading data for standardization
-  -> memory bedarf ist hier am grössten. Geht zwischen den einzelnen
-     Schritten auch nicht ganz zurück.
-
+- [ok] improve concat logic, don't load files, instead use helper function
+  -> [ok] check and compare performance / memory usage
+  -> [ok] anzahl rows alt und neu vergleichen
 
 - Notebook -> low memory usage
   - use filters in collectors
   - use filters in load function
+      data:
+         BS on all (sandbox/filter_run.py)
+                 old: 1. 20 GB / 45 seconds / (19657047, 17)
+                 new: 1. 7 GB / 15 seconds / (19657047, 17)
   - write your own load function for special cases
   - concatenate directly on the files
-    -> examples where that is being used
-  data:
-     BS on all (sandbox/filter_run.py)
-             old: 1. 20 GB / 45 seconds / (19657047, 17)
-             new: 1. 7 GB / 15 seconds / (19657047, 17)
-
+    -> examples where that is being used in pipelines
 
 -- maybe make cut here for 2.0.1 ?
+
+- standardized bag concat sollte auch file variante erhalten.
+  - dann könnte demo pipeline auch quarters einzeln standardisieren und am Ende zusammen concaten
+
+
 
 - maybe introduce a first notebook explaining segments and what they show with examples
 - maybe also provide segmentsinfo per Tag? kind of overview
@@ -57,7 +56,7 @@ new release
 
 
 
-2.0.2
+2.2.0
 - spezieller segmentfilter -> z.B. nur ProductOrService Filter mit spezifischen Values?
 - adapt standardizer, use specific segment infos
 

@@ -292,7 +292,8 @@ class JoinedDataBag(DataBagBase[JOINED]):
             pre_num_filter.append(('tag', 'in', tags))
             filter_log_str.append(str(('tag', 'in', tags)))
 
-        LOGGER.info("apply pre_num_df filter: %s", filter_log_str)
+        if len(pre_num_filter) > 0:
+            LOGGER.info("apply pre_num_df filter: %s", filter_log_str)
 
         pre_num_df = pd.read_parquet(os.path.join(target_path, f'{PRE_NUM_TXT}.parquet'),
                                      filters=pre_num_filter if pre_num_filter else None)
@@ -533,8 +534,11 @@ class RawDataBag(DataBagBase[RAW]):
                                                      stmts=stmts,
                                                      tags=tags)
 
-        LOGGER.info("apply num_df filter: %s", num_filter)
-        LOGGER.info("apply pre_df filter: %s", pre_filter)
+        if len(num_filter) > 0:
+            LOGGER.info("apply num_df filter: %s", num_filter)
+
+        if len(pre_filter) > 0:
+            LOGGER.info("apply pre_df filter: %s", pre_filter)
 
         pre_df = pd.read_parquet(os.path.join(target_path, f'{PRE_TXT}.parquet'),
                                  filters=pre_filter if pre_filter else None)

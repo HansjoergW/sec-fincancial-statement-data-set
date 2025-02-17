@@ -38,7 +38,7 @@ def concat_parquet_files(input_files: List[str], output_file: str):
             continue  # Ignore empty files
 
         # Read Parquet file
-        table = pq.read_table(file)
+        table = pq.read_table(file, columns=schema.names)
 
         # Ensure the table conforms to the fixed schema
         table = table.cast(schema)

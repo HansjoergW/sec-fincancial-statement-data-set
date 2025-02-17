@@ -266,10 +266,10 @@ class JoinedDataBag(DataBagBase[JOINED]):
 
     @staticmethod
     def load(target_path: str,
-             adshs: Optional[List[str]] = None,
-             forms: Optional[List[str]] = None,
-             stmts: Optional[List[str]] = None,
-             tags: Optional[List[str]] = None) -&gt; JOINED:
+             adshs_filter: Optional[List[str]] = None,
+             forms_filter: Optional[List[str]] = None,
+             stmt_filter: Optional[List[str]] = None,
+             tag_filter: Optional[List[str]] = None) -&gt; JOINED:
         &#34;&#34;&#34;
             Loads the content of the current bag at the specified location.
 
@@ -284,44 +284,44 @@ class JoinedDataBag(DataBagBase[JOINED]):
 
         Args:
             target_path: root_path with the parquet files for sub, pre, and num
-            forms: optional list of forms (10-K, 10-Q) to filter for during loading
-            adshs: optional list of adhs to filter during the laoding
-            stmts: optional list of stmts (BS, IS, CF, ..) to filter during the loading
-            tags: optional list of tags to filter during the loading
+            forms_filter: optional list of forms (10-K, 10-Q) to filter for during loading
+            adshs_filter: optional list of adhs to filter during the laoding
+            stmt_filter: optional list of stmts (BS, IS, CF, ..) to filter during the loading
+            tag_filter: optional list of tags to filter during the loading
 
         Returns:
             RawDataBag: the loaded Databag
         &#34;&#34;&#34;
         sub_df = DataBagBase.load_sub_df_by_filter(
-            target_path=target_path, adshs=adshs, forms=forms
+            target_path=target_path, adshs=adshs_filter, forms=forms_filter
         )
 
         # if the forms filter was applied, overwrite the adshs list, since this are adshs
         # values that we should filter for in the pre_num dataframe
-        if not adshs and forms:
-            adshs = sub_df.adsh.to_list()
+        if not adshs_filter and forms_filter:
+            adshs_filter = sub_df.adsh.to_list()
 
         pre_num_filter = []
 
         filter_log_str: List[str] = []
 
-        if adshs:
-            pre_num_filter.append((&#39;adsh&#39;, &#39;in&#39;, adshs))
+        if adshs_filter:
+            pre_num_filter.append((&#39;adsh&#39;, &#39;in&#39;, adshs_filter))
 
             # the list of adshs could be quite huge, so we trim the message that we log
             # to max 100 characters
-            log_part = str((&#39;adsh&#39;, &#39;in&#39;, adshs))
+            log_part = str((&#39;adsh&#39;, &#39;in&#39;, adshs_filter))
             if len(log_part) &gt; 100:
                 log_part = log_part[:100] + &#34;...)&#34;
             filter_log_str.append(log_part)
 
-        if stmts:
-            pre_num_filter.append((&#39;stmt&#39;, &#39;in&#39;, stmts))
-            filter_log_str.append(str((&#39;stmt&#39;, &#39;in&#39;, stmts)))
+        if stmt_filter:
+            pre_num_filter.append((&#39;stmt&#39;, &#39;in&#39;, stmt_filter))
+            filter_log_str.append(str((&#39;stmt&#39;, &#39;in&#39;, stmt_filter)))
 
-        if tags:
-            pre_num_filter.append((&#39;tag&#39;, &#39;in&#39;, tags))
-            filter_log_str.append(str((&#39;tag&#39;, &#39;in&#39;, tags)))
+        if tag_filter:
+            pre_num_filter.append((&#39;tag&#39;, &#39;in&#39;, tag_filter))
+            filter_log_str.append(str((&#39;tag&#39;, &#39;in&#39;, tag_filter)))
 
         if len(pre_num_filter) &gt; 0:
             LOGGER.info(&#34;apply pre_num_df filter: %s&#34;, filter_log_str)
@@ -526,10 +526,10 @@ class RawDataBag(DataBagBase[RAW]):
 
     @staticmethod
     def load(target_path: str,
-             adshs: Optional[List[str]] = None,
-             forms: Optional[List[str]] = None,
-             stmts: Optional[List[str]] = None,
-             tags: Optional[List[str]] = None) -&gt; RAW:
+             adshs_filter: Optional[List[str]] = None,
+             forms_filter: Optional[List[str]] = None,
+             stmt_filter: Optional[List[str]] = None,
+             tag_filter: Optional[List[str]] = None) -&gt; RAW:
         &#34;&#34;&#34;
             Loads the content of the current bag at the specified location.
 
@@ -544,26 +544,26 @@ class RawDataBag(DataBagBase[RAW]):
 
         Args:
             target_path: root_path with the parquet files for sub, pre, and num
-            forms: optional list of forms (10-K, 10-Q) to filter for during loading
-            adshs: optional list of adhs to filter during the laoding
-            stmts: optional list of stmts (BS, IS, CF, ..) to filter during the loading
-            tags: optional list of tags to filter during the loading
+            forms_filter: optional list of forms (10-K, 10-Q) to filter for during loading
+            adshs_filter: optional list of adhs to filter during the laoding
+            stmt_filter: optional list of stmts (BS, IS, CF, ..) to filter during the loading
+            tag_filter: optional list of tags to filter during the loading
 
         Returns:
             RawDataBag: the loaded Databag
         &#34;&#34;&#34;
         sub_df = DataBagBase.load_sub_df_by_filter(
-            target_path=target_path, adshs=adshs, forms=forms
+            target_path=target_path, adshs=adshs_filter, forms=forms_filter
         )
 
         # if the forms filter was applied, overwrite the adshs list, since this is the list
         # we should then filter for
-        if not adshs and forms:
-            adshs = sub_df.adsh.to_list()
+        if not adshs_filter and forms_filter:
+            adshs_filter = sub_df.adsh.to_list()
 
-        pre_filter, num_filter = get_pre_num_filters(adshs=adshs,
-                                                     stmts=stmts,
-                                                     tags=tags)
+        pre_filter, num_filter = get_pre_num_filters(adshs=adshs_filter,
+                                                     stmts=stmt_filter,
+                                                     tags=tag_filter)
 
         if len(num_filter) &gt; 0:
             LOGGER.info(&#34;apply num_df filter: %s&#34;, num_filter)
@@ -1091,10 +1091,10 @@ adsh, tag, and version.</p>
 
     @staticmethod
     def load(target_path: str,
-             adshs: Optional[List[str]] = None,
-             forms: Optional[List[str]] = None,
-             stmts: Optional[List[str]] = None,
-             tags: Optional[List[str]] = None) -&gt; JOINED:
+             adshs_filter: Optional[List[str]] = None,
+             forms_filter: Optional[List[str]] = None,
+             stmt_filter: Optional[List[str]] = None,
+             tag_filter: Optional[List[str]] = None) -&gt; JOINED:
         &#34;&#34;&#34;
             Loads the content of the current bag at the specified location.
 
@@ -1109,44 +1109,44 @@ adsh, tag, and version.</p>
 
         Args:
             target_path: root_path with the parquet files for sub, pre, and num
-            forms: optional list of forms (10-K, 10-Q) to filter for during loading
-            adshs: optional list of adhs to filter during the laoding
-            stmts: optional list of stmts (BS, IS, CF, ..) to filter during the loading
-            tags: optional list of tags to filter during the loading
+            forms_filter: optional list of forms (10-K, 10-Q) to filter for during loading
+            adshs_filter: optional list of adhs to filter during the laoding
+            stmt_filter: optional list of stmts (BS, IS, CF, ..) to filter during the loading
+            tag_filter: optional list of tags to filter during the loading
 
         Returns:
             RawDataBag: the loaded Databag
         &#34;&#34;&#34;
         sub_df = DataBagBase.load_sub_df_by_filter(
-            target_path=target_path, adshs=adshs, forms=forms
+            target_path=target_path, adshs=adshs_filter, forms=forms_filter
         )
 
         # if the forms filter was applied, overwrite the adshs list, since this are adshs
         # values that we should filter for in the pre_num dataframe
-        if not adshs and forms:
-            adshs = sub_df.adsh.to_list()
+        if not adshs_filter and forms_filter:
+            adshs_filter = sub_df.adsh.to_list()
 
         pre_num_filter = []
 
         filter_log_str: List[str] = []
 
-        if adshs:
-            pre_num_filter.append((&#39;adsh&#39;, &#39;in&#39;, adshs))
+        if adshs_filter:
+            pre_num_filter.append((&#39;adsh&#39;, &#39;in&#39;, adshs_filter))
 
             # the list of adshs could be quite huge, so we trim the message that we log
             # to max 100 characters
-            log_part = str((&#39;adsh&#39;, &#39;in&#39;, adshs))
+            log_part = str((&#39;adsh&#39;, &#39;in&#39;, adshs_filter))
             if len(log_part) &gt; 100:
                 log_part = log_part[:100] + &#34;...)&#34;
             filter_log_str.append(log_part)
 
-        if stmts:
-            pre_num_filter.append((&#39;stmt&#39;, &#39;in&#39;, stmts))
-            filter_log_str.append(str((&#39;stmt&#39;, &#39;in&#39;, stmts)))
+        if stmt_filter:
+            pre_num_filter.append((&#39;stmt&#39;, &#39;in&#39;, stmt_filter))
+            filter_log_str.append(str((&#39;stmt&#39;, &#39;in&#39;, stmt_filter)))
 
-        if tags:
-            pre_num_filter.append((&#39;tag&#39;, &#39;in&#39;, tags))
-            filter_log_str.append(str((&#39;tag&#39;, &#39;in&#39;, tags)))
+        if tag_filter:
+            pre_num_filter.append((&#39;tag&#39;, &#39;in&#39;, tag_filter))
+            filter_log_str.append(str((&#39;tag&#39;, &#39;in&#39;, tag_filter)))
 
         if len(pre_num_filter) &gt; 0:
             LOGGER.info(&#34;apply pre_num_df filter: %s&#34;, filter_log_str)
@@ -1366,7 +1366,7 @@ def create(cls, sub_df: pd.DataFrame, pre_num_df: pd.DataFrame) -&gt; JOINED:
 </details>
 </dd>
 <dt id="secfsdstools.d_container.databagmodel.JoinedDataBag.load"><code class="name flex">
-<span>def <span class="ident">load</span></span>(<span>target_path: str, adshs: Optional[List[str]] = None, forms: Optional[List[str]] = None, stmts: Optional[List[str]] = None, tags: Optional[List[str]] = None) ‑> ~JOINED</span>
+<span>def <span class="ident">load</span></span>(<span>target_path: str, adshs_filter: Optional[List[str]] = None, forms_filter: Optional[List[str]] = None, stmt_filter: Optional[List[str]] = None, tag_filter: Optional[List[str]] = None) ‑> ~JOINED</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Loads the content of the current bag at the specified location.</p>
@@ -1383,13 +1383,13 @@ Note: the adsh are mutally exclusive and adsh has the higher precedence.
 <dl>
 <dt><strong><code>target_path</code></strong></dt>
 <dd>root_path with the parquet files for sub, pre, and num</dd>
-<dt><strong><code>forms</code></strong></dt>
+<dt><strong><code>forms_filter</code></strong></dt>
 <dd>optional list of forms (10-K, 10-Q) to filter for during loading</dd>
-<dt><strong><code>adshs</code></strong></dt>
+<dt><strong><code>adshs_filter</code></strong></dt>
 <dd>optional list of adhs to filter during the laoding</dd>
-<dt><strong><code>stmts</code></strong></dt>
+<dt><strong><code>stmt_filter</code></strong></dt>
 <dd>optional list of stmts (BS, IS, CF, ..) to filter during the loading</dd>
-<dt><strong><code>tags</code></strong></dt>
+<dt><strong><code>tag_filter</code></strong></dt>
 <dd>optional list of tags to filter during the loading</dd>
 </dl>
 <h2 id="returns">Returns</h2>
@@ -1403,10 +1403,10 @@ Note: the adsh are mutally exclusive and adsh has the higher precedence.
 </summary>
 <pre><code class="python">@staticmethod
 def load(target_path: str,
-         adshs: Optional[List[str]] = None,
-         forms: Optional[List[str]] = None,
-         stmts: Optional[List[str]] = None,
-         tags: Optional[List[str]] = None) -&gt; JOINED:
+         adshs_filter: Optional[List[str]] = None,
+         forms_filter: Optional[List[str]] = None,
+         stmt_filter: Optional[List[str]] = None,
+         tag_filter: Optional[List[str]] = None) -&gt; JOINED:
     &#34;&#34;&#34;
         Loads the content of the current bag at the specified location.
 
@@ -1421,44 +1421,44 @@ def load(target_path: str,
 
     Args:
         target_path: root_path with the parquet files for sub, pre, and num
-        forms: optional list of forms (10-K, 10-Q) to filter for during loading
-        adshs: optional list of adhs to filter during the laoding
-        stmts: optional list of stmts (BS, IS, CF, ..) to filter during the loading
-        tags: optional list of tags to filter during the loading
+        forms_filter: optional list of forms (10-K, 10-Q) to filter for during loading
+        adshs_filter: optional list of adhs to filter during the laoding
+        stmt_filter: optional list of stmts (BS, IS, CF, ..) to filter during the loading
+        tag_filter: optional list of tags to filter during the loading
 
     Returns:
         RawDataBag: the loaded Databag
     &#34;&#34;&#34;
     sub_df = DataBagBase.load_sub_df_by_filter(
-        target_path=target_path, adshs=adshs, forms=forms
+        target_path=target_path, adshs=adshs_filter, forms=forms_filter
     )
 
     # if the forms filter was applied, overwrite the adshs list, since this are adshs
     # values that we should filter for in the pre_num dataframe
-    if not adshs and forms:
-        adshs = sub_df.adsh.to_list()
+    if not adshs_filter and forms_filter:
+        adshs_filter = sub_df.adsh.to_list()
 
     pre_num_filter = []
 
     filter_log_str: List[str] = []
 
-    if adshs:
-        pre_num_filter.append((&#39;adsh&#39;, &#39;in&#39;, adshs))
+    if adshs_filter:
+        pre_num_filter.append((&#39;adsh&#39;, &#39;in&#39;, adshs_filter))
 
         # the list of adshs could be quite huge, so we trim the message that we log
         # to max 100 characters
-        log_part = str((&#39;adsh&#39;, &#39;in&#39;, adshs))
+        log_part = str((&#39;adsh&#39;, &#39;in&#39;, adshs_filter))
         if len(log_part) &gt; 100:
             log_part = log_part[:100] + &#34;...)&#34;
         filter_log_str.append(log_part)
 
-    if stmts:
-        pre_num_filter.append((&#39;stmt&#39;, &#39;in&#39;, stmts))
-        filter_log_str.append(str((&#39;stmt&#39;, &#39;in&#39;, stmts)))
+    if stmt_filter:
+        pre_num_filter.append((&#39;stmt&#39;, &#39;in&#39;, stmt_filter))
+        filter_log_str.append(str((&#39;stmt&#39;, &#39;in&#39;, stmt_filter)))
 
-    if tags:
-        pre_num_filter.append((&#39;tag&#39;, &#39;in&#39;, tags))
-        filter_log_str.append(str((&#39;tag&#39;, &#39;in&#39;, tags)))
+    if tag_filter:
+        pre_num_filter.append((&#39;tag&#39;, &#39;in&#39;, tag_filter))
+        filter_log_str.append(str((&#39;tag&#39;, &#39;in&#39;, tag_filter)))
 
     if len(pre_num_filter) &gt; 0:
         LOGGER.info(&#34;apply pre_num_df filter: %s&#34;, filter_log_str)
@@ -1722,10 +1722,10 @@ will be created</dd>
 
     @staticmethod
     def load(target_path: str,
-             adshs: Optional[List[str]] = None,
-             forms: Optional[List[str]] = None,
-             stmts: Optional[List[str]] = None,
-             tags: Optional[List[str]] = None) -&gt; RAW:
+             adshs_filter: Optional[List[str]] = None,
+             forms_filter: Optional[List[str]] = None,
+             stmt_filter: Optional[List[str]] = None,
+             tag_filter: Optional[List[str]] = None) -&gt; RAW:
         &#34;&#34;&#34;
             Loads the content of the current bag at the specified location.
 
@@ -1740,26 +1740,26 @@ will be created</dd>
 
         Args:
             target_path: root_path with the parquet files for sub, pre, and num
-            forms: optional list of forms (10-K, 10-Q) to filter for during loading
-            adshs: optional list of adhs to filter during the laoding
-            stmts: optional list of stmts (BS, IS, CF, ..) to filter during the loading
-            tags: optional list of tags to filter during the loading
+            forms_filter: optional list of forms (10-K, 10-Q) to filter for during loading
+            adshs_filter: optional list of adhs to filter during the laoding
+            stmt_filter: optional list of stmts (BS, IS, CF, ..) to filter during the loading
+            tag_filter: optional list of tags to filter during the loading
 
         Returns:
             RawDataBag: the loaded Databag
         &#34;&#34;&#34;
         sub_df = DataBagBase.load_sub_df_by_filter(
-            target_path=target_path, adshs=adshs, forms=forms
+            target_path=target_path, adshs=adshs_filter, forms=forms_filter
         )
 
         # if the forms filter was applied, overwrite the adshs list, since this is the list
         # we should then filter for
-        if not adshs and forms:
-            adshs = sub_df.adsh.to_list()
+        if not adshs_filter and forms_filter:
+            adshs_filter = sub_df.adsh.to_list()
 
-        pre_filter, num_filter = get_pre_num_filters(adshs=adshs,
-                                                     stmts=stmts,
-                                                     tags=tags)
+        pre_filter, num_filter = get_pre_num_filters(adshs=adshs_filter,
+                                                     stmts=stmt_filter,
+                                                     tags=tag_filter)
 
         if len(num_filter) &gt; 0:
             LOGGER.info(&#34;apply num_df filter: %s&#34;, num_filter)
@@ -1984,7 +1984,7 @@ def create(cls, sub_df: pd.DataFrame, pre_df: pd.DataFrame, num_df: pd.DataFrame
 </details>
 </dd>
 <dt id="secfsdstools.d_container.databagmodel.RawDataBag.load"><code class="name flex">
-<span>def <span class="ident">load</span></span>(<span>target_path: str, adshs: Optional[List[str]] = None, forms: Optional[List[str]] = None, stmts: Optional[List[str]] = None, tags: Optional[List[str]] = None) ‑> ~RAW</span>
+<span>def <span class="ident">load</span></span>(<span>target_path: str, adshs_filter: Optional[List[str]] = None, forms_filter: Optional[List[str]] = None, stmt_filter: Optional[List[str]] = None, tag_filter: Optional[List[str]] = None) ‑> ~RAW</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Loads the content of the current bag at the specified location.</p>
@@ -2001,13 +2001,13 @@ Note: the adsh are mutally exclusive and adsh has the higher precedence.
 <dl>
 <dt><strong><code>target_path</code></strong></dt>
 <dd>root_path with the parquet files for sub, pre, and num</dd>
-<dt><strong><code>forms</code></strong></dt>
+<dt><strong><code>forms_filter</code></strong></dt>
 <dd>optional list of forms (10-K, 10-Q) to filter for during loading</dd>
-<dt><strong><code>adshs</code></strong></dt>
+<dt><strong><code>adshs_filter</code></strong></dt>
 <dd>optional list of adhs to filter during the laoding</dd>
-<dt><strong><code>stmts</code></strong></dt>
+<dt><strong><code>stmt_filter</code></strong></dt>
 <dd>optional list of stmts (BS, IS, CF, ..) to filter during the loading</dd>
-<dt><strong><code>tags</code></strong></dt>
+<dt><strong><code>tag_filter</code></strong></dt>
 <dd>optional list of tags to filter during the loading</dd>
 </dl>
 <h2 id="returns">Returns</h2>
@@ -2021,10 +2021,10 @@ Note: the adsh are mutally exclusive and adsh has the higher precedence.
 </summary>
 <pre><code class="python">@staticmethod
 def load(target_path: str,
-         adshs: Optional[List[str]] = None,
-         forms: Optional[List[str]] = None,
-         stmts: Optional[List[str]] = None,
-         tags: Optional[List[str]] = None) -&gt; RAW:
+         adshs_filter: Optional[List[str]] = None,
+         forms_filter: Optional[List[str]] = None,
+         stmt_filter: Optional[List[str]] = None,
+         tag_filter: Optional[List[str]] = None) -&gt; RAW:
     &#34;&#34;&#34;
         Loads the content of the current bag at the specified location.
 
@@ -2039,26 +2039,26 @@ def load(target_path: str,
 
     Args:
         target_path: root_path with the parquet files for sub, pre, and num
-        forms: optional list of forms (10-K, 10-Q) to filter for during loading
-        adshs: optional list of adhs to filter during the laoding
-        stmts: optional list of stmts (BS, IS, CF, ..) to filter during the loading
-        tags: optional list of tags to filter during the loading
+        forms_filter: optional list of forms (10-K, 10-Q) to filter for during loading
+        adshs_filter: optional list of adhs to filter during the laoding
+        stmt_filter: optional list of stmts (BS, IS, CF, ..) to filter during the loading
+        tag_filter: optional list of tags to filter during the loading
 
     Returns:
         RawDataBag: the loaded Databag
     &#34;&#34;&#34;
     sub_df = DataBagBase.load_sub_df_by_filter(
-        target_path=target_path, adshs=adshs, forms=forms
+        target_path=target_path, adshs=adshs_filter, forms=forms_filter
     )
 
     # if the forms filter was applied, overwrite the adshs list, since this is the list
     # we should then filter for
-    if not adshs and forms:
-        adshs = sub_df.adsh.to_list()
+    if not adshs_filter and forms_filter:
+        adshs_filter = sub_df.adsh.to_list()
 
-    pre_filter, num_filter = get_pre_num_filters(adshs=adshs,
-                                                 stmts=stmts,
-                                                 tags=tags)
+    pre_filter, num_filter = get_pre_num_filters(adshs=adshs_filter,
+                                                 stmts=stmt_filter,
+                                                 tags=tag_filter)
 
     if len(num_filter) &gt; 0:
         LOGGER.info(&#34;apply num_df filter: %s&#34;, num_filter)

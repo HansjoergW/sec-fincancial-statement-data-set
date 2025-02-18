@@ -53,8 +53,7 @@ the standardized bags under the path that is defined as standardized_dir.
 The fourth step is optional and is only executed if the configuration file contains an entry
 for singlebag_dir. If it does, it will create a single joined bag concatenating all the bags
 created in the second step, so basically creating a single bag that contains all the data from
-all the available zip files, resp. quarters. This step uses more memory than the others, so it
-might not be running on every system.
+all the available zip files, resp. quarters.
 
 All this steps use basic implementations of the AbstractProcess class from the
 secfsdstools.g_pipeline package.

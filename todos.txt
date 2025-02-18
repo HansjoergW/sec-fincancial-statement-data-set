@@ -15,8 +15,6 @@ new release
 
 -----
 2.1.0
-- add "check release notes" link in readme somewhere at the top in a prominent manner
-
 - [ok] save -> create folder if not exists
 - [ok] special "concat files to file" helper function
        -> static method in Ra/JoinedBag concat_filebased
@@ -27,17 +25,14 @@ new release
   -> [ok] check and compare performance / memory usage
   -> [ok] anzahl rows alt und neu vergleichen
 
-- Notebook -> low memory usage _6_1_
+- [ok] Notebook -> low memory usage _6_1_
   - use filters in collectors
   - use filters in load function
-      data:
-         BS on all (sandbox/filter_run.py)
-                 old: 1. 20 GB / 45 seconds / (19657047, 17)
-                 new: 1. 7 GB / 15 seconds / (19657047, 17)
   - write your own load function for special cases
   - concatenate directly on the files
     -> examples where that is being used in pipelines
 
+- add "check release notes" link in readme somewhere at the top in a prominent manner
 
 -- maybe make cut here for 2.0.1 ?
 

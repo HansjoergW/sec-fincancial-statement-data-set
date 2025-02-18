@@ -24,6 +24,9 @@ The main features include:
   data file is detected on sec.gov (see [08_00_automation_basics.ipynb](notebooks/08_00_automation_basics.ipynb))
 - **version 2 supports the new "segments" column that was added in December 2024**  
 
+Have a look at the * [Release Notes](https://hansjoergw.github.io/sec-fincancial-statement-data-set/releasenotes/)
+
+
 # Principles
 
 The goal is to be able to do bulk processing of the data without the need to do countless API calls to sec.gov. 
@@ -47,8 +50,6 @@ The project is published on [pypi.org](https://pypi.org/project/secfsdstools/). 
 ```
 pip install secfsdstools
 ```
-
-
 
 If you want to contribute, just clone the project and use a python 3.8 environment.
 The dependencies are defined in the requirements.txt file or use the pyproject.toml to install them.
@@ -334,11 +335,20 @@ and being stored in the sub_df, pre_df, and num_df attributes inside an instance
     rawdatabag.save("<path>")
     
     # load it back
-    RawDataBag.load("<path") 
+    bag = RawDataBag.load("<path")
+  
+    # load it back with Predicate Pushdown (filter while reading)
+    bag = RawDataBag.load("<path", stmt_filter=["BS"])
+    ```` 
 
 *  `concat` multiple instances of `RawDataBag`
     ````
     concat_bag = RawDataBag.concat(list_of_rawdatabags)    
+    ````
+
+*  `concat_filebased` concat multiple RawDataBag folders into a new folder in very memory efficient way
+    ````
+    RawDataBag.concat_filebased(list_of_rawdatabag_folders, target_folder)    
     ````
 
 * `join` produces a `JoinedRawDataBag` by joining the content of the pre_df and num_df
@@ -399,11 +409,12 @@ and being stored in the sub_df, pre_df, and num_df attributes inside an instance
 
    Have a look at the [filter_deep_dive notebook](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/05_filter_deep_dive.ipynb).
 
-### Workin with joined data
+### Working with joined data
 When the `join` method of a `RawDataBag` instance is called an instance of `JoinedDataBag` is returned.
 
-The `JoinedDataBag` provides `save`, `load`, and `concat` in the same manner as the `RawDataBag`does.
-More over, also `filter` is possible and the same filters are available. They jost go by the name
+The `JoinedDataBag` provides `save`, `load`, `concat`, and `concat_filebased` in the same manner as the
+`RawDataBag`does. 
+More over, also `filter` is possible and the same filters are available. They just go by the name
 `...JoinedFilter` instead of `...RawFilter`.
 
 `present` The idea of the present method is to make a final presentation of the data as pandas dataframe. 
@@ -651,11 +662,11 @@ Have a look at [08_00_automation_basics](notebooks/08_00_automation_basics.ipynb
 * [collector_deep_dive Notebook](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/04_collector_deep_dive.ipynb)
 * [filter_deep_dive Notebook](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/05_filter_deep_dive.ipynb).
 * [bulk_data_processing_deep_dive Notebook](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/06_bulk_data_processing_deep_dive.ipynb)
+* [bulk_data_processing_memory_efficiency](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/06_01_bulk_data_memory_efficiency.ipynb)
 * [standardizer_basics](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/07_00_standardizer_basics.ipynb)
 * [standardize the balance sheets and make them comparable](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/07_01_BS_standardizer.ipynb)
 * [standardize the income statements and make them comparable](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/07_02_IS_standardizer.ipynb)
 * [standardize the cash flow statements and make them comparable](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/07_03_CF_standardizer.ipynb)
-* [checkout the `u_usecases` package](https://hansjoergw.github.io/sec-fincancial-statement-data-set/doc_latest/api/secfsdstools/u_usecases/index.html)
 * [automate additional processing steps that are executed after new data is discovered](notebooks/08_00_automation_basics.ipynb)
-* [Trouble hssting and known issues](KNOWN_ISSUES.md)
-* [Changelog](CHANGELOG.md)
+* [checkout the `u_usecases` package](https://hansjoergw.github.io/sec-fincancial-statement-data-set/doc_latest/api/secfsdstools/u_usecases/index.html)
+* [Trouble shooting and known issues](KNOWN_ISSUES.md)

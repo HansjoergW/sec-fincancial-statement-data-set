@@ -2,6 +2,17 @@
 # Changelog
 See the [Release Notes](https://hansjoergw.github.io/sec-fincancial-statement-data-set/releasenotes/) for details.
 
+## 2.0.0 -> 2.1.0
+Main goal: improving memory footprint. Checkout the notebook:  [bulk_data_processing_memory_efficiency](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/06_01_bulk_data_memory_efficiency.ipynb)
+
+* New 
+  * Predicate Pushdown in `load` methods of `RawDataBag` and `JoinedDataBag`  
+    Directly apply filters for adshs, statements, forms, and tags during loading of the data
+  * `concat_filebased` concatenates `RawDataBag` and `JoinedDataBag` folders without loading them into memory  
+  * `ConcatByChangedTimestampProcess` and `ConcatByNewSubfoldersProcess` use `concat_filebased`
+  * `save` for `RawDataBag`, `JoinedDataBag`, and `StandardizedBag` create new the target folder if it does not exist. 
+
+
 ## 1.8.2 -> 2.0.0
 Introducing the new version of the datasets that includes the "segments" column in then num tables.
 The main purpose of this version is to ensure that the new "segments" colomn does not interfere with existing logic.

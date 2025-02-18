@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "secfsdstools"
-version = "2.0.0"
+version = "2.1.0"
 authors = [
     { name="Hansjoerg Wingeier", email="hansjoerg.wingeier@gmail.com" },
 ]
@@ -56,6 +56,7 @@ keywords=[
 "Homepage" = "https://hansjoergw.github.io/sec-fincancial-statement-data-set/"
 "Bug Tracker" = "https://github.com/HansjoergW/sec-fincancial-statement-data-set/issues"
 "Github" = "https://github.com/HansjoergW/sec-fincancial-statement-data-set"
+"Changelog" = "https://github.com/HansjoergW/sec-fincancial-statement-data-set/blob/main/CHANGELOG.md"
 
 
 [project.optional-dependencies]

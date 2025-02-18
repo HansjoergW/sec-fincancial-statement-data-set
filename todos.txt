@@ -17,7 +17,7 @@ new release
 2.1.0
 - [ok] save -> create folder if not exists
 - [ok] special "concat files to file" helper function
-       -> static method in Ra/JoinedBag concat_filebased
+       -> static method in Raw/JoinedBag concat_filebased
 - [ok] load functions for  Raw/JoinedBag can directly apply filters during the load process
 - [ok] check performance of filterload function
 
@@ -32,11 +32,9 @@ new release
   - concatenate directly on the files
     -> examples where that is being used in pipelines
 
-- add "check release notes" link in readme somewhere at the top in a prominent manner
+- [ok] add "check release notes" link in readme somewhere at the top in a prominent manner
 
--- maybe make cut here for 2.0.1 ?
-
-
+-- maybe make cut here for 2.1.0 ?
 
 
 - maybe introduce a first notebook explaining segments and what they show with examples
@@ -50,6 +48,9 @@ new release
 
 - standardized bag concat sollte auch file variante erhalten.
   - dann könnte demo pipeline auch quarters einzeln standardisieren und am Ende zusammen concaten
+
+- automation process -> besser auch jedes einzelne zip zu standardisieren
+  und dann die ergebnisse zusammen zu concaten.
 
 
 2.2.0

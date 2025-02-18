@@ -2,6 +2,7 @@
 Module that contains the AbstractProcess implementation that can standardize
 JoinedDataBags for BalanceSheet, IncomeStatement, and  CashFlow.
 """
+import gc
 import logging
 import shutil
 from pathlib import Path
@@ -106,7 +107,6 @@ class StandardizerTask(CheckByTimestampMergeBaseTask):
             folders have to processed (BS, IS, CF)
             tmp_path: target path to write the result to
         """
-        import gc
         _bs_standardization(root_path=self.root_path, tmp_path=tmp_path)
         gc.collect()
         _is_standardization(root_path=self.root_path, tmp_path=tmp_path)

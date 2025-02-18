@@ -249,7 +249,28 @@ class USDOnlyJoinedFilter(FilterBase[JoinedDataBag]):
             mask_has_lower | mask_is_none_currency | mask_usd_only]
 
         return JoinedDataBag.create(sub_df=databag.sub_df,
-                                    pre_num_df=prenum_filtered_for_usd)</code></pre>
+                                    pre_num_df=prenum_filtered_for_usd)
+
+
+class NoSegmentInfoJoinedFilter(FilterBase[JoinedDataBag]):
+    &#34;&#34;&#34;
+    Filters only for the main coreg entries (coreg == &#39;&#39;)
+    &#34;&#34;&#34;
+
+    def filter(self, databag: JoinedDataBag) -&gt; JoinedDataBag:
+        &#34;&#34;&#34;
+        filters the databag so that only the main coreg entries are contained
+        (no data subsidiaries).
+        Args:
+            databag(JoinedDataBag) : databag to apply the pathfilter to
+
+        Returns:
+            JoinedDataBag: the databag with the filtered data
+        &#34;&#34;&#34;
+        pre_num_filtered_for_main_coreg = databag.pre_num_df[databag.pre_num_df.segments == &#39;&#39;]
+
+        return JoinedDataBag.create(sub_df=databag.sub_df,
+                                    pre_num_df=pre_num_filtered_for_main_coreg)</code></pre>
 </details>
 </section>
 <section>
@@ -405,6 +426,78 @@ are contained.</p>
         JoinedDataBag: the databag with the filtered data
     &#34;&#34;&#34;
     pre_num_filtered_for_main_coreg = databag.pre_num_df[databag.pre_num_df.coreg == &#39;&#39;]
+
+    return JoinedDataBag.create(sub_df=databag.sub_df,
+                                pre_num_df=pre_num_filtered_for_main_coreg)</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+<dt id="secfsdstools.e_filter.joinedfiltering.NoSegmentInfoJoinedFilter"><code class="flex name class">
+<span>class <span class="ident">NoSegmentInfoJoinedFilter</span></span>
+<span>(</span><span>*args, **kwds)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Filters only for the main coreg entries (coreg == '')</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class NoSegmentInfoJoinedFilter(FilterBase[JoinedDataBag]):
+    &#34;&#34;&#34;
+    Filters only for the main coreg entries (coreg == &#39;&#39;)
+    &#34;&#34;&#34;
+
+    def filter(self, databag: JoinedDataBag) -&gt; JoinedDataBag:
+        &#34;&#34;&#34;
+        filters the databag so that only the main coreg entries are contained
+        (no data subsidiaries).
+        Args:
+            databag(JoinedDataBag) : databag to apply the pathfilter to
+
+        Returns:
+            JoinedDataBag: the databag with the filtered data
+        &#34;&#34;&#34;
+        pre_num_filtered_for_main_coreg = databag.pre_num_df[databag.pre_num_df.segments == &#39;&#39;]
+
+        return JoinedDataBag.create(sub_df=databag.sub_df,
+                                    pre_num_df=pre_num_filtered_for_main_coreg)</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="secfsdstools.d_container.filter.FilterBase" href="../d_container/filter.html#secfsdstools.d_container.filter.FilterBase">FilterBase</a></li>
+<li>typing.Generic</li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="secfsdstools.e_filter.joinedfiltering.NoSegmentInfoJoinedFilter.filter"><code class="name flex">
+<span>def <span class="ident">filter</span></span>(<span>self, databag: <a title="secfsdstools.d_container.databagmodel.JoinedDataBag" href="../d_container/databagmodel.html#secfsdstools.d_container.databagmodel.JoinedDataBag">JoinedDataBag</a>) ‑> <a title="secfsdstools.d_container.databagmodel.JoinedDataBag" href="../d_container/databagmodel.html#secfsdstools.d_container.databagmodel.JoinedDataBag">JoinedDataBag</a></span>
+</code></dt>
+<dd>
+<div class="desc"><p>filters the databag so that only the main coreg entries are contained
+(no data subsidiaries).</p>
+<h2 id="args">Args</h2>
+<p>databag(JoinedDataBag) : databag to apply the pathfilter to</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>JoinedDataBag</code></dt>
+<dd>the databag with the filtered data</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def filter(self, databag: JoinedDataBag) -&gt; JoinedDataBag:
+    &#34;&#34;&#34;
+    filters the databag so that only the main coreg entries are contained
+    (no data subsidiaries).
+    Args:
+        databag(JoinedDataBag) : databag to apply the pathfilter to
+
+    Returns:
+        JoinedDataBag: the databag with the filtered data
+    &#34;&#34;&#34;
+    pre_num_filtered_for_main_coreg = databag.pre_num_df[databag.pre_num_df.segments == &#39;&#39;]
 
     return JoinedDataBag.create(sub_df=databag.sub_df,
                                 pre_num_df=pre_num_filtered_for_main_coreg)</code></pre>
@@ -941,6 +1034,12 @@ that is in the provided list.</p>
 <h4><code><a title="secfsdstools.e_filter.joinedfiltering.MainCoregJoinedFilter" href="#secfsdstools.e_filter.joinedfiltering.MainCoregJoinedFilter">MainCoregJoinedFilter</a></code></h4>
 <ul class="">
 <li><code><a title="secfsdstools.e_filter.joinedfiltering.MainCoregJoinedFilter.filter" href="#secfsdstools.e_filter.joinedfiltering.MainCoregJoinedFilter.filter">filter</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="secfsdstools.e_filter.joinedfiltering.NoSegmentInfoJoinedFilter" href="#secfsdstools.e_filter.joinedfiltering.NoSegmentInfoJoinedFilter">NoSegmentInfoJoinedFilter</a></code></h4>
+<ul class="">
+<li><code><a title="secfsdstools.e_filter.joinedfiltering.NoSegmentInfoJoinedFilter.filter" href="#secfsdstools.e_filter.joinedfiltering.NoSegmentInfoJoinedFilter.filter">filter</a></code></li>
 </ul>
 </li>
 <li>

@@ -35,6 +35,7 @@ CashFlow.</p>
 Module that contains the AbstractProcess implementation that can standardize
 JoinedDataBags for BalanceSheet, IncomeStatement, and  CashFlow.
 &#34;&#34;&#34;
+import gc
 import logging
 import shutil
 from pathlib import Path
@@ -139,7 +140,6 @@ class StandardizerTask(CheckByTimestampMergeBaseTask):
             folders have to processed (BS, IS, CF)
             tmp_path: target path to write the result to
         &#34;&#34;&#34;
-        import gc
         _bs_standardization(root_path=self.root_path, tmp_path=tmp_path)
         gc.collect()
         _is_standardization(root_path=self.root_path, tmp_path=tmp_path)
@@ -441,7 +441,6 @@ The Data has to be provided as standardized DataBags.</dd>
             folders have to processed (BS, IS, CF)
             tmp_path: target path to write the result to
         &#34;&#34;&#34;
-        import gc
         _bs_standardization(root_path=self.root_path, tmp_path=tmp_path)
         gc.collect()
         _is_standardization(root_path=self.root_path, tmp_path=tmp_path)
@@ -488,7 +487,6 @@ Does apply the OfficialTagsOnlyJoinedFilter before standardizing.</p>
         folders have to processed (BS, IS, CF)
         tmp_path: target path to write the result to
     &#34;&#34;&#34;
-    import gc
     _bs_standardization(root_path=self.root_path, tmp_path=tmp_path)
     gc.collect()
     _is_standardization(root_path=self.root_path, tmp_path=tmp_path)

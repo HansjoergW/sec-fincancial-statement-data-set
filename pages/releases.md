@@ -4,6 +4,24 @@ permalink: /releasenotes/
 
 
 # Release Notes
+## 2.0.0 -> 2.1.0 2025-February-18
+
+The main goal of this release was to improve the memory footprint when working with the framework.
+These mainly includes the support for Predicate Pushdown in the load methods, as well
+as being able to concatenate bags directly on the file system, which significantly improved the
+memory footprint during concatenation steps when using "automation".
+
+Checkout the notebook:  [bulk_data_processing_memory_efficiency](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/06_01_bulk_data_memory_efficiency.ipynb)
+
+* New
+  * Predicate Pushdown in `load` methods of `RawDataBag` and `JoinedDataBag`  
+    Directly apply filters for adshs, statements, forms, and tags during loading of the data
+  * `concat_filebased` concatenates `RawDataBag` and `JoinedDataBag` folders without loading them into memory
+  * `ConcatByChangedTimestampProcess` and `ConcatByNewSubfoldersProcess` use `concat_filebased`
+  * `save` for `RawDataBag`, `JoinedDataBag`, and `StandardizedBag` create new the target folder if it does not exist.
+
+
+
 ## 1.8.2 -> 2.0.0 2025-February-11
 Introducing the new version of the datasets that includes the "segments" column in then num tables.
 The main purpose of this version is to ensure that the new "segments" colomn does not interfere with existing logic.

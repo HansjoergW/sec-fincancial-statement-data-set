@@ -46,10 +46,8 @@ def concat_bags(paths_to_concat: List[Path], target_path: Path):
     Of course, all paths in the paths_to_concat must be of the same type
 
     Args:
-        paths_to_concat (List[Path]) :
-        target_dir:
-
-    Returns:
+        paths_to_concat (List[Path]) : List with paths to read the datafrome
+        target_path (Path) : path to write the concatenated data to
 
     &#34;&#34;&#34;
     if len(paths_to_concat) == 0:
@@ -66,6 +64,40 @@ def concat_bags(paths_to_concat: List[Path], target_path: Path):
 
         all_bag: JoinedDataBag = JoinedDataBag.concat(all_bags, drop_duplicates_sub_df=True)
         all_bag.save(target_path=str(target_path))
+    else:
+        raise ValueError(&#34;bag_type must be either raw or joined&#34;)
+
+
+def concat_bags_filebased(paths_to_concat: List[Path],
+                           target_path: Path,
+                           drop_duplicates_sub_df: bool = False):
+    &#34;&#34;&#34;
+    Concatenates all the Bags in paths_to_concatenate by using the provided bag_type
+    into the target_dir directory.
+
+    The logic checks for the type of the bag (Raw or Joined) and handles them accordingly.
+    Of course, all paths in the paths_to_concat must be of the same type
+
+    Args:
+        paths_to_concat (List[Path]) : List with paths to read the datafrome
+        target_path (Path) : path to write the concatenated data to
+        drop_duplicates_sub_df (bool, False) : if the final sub_df should be check for duplicates
+
+    Returns:
+    &#34;&#34;&#34;
+    if len(paths_to_concat) == 0:
+        # nothing to do
+        return
+
+    if is_rawbag_path(paths_to_concat[0]):
+        RawDataBag.concat_filebased(paths_to_concat=paths_to_concat,
+                                    target_path=target_path,
+                                    drop_duplicates_sub_df=drop_duplicates_sub_df)
+
+    elif is_joinedbag_path(paths_to_concat[0]):
+        JoinedDataBag.concat_filebased(paths_to_concat=paths_to_concat,
+                                       target_path=target_path,
+                                       drop_duplicates_sub_df=drop_duplicates_sub_df)
     else:
         raise ValueError(&#34;bag_type must be either raw or joined&#34;)</code></pre>
 </details>
@@ -86,9 +118,8 @@ into the target_dir directory.</p>
 <p>The logic checks for the type of the bag (Raw or Joined) and handles them accordingly.
 Of course, all paths in the paths_to_concat must be of the same type</p>
 <h2 id="args">Args</h2>
-<p>paths_to_concat (List[Path]) :
-target_dir:
-Returns:</p></div>
+<p>paths_to_concat (List[Path]) : List with paths to read the datafrome
+target_path (Path) : path to write the concatenated data to</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -102,10 +133,8 @@ Returns:</p></div>
     Of course, all paths in the paths_to_concat must be of the same type
 
     Args:
-        paths_to_concat (List[Path]) :
-        target_dir:
-
-    Returns:
+        paths_to_concat (List[Path]) : List with paths to read the datafrome
+        target_path (Path) : path to write the concatenated data to
 
     &#34;&#34;&#34;
     if len(paths_to_concat) == 0:
@@ -122,6 +151,57 @@ Returns:</p></div>
 
         all_bag: JoinedDataBag = JoinedDataBag.concat(all_bags, drop_duplicates_sub_df=True)
         all_bag.save(target_path=str(target_path))
+    else:
+        raise ValueError(&#34;bag_type must be either raw or joined&#34;)</code></pre>
+</details>
+</dd>
+<dt id="secfsdstools.g_pipelines.pipeline_utils.concat_bags_filebased"><code class="name flex">
+<span>def <span class="ident">concat_bags_filebased</span></span>(<span>paths_to_concat: List[pathlib.Path], target_path: pathlib.Path, drop_duplicates_sub_df: bool = False)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Concatenates all the Bags in paths_to_concatenate by using the provided bag_type
+into the target_dir directory.</p>
+<p>The logic checks for the type of the bag (Raw or Joined) and handles them accordingly.
+Of course, all paths in the paths_to_concat must be of the same type</p>
+<h2 id="args">Args</h2>
+<p>paths_to_concat (List[Path]) : List with paths to read the datafrome
+target_path (Path) : path to write the concatenated data to
+drop_duplicates_sub_df (bool, False) : if the final sub_df should be check for duplicates
+Returns:</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def concat_bags_filebased(paths_to_concat: List[Path],
+                           target_path: Path,
+                           drop_duplicates_sub_df: bool = False):
+    &#34;&#34;&#34;
+    Concatenates all the Bags in paths_to_concatenate by using the provided bag_type
+    into the target_dir directory.
+
+    The logic checks for the type of the bag (Raw or Joined) and handles them accordingly.
+    Of course, all paths in the paths_to_concat must be of the same type
+
+    Args:
+        paths_to_concat (List[Path]) : List with paths to read the datafrome
+        target_path (Path) : path to write the concatenated data to
+        drop_duplicates_sub_df (bool, False) : if the final sub_df should be check for duplicates
+
+    Returns:
+    &#34;&#34;&#34;
+    if len(paths_to_concat) == 0:
+        # nothing to do
+        return
+
+    if is_rawbag_path(paths_to_concat[0]):
+        RawDataBag.concat_filebased(paths_to_concat=paths_to_concat,
+                                    target_path=target_path,
+                                    drop_duplicates_sub_df=drop_duplicates_sub_df)
+
+    elif is_joinedbag_path(paths_to_concat[0]):
+        JoinedDataBag.concat_filebased(paths_to_concat=paths_to_concat,
+                                       target_path=target_path,
+                                       drop_duplicates_sub_df=drop_duplicates_sub_df)
     else:
         raise ValueError(&#34;bag_type must be either raw or joined&#34;)</code></pre>
 </details>
@@ -145,6 +225,7 @@ Returns:</p></div>
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
 <li><code><a title="secfsdstools.g_pipelines.pipeline_utils.concat_bags" href="#secfsdstools.g_pipelines.pipeline_utils.concat_bags">concat_bags</a></code></li>
+<li><code><a title="secfsdstools.g_pipelines.pipeline_utils.concat_bags_filebased" href="#secfsdstools.g_pipelines.pipeline_utils.concat_bags_filebased">concat_bags_filebased</a></code></li>
 </ul>
 </li>
 </ul>

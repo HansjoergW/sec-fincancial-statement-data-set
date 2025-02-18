@@ -30,6 +30,9 @@
 <pre><code class="python">&#34;&#34;&#34;
 base constant values
 &#34;&#34;&#34;
+from typing import Dict
+
+import pyarrow as pa
 
 NUM_TXT = &#34;num.txt&#34;
 PRE_TXT = &#34;pre.txt&#34;
@@ -66,7 +69,7 @@ NUM_DTYPE = {&#39;adsh&#39;: str,
              &#39;qtrs&#39;: int,
              &#39;uom&#39;: str,
              &#39;segments&#39;: str,
-             &#39;value&#39;: str, # daily files can also contain ticker name and stockexchange as strings
+             &#39;value&#39;: str,  # daily files can also contain ticker name and stockexchange as strings
              &#39;footnote&#39;: str}
 
 PRE_DTYPE = {&#39;adsh&#39;: str,
@@ -76,7 +79,92 @@ PRE_DTYPE = {&#39;adsh&#39;: str,
              &#39;inpth&#39;: int,
              &#39;tag&#39;: str,
              &#39;version&#39;: str,
-             &#39;negating&#39;: int}</code></pre>
+             &#39;negating&#39;: int}
+
+# pyarrow schema map
+PA_SCHEMA_MAP: Dict[str, pa.Schema] = {
+    SUB_TXT: pa.schema([
+        (&#34;adsh&#34;, pa.string()),
+        (&#39;cik&#39;, pa.int32()),
+        (&#39;name&#39;, pa.string()),
+        (&#39;sic&#39;, pa.float64()),
+        (&#39;countryba&#39;, pa.string()),
+        (&#39;stprba&#39;, pa.string()),
+        (&#39;cityba&#39;, pa.string()),
+        (&#39;zipba&#39;, pa.string()),
+        (&#39;bas1&#39;, pa.string()),
+        (&#39;bas2&#39;, pa.string()),
+        (&#39;baph&#39;, pa.string()),
+        (&#39;countryma&#39;, pa.string()),
+        (&#39;stprma&#39;, pa.string()),
+        (&#39;cityma&#39;, pa.string()),
+        (&#39;zipma&#39;, pa.string()),
+        (&#39;mas1&#39;, pa.string()),
+        (&#39;mas2&#39;, pa.string()),
+        (&#39;countryinc&#39;, pa.string()),
+        (&#39;stprinc&#39;, pa.string()),
+        (&#39;ein&#39;, pa.float64()),
+        (&#39;former&#39;, pa.string()),
+        (&#39;changed&#39;, pa.float64()),
+        (&#39;afs&#39;, pa.string()),
+        (&#39;wksi&#39;, pa.int64()),
+        (&#39;fye&#39;, pa.string()),
+        (&#39;form&#39;, pa.string()),
+        (&#39;period&#39;, pa.int32()),
+        (&#39;fy&#39;, pa.float64()),
+        (&#39;fp&#39;, pa.string()),
+        (&#39;filed&#39;, pa.int32()),
+        (&#39;accepted&#39;, pa.string()),
+        (&#39;prevrpt&#39;, pa.int64()),
+        (&#39;detail&#39;, pa.int64()),
+        (&#39;instance&#39;, pa.string()),
+        (&#39;nciks&#39;, pa.int64()),
+        (&#39;aciks&#39;, pa.string()),
+    ]),
+    PRE_TXT: pa.schema([
+        (&#34;adsh&#34;, pa.string()),
+        (&#34;tag&#34;, pa.string()),
+        (&#34;version&#34;, pa.string()),
+        (&#34;report&#34;, pa.int32()),
+        (&#34;line&#34;, pa.int32()),
+        (&#34;stmt&#34;, pa.string()),
+        (&#34;inpth&#34;, pa.int32()),
+        (&#34;rfile&#34;, pa.string()),
+        (&#34;plabel&#34;, pa.string()),
+        (&#34;negating&#34;, pa.int32()),
+    ]),
+    NUM_TXT: pa.schema([
+        (&#34;adsh&#34;, pa.string()),
+        (&#34;tag&#34;, pa.string()),
+        (&#34;version&#34;, pa.string()),
+        (&#34;ddate&#34;, pa.int32()),
+        (&#34;qtrs&#34;, pa.int32()),
+        (&#34;uom&#34;, pa.string()),
+        (&#34;segments&#34;, pa.string()),
+        (&#34;coreg&#34;, pa.string()),
+        (&#34;value&#34;, pa.float64()),
+        (&#34;footnote&#34;, pa.string()),
+    ]),
+    PRE_NUM_TXT: pa.schema([
+        (&#34;adsh&#34;, pa.string()),
+        (&#34;tag&#34;, pa.string()),
+        (&#34;version&#34;, pa.string()),
+        (&#34;ddate&#34;, pa.int32()),
+        (&#34;qtrs&#34;, pa.int32()),
+        (&#34;uom&#34;, pa.string()),
+        (&#34;segments&#34;, pa.string()),
+        (&#34;coreg&#34;, pa.string()),
+        (&#34;value&#34;, pa.float64()),
+        (&#34;footnote&#34;, pa.string()),
+        (&#34;report&#34;, pa.int32()),
+        (&#34;line&#34;, pa.int32()),
+        (&#34;stmt&#34;, pa.string()),
+        (&#34;inpth&#34;, pa.int32()),
+        (&#34;rfile&#34;, pa.string()),
+        (&#34;plabel&#34;, pa.string()),
+        (&#34;negating&#34;, pa.int32()),
+    ])
+}</code></pre>
 </details>
 </section>
 <section>

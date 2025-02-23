@@ -129,32 +129,36 @@ class DataBagBase(Generic[T]):
 
     @staticmethod
     def load_sub_df_by_filter(target_path: str,
+                              ciks: Optional[List[int]] = None,
                               adshs: Optional[List[str]] = None,
                               forms: Optional[List[str]] = None) -> pd.DataFrame:
         """
         loads the sub_txt datafrome from the target_path by directly applying the
-        adshs or the froms filter.
+        defined filters during loading.
 
         Args:
             target_path: root_path with the parquet files for sub, pre, and num
+            ciks: optional list of cik numbers to filter for during loading
             forms: optional list of forms (10-K, 10-Q) to filter for during loading
-            adshs: optional list of adhs to filter during the laoding
+            adshs: optional list of adhs to filter during the loading
 
         Returns:
             pd.DataFrame the loaded sub_df content
         """
 
-        sub_filter = None
+        sub_filters: List = []
+        if ciks:
+            sub_filters.append(('cik', 'in', ciks))
         if adshs:
-            sub_filter = ('adsh', 'in', adshs)
+            sub_filters.append(('adsh', 'in', adshs))
         elif forms:
-            sub_filter = ('form', 'in', forms)
+            sub_filters.append(('form', 'in', forms))
 
-        if sub_filter:
-            LOGGER.info("apply sub_df filter: %s", sub_filter)
+        if sub_filters:
+            LOGGER.info("apply sub_df filter: %s", sub_filters)
 
         sub_df = pd.read_parquet(os.path.join(target_path, f'{SUB_TXT}.parquet'),
-                                 filters=[sub_filter] if sub_filter else None)
+                                 filters=sub_filters if sub_filters else None)
 
         return sub_df
 
@@ -235,6 +239,7 @@ class JoinedDataBag(DataBagBase[JOINED]):
 
     @staticmethod
     def load(target_path: str,
+             ciks_filter: Optional[List[int]] = None,
              adshs_filter: Optional[List[str]] = None,
              forms_filter: Optional[List[str]] = None,
              stmt_filter: Optional[List[str]] = None,
@@ -249,10 +254,9 @@ class JoinedDataBag(DataBagBase[JOINED]):
             This makes especially sense, when you concatenated together data from different
             zip files.
 
-            Note: the adsh are mutally exclusive and adsh has the higher precedence.
-
         Args:
             target_path: root_path with the parquet files for sub, pre, and num
+            ciks_filter: optional list of cik numbers to filter for during loading
             forms_filter: optional list of forms (10-K, 10-Q) to filter for during loading
             adshs_filter: optional list of adhs to filter during the laoding
             stmt_filter: optional list of stmts (BS, IS, CF, ..) to filter during the loading
@@ -262,12 +266,12 @@ class JoinedDataBag(DataBagBase[JOINED]):
             RawDataBag: the loaded Databag
         """
         sub_df = DataBagBase.load_sub_df_by_filter(
-            target_path=target_path, adshs=adshs_filter, forms=forms_filter
+            target_path=target_path, adshs=adshs_filter, forms=forms_filter, ciks=ciks_filter
         )
 
-        # if the forms filter was applied, overwrite the adshs list, since this are adshs
-        # values that we should filter for in the pre_num dataframe
-        if not adshs_filter and forms_filter:
+        # if the forms and/or ciks filter was applied, overwrite the adshs list,
+        # since this are adshs values that we should filter for in the pre_num dataframe
+        if forms_filter or ciks_filter:
             adshs_filter = sub_df.adsh.to_list()
 
         pre_num_filter = []
@@ -495,6 +499,7 @@ class RawDataBag(DataBagBase[RAW]):
 
     @staticmethod
     def load(target_path: str,
+             ciks_filter: Optional[List[int]] = None,
              adshs_filter: Optional[List[str]] = None,
              forms_filter: Optional[List[str]] = None,
              stmt_filter: Optional[List[str]] = None,
@@ -513,6 +518,7 @@ class RawDataBag(DataBagBase[RAW]):
 
         Args:
             target_path: root_path with the parquet files for sub, pre, and num
+            ciks_filter: optional list of cik numbers to filter for during loading
             forms_filter: optional list of forms (10-K, 10-Q) to filter for during loading
             adshs_filter: optional list of adhs to filter during the laoding
             stmt_filter: optional list of stmts (BS, IS, CF, ..) to filter during the loading
@@ -522,12 +528,12 @@ class RawDataBag(DataBagBase[RAW]):
             RawDataBag: the loaded Databag
         """
         sub_df = DataBagBase.load_sub_df_by_filter(
-            target_path=target_path, adshs=adshs_filter, forms=forms_filter
+            target_path=target_path, adshs=adshs_filter, forms=forms_filter, ciks=ciks_filter
         )
 
-        # if the forms filter was applied, overwrite the adshs list, since this is the list
-        # we should then filter for
-        if not adshs_filter and forms_filter:
+        # if the forms and/or ciks filter was applied, overwrite the adshs list,
+        # since this are adshs values that we should filter for in the pre and num dataframes
+        if forms_filter or ciks_filter:
             adshs_filter = sub_df.adsh.to_list()
 
         pre_filter, num_filter = get_pre_num_filters(adshs=adshs_filter,

@@ -14,19 +14,22 @@ new release
 
 
 2.2.0
+- [ok] cik-filter in load method of bags
+- new CIKFilter for bags (similar logic than adshs filter)
 
 - maybe introduce a first notebook explaining segments and what they show with examples
 - maybe also provide segmentsinfo per Tag? kind of overview
   value count, damit prioritäten definiert werden können.
+
 
 - Flatten Segments -> general, which axis, per tag ? SegmentsToTag?
    - think about having a new databag -> segmentbag
    - would we need some special metadata?
    - for instance if you want to concat bags?
 
-
-
 - spezieller segmentfilter -> z.B. nur ProductOrService Filter mit spezifischen Values?
+
+
 - adapt standardizer, use specific segment infos
 
 - automation process -> besser auch jedes einzelne zip zu standardisieren

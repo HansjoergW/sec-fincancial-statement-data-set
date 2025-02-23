@@ -13,6 +13,7 @@ PATH_TO_JOINED_BAG_1 = f'{CURRENT_DIR}/../_testdata/joined/2010q1.zip'
 PATH_TO_JOINED_BAG_2 = f'{CURRENT_DIR}/../_testdata/joined/2010q2.zip'
 
 BAG_1_ADSHS: List[str] = ["0000827054-10-000049", "0000950123-10-009905"]
+BAG_1_CIKS: List[int] = [827054, 1024478]
 
 
 # def test_create_joined():
@@ -51,18 +52,24 @@ def test_load_method():
 
 
 def test_load_with_filters():
-    bag_by_forms: RawDataBag = RawDataBag.load(target_path=PATH_TO_BAG_1,
-                                               forms_filter=["10-Q"])
-    assert bag_by_forms.num_df.shape == (17555, 10)
-    assert bag_by_forms.pre_df.shape == (7597, 10)
-    assert bag_by_forms.sub_df.shape == (80, 36)
-
     bag_by_adshs: RawDataBag = RawDataBag.load(target_path=PATH_TO_BAG_1,
                                                adshs_filter=BAG_1_ADSHS)
 
     assert bag_by_adshs.num_df.shape == (384, 10)
     assert bag_by_adshs.pre_df.shape == (180, 10)
     assert bag_by_adshs.sub_df.shape == (2, 36)
+
+    bag_by_ciks: RawDataBag = RawDataBag.load(target_path=PATH_TO_BAG_1,
+                                              ciks_filter=BAG_1_CIKS)
+    assert bag_by_ciks.num_df.shape == (384, 10)
+    assert bag_by_ciks.pre_df.shape == (180, 10)
+    assert bag_by_ciks.sub_df.shape == (2, 36)
+
+    bag_by_forms: RawDataBag = RawDataBag.load(target_path=PATH_TO_BAG_1,
+                                               forms_filter=["10-Q"])
+    assert bag_by_forms.num_df.shape == (17555, 10)
+    assert bag_by_forms.pre_df.shape == (7597, 10)
+    assert bag_by_forms.sub_df.shape == (80, 36)
 
     bag_by_stmt: RawDataBag = RawDataBag.load(target_path=PATH_TO_BAG_1,
                                               stmt_filter=["BS"])
@@ -180,6 +187,11 @@ def test_concat_filebased_joined(tmp_path):
 
 
 def test_joined_load_with_filters():
+    bag_by_adshs: JoinedDataBag = JoinedDataBag.load(target_path=PATH_TO_JOINED_BAG_1,
+                                                     adshs_filter=BAG_1_ADSHS)
+    assert bag_by_adshs.pre_num_df.shape == (414, 17)
+    assert bag_by_adshs.sub_df.shape == (2, 36)
+
     bag_by_forms: JoinedDataBag = JoinedDataBag.load(target_path=PATH_TO_JOINED_BAG_1,
                                                      forms_filter=["10-Q"])
     assert bag_by_forms.pre_num_df.shape == (19611, 17)

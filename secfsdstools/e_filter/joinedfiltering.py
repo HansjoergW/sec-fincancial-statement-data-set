@@ -241,3 +241,32 @@ class NoSegmentInfoJoinedFilter(FilterBase[JoinedDataBag]):
 
         return JoinedDataBag.create(sub_df=databag.sub_df,
                                     pre_num_df=pre_num_filtered_for_main_coreg)
+
+
+class CIKJoinedFilter(FilterBase[JoinedDataBag]):
+    """
+    Filters the data by a list of ciks. This filter operates on the sub, pre_df and the num_df.
+    """
+
+    def __init__(self, ciks: List[int]):
+        self.ciks = ciks
+
+    def filter(self, databag: JoinedDataBag) -> JoinedDataBag:
+        """
+        filters the databag so that only datapoints belonging to the provided ciks
+        are contained.
+
+        Args:
+            databag(JoinedDataBag) : joineddatabag to apply the filter to
+
+        Returns:
+            JoinedDataBag: the databag with the filtered data
+        """
+
+        sub_filtered_for_adshs = databag.sub_df[databag.sub_df.cik.isin(self.ciks)]
+        adshs = sub_filtered_for_adshs.adsh.tolist()
+
+        pre_num_filtered_for_adshs = databag.pre_num_df[databag.pre_num_df.adsh.isin(adshs)]
+
+        return JoinedDataBag.create(sub_df=sub_filtered_for_adshs,
+                                    pre_num_df=pre_num_filtered_for_adshs)

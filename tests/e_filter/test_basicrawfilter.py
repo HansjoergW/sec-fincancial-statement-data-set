@@ -3,7 +3,7 @@ import os
 from secfsdstools.d_container.databagmodel import RawDataBag
 from secfsdstools.e_filter.rawfiltering import ReportPeriodRawFilter, AdshRawFilter, \
     ReportPeriodAndPreviousPeriodRawFilter, TagRawFilter, MainCoregRawFilter, StmtRawFilter, \
-    OfficialTagsOnlyRawFilter, USDOnlyRawFilter, NoSegmentInfoRawFilter
+    OfficialTagsOnlyRawFilter, USDOnlyRawFilter, NoSegmentInfoRawFilter, CIKRawFilter
 
 CURRENT_DIR, _ = os.path.split(__file__)
 PATH_TO_BAG_1 = f'{CURRENT_DIR}/../_testdata/parquet_new/quarter/2010q1.zip'
@@ -148,6 +148,7 @@ def test_USDOnlyFilter():
     assert bag1.num_df.shape == (194741, 10)
     assert filtered_bag.num_df.shape == (192629, 10)
 
+
 def test_filter_NoSegmentInfoRawFilter():
     bag1: RawDataBag = RawDataBag.load(PATH_TO_BAG_1)
     bag1.num_df.loc[bag1.num_df.segments.isna(), 'segments'] = ''
@@ -159,3 +160,26 @@ def test_filter_NoSegmentInfoRawFilter():
     assert filtered_bag.sub_df.shape == bag1.sub_df.shape
     assert filtered_bag.pre_df.shape == bag1.pre_df.shape
     assert filtered_bag.num_df.shape == (142929, 10)
+
+
+def test_filter_CIKRawFilter():
+    cik_apple = 320193
+
+    bag1: RawDataBag = RawDataBag.load(PATH_TO_BAG_1)
+
+    filter = CIKRawFilter(ciks=[cik_apple])
+
+    filtered_bag = filter.filter(bag1)
+
+    # apple reported a 10-Q and a 10-K/A in the first quarter of 2010
+    assert filtered_bag.sub_df.shape == (2, 36)
+    assert filtered_bag.pre_df.shape == (165, 10)
+    assert filtered_bag.num_df.shape == (404, 10)
+
+    pre_adshs = filtered_bag.pre_df.adsh.unique()
+    assert len(pre_adshs) == 2
+    assert APPLE_10Q_2010Q1 in pre_adshs
+
+    num_adshs = filtered_bag.num_df.adsh.unique()
+    assert len(num_adshs) == 2
+    assert APPLE_10Q_2010Q1 in num_adshs

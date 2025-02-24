@@ -6,7 +6,7 @@ from secfsdstools.d_container.databagmodel import JoinedDataBag, RawDataBag
 from secfsdstools.e_filter.joinedfiltering import ReportPeriodJoinedFilter, AdshJoinedFilter, \
     ReportPeriodAndPreviousPeriodJoinedFilter, TagJoinedFilter, MainCoregJoinedFilter, \
     StmtJoinedFilter, \
-    OfficialTagsOnlyJoinedFilter, USDOnlyJoinedFilter, NoSegmentInfoJoinedFilter
+    OfficialTagsOnlyJoinedFilter, USDOnlyJoinedFilter, NoSegmentInfoJoinedFilter, CIKJoinedFilter
 
 CURRENT_DIR, _ = os.path.split(__file__)
 PATH_TO_BAG_1 = f'{CURRENT_DIR}/../_testdata/parquet_new/quarter/2010q1.zip'
@@ -132,6 +132,7 @@ def test_USDOnlyFilter(bag1):
     assert bag1.pre_num_df.shape == (237716, 17)
     assert filtered_bag.pre_num_df.shape == (235027, 17)
 
+
 def test_filter_NoSegmentInfoJoinedFilter(bag1):
     filter = NoSegmentInfoJoinedFilter()
 
@@ -139,3 +140,19 @@ def test_filter_NoSegmentInfoJoinedFilter(bag1):
 
     assert filtered_bag.sub_df.shape == bag1.sub_df.shape
     assert filtered_bag.pre_num_df.shape == (156896, 17)
+
+
+def test_filter_CIKJoinedFilter(bag1):
+    cik_apple = 320193
+
+    filter = CIKJoinedFilter(ciks=[cik_apple])
+
+    filtered_bag = filter.filter(bag1)
+
+    # apple reported a 10-Q and a 10-K/A in the first quarter of 2010
+    assert filtered_bag.sub_df.shape == (2, 36)
+    assert filtered_bag.pre_num_df.shape == (470, 17)
+
+    pre_num_adshs = filtered_bag.pre_num_df.adsh.unique()
+    assert len(pre_num_adshs) == 2
+    assert APPLE_10Q_2010Q1 in pre_num_adshs

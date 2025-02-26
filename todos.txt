@@ -16,6 +16,8 @@ new release
 2.2.0
 - [ok] cik-filter in load method of bags
 - [ok] new CIKFilter for bags (similar logic than adshs filter)
+- segments basics notebook
+  -
 
 - maybe introduce a first notebook explaining segments and what they show with examples
 - maybe also provide segmentsinfo per Tag? kind of overview

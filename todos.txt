@@ -16,28 +16,18 @@ new release
 2.2.0
 - [ok] cik-filter in load method of bags
 - [ok] new CIKFilter for bags (similar logic than adshs filter)
-- segments basics notebook
-  -
+- [ok] segments basics notebook
 
-- maybe introduce a first notebook explaining segments and what they show with examples
-- maybe also provide segmentsinfo per Tag? kind of overview
-  value count, damit prioritäten definiert werden können.
+- Standardization by quarter / make more flexibel -> either single task, or multiple dirs
 
-
-- Flatten Segments -> general, which axis, per tag ? SegmentsToTag?
-   - think about having a new databag -> segmentbag
-   - would we need some special metadata?
-   - for instance if you want to concat bags?
-
-- spezieller segmentfilter -> z.B. nur ProductOrService Filter mit spezifischen Values?
-
-
-- adapt standardizer, use specific segment infos
-
-- automation process -> besser auch jedes einzelne zip zu standardisieren
-  und dann die ergebnisse zusammen zu concaten.
+- Concat Standardized files in Memory -> make Concat more flexible, also for StandardizedBag, switch if file based, or memory based
+- sponsoring hinweis und text -> output once a day If you like it - please support it!
+- sponsoring hinweis in readme, und als header in allen notebooks
+- linked in post
 
 2.3.0
+switch to vs code?
+
 - adding more steps to automation
 
 

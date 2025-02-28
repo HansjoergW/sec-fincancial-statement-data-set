@@ -57,7 +57,7 @@ keywords=[
 "Bug Tracker" = "https://github.com/HansjoergW/sec-fincancial-statement-data-set/issues"
 "Github" = "https://github.com/HansjoergW/sec-fincancial-statement-data-set"
 "Changelog" = "https://github.com/HansjoergW/sec-fincancial-statement-data-set/blob/main/CHANGELOG.md"
-
+"Funding" = "https://github.com/sponsors/HansjoergW"
 
 [project.optional-dependencies]
 test = [

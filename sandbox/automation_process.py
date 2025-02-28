@@ -1,7 +1,8 @@
 import logging
 
-from secfsdstools.x_examples.automation.filter_process import FilterProcess
-from secfsdstools.x_examples.automation.automation import CombineProcess
+from secfsdstools.a_utils.fileutils import get_directories_in_directory
+from secfsdstools.f_standardize.standardizing import StandardizedBag
+from secfsdstools.g_pipelines.standardize_2_process import StandardizeProcess2
 
 if __name__ == '__main__':
     logging.basicConfig(
@@ -12,20 +13,15 @@ if __name__ == '__main__':
         ]
     )
 
-    import pathlib
-    path = pathlib.Path("c:/data/sec/automated/_1_filtered/")
-    results = list(path.glob("quarter/**/joined/BS"))
-    print(results)
+    process = StandardizeProcess2(root_dir="c:/data/sec/automated/_1_filtered_by_stmt_joined/quarter",
+                                 target_dir="c:/data/sec/automated/_1_standardized/quarter",
+                                  execute_serial=False
+                                 )
+    #process.process()
 
-    # process = FilterProcess(parquet_dir="C:/data/sec/automated/parquet",
-    #                         filtered_dir="C:/data/sec/automated/pathfilter")
-    #
-    # process.process()
 
-    process = CombineProcess(
-        filtered_dir="C:/data/sec/automated/_1_filtered",
-        bag_type="raw",
-        execute_serial=True
-    )
+    available = get_directories_in_directory(process.target_dir)
+    bags = [StandardizedBag.load(f"{process.target_dir}/{e}/BS") for e in available]
+    total = StandardizedBag.concat(bags)
+    total.save("c:/data/sec/automated/_1_standardized/all/BS")
 
-    process.process()

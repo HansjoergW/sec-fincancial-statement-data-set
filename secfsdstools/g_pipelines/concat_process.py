@@ -8,7 +8,7 @@ from secfsdstools.c_automation.automation_utils import delete_temp_folders
 from secfsdstools.c_automation.task_framework import CheckByNewSubfoldersMergeBaseTask, \
     CheckByTimestampMergeBaseTask, AbstractTask, \
     AbstractThreadProcess
-from secfsdstools.g_pipelines.pipeline_utils import concat_bags_filebased
+from secfsdstools.g_pipelines.pipeline_utils import concat_bags_filebased, concat_bags
 
 
 class ConcatIfNewSubfolderTask(CheckByNewSubfoldersMergeBaseTask):
@@ -19,7 +19,8 @@ class ConcatIfNewSubfolderTask(CheckByNewSubfoldersMergeBaseTask):
     def __init__(self,
                  root_path: Path,
                  pathfilter: str,
-                 target_path: Path):
+                 target_path: Path,
+                 in_memory: bool = False):
         """
         Takes subfolders from the root_path (with applied pathfilter string) and
         concatenates them into a single DataBag (either Raw or Joined) into the target_path.
@@ -71,12 +72,15 @@ class ConcatIfNewSubfolderTask(CheckByNewSubfoldersMergeBaseTask):
             pathfilter: pathfilter string that defines which subfolders in the root_path have
                         to be selected
             target_path: path to where the results have to be written
+            in_memory: if true, the concatenation is being done in memory instead directly on the
+                       filesystem. This can consume a lot of memory depending on the bag size.
         """
         super().__init__(
             root_path=root_path,
             pathfilter=pathfilter,
             target_path=target_path
         )
+        self.in_memory = in_memory
 
     def __str__(self) -> str:
         return f"ConcatIfNewSubfolderTask(root_path: {self.root_path}, pathfilter: {self.filter})"
@@ -99,9 +103,15 @@ class ConcatIfNewSubfolderTask(CheckByNewSubfoldersMergeBaseTask):
             paths_to_concat = paths_to_process + [target_path]
 
         # concat and save to the tmp_path
-        concat_bags_filebased(paths_to_concat=paths_to_concat,
-                              target_path=tmp_path,
-                              drop_duplicates_sub_df=True)
+        if self.in_memory:
+            concat_bags(paths_to_concat=paths_to_concat,
+                        target_path=tmp_path,
+                        drop_duplicates_sub_df=True
+                        )
+        else:
+            concat_bags_filebased(paths_to_concat=paths_to_concat,
+                                  target_path=tmp_path,
+                                  drop_duplicates_sub_df=True)
 
 
 class ConcatIfChangedTimestampTask(CheckByTimestampMergeBaseTask):
@@ -113,7 +123,8 @@ class ConcatIfChangedTimestampTask(CheckByTimestampMergeBaseTask):
     def __init__(self,
                  root_path: Path,
                  pathfilter: str,
-                 target_path: Path):
+                 target_path: Path,
+                 in_memory: bool = False):
         """
         Takes subfolder from the root_path (with applied pathfilter string) and
         concatenates them into a single DataBag (either Raw or Joined) into the target_path.
@@ -162,12 +173,15 @@ class ConcatIfChangedTimestampTask(CheckByTimestampMergeBaseTask):
             pathfilter: pathfilter string that defines which subfolders in the root_path
                         have to be selected
             target_path: path to where the results have to be written
+            in_memory: if true, the concatenation is being done in memory instead directly on the
+                       filesystem. This can consume a lot of memory depending on the bag size.
         """
         super().__init__(
             root_path=root_path,
             pathfilter=pathfilter,
             target_path=target_path
         )
+        self.in_memory = in_memory
 
     def __str__(self) -> str:
         return f"ConcatIfChangedTimestampTask(root_path: {self.root_path}," \
@@ -183,10 +197,15 @@ class ConcatIfChangedTimestampTask(CheckByTimestampMergeBaseTask):
             paths_to_process: lists of paths/folders that have to be processed
             tmp_path: path to where a result has to be written
         """
-        concat_bags_filebased(paths_to_concat=paths_to_process,
-                              target_path=tmp_path,
-                              drop_duplicates_sub_df=True)
-
+        if self.in_memory:
+            concat_bags(paths_to_concat=paths_to_process,
+                        target_path=tmp_path,
+                        drop_duplicates_sub_df=True
+                        )
+        else:
+            concat_bags_filebased(paths_to_concat=paths_to_process,
+                                  target_path=tmp_path,
+                                  drop_duplicates_sub_df=True)
 
 
 class ConcatByChangedTimestampProcess(AbstractThreadProcess):
@@ -199,6 +218,7 @@ class ConcatByChangedTimestampProcess(AbstractThreadProcess):
                  root_dir: str,
                  target_dir: str,
                  pathfilter: str = "*",
+                 in_memory: bool = False
                  ):
         """
         Constructor.
@@ -207,6 +227,9 @@ class ConcatByChangedTimestampProcess(AbstractThreadProcess):
             target_dir: target_dir to which the concatenated result has to be written
             pathfilter: pathfilter string to apply to select the bags/subfolders to be processed.
                     default is "*".
+            in_memory: if true, the concatenation is being done in memory instead directly on the
+                       filesystem. This can consume a lot of memory depending on the bag size.
+
         """
         super().__init__(execute_serial=False,
                          chunksize=0)
@@ -214,6 +237,7 @@ class ConcatByChangedTimestampProcess(AbstractThreadProcess):
         self.root_path = Path(root_dir)
         self.target_path = Path(target_dir)
         self.filter = pathfilter
+        self.in_memory = in_memory
 
     def pre_process(self):
         """
@@ -234,6 +258,7 @@ class ConcatByChangedTimestampProcess(AbstractThreadProcess):
             root_path=self.root_path,
             pathfilter=self.filter,
             target_path=self.target_path,
+            in_memory=self.in_memory
         )
 
         # since this is a one task process, we just check if there is really something to do
@@ -252,6 +277,7 @@ class ConcatByNewSubfoldersProcess(AbstractThreadProcess):
                  root_dir: str,
                  target_dir: str,
                  pathfilter: str = "*",
+                 in_memory: bool = False
                  ):
         """
         Constructor.
@@ -260,6 +286,9 @@ class ConcatByNewSubfoldersProcess(AbstractThreadProcess):
             target_dir: target_dir to which the concatenated result has to be written
             pathfilter: pathfilter string to apply to select the bags/subfolders to be processed.
                     default is "*".
+            in_memory: if true, the concatenation is being done in memory instead directly on the
+                       filesystem. This can consume a lot of memory depending on the bag size.
+
         """
         super().__init__(execute_serial=False,
                          chunksize=0)
@@ -267,6 +296,7 @@ class ConcatByNewSubfoldersProcess(AbstractThreadProcess):
         self.root_path = Path(root_dir)
         self.target_path = Path(target_dir)
         self.filter = pathfilter
+        self.in_memory = in_memory
 
     def pre_process(self):
         """
@@ -287,6 +317,7 @@ class ConcatByNewSubfoldersProcess(AbstractThreadProcess):
             root_path=self.root_path,
             pathfilter=self.filter,
             target_path=self.target_path,
+            in_memory=self.in_memory
         )
 
         # since this is a one task process, we just check if there is really something to do

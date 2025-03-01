@@ -2,7 +2,7 @@ import logging
 
 from secfsdstools.a_utils.fileutils import get_directories_in_directory
 from secfsdstools.f_standardize.standardizing import StandardizedBag
-from secfsdstools.g_pipelines.standardize_2_process import StandardizeProcess2
+from secfsdstools.g_pipelines.standardize_process import StandardizeProcess
 
 if __name__ == '__main__':
     logging.basicConfig(
@@ -13,7 +13,7 @@ if __name__ == '__main__':
         ]
     )
 
-    process = StandardizeProcess2(root_dir="c:/data/sec/automated/_1_filtered_by_stmt_joined/quarter",
+    process = StandardizeProcess(root_dir="c:/data/sec/automated/_1_filtered_by_stmt_joined/quarter",
                                  target_dir="c:/data/sec/automated/_1_standardized/quarter",
                                   execute_serial=False
                                  )

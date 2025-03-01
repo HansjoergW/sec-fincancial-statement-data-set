@@ -17,8 +17,7 @@ new release
 - [ok] cik-filter in load method of bags
 - [ok] new CIKFilter for bags (similar logic than adshs filter)
 - [ok] segments basics notebook
-
-- Standardization by quarter / make more flexibel -> either single task, or multiple dirs
+- [ok] Standardization by quarter / make more flexibel -> either single task, or multiple dirs
 
 - Concat Standardized files in Memory -> make Concat more flexible, also for StandardizedBag, switch if file based, or memory based
 - sponsoring hinweis und text -> output once a day If you like it - please support it!

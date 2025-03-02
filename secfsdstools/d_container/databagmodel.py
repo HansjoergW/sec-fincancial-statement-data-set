@@ -363,6 +363,11 @@ class JoinedDataBag(DataBagBase[JOINED]):
             drop_duplicates_sub_df=drop_duplicates_sub_df
         )
 
+    @staticmethod
+    def is_joinedbag_path(path: Path) -> bool:
+        """ Check whether the provided path contains the files of a JoinedDatabag. """
+        return (path / "pre_num.txt.parquet").exists()
+
 
 @dataclass
 class RawDataBagStats:
@@ -616,12 +621,7 @@ class RawDataBag(DataBagBase[RAW]):
             drop_duplicates_sub_df=drop_duplicates_sub_df
         )
 
-
-def is_rawbag_path(path: Path) -> bool:
-    """ Check whether the provided path contains the files of a RawDatabag. """
-    return (path / "num.txt.parquet").exists()
-
-
-def is_joinedbag_path(path: Path) -> bool:
-    """ Check whether the provided path contains the files of a JoinedDatabag. """
-    return (path / "pre_num.txt.parquet").exists()
+    @staticmethod
+    def is_rawbag_path(path: Path) -> bool:
+        """ Check whether the provided path contains the files of a RawDatabag. """
+        return (path / "num.txt.parquet").exists()

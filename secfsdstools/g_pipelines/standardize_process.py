@@ -181,22 +181,23 @@ class StandardizeProcess(AbstractThreadProcess):
             existing = get_directories_in_directory(self.target_dir)
             available = get_directories_in_directory(self.root_dir)
 
-            missings = set(available) - set(existing)
+            not_standardized_folders = set(available) - set(existing)
 
             tasks = [StandardizerTask(
                 root_path=Path(self.root_dir) / missing,
                 target_path=Path(self.target_dir) / missing
-            ) for missing in missings]
+            ) for missing in not_standardized_folders]
 
             return tasks
-        else:
-            # the root dir directly contains the BS, IS, and CF folder
-            task = StandardizerTask(
-                root_path=Path(self.root_dir),
-                target_path=Path(self.target_dir)
-            )
 
-            # since this is a one task process, we just check if there is really something to do
-            if len(task.paths_to_process) > 0:
-                return [task]
+        # the root dir directly contains the BS, IS, and CF folder
+        # so, we just have one task to create
+        task = StandardizerTask(
+            root_path=Path(self.root_dir),
+            target_path=Path(self.target_dir)
+        )
+
+        # since this is a one task process, we just check if there is really something to do
+        if len(task.paths_to_process) > 0:
+            return [task]
         return []

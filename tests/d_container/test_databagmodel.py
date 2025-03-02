@@ -2,8 +2,7 @@ import os
 from pathlib import Path
 from typing import List
 
-from secfsdstools.d_container.databagmodel import RawDataBag, RawDataBagStats, JoinedDataBag, \
-    is_joinedbag_path, is_rawbag_path
+from secfsdstools.d_container.databagmodel import RawDataBag, RawDataBagStats, JoinedDataBag
 
 CURRENT_DIR, _ = os.path.split(__file__)
 TESTDATA_PATH = Path(CURRENT_DIR) / ".." / "_testdata"
@@ -28,13 +27,13 @@ BAG_1_CIKS: List[int] = [827054, 1024478]
 
 
 def test_is_rawbag():
-    assert is_rawbag_path(TESTDATA_PATH / "parquet_new" / "quarter" / "2010q1.zip")
-    assert not is_rawbag_path(TESTDATA_PATH / "joined" / "2010q1.zip")
+    assert RawDataBag.is_rawbag_path(TESTDATA_PATH / "parquet_new" / "quarter" / "2010q1.zip")
+    assert not RawDataBag.is_rawbag_path(TESTDATA_PATH / "joined" / "2010q1.zip")
 
 
 def test_is_joinedbag():
-    assert not is_joinedbag_path(TESTDATA_PATH / "parquet_new" / "quarter" / "2010q1.zip")
-    assert is_joinedbag_path(TESTDATA_PATH / "joined" / "2010q1.zip")
+    assert not JoinedDataBag.is_joinedbag_path(TESTDATA_PATH / "parquet_new" / "quarter" / "2010q1.zip")
+    assert JoinedDataBag.is_joinedbag_path(TESTDATA_PATH / "joined" / "2010q1.zip")
 
 
 def test_load_method():

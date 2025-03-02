@@ -1,6 +1,7 @@
 """Contains the base implementation of the standardizer"""
 import logging
 import os
+from pathlib import Path
 from typing import List, Optional, Set, TypeVar
 
 import numpy as np
@@ -161,6 +162,12 @@ class StandardizedBag:
                                applied_rules_sum_s=applied_rules_sum_s,
                                validation_overview_df=validation_overview_df,
                                process_description_df=process_description_df)
+
+    @staticmethod
+    def is_standardizebag_path(path: Path) -> bool:
+        """ Check whether the provided path contains the files of a StandardizeBag. """
+        return ((path / "result.parquet").exists() and
+                (path / "applied_prepivot_rules_log.parquet").exists())
 
 
 class Stats:

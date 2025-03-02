@@ -23,6 +23,8 @@ new release
 - [ok] use ConcatProcess also for StandardizedBag (only in_memory)
 
 - define new memory_optimized pipeline
+  -> eigene option um filter serial laufen zu lassen -> sollte footprint nochmals reduzieren
+
 - adapt pipeline/automation notebook
 
 - sponsoring hinweis und text -> output once a day If you like it - please support it!

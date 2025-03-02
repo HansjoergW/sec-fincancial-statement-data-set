@@ -18,7 +18,7 @@ if __name__ == '__main__':
     )
 
     # define which configuration file to use
-    os.environ[SECFSDSTOOLS_ENV_VAR_NAME] = f"{CURRENT_DIR}/../secfsdstools/x_examples/automation/automation_config.cfg"
+    os.environ[SECFSDSTOOLS_ENV_VAR_NAME] = f"{CURRENT_DIR}/../secfsdstools/x_examples/automation/memory_optimized_automation_config.cfg"
 
     config = ConfigurationManager.read_config_file()
 

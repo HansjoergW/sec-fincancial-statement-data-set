@@ -52,7 +52,7 @@ def concat_bags(paths_to_concat: List[Path], target_path: Path,
         all_bag: StandardizedBag = StandardizedBag.concat(all_bags)
         all_bag.save(target_path=str(target_path))
     else:
-        raise ValueError("bag_type must be either raw or joined")
+        raise ValueError("bag_type must be either raw, joined, or standardized")
 
 
 def concat_bags_filebased(paths_to_concat: List[Path],

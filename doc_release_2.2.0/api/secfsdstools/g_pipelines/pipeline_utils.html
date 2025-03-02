@@ -81,7 +81,7 @@ def concat_bags(paths_to_concat: List[Path], target_path: Path,
         all_bag: StandardizedBag = StandardizedBag.concat(all_bags)
         all_bag.save(target_path=str(target_path))
     else:
-        raise ValueError(&#34;bag_type must be either raw or joined&#34;)
+        raise ValueError(&#34;bag_type must be either raw, joined, or standardized&#34;)
 
 
 def concat_bags_filebased(paths_to_concat: List[Path],
@@ -185,7 +185,7 @@ drop_duplicates_sub_df (bool, False) : if the final sub_df should be check for d
         all_bag: StandardizedBag = StandardizedBag.concat(all_bags)
         all_bag.save(target_path=str(target_path))
     else:
-        raise ValueError(&#34;bag_type must be either raw or joined&#34;)</code></pre>
+        raise ValueError(&#34;bag_type must be either raw, joined, or standardized&#34;)</code></pre>
 </details>
 </dd>
 <dt id="secfsdstools.g_pipelines.pipeline_utils.concat_bags_filebased"><code class="name flex">

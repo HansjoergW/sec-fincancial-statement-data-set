@@ -22,8 +22,7 @@ new release
 - [ok] is_xxx_bag_path -> moved into classes JoinedDataBag, RawDataBag, added to StandardizeBag
 - [ok] use ConcatProcess also for StandardizedBag (only in_memory)
 - [ok] define new memory_optimized pipeline
-
-- adapt pipeline/automation notebook
+- [ok] adapt pipeline/automation notebook
 
 - sponsoring hinweis und text -> output once a day If you like it - please support it!
 - sponsoring hinweis in readme, und als header in allen notebooks

@@ -127,7 +127,8 @@ def define_extra_processes(configuration: Configuration) -> List[AbstractProcess
 
     filter_parallelize = configuration.config_parser.get(
         section="Filter",
-        option="parallelize"
+        option="parallelize",
+        fallback=True
     )
 
     standardized_by_stmt_dir = configuration.config_parser.get(

@@ -21,9 +21,7 @@ new release
 - [ok] Switch for ConcatProcess whether to load all data directly into memory, or do it file_based
 - [ok] is_xxx_bag_path -> moved into classes JoinedDataBag, RawDataBag, added to StandardizeBag
 - [ok] use ConcatProcess also for StandardizedBag (only in_memory)
-
-- define new memory_optimized pipeline
-  -> eigene option um filter serial laufen zu lassen -> sollte footprint nochmals reduzieren
+- [ok] define new memory_optimized pipeline
 
 - adapt pipeline/automation notebook
 

@@ -35,6 +35,7 @@ If you want to use it, you also need to add additional configuration entries as 
 <pre>
 [Filter]
 filtered_joined_by_stmt_dir = C:/data/sec/automated/_1_by_quarter/_1_filtered_joined_by_stmt
+parallelize = True
 
 [Standardizer]
 standardized_by_stmt_dir = C:/data/sec/automated/_1_by_quarter/_2_standardized_by_stmt
@@ -53,11 +54,13 @@ First, it creates a joined bag for every zip file, filters it for 10-K and 10-Q 
 and also applies the filters  ReportPeriodRawFilter, MainCoregRawFilter, USDOnlyRawFilter,
 OfficialTagsOnlyRawFilter. The filtered joined bag is stored under the path defined as
 filtered_dir_by_stmt_joined. Furthermore, the data will also be split by stmt.
-This data will be stored under the path defined as `filtered_joined_by_stmt_dir`
+This data will be stored under the path defined as `filtered_joined_by_stmt_dir`.
+Note: setting "parallelize" in the config to False, well be slower in the initial loading
+but using less memory.
 
 Second, it produces standardized bags for BS, IS, CF for every zip file based on the filtered
 data from the previous step. These bags are stored under the path defined as
-`standardized_by_stmt_dir`
+`standardized_by_stmt_dir`.
 
 Third, it creates a single joined bag for every statement (balance sheet, income statement,
 cash flow, cover page, ...) based on the filtered data from the first step.
@@ -97,8 +100,8 @@ def define_extra_processes(configuration: Configuration) -> List[AbstractProcess
     1. Filter for 10-K and 10-Q reports, als apply the filters
        ReportPeriodRawFilter, MainCoregRawFilter, USDOnlyRawFilter, OfficialTagsOnlyRawFilter,
        then joins the data and splits up the data by stmt (BS, IS, CF, ...)
-       This is done for every zipfile individually
-    2. it produces standardize bags for every quarter.
+       This is done for every zipfile individually.
+    2. it produces a standardize bag for every quarter/zipfile.
     3. it concatenates all the stmts together, so that there is one file for every stmt containing all
        the available data
     4. it creates a single bag containing all the filtered and joined data
@@ -121,6 +124,11 @@ def define_extra_processes(configuration: Configuration) -> List[AbstractProcess
     filtered_joined_by_stmt_dir = configuration.config_parser.get(
         section="Filter",
         option="filtered_joined_by_stmt_dir")
+
+    filter_parallelize = configuration.config_parser.get(
+        section="Filter",
+        option="parallelize"
+    )
 
     standardized_by_stmt_dir = configuration.config_parser.get(
         section="Standardizer",
@@ -146,7 +154,7 @@ def define_extra_processes(configuration: Configuration) -> List[AbstractProcess
                       target_dir=filtered_joined_by_stmt_dir,
                       bag_type="joined",
                       save_by_stmt=True,
-                      execute_serial=configuration.no_parallel_processing
+                      execute_serial=not filter_parallelize
                       )
     )
 

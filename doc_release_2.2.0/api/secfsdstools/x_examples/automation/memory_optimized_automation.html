@@ -231,7 +231,8 @@ def define_extra_processes(configuration: Configuration) -&gt; List[AbstractProc
 
     filter_parallelize = configuration.config_parser.get(
         section=&#34;Filter&#34;,
-        option=&#34;parallelize&#34;
+        option=&#34;parallelize&#34;,
+        fallback=True
     )
 
     standardized_by_stmt_dir = configuration.config_parser.get(
@@ -402,7 +403,8 @@ on 16 GB machine.</p>
 
     filter_parallelize = configuration.config_parser.get(
         section=&#34;Filter&#34;,
-        option=&#34;parallelize&#34;
+        option=&#34;parallelize&#34;,
+        fallback=True
     )
 
     standardized_by_stmt_dir = configuration.config_parser.get(

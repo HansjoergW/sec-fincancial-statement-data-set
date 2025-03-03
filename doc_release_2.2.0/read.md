@@ -438,7 +438,7 @@ implementations (module `secfsdstools.e_presenter.presenting`):
   print(bs_df) 
   ```` 
 
-### Stanardize financial data
+### Standardize financial data
   Even if xbrl is a standard on how to tag positions and numbers in financial statements, that doesn't mean that financial
   statements can then be compared easily. For instance, there are over 3000 tags which can be used in a balance sheet.
   Moreover, some tags can mean similar things or can be grouped behind a "parent" tag, which itself might not be present.

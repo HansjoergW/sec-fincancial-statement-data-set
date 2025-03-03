@@ -1,3 +1,4 @@
+# pylint: disable=C0301
 """
 This module shows the automation to add additional steps after the usual update process
 (which is downloading new zip files, transforming them to parquet, indexding them).

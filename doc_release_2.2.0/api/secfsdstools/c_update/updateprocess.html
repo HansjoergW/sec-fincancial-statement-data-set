@@ -76,25 +76,30 @@ sponsor_messages = [
 def print_sponsoring_message():
     &#34;&#34;&#34; create sponsoring message &#34;&#34;&#34;
     import random
-    from colorama import init, Fore, Style
-
-    # Initialize colorama
-    init(autoreset=True)
 
     message = random.choice(sponsor_messages)
 
+    # ANSI-Escape-Codes für Farben und Formatierungen
+    RESET = &#34;\033[0m&#34;
+    BOLD = &#34;\033[1m&#34;
+    YELLOW = &#34;\033[33m&#34;
+    WHITE = &#34;\033[37m&#34;
+
+    # Rahmen um die Nachricht erzeugen
+    border = &#34;-&#34; * (len(message) + 8)
+    hash_border = &#34;#&#34; * (len(message) + 8)
+
     # Präsentation des Sponsor-Hinweises mit Farben und Hervorhebung
     print(&#34;\n\n&#34;)
-    print(Style.NORMAL + Fore.YELLOW + &#34;-&#34; * (len(message) + 8) + Style.RESET_ALL)
-    print(Style.BRIGHT + Fore.YELLOW + &#34;#&#34; * (len(message) + 8) + Style.RESET_ALL)
+    print(YELLOW + border + RESET)
+    print(BOLD + YELLOW + hash_border + RESET)
     print(&#34;\n&#34;)
-    print(Style.BRIGHT + Fore.WHITE + &#34;    &#34; + message + &#34;    &#34; + Style.RESET_ALL)
+    print(BOLD + WHITE + &#34;    &#34; + message + &#34;    &#34; + RESET)
     print(&#34;\n&#34;)
-    print(
-        Style.BRIGHT + Fore.WHITE + &#34;    https://github.com/sponsors/HansjoergW&#34; + Style.RESET_ALL)
+    print(BOLD + WHITE + &#34;    https://github.com/sponsors/HansjoergW&#34; + RESET)
     print(&#34;\n&#34;)
-    print(Style.BRIGHT + Fore.YELLOW + &#34;#&#34; * (len(message) + 8) + Style.RESET_ALL)
-    print(Style.NORMAL + Fore.YELLOW + &#34;-&#34; * (len(message) + 8) + Style.RESET_ALL)
+    print(BOLD + YELLOW + hash_border + RESET)
+    print(YELLOW + border + RESET)
     print(&#34;\n\n&#34;)
 
 
@@ -307,25 +312,30 @@ class Updater:
 <pre><code class="python">def print_sponsoring_message():
     &#34;&#34;&#34; create sponsoring message &#34;&#34;&#34;
     import random
-    from colorama import init, Fore, Style
-
-    # Initialize colorama
-    init(autoreset=True)
 
     message = random.choice(sponsor_messages)
 
+    # ANSI-Escape-Codes für Farben und Formatierungen
+    RESET = &#34;\033[0m&#34;
+    BOLD = &#34;\033[1m&#34;
+    YELLOW = &#34;\033[33m&#34;
+    WHITE = &#34;\033[37m&#34;
+
+    # Rahmen um die Nachricht erzeugen
+    border = &#34;-&#34; * (len(message) + 8)
+    hash_border = &#34;#&#34; * (len(message) + 8)
+
     # Präsentation des Sponsor-Hinweises mit Farben und Hervorhebung
     print(&#34;\n\n&#34;)
-    print(Style.NORMAL + Fore.YELLOW + &#34;-&#34; * (len(message) + 8) + Style.RESET_ALL)
-    print(Style.BRIGHT + Fore.YELLOW + &#34;#&#34; * (len(message) + 8) + Style.RESET_ALL)
+    print(YELLOW + border + RESET)
+    print(BOLD + YELLOW + hash_border + RESET)
     print(&#34;\n&#34;)
-    print(Style.BRIGHT + Fore.WHITE + &#34;    &#34; + message + &#34;    &#34; + Style.RESET_ALL)
+    print(BOLD + WHITE + &#34;    &#34; + message + &#34;    &#34; + RESET)
     print(&#34;\n&#34;)
-    print(
-        Style.BRIGHT + Fore.WHITE + &#34;    https://github.com/sponsors/HansjoergW&#34; + Style.RESET_ALL)
+    print(BOLD + WHITE + &#34;    https://github.com/sponsors/HansjoergW&#34; + RESET)
     print(&#34;\n&#34;)
-    print(Style.BRIGHT + Fore.YELLOW + &#34;#&#34; * (len(message) + 8) + Style.RESET_ALL)
-    print(Style.NORMAL + Fore.YELLOW + &#34;-&#34; * (len(message) + 8) + Style.RESET_ALL)
+    print(BOLD + YELLOW + hash_border + RESET)
+    print(YELLOW + border + RESET)
     print(&#34;\n\n&#34;)</code></pre>
 </details>
 </dd>

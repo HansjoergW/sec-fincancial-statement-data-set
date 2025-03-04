@@ -14,15 +14,11 @@ sponsor_messages = [
     "Like what you see? Consider sponsoring to help drive innovation.",
     "Your support makes a difference. Please sponsor secfsdstools!",
     "Sponsor secfsdstools and help us build a better tool for everyone.",
-    "Help keep this project thriving – consider becoming a sponsor.",
     "Support innovation and open source by sponsoring secfsdstools.",
     "Your sponsorship ensures continued updates. Thank you for your support!",
-    "Love our daily updates? Become a sponsor and back our work.",
-    "Sponsorship fuels open-source progress. Please consider supporting us!",
     "Help us keep secfsdstools running smoothly – your sponsorship matters.",
     "If you value this tool, your sponsorship is a great way to contribute!",
     "Support the developer behind secfsdstools – consider sponsoring today.",
-    "Your sponsorship empowers ongoing improvements. Thank you for your support!",
     "Enjoy the convenience? Sponsor secfsdstools and help us grow.",
     "Be a champion for open source – sponsor secfsdstools and support innovation."
 ]
@@ -33,5 +29,16 @@ if __name__ == '__main__':
     message = random.choice(sponsor_messages)
 
     # Präsentation des Sponsor-Hinweises mit Farben und Hervorhebung
-    print(Style.NORMAL + Fore.BLACK + Back.WHITE + "\n*** " + message + " ***\n\n" + Style.RESET_ALL)
+    print("\n\n")
+    print(Style.NORMAL + Fore.YELLOW + "-"*(len(message) + 8) + Style.RESET_ALL)
+    print(Style.BRIGHT + Fore.YELLOW + "#"*(len(message) + 8) + Style.RESET_ALL)
+    print("\n")
+    print(Style.BRIGHT + Fore.WHITE + "    " + message + "    " + Style.RESET_ALL)
+    print("\n")
+    print(Style.BRIGHT + Fore.WHITE + "    Goto https://github.com/sponsors/HansjoergW" + Style.RESET_ALL)
+    print("\n")
+    print(Style.BRIGHT + Fore.YELLOW + "#"*(len(message) + 8) + Style.RESET_ALL)
+    print(Style.NORMAL + Fore.YELLOW + "-"*(len(message) + 8) + Style.RESET_ALL)
+    print("\n\n")
+
 

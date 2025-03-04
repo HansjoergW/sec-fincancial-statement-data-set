@@ -23,9 +23,9 @@ new release
 - [ok] use ConcatProcess also for StandardizedBag (only in_memory)
 - [ok] define new memory_optimized pipeline
 - [ok] adapt pipeline/automation notebook
+- [ok] sponsoring hinweis und text -> output once a day If you like it - please support it!
+- [ok] sponsoring hinweis in readme, und als header in allen notebooks
 
-- sponsoring hinweis und text -> output once a day If you like it - please support it!
-- sponsoring hinweis in readme, und als header in allen notebooks
 - linked in post
 
 2.3.0

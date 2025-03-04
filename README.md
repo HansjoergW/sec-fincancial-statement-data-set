@@ -26,6 +26,14 @@ The main features include:
 
 Have a look at the * [Release Notes](https://hansjoergw.github.io/sec-fincancial-statement-data-set/releasenotes/)
 
+<span style="color: #FF8C00;">==========================================================</span>
+
+**If you find this tool useful, a sponsorship would be greatly appreciated!**
+
+**https://github.com/sponsors/HansjoergW**
+
+<span style="color: #FF8C00;">==========================================================</span>
+
 
 # Principles
 

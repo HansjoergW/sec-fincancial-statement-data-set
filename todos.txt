@@ -33,9 +33,10 @@ switch to vs code?
 
 - adding more steps to automation
 
+spenden via paypal: Bsp:
+https://pypi.org/project/colorama/ -> Projekt mit Spenden-Button
+https://www.paypal.com/donate/?cmd=_donations&business=2MZ9D2GMLYCUJ&item_name=Colorama&currency_code=USD -> Präsentation
 
-- standardized bag concat sollte auch file variante erhalten.
-  - dann könnte demo pipeline auch quarters einzeln standardisieren und am Ende zusammen concaten
 
 
 ----------

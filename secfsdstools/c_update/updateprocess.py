@@ -45,25 +45,30 @@ sponsor_messages = [
 def print_sponsoring_message():
     """ create sponsoring message """
     import random
-    from colorama import init, Fore, Style
-
-    # Initialize colorama
-    init(autoreset=True)
 
     message = random.choice(sponsor_messages)
 
+    # ANSI-Escape-Codes für Farben und Formatierungen
+    RESET = "\033[0m"
+    BOLD = "\033[1m"
+    YELLOW = "\033[33m"
+    WHITE = "\033[37m"
+
+    # Rahmen um die Nachricht erzeugen
+    border = "-" * (len(message) + 8)
+    hash_border = "#" * (len(message) + 8)
+
     # Präsentation des Sponsor-Hinweises mit Farben und Hervorhebung
     print("\n\n")
-    print(Style.NORMAL + Fore.YELLOW + "-" * (len(message) + 8) + Style.RESET_ALL)
-    print(Style.BRIGHT + Fore.YELLOW + "#" * (len(message) + 8) + Style.RESET_ALL)
+    print(YELLOW + border + RESET)
+    print(BOLD + YELLOW + hash_border + RESET)
     print("\n")
-    print(Style.BRIGHT + Fore.WHITE + "    " + message + "    " + Style.RESET_ALL)
+    print(BOLD + WHITE + "    " + message + "    " + RESET)
     print("\n")
-    print(
-        Style.BRIGHT + Fore.WHITE + "    https://github.com/sponsors/HansjoergW" + Style.RESET_ALL)
+    print(BOLD + WHITE + "    https://github.com/sponsors/HansjoergW" + RESET)
     print("\n")
-    print(Style.BRIGHT + Fore.YELLOW + "#" * (len(message) + 8) + Style.RESET_ALL)
-    print(Style.NORMAL + Fore.YELLOW + "-" * (len(message) + 8) + Style.RESET_ALL)
+    print(BOLD + YELLOW + hash_border + RESET)
+    print(YELLOW + border + RESET)
     print("\n\n")
 
 

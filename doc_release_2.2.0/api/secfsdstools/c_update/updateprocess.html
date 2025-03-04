@@ -53,6 +53,50 @@ from secfsdstools.c_transform.toparquettransforming_process import ToParquetTran
 
 LOGGER = logging.getLogger(__name__)
 
+sponsor_messages = [
+    &#34;Enjoying secfsdstools? Please consider sponsoring the project!&#34;,
+    &#34;Love the tool? Your support keeps development alive – consider sponsoring!&#34;,
+    &#34;If you find this tool useful, a sponsorship would be greatly appreciated!&#34;,
+    &#34;Help us continue to improve secfsdstools by becoming a sponsor!&#34;,
+    &#34;Support open source: Sponsor secfsdstools today!&#34;,
+    &#34;Keep the updates coming – sponsor secfsdstools and fuel further development.&#34;,
+    &#34;Like what you see? Consider sponsoring to help drive innovation.&#34;,
+    &#34;Your support makes a difference. Please sponsor secfsdstools!&#34;,
+    &#34;Sponsor secfsdstools and help us build a better tool for everyone.&#34;,
+    &#34;Support innovation and open source by sponsoring secfsdstools.&#34;,
+    &#34;Your sponsorship ensures continued updates. Thank you for your support!&#34;,
+    &#34;Help us keep secfsdstools running smoothly – your sponsorship matters.&#34;,
+    &#34;If you value this tool, your sponsorship is a great way to contribute!&#34;,
+    &#34;Support the developer behind secfsdstools – consider sponsoring today.&#34;,
+    &#34;Enjoy the convenience? Sponsor secfsdstools and help us grow.&#34;,
+    &#34;Be a champion for open source – sponsor secfsdstools and support innovation.&#34;
+]
+
+
+def print_sponsoring_message():
+    &#34;&#34;&#34; create sponsoring message &#34;&#34;&#34;
+    import random
+    from colorama import init, Fore, Style
+
+    # Initialize colorama
+    init(autoreset=True)
+
+    message = random.choice(sponsor_messages)
+
+    # Präsentation des Sponsor-Hinweises mit Farben und Hervorhebung
+    print(&#34;\n\n&#34;)
+    print(Style.NORMAL + Fore.YELLOW + &#34;-&#34; * (len(message) + 8) + Style.RESET_ALL)
+    print(Style.BRIGHT + Fore.YELLOW + &#34;#&#34; * (len(message) + 8) + Style.RESET_ALL)
+    print(&#34;\n&#34;)
+    print(Style.BRIGHT + Fore.WHITE + &#34;    &#34; + message + &#34;    &#34; + Style.RESET_ALL)
+    print(&#34;\n&#34;)
+    print(
+        Style.BRIGHT + Fore.WHITE + &#34;    https://github.com/sponsors/HansjoergW&#34; + Style.RESET_ALL)
+    print(&#34;\n&#34;)
+    print(Style.BRIGHT + Fore.YELLOW + &#34;#&#34; * (len(message) + 8) + Style.RESET_ALL)
+    print(Style.NORMAL + Fore.YELLOW + &#34;-&#34; * (len(message) + 8) + Style.RESET_ALL)
+    print(&#34;\n\n&#34;)
+
 
 class Updater:
     &#34;&#34;&#34;Manages the update process: download zipfiles, transform to parquet, and index the reports&#34;&#34;&#34;
@@ -238,6 +282,8 @@ class Updater:
             # execute the update logic
             self._update()
 
+            print_sponsoring_message()
+
             # update the timestamp of the last check
             self.db_state_accesor.set_key(Updater.LAST_UPDATE_CHECK_KEY, str(time.time()))</code></pre>
 </details>
@@ -247,6 +293,43 @@ class Updater:
 <section>
 </section>
 <section>
+<h2 class="section-title" id="header-functions">Functions</h2>
+<dl>
+<dt id="secfsdstools.c_update.updateprocess.print_sponsoring_message"><code class="name flex">
+<span>def <span class="ident">print_sponsoring_message</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>create sponsoring message</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def print_sponsoring_message():
+    &#34;&#34;&#34; create sponsoring message &#34;&#34;&#34;
+    import random
+    from colorama import init, Fore, Style
+
+    # Initialize colorama
+    init(autoreset=True)
+
+    message = random.choice(sponsor_messages)
+
+    # Präsentation des Sponsor-Hinweises mit Farben und Hervorhebung
+    print(&#34;\n\n&#34;)
+    print(Style.NORMAL + Fore.YELLOW + &#34;-&#34; * (len(message) + 8) + Style.RESET_ALL)
+    print(Style.BRIGHT + Fore.YELLOW + &#34;#&#34; * (len(message) + 8) + Style.RESET_ALL)
+    print(&#34;\n&#34;)
+    print(Style.BRIGHT + Fore.WHITE + &#34;    &#34; + message + &#34;    &#34; + Style.RESET_ALL)
+    print(&#34;\n&#34;)
+    print(
+        Style.BRIGHT + Fore.WHITE + &#34;    https://github.com/sponsors/HansjoergW&#34; + Style.RESET_ALL)
+    print(&#34;\n&#34;)
+    print(Style.BRIGHT + Fore.YELLOW + &#34;#&#34; * (len(message) + 8) + Style.RESET_ALL)
+    print(Style.NORMAL + Fore.YELLOW + &#34;-&#34; * (len(message) + 8) + Style.RESET_ALL)
+    print(&#34;\n\n&#34;)</code></pre>
+</details>
+</dd>
+</dl>
 </section>
 <section>
 <h2 class="section-title" id="header-classes">Classes</h2>
@@ -445,6 +528,8 @@ class Updater:
             # execute the update logic
             self._update()
 
+            print_sponsoring_message()
+
             # update the timestamp of the last check
             self.db_state_accesor.set_key(Updater.LAST_UPDATE_CHECK_KEY, str(time.time()))</code></pre>
 </details>
@@ -577,6 +662,8 @@ Returns:</p></div>
         # execute the update logic
         self._update()
 
+        print_sponsoring_message()
+
         # update the timestamp of the last check
         self.db_state_accesor.set_key(Updater.LAST_UPDATE_CHECK_KEY, str(time.time()))</code></pre>
 </details>
@@ -595,6 +682,11 @@ Returns:</p></div>
 <li><h3>Super-module</h3>
 <ul>
 <li><code><a title="secfsdstools.c_update" href="index.html">secfsdstools.c_update</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-functions">Functions</a></h3>
+<ul class="">
+<li><code><a title="secfsdstools.c_update.updateprocess.print_sponsoring_message" href="#secfsdstools.c_update.updateprocess.print_sponsoring_message">print_sponsoring_message</a></code></li>
 </ul>
 </li>
 <li><h3><a href="#header-classes">Classes</a></h3>

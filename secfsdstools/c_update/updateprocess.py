@@ -3,6 +3,7 @@ this module contains the update logic. This means downloading new zipfiles, tran
 into parquet format, and indexing the reports.
 """
 import logging
+import random
 import sys
 import time
 from pathlib import Path
@@ -44,15 +45,14 @@ sponsor_messages = [
 
 def print_sponsoring_message():
     """ create sponsoring message """
-    import random
 
     message = random.choice(sponsor_messages)
 
     # ANSI-Escape-Codes für Farben und Formatierungen
-    RESET = "\033[0m"
-    BOLD = "\033[1m"
-    YELLOW = "\033[33m"
-    WHITE = "\033[37m"
+    reset = "\033[0m"
+    bold = "\033[1m"
+    yellow = "\033[33m"
+    white = "\033[37m"
 
     # Rahmen um die Nachricht erzeugen
     border = "-" * (len(message) + 8)
@@ -60,15 +60,15 @@ def print_sponsoring_message():
 
     # Präsentation des Sponsor-Hinweises mit Farben und Hervorhebung
     print("\n\n")
-    print(YELLOW + border + RESET)
-    print(BOLD + YELLOW + hash_border + RESET)
+    print(yellow + border + reset)
+    print(bold + yellow + hash_border + reset)
     print("\n")
-    print(BOLD + WHITE + "    " + message + "    " + RESET)
+    print(bold + white + "    " + message + "    " + reset)
     print("\n")
-    print(BOLD + WHITE + "    https://github.com/sponsors/HansjoergW" + RESET)
+    print(bold + white + "    https://github.com/sponsors/HansjoergW" + reset)
     print("\n")
-    print(BOLD + YELLOW + hash_border + RESET)
-    print(YELLOW + border + RESET)
+    print(bold + yellow + hash_border + reset)
+    print(yellow + border + reset)
     print("\n\n")
 
 

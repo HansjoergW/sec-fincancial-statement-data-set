@@ -20,9 +20,9 @@ See the [Release Notes](https://hansjoergw.github.io/sec-fincancial-statement-da
   * The `is_xxx_bag_path` methods in the module `secfsdstools.d_container.databagmodel` have been moved into `RawDataBag`, resp. `JoinedDataBag` classes in the same module.
     The `StandardizedBag` now also has a `is_xxx_bag_path` method. 
 
-* Other things
+* Other
   * GitHub sponsoring account was activated: https://github.com/sponsors/HansjoergW
-
+  * GitHub Discussions was activated: https://github.com/HansjoergW/sec-fincancial-statement-data-set/discussions
 
 ## 2.0.0 -> 2.1.0
 Main goal: improving memory footprint. Checkout the notebook:  [bulk_data_processing_memory_efficiency](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/06_01_bulk_data_memory_efficiency.ipynb)

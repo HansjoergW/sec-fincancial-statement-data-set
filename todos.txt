@@ -28,6 +28,17 @@ new release
 - [ok] sponsoring hinweis und text -> output once a day If you like it - please support it!
 - [ok] sponsoring hinweis in readme, und als header in allen notebooks
 
+- [ok] activate github discussions (https://docs.github.com/en/discussions/quickstart)
+- hint forum in readme, as additional link on pypi
+  get in touch
+  found a bug [issues]
+  have a question []
+  have an idea/feature request []
+  have something to show []
+  general feedback []
+
+
+
 - linked in post
 
 2.3.0

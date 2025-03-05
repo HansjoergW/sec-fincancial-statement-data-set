@@ -64,21 +64,19 @@ DEFAULT_COMMENTED_LINES = &#34;&#34;&#34;# If you want to add additional process
 # For more details about these additional steps, have a look at the 
 # 08_00_automation_basics notebook.
 
-# postupdateprocesses=secfsdstools.x_examples.automation.automation.define_extra_processes
+# postupdateprocesses=secfsdstools.x_examples.automation.memory_optimized_automation.define_extra_processes
 
 # [Filter]
-# filtered_dir_by_stmt_joined = secfsdstools/pipeline/_1_filtered_by_stmt_joined
- 
-# [Concat]
-# concat_dir_by_stmt_joined = secfsdstools/pipeline/_2_concat_by_stmt_joined
+# filtered_joined_by_stmt_dir = &lt;choose_path&gt;/_1_by_quarter/_1_filtered_joined_by_stmt
+# parallelize = True
 
 # [Standardizer]
-# standardized_dir = secfsdstools/pipeline/_3_standardized
+# standardized_by_stmt_dir = &lt;choose_path&gt;/_1_by_quarter/_2_standardized_by_stmt
 
-# Note: this is an optional step which needs a significant amount of memory. Leave it commented
-# in case of memory problems.
-# [SingleBag]
-# singlebag_dir = secfsdstools/pipeline/_4_single_bag
+# [Concat]
+# concat_joined_by_stmt_dir = &lt;choose_path&gt;/_2_all/_1_joined_by_stmt
+# concat_joined_all_dir = &lt;choose_path&gt;/_2_all/_2_joined
+# concat_standardized_by_stmt_dir = &lt;choose_path&gt;/_2_all/_3_standardized_by_stmt
 &#34;&#34;&#34;
 
 class ConfigurationManager:
@@ -87,7 +85,7 @@ class ConfigurationManager:
     If the file does not exist, it will create one in the current directory
     &#34;&#34;&#34;
 
-    #SUCCESSFULL_RAPID_API_KEY: str = &#34;RAPID_KEY&#34;
+    SUCCESSFULL_RAPID_API_KEY: str = &#34;RAPID_KEY&#34;
 
     @staticmethod
     def read_config_file() -&gt; Configuration:
@@ -451,7 +449,7 @@ If the file does not exist, it will create one in the current directory</p></div
     If the file does not exist, it will create one in the current directory
     &#34;&#34;&#34;
 
-    #SUCCESSFULL_RAPID_API_KEY: str = &#34;RAPID_KEY&#34;
+    SUCCESSFULL_RAPID_API_KEY: str = &#34;RAPID_KEY&#34;
 
     @staticmethod
     def read_config_file() -&gt; Configuration:
@@ -789,6 +787,13 @@ If the file does not exist, it will create one in the current directory</p></div
             config.write(configfile)
             configfile.write(DEFAULT_COMMENTED_LINES)</code></pre>
 </details>
+<h3>Class variables</h3>
+<dl>
+<dt id="secfsdstools.a_config.configmgt.ConfigurationManager.SUCCESSFULL_RAPID_API_KEY"><code class="name">var <span class="ident">SUCCESSFULL_RAPID_API_KEY</span> : str</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
 <h3>Static methods</h3>
 <dl>
 <dt id="secfsdstools.a_config.configmgt.ConfigurationManager.check_basic_configuration"><code class="name flex">
@@ -1012,6 +1017,7 @@ def read_config_file() -&gt; Configuration:
 <li>
 <h4><code><a title="secfsdstools.a_config.configmgt.ConfigurationManager" href="#secfsdstools.a_config.configmgt.ConfigurationManager">ConfigurationManager</a></code></h4>
 <ul class="">
+<li><code><a title="secfsdstools.a_config.configmgt.ConfigurationManager.SUCCESSFULL_RAPID_API_KEY" href="#secfsdstools.a_config.configmgt.ConfigurationManager.SUCCESSFULL_RAPID_API_KEY">SUCCESSFULL_RAPID_API_KEY</a></code></li>
 <li><code><a title="secfsdstools.a_config.configmgt.ConfigurationManager.check_basic_configuration" href="#secfsdstools.a_config.configmgt.ConfigurationManager.check_basic_configuration">check_basic_configuration</a></code></li>
 <li><code><a title="secfsdstools.a_config.configmgt.ConfigurationManager.check_rapid_configuration" href="#secfsdstools.a_config.configmgt.ConfigurationManager.check_rapid_configuration">check_rapid_configuration</a></code></li>
 <li><code><a title="secfsdstools.a_config.configmgt.ConfigurationManager.read_config_file" href="#secfsdstools.a_config.configmgt.ConfigurationManager.read_config_file">read_config_file</a></code></li>

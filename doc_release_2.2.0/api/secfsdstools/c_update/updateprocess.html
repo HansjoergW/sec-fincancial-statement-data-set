@@ -34,6 +34,7 @@ this module contains the update logic. This means downloading new zipfiles, tran
 into parquet format, and indexing the reports.
 &#34;&#34;&#34;
 import logging
+import random
 import sys
 import time
 from pathlib import Path
@@ -75,15 +76,14 @@ sponsor_messages = [
 
 def print_sponsoring_message():
     &#34;&#34;&#34; create sponsoring message &#34;&#34;&#34;
-    import random
 
     message = random.choice(sponsor_messages)
 
     # ANSI-Escape-Codes für Farben und Formatierungen
-    RESET = &#34;\033[0m&#34;
-    BOLD = &#34;\033[1m&#34;
-    YELLOW = &#34;\033[33m&#34;
-    WHITE = &#34;\033[37m&#34;
+    reset = &#34;\033[0m&#34;
+    bold = &#34;\033[1m&#34;
+    yellow = &#34;\033[33m&#34;
+    white = &#34;\033[37m&#34;
 
     # Rahmen um die Nachricht erzeugen
     border = &#34;-&#34; * (len(message) + 8)
@@ -91,15 +91,15 @@ def print_sponsoring_message():
 
     # Präsentation des Sponsor-Hinweises mit Farben und Hervorhebung
     print(&#34;\n\n&#34;)
-    print(YELLOW + border + RESET)
-    print(BOLD + YELLOW + hash_border + RESET)
+    print(yellow + border + reset)
+    print(bold + yellow + hash_border + reset)
     print(&#34;\n&#34;)
-    print(BOLD + WHITE + &#34;    &#34; + message + &#34;    &#34; + RESET)
+    print(bold + white + &#34;    &#34; + message + &#34;    &#34; + reset)
     print(&#34;\n&#34;)
-    print(BOLD + WHITE + &#34;    https://github.com/sponsors/HansjoergW&#34; + RESET)
+    print(bold + white + &#34;    https://github.com/sponsors/HansjoergW&#34; + reset)
     print(&#34;\n&#34;)
-    print(BOLD + YELLOW + hash_border + RESET)
-    print(YELLOW + border + RESET)
+    print(bold + yellow + hash_border + reset)
+    print(yellow + border + reset)
     print(&#34;\n\n&#34;)
 
 
@@ -311,15 +311,14 @@ class Updater:
 </summary>
 <pre><code class="python">def print_sponsoring_message():
     &#34;&#34;&#34; create sponsoring message &#34;&#34;&#34;
-    import random
 
     message = random.choice(sponsor_messages)
 
     # ANSI-Escape-Codes für Farben und Formatierungen
-    RESET = &#34;\033[0m&#34;
-    BOLD = &#34;\033[1m&#34;
-    YELLOW = &#34;\033[33m&#34;
-    WHITE = &#34;\033[37m&#34;
+    reset = &#34;\033[0m&#34;
+    bold = &#34;\033[1m&#34;
+    yellow = &#34;\033[33m&#34;
+    white = &#34;\033[37m&#34;
 
     # Rahmen um die Nachricht erzeugen
     border = &#34;-&#34; * (len(message) + 8)
@@ -327,15 +326,15 @@ class Updater:
 
     # Präsentation des Sponsor-Hinweises mit Farben und Hervorhebung
     print(&#34;\n\n&#34;)
-    print(YELLOW + border + RESET)
-    print(BOLD + YELLOW + hash_border + RESET)
+    print(yellow + border + reset)
+    print(bold + yellow + hash_border + reset)
     print(&#34;\n&#34;)
-    print(BOLD + WHITE + &#34;    &#34; + message + &#34;    &#34; + RESET)
+    print(bold + white + &#34;    &#34; + message + &#34;    &#34; + reset)
     print(&#34;\n&#34;)
-    print(BOLD + WHITE + &#34;    https://github.com/sponsors/HansjoergW&#34; + RESET)
+    print(bold + white + &#34;    https://github.com/sponsors/HansjoergW&#34; + reset)
     print(&#34;\n&#34;)
-    print(BOLD + YELLOW + hash_border + RESET)
-    print(YELLOW + border + RESET)
+    print(bold + yellow + hash_border + reset)
+    print(yellow + border + reset)
     print(&#34;\n\n&#34;)</code></pre>
 </details>
 </dd>

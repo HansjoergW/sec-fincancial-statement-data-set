@@ -35,21 +35,19 @@ DEFAULT_COMMENTED_LINES = """# If you want to add additional processing steps be
 # For more details about these additional steps, have a look at the 
 # 08_00_automation_basics notebook.
 
-# postupdateprocesses=secfsdstools.x_examples.automation.automation.define_extra_processes
+# postupdateprocesses=secfsdstools.x_examples.automation.memory_optimized_automation.define_extra_processes
 
 # [Filter]
-# filtered_dir_by_stmt_joined = secfsdstools/pipeline/_1_filtered_by_stmt_joined
- 
-# [Concat]
-# concat_dir_by_stmt_joined = secfsdstools/pipeline/_2_concat_by_stmt_joined
+# filtered_joined_by_stmt_dir = <choose_path>/_1_by_quarter/_1_filtered_joined_by_stmt
+# parallelize = True
 
 # [Standardizer]
-# standardized_dir = secfsdstools/pipeline/_3_standardized
+# standardized_by_stmt_dir = <choose_path>/_1_by_quarter/_2_standardized_by_stmt
 
-# Note: this is an optional step which needs a significant amount of memory. Leave it commented
-# in case of memory problems.
-# [SingleBag]
-# singlebag_dir = secfsdstools/pipeline/_4_single_bag
+# [Concat]
+# concat_joined_by_stmt_dir = <choose_path>/_2_all/_1_joined_by_stmt
+# concat_joined_all_dir = <choose_path>/_2_all/_2_joined
+# concat_standardized_by_stmt_dir = <choose_path>/_2_all/_3_standardized_by_stmt
 """
 
 class ConfigurationManager:
@@ -58,7 +56,7 @@ class ConfigurationManager:
     If the file does not exist, it will create one in the current directory
     """
 
-    #SUCCESSFULL_RAPID_API_KEY: str = "RAPID_KEY"
+    SUCCESSFULL_RAPID_API_KEY: str = "RAPID_KEY"
 
     @staticmethod
     def read_config_file() -> Configuration:

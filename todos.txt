@@ -17,15 +17,16 @@ new release
 - [ok] new CIKFilter for bags (similar logic than adshs filter)
 - [ok] segments basics notebook
 - [ok] cik-filter in load method of bags
-- [ok] Standardization by quarter / make more flexibel -> either single task, or multiple dirs
 - [ok] Switch for ConcatProcess whether to load all data directly into memory, or do it file_based
-- [ok] is_xxx_bag_path -> moved into classes JoinedDataBag, RawDataBag, added to StandardizeBag
 - [ok] use ConcatProcess also for StandardizedBag (only in_memory)
+- [ok] Standardization by quarter / make more flexibel -> either single task, or multiple dirs
 - [ok] define new memory_optimized pipeline
 - [ok] adapt pipeline/automation notebook
+- [ok] examples on how to use the bags from the pipeline
+- [ok] is_xxx_bag_path -> moved into classes JoinedDataBag, RawDataBag, added to StandardizeBag
+
 - [ok] sponsoring hinweis und text -> output once a day If you like it - please support it!
 - [ok] sponsoring hinweis in readme, und als header in allen notebooks
-- [ok] examples on how to use the bags from the pipeline
 
 - linked in post
 

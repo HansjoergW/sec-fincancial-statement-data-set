@@ -2,6 +2,13 @@
 # Changelog
 See the [Release Notes](https://hansjoergw.github.io/sec-fincancial-statement-data-set/releasenotes/) for details.
 
+
+## 2.2.1 -> 2.2.0
+
+* New
+  *  
+
+
 ## 2.0.0 -> 2.1.0
 Main goal: improving memory footprint. Checkout the notebook:  [bulk_data_processing_memory_efficiency](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/06_01_bulk_data_memory_efficiency.ipynb)
 

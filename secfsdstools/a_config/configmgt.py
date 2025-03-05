@@ -58,7 +58,7 @@ class ConfigurationManager:
     If the file does not exist, it will create one in the current directory
     """
 
-    SUCCESSFULL_RAPID_API_KEY: str = "RAPID_KEY"
+    #SUCCESSFULL_RAPID_API_KEY: str = "RAPID_KEY"
 
     @staticmethod
     def read_config_file() -> Configuration:

@@ -25,6 +25,7 @@ new release
 - [ok] adapt pipeline/automation notebook
 - [ok] sponsoring hinweis und text -> output once a day If you like it - please support it!
 - [ok] sponsoring hinweis in readme, und als header in allen notebooks
+- [ok] examples on how to use the bags from the pipeline
 
 - linked in post
 

@@ -67,6 +67,14 @@ def print_sponsoring_message():
     print("\n")
     print(bold + white + "    https://github.com/sponsors/HansjoergW" + reset)
     print("\n")
+    print(white + "    How to get in touch")
+    print("    - Found a bug:            https://github.com/HansjoergW/sec-fincancial-statement-data-set/issues")
+    print("    - Have a remark:          https://github.com/HansjoergW/sec-fincancial-statement-data-set/discussions/categories/general")
+    print("    - Have an idea:           https://github.com/HansjoergW/sec-fincancial-statement-data-set/discussions/categories/ideas")
+    print("    - Have a question:        https://github.com/HansjoergW/sec-fincancial-statement-data-set/discussions/categories/q-a")
+    print("    - Have something to show: https://github.com/HansjoergW/sec-fincancial-statement-data-set/discussions/categories/show-and-tell")
+    print("\n")
+
     print(bold + yellow + hash_border + reset)
     print(yellow + border + reset)
     print("\n\n")
@@ -260,3 +268,7 @@ class Updater:
 
             # update the timestamp of the last check
             self.db_state_accesor.set_key(Updater.LAST_UPDATE_CHECK_KEY, str(time.time()))
+
+
+if __name__ == '__main__':
+    print_sponsoring_message()

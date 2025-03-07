@@ -58,6 +58,7 @@ keywords=[
 "Github" = "https://github.com/HansjoergW/sec-fincancial-statement-data-set"
 "Changelog" = "https://github.com/HansjoergW/sec-fincancial-statement-data-set/blob/main/CHANGELOG.md"
 "Funding" = "https://github.com/sponsors/HansjoergW"
+"Forum" =  "https://github.com/HansjoergW/sec-fincancial-statement-data-set/discussions"
 
 [project.optional-dependencies]
 test = [

@@ -1,0 +1,2460 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.10.0" />
+<title>secfsdstools.d_container.databagmodel API documentation</title>
+<meta name="description" content="Defines the container that keeps the data of sub.txt, num.txt, and
+pre.txt together." />
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
+<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js" integrity="sha256-Uv3H6lx7dJmRfRvH8TH6kJD1TSK1aFcwgx+mdg3epi8=" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>secfsdstools.d_container.databagmodel</code></h1>
+</header>
+<section id="section-intro">
+<p>Defines the container that keeps the data of sub.txt, num.txt, and
+pre.txt together.</p>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">&#34;&#34;&#34;
+Defines the container that keeps the data of sub.txt, num.txt, and  pre.txt together.
+&#34;&#34;&#34;
+import logging
+import os
+from dataclasses import dataclass
+from pathlib import Path
+from typing import Dict, List, TypeVar, Generic, Optional
+
+import pandas as pd
+
+from secfsdstools.a_utils.constants import SUB_TXT, PRE_TXT, NUM_TXT, PRE_NUM_TXT
+from secfsdstools.a_utils.fileutils import check_dir, concat_parquet_files
+from secfsdstools.d_container.filter import FilterBase
+from secfsdstools.d_container.presentation import Presenter
+
+RAW = TypeVar(&#39;RAW&#39;, bound=&#39;RawDataBag&#39;)
+JOINED = TypeVar(&#39;JOINED&#39;, bound=&#39;JoinedDataBag&#39;)
+T = TypeVar(&#39;T&#39;)
+
+LOGGER = logging.getLogger(__name__)
+
+
+def get_pre_num_filters(adshs: Optional[List[str]],
+                        stmts: Optional[List[str]],
+                        tags: Optional[List[str]]):
+    &#34;&#34;&#34; creates filter definitions to be directly applied to num and pre files. &#34;&#34;&#34;
+
+    pre_filter = []
+    num_filter = []
+
+    if adshs:
+        adsh_filter_expression = (&#39;adsh&#39;, &#39;in&#39;, adshs)
+        pre_filter.append(adsh_filter_expression)
+        num_filter.append(adsh_filter_expression)
+
+    if stmts:
+        pre_filter.append((&#39;stmt&#39;, &#39;in&#39;, stmts))
+
+    if tags:
+        tag_filter_expression = (&#39;tag&#39;, &#39;in&#39;, tags)
+        pre_filter.append(tag_filter_expression)
+        num_filter.append(tag_filter_expression)
+
+    return pre_filter, num_filter
+
+
+def concat_bags_file_based_internal(paths_to_concat: List[Path],
+                                    target_path: Path,
+                                    file_list: List[str],
+                                    drop_duplicates_sub_df: bool = False):
+    &#34;&#34;&#34;
+    Helper method to concat files of multiple bags into a new bag-directory without actually
+    loading the data and therefore having a low memory footprint.
+
+    Args:
+        paths_to_concat: list of paths that we want to concat
+        target_path:  target path to where the concat data will be stored. the necessary directories
+                      will be created
+        file_list:  list of filenames to be concatenated without SUB_TXT. So this is either
+                    [&#39;pre.txt&#39;, &#39;num.txt&#39;] or [&#39;pre_num.txt&#39;].
+        drop_duplicates_sub_df: indicates whether drop duplicates has to be applied on the sub_df.
+                                if true, the data for the sub.txt files must be read into memory.
+                                This has to be true, for instance if you have separate bags
+                                for BS, IS, and CF and want to concat them. In this case, they
+                                all have the same data in sub.txt.
+
+
+    &#34;&#34;&#34;
+
+    target_path.mkdir(parents=True, exist_ok=True)
+    if not drop_duplicates_sub_df:
+        file_list.append(SUB_TXT)
+
+    for file_name in file_list:
+        target_path_file = str(target_path / f&#39;{file_name}.parquet&#39;)
+        paths_to_concat_file = [str(p / f&#39;{file_name}.parquet&#39;) for p in paths_to_concat]
+        concat_parquet_files(paths_to_concat_file, target_path_file)
+
+    # if we have to drop the duplicates, we need to read the data for the sub_df into memory
+    if drop_duplicates_sub_df:
+        sub_dfs: List[pd.DataFrame] = []
+        for path_to_concat in paths_to_concat:
+            sub_dfs.append(pd.read_parquet(path_to_concat / f&#39;{SUB_TXT}.parquet&#39;))
+
+        sub_df = pd.concat(sub_dfs, ignore_index=True)
+        sub_df.drop_duplicates(inplace=True)
+        sub_df.to_parquet(target_path / f&#39;{SUB_TXT}.parquet&#39;)
+
+
+class DataBagBase(Generic[T]):
+    &#34;&#34;&#34;
+    Base class for the DataBag types
+    &#34;&#34;&#34;
+
+    def __getitem__(self, bagfilter: FilterBase[T]) -&gt; T:
+        &#34;&#34;&#34;
+        forwards to the pathfilter method, so that filters can be chained in a simple syntax:
+        bag[filter1][filter2] is equal to bag.pathfilter(filter1).pathfilter(filter2)
+
+        Args:
+            bagfilter: the pathfilter to be applied
+
+        Returns:
+            RawDataBag: the databag with the filtered content
+        &#34;&#34;&#34;
+
+        return self.filter(bagfilter)
+
+    def filter(self, bagfilter: FilterBase[T]) -&gt; T:
+        &#34;&#34;&#34;
+        applies a pathfilter to the bag and produces a new bag based on the pathfilter.
+        instead of using the pathfilter, you can also use the &#34;index&#34; syntax to apply filters:
+        bag[filter1][filter2] is equal to bag.pathfilter(filter1).pathfilter(filter2)
+
+        Args:
+            bagfilter: the pathfilter to be applied
+
+        Returns:
+            RawDataBag: the databag with the filtered content
+        &#34;&#34;&#34;
+        return bagfilter.filter(self)
+
+    def present(self, presenter: Presenter[T]) -&gt; pd.DataFrame:
+        &#34;&#34;&#34;
+        apply a presenter
+        &#34;&#34;&#34;
+        return presenter.present(self)
+
+    @staticmethod
+    def load_sub_df_by_filter(target_path: str,
+                              ciks: Optional[List[int]] = None,
+                              adshs: Optional[List[str]] = None,
+                              forms: Optional[List[str]] = None) -&gt; pd.DataFrame:
+        &#34;&#34;&#34;
+        loads the sub_txt datafrome from the target_path by directly applying the
+        defined filters during loading.
+
+        Args:
+            target_path: root_path with the parquet files for sub, pre, and num
+            ciks: optional list of cik numbers to filter for during loading
+            forms: optional list of forms (10-K, 10-Q) to filter for during loading
+            adshs: optional list of adhs to filter during the loading
+
+        Returns:
+            pd.DataFrame the loaded sub_df content
+        &#34;&#34;&#34;
+
+        sub_filters: List = []
+        if ciks:
+            sub_filters.append((&#39;cik&#39;, &#39;in&#39;, ciks))
+        if adshs:
+            sub_filters.append((&#39;adsh&#39;, &#39;in&#39;, adshs))
+        elif forms:
+            sub_filters.append((&#39;form&#39;, &#39;in&#39;, forms))
+
+        if sub_filters:
+            LOGGER.info(&#34;apply sub_df filter: %s&#34;, sub_filters)
+
+        sub_df = pd.read_parquet(os.path.join(target_path, f&#39;{SUB_TXT}.parquet&#39;),
+                                 filters=sub_filters if sub_filters else None)
+
+        return sub_df
+
+
+class JoinedDataBag(DataBagBase[JOINED]):
+    &#34;&#34;&#34;
+    the DataBag in which the pre.txt and the num.txt are joined based on the
+    adsh, tag, and version.
+    &#34;&#34;&#34;
+
+    @classmethod
+    def create(cls, sub_df: pd.DataFrame, pre_num_df: pd.DataFrame) -&gt; JOINED:
+        &#34;&#34;&#34;
+        create a new JoinedDataBag.
+
+        Args:
+            sub_df: sub.txt dataframe
+
+            pre_num_df: joined pre.txt and num.txt dataframe
+
+        Returns:
+            JoinedDataBag: new instance of JoinedDataBag
+        &#34;&#34;&#34;
+        return JoinedDataBag(sub_df=sub_df, pre_num_df=pre_num_df)
+
+    def __init__(self, sub_df: pd.DataFrame, pre_num_df: pd.DataFrame):
+        &#34;&#34;&#34;
+        constructor.
+        Args:
+            sub_df: sub.txt dataframe
+            pre_num_df: joined pre.txt and num.txt dataframe
+        &#34;&#34;&#34;
+        self.sub_df = sub_df
+        self.pre_num_df = pre_num_df
+
+    def get_sub_copy(self) -&gt; pd.DataFrame:
+        &#34;&#34;&#34;
+        Returns a copy of the sub dataframe.
+
+        Returns:
+            pd.DataFrame: copy of the sub dataframe.
+        &#34;&#34;&#34;
+        return self.sub_df.copy()
+
+    def get_pre_num_copy(self) -&gt; pd.DataFrame:
+        &#34;&#34;&#34;
+        Returns a copy of the joined pre_num dataframe.
+
+        Returns:
+            pd.DataFrame: copy of joined pre_num dataframe.
+        &#34;&#34;&#34;
+        return self.pre_num_df.copy()
+
+    def copy_bag(self) -&gt; JOINED:
+        &#34;&#34;&#34;
+        creates a bag with new copies of the internal dataframes.
+
+        Returns:
+            JoinedDataBag: new instance of JoinedDataBag
+        &#34;&#34;&#34;
+        return JoinedDataBag.create(sub_df=self.sub_df.copy(),
+                                    pre_num_df=self.pre_num_df.copy())
+
+    def save(self, target_path: str):
+        &#34;&#34;&#34;
+        Stores the bag under the given directory.
+        The directory has to exist and must be empty.
+
+        Args:
+            target_path: the directory under which the parquet files for sub and pre_num
+                  will be created
+
+        &#34;&#34;&#34;
+        check_dir(target_path)
+
+        self.sub_df.to_parquet(os.path.join(target_path, f&#39;{SUB_TXT}.parquet&#39;))
+        self.pre_num_df.to_parquet(os.path.join(target_path, f&#39;{PRE_NUM_TXT}.parquet&#39;))
+
+    @staticmethod
+    def load(target_path: str,
+             ciks_filter: Optional[List[int]] = None,
+             adshs_filter: Optional[List[str]] = None,
+             forms_filter: Optional[List[str]] = None,
+             stmt_filter: Optional[List[str]] = None,
+             tag_filter: Optional[List[str]] = None) -&gt; JOINED:
+        &#34;&#34;&#34;
+            Loads the content of the current bag at the specified location.
+
+            There are optional filters for adshs, forms, stmts and tags, that are
+            applied directly during the load process and hence are more efficient and
+            less memory consuming than loading the data and then applying filters.
+
+            This makes especially sense, when you concatenated together data from different
+            zip files.
+
+        Args:
+            target_path: root_path with the parquet files for sub, pre, and num
+            ciks_filter: optional list of cik numbers to filter for during loading
+            forms_filter: optional list of forms (10-K, 10-Q) to filter for during loading
+            adshs_filter: optional list of adhs to filter during the laoding
+            stmt_filter: optional list of stmts (BS, IS, CF, ..) to filter during the loading
+            tag_filter: optional list of tags to filter during the loading
+
+        Returns:
+            RawDataBag: the loaded Databag
+        &#34;&#34;&#34;
+        sub_df = DataBagBase.load_sub_df_by_filter(
+            target_path=target_path, adshs=adshs_filter, forms=forms_filter, ciks=ciks_filter
+        )
+
+        # if the forms and/or ciks filter was applied, overwrite the adshs list,
+        # since this are adshs values that we should filter for in the pre_num dataframe
+        if forms_filter or ciks_filter:
+            adshs_filter = sub_df.adsh.to_list()
+
+        pre_num_filter = []
+
+        filter_log_str: List[str] = []
+
+        if adshs_filter:
+            pre_num_filter.append((&#39;adsh&#39;, &#39;in&#39;, adshs_filter))
+
+            # the list of adshs could be quite huge, so we trim the message that we log
+            # to max 100 characters
+            log_part = str((&#39;adsh&#39;, &#39;in&#39;, adshs_filter))
+            if len(log_part) &gt; 100:
+                log_part = log_part[:100] + &#34;...)&#34;
+            filter_log_str.append(log_part)
+
+        if stmt_filter:
+            pre_num_filter.append((&#39;stmt&#39;, &#39;in&#39;, stmt_filter))
+            filter_log_str.append(str((&#39;stmt&#39;, &#39;in&#39;, stmt_filter)))
+
+        if tag_filter:
+            pre_num_filter.append((&#39;tag&#39;, &#39;in&#39;, tag_filter))
+            filter_log_str.append(str((&#39;tag&#39;, &#39;in&#39;, tag_filter)))
+
+        if len(pre_num_filter) &gt; 0:
+            LOGGER.info(&#34;apply pre_num_df filter: %s&#34;, filter_log_str)
+
+        pre_num_df = pd.read_parquet(os.path.join(target_path, f&#39;{PRE_NUM_TXT}.parquet&#39;),
+                                     filters=pre_num_filter if pre_num_filter else None)
+
+        return JoinedDataBag.create(sub_df=sub_df, pre_num_df=pre_num_df)
+
+    @staticmethod
+    def concat(bags: List[JOINED], drop_duplicates_sub_df: bool = False) -&gt; JOINED:
+        &#34;&#34;&#34;
+        Merges multiple Bags together into one bag.
+        Note: merge does not check if DataBags with the same reports are merged together.
+
+        Args:
+            bags: List of bags to be merged
+            drop_duplicates_sub_df: set to True, if you want to remove duplicates in the sub_df
+
+        Returns:
+            JoinedDataBag: a Bag with the merged content
+
+        &#34;&#34;&#34;
+        sub_dfs = [db.sub_df for db in bags]
+        pre_num_dfs = [db.pre_num_df for db in bags]
+
+        sub_df = pd.concat(sub_dfs, ignore_index=True)
+        pre_num_df = pd.concat(pre_num_dfs, ignore_index=True)
+
+        if drop_duplicates_sub_df:
+            sub_df.drop_duplicates(inplace=True)
+
+        return JoinedDataBag.create(sub_df=sub_df,
+                                    pre_num_df=pre_num_df)
+
+    @staticmethod
+    def concat_filebased(paths_to_concat: List[Path],
+                         target_path: Path,
+                         drop_duplicates_sub_df: bool = False):
+        &#34;&#34;&#34;
+        Concatenates all the Bags in paths_to_concatenate into the target_dir directory.
+
+        It is directly working on the files and does not load the data into the memory.
+
+
+        Args:
+            paths_to_concat (List[Path]) : List with paths to read the datafrome
+            target_path (Path) : path to write the concatenated data to
+            drop_duplicates_sub_df (bool, False): indicates whether drop duplicates
+                                has to be applied on the sub_df.
+                                if true, the data for the sub.txt files must be read into memory.
+                                This has to be true, for instance if you have separate bags
+                                for BS, IS, and CF and want to concat them. In this case, they
+                                all have the same data in sub.txt.
+
+        Returns:
+        &#34;&#34;&#34;
+        if len(paths_to_concat) == 0:
+            # nothing to do
+            return
+
+        concat_bags_file_based_internal(
+            paths_to_concat=paths_to_concat,
+            target_path=target_path,
+            file_list=[PRE_NUM_TXT],
+            drop_duplicates_sub_df=drop_duplicates_sub_df
+        )
+
+    @staticmethod
+    def is_joinedbag_path(path: Path) -&gt; bool:
+        &#34;&#34;&#34; Check whether the provided path contains the files of a JoinedDatabag. &#34;&#34;&#34;
+        return (path / &#34;pre_num.txt.parquet&#34;).exists()
+
+
+@dataclass
+class RawDataBagStats:
+    &#34;&#34;&#34;
+    Contains simple statistics of a report.
+    &#34;&#34;&#34;
+    num_entries: int
+    pre_entries: int
+    number_of_reports: int
+    reports_per_form: Dict[str, int]
+    reports_per_period_date: Dict[int, int]
+
+
+class RawDataBag(DataBagBase[RAW]):
+    &#34;&#34;&#34;
+    Container class to keep the data for sub.txt, pre.txt, and num.txt together.
+    &#34;&#34;&#34;
+
+    @classmethod
+    def create(cls, sub_df: pd.DataFrame, pre_df: pd.DataFrame, num_df: pd.DataFrame) -&gt; RAW:
+        &#34;&#34;&#34;
+        create method for RawDataBag
+        Args:
+            sub_df(pd.DataFrame): sub.txt dataframe
+            pre_df(pd.DataFrame): pre.txt dataframe
+            num_df(pd.DataFrame): num.txt dataframe
+
+        Returns:
+            RawDataBag:
+        &#34;&#34;&#34;
+        return RawDataBag(sub_df=sub_df, pre_df=pre_df, num_df=num_df)
+
+    def __init__(self, sub_df: pd.DataFrame, pre_df: pd.DataFrame, num_df: pd.DataFrame):
+        self.sub_df = sub_df
+        self.pre_df = pre_df
+        self.num_df = num_df
+
+    def copy_bag(self):
+        &#34;&#34;&#34;
+        creates a bag with new copies of the internal dataframes.
+
+        Returns:
+            RawDataBag: new instance of JoinedDataBag
+        &#34;&#34;&#34;
+
+        return RawDataBag.create(sub_df=self.sub_df.copy(),
+                                 pre_df=self.pre_df.copy(),
+                                 num_df=self.num_df.copy())
+
+    def get_sub_copy(self) -&gt; pd.DataFrame:
+        &#34;&#34;&#34;
+        Returns a copy of the sub.txt dataframe.
+
+        Returns:
+            pd.DataFrame: copy of the sub.txt dataframe.
+        &#34;&#34;&#34;
+        return self.sub_df.copy()
+
+    def get_pre_copy(self) -&gt; pd.DataFrame:
+        &#34;&#34;&#34;
+        Returns a copy of the pre.txt dataframe.
+
+        Returns:
+            pd.DataFrame: copy of the pre.txt dataframe.
+        &#34;&#34;&#34;
+        return self.pre_df.copy()
+
+    def get_num_copy(self) -&gt; pd.DataFrame:
+        &#34;&#34;&#34;
+        Returns a copy of the num.txt dataframe.
+
+        Returns:
+            pd.DataFrame: copy of the num.txt dataframe.
+        &#34;&#34;&#34;
+        return self.num_df.copy()
+
+    def join(self) -&gt; JoinedDataBag:
+        &#34;&#34;&#34;
+        merges the raw data of pre and num together.
+
+        Returns:
+            JoinedDataBag: the DataBag where pre and num are merged
+
+        &#34;&#34;&#34;
+
+        # merge num and pre together. only rows in num are considered for which entries in pre exist
+        pre_num_df = pd.merge(self.num_df,
+                              self.pre_df,
+                              on=[&#39;adsh&#39;, &#39;tag&#39;,
+                                  &#39;version&#39;])  # don&#39;t produce index_x and index_y columns
+
+        return JoinedDataBag.create(sub_df=self.sub_df, pre_num_df=pre_num_df)
+
+    def statistics(self) -&gt; RawDataBagStats:
+        &#34;&#34;&#34;
+        calculate a few simple statistics of a report.
+        - number of entries in the num-file
+        - number of entries in the pre-file
+        - number of reports in the zip-file (equals number of entries in sub-file)
+        - number of reports per form (10-K, 10-Q, ...)
+        - number of reports per period date (counts per value in the period column of sub-file)
+
+        Returns:
+            RawDataBagStats: instance with basic report infos
+        &#34;&#34;&#34;
+
+        num_entries = len(self.num_df)
+        pre_entries = len(self.pre_df)
+        number_of_reports = len(self.sub_df)
+        reports_per_period_date: Dict[int, int] = self.sub_df.period.value_counts().to_dict()
+        reports_per_form: Dict[str, int] = self.sub_df.form.value_counts().to_dict()
+
+        return RawDataBagStats(num_entries=num_entries,
+                               pre_entries=pre_entries,
+                               number_of_reports=number_of_reports,
+                               reports_per_form=reports_per_form,
+                               reports_per_period_date=reports_per_period_date
+                               )
+
+    def save(self, target_path: str):
+        &#34;&#34;&#34;
+        Stores the bag under the given directory.
+        The directory has to exist and must be empty.
+
+        Args:
+            target_path: the directory under which three parquet files for sub_txt, pre_text,
+                  and num_txt will be created
+        &#34;&#34;&#34;
+        check_dir(target_path)
+
+        self.sub_df.to_parquet(os.path.join(target_path, f&#39;{SUB_TXT}.parquet&#39;))
+        self.pre_df.to_parquet(os.path.join(target_path, f&#39;{PRE_TXT}.parquet&#39;))
+        self.num_df.to_parquet(os.path.join(target_path, f&#39;{NUM_TXT}.parquet&#39;))
+
+    @staticmethod
+    def load(target_path: str,
+             ciks_filter: Optional[List[int]] = None,
+             adshs_filter: Optional[List[str]] = None,
+             forms_filter: Optional[List[str]] = None,
+             stmt_filter: Optional[List[str]] = None,
+             tag_filter: Optional[List[str]] = None) -&gt; RAW:
+        &#34;&#34;&#34;
+            Loads the content of the current bag at the specified location.
+
+            There are optional filters for adshs, forms, stmts and tags, that are
+            applied directly during the load process and hence are more efficient and
+            less memory consuming than loading the data and then applying filters.
+
+            This makes especially sense, when you concatenated together data from different
+            zip files.
+
+            Note: the adsh are mutally exclusive and adsh has the higher precedence.
+
+        Args:
+            target_path: root_path with the parquet files for sub, pre, and num
+            ciks_filter: optional list of cik numbers to filter for during loading
+            forms_filter: optional list of forms (10-K, 10-Q) to filter for during loading
+            adshs_filter: optional list of adhs to filter during the laoding
+            stmt_filter: optional list of stmts (BS, IS, CF, ..) to filter during the loading
+            tag_filter: optional list of tags to filter during the loading
+
+        Returns:
+            RawDataBag: the loaded Databag
+        &#34;&#34;&#34;
+        sub_df = DataBagBase.load_sub_df_by_filter(
+            target_path=target_path, adshs=adshs_filter, forms=forms_filter, ciks=ciks_filter
+        )
+
+        # if the forms and/or ciks filter was applied, overwrite the adshs list,
+        # since this are adshs values that we should filter for in the pre and num dataframes
+        if forms_filter or ciks_filter:
+            adshs_filter = sub_df.adsh.to_list()
+
+        pre_filter, num_filter = get_pre_num_filters(adshs=adshs_filter,
+                                                     stmts=stmt_filter,
+                                                     tags=tag_filter)
+
+        if len(num_filter) &gt; 0:
+            LOGGER.info(&#34;apply num_df filter: %s&#34;, num_filter)
+
+        if len(pre_filter) &gt; 0:
+            LOGGER.info(&#34;apply pre_df filter: %s&#34;, pre_filter)
+
+        pre_df = pd.read_parquet(os.path.join(target_path, f&#39;{PRE_TXT}.parquet&#39;),
+                                 filters=pre_filter if pre_filter else None)
+
+        num_df = pd.read_parquet(os.path.join(target_path, f&#39;{NUM_TXT}.parquet&#39;),
+                                 filters=num_filter if num_filter else None)
+
+        return RawDataBag.create(sub_df=sub_df, pre_df=pre_df, num_df=num_df)
+
+    @staticmethod
+    def concat(bags: List[RAW], drop_duplicates_sub_df: bool = False) -&gt; RAW:
+        &#34;&#34;&#34;
+        Merges multiple Bags together into one bag.
+        Note: merge does not check if DataBags with the same reports are merged together.
+
+        Args:
+            bags: List of bags to be merged
+            drop_duplicates_sub_df: set to True, if you want to remove duplicates in the sub_df
+
+        Returns:
+            RawDataBag: a Bag with the merged content
+
+        &#34;&#34;&#34;
+        sub_dfs = [db.sub_df for db in bags]
+        pre_dfs = [db.pre_df for db in bags]
+        num_dfs = [db.num_df for db in bags]
+
+        sub_df = pd.concat(sub_dfs, ignore_index=True)
+        pre_df = pd.concat(pre_dfs, ignore_index=True)
+        num_df = pd.concat(num_dfs, ignore_index=True)
+
+        if drop_duplicates_sub_df:
+            sub_df.drop_duplicates(inplace=True)
+
+        return RawDataBag.create(sub_df=sub_df,
+                                 pre_df=pre_df,
+                                 num_df=num_df)
+
+    @staticmethod
+    def concat_filebased(paths_to_concat: List[Path],
+                         target_path: Path,
+                         drop_duplicates_sub_df: bool = False):
+        &#34;&#34;&#34;
+        Concatenates all the Bags in paths_to_concatenate into the target_dir directory.
+
+        It is directly working on the files and does not load the data into the memory.
+
+
+        Args:
+            paths_to_concat (List[Path]) : List with paths to read the datafrome
+            target_path (Path) : path to write the concatenated data to
+            drop_duplicates_sub_df (bool, False): indicates whether drop duplicates
+                                has to be applied on the sub_df.
+                                if true, the data for the sub.txt files must be read into memory.
+                                This has to be true, for instance if you have separate bags
+                                for BS, IS, and CF and want to concat them. In this case, they
+                                all have the same data in sub.txt.
+
+        Returns:
+        &#34;&#34;&#34;
+        if len(paths_to_concat) == 0:
+            # nothing to do
+            return
+
+        concat_bags_file_based_internal(
+            paths_to_concat=paths_to_concat,
+            target_path=target_path,
+            file_list=[PRE_TXT, NUM_TXT],
+            drop_duplicates_sub_df=drop_duplicates_sub_df
+        )
+
+    @staticmethod
+    def is_rawbag_path(path: Path) -&gt; bool:
+        &#34;&#34;&#34; Check whether the provided path contains the files of a RawDatabag. &#34;&#34;&#34;
+        return (path / &#34;num.txt.parquet&#34;).exists()</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-functions">Functions</h2>
+<dl>
+<dt id="secfsdstools.d_container.databagmodel.concat_bags_file_based_internal"><code class="name flex">
+<span>def <span class="ident">concat_bags_file_based_internal</span></span>(<span>paths_to_concat: List[pathlib.Path], target_path: pathlib.Path, file_list: List[str], drop_duplicates_sub_df: bool = False)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Helper method to concat files of multiple bags into a new bag-directory without actually
+loading the data and therefore having a low memory footprint.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>paths_to_concat</code></strong></dt>
+<dd>list of paths that we want to concat</dd>
+<dt><strong><code>target_path</code></strong></dt>
+<dd>target path to where the concat data will be stored. the necessary directories
+will be created</dd>
+<dt><strong><code>file_list</code></strong></dt>
+<dd>list of filenames to be concatenated without SUB_TXT. So this is either
+['pre.txt', 'num.txt'] or ['pre_num.txt'].</dd>
+<dt><strong><code>drop_duplicates_sub_df</code></strong></dt>
+<dd>indicates whether drop duplicates has to be applied on the sub_df.
+if true, the data for the sub.txt files must be read into memory.
+This has to be true, for instance if you have separate bags
+for BS, IS, and CF and want to concat them. In this case, they
+all have the same data in sub.txt.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def concat_bags_file_based_internal(paths_to_concat: List[Path],
+                                    target_path: Path,
+                                    file_list: List[str],
+                                    drop_duplicates_sub_df: bool = False):
+    &#34;&#34;&#34;
+    Helper method to concat files of multiple bags into a new bag-directory without actually
+    loading the data and therefore having a low memory footprint.
+
+    Args:
+        paths_to_concat: list of paths that we want to concat
+        target_path:  target path to where the concat data will be stored. the necessary directories
+                      will be created
+        file_list:  list of filenames to be concatenated without SUB_TXT. So this is either
+                    [&#39;pre.txt&#39;, &#39;num.txt&#39;] or [&#39;pre_num.txt&#39;].
+        drop_duplicates_sub_df: indicates whether drop duplicates has to be applied on the sub_df.
+                                if true, the data for the sub.txt files must be read into memory.
+                                This has to be true, for instance if you have separate bags
+                                for BS, IS, and CF and want to concat them. In this case, they
+                                all have the same data in sub.txt.
+
+
+    &#34;&#34;&#34;
+
+    target_path.mkdir(parents=True, exist_ok=True)
+    if not drop_duplicates_sub_df:
+        file_list.append(SUB_TXT)
+
+    for file_name in file_list:
+        target_path_file = str(target_path / f&#39;{file_name}.parquet&#39;)
+        paths_to_concat_file = [str(p / f&#39;{file_name}.parquet&#39;) for p in paths_to_concat]
+        concat_parquet_files(paths_to_concat_file, target_path_file)
+
+    # if we have to drop the duplicates, we need to read the data for the sub_df into memory
+    if drop_duplicates_sub_df:
+        sub_dfs: List[pd.DataFrame] = []
+        for path_to_concat in paths_to_concat:
+            sub_dfs.append(pd.read_parquet(path_to_concat / f&#39;{SUB_TXT}.parquet&#39;))
+
+        sub_df = pd.concat(sub_dfs, ignore_index=True)
+        sub_df.drop_duplicates(inplace=True)
+        sub_df.to_parquet(target_path / f&#39;{SUB_TXT}.parquet&#39;)</code></pre>
+</details>
+</dd>
+<dt id="secfsdstools.d_container.databagmodel.get_pre_num_filters"><code class="name flex">
+<span>def <span class="ident">get_pre_num_filters</span></span>(<span>adshs: Optional[List[str]], stmts: Optional[List[str]], tags: Optional[List[str]])</span>
+</code></dt>
+<dd>
+<div class="desc"><p>creates filter definitions to be directly applied to num and pre files.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_pre_num_filters(adshs: Optional[List[str]],
+                        stmts: Optional[List[str]],
+                        tags: Optional[List[str]]):
+    &#34;&#34;&#34; creates filter definitions to be directly applied to num and pre files. &#34;&#34;&#34;
+
+    pre_filter = []
+    num_filter = []
+
+    if adshs:
+        adsh_filter_expression = (&#39;adsh&#39;, &#39;in&#39;, adshs)
+        pre_filter.append(adsh_filter_expression)
+        num_filter.append(adsh_filter_expression)
+
+    if stmts:
+        pre_filter.append((&#39;stmt&#39;, &#39;in&#39;, stmts))
+
+    if tags:
+        tag_filter_expression = (&#39;tag&#39;, &#39;in&#39;, tags)
+        pre_filter.append(tag_filter_expression)
+        num_filter.append(tag_filter_expression)
+
+    return pre_filter, num_filter</code></pre>
+</details>
+</dd>
+</dl>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="secfsdstools.d_container.databagmodel.DataBagBase"><code class="flex name class">
+<span>class <span class="ident">DataBagBase</span></span>
+<span>(</span><span>*args, **kwds)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Base class for the DataBag types</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class DataBagBase(Generic[T]):
+    &#34;&#34;&#34;
+    Base class for the DataBag types
+    &#34;&#34;&#34;
+
+    def __getitem__(self, bagfilter: FilterBase[T]) -&gt; T:
+        &#34;&#34;&#34;
+        forwards to the pathfilter method, so that filters can be chained in a simple syntax:
+        bag[filter1][filter2] is equal to bag.pathfilter(filter1).pathfilter(filter2)
+
+        Args:
+            bagfilter: the pathfilter to be applied
+
+        Returns:
+            RawDataBag: the databag with the filtered content
+        &#34;&#34;&#34;
+
+        return self.filter(bagfilter)
+
+    def filter(self, bagfilter: FilterBase[T]) -&gt; T:
+        &#34;&#34;&#34;
+        applies a pathfilter to the bag and produces a new bag based on the pathfilter.
+        instead of using the pathfilter, you can also use the &#34;index&#34; syntax to apply filters:
+        bag[filter1][filter2] is equal to bag.pathfilter(filter1).pathfilter(filter2)
+
+        Args:
+            bagfilter: the pathfilter to be applied
+
+        Returns:
+            RawDataBag: the databag with the filtered content
+        &#34;&#34;&#34;
+        return bagfilter.filter(self)
+
+    def present(self, presenter: Presenter[T]) -&gt; pd.DataFrame:
+        &#34;&#34;&#34;
+        apply a presenter
+        &#34;&#34;&#34;
+        return presenter.present(self)
+
+    @staticmethod
+    def load_sub_df_by_filter(target_path: str,
+                              ciks: Optional[List[int]] = None,
+                              adshs: Optional[List[str]] = None,
+                              forms: Optional[List[str]] = None) -&gt; pd.DataFrame:
+        &#34;&#34;&#34;
+        loads the sub_txt datafrome from the target_path by directly applying the
+        defined filters during loading.
+
+        Args:
+            target_path: root_path with the parquet files for sub, pre, and num
+            ciks: optional list of cik numbers to filter for during loading
+            forms: optional list of forms (10-K, 10-Q) to filter for during loading
+            adshs: optional list of adhs to filter during the loading
+
+        Returns:
+            pd.DataFrame the loaded sub_df content
+        &#34;&#34;&#34;
+
+        sub_filters: List = []
+        if ciks:
+            sub_filters.append((&#39;cik&#39;, &#39;in&#39;, ciks))
+        if adshs:
+            sub_filters.append((&#39;adsh&#39;, &#39;in&#39;, adshs))
+        elif forms:
+            sub_filters.append((&#39;form&#39;, &#39;in&#39;, forms))
+
+        if sub_filters:
+            LOGGER.info(&#34;apply sub_df filter: %s&#34;, sub_filters)
+
+        sub_df = pd.read_parquet(os.path.join(target_path, f&#39;{SUB_TXT}.parquet&#39;),
+                                 filters=sub_filters if sub_filters else None)
+
+        return sub_df</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>typing.Generic</li>
+</ul>
+<h3>Subclasses</h3>
+<ul class="hlist">
+<li><a title="secfsdstools.d_container.databagmodel.JoinedDataBag" href="#secfsdstools.d_container.databagmodel.JoinedDataBag">JoinedDataBag</a></li>
+<li><a title="secfsdstools.d_container.databagmodel.RawDataBag" href="#secfsdstools.d_container.databagmodel.RawDataBag">RawDataBag</a></li>
+</ul>
+<h3>Static methods</h3>
+<dl>
+<dt id="secfsdstools.d_container.databagmodel.DataBagBase.load_sub_df_by_filter"><code class="name flex">
+<span>def <span class="ident">load_sub_df_by_filter</span></span>(<span>target_path: str, ciks: Optional[List[int]] = None, adshs: Optional[List[str]] = None, forms: Optional[List[str]] = None) ‑> pandas.core.frame.DataFrame</span>
+</code></dt>
+<dd>
+<div class="desc"><p>loads the sub_txt datafrome from the target_path by directly applying the
+defined filters during loading.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>target_path</code></strong></dt>
+<dd>root_path with the parquet files for sub, pre, and num</dd>
+<dt><strong><code>ciks</code></strong></dt>
+<dd>optional list of cik numbers to filter for during loading</dd>
+<dt><strong><code>forms</code></strong></dt>
+<dd>optional list of forms (10-K, 10-Q) to filter for during loading</dd>
+<dt><strong><code>adshs</code></strong></dt>
+<dd>optional list of adhs to filter during the loading</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<p>pd.DataFrame the loaded sub_df content</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@staticmethod
+def load_sub_df_by_filter(target_path: str,
+                          ciks: Optional[List[int]] = None,
+                          adshs: Optional[List[str]] = None,
+                          forms: Optional[List[str]] = None) -&gt; pd.DataFrame:
+    &#34;&#34;&#34;
+    loads the sub_txt datafrome from the target_path by directly applying the
+    defined filters during loading.
+
+    Args:
+        target_path: root_path with the parquet files for sub, pre, and num
+        ciks: optional list of cik numbers to filter for during loading
+        forms: optional list of forms (10-K, 10-Q) to filter for during loading
+        adshs: optional list of adhs to filter during the loading
+
+    Returns:
+        pd.DataFrame the loaded sub_df content
+    &#34;&#34;&#34;
+
+    sub_filters: List = []
+    if ciks:
+        sub_filters.append((&#39;cik&#39;, &#39;in&#39;, ciks))
+    if adshs:
+        sub_filters.append((&#39;adsh&#39;, &#39;in&#39;, adshs))
+    elif forms:
+        sub_filters.append((&#39;form&#39;, &#39;in&#39;, forms))
+
+    if sub_filters:
+        LOGGER.info(&#34;apply sub_df filter: %s&#34;, sub_filters)
+
+    sub_df = pd.read_parquet(os.path.join(target_path, f&#39;{SUB_TXT}.parquet&#39;),
+                             filters=sub_filters if sub_filters else None)
+
+    return sub_df</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="secfsdstools.d_container.databagmodel.DataBagBase.filter"><code class="name flex">
+<span>def <span class="ident">filter</span></span>(<span>self, bagfilter: <a title="secfsdstools.d_container.filter.FilterBase" href="filter.html#secfsdstools.d_container.filter.FilterBase">FilterBase</a>[~T]) ‑> ~T</span>
+</code></dt>
+<dd>
+<div class="desc"><p>applies a pathfilter to the bag and produces a new bag based on the pathfilter.
+instead of using the pathfilter, you can also use the "index" syntax to apply filters:
+bag[filter1][filter2] is equal to bag.pathfilter(filter1).pathfilter(filter2)</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>bagfilter</code></strong></dt>
+<dd>the pathfilter to be applied</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code><a title="secfsdstools.d_container.databagmodel.RawDataBag" href="#secfsdstools.d_container.databagmodel.RawDataBag">RawDataBag</a></code></dt>
+<dd>the databag with the filtered content</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def filter(self, bagfilter: FilterBase[T]) -&gt; T:
+    &#34;&#34;&#34;
+    applies a pathfilter to the bag and produces a new bag based on the pathfilter.
+    instead of using the pathfilter, you can also use the &#34;index&#34; syntax to apply filters:
+    bag[filter1][filter2] is equal to bag.pathfilter(filter1).pathfilter(filter2)
+
+    Args:
+        bagfilter: the pathfilter to be applied
+
+    Returns:
+        RawDataBag: the databag with the filtered content
+    &#34;&#34;&#34;
+    return bagfilter.filter(self)</code></pre>
+</details>
+</dd>
+<dt id="secfsdstools.d_container.databagmodel.DataBagBase.present"><code class="name flex">
+<span>def <span class="ident">present</span></span>(<span>self, presenter: <a title="secfsdstools.d_container.presentation.Presenter" href="presentation.html#secfsdstools.d_container.presentation.Presenter">Presenter</a>[~T]) ‑> pandas.core.frame.DataFrame</span>
+</code></dt>
+<dd>
+<div class="desc"><p>apply a presenter</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def present(self, presenter: Presenter[T]) -&gt; pd.DataFrame:
+    &#34;&#34;&#34;
+    apply a presenter
+    &#34;&#34;&#34;
+    return presenter.present(self)</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+<dt id="secfsdstools.d_container.databagmodel.JoinedDataBag"><code class="flex name class">
+<span>class <span class="ident">JoinedDataBag</span></span>
+<span>(</span><span>sub_df: pandas.core.frame.DataFrame, pre_num_df: pandas.core.frame.DataFrame)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>the DataBag in which the pre.txt and the num.txt are joined based on the
+adsh, tag, and version.</p>
+<p>constructor.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>sub_df</code></strong></dt>
+<dd>sub.txt dataframe</dd>
+<dt><strong><code>pre_num_df</code></strong></dt>
+<dd>joined pre.txt and num.txt dataframe</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class JoinedDataBag(DataBagBase[JOINED]):
+    &#34;&#34;&#34;
+    the DataBag in which the pre.txt and the num.txt are joined based on the
+    adsh, tag, and version.
+    &#34;&#34;&#34;
+
+    @classmethod
+    def create(cls, sub_df: pd.DataFrame, pre_num_df: pd.DataFrame) -&gt; JOINED:
+        &#34;&#34;&#34;
+        create a new JoinedDataBag.
+
+        Args:
+            sub_df: sub.txt dataframe
+
+            pre_num_df: joined pre.txt and num.txt dataframe
+
+        Returns:
+            JoinedDataBag: new instance of JoinedDataBag
+        &#34;&#34;&#34;
+        return JoinedDataBag(sub_df=sub_df, pre_num_df=pre_num_df)
+
+    def __init__(self, sub_df: pd.DataFrame, pre_num_df: pd.DataFrame):
+        &#34;&#34;&#34;
+        constructor.
+        Args:
+            sub_df: sub.txt dataframe
+            pre_num_df: joined pre.txt and num.txt dataframe
+        &#34;&#34;&#34;
+        self.sub_df = sub_df
+        self.pre_num_df = pre_num_df
+
+    def get_sub_copy(self) -&gt; pd.DataFrame:
+        &#34;&#34;&#34;
+        Returns a copy of the sub dataframe.
+
+        Returns:
+            pd.DataFrame: copy of the sub dataframe.
+        &#34;&#34;&#34;
+        return self.sub_df.copy()
+
+    def get_pre_num_copy(self) -&gt; pd.DataFrame:
+        &#34;&#34;&#34;
+        Returns a copy of the joined pre_num dataframe.
+
+        Returns:
+            pd.DataFrame: copy of joined pre_num dataframe.
+        &#34;&#34;&#34;
+        return self.pre_num_df.copy()
+
+    def copy_bag(self) -&gt; JOINED:
+        &#34;&#34;&#34;
+        creates a bag with new copies of the internal dataframes.
+
+        Returns:
+            JoinedDataBag: new instance of JoinedDataBag
+        &#34;&#34;&#34;
+        return JoinedDataBag.create(sub_df=self.sub_df.copy(),
+                                    pre_num_df=self.pre_num_df.copy())
+
+    def save(self, target_path: str):
+        &#34;&#34;&#34;
+        Stores the bag under the given directory.
+        The directory has to exist and must be empty.
+
+        Args:
+            target_path: the directory under which the parquet files for sub and pre_num
+                  will be created
+
+        &#34;&#34;&#34;
+        check_dir(target_path)
+
+        self.sub_df.to_parquet(os.path.join(target_path, f&#39;{SUB_TXT}.parquet&#39;))
+        self.pre_num_df.to_parquet(os.path.join(target_path, f&#39;{PRE_NUM_TXT}.parquet&#39;))
+
+    @staticmethod
+    def load(target_path: str,
+             ciks_filter: Optional[List[int]] = None,
+             adshs_filter: Optional[List[str]] = None,
+             forms_filter: Optional[List[str]] = None,
+             stmt_filter: Optional[List[str]] = None,
+             tag_filter: Optional[List[str]] = None) -&gt; JOINED:
+        &#34;&#34;&#34;
+            Loads the content of the current bag at the specified location.
+
+            There are optional filters for adshs, forms, stmts and tags, that are
+            applied directly during the load process and hence are more efficient and
+            less memory consuming than loading the data and then applying filters.
+
+            This makes especially sense, when you concatenated together data from different
+            zip files.
+
+        Args:
+            target_path: root_path with the parquet files for sub, pre, and num
+            ciks_filter: optional list of cik numbers to filter for during loading
+            forms_filter: optional list of forms (10-K, 10-Q) to filter for during loading
+            adshs_filter: optional list of adhs to filter during the laoding
+            stmt_filter: optional list of stmts (BS, IS, CF, ..) to filter during the loading
+            tag_filter: optional list of tags to filter during the loading
+
+        Returns:
+            RawDataBag: the loaded Databag
+        &#34;&#34;&#34;
+        sub_df = DataBagBase.load_sub_df_by_filter(
+            target_path=target_path, adshs=adshs_filter, forms=forms_filter, ciks=ciks_filter
+        )
+
+        # if the forms and/or ciks filter was applied, overwrite the adshs list,
+        # since this are adshs values that we should filter for in the pre_num dataframe
+        if forms_filter or ciks_filter:
+            adshs_filter = sub_df.adsh.to_list()
+
+        pre_num_filter = []
+
+        filter_log_str: List[str] = []
+
+        if adshs_filter:
+            pre_num_filter.append((&#39;adsh&#39;, &#39;in&#39;, adshs_filter))
+
+            # the list of adshs could be quite huge, so we trim the message that we log
+            # to max 100 characters
+            log_part = str((&#39;adsh&#39;, &#39;in&#39;, adshs_filter))
+            if len(log_part) &gt; 100:
+                log_part = log_part[:100] + &#34;...)&#34;
+            filter_log_str.append(log_part)
+
+        if stmt_filter:
+            pre_num_filter.append((&#39;stmt&#39;, &#39;in&#39;, stmt_filter))
+            filter_log_str.append(str((&#39;stmt&#39;, &#39;in&#39;, stmt_filter)))
+
+        if tag_filter:
+            pre_num_filter.append((&#39;tag&#39;, &#39;in&#39;, tag_filter))
+            filter_log_str.append(str((&#39;tag&#39;, &#39;in&#39;, tag_filter)))
+
+        if len(pre_num_filter) &gt; 0:
+            LOGGER.info(&#34;apply pre_num_df filter: %s&#34;, filter_log_str)
+
+        pre_num_df = pd.read_parquet(os.path.join(target_path, f&#39;{PRE_NUM_TXT}.parquet&#39;),
+                                     filters=pre_num_filter if pre_num_filter else None)
+
+        return JoinedDataBag.create(sub_df=sub_df, pre_num_df=pre_num_df)
+
+    @staticmethod
+    def concat(bags: List[JOINED], drop_duplicates_sub_df: bool = False) -&gt; JOINED:
+        &#34;&#34;&#34;
+        Merges multiple Bags together into one bag.
+        Note: merge does not check if DataBags with the same reports are merged together.
+
+        Args:
+            bags: List of bags to be merged
+            drop_duplicates_sub_df: set to True, if you want to remove duplicates in the sub_df
+
+        Returns:
+            JoinedDataBag: a Bag with the merged content
+
+        &#34;&#34;&#34;
+        sub_dfs = [db.sub_df for db in bags]
+        pre_num_dfs = [db.pre_num_df for db in bags]
+
+        sub_df = pd.concat(sub_dfs, ignore_index=True)
+        pre_num_df = pd.concat(pre_num_dfs, ignore_index=True)
+
+        if drop_duplicates_sub_df:
+            sub_df.drop_duplicates(inplace=True)
+
+        return JoinedDataBag.create(sub_df=sub_df,
+                                    pre_num_df=pre_num_df)
+
+    @staticmethod
+    def concat_filebased(paths_to_concat: List[Path],
+                         target_path: Path,
+                         drop_duplicates_sub_df: bool = False):
+        &#34;&#34;&#34;
+        Concatenates all the Bags in paths_to_concatenate into the target_dir directory.
+
+        It is directly working on the files and does not load the data into the memory.
+
+
+        Args:
+            paths_to_concat (List[Path]) : List with paths to read the datafrome
+            target_path (Path) : path to write the concatenated data to
+            drop_duplicates_sub_df (bool, False): indicates whether drop duplicates
+                                has to be applied on the sub_df.
+                                if true, the data for the sub.txt files must be read into memory.
+                                This has to be true, for instance if you have separate bags
+                                for BS, IS, and CF and want to concat them. In this case, they
+                                all have the same data in sub.txt.
+
+        Returns:
+        &#34;&#34;&#34;
+        if len(paths_to_concat) == 0:
+            # nothing to do
+            return
+
+        concat_bags_file_based_internal(
+            paths_to_concat=paths_to_concat,
+            target_path=target_path,
+            file_list=[PRE_NUM_TXT],
+            drop_duplicates_sub_df=drop_duplicates_sub_df
+        )
+
+    @staticmethod
+    def is_joinedbag_path(path: Path) -&gt; bool:
+        &#34;&#34;&#34; Check whether the provided path contains the files of a JoinedDatabag. &#34;&#34;&#34;
+        return (path / &#34;pre_num.txt.parquet&#34;).exists()</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="secfsdstools.d_container.databagmodel.DataBagBase" href="#secfsdstools.d_container.databagmodel.DataBagBase">DataBagBase</a></li>
+<li>typing.Generic</li>
+</ul>
+<h3>Static methods</h3>
+<dl>
+<dt id="secfsdstools.d_container.databagmodel.JoinedDataBag.concat"><code class="name flex">
+<span>def <span class="ident">concat</span></span>(<span>bags: List[~JOINED], drop_duplicates_sub_df: bool = False) ‑> ~JOINED</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Merges multiple Bags together into one bag.
+Note: merge does not check if DataBags with the same reports are merged together.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>bags</code></strong></dt>
+<dd>List of bags to be merged</dd>
+<dt><strong><code>drop_duplicates_sub_df</code></strong></dt>
+<dd>set to True, if you want to remove duplicates in the sub_df</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code><a title="secfsdstools.d_container.databagmodel.JoinedDataBag" href="#secfsdstools.d_container.databagmodel.JoinedDataBag">JoinedDataBag</a></code></dt>
+<dd>a Bag with the merged content</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@staticmethod
+def concat(bags: List[JOINED], drop_duplicates_sub_df: bool = False) -&gt; JOINED:
+    &#34;&#34;&#34;
+    Merges multiple Bags together into one bag.
+    Note: merge does not check if DataBags with the same reports are merged together.
+
+    Args:
+        bags: List of bags to be merged
+        drop_duplicates_sub_df: set to True, if you want to remove duplicates in the sub_df
+
+    Returns:
+        JoinedDataBag: a Bag with the merged content
+
+    &#34;&#34;&#34;
+    sub_dfs = [db.sub_df for db in bags]
+    pre_num_dfs = [db.pre_num_df for db in bags]
+
+    sub_df = pd.concat(sub_dfs, ignore_index=True)
+    pre_num_df = pd.concat(pre_num_dfs, ignore_index=True)
+
+    if drop_duplicates_sub_df:
+        sub_df.drop_duplicates(inplace=True)
+
+    return JoinedDataBag.create(sub_df=sub_df,
+                                pre_num_df=pre_num_df)</code></pre>
+</details>
+</dd>
+<dt id="secfsdstools.d_container.databagmodel.JoinedDataBag.concat_filebased"><code class="name flex">
+<span>def <span class="ident">concat_filebased</span></span>(<span>paths_to_concat: List[pathlib.Path], target_path: pathlib.Path, drop_duplicates_sub_df: bool = False)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Concatenates all the Bags in paths_to_concatenate into the target_dir directory.</p>
+<p>It is directly working on the files and does not load the data into the memory.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt>paths_to_concat (List[Path]) : List with paths to read the datafrome</dt>
+<dt>target_path (Path) : path to write the concatenated data to</dt>
+<dt><strong><code>drop_duplicates_sub_df</code></strong> :&ensp;<code>bool, False</code></dt>
+<dd>indicates whether drop duplicates
+has to be applied on the sub_df.
+if true, the data for the sub.txt files must be read into memory.
+This has to be true, for instance if you have separate bags
+for BS, IS, and CF and want to concat them. In this case, they
+all have the same data in sub.txt.</dd>
+</dl>
+<p>Returns:</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@staticmethod
+def concat_filebased(paths_to_concat: List[Path],
+                     target_path: Path,
+                     drop_duplicates_sub_df: bool = False):
+    &#34;&#34;&#34;
+    Concatenates all the Bags in paths_to_concatenate into the target_dir directory.
+
+    It is directly working on the files and does not load the data into the memory.
+
+
+    Args:
+        paths_to_concat (List[Path]) : List with paths to read the datafrome
+        target_path (Path) : path to write the concatenated data to
+        drop_duplicates_sub_df (bool, False): indicates whether drop duplicates
+                            has to be applied on the sub_df.
+                            if true, the data for the sub.txt files must be read into memory.
+                            This has to be true, for instance if you have separate bags
+                            for BS, IS, and CF and want to concat them. In this case, they
+                            all have the same data in sub.txt.
+
+    Returns:
+    &#34;&#34;&#34;
+    if len(paths_to_concat) == 0:
+        # nothing to do
+        return
+
+    concat_bags_file_based_internal(
+        paths_to_concat=paths_to_concat,
+        target_path=target_path,
+        file_list=[PRE_NUM_TXT],
+        drop_duplicates_sub_df=drop_duplicates_sub_df
+    )</code></pre>
+</details>
+</dd>
+<dt id="secfsdstools.d_container.databagmodel.JoinedDataBag.create"><code class="name flex">
+<span>def <span class="ident">create</span></span>(<span>sub_df: pandas.core.frame.DataFrame, pre_num_df: pandas.core.frame.DataFrame) ‑> ~JOINED</span>
+</code></dt>
+<dd>
+<div class="desc"><p>create a new JoinedDataBag.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>sub_df</code></strong></dt>
+<dd>sub.txt dataframe</dd>
+<dt><strong><code>pre_num_df</code></strong></dt>
+<dd>joined pre.txt and num.txt dataframe</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code><a title="secfsdstools.d_container.databagmodel.JoinedDataBag" href="#secfsdstools.d_container.databagmodel.JoinedDataBag">JoinedDataBag</a></code></dt>
+<dd>new instance of JoinedDataBag</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@classmethod
+def create(cls, sub_df: pd.DataFrame, pre_num_df: pd.DataFrame) -&gt; JOINED:
+    &#34;&#34;&#34;
+    create a new JoinedDataBag.
+
+    Args:
+        sub_df: sub.txt dataframe
+
+        pre_num_df: joined pre.txt and num.txt dataframe
+
+    Returns:
+        JoinedDataBag: new instance of JoinedDataBag
+    &#34;&#34;&#34;
+    return JoinedDataBag(sub_df=sub_df, pre_num_df=pre_num_df)</code></pre>
+</details>
+</dd>
+<dt id="secfsdstools.d_container.databagmodel.JoinedDataBag.is_joinedbag_path"><code class="name flex">
+<span>def <span class="ident">is_joinedbag_path</span></span>(<span>path: pathlib.Path) ‑> bool</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Check whether the provided path contains the files of a JoinedDatabag.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@staticmethod
+def is_joinedbag_path(path: Path) -&gt; bool:
+    &#34;&#34;&#34; Check whether the provided path contains the files of a JoinedDatabag. &#34;&#34;&#34;
+    return (path / &#34;pre_num.txt.parquet&#34;).exists()</code></pre>
+</details>
+</dd>
+<dt id="secfsdstools.d_container.databagmodel.JoinedDataBag.load"><code class="name flex">
+<span>def <span class="ident">load</span></span>(<span>target_path: str, ciks_filter: Optional[List[int]] = None, adshs_filter: Optional[List[str]] = None, forms_filter: Optional[List[str]] = None, stmt_filter: Optional[List[str]] = None, tag_filter: Optional[List[str]] = None) ‑> ~JOINED</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Loads the content of the current bag at the specified location.</p>
+<pre><code>There are optional filters for adshs, forms, stmts and tags, that are
+applied directly during the load process and hence are more efficient and
+less memory consuming than loading the data and then applying filters.
+
+This makes especially sense, when you concatenated together data from different
+zip files.
+</code></pre>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>target_path</code></strong></dt>
+<dd>root_path with the parquet files for sub, pre, and num</dd>
+<dt><strong><code>ciks_filter</code></strong></dt>
+<dd>optional list of cik numbers to filter for during loading</dd>
+<dt><strong><code>forms_filter</code></strong></dt>
+<dd>optional list of forms (10-K, 10-Q) to filter for during loading</dd>
+<dt><strong><code>adshs_filter</code></strong></dt>
+<dd>optional list of adhs to filter during the laoding</dd>
+<dt><strong><code>stmt_filter</code></strong></dt>
+<dd>optional list of stmts (BS, IS, CF, ..) to filter during the loading</dd>
+<dt><strong><code>tag_filter</code></strong></dt>
+<dd>optional list of tags to filter during the loading</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code><a title="secfsdstools.d_container.databagmodel.RawDataBag" href="#secfsdstools.d_container.databagmodel.RawDataBag">RawDataBag</a></code></dt>
+<dd>the loaded Databag</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@staticmethod
+def load(target_path: str,
+         ciks_filter: Optional[List[int]] = None,
+         adshs_filter: Optional[List[str]] = None,
+         forms_filter: Optional[List[str]] = None,
+         stmt_filter: Optional[List[str]] = None,
+         tag_filter: Optional[List[str]] = None) -&gt; JOINED:
+    &#34;&#34;&#34;
+        Loads the content of the current bag at the specified location.
+
+        There are optional filters for adshs, forms, stmts and tags, that are
+        applied directly during the load process and hence are more efficient and
+        less memory consuming than loading the data and then applying filters.
+
+        This makes especially sense, when you concatenated together data from different
+        zip files.
+
+    Args:
+        target_path: root_path with the parquet files for sub, pre, and num
+        ciks_filter: optional list of cik numbers to filter for during loading
+        forms_filter: optional list of forms (10-K, 10-Q) to filter for during loading
+        adshs_filter: optional list of adhs to filter during the laoding
+        stmt_filter: optional list of stmts (BS, IS, CF, ..) to filter during the loading
+        tag_filter: optional list of tags to filter during the loading
+
+    Returns:
+        RawDataBag: the loaded Databag
+    &#34;&#34;&#34;
+    sub_df = DataBagBase.load_sub_df_by_filter(
+        target_path=target_path, adshs=adshs_filter, forms=forms_filter, ciks=ciks_filter
+    )
+
+    # if the forms and/or ciks filter was applied, overwrite the adshs list,
+    # since this are adshs values that we should filter for in the pre_num dataframe
+    if forms_filter or ciks_filter:
+        adshs_filter = sub_df.adsh.to_list()
+
+    pre_num_filter = []
+
+    filter_log_str: List[str] = []
+
+    if adshs_filter:
+        pre_num_filter.append((&#39;adsh&#39;, &#39;in&#39;, adshs_filter))
+
+        # the list of adshs could be quite huge, so we trim the message that we log
+        # to max 100 characters
+        log_part = str((&#39;adsh&#39;, &#39;in&#39;, adshs_filter))
+        if len(log_part) &gt; 100:
+            log_part = log_part[:100] + &#34;...)&#34;
+        filter_log_str.append(log_part)
+
+    if stmt_filter:
+        pre_num_filter.append((&#39;stmt&#39;, &#39;in&#39;, stmt_filter))
+        filter_log_str.append(str((&#39;stmt&#39;, &#39;in&#39;, stmt_filter)))
+
+    if tag_filter:
+        pre_num_filter.append((&#39;tag&#39;, &#39;in&#39;, tag_filter))
+        filter_log_str.append(str((&#39;tag&#39;, &#39;in&#39;, tag_filter)))
+
+    if len(pre_num_filter) &gt; 0:
+        LOGGER.info(&#34;apply pre_num_df filter: %s&#34;, filter_log_str)
+
+    pre_num_df = pd.read_parquet(os.path.join(target_path, f&#39;{PRE_NUM_TXT}.parquet&#39;),
+                                 filters=pre_num_filter if pre_num_filter else None)
+
+    return JoinedDataBag.create(sub_df=sub_df, pre_num_df=pre_num_df)</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="secfsdstools.d_container.databagmodel.JoinedDataBag.copy_bag"><code class="name flex">
+<span>def <span class="ident">copy_bag</span></span>(<span>self) ‑> ~JOINED</span>
+</code></dt>
+<dd>
+<div class="desc"><p>creates a bag with new copies of the internal dataframes.</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code><a title="secfsdstools.d_container.databagmodel.JoinedDataBag" href="#secfsdstools.d_container.databagmodel.JoinedDataBag">JoinedDataBag</a></code></dt>
+<dd>new instance of JoinedDataBag</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def copy_bag(self) -&gt; JOINED:
+    &#34;&#34;&#34;
+    creates a bag with new copies of the internal dataframes.
+
+    Returns:
+        JoinedDataBag: new instance of JoinedDataBag
+    &#34;&#34;&#34;
+    return JoinedDataBag.create(sub_df=self.sub_df.copy(),
+                                pre_num_df=self.pre_num_df.copy())</code></pre>
+</details>
+</dd>
+<dt id="secfsdstools.d_container.databagmodel.JoinedDataBag.get_pre_num_copy"><code class="name flex">
+<span>def <span class="ident">get_pre_num_copy</span></span>(<span>self) ‑> pandas.core.frame.DataFrame</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Returns a copy of the joined pre_num dataframe.</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>pd.DataFrame</code></dt>
+<dd>copy of joined pre_num dataframe.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_pre_num_copy(self) -&gt; pd.DataFrame:
+    &#34;&#34;&#34;
+    Returns a copy of the joined pre_num dataframe.
+
+    Returns:
+        pd.DataFrame: copy of joined pre_num dataframe.
+    &#34;&#34;&#34;
+    return self.pre_num_df.copy()</code></pre>
+</details>
+</dd>
+<dt id="secfsdstools.d_container.databagmodel.JoinedDataBag.get_sub_copy"><code class="name flex">
+<span>def <span class="ident">get_sub_copy</span></span>(<span>self) ‑> pandas.core.frame.DataFrame</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Returns a copy of the sub dataframe.</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>pd.DataFrame</code></dt>
+<dd>copy of the sub dataframe.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_sub_copy(self) -&gt; pd.DataFrame:
+    &#34;&#34;&#34;
+    Returns a copy of the sub dataframe.
+
+    Returns:
+        pd.DataFrame: copy of the sub dataframe.
+    &#34;&#34;&#34;
+    return self.sub_df.copy()</code></pre>
+</details>
+</dd>
+<dt id="secfsdstools.d_container.databagmodel.JoinedDataBag.save"><code class="name flex">
+<span>def <span class="ident">save</span></span>(<span>self, target_path: str)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Stores the bag under the given directory.
+The directory has to exist and must be empty.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>target_path</code></strong></dt>
+<dd>the directory under which the parquet files for sub and pre_num
+will be created</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def save(self, target_path: str):
+    &#34;&#34;&#34;
+    Stores the bag under the given directory.
+    The directory has to exist and must be empty.
+
+    Args:
+        target_path: the directory under which the parquet files for sub and pre_num
+              will be created
+
+    &#34;&#34;&#34;
+    check_dir(target_path)
+
+    self.sub_df.to_parquet(os.path.join(target_path, f&#39;{SUB_TXT}.parquet&#39;))
+    self.pre_num_df.to_parquet(os.path.join(target_path, f&#39;{PRE_NUM_TXT}.parquet&#39;))</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="secfsdstools.d_container.databagmodel.DataBagBase" href="#secfsdstools.d_container.databagmodel.DataBagBase">DataBagBase</a></b></code>:
+<ul class="hlist">
+<li><code><a title="secfsdstools.d_container.databagmodel.DataBagBase.filter" href="#secfsdstools.d_container.databagmodel.DataBagBase.filter">filter</a></code></li>
+<li><code><a title="secfsdstools.d_container.databagmodel.DataBagBase.load_sub_df_by_filter" href="#secfsdstools.d_container.databagmodel.DataBagBase.load_sub_df_by_filter">load_sub_df_by_filter</a></code></li>
+<li><code><a title="secfsdstools.d_container.databagmodel.DataBagBase.present" href="#secfsdstools.d_container.databagmodel.DataBagBase.present">present</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+<dt id="secfsdstools.d_container.databagmodel.RawDataBag"><code class="flex name class">
+<span>class <span class="ident">RawDataBag</span></span>
+<span>(</span><span>sub_df: pandas.core.frame.DataFrame, pre_df: pandas.core.frame.DataFrame, num_df: pandas.core.frame.DataFrame)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Container class to keep the data for sub.txt, pre.txt, and num.txt together.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class RawDataBag(DataBagBase[RAW]):
+    &#34;&#34;&#34;
+    Container class to keep the data for sub.txt, pre.txt, and num.txt together.
+    &#34;&#34;&#34;
+
+    @classmethod
+    def create(cls, sub_df: pd.DataFrame, pre_df: pd.DataFrame, num_df: pd.DataFrame) -&gt; RAW:
+        &#34;&#34;&#34;
+        create method for RawDataBag
+        Args:
+            sub_df(pd.DataFrame): sub.txt dataframe
+            pre_df(pd.DataFrame): pre.txt dataframe
+            num_df(pd.DataFrame): num.txt dataframe
+
+        Returns:
+            RawDataBag:
+        &#34;&#34;&#34;
+        return RawDataBag(sub_df=sub_df, pre_df=pre_df, num_df=num_df)
+
+    def __init__(self, sub_df: pd.DataFrame, pre_df: pd.DataFrame, num_df: pd.DataFrame):
+        self.sub_df = sub_df
+        self.pre_df = pre_df
+        self.num_df = num_df
+
+    def copy_bag(self):
+        &#34;&#34;&#34;
+        creates a bag with new copies of the internal dataframes.
+
+        Returns:
+            RawDataBag: new instance of JoinedDataBag
+        &#34;&#34;&#34;
+
+        return RawDataBag.create(sub_df=self.sub_df.copy(),
+                                 pre_df=self.pre_df.copy(),
+                                 num_df=self.num_df.copy())
+
+    def get_sub_copy(self) -&gt; pd.DataFrame:
+        &#34;&#34;&#34;
+        Returns a copy of the sub.txt dataframe.
+
+        Returns:
+            pd.DataFrame: copy of the sub.txt dataframe.
+        &#34;&#34;&#34;
+        return self.sub_df.copy()
+
+    def get_pre_copy(self) -&gt; pd.DataFrame:
+        &#34;&#34;&#34;
+        Returns a copy of the pre.txt dataframe.
+
+        Returns:
+            pd.DataFrame: copy of the pre.txt dataframe.
+        &#34;&#34;&#34;
+        return self.pre_df.copy()
+
+    def get_num_copy(self) -&gt; pd.DataFrame:
+        &#34;&#34;&#34;
+        Returns a copy of the num.txt dataframe.
+
+        Returns:
+            pd.DataFrame: copy of the num.txt dataframe.
+        &#34;&#34;&#34;
+        return self.num_df.copy()
+
+    def join(self) -&gt; JoinedDataBag:
+        &#34;&#34;&#34;
+        merges the raw data of pre and num together.
+
+        Returns:
+            JoinedDataBag: the DataBag where pre and num are merged
+
+        &#34;&#34;&#34;
+
+        # merge num and pre together. only rows in num are considered for which entries in pre exist
+        pre_num_df = pd.merge(self.num_df,
+                              self.pre_df,
+                              on=[&#39;adsh&#39;, &#39;tag&#39;,
+                                  &#39;version&#39;])  # don&#39;t produce index_x and index_y columns
+
+        return JoinedDataBag.create(sub_df=self.sub_df, pre_num_df=pre_num_df)
+
+    def statistics(self) -&gt; RawDataBagStats:
+        &#34;&#34;&#34;
+        calculate a few simple statistics of a report.
+        - number of entries in the num-file
+        - number of entries in the pre-file
+        - number of reports in the zip-file (equals number of entries in sub-file)
+        - number of reports per form (10-K, 10-Q, ...)
+        - number of reports per period date (counts per value in the period column of sub-file)
+
+        Returns:
+            RawDataBagStats: instance with basic report infos
+        &#34;&#34;&#34;
+
+        num_entries = len(self.num_df)
+        pre_entries = len(self.pre_df)
+        number_of_reports = len(self.sub_df)
+        reports_per_period_date: Dict[int, int] = self.sub_df.period.value_counts().to_dict()
+        reports_per_form: Dict[str, int] = self.sub_df.form.value_counts().to_dict()
+
+        return RawDataBagStats(num_entries=num_entries,
+                               pre_entries=pre_entries,
+                               number_of_reports=number_of_reports,
+                               reports_per_form=reports_per_form,
+                               reports_per_period_date=reports_per_period_date
+                               )
+
+    def save(self, target_path: str):
+        &#34;&#34;&#34;
+        Stores the bag under the given directory.
+        The directory has to exist and must be empty.
+
+        Args:
+            target_path: the directory under which three parquet files for sub_txt, pre_text,
+                  and num_txt will be created
+        &#34;&#34;&#34;
+        check_dir(target_path)
+
+        self.sub_df.to_parquet(os.path.join(target_path, f&#39;{SUB_TXT}.parquet&#39;))
+        self.pre_df.to_parquet(os.path.join(target_path, f&#39;{PRE_TXT}.parquet&#39;))
+        self.num_df.to_parquet(os.path.join(target_path, f&#39;{NUM_TXT}.parquet&#39;))
+
+    @staticmethod
+    def load(target_path: str,
+             ciks_filter: Optional[List[int]] = None,
+             adshs_filter: Optional[List[str]] = None,
+             forms_filter: Optional[List[str]] = None,
+             stmt_filter: Optional[List[str]] = None,
+             tag_filter: Optional[List[str]] = None) -&gt; RAW:
+        &#34;&#34;&#34;
+            Loads the content of the current bag at the specified location.
+
+            There are optional filters for adshs, forms, stmts and tags, that are
+            applied directly during the load process and hence are more efficient and
+            less memory consuming than loading the data and then applying filters.
+
+            This makes especially sense, when you concatenated together data from different
+            zip files.
+
+            Note: the adsh are mutally exclusive and adsh has the higher precedence.
+
+        Args:
+            target_path: root_path with the parquet files for sub, pre, and num
+            ciks_filter: optional list of cik numbers to filter for during loading
+            forms_filter: optional list of forms (10-K, 10-Q) to filter for during loading
+            adshs_filter: optional list of adhs to filter during the laoding
+            stmt_filter: optional list of stmts (BS, IS, CF, ..) to filter during the loading
+            tag_filter: optional list of tags to filter during the loading
+
+        Returns:
+            RawDataBag: the loaded Databag
+        &#34;&#34;&#34;
+        sub_df = DataBagBase.load_sub_df_by_filter(
+            target_path=target_path, adshs=adshs_filter, forms=forms_filter, ciks=ciks_filter
+        )
+
+        # if the forms and/or ciks filter was applied, overwrite the adshs list,
+        # since this are adshs values that we should filter for in the pre and num dataframes
+        if forms_filter or ciks_filter:
+            adshs_filter = sub_df.adsh.to_list()
+
+        pre_filter, num_filter = get_pre_num_filters(adshs=adshs_filter,
+                                                     stmts=stmt_filter,
+                                                     tags=tag_filter)
+
+        if len(num_filter) &gt; 0:
+            LOGGER.info(&#34;apply num_df filter: %s&#34;, num_filter)
+
+        if len(pre_filter) &gt; 0:
+            LOGGER.info(&#34;apply pre_df filter: %s&#34;, pre_filter)
+
+        pre_df = pd.read_parquet(os.path.join(target_path, f&#39;{PRE_TXT}.parquet&#39;),
+                                 filters=pre_filter if pre_filter else None)
+
+        num_df = pd.read_parquet(os.path.join(target_path, f&#39;{NUM_TXT}.parquet&#39;),
+                                 filters=num_filter if num_filter else None)
+
+        return RawDataBag.create(sub_df=sub_df, pre_df=pre_df, num_df=num_df)
+
+    @staticmethod
+    def concat(bags: List[RAW], drop_duplicates_sub_df: bool = False) -&gt; RAW:
+        &#34;&#34;&#34;
+        Merges multiple Bags together into one bag.
+        Note: merge does not check if DataBags with the same reports are merged together.
+
+        Args:
+            bags: List of bags to be merged
+            drop_duplicates_sub_df: set to True, if you want to remove duplicates in the sub_df
+
+        Returns:
+            RawDataBag: a Bag with the merged content
+
+        &#34;&#34;&#34;
+        sub_dfs = [db.sub_df for db in bags]
+        pre_dfs = [db.pre_df for db in bags]
+        num_dfs = [db.num_df for db in bags]
+
+        sub_df = pd.concat(sub_dfs, ignore_index=True)
+        pre_df = pd.concat(pre_dfs, ignore_index=True)
+        num_df = pd.concat(num_dfs, ignore_index=True)
+
+        if drop_duplicates_sub_df:
+            sub_df.drop_duplicates(inplace=True)
+
+        return RawDataBag.create(sub_df=sub_df,
+                                 pre_df=pre_df,
+                                 num_df=num_df)
+
+    @staticmethod
+    def concat_filebased(paths_to_concat: List[Path],
+                         target_path: Path,
+                         drop_duplicates_sub_df: bool = False):
+        &#34;&#34;&#34;
+        Concatenates all the Bags in paths_to_concatenate into the target_dir directory.
+
+        It is directly working on the files and does not load the data into the memory.
+
+
+        Args:
+            paths_to_concat (List[Path]) : List with paths to read the datafrome
+            target_path (Path) : path to write the concatenated data to
+            drop_duplicates_sub_df (bool, False): indicates whether drop duplicates
+                                has to be applied on the sub_df.
+                                if true, the data for the sub.txt files must be read into memory.
+                                This has to be true, for instance if you have separate bags
+                                for BS, IS, and CF and want to concat them. In this case, they
+                                all have the same data in sub.txt.
+
+        Returns:
+        &#34;&#34;&#34;
+        if len(paths_to_concat) == 0:
+            # nothing to do
+            return
+
+        concat_bags_file_based_internal(
+            paths_to_concat=paths_to_concat,
+            target_path=target_path,
+            file_list=[PRE_TXT, NUM_TXT],
+            drop_duplicates_sub_df=drop_duplicates_sub_df
+        )
+
+    @staticmethod
+    def is_rawbag_path(path: Path) -&gt; bool:
+        &#34;&#34;&#34; Check whether the provided path contains the files of a RawDatabag. &#34;&#34;&#34;
+        return (path / &#34;num.txt.parquet&#34;).exists()</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="secfsdstools.d_container.databagmodel.DataBagBase" href="#secfsdstools.d_container.databagmodel.DataBagBase">DataBagBase</a></li>
+<li>typing.Generic</li>
+</ul>
+<h3>Static methods</h3>
+<dl>
+<dt id="secfsdstools.d_container.databagmodel.RawDataBag.concat"><code class="name flex">
+<span>def <span class="ident">concat</span></span>(<span>bags: List[~RAW], drop_duplicates_sub_df: bool = False) ‑> ~RAW</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Merges multiple Bags together into one bag.
+Note: merge does not check if DataBags with the same reports are merged together.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>bags</code></strong></dt>
+<dd>List of bags to be merged</dd>
+<dt><strong><code>drop_duplicates_sub_df</code></strong></dt>
+<dd>set to True, if you want to remove duplicates in the sub_df</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code><a title="secfsdstools.d_container.databagmodel.RawDataBag" href="#secfsdstools.d_container.databagmodel.RawDataBag">RawDataBag</a></code></dt>
+<dd>a Bag with the merged content</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@staticmethod
+def concat(bags: List[RAW], drop_duplicates_sub_df: bool = False) -&gt; RAW:
+    &#34;&#34;&#34;
+    Merges multiple Bags together into one bag.
+    Note: merge does not check if DataBags with the same reports are merged together.
+
+    Args:
+        bags: List of bags to be merged
+        drop_duplicates_sub_df: set to True, if you want to remove duplicates in the sub_df
+
+    Returns:
+        RawDataBag: a Bag with the merged content
+
+    &#34;&#34;&#34;
+    sub_dfs = [db.sub_df for db in bags]
+    pre_dfs = [db.pre_df for db in bags]
+    num_dfs = [db.num_df for db in bags]
+
+    sub_df = pd.concat(sub_dfs, ignore_index=True)
+    pre_df = pd.concat(pre_dfs, ignore_index=True)
+    num_df = pd.concat(num_dfs, ignore_index=True)
+
+    if drop_duplicates_sub_df:
+        sub_df.drop_duplicates(inplace=True)
+
+    return RawDataBag.create(sub_df=sub_df,
+                             pre_df=pre_df,
+                             num_df=num_df)</code></pre>
+</details>
+</dd>
+<dt id="secfsdstools.d_container.databagmodel.RawDataBag.concat_filebased"><code class="name flex">
+<span>def <span class="ident">concat_filebased</span></span>(<span>paths_to_concat: List[pathlib.Path], target_path: pathlib.Path, drop_duplicates_sub_df: bool = False)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Concatenates all the Bags in paths_to_concatenate into the target_dir directory.</p>
+<p>It is directly working on the files and does not load the data into the memory.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt>paths_to_concat (List[Path]) : List with paths to read the datafrome</dt>
+<dt>target_path (Path) : path to write the concatenated data to</dt>
+<dt><strong><code>drop_duplicates_sub_df</code></strong> :&ensp;<code>bool, False</code></dt>
+<dd>indicates whether drop duplicates
+has to be applied on the sub_df.
+if true, the data for the sub.txt files must be read into memory.
+This has to be true, for instance if you have separate bags
+for BS, IS, and CF and want to concat them. In this case, they
+all have the same data in sub.txt.</dd>
+</dl>
+<p>Returns:</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@staticmethod
+def concat_filebased(paths_to_concat: List[Path],
+                     target_path: Path,
+                     drop_duplicates_sub_df: bool = False):
+    &#34;&#34;&#34;
+    Concatenates all the Bags in paths_to_concatenate into the target_dir directory.
+
+    It is directly working on the files and does not load the data into the memory.
+
+
+    Args:
+        paths_to_concat (List[Path]) : List with paths to read the datafrome
+        target_path (Path) : path to write the concatenated data to
+        drop_duplicates_sub_df (bool, False): indicates whether drop duplicates
+                            has to be applied on the sub_df.
+                            if true, the data for the sub.txt files must be read into memory.
+                            This has to be true, for instance if you have separate bags
+                            for BS, IS, and CF and want to concat them. In this case, they
+                            all have the same data in sub.txt.
+
+    Returns:
+    &#34;&#34;&#34;
+    if len(paths_to_concat) == 0:
+        # nothing to do
+        return
+
+    concat_bags_file_based_internal(
+        paths_to_concat=paths_to_concat,
+        target_path=target_path,
+        file_list=[PRE_TXT, NUM_TXT],
+        drop_duplicates_sub_df=drop_duplicates_sub_df
+    )</code></pre>
+</details>
+</dd>
+<dt id="secfsdstools.d_container.databagmodel.RawDataBag.create"><code class="name flex">
+<span>def <span class="ident">create</span></span>(<span>sub_df: pandas.core.frame.DataFrame, pre_df: pandas.core.frame.DataFrame, num_df: pandas.core.frame.DataFrame) ‑> ~RAW</span>
+</code></dt>
+<dd>
+<div class="desc"><p>create method for RawDataBag</p>
+<h2 id="args">Args</h2>
+<p>sub_df(pd.DataFrame): sub.txt dataframe
+pre_df(pd.DataFrame): pre.txt dataframe
+num_df(pd.DataFrame): num.txt dataframe</p>
+<h2 id="returns">Returns</h2>
+<p>RawDataBag:</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@classmethod
+def create(cls, sub_df: pd.DataFrame, pre_df: pd.DataFrame, num_df: pd.DataFrame) -&gt; RAW:
+    &#34;&#34;&#34;
+    create method for RawDataBag
+    Args:
+        sub_df(pd.DataFrame): sub.txt dataframe
+        pre_df(pd.DataFrame): pre.txt dataframe
+        num_df(pd.DataFrame): num.txt dataframe
+
+    Returns:
+        RawDataBag:
+    &#34;&#34;&#34;
+    return RawDataBag(sub_df=sub_df, pre_df=pre_df, num_df=num_df)</code></pre>
+</details>
+</dd>
+<dt id="secfsdstools.d_container.databagmodel.RawDataBag.is_rawbag_path"><code class="name flex">
+<span>def <span class="ident">is_rawbag_path</span></span>(<span>path: pathlib.Path) ‑> bool</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Check whether the provided path contains the files of a RawDatabag.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@staticmethod
+def is_rawbag_path(path: Path) -&gt; bool:
+    &#34;&#34;&#34; Check whether the provided path contains the files of a RawDatabag. &#34;&#34;&#34;
+    return (path / &#34;num.txt.parquet&#34;).exists()</code></pre>
+</details>
+</dd>
+<dt id="secfsdstools.d_container.databagmodel.RawDataBag.load"><code class="name flex">
+<span>def <span class="ident">load</span></span>(<span>target_path: str, ciks_filter: Optional[List[int]] = None, adshs_filter: Optional[List[str]] = None, forms_filter: Optional[List[str]] = None, stmt_filter: Optional[List[str]] = None, tag_filter: Optional[List[str]] = None) ‑> ~RAW</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Loads the content of the current bag at the specified location.</p>
+<pre><code>There are optional filters for adshs, forms, stmts and tags, that are
+applied directly during the load process and hence are more efficient and
+less memory consuming than loading the data and then applying filters.
+
+This makes especially sense, when you concatenated together data from different
+zip files.
+
+Note: the adsh are mutally exclusive and adsh has the higher precedence.
+</code></pre>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>target_path</code></strong></dt>
+<dd>root_path with the parquet files for sub, pre, and num</dd>
+<dt><strong><code>ciks_filter</code></strong></dt>
+<dd>optional list of cik numbers to filter for during loading</dd>
+<dt><strong><code>forms_filter</code></strong></dt>
+<dd>optional list of forms (10-K, 10-Q) to filter for during loading</dd>
+<dt><strong><code>adshs_filter</code></strong></dt>
+<dd>optional list of adhs to filter during the laoding</dd>
+<dt><strong><code>stmt_filter</code></strong></dt>
+<dd>optional list of stmts (BS, IS, CF, ..) to filter during the loading</dd>
+<dt><strong><code>tag_filter</code></strong></dt>
+<dd>optional list of tags to filter during the loading</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code><a title="secfsdstools.d_container.databagmodel.RawDataBag" href="#secfsdstools.d_container.databagmodel.RawDataBag">RawDataBag</a></code></dt>
+<dd>the loaded Databag</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@staticmethod
+def load(target_path: str,
+         ciks_filter: Optional[List[int]] = None,
+         adshs_filter: Optional[List[str]] = None,
+         forms_filter: Optional[List[str]] = None,
+         stmt_filter: Optional[List[str]] = None,
+         tag_filter: Optional[List[str]] = None) -&gt; RAW:
+    &#34;&#34;&#34;
+        Loads the content of the current bag at the specified location.
+
+        There are optional filters for adshs, forms, stmts and tags, that are
+        applied directly during the load process and hence are more efficient and
+        less memory consuming than loading the data and then applying filters.
+
+        This makes especially sense, when you concatenated together data from different
+        zip files.
+
+        Note: the adsh are mutally exclusive and adsh has the higher precedence.
+
+    Args:
+        target_path: root_path with the parquet files for sub, pre, and num
+        ciks_filter: optional list of cik numbers to filter for during loading
+        forms_filter: optional list of forms (10-K, 10-Q) to filter for during loading
+        adshs_filter: optional list of adhs to filter during the laoding
+        stmt_filter: optional list of stmts (BS, IS, CF, ..) to filter during the loading
+        tag_filter: optional list of tags to filter during the loading
+
+    Returns:
+        RawDataBag: the loaded Databag
+    &#34;&#34;&#34;
+    sub_df = DataBagBase.load_sub_df_by_filter(
+        target_path=target_path, adshs=adshs_filter, forms=forms_filter, ciks=ciks_filter
+    )
+
+    # if the forms and/or ciks filter was applied, overwrite the adshs list,
+    # since this are adshs values that we should filter for in the pre and num dataframes
+    if forms_filter or ciks_filter:
+        adshs_filter = sub_df.adsh.to_list()
+
+    pre_filter, num_filter = get_pre_num_filters(adshs=adshs_filter,
+                                                 stmts=stmt_filter,
+                                                 tags=tag_filter)
+
+    if len(num_filter) &gt; 0:
+        LOGGER.info(&#34;apply num_df filter: %s&#34;, num_filter)
+
+    if len(pre_filter) &gt; 0:
+        LOGGER.info(&#34;apply pre_df filter: %s&#34;, pre_filter)
+
+    pre_df = pd.read_parquet(os.path.join(target_path, f&#39;{PRE_TXT}.parquet&#39;),
+                             filters=pre_filter if pre_filter else None)
+
+    num_df = pd.read_parquet(os.path.join(target_path, f&#39;{NUM_TXT}.parquet&#39;),
+                             filters=num_filter if num_filter else None)
+
+    return RawDataBag.create(sub_df=sub_df, pre_df=pre_df, num_df=num_df)</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="secfsdstools.d_container.databagmodel.RawDataBag.copy_bag"><code class="name flex">
+<span>def <span class="ident">copy_bag</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>creates a bag with new copies of the internal dataframes.</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code><a title="secfsdstools.d_container.databagmodel.RawDataBag" href="#secfsdstools.d_container.databagmodel.RawDataBag">RawDataBag</a></code></dt>
+<dd>new instance of JoinedDataBag</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def copy_bag(self):
+    &#34;&#34;&#34;
+    creates a bag with new copies of the internal dataframes.
+
+    Returns:
+        RawDataBag: new instance of JoinedDataBag
+    &#34;&#34;&#34;
+
+    return RawDataBag.create(sub_df=self.sub_df.copy(),
+                             pre_df=self.pre_df.copy(),
+                             num_df=self.num_df.copy())</code></pre>
+</details>
+</dd>
+<dt id="secfsdstools.d_container.databagmodel.RawDataBag.get_num_copy"><code class="name flex">
+<span>def <span class="ident">get_num_copy</span></span>(<span>self) ‑> pandas.core.frame.DataFrame</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Returns a copy of the num.txt dataframe.</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>pd.DataFrame</code></dt>
+<dd>copy of the num.txt dataframe.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_num_copy(self) -&gt; pd.DataFrame:
+    &#34;&#34;&#34;
+    Returns a copy of the num.txt dataframe.
+
+    Returns:
+        pd.DataFrame: copy of the num.txt dataframe.
+    &#34;&#34;&#34;
+    return self.num_df.copy()</code></pre>
+</details>
+</dd>
+<dt id="secfsdstools.d_container.databagmodel.RawDataBag.get_pre_copy"><code class="name flex">
+<span>def <span class="ident">get_pre_copy</span></span>(<span>self) ‑> pandas.core.frame.DataFrame</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Returns a copy of the pre.txt dataframe.</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>pd.DataFrame</code></dt>
+<dd>copy of the pre.txt dataframe.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_pre_copy(self) -&gt; pd.DataFrame:
+    &#34;&#34;&#34;
+    Returns a copy of the pre.txt dataframe.
+
+    Returns:
+        pd.DataFrame: copy of the pre.txt dataframe.
+    &#34;&#34;&#34;
+    return self.pre_df.copy()</code></pre>
+</details>
+</dd>
+<dt id="secfsdstools.d_container.databagmodel.RawDataBag.get_sub_copy"><code class="name flex">
+<span>def <span class="ident">get_sub_copy</span></span>(<span>self) ‑> pandas.core.frame.DataFrame</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Returns a copy of the sub.txt dataframe.</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>pd.DataFrame</code></dt>
+<dd>copy of the sub.txt dataframe.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_sub_copy(self) -&gt; pd.DataFrame:
+    &#34;&#34;&#34;
+    Returns a copy of the sub.txt dataframe.
+
+    Returns:
+        pd.DataFrame: copy of the sub.txt dataframe.
+    &#34;&#34;&#34;
+    return self.sub_df.copy()</code></pre>
+</details>
+</dd>
+<dt id="secfsdstools.d_container.databagmodel.RawDataBag.join"><code class="name flex">
+<span>def <span class="ident">join</span></span>(<span>self) ‑> <a title="secfsdstools.d_container.databagmodel.JoinedDataBag" href="#secfsdstools.d_container.databagmodel.JoinedDataBag">JoinedDataBag</a></span>
+</code></dt>
+<dd>
+<div class="desc"><p>merges the raw data of pre and num together.</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code><a title="secfsdstools.d_container.databagmodel.JoinedDataBag" href="#secfsdstools.d_container.databagmodel.JoinedDataBag">JoinedDataBag</a></code></dt>
+<dd>the DataBag where pre and num are merged</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def join(self) -&gt; JoinedDataBag:
+    &#34;&#34;&#34;
+    merges the raw data of pre and num together.
+
+    Returns:
+        JoinedDataBag: the DataBag where pre and num are merged
+
+    &#34;&#34;&#34;
+
+    # merge num and pre together. only rows in num are considered for which entries in pre exist
+    pre_num_df = pd.merge(self.num_df,
+                          self.pre_df,
+                          on=[&#39;adsh&#39;, &#39;tag&#39;,
+                              &#39;version&#39;])  # don&#39;t produce index_x and index_y columns
+
+    return JoinedDataBag.create(sub_df=self.sub_df, pre_num_df=pre_num_df)</code></pre>
+</details>
+</dd>
+<dt id="secfsdstools.d_container.databagmodel.RawDataBag.save"><code class="name flex">
+<span>def <span class="ident">save</span></span>(<span>self, target_path: str)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Stores the bag under the given directory.
+The directory has to exist and must be empty.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>target_path</code></strong></dt>
+<dd>the directory under which three parquet files for sub_txt, pre_text,
+and num_txt will be created</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def save(self, target_path: str):
+    &#34;&#34;&#34;
+    Stores the bag under the given directory.
+    The directory has to exist and must be empty.
+
+    Args:
+        target_path: the directory under which three parquet files for sub_txt, pre_text,
+              and num_txt will be created
+    &#34;&#34;&#34;
+    check_dir(target_path)
+
+    self.sub_df.to_parquet(os.path.join(target_path, f&#39;{SUB_TXT}.parquet&#39;))
+    self.pre_df.to_parquet(os.path.join(target_path, f&#39;{PRE_TXT}.parquet&#39;))
+    self.num_df.to_parquet(os.path.join(target_path, f&#39;{NUM_TXT}.parquet&#39;))</code></pre>
+</details>
+</dd>
+<dt id="secfsdstools.d_container.databagmodel.RawDataBag.statistics"><code class="name flex">
+<span>def <span class="ident">statistics</span></span>(<span>self) ‑> <a title="secfsdstools.d_container.databagmodel.RawDataBagStats" href="#secfsdstools.d_container.databagmodel.RawDataBagStats">RawDataBagStats</a></span>
+</code></dt>
+<dd>
+<div class="desc"><p>calculate a few simple statistics of a report.
+- number of entries in the num-file
+- number of entries in the pre-file
+- number of reports in the zip-file (equals number of entries in sub-file)
+- number of reports per form (10-K, 10-Q, &hellip;)
+- number of reports per period date (counts per value in the period column of sub-file)</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code><a title="secfsdstools.d_container.databagmodel.RawDataBagStats" href="#secfsdstools.d_container.databagmodel.RawDataBagStats">RawDataBagStats</a></code></dt>
+<dd>instance with basic report infos</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def statistics(self) -&gt; RawDataBagStats:
+    &#34;&#34;&#34;
+    calculate a few simple statistics of a report.
+    - number of entries in the num-file
+    - number of entries in the pre-file
+    - number of reports in the zip-file (equals number of entries in sub-file)
+    - number of reports per form (10-K, 10-Q, ...)
+    - number of reports per period date (counts per value in the period column of sub-file)
+
+    Returns:
+        RawDataBagStats: instance with basic report infos
+    &#34;&#34;&#34;
+
+    num_entries = len(self.num_df)
+    pre_entries = len(self.pre_df)
+    number_of_reports = len(self.sub_df)
+    reports_per_period_date: Dict[int, int] = self.sub_df.period.value_counts().to_dict()
+    reports_per_form: Dict[str, int] = self.sub_df.form.value_counts().to_dict()
+
+    return RawDataBagStats(num_entries=num_entries,
+                           pre_entries=pre_entries,
+                           number_of_reports=number_of_reports,
+                           reports_per_form=reports_per_form,
+                           reports_per_period_date=reports_per_period_date
+                           )</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="secfsdstools.d_container.databagmodel.DataBagBase" href="#secfsdstools.d_container.databagmodel.DataBagBase">DataBagBase</a></b></code>:
+<ul class="hlist">
+<li><code><a title="secfsdstools.d_container.databagmodel.DataBagBase.filter" href="#secfsdstools.d_container.databagmodel.DataBagBase.filter">filter</a></code></li>
+<li><code><a title="secfsdstools.d_container.databagmodel.DataBagBase.load_sub_df_by_filter" href="#secfsdstools.d_container.databagmodel.DataBagBase.load_sub_df_by_filter">load_sub_df_by_filter</a></code></li>
+<li><code><a title="secfsdstools.d_container.databagmodel.DataBagBase.present" href="#secfsdstools.d_container.databagmodel.DataBagBase.present">present</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+<dt id="secfsdstools.d_container.databagmodel.RawDataBagStats"><code class="flex name class">
+<span>class <span class="ident">RawDataBagStats</span></span>
+<span>(</span><span>num_entries: int, pre_entries: int, number_of_reports: int, reports_per_form: Dict[str, int], reports_per_period_date: Dict[int, int])</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Contains simple statistics of a report.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class RawDataBagStats:
+    &#34;&#34;&#34;
+    Contains simple statistics of a report.
+    &#34;&#34;&#34;
+    num_entries: int
+    pre_entries: int
+    number_of_reports: int
+    reports_per_form: Dict[str, int]
+    reports_per_period_date: Dict[int, int]</code></pre>
+</details>
+<h3>Class variables</h3>
+<dl>
+<dt id="secfsdstools.d_container.databagmodel.RawDataBagStats.num_entries"><code class="name">var <span class="ident">num_entries</span> : int</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="secfsdstools.d_container.databagmodel.RawDataBagStats.number_of_reports"><code class="name">var <span class="ident">number_of_reports</span> : int</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="secfsdstools.d_container.databagmodel.RawDataBagStats.pre_entries"><code class="name">var <span class="ident">pre_entries</span> : int</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="secfsdstools.d_container.databagmodel.RawDataBagStats.reports_per_form"><code class="name">var <span class="ident">reports_per_form</span> : Dict[str, int]</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="secfsdstools.d_container.databagmodel.RawDataBagStats.reports_per_period_date"><code class="name">var <span class="ident">reports_per_period_date</span> : Dict[int, int]</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+</dd>
+</dl>
+</section>
+</article>
+<nav id="sidebar">
+<h1>Index</h1>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="secfsdstools.d_container" href="index.html">secfsdstools.d_container</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-functions">Functions</a></h3>
+<ul class="">
+<li><code><a title="secfsdstools.d_container.databagmodel.concat_bags_file_based_internal" href="#secfsdstools.d_container.databagmodel.concat_bags_file_based_internal">concat_bags_file_based_internal</a></code></li>
+<li><code><a title="secfsdstools.d_container.databagmodel.get_pre_num_filters" href="#secfsdstools.d_container.databagmodel.get_pre_num_filters">get_pre_num_filters</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="secfsdstools.d_container.databagmodel.DataBagBase" href="#secfsdstools.d_container.databagmodel.DataBagBase">DataBagBase</a></code></h4>
+<ul class="">
+<li><code><a title="secfsdstools.d_container.databagmodel.DataBagBase.filter" href="#secfsdstools.d_container.databagmodel.DataBagBase.filter">filter</a></code></li>
+<li><code><a title="secfsdstools.d_container.databagmodel.DataBagBase.load_sub_df_by_filter" href="#secfsdstools.d_container.databagmodel.DataBagBase.load_sub_df_by_filter">load_sub_df_by_filter</a></code></li>
+<li><code><a title="secfsdstools.d_container.databagmodel.DataBagBase.present" href="#secfsdstools.d_container.databagmodel.DataBagBase.present">present</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="secfsdstools.d_container.databagmodel.JoinedDataBag" href="#secfsdstools.d_container.databagmodel.JoinedDataBag">JoinedDataBag</a></code></h4>
+<ul class="two-column">
+<li><code><a title="secfsdstools.d_container.databagmodel.JoinedDataBag.concat" href="#secfsdstools.d_container.databagmodel.JoinedDataBag.concat">concat</a></code></li>
+<li><code><a title="secfsdstools.d_container.databagmodel.JoinedDataBag.concat_filebased" href="#secfsdstools.d_container.databagmodel.JoinedDataBag.concat_filebased">concat_filebased</a></code></li>
+<li><code><a title="secfsdstools.d_container.databagmodel.JoinedDataBag.copy_bag" href="#secfsdstools.d_container.databagmodel.JoinedDataBag.copy_bag">copy_bag</a></code></li>
+<li><code><a title="secfsdstools.d_container.databagmodel.JoinedDataBag.create" href="#secfsdstools.d_container.databagmodel.JoinedDataBag.create">create</a></code></li>
+<li><code><a title="secfsdstools.d_container.databagmodel.JoinedDataBag.get_pre_num_copy" href="#secfsdstools.d_container.databagmodel.JoinedDataBag.get_pre_num_copy">get_pre_num_copy</a></code></li>
+<li><code><a title="secfsdstools.d_container.databagmodel.JoinedDataBag.get_sub_copy" href="#secfsdstools.d_container.databagmodel.JoinedDataBag.get_sub_copy">get_sub_copy</a></code></li>
+<li><code><a title="secfsdstools.d_container.databagmodel.JoinedDataBag.is_joinedbag_path" href="#secfsdstools.d_container.databagmodel.JoinedDataBag.is_joinedbag_path">is_joinedbag_path</a></code></li>
+<li><code><a title="secfsdstools.d_container.databagmodel.JoinedDataBag.load" href="#secfsdstools.d_container.databagmodel.JoinedDataBag.load">load</a></code></li>
+<li><code><a title="secfsdstools.d_container.databagmodel.JoinedDataBag.save" href="#secfsdstools.d_container.databagmodel.JoinedDataBag.save">save</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="secfsdstools.d_container.databagmodel.RawDataBag" href="#secfsdstools.d_container.databagmodel.RawDataBag">RawDataBag</a></code></h4>
+<ul class="two-column">
+<li><code><a title="secfsdstools.d_container.databagmodel.RawDataBag.concat" href="#secfsdstools.d_container.databagmodel.RawDataBag.concat">concat</a></code></li>
+<li><code><a title="secfsdstools.d_container.databagmodel.RawDataBag.concat_filebased" href="#secfsdstools.d_container.databagmodel.RawDataBag.concat_filebased">concat_filebased</a></code></li>
+<li><code><a title="secfsdstools.d_container.databagmodel.RawDataBag.copy_bag" href="#secfsdstools.d_container.databagmodel.RawDataBag.copy_bag">copy_bag</a></code></li>
+<li><code><a title="secfsdstools.d_container.databagmodel.RawDataBag.create" href="#secfsdstools.d_container.databagmodel.RawDataBag.create">create</a></code></li>
+<li><code><a title="secfsdstools.d_container.databagmodel.RawDataBag.get_num_copy" href="#secfsdstools.d_container.databagmodel.RawDataBag.get_num_copy">get_num_copy</a></code></li>
+<li><code><a title="secfsdstools.d_container.databagmodel.RawDataBag.get_pre_copy" href="#secfsdstools.d_container.databagmodel.RawDataBag.get_pre_copy">get_pre_copy</a></code></li>
+<li><code><a title="secfsdstools.d_container.databagmodel.RawDataBag.get_sub_copy" href="#secfsdstools.d_container.databagmodel.RawDataBag.get_sub_copy">get_sub_copy</a></code></li>
+<li><code><a title="secfsdstools.d_container.databagmodel.RawDataBag.is_rawbag_path" href="#secfsdstools.d_container.databagmodel.RawDataBag.is_rawbag_path">is_rawbag_path</a></code></li>
+<li><code><a title="secfsdstools.d_container.databagmodel.RawDataBag.join" href="#secfsdstools.d_container.databagmodel.RawDataBag.join">join</a></code></li>
+<li><code><a title="secfsdstools.d_container.databagmodel.RawDataBag.load" href="#secfsdstools.d_container.databagmodel.RawDataBag.load">load</a></code></li>
+<li><code><a title="secfsdstools.d_container.databagmodel.RawDataBag.save" href="#secfsdstools.d_container.databagmodel.RawDataBag.save">save</a></code></li>
+<li><code><a title="secfsdstools.d_container.databagmodel.RawDataBag.statistics" href="#secfsdstools.d_container.databagmodel.RawDataBag.statistics">statistics</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="secfsdstools.d_container.databagmodel.RawDataBagStats" href="#secfsdstools.d_container.databagmodel.RawDataBagStats">RawDataBagStats</a></code></h4>
+<ul class="">
+<li><code><a title="secfsdstools.d_container.databagmodel.RawDataBagStats.num_entries" href="#secfsdstools.d_container.databagmodel.RawDataBagStats.num_entries">num_entries</a></code></li>
+<li><code><a title="secfsdstools.d_container.databagmodel.RawDataBagStats.number_of_reports" href="#secfsdstools.d_container.databagmodel.RawDataBagStats.number_of_reports">number_of_reports</a></code></li>
+<li><code><a title="secfsdstools.d_container.databagmodel.RawDataBagStats.pre_entries" href="#secfsdstools.d_container.databagmodel.RawDataBagStats.pre_entries">pre_entries</a></code></li>
+<li><code><a title="secfsdstools.d_container.databagmodel.RawDataBagStats.reports_per_form" href="#secfsdstools.d_container.databagmodel.RawDataBagStats.reports_per_form">reports_per_form</a></code></li>
+<li><code><a title="secfsdstools.d_container.databagmodel.RawDataBagStats.reports_per_period_date" href="#secfsdstools.d_container.databagmodel.RawDataBagStats.reports_per_period_date">reports_per_period_date</a></code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.10.0</a>.</p>
+</footer>
+</body>
+</html>

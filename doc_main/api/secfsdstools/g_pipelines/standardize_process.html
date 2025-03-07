@@ -41,6 +41,8 @@ import shutil
 from pathlib import Path
 from typing import List
 
+from secfsdstools.a_utils.fileutils import get_directories_in_directory
+
 from secfsdstools.c_automation.automation_utils import delete_temp_folders
 from secfsdstools.c_automation.task_framework import Task, \
     CheckByTimestampMergeBaseTask, AbstractThreadProcess
@@ -150,19 +152,22 @@ class StandardizerTask(CheckByTimestampMergeBaseTask):
 
 class StandardizeProcess(AbstractThreadProcess):
     &#34;&#34;&#34;
-    Expects subfolders BS, IS, CF inside the provided root_dir.
+    Expects subfolders BS, IS, CF directly inside the provided root_dir
+    or in all subfolders of the root_dir.
+
     The data has to be provided as JoinedDataBags.
 
     The resulting StandardizedBags are stored under the subfolders
-    BS, IS, and CF unter the target_dir.
+    BS, IS, and CF unter the target_dir, resp. inside additional subfolders.
 
-    Will be executed if anything had changed (modification timestamp) in the
+    Will be executed if anything has changed (modification timestamp) in the
     root_dir since last execution.
     &#34;&#34;&#34;
 
     def __init__(self,
                  root_dir: str,
                  target_dir: str,
+                 execute_serial=True
                  ):
         &#34;&#34;&#34;
         Expects subfolders BS, IS, CF inside the provided root_dir.
@@ -179,7 +184,7 @@ class StandardizeProcess(AbstractThreadProcess):
             the data as JoinedDataBags
             target_dir: directory to write the resulting StandardizedBags to
         &#34;&#34;&#34;
-        super().__init__(execute_serial=False,
+        super().__init__(execute_serial=execute_serial,
                          chunksize=0)
         self.root_dir = root_dir
         self.target_dir = target_dir
@@ -190,10 +195,36 @@ class StandardizeProcess(AbstractThreadProcess):
         &#34;&#34;&#34;
         delete_temp_folders(root_path=Path(self.target_dir))
 
+    def _check_if_multiple_sub_dirs(self):
+        &#34;&#34;&#34;
+        When we find directly BS, CF, IS subfolders, we just need to process the root folder.
+        If we don&#39;t find these subfolders, we expect that every subfolder must be processed
+        individually.
+        &#34;&#34;&#34;
+        return not ((Path(self.root_dir) / &#34;BS&#34;).exists() and
+                    (Path(self.root_dir) / &#34;CF&#34;).exists() and
+                    (Path(self.root_dir) / &#34;IS&#34;).exists())
+
     def calculate_tasks(self) -&gt; List[Task]:
         &#34;&#34;&#34;
         Prepares the StandardizerTask which will actually execute the standardization.
         &#34;&#34;&#34;
+        if self._check_if_multiple_sub_dirs():
+            # we need to process all subfolders of the root_dir
+            existing = get_directories_in_directory(self.target_dir)
+            available = get_directories_in_directory(self.root_dir)
+
+            not_standardized_folders = set(available) - set(existing)
+
+            tasks = [StandardizerTask(
+                root_path=Path(self.root_dir) / missing,
+                target_path=Path(self.target_dir) / missing
+            ) for missing in not_standardized_folders]
+
+            return tasks
+
+        # the root dir directly contains the BS, IS, and CF folder
+        # so, we just have one task to create
         task = StandardizerTask(
             root_path=Path(self.root_dir),
             target_path=Path(self.target_dir)
@@ -216,14 +247,15 @@ class StandardizeProcess(AbstractThreadProcess):
 <dl>
 <dt id="secfsdstools.g_pipelines.standardize_process.StandardizeProcess"><code class="flex name class">
 <span>class <span class="ident">StandardizeProcess</span></span>
-<span>(</span><span>root_dir: str, target_dir: str)</span>
+<span>(</span><span>root_dir: str, target_dir: str, execute_serial=True)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Expects subfolders BS, IS, CF inside the provided root_dir.
-The data has to be provided as JoinedDataBags.</p>
+<div class="desc"><p>Expects subfolders BS, IS, CF directly inside the provided root_dir
+or in all subfolders of the root_dir.</p>
+<p>The data has to be provided as JoinedDataBags.</p>
 <p>The resulting StandardizedBags are stored under the subfolders
-BS, IS, and CF unter the target_dir.</p>
-<p>Will be executed if anything had changed (modification timestamp) in the
+BS, IS, and CF unter the target_dir, resp. inside additional subfolders.</p>
+<p>Will be executed if anything has changed (modification timestamp) in the
 root_dir since last execution.</p>
 <p>Expects subfolders BS, IS, CF inside the provided root_dir.
 The data has to be provided as JoinedDataBags.</p>
@@ -245,19 +277,22 @@ root_dir since last execution.</p>
 </summary>
 <pre><code class="python">class StandardizeProcess(AbstractThreadProcess):
     &#34;&#34;&#34;
-    Expects subfolders BS, IS, CF inside the provided root_dir.
+    Expects subfolders BS, IS, CF directly inside the provided root_dir
+    or in all subfolders of the root_dir.
+
     The data has to be provided as JoinedDataBags.
 
     The resulting StandardizedBags are stored under the subfolders
-    BS, IS, and CF unter the target_dir.
+    BS, IS, and CF unter the target_dir, resp. inside additional subfolders.
 
-    Will be executed if anything had changed (modification timestamp) in the
+    Will be executed if anything has changed (modification timestamp) in the
     root_dir since last execution.
     &#34;&#34;&#34;
 
     def __init__(self,
                  root_dir: str,
                  target_dir: str,
+                 execute_serial=True
                  ):
         &#34;&#34;&#34;
         Expects subfolders BS, IS, CF inside the provided root_dir.
@@ -274,7 +309,7 @@ root_dir since last execution.</p>
             the data as JoinedDataBags
             target_dir: directory to write the resulting StandardizedBags to
         &#34;&#34;&#34;
-        super().__init__(execute_serial=False,
+        super().__init__(execute_serial=execute_serial,
                          chunksize=0)
         self.root_dir = root_dir
         self.target_dir = target_dir
@@ -285,10 +320,36 @@ root_dir since last execution.</p>
         &#34;&#34;&#34;
         delete_temp_folders(root_path=Path(self.target_dir))
 
+    def _check_if_multiple_sub_dirs(self):
+        &#34;&#34;&#34;
+        When we find directly BS, CF, IS subfolders, we just need to process the root folder.
+        If we don&#39;t find these subfolders, we expect that every subfolder must be processed
+        individually.
+        &#34;&#34;&#34;
+        return not ((Path(self.root_dir) / &#34;BS&#34;).exists() and
+                    (Path(self.root_dir) / &#34;CF&#34;).exists() and
+                    (Path(self.root_dir) / &#34;IS&#34;).exists())
+
     def calculate_tasks(self) -&gt; List[Task]:
         &#34;&#34;&#34;
         Prepares the StandardizerTask which will actually execute the standardization.
         &#34;&#34;&#34;
+        if self._check_if_multiple_sub_dirs():
+            # we need to process all subfolders of the root_dir
+            existing = get_directories_in_directory(self.target_dir)
+            available = get_directories_in_directory(self.root_dir)
+
+            not_standardized_folders = set(available) - set(existing)
+
+            tasks = [StandardizerTask(
+                root_path=Path(self.root_dir) / missing,
+                target_path=Path(self.target_dir) / missing
+            ) for missing in not_standardized_folders]
+
+            return tasks
+
+        # the root dir directly contains the BS, IS, and CF folder
+        # so, we just have one task to create
         task = StandardizerTask(
             root_path=Path(self.root_dir),
             target_path=Path(self.target_dir)
@@ -320,6 +381,22 @@ root_dir since last execution.</p>
     &#34;&#34;&#34;
     Prepares the StandardizerTask which will actually execute the standardization.
     &#34;&#34;&#34;
+    if self._check_if_multiple_sub_dirs():
+        # we need to process all subfolders of the root_dir
+        existing = get_directories_in_directory(self.target_dir)
+        available = get_directories_in_directory(self.root_dir)
+
+        not_standardized_folders = set(available) - set(existing)
+
+        tasks = [StandardizerTask(
+            root_path=Path(self.root_dir) / missing,
+            target_path=Path(self.target_dir) / missing
+        ) for missing in not_standardized_folders]
+
+        return tasks
+
+    # the root dir directly contains the BS, IS, and CF folder
+    # so, we just have one task to create
     task = StandardizerTask(
         root_path=Path(self.root_dir),
         target_path=Path(self.target_dir)

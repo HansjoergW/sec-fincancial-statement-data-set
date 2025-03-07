@@ -25,6 +25,23 @@ The main features include:
 - **version 2 supports the new "segments" column that was added in December 2024**  
 
 Have a look at the * [Release Notes](https://hansjoergw.github.io/sec-fincancial-statement-data-set/releasenotes/)
+<br/>
+<br/>
+<br/>
+
+<span style="color: #FF8C00;">==========================================================</span>
+### If you find this tool useful, a sponsorship would be greatly appreciated! ###
+
+**https://github.com/sponsors/HansjoergW**
+
+### How to get in touch ###
+* Found a bug: https://github.com/HansjoergW/sec-fincancial-statement-data-set/issues
+* Have a remark: https://github.com/HansjoergW/sec-fincancial-statement-data-set/discussions/categories/general
+* Have an idea: https://github.com/HansjoergW/sec-fincancial-statement-data-set/discussions/categories/ideas
+* Have a question: https://github.com/HansjoergW/sec-fincancial-statement-data-set/discussions/categories/q-a
+* Have something to show: https://github.com/HansjoergW/sec-fincancial-statement-data-set/discussions/categories/show-and-tell
+
+<span style="color: #FF8C00;">==========================================================</span>
 
 
 # Principles
@@ -438,7 +455,7 @@ implementations (module `secfsdstools.e_presenter.presenting`):
   print(bs_df) 
   ```` 
 
-### Stanardize financial data
+### Standardize financial data
   Even if xbrl is a standard on how to tag positions and numbers in financial statements, that doesn't mean that financial
   statements can then be compared easily. For instance, there are over 3000 tags which can be used in a balance sheet.
   Moreover, some tags can mean similar things or can be grouped behind a "parent" tag, which itself might not be present.

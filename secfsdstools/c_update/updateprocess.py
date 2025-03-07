@@ -68,11 +68,11 @@ def print_sponsoring_message():
     print(bold + white + "    https://github.com/sponsors/HansjoergW" + reset)
     print("\n")
     print(white + "    How to get in touch")
-    print("    - Found a bug:            https://github.com/HansjoergW/sec-fincancial-statement-data-set/issues")
-    print("    - Have a remark:          https://github.com/HansjoergW/sec-fincancial-statement-data-set/discussions/categories/general")
-    print("    - Have an idea:           https://github.com/HansjoergW/sec-fincancial-statement-data-set/discussions/categories/ideas")
-    print("    - Have a question:        https://github.com/HansjoergW/sec-fincancial-statement-data-set/discussions/categories/q-a")
-    print("    - Have something to show: https://github.com/HansjoergW/sec-fincancial-statement-data-set/discussions/categories/show-and-tell")
+    print("    - Found a bug:            https://github.com/HansjoergW/sec-fincancial-statement-data-set/issues") # pylint: disable=C0301
+    print("    - Have a remark:          https://github.com/HansjoergW/sec-fincancial-statement-data-set/discussions/categories/general") # pylint: disable=C0301
+    print("    - Have an idea:           https://github.com/HansjoergW/sec-fincancial-statement-data-set/discussions/categories/ideas") # pylint: disable=C0301
+    print("    - Have a question:        https://github.com/HansjoergW/sec-fincancial-statement-data-set/discussions/categories/q-a") # pylint: disable=C0301
+    print("    - Have something to show: https://github.com/HansjoergW/sec-fincancial-statement-data-set/discussions/categories/show-and-tell") # pylint: disable=C0301
     print("\n")
 
     print(bold + yellow + hash_border + reset)

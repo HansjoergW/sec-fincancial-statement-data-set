@@ -4,6 +4,29 @@ permalink: /releasenotes/
 
 
 # Release Notes
+
+## 2.2.1 -> 2.2.0 2025-March-07
+
+* New
+  * `CIKXXFilter` was introduced for `RawDataBag` and `JoinedDataBag`
+  * ciks_filter parameter was added to the load methods of `RawDataBag` and `JoinedDataBag`
+  * The notebook 09_00_segments_basics gives an idea how you can work with the information in the segment column.
+    [segment_basics](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/09_00_segments_basics.ipynb)
+  * The concat processes `ConcatByChangedTimestampProcess` and `ConcatByNewSubfoldersProcess` now have a switch to choose whether in_memory or file_based concatenation should be used
+  * `ConcatByChangedTimestampProcess` and `ConcatByNewSubfoldersProcess` now also support the concatenation of `StandardizedBag`
+  * `StandardizeProcess` now also works with multiple subfolders where each contains BS, CF, and IS folders
+  * A new example of a memory optimized pipeline was introduced:  `secfsdstools.x_examples.automation.memory_optimized_automation.define_extra_processes`.
+    Have a look at the description of this pipeline in [08_02_automation_a_memory_optimized_example_2.2.0](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/08_02_automation_a_memory_optimized_example_2.2.0.ipynb)
+
+* Changes
+  * The `is_xxx_bag_path` methods in the module `secfsdstools.d_container.databagmodel` have been moved into `RawDataBag`, resp. `JoinedDataBag` classes in the same module.
+    The `StandardizedBag` now also has a `is_xxx_bag_path` method.
+
+* Other
+  * GitHub sponsoring account was activated: https://github.com/sponsors/HansjoergW
+  * GitHub Discussions was activated: https://github.com/HansjoergW/sec-fincancial-statement-data-set/discussions
+
+
 ## 2.0.0 -> 2.1.0 2025-February-18
 
 The main goal of this release was to improve the memory footprint when working with the framework.

@@ -1,0 +1,2765 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.10.0" />
+<title>secfsdstools.f_standardize.cf_standardize API documentation</title>
+<meta name="description" content="Contains the definitions to standardize incaome statements." />
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
+<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js" integrity="sha256-Uv3H6lx7dJmRfRvH8TH6kJD1TSK1aFcwgx+mdg3epi8=" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>secfsdstools.f_standardize.cf_standardize</code></h1>
+</header>
+<section id="section-intro">
+<p>Contains the definitions to standardize incaome statements.</p>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python"># pylint: disable=C0302
+&#34;&#34;&#34;Contains the definitions to standardize incaome statements.&#34;&#34;&#34;
+from typing import List, Set, Optional
+
+import pandas as pd
+import pandera as pa
+
+from secfsdstools.f_standardize.base_prepivot_rules import (PrePivotDeduplicate,
+                                                            PrePivotCorrectSign, PrePivotMaxQtrs)
+from secfsdstools.f_standardize.base_rule_framework import RuleGroup, Rule, PrePivotRule
+from secfsdstools.f_standardize.base_rules import CopyTagRule, SumUpRule, PostSetToZero, \
+    MissingSummandRule, PostCopyToFirstSummand, MissingSumRule
+from secfsdstools.f_standardize.base_validation_rules import ValidationRule, SumValidationRule, \
+    IsSetValidationRule
+from secfsdstools.f_standardize.standardizing import Standardizer
+
+# list of tags which indicate an inflow of money and therefore should have a positive value
+inflow_tags = [
+    &#39;ProceedsFromDivestitureOfBusinessesNetOfCashDivested&#39;,
+    &#39;ProceedsFromIssuanceOfCommonStock&#39;,
+    &#39;ProceedsFromIssuanceOfDebt&#39;,
+    &#39;ProceedsFromMaturitiesPrepaymentsAndCallsOfAvailableForSaleSecurities&#39;,
+    &#39;ProceedsFromSaleAndMaturityOfOtherInvestments&#39;,
+    &#39;ProceedsFromSaleOfAvailableForSaleSecurities&#39;,
+    &#39;ProceedsFromSaleOfHeldToMaturitySecurities&#39;,
+    &#39;ProceedsFromSaleOfIntangibleAssets&#39;,
+    &#39;ProceedsFromSaleOfPropertyPlantAndEquipment&#39;,
+    &#39;ProceedsFromStockOptionsExercised&#39;,
+    &#39;AmortizationOfDeferredCharges&#39;,
+    &#39;AmortizationOfFinancingCosts&#39;,
+    &#39;AmortizationOfIntangibleAssets&#39;,
+    &#39;Depletion&#39;,
+    &#39;Depreciation&#39;,
+    &#39;DepreciationAndAmortization&#39;,
+    &#39;DepreciationDepletionAndAmortization&#39;,
+]
+
+# list of tags which indicate an outflow of money and therefore should have a positive value
+outflow_tags = [
+    &#39;PaymentsForRepurchaseOfCommonStock&#39;,
+    &#39;PaymentsOfDividends&#39;,
+    &#39;PaymentsOfDividendsCommonStock&#39;,
+    &#39;PaymentsOfDividendsMinorityInterest&#39;,
+    &#39;PaymentsOfDividendsPreferredStockAndPreferenceStock&#39;,
+    &#39;PaymentsToAcquireBusinessesNetOfCashAcquired&#39;,
+    &#39;PaymentsToAcquireIntangibleAssets&#39;,
+    &#39;PaymentsToAcquireInvestments&#39;,
+    &#39;PaymentsToAcquirePropertyPlantAndEquipment&#39;,
+    &#39;RepaymentsOfDebt&#39;,
+]
+
+
+class PrePivotCashAtEndOfPeriod(PrePivotRule):
+    &#34;&#34;&#34;
+    The cash at the beginning and end of a period always has qtrs=0, since this is
+    &#34;point-in-time&#34; value and not a period value.
+
+    However, when we pivot, we need to use the qtrs as key and therefore,
+    this value is lost.
+
+    Therefore, for all &#34;cash&#34; indicators:
+    - CashAndCashEquivalentsAtCarryingValue
+    - CashCashEquivalentsRestrictedCashAndRestrictedCashEquivalents
+    - CashAndCashEquivalentsAtCarryingValueIncludingDiscontinuedOperations
+
+    we add copied entries for the qtrs that are present for that adsh number.
+    &#34;&#34;&#34;
+
+    # pylint: disable=C0301
+    def __init__(self):
+        super().__init__(&#34;CashEndOfPeriod&#34;)
+        self.cash_tags = [
+            &#39;Cash&#39;,
+            &#39;CashAndDueFromBanks&#39;,
+            &#39;CashAndCashEquivalentsAtCarryingValue&#39;,
+            &#39;CashAndCashEquivalentsAtCarryingValueIncludingDiscontinuedOperations&#39;,
+            &#39;CashCashEquivalentsRestrictedCashAndRestrictedCashEquivalents&#39;,
+            &#39;CashCashEquivalentsRestrictedCashAndRestrictedCashEquivalentsDisposalGroupIncludingDiscontinuedOperations&#39;,
+            &#39;CashCashEquivalentsRestrictedCashAndRestrictedCashEquivalentsIncludingDisposalGroupAndDiscontinuedOperations&#39;,
+        ]
+
+    def get_input_tags(self) -&gt; Set[str]:
+        return set(self.cash_tags)
+
+    def mask(self, data_df: pd.DataFrame) -&gt; pa.typing.Series[bool]:
+        &#34;&#34;&#34;
+            returns a Series[bool] which defines the rows to which this rule has to be applied.
+
+        Args:
+            data_df: dataframe on which the rules should be applied
+
+        Returns:
+            pa.typing.Series[bool]: a boolean Series that marks which rows have to be calculated
+        &#34;&#34;&#34;
+        return data_df.tag.isin(self.cash_tags) &amp; (data_df.qtrs == 0)
+
+    def apply(self, data_df: pd.DataFrame, mask: pa.typing.Series[bool]) -&gt; pd.DataFrame:
+        &#34;&#34;&#34;
+        apply the rule on the provided dataframe. the rows, on which the rule has to be applied
+        is defined by the provide mask Series.
+
+        Important, the rules have to be applied &#34;in-place&#34;, so no new dataframe is produced.
+
+        Args:
+            df: dataframe on which the rule has to be applied
+            mask: a Series marking the rows in the dataframe on which the rule has to be applied
+        Returns:
+            pd.DataFrame: make the process chainable
+        &#34;&#34;&#34;
+        # dataframe with unique entries of qdsh and qtrs
+        adsh_qtrs_df = data_df[[&#39;adsh&#39;, &#39;qtrs&#39;]].drop_duplicates()
+
+        relevant_entries_df = data_df[mask]
+
+        added_dfs: List[pd.DataFrame] = []
+        # copy entries for qtrs 0...4
+        for qtrs in range(5):
+            # define which adshs have entries with the current qtrs loop-variable
+            adshs_with_qtrs = adsh_qtrs_df[adsh_qtrs_df.qtrs == qtrs].adsh.tolist()
+
+            # create new entries only for the adshs that have values in the current qtr
+            new_df = relevant_entries_df[relevant_entries_df.adsh.isin(adshs_with_qtrs)].copy()
+            new_df[&#39;qtrs&#39;] = qtrs
+            new_df[&#39;tag&#39;] = new_df.tag + &#34;EndOfPeriod&#34;
+            added_dfs.append(new_df)
+
+        return pd.concat([data_df] + added_dfs)
+
+    def get_description(self) -&gt; str:
+        &#34;&#34;&#34;
+        Returns the description String
+        Returns:
+            str: description
+        &#34;&#34;&#34;
+        return (f&#34;Adds copies of rows for {self.cash_tags} with the &#39;qtrs&#39; set to the values that&#34;
+                &#34;are present for the corresponding &#39;adsh&#39; and extending the tag name with &#34;
+                &#34; &#39;EndOfPeriod&#39;. &#34;)
+
+
+class PreCorrectMixUpContinuingOperations(Rule):
+    &#34;&#34;&#34;
+    Normally,
+    NetCashProvidedByUsedInFinancingActivities,
+    NetCashProvidedByUsedInOperatingActivities, and
+    NetCashProvidedByUsedInInvestingActivities
+
+    Sum up in NetCashProvidedByUsedInContinuingOperations.
+
+    However, there are reports which use NetCashProvidedByUsedInContinuingOperations to reflect
+    NetCashProvidedByUsedInOperatingActivities.
+
+    This rules correct such cases by looking for reports where
+    NetCashProvidedByUsedInContinuingOperations and NetCashProvidedByUsedInFinancingActivities are
+    set, but not NetCashProvidedByUsedInOperatingActivities.
+    &#34;&#34;&#34;
+
+    def __init__(self):
+        &#34;&#34;&#34;
+
+        Args:
+            sum_tag: the tag that should contain the sum
+            mixed_up_summand: the summand that actually does contain the sum
+            other_summand: the other summand
+        &#34;&#34;&#34;
+        self.opcont = &#39;NetCashProvidedByUsedInContinuingOperations&#39;
+        self.opact = &#39;NetCashProvidedByUsedInOperatingActivities&#39;
+        self.finact = &#39;NetCashProvidedByUsedInFinancingActivities&#39;
+
+    def get_target_tags(self) -&gt; List[str]:
+        &#34;&#34;&#34;
+        returns a list of tags that could be affected/changed by this rule
+
+        Returns:
+            List[str]: list with affected tags/columns
+        &#34;&#34;&#34;
+        return [self.opact]
+
+    def get_input_tags(self) -&gt; Set[str]:
+        &#34;&#34;&#34;
+        return all tags that the rules within this group need.
+
+        Returns:
+            Set[str]: set of all input tags that are used by rules in this group
+        &#34;&#34;&#34;
+        return {self.opcont, self.opact, self.finact}
+
+    def mask(self, data_df: pd.DataFrame) -&gt; pa.typing.Series[bool]:
+        &#34;&#34;&#34;
+            returns a Series[bool] which defines the rows to which this rule has to be applied.
+
+        Args:
+            data_df: dataframe on which the rules should be applied
+
+        Returns:
+            pa.typing.Series[bool]: a boolean Series that marks which rows have to be calculated
+        &#34;&#34;&#34;
+        return ~data_df[self.opcont].isnull() &amp; ~data_df[self.finact].isnull() \
+            &amp; data_df[self.opact].isnull()
+
+    def apply(self, data_df: pd.DataFrame, mask: pa.typing.Series[bool]) -&gt; pd.DataFrame:
+        &#34;&#34;&#34;
+        apply the rule on the provided dataframe. the rows, on which the rule has to be applied
+        is defined by the provide mask Series.
+
+        Important, the rules have to be applied &#34;in-place&#34;, so no new dataframe is produced.
+
+        Args:
+            df: dataframe on which the rule has to be applied
+            mask: a Series marking the rows in the dataframe on which the rule has to be applied
+        Returns:
+            pd.DataFrame: make the process chainable
+        &#34;&#34;&#34;
+
+        data_df.loc[mask, self.opact] = data_df[self.opcont]
+        data_df.loc[mask, self.opcont] = None
+        return data_df
+
+    def get_description(self) -&gt; str:
+        &#34;&#34;&#34;
+        Returns the description String
+        Returns:
+            str: description
+        &#34;&#34;&#34;
+        return (f&#34;Checks for reports where &#39;{self.opcont}&#39; was used instead of {self.opact}.&#34;
+                f&#34;Looks where {self.opcont} and {self.finact} were set, but ${self.opact} is nan.&#34;
+                f&#34;In this cases, the value from {self.opcont} is copied to {self.opact} &#34;
+                f&#34;and {self.opcont} is set to nan afterwards.&#34;)
+
+
+class PostFixMixedContinuingWithSum(Rule):
+    &#34;&#34;&#34;
+    Normally, NetCashProvidedByUsedInXXXActivities is the sum of
+    NetCashProvidedByUsedInXXXActivitiesContinuingOperations and
+    CashProvidedByUsedInXXXgActivitiesDiscontinuedOperations
+
+    However, often when CashProvidedByUsedInXXXgActivitiesDiscontinuedOperations is present,
+    NetCashProvidedByUsedInXXXActivities is used to tag the continuingOperations instead of
+    NetCashProvidedByUsedInXXXActivitiesContinuingOperations.
+
+    This results in a wrong summation and therefore validation.
+
+    This rule fixes these entries.
+    &#34;&#34;&#34;
+
+    def __init__(self):
+        self.disc_tags = [&#39;CashProvidedByUsedInOperatingActivitiesDiscontinuedOperations&#39;,
+                          &#39;CashProvidedByUsedInFinancingActivitiesDiscontinuedOperations&#39;,
+                          &#39;CashProvidedByUsedInInvestingActivitiesDiscontinuedOperations&#39;]
+        self.cont_tags = [&#39;NetCashProvidedByUsedInOperatingActivitiesContinuingOperations&#39;,
+                          &#39;NetCashProvidedByUsedInFinancingActivitiesContinuingOperations&#39;,
+                          &#39;NetCashProvidedByUsedInInvestingActivitiesContinuingOperations&#39;]
+        self.sum_tags = [&#39;NetCashProvidedByUsedInOperatingActivities&#39;,
+                         &#39;NetCashProvidedByUsedInFinancingActivities&#39;,
+                         &#39;NetCashProvidedByUsedInInvestingActivities&#39;]
+
+    def get_target_tags(self) -&gt; List[str]:
+        &#34;&#34;&#34;
+        returns a list of tags that could be affected/changed by this rule
+
+        Returns:
+            List[str]: list with affected tags/columns
+        &#34;&#34;&#34;
+        return self.sum_tags + self.cont_tags
+
+    def get_input_tags(self) -&gt; Set[str]:
+        &#34;&#34;&#34;
+        return all tags that the rules within this group need.
+
+        Returns:
+            Set[str]: set of all input tags that are used by rules in this group
+        &#34;&#34;&#34;
+        return set(self.disc_tags + self.cont_tags + self.sum_tags)
+
+    def mask(self, data_df: pd.DataFrame) -&gt; pa.typing.Series[bool]:
+        &#34;&#34;&#34;
+            returns a Series[bool] which defines the rows to which this rule has to be applied.
+
+        Args:
+            data_df: dataframe on which the rules should be applied
+
+        Returns:
+            pa.typing.Series[bool]: a boolean Series that marks which rows have to be calculated
+        &#34;&#34;&#34;
+
+        # how to detect..
+        # Summing up the NetCashProvidedByUsedInOperatingActivities values and adding
+        # the value of EffectOfExchangeRateFinal gives the expected
+        # CashPeriodIncreaseDecrease value.
+
+        expected_sum = data_df[self.sum_tags].sum(axis=1) + data_df[&#39;EffectOfExchangeRateFinal&#39;]
+
+        # we sum up the values for the discontinued tags, and create a pathfilter if they are all 0
+        sum_disc = data_df[self.disc_tags].sum(axis=1)
+        mask_sum_disc_not_zero = ~(sum_disc == 0)
+
+        # now, we compare the expected CashPeriodIncDec value with the actual value the tag
+        # the difference should be 0.0
+        diff = data_df[&#39;CashPeriodIncreaseDecreaseIncludingExRateEffectFinal&#39;] - expected_sum
+
+        # So if the difference matches the sum of the disc operations, we know that the
+        # Discontinued Value is not in the appropriate SumTag.
+
+        # Explanation:
+        # it should be that
+        #   + NetCashProvidedByUsedInOperatingActivitiesContinuingOperations
+        #   + CashProvidedByUsedInOperatingActivitiesDiscontinuedOperations
+        #   = NetCashProvidedByUsedInOperatingActivities (expected)
+        #
+        #  However, if the tag NetCashProvidedByUsedInOperatingActivities was used to tag the
+        #  actual value for NetCashProvidedByUsedInOperatingActivitiesContinuingOperations
+        #  the value is off by the value of
+        #  CashProvidedByUsedInOperatingActivitiesDiscontinuedOperations
+
+        mask: pa.typing.Series[bool] = mask_sum_disc_not_zero &amp; (diff == sum_disc)
+        return mask
+
+    def apply(self, data_df: pd.DataFrame, mask: pa.typing.Series[bool]) -&gt; pd.DataFrame:
+        &#34;&#34;&#34;
+        apply the rule on the provided dataframe. the rows, on which the rule has to be applied
+        is defined by the provide mask Series.
+
+        Important, the rules have to be applied &#34;in-place&#34;, so no new dataframe is produced.
+
+        Args:
+            df: dataframe on which the rule has to be applied
+            mask: a Series marking the rows in the dataframe on which the rule has to be applied
+        Returns:
+            pd.DataFrame: make the process chainable
+        &#34;&#34;&#34;
+        for idx in range(3):
+            data_df.loc[mask, self.cont_tags[idx]] = data_df[self.sum_tags[idx]]
+            data_df.loc[mask, self.sum_tags[idx]] = (
+                    data_df[self.cont_tags[idx]] + data_df[self.disc_tags[idx]])
+        return data_df
+
+    def get_description(self) -&gt; str:
+        &#34;&#34;&#34;
+        Returns the description String
+        Returns:
+            str: description
+        &#34;&#34;&#34;
+        return (&#34;Tries to find and correct cases when discontinued operations are reported and &#34;
+                &#34;the &#39;Sum&#39; tags (e.g.&#39;NetCashProvidedByUsedIn...Activities&#39;) were used to&#34;
+                &#34; report the continuing operation instead using the of the &#34;
+                &#34; &#39;...ContinuingOperations&#39; tags. &#34;
+                &#34;(e.g. &#39;NetCashProvidedByUsedInOperatingActivitiesContinuingOperations&#39;).&#34;)
+
+
+# pylint: disable=C0301
+class CashFlowStandardizer(Standardizer):
+    &#34;&#34;&#34;
+    The goal of this Standardizer is to create CashFlow statements that are comparable,
+    meaning that they have the same tags.
+
+    At the end, the standardized CF contains the following columns
+
+    &lt;pre&gt;
+    Final Tags
+        NetCashProvidedByUsedInOperatingActivities
+          CashProvidedByUsedInOperatingActivitiesDiscontinuedOperations
+          NetCashProvidedByUsedInOperatingActivitiesContinuingOperations
+              DepreciationDepletionAndAmortization
+              DeferredIncomeTaxExpenseBenefit
+              ShareBasedCompensation
+              IncreaseDecreaseInAccountsPayable
+              IncreaseDecreaseInAccruedLiabilities
+              InterestPaidNet
+              IncomeTaxesPaidNet
+
+        NetCashProvidedByUsedInInvestingActivities
+            CashProvidedByUsedInInvestingActivitiesDiscontinuedOperations
+            NetCashProvidedByUsedInInvestingActivitiesContinuingOperations
+              PaymentsToAcquirePropertyPlantAndEquipment
+              ProceedsFromSaleOfPropertyPlantAndEquipment
+              PaymentsToAcquireInvestments
+              ProceedsFromSaleOfInvestments
+              PaymentsToAcquireBusinessesNetOfCashAcquired
+              ProceedsFromDivestitureOfBusinessesNetOfCashDivested
+              PaymentsToAcquireIntangibleAssets
+              ProceedsFromSaleOfIntangibleAssets
+
+        NetCashProvidedByUsedInFinancingActivities
+            CashProvidedByUsedInFinancingActivitiesDiscontinuedOperations
+            NetCashProvidedByUsedInFinancingActivitiesContinuingOperations
+              ProceedsFromIssuanceOfCommonStock
+              ProceedsFromStockOptionsExercised
+              PaymentsForRepurchaseOfCommonStock
+              ProceedsFromIssuanceOfDebt
+              RepaymentsOfDebt
+              PaymentsOfDividends
+
+
+        EffectOfExchangeRateFinal
+        CashPeriodIncreaseDecreaseIncludingExRateEffectFinal
+
+        CashAndCashEquivalentsEndOfPeriod
+    &lt;/pre&gt;
+
+    Rule overview:
+    &lt;pre&gt;
+          + NetCashProvidedByUsedInOperatingActivitiesContinuingOperations
+          + CashProvidedByUsedInOperatingActivitiesDiscontinuedOperations &lt;- CashProvidedByUsedInDiscontinuedOperationsOperatingActivities
+          --------
+      + NetCashProvidedByUsedInOperatingActivities
+
+          + NetCashProvidedByUsedInInvestingActivitiesContinuingOperations
+          + CashProvidedByUsedInInvestingActivitiesDiscontinuedOperations &lt;- CashProvidedByUsedInDiscontinuedOperationsInvestingActivities
+          --------
+      + NetCashProvidedByUsedInInvestingActivities
+
+          + NetCashProvidedByUsedInInvestingActivitiesContinuingOperations
+          + CashProvidedByUsedInFinancingActivitiesDiscontinuedOperations &lt;- CashProvidedByUsedInDiscontinuedOperationsFinancingActivities
+          --------
+      + NetCashProvidedByUsedInInvestingActivities
+
+
+                  Prio 1
+                           &lt;- EffectOfExchangeRateOnCash
+                       &lt;- EffectOfExchangeRateOnCashAndCashEquivalents
+                  + EffectOfExchangeRateOnCashCashEquivalentsRestrictedCashAndRestrictedCashEquivalents
+                  + EffectOfExchangeRateOnCashCashEquivalentsRestrictedCashAndRestrictedCashEquivalentsDisposalGroupIncludingDiscontinuedOperations
+                  --------
+                  EffectOfExchangeRateOnCashCashEquivalentsRestrictedCashAndRestrictedCashEquivalentsIncludingDisposalGroupAndDiscontinuedOperations
+                 &lt;-
+              EffectOfExchangeRateFinal
+
+
+                  Prio 2
+                  + EffectOfExchangeRateOnCashAndCashEquivalentsContinuingOperations &lt;- EffectOfExchangeRateOnCashContinuingOperations
+                  + EffectOfExchangeRateOnCashAndCashEquivalentsDiscontinuedOperations &lt;- EffectOfExchangeRateOnCashDiscontinuedOperations
+                  --------
+              EffectOfExchangeRateFinal
+
+
+      + EffectOfExchangeRateFinal
+      ---------------------------
+
+                   &lt;- CashPeriodIncreaseDecrease
+             &lt;- CashAndCashEquivalentsPeriodIncreaseDecrease
+        &lt;- CashCashEquivalentsRestrictedCashAndRestrictedCashEquivalentsPeriodIncreaseDecreaseIncludingExchangeRateEffect
+      CashPeriodIncreaseDecreaseIncludingExRateEffectFinal
+      ==================
+
+                                       &lt;- CashEndOfPeriod
+                                  &lt;- CashAndDueFromBanksEndOfPeriod
+                             &lt;- CashAndCashEquivalentsAtCarryingValueEndOfPeriod
+                        &lt;- CashAndCashEquivalentsAtCarryingValueIncludingDiscontinuedOperationsEndOfPeriod
+                   &lt;- CashCashEquivalentsRestrictedCashAndRestrictedCashEquivalentsEndOfPeriod
+              &lt;- CashCashEquivalentsRestrictedCashAndRestrictedCashEquivalentsDisposalGroupIncludingDiscontinuedOperationsEndOfPeriod
+        &lt;- CashCashEquivalentsRestrictedCashAndRestrictedCashEquivalentsIncludingDisposalGroupAndDiscontinuedOperationsEndOfPeriod
+      CashAndCashEquivalentsEndOfPeriod
+
+
+      Details of Operating Activities
+
+                  + AmortizationOfIntangibleAssets
+                  + AmortizationOfDeferredCharges
+                  + AmortizationOfFinancingCosts
+                  -------------
+                + Amortization
+                + Depreciation
+                --------------
+                + DepreciationAndAmortization
+                + Depletion
+                ----------
+            DepreciationDepletionAndAmortization
+
+            DeferredIncomeTaxExpenseBenefit
+            ShareBasedCompensation
+            IncreaseDecreaseInAccountsPayable
+            IncreaseDecreaseInAccruedLiabilities
+            InterestPaidNet
+            IncomeTaxesPaidNet
+
+
+      Details of Investing activities
+
+                + ProceedsFromSaleOfAvailableForSaleSecurities
+                + ProceedsFromSaleOfTradingSecurities
+                + ProceedsFromSaleOfEquitySecurities
+                + ProceedsFromSaleOfDebtSecurities
+                + ProceedsFromSaleAndMaturityOfOtherInvestments
+                + ProceedsFromMaturitiesPrepaymentsAndCallsOfAvailableForSaleSecurities
+                + ProceedsFromSaleOfInvestmentsInAffiliates
+                + ProceedsFromSaleOfHeldToMaturitySecurities
+                --------------------------------------------
+            ProceedsFromSaleOfInvestments
+
+            PaymentsToAcquirePropertyPlantAndEquipment
+            ProceedsFromSaleOfPropertyPlantAndEquipment
+            PaymentsToAcquireInvestments
+            PaymentsToAcquireBusinessesNetOfCashAcquired
+            ProceedsFromDivestitureOfBusinessesNetOfCashDivested
+            PaymentsToAcquireIntangibleAssets
+            ProceedsFromSaleOfIntangibleAssets
+
+
+      Details of Financing activities
+
+                  + PaymentsOfDividendsCommonStock
+                  + PaymentsOfDividendsPreferredStockAndPreferenceStock
+                  + PaymentsOfDividendsMinorityInterest
+                  -------------
+             PaymentsOfDividends
+
+             ProceedsFromIssuanceOfCommonStock
+             ProceedsFromStockOptionsExercised
+             PaymentsForRepurchaseOfCommonStock
+             ProceedsFromIssuanceOfDebt
+             RepaymentsOfDebt
+
+     Post Rules
+
+        Calculate missing &#34;Operating&#34; tags
+
+        + NetCashProvidedByUsedInOperatingActivities (if present)
+        - NetCashProvidedByUsedInOperatingActivitiesContinuingOperations (if present)
+        -------
+        = CashProvidedByUsedInOperatingActivitiesDiscontinuedOperations (if not present)
+
+
+        + NetCashProvidedByUsedInOperatingActivities (if present)
+        - CashProvidedByUsedInOperatingActivitiesDiscontinuedOperations (if present)
+        -------
+        = NetCashProvidedByUsedInOperatingActivitiesContinuingOperations (if not present)
+
+
+        if only NetCashProvidedByUsedInOperatingActivities is set:
+          NetCashProvidedByUsedInOperatingActivitiesContinuingOperations = NetCashProvidedByUsedInOperatingActivities
+          CashProvidedByUsedInOperatingActivitiesDiscontinuedOperations = 0
+
+
+        Same as above for Financing and Investing triples
+
+        Set to Zero if still not set:
+           NetCashProvidedByUsedInOperatingActivitiesContinuingOperations
+           NetCashProvidedByUsedInInvestingActivitiesContinuingOperations
+           NetCashProvidedByUsedInFinancingActivitiesContinuingOperations
+           NetCashProvidedByUsedInOperatingActivities
+           NetCashProvidedByUsedInInvestingActivities
+           NetCashProvidedByUsedInFinancingActivities
+           CashProvidedByUsedInOperatingActivitiesDiscontinuedOperations
+           CashProvidedByUsedInInvestingActivitiesDiscontinuedOperations
+           CashProvidedByUsedInFinancingActivitiesDiscontinuedOperations
+
+           EffectOfExchangeRateFinal
+
+        Set CashPeriodIncreaseDecreaseIncludingExRateEffectFinal (if not set yet)
+            + NetCashProvidedByUsedInOperatingActivities
+            + NetCashProvidedByUsedInInvestingActivities
+            + NetCashProvidedByUsedInFinancingActivities
+            + EffectOfExchangeRateFinal
+            ------------------
+            = CashPeriodIncreaseDecreaseIncludingExRateEffectFinal
+
+        Fix mixed up usage of NetCashProvidedByUsed...Activities/-ContinuingOperations
+    &lt;/pre&gt;
+
+    &#34;&#34;&#34;
+    prepivot_rule_tree = RuleGroup(
+        prefix=&#34;CF_PREPIV&#34;,
+        rules=[PrePivotDeduplicate(),  # remove duplicates
+               PrePivotMaxQtrs(max_qtrs=4),  # only keep entries with qtrs &lt;= 4
+               PrePivotCorrectSign(
+                   tag_list=inflow_tags,  # make sure these tags have a positive value
+                   is_positive=True
+               ),
+               PrePivotCorrectSign(
+                   tag_list=outflow_tags,  # make sure these tags have a negative value
+                   is_positive=False
+               ),
+               PrePivotCashAtEndOfPeriod()  # prepare CashAtEndOfPeriod
+               ]
+    )
+
+    preprocess_rule_tree = (
+        RuleGroup(prefix=&#34;CF_PRE&#34;,
+                  rules=[
+                      # fix wrong usage of NetCashProvidedByUsedInContinuingOperations
+                      PreCorrectMixUpContinuingOperations(),
+                  ]))
+
+    cf_netcash = RuleGroup(
+        prefix=&#34;NETCASH&#34;,
+        rules=[
+
+            # found in older reports, very rarely used (around 100 times)
+            CopyTagRule(original=&#39;CashProvidedByUsedInDiscontinuedOperationsOperatingActivities&#39;,
+                        target=&#39;CashProvidedByUsedInOperatingActivitiesDiscontinuedOperations&#39;),
+
+            CopyTagRule(original=&#39;CashProvidedByUsedInDiscontinuedOperationsInvestingActivities&#39;,
+                        target=&#39;CashProvidedByUsedInInvestingActivitiesDiscontinuedOperations&#39;),
+
+            CopyTagRule(original=&#39;CashProvidedByUsedInDiscontinuedOperationsFinancingActivities&#39;,
+                        target=&#39;CashProvidedByUsedInFinancingActivitiesDiscontinuedOperations&#39;),
+
+            # Calculate SumTags for Continuing and Discontinued
+            SumUpRule(sum_tag=&#39;NetCashProvidedByUsedInOperatingActivities&#39;,
+                      potential_summands=[
+                          &#39;NetCashProvidedByUsedInOperatingActivitiesContinuingOperations&#39;,
+                          &#39;CashProvidedByUsedInOperatingActivitiesDiscontinuedOperations&#39;,
+                      ]),
+            SumUpRule(sum_tag=&#39;NetCashProvidedByUsedInFinancingActivities&#39;,
+                      potential_summands=[
+                          &#39;NetCashProvidedByUsedInFinancingActivitiesContinuingOperations&#39;,
+                          &#39;CashProvidedByUsedInFinancingActivitiesDiscontinuedOperations&#39;,
+                      ]),
+            SumUpRule(sum_tag=&#39;NetCashProvidedByUsedInInvestingActivities&#39;,
+                      potential_summands=[
+                          &#39;NetCashProvidedByUsedInInvestingActivitiesContinuingOperations&#39;,
+                          &#39;CashProvidedByUsedInInvestingActivitiesDiscontinuedOperations&#39;,
+                      ]),
+        ]
+    )
+
+    cf_eff_ex_rate = RuleGroup(
+        prefix=&#34;EFF_EXRATE&#34;,
+        rules=[
+            # ExRateEffect
+            # ----------------------
+            CopyTagRule(original=&#39;EffectOfExchangeRateOnCash&#39;,
+                        target=&#39;EffectOfExchangeRateOnCashAndCashEquivalents&#39;),
+            CopyTagRule(original=&#39;EffectOfExchangeRateOnCashAndCashEquivalents&#39;,
+                        target=&#39;EffectOfExchangeRateOnCashCashEquivalentsRestrictedCashAndRestrictedCashEquivalents&#39;),
+            SumUpRule(
+                sum_tag=&#39;EffectOfExchangeRateOnCashCashEquivalentsRestrictedCashAndRestrictedCashEquivalentsIncludingDisposalGroupAndDiscontinuedOperations&#39;,
+                potential_summands=[
+                    &#39;EffectOfExchangeRateOnCashCashEquivalentsRestrictedCashAndRestrictedCashEquivalents&#39;,
+                    &#39;EffectOfExchangeRateOnCashCashEquivalentsRestrictedCashAndRestrictedCashEquivalentsDisposalGroupIncludingDiscontinuedOperations&#39;
+                ]),
+
+            # Simplify name to EffectOfExchangeRateFinal
+            CopyTagRule(
+                original=&#39;EffectOfExchangeRateOnCashCashEquivalentsRestrictedCashAndRestrictedCashEquivalentsIncludingDisposalGroupAndDiscontinuedOperations&#39;,
+                target=&#39;EffectOfExchangeRateFinal&#39;),
+
+            # Sometimes also EffectOfExchangeRateOnCashContinuingOperations are used
+            # Continuing Op EffectsOnExRate
+            CopyTagRule(original=&#39;EffectOfExchangeRateOnCashContinuingOperations&#39;,
+                        target=&#39;EffectOfExchangeRateOnCashAndCashEquivalentsContinuingOperations&#39;),
+
+            # Discontinued Op EffectsOnExRate
+            CopyTagRule(original=&#39;EffectOfExchangeRateOnCashDiscontinuedOperations&#39;,
+                        target=&#39;EffectOfExchangeRateOnCashAndCashEquivalentsDiscontinuedOperations&#39;),
+
+            SumUpRule(
+                sum_tag=&#39;EffectOfExchangeRateFinal&#39;,
+                potential_summands=[
+                    &#39;EffectOfExchangeRateOnCashAndCashEquivalentsContinuingOperations&#39;,
+                    &#39;EffectOfExchangeRateOnCashAndCashEquivalentsDiscontinuedOperations&#39;
+                ]
+            )
+        ]
+    )
+
+    cf_increase_decrease = RuleGroup(
+        prefix=&#34;INC_DEC&#34;,
+        rules=[
+            # Cash increase decrease Including ExRate Effect
+            # ----------------------------------------------
+            CopyTagRule(original=&#39;CashPeriodIncreaseDecrease&#39;,
+                        target=&#39;CashAndCashEquivalentsPeriodIncreaseDecrease&#39;),
+            CopyTagRule(original=&#39;CashAndCashEquivalentsPeriodIncreaseDecrease&#39;,
+                        target=&#39;CashCashEquivalentsRestrictedCashAndRestrictedCashEquivalentsPeriodIncreaseDecreaseIncludingExchangeRateEffect&#39;),
+
+            # Simplify name to CashTotalPeriodIncreaseDecreaseIncludingExRateEffect
+            CopyTagRule(
+                original=&#39;CashCashEquivalentsRestrictedCashAndRestrictedCashEquivalentsPeriodIncreaseDecreaseIncludingExchangeRateEffect&#39;,
+                target=&#39;CashPeriodIncreaseDecreaseIncludingExRateEffectFinal&#39;),
+        ])
+
+    cf_end_of_period = RuleGroup(
+        prefix=&#34;EOP&#34;,
+        rules=[
+            CopyTagRule(
+                original=&#39;CashEndOfPeriod&#39;,
+                target=&#39;CashAndDueFromBanksEndOfPeriod&#39;),
+            CopyTagRule(
+                original=&#39;CashAndDueFromBanksEndOfPeriod&#39;,
+                target=&#39;CashAndCashEquivalentsAtCarryingValueEndOfPeriod&#39;),
+            CopyTagRule(
+                original=&#39;CashAndCashEquivalentsAtCarryingValueEndOfPeriod&#39;,
+                target=&#39;CashAndCashEquivalentsAtCarryingValueIncludingDiscontinuedOperationsEndOfPeriod&#39;),
+            CopyTagRule(
+                original=&#39;CashAndCashEquivalentsAtCarryingValueIncludingDiscontinuedOperationsEndOfPeriod&#39;,
+                target=&#39;CashCashEquivalentsRestrictedCashAndRestrictedCashEquivalentsEndOfPeriod&#39;),
+            CopyTagRule(
+                original=&#39;CashCashEquivalentsRestrictedCashAndRestrictedCashEquivalentsEndOfPeriod&#39;,
+                target=&#39;CashCashEquivalentsRestrictedCashAndRestrictedCashEquivalentsDisposalGroupIncludingDiscontinuedOperationsEndOfPeriod&#39;),
+            CopyTagRule(
+                original=&#39;CashCashEquivalentsRestrictedCashAndRestrictedCashEquivalentsDisposalGroupIncludingDiscontinuedOperationsEndOfPeriod&#39;,
+                target=&#39;CashCashEquivalentsRestrictedCashAndRestrictedCashEquivalentsIncludingDisposalGroupAndDiscontinuedOperationsEndOfPeriod&#39;),
+            CopyTagRule(
+                original=&#39;CashCashEquivalentsRestrictedCashAndRestrictedCashEquivalentsIncludingDisposalGroupAndDiscontinuedOperationsEndOfPeriod&#39;,
+                target=&#39;CashAndCashEquivalentsEndOfPeriod&#39;),
+        ]
+    )
+
+    # DepreciationDepletionAndAmortization
+    cf_depr_depl_amort = RuleGroup(
+        # 1. DepreciationDepletionAndAmortization
+        # 1.1 DepreciationAndAmortization
+        # 1.1.1 Depreciation
+        # 1.1.2 Amortization
+        # 1.1.2.1 AmortizationOfIntangibleAssets
+        # 1.1.2.2 AmortizationOfDeferredCharges
+        # 1.1.2.3 AmortizationOfFinancingCosts
+        # 1.2 Depletion
+
+        prefix=&#34;DeprDeplAmort&#34;,
+        rules=[
+            SumUpRule(
+                sum_tag=&#39;Amortization&#39;,
+                potential_summands=[
+                    &#39;AmortizationOfIntangibleAssets&#39;,
+                    &#39;AmortizationOfDeferredCharges&#39;,
+                    &#39;AmortizationOfFinancingCosts&#39;,
+                ]),
+            SumUpRule(
+                sum_tag=&#39;DepreciationAndAmortization&#39;,
+                potential_summands=[
+                    &#39;Amortization&#39;,
+                    &#39;Depreciation&#39;,
+                ]),
+            SumUpRule(
+                sum_tag=&#39;DepreciationDepletionAndAmortization&#39;,
+                potential_summands=[
+                    &#39;DepreciationAndAmortization&#39;,
+                    &#39;Depletion&#39;,
+                ]),
+        ]
+    )
+
+    cf_proceeds_sale_invest = RuleGroup(
+        prefix=&#34;ProSalesInvest&#34;,
+        rules=[
+            SumUpRule(
+                sum_tag=&#34;ProceedsFromSaleOfInvestments&#34;,
+                potential_summands=[
+                    &#39;ProceedsFromSaleOfAvailableForSaleSecurities&#39;,
+                    &#39;ProceedsFromSaleOfTradingSecurities&#39;,
+                    &#39;ProceedsFromSaleOfEquitySecurities&#39;,
+                    &#39;ProceedsFromSaleOfDebtSecurities&#39;,
+                    &#39;ProceedsFromSaleAndMaturityOfOtherInvestments&#39;,
+                    &#39;ProceedsFromMaturitiesPrepaymentsAndCallsOfAvailableForSaleSecurities&#39;,
+                    &#39;ProceedsFromSaleOfInvestmentsInAffiliates&#39;,
+                    &#39;ProceedsFromSaleOfHeldToMaturitySecurities&#39;,
+                ]
+            )
+        ]
+    )
+
+    cf_payments_dividends = RuleGroup(
+        prefix=&#34;PayDividends&#34;,
+        rules=[
+            SumUpRule(
+                sum_tag=&#34;PaymentsOfDividends&#34;,
+                potential_summands=[
+                    &#39;PaymentsOfDividendsCommonStock&#39;,
+                    &#39;PaymentsOfDividendsPreferredStockAndPreferenceStock&#39;,
+                    &#39;PaymentsOfDividendsMinorityInterest&#39;,
+                ]
+            )
+        ]
+    )
+
+    main_rule_tree = RuleGroup(prefix=&#34;CF&#34;,
+                               rules=[
+                                   cf_netcash,
+                                   cf_eff_ex_rate,
+                                   cf_increase_decrease,
+                                   cf_end_of_period,
+                                   cf_depr_depl_amort,
+                                   cf_proceeds_sale_invest,
+                                   cf_payments_dividends,
+                               ])
+
+    post_rule_tree = RuleGroup(
+        prefix=&#34;CF&#34;,
+        rules=[
+            # final completion of NetCash-Tags
+            MissingSummandRule(sum_tag=&#39;NetCashProvidedByUsedInOperatingActivities&#39;,
+                               existing_summands_tags=[
+                                   &#39;NetCashProvidedByUsedInOperatingActivitiesContinuingOperations&#39;],
+                               missing_summand_tag=&#39;CashProvidedByUsedInOperatingActivitiesDiscontinuedOperations&#39;),
+
+            MissingSummandRule(sum_tag=&#39;NetCashProvidedByUsedInOperatingActivities&#39;,
+                               existing_summands_tags=[
+                                   &#39;CashProvidedByUsedInOperatingActivitiesDiscontinuedOperations&#39;],
+                               missing_summand_tag=&#39;NetCashProvidedByUsedInOperatingActivitiesContinuingOperations&#39;),
+
+            PostCopyToFirstSummand(sum_tag=&#39;NetCashProvidedByUsedInOperatingActivities&#39;,
+                                   first_summand=&#39;NetCashProvidedByUsedInOperatingActivitiesContinuingOperations&#39;,
+                                   other_summands=[
+                                       &#39;CashProvidedByUsedInOperatingActivitiesDiscontinuedOperations&#39;]),
+
+            MissingSummandRule(sum_tag=&#39;NetCashProvidedByUsedInFinancingActivities&#39;,
+                               existing_summands_tags=[
+                                   &#39;NetCashProvidedByUsedInFinancingActivitiesContinuingOperations&#39;],
+                               missing_summand_tag=&#39;CashProvidedByUsedInFinancingActivitiesDiscontinuedOperations&#39;),
+
+            MissingSummandRule(sum_tag=&#39;NetCashProvidedByUsedInFinancingActivities&#39;,
+                               existing_summands_tags=[
+                                   &#39;CashProvidedByUsedInFinancingActivitiesDiscontinuedOperations&#39;],
+                               missing_summand_tag=&#39;NetCashProvidedByUsedInFinancingActivitiesContinuingOperations&#39;),
+
+            PostCopyToFirstSummand(sum_tag=&#39;NetCashProvidedByUsedInFinancingActivities&#39;,
+                                   first_summand=&#39;NetCashProvidedByUsedInFinancingActivitiesContinuingOperations&#39;,
+                                   other_summands=[
+                                       &#39;CashProvidedByUsedInFinancingActivitiesDiscontinuedOperations&#39;]),
+
+            MissingSummandRule(sum_tag=&#39;NetCashProvidedByUsedInInvestingActivities&#39;,
+                               existing_summands_tags=[
+                                   &#39;NetCashProvidedByUsedInInvestingActivitiesContinuingOperations&#39;],
+                               missing_summand_tag=&#39;CashProvidedByUsedInInvestingActivitiesDiscontinuedOperations&#39;),
+
+            MissingSummandRule(sum_tag=&#39;NetCashProvidedByUsedInInvestingActivities&#39;,
+                               existing_summands_tags=[
+                                   &#39;CashProvidedByUsedInInvestingActivitiesDiscontinuedOperations&#39;],
+                               missing_summand_tag=&#39;NetCashProvidedByUsedInInvestingActivitiesContinuingOperations&#39;),
+
+            PostCopyToFirstSummand(sum_tag=&#39;NetCashProvidedByUsedInInvestingActivities&#39;,
+                                   first_summand=&#39;NetCashProvidedByUsedInInvestingActivitiesContinuingOperations&#39;,
+                                   other_summands=[
+                                       &#39;CashProvidedByUsedInInvestingActivitiesDiscontinuedOperations&#39;]),
+
+            # Setting values to zero of tags which were not set
+            PostSetToZero(
+                tags=[&#39;NetCashProvidedByUsedInOperatingActivitiesContinuingOperations&#39;, ]),
+            PostSetToZero(
+                tags=[&#39;NetCashProvidedByUsedInInvestingActivitiesContinuingOperations&#39;, ]),
+            PostSetToZero(
+                tags=[&#39;NetCashProvidedByUsedInFinancingActivitiesContinuingOperations&#39;, ]),
+            PostSetToZero(tags=[&#39;NetCashProvidedByUsedInOperatingActivities&#39;, ]),
+            PostSetToZero(tags=[&#39;NetCashProvidedByUsedInInvestingActivities&#39;, ]),
+            PostSetToZero(tags=[&#39;NetCashProvidedByUsedInFinancingActivities&#39;, ]),
+            PostSetToZero(tags=[&#39;CashProvidedByUsedInOperatingActivitiesDiscontinuedOperations&#39;, ]),
+            PostSetToZero(tags=[&#39;CashProvidedByUsedInInvestingActivitiesDiscontinuedOperations&#39;, ]),
+            PostSetToZero(tags=[&#39;CashProvidedByUsedInFinancingActivitiesDiscontinuedOperations&#39;, ]),
+
+            PostSetToZero(tags=[&#39;EffectOfExchangeRateFinal&#39;]),
+
+            # Final Summation of CashPeriodIncreaseDecreaseIncludingExRateEffectFinal
+            MissingSumRule(sum_tag=&#39;CashPeriodIncreaseDecreaseIncludingExRateEffectFinal&#39;,
+                           summand_tags=[&#39;NetCashProvidedByUsedInOperatingActivities&#39;,
+                                         &#39;NetCashProvidedByUsedInInvestingActivities&#39;,
+                                         &#39;NetCashProvidedByUsedInFinancingActivities&#39;,
+                                         &#39;EffectOfExchangeRateFinal&#39;]),
+
+            PostFixMixedContinuingWithSum(),
+
+        ])
+
+    validation_rules: List[ValidationRule] = [
+        SumValidationRule(identifier=&#34;BaseOpAct&#34;,
+                          sum_tag=&#39;NetCashProvidedByUsedInOperatingActivities&#39;,
+                          summands=[
+                              &#39;NetCashProvidedByUsedInOperatingActivitiesContinuingOperations&#39;,
+                              &#39;CashProvidedByUsedInOperatingActivitiesDiscontinuedOperations&#39;]),
+
+        SumValidationRule(identifier=&#34;BaseFinAct&#34;,
+                          sum_tag=&#39;NetCashProvidedByUsedInFinancingActivities&#39;,
+                          summands=[
+                              &#39;NetCashProvidedByUsedInFinancingActivitiesContinuingOperations&#39;,
+                              &#39;CashProvidedByUsedInFinancingActivitiesDiscontinuedOperations&#39;]),
+
+        SumValidationRule(identifier=&#34;BaseInvAct&#34;,
+                          sum_tag=&#39;NetCashProvidedByUsedInInvestingActivities&#39;,
+                          summands=[
+                              &#39;NetCashProvidedByUsedInInvestingActivitiesContinuingOperations&#39;,
+                              &#39;CashProvidedByUsedInInvestingActivitiesDiscontinuedOperations&#39;]),
+
+        SumValidationRule(identifier=&#34;NetCashContOp&#34;,
+                          sum_tag=&#39;CashPeriodIncreaseDecreaseIncludingExRateEffectFinal&#39;,
+                          summands=[&#39;NetCashProvidedByUsedInOperatingActivities&#39;,
+                                    &#39;NetCashProvidedByUsedInFinancingActivities&#39;,
+                                    &#39;NetCashProvidedByUsedInInvestingActivities&#39;,
+                                    &#39;EffectOfExchangeRateFinal&#39;]),
+
+        IsSetValidationRule(identifier=&#34;CashEoP&#34;,
+                            tag=&#39;CashAndCashEquivalentsEndOfPeriod&#39;)
+    ]
+
+    # these are the columns that finally are returned after the standardization
+    final_tags: List[str] = [
+        &#39;NetCashProvidedByUsedInOperatingActivitiesContinuingOperations&#39;,
+        &#39;NetCashProvidedByUsedInFinancingActivitiesContinuingOperations&#39;,
+        &#39;NetCashProvidedByUsedInInvestingActivitiesContinuingOperations&#39;,
+        &#39;NetCashProvidedByUsedInOperatingActivities&#39;,
+        &#39;NetCashProvidedByUsedInFinancingActivities&#39;,
+        &#39;NetCashProvidedByUsedInInvestingActivities&#39;,
+        &#39;CashProvidedByUsedInOperatingActivitiesDiscontinuedOperations&#39;,
+        &#39;CashProvidedByUsedInInvestingActivitiesDiscontinuedOperations&#39;,
+        &#39;CashProvidedByUsedInFinancingActivitiesDiscontinuedOperations&#39;,
+        &#39;EffectOfExchangeRateFinal&#39;,
+        &#39;CashPeriodIncreaseDecreaseIncludingExRateEffectFinal&#39;,
+        &#39;CashAndCashEquivalentsEndOfPeriod&#39;,
+
+        # Details in Operating activities
+        &#39;DepreciationDepletionAndAmortization&#39;,
+        &#39;DeferredIncomeTaxExpenseBenefit&#39;,
+        &#39;ShareBasedCompensation&#39;,
+        &#39;IncreaseDecreaseInAccountsPayable&#39;,
+        &#39;IncreaseDecreaseInAccruedLiabilities&#39;,
+        &#39;InterestPaidNet&#39;,
+        &#39;IncomeTaxesPaidNet&#39;,
+
+        # Details of Investing activities
+        &#39;PaymentsToAcquirePropertyPlantAndEquipment&#39;,
+        &#39;ProceedsFromSaleOfPropertyPlantAndEquipment&#39;,
+        &#39;PaymentsToAcquireInvestments&#39;,
+        &#39;ProceedsFromSaleOfInvestments&#39;,
+        &#39;PaymentsToAcquireBusinessesNetOfCashAcquired&#39;,
+        &#39;ProceedsFromDivestitureOfBusinessesNetOfCashDivested&#39;,
+        &#39;PaymentsToAcquireIntangibleAssets&#39;,
+        &#39;ProceedsFromSaleOfIntangibleAssets&#39;,
+
+        # Details of Financing activities
+        &#39;ProceedsFromIssuanceOfCommonStock&#39;,
+        &#39;ProceedsFromStockOptionsExercised&#39;,
+        &#39;PaymentsForRepurchaseOfCommonStock&#39;,
+        &#39;ProceedsFromIssuanceOfDebt&#39;,
+        &#39;RepaymentsOfDebt&#39;,
+        &#39;PaymentsOfDividends&#39;,
+
+    ]
+
+    # used to evaluate if a report is the main cashflow report
+    # inside a report, there can be several tables (different report nr)
+    # which stmt value is CF.
+    # however, we might be only interested in the &#34;major&#34; CF report. Usually this is the
+    # one which has the least nan in the following columns
+    main_statement_tags = [
+        &#39;NetCashProvidedByUsedInOperatingActivities&#39;,
+        &#39;NetCashProvidedByUsedInFinancingActivities&#39;,
+        &#39;NetCashProvidedByUsedInInvestingActivities&#39;,
+        &#39;NetCashProvidedByUsedInOperatingActivitiesContinuingOperations&#39;,
+        &#39;NetCashProvidedByUsedInInvestingActivitiesContinuingOperations&#39;,
+        &#39;NetCashProvidedByUsedInFinancingActivitiesContinuingOperations&#39;,
+        &#39;NetCashProvidedByUsedInContinuingOperations&#39;,
+        &#39;NetCashProvidedByUsedInDiscontinuedOperations&#39;,
+        &#39;CashCashEquivalentsRestrictedCashAndRestrictedCashEquivalentsPeriodIncreaseDecreaseIncludingExchangeRateEffect&#39;,
+        &#39;CashAndCashEquivalentsPeriodIncreaseDecrease&#39;,
+        &#39;CashPeriodIncreaseDecrease&#39;,
+    ]
+
+    def __init__(self,
+                 prepivot_rule_tree: Optional[RuleGroup] = None,
+                 pre_rule_tree: Optional[RuleGroup] = None,
+                 main_rule_tree: Optional[RuleGroup] = None,
+                 post_rule_tree: Optional[RuleGroup] = None,
+                 validation_rules: Optional[List[ValidationRule]] = None,
+                 final_tags: Optional[List[str]] = None,
+                 main_statement_tags: Optional[List[str]] = None,
+
+                 filter_for_main_statement: bool = True,
+                 main_iterations: int = 1,
+                 invert_negated: bool = True,
+                 additional_final_sub_fields: Optional[List[str]] = None,
+                 additional_final_tags: Optional[List[str]] = None):
+        &#34;&#34;&#34;
+        Initialize the CashFlow Standardizer.
+
+        Fine tune it with the following arguments:
+
+        Args:
+            prepivot_rule_tree: rules that are applied before the data is pivoted. These are rules
+                    that pathfilter (like deduplicate) or correct values.
+            pre_rule_tree: rules that are applied once before the main processing. These are mainly
+                    rules that try to correct existing data from obvious errors (like wrong
+                    tagging)
+            main_rule_tree: rules that are applied during the main processing rule and which do the
+                    heavy lifting. These rules can be executed multiple times depending on the value
+                    of the main_iterations parameter
+            post_rule_tree: rules that are used to &#34;cleanup&#34;, like setting certain values to
+                    0.0. They are just executed once.
+            validation_rules: Validation rules are applied after all rules were applied.
+                   they add validation columns to the main dataset. Validation rules do check
+                   if certain requirements are met. E.g. in a Balance Sheet, the following
+                   equation should be true: Assets = AssetsCurrent + AssetsNoncurrent
+            final_tags: The list of tags/columns that will appear in the final result dataframe.
+            main_statement_tags: list of tags that is used to identify the main table of a
+                   financial statement (income statement, balance sheet, cash flow).
+
+            filter_for_main_statement (bool):
+                    Only consider the reports that contain most of the &#34;main_statement_tags&#34;.
+                    Default is True.
+            main_iterations (int): Number of times the main rules should be applied.
+                    Default is 1 for CashFlow.
+            invert_negated (bool, Optional, True): inverts the value of the tags that are marked
+                   as negated (in the pre_df).
+            additional_final_sub_fields (List, Optional):
+                    When using the present method, the results are joined with the following fields
+                    from the sub_df entry: &#39;adsh&#39;, &#39;cik&#39;, &#39;form&#39;, &#39;fye&#39;, &#39;fy&#39;, &#39;fp&#39;, &#39;filed&#39;
+                    Additional fields can be assigend in this list. Default is None.
+            additional_final_tags (List, Optional):
+                     the &#34;final_tags&#34; list define the tags that will be present in the final result
+                     dataframe. Additional tags can be added via this parameter. Default is None.
+        &#34;&#34;&#34;
+        super().__init__(
+            prepivot_rule_tree=
+            prepivot_rule_tree if prepivot_rule_tree else self.prepivot_rule_tree,
+            pre_rule_tree=pre_rule_tree if pre_rule_tree else self.preprocess_rule_tree,
+            main_rule_tree=main_rule_tree if main_rule_tree else self.main_rule_tree,
+            post_rule_tree=post_rule_tree if post_rule_tree else self.post_rule_tree,
+            validation_rules=validation_rules if validation_rules else self.validation_rules,
+            final_tags=final_tags if final_tags else self.final_tags,
+            main_statement_tags=
+            main_statement_tags if main_statement_tags else self.main_statement_tags,
+
+            filter_for_main_statement=filter_for_main_statement,
+            main_iterations=main_iterations,
+            invert_negated=invert_negated,
+            additional_final_sub_fields=additional_final_sub_fields,
+            additional_final_tags=additional_final_tags
+        )</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="secfsdstools.f_standardize.cf_standardize.CashFlowStandardizer"><code class="flex name class">
+<span>class <span class="ident">CashFlowStandardizer</span></span>
+<span>(</span><span>prepivot_rule_tree: Optional[<a title="secfsdstools.f_standardize.base_rule_framework.RuleGroup" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.RuleGroup">RuleGroup</a>] = None, pre_rule_tree: Optional[<a title="secfsdstools.f_standardize.base_rule_framework.RuleGroup" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.RuleGroup">RuleGroup</a>] = None, main_rule_tree: Optional[<a title="secfsdstools.f_standardize.base_rule_framework.RuleGroup" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.RuleGroup">RuleGroup</a>] = None, post_rule_tree: Optional[<a title="secfsdstools.f_standardize.base_rule_framework.RuleGroup" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.RuleGroup">RuleGroup</a>] = None, validation_rules: Optional[List[<a title="secfsdstools.f_standardize.base_validation_rules.ValidationRule" href="base_validation_rules.html#secfsdstools.f_standardize.base_validation_rules.ValidationRule">ValidationRule</a>]] = None, final_tags: Optional[List[str]] = None, main_statement_tags: Optional[List[str]] = None, filter_for_main_statement: bool = True, main_iterations: int = 1, invert_negated: bool = True, additional_final_sub_fields: Optional[List[str]] = None, additional_final_tags: Optional[List[str]] = None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>The goal of this Standardizer is to create CashFlow statements that are comparable,
+meaning that they have the same tags.</p>
+<p>At the end, the standardized CF contains the following columns</p>
+<pre>
+Final Tags
+    NetCashProvidedByUsedInOperatingActivities
+      CashProvidedByUsedInOperatingActivitiesDiscontinuedOperations
+      NetCashProvidedByUsedInOperatingActivitiesContinuingOperations
+          DepreciationDepletionAndAmortization
+          DeferredIncomeTaxExpenseBenefit
+          ShareBasedCompensation
+          IncreaseDecreaseInAccountsPayable
+          IncreaseDecreaseInAccruedLiabilities
+          InterestPaidNet
+          IncomeTaxesPaidNet
+
+    NetCashProvidedByUsedInInvestingActivities
+        CashProvidedByUsedInInvestingActivitiesDiscontinuedOperations
+        NetCashProvidedByUsedInInvestingActivitiesContinuingOperations
+          PaymentsToAcquirePropertyPlantAndEquipment
+          ProceedsFromSaleOfPropertyPlantAndEquipment
+          PaymentsToAcquireInvestments
+          ProceedsFromSaleOfInvestments
+          PaymentsToAcquireBusinessesNetOfCashAcquired
+          ProceedsFromDivestitureOfBusinessesNetOfCashDivested
+          PaymentsToAcquireIntangibleAssets
+          ProceedsFromSaleOfIntangibleAssets
+
+    NetCashProvidedByUsedInFinancingActivities
+        CashProvidedByUsedInFinancingActivitiesDiscontinuedOperations
+        NetCashProvidedByUsedInFinancingActivitiesContinuingOperations
+          ProceedsFromIssuanceOfCommonStock
+          ProceedsFromStockOptionsExercised
+          PaymentsForRepurchaseOfCommonStock
+          ProceedsFromIssuanceOfDebt
+          RepaymentsOfDebt
+          PaymentsOfDividends
+
+
+    EffectOfExchangeRateFinal
+    CashPeriodIncreaseDecreaseIncludingExRateEffectFinal
+
+    CashAndCashEquivalentsEndOfPeriod
+</pre>
+<p>Rule overview:</p>
+<pre>
+      + NetCashProvidedByUsedInOperatingActivitiesContinuingOperations
+      + CashProvidedByUsedInOperatingActivitiesDiscontinuedOperations <- CashProvidedByUsedInDiscontinuedOperationsOperatingActivities
+      --------
+  + NetCashProvidedByUsedInOperatingActivities
+
+      + NetCashProvidedByUsedInInvestingActivitiesContinuingOperations
+      + CashProvidedByUsedInInvestingActivitiesDiscontinuedOperations <- CashProvidedByUsedInDiscontinuedOperationsInvestingActivities
+      --------
+  + NetCashProvidedByUsedInInvestingActivities
+
+      + NetCashProvidedByUsedInInvestingActivitiesContinuingOperations
+      + CashProvidedByUsedInFinancingActivitiesDiscontinuedOperations <- CashProvidedByUsedInDiscontinuedOperationsFinancingActivities
+      --------
+  + NetCashProvidedByUsedInInvestingActivities
+
+
+              Prio 1
+                       <- EffectOfExchangeRateOnCash
+                   <- EffectOfExchangeRateOnCashAndCashEquivalents
+              + EffectOfExchangeRateOnCashCashEquivalentsRestrictedCashAndRestrictedCashEquivalents
+              + EffectOfExchangeRateOnCashCashEquivalentsRestrictedCashAndRestrictedCashEquivalentsDisposalGroupIncludingDiscontinuedOperations
+              --------
+              EffectOfExchangeRateOnCashCashEquivalentsRestrictedCashAndRestrictedCashEquivalentsIncludingDisposalGroupAndDiscontinuedOperations
+             <-
+          EffectOfExchangeRateFinal
+
+
+              Prio 2
+              + EffectOfExchangeRateOnCashAndCashEquivalentsContinuingOperations <- EffectOfExchangeRateOnCashContinuingOperations
+              + EffectOfExchangeRateOnCashAndCashEquivalentsDiscontinuedOperations <- EffectOfExchangeRateOnCashDiscontinuedOperations
+              --------
+          EffectOfExchangeRateFinal
+
+
+  + EffectOfExchangeRateFinal
+  ---------------------------
+
+               <- CashPeriodIncreaseDecrease
+         <- CashAndCashEquivalentsPeriodIncreaseDecrease
+    <- CashCashEquivalentsRestrictedCashAndRestrictedCashEquivalentsPeriodIncreaseDecreaseIncludingExchangeRateEffect
+  CashPeriodIncreaseDecreaseIncludingExRateEffectFinal
+  ==================
+
+                                   <- CashEndOfPeriod
+                              <- CashAndDueFromBanksEndOfPeriod
+                         <- CashAndCashEquivalentsAtCarryingValueEndOfPeriod
+                    <- CashAndCashEquivalentsAtCarryingValueIncludingDiscontinuedOperationsEndOfPeriod
+               <- CashCashEquivalentsRestrictedCashAndRestrictedCashEquivalentsEndOfPeriod
+          <- CashCashEquivalentsRestrictedCashAndRestrictedCashEquivalentsDisposalGroupIncludingDiscontinuedOperationsEndOfPeriod
+    <- CashCashEquivalentsRestrictedCashAndRestrictedCashEquivalentsIncludingDisposalGroupAndDiscontinuedOperationsEndOfPeriod
+  CashAndCashEquivalentsEndOfPeriod
+
+
+  Details of Operating Activities
+
+              + AmortizationOfIntangibleAssets
+              + AmortizationOfDeferredCharges
+              + AmortizationOfFinancingCosts
+              -------------
+            + Amortization
+            + Depreciation
+            --------------
+            + DepreciationAndAmortization
+            + Depletion
+            ----------
+        DepreciationDepletionAndAmortization
+
+        DeferredIncomeTaxExpenseBenefit
+        ShareBasedCompensation
+        IncreaseDecreaseInAccountsPayable
+        IncreaseDecreaseInAccruedLiabilities
+        InterestPaidNet
+        IncomeTaxesPaidNet
+
+
+  Details of Investing activities
+
+            + ProceedsFromSaleOfAvailableForSaleSecurities
+            + ProceedsFromSaleOfTradingSecurities
+            + ProceedsFromSaleOfEquitySecurities
+            + ProceedsFromSaleOfDebtSecurities
+            + ProceedsFromSaleAndMaturityOfOtherInvestments
+            + ProceedsFromMaturitiesPrepaymentsAndCallsOfAvailableForSaleSecurities
+            + ProceedsFromSaleOfInvestmentsInAffiliates
+            + ProceedsFromSaleOfHeldToMaturitySecurities
+            --------------------------------------------
+        ProceedsFromSaleOfInvestments
+
+        PaymentsToAcquirePropertyPlantAndEquipment
+        ProceedsFromSaleOfPropertyPlantAndEquipment
+        PaymentsToAcquireInvestments
+        PaymentsToAcquireBusinessesNetOfCashAcquired
+        ProceedsFromDivestitureOfBusinessesNetOfCashDivested
+        PaymentsToAcquireIntangibleAssets
+        ProceedsFromSaleOfIntangibleAssets
+
+
+  Details of Financing activities
+
+              + PaymentsOfDividendsCommonStock
+              + PaymentsOfDividendsPreferredStockAndPreferenceStock
+              + PaymentsOfDividendsMinorityInterest
+              -------------
+         PaymentsOfDividends
+
+         ProceedsFromIssuanceOfCommonStock
+         ProceedsFromStockOptionsExercised
+         PaymentsForRepurchaseOfCommonStock
+         ProceedsFromIssuanceOfDebt
+         RepaymentsOfDebt
+
+ Post Rules
+
+    Calculate missing "Operating" tags
+
+    + NetCashProvidedByUsedInOperatingActivities (if present)
+    - NetCashProvidedByUsedInOperatingActivitiesContinuingOperations (if present)
+    -------
+    = CashProvidedByUsedInOperatingActivitiesDiscontinuedOperations (if not present)
+
+
+    + NetCashProvidedByUsedInOperatingActivities (if present)
+    - CashProvidedByUsedInOperatingActivitiesDiscontinuedOperations (if present)
+    -------
+    = NetCashProvidedByUsedInOperatingActivitiesContinuingOperations (if not present)
+
+
+    if only NetCashProvidedByUsedInOperatingActivities is set:
+      NetCashProvidedByUsedInOperatingActivitiesContinuingOperations = NetCashProvidedByUsedInOperatingActivities
+      CashProvidedByUsedInOperatingActivitiesDiscontinuedOperations = 0
+
+
+    Same as above for Financing and Investing triples
+
+    Set to Zero if still not set:
+       NetCashProvidedByUsedInOperatingActivitiesContinuingOperations
+       NetCashProvidedByUsedInInvestingActivitiesContinuingOperations
+       NetCashProvidedByUsedInFinancingActivitiesContinuingOperations
+       NetCashProvidedByUsedInOperatingActivities
+       NetCashProvidedByUsedInInvestingActivities
+       NetCashProvidedByUsedInFinancingActivities
+       CashProvidedByUsedInOperatingActivitiesDiscontinuedOperations
+       CashProvidedByUsedInInvestingActivitiesDiscontinuedOperations
+       CashProvidedByUsedInFinancingActivitiesDiscontinuedOperations
+
+       EffectOfExchangeRateFinal
+
+    Set CashPeriodIncreaseDecreaseIncludingExRateEffectFinal (if not set yet)
+        + NetCashProvidedByUsedInOperatingActivities
+        + NetCashProvidedByUsedInInvestingActivities
+        + NetCashProvidedByUsedInFinancingActivities
+        + EffectOfExchangeRateFinal
+        ------------------
+        = CashPeriodIncreaseDecreaseIncludingExRateEffectFinal
+
+    Fix mixed up usage of NetCashProvidedByUsed...Activities/-ContinuingOperations
+</pre>
+<p>Initialize the CashFlow Standardizer.</p>
+<p>Fine tune it with the following arguments:</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>prepivot_rule_tree</code></strong></dt>
+<dd>rules that are applied before the data is pivoted. These are rules
+that pathfilter (like deduplicate) or correct values.</dd>
+<dt><strong><code>pre_rule_tree</code></strong></dt>
+<dd>rules that are applied once before the main processing. These are mainly
+rules that try to correct existing data from obvious errors (like wrong
+tagging)</dd>
+<dt><strong><code>main_rule_tree</code></strong></dt>
+<dd>rules that are applied during the main processing rule and which do the
+heavy lifting. These rules can be executed multiple times depending on the value
+of the main_iterations parameter</dd>
+<dt><strong><code>post_rule_tree</code></strong></dt>
+<dd>rules that are used to "cleanup", like setting certain values to
+0.0. They are just executed once.</dd>
+<dt><strong><code>validation_rules</code></strong></dt>
+<dd>Validation rules are applied after all rules were applied.
+they add validation columns to the main dataset. Validation rules do check
+if certain requirements are met. E.g. in a Balance Sheet, the following
+equation should be true: Assets = AssetsCurrent + AssetsNoncurrent</dd>
+<dt><strong><code>final_tags</code></strong></dt>
+<dd>The list of tags/columns that will appear in the final result dataframe.</dd>
+<dt><strong><code>main_statement_tags</code></strong></dt>
+<dd>list of tags that is used to identify the main table of a
+financial statement (income statement, balance sheet, cash flow).</dd>
+<dt>filter_for_main_statement (bool):</dt>
+<dt>Only consider the reports that contain most of the "main_statement_tags".</dt>
+<dt>Default is True.</dt>
+<dt><strong><code>main_iterations</code></strong> :&ensp;<code>int</code></dt>
+<dd>Number of times the main rules should be applied.
+Default is 1 for CashFlow.</dd>
+<dt><strong><code>invert_negated</code></strong> :&ensp;<code>bool, Optional, True</code></dt>
+<dd>inverts the value of the tags that are marked
+as negated (in the pre_df).</dd>
+</dl>
+<p>additional_final_sub_fields (List, Optional):
+When using the present method, the results are joined with the following fields
+from the sub_df entry: 'adsh', 'cik', 'form', 'fye', 'fy', 'fp', 'filed'
+Additional fields can be assigend in this list. Default is None.
+additional_final_tags (List, Optional):
+the "final_tags" list define the tags that will be present in the final result
+dataframe. Additional tags can be added via this parameter. Default is None.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class CashFlowStandardizer(Standardizer):
+    &#34;&#34;&#34;
+    The goal of this Standardizer is to create CashFlow statements that are comparable,
+    meaning that they have the same tags.
+
+    At the end, the standardized CF contains the following columns
+
+    &lt;pre&gt;
+    Final Tags
+        NetCashProvidedByUsedInOperatingActivities
+          CashProvidedByUsedInOperatingActivitiesDiscontinuedOperations
+          NetCashProvidedByUsedInOperatingActivitiesContinuingOperations
+              DepreciationDepletionAndAmortization
+              DeferredIncomeTaxExpenseBenefit
+              ShareBasedCompensation
+              IncreaseDecreaseInAccountsPayable
+              IncreaseDecreaseInAccruedLiabilities
+              InterestPaidNet
+              IncomeTaxesPaidNet
+
+        NetCashProvidedByUsedInInvestingActivities
+            CashProvidedByUsedInInvestingActivitiesDiscontinuedOperations
+            NetCashProvidedByUsedInInvestingActivitiesContinuingOperations
+              PaymentsToAcquirePropertyPlantAndEquipment
+              ProceedsFromSaleOfPropertyPlantAndEquipment
+              PaymentsToAcquireInvestments
+              ProceedsFromSaleOfInvestments
+              PaymentsToAcquireBusinessesNetOfCashAcquired
+              ProceedsFromDivestitureOfBusinessesNetOfCashDivested
+              PaymentsToAcquireIntangibleAssets
+              ProceedsFromSaleOfIntangibleAssets
+
+        NetCashProvidedByUsedInFinancingActivities
+            CashProvidedByUsedInFinancingActivitiesDiscontinuedOperations
+            NetCashProvidedByUsedInFinancingActivitiesContinuingOperations
+              ProceedsFromIssuanceOfCommonStock
+              ProceedsFromStockOptionsExercised
+              PaymentsForRepurchaseOfCommonStock
+              ProceedsFromIssuanceOfDebt
+              RepaymentsOfDebt
+              PaymentsOfDividends
+
+
+        EffectOfExchangeRateFinal
+        CashPeriodIncreaseDecreaseIncludingExRateEffectFinal
+
+        CashAndCashEquivalentsEndOfPeriod
+    &lt;/pre&gt;
+
+    Rule overview:
+    &lt;pre&gt;
+          + NetCashProvidedByUsedInOperatingActivitiesContinuingOperations
+          + CashProvidedByUsedInOperatingActivitiesDiscontinuedOperations &lt;- CashProvidedByUsedInDiscontinuedOperationsOperatingActivities
+          --------
+      + NetCashProvidedByUsedInOperatingActivities
+
+          + NetCashProvidedByUsedInInvestingActivitiesContinuingOperations
+          + CashProvidedByUsedInInvestingActivitiesDiscontinuedOperations &lt;- CashProvidedByUsedInDiscontinuedOperationsInvestingActivities
+          --------
+      + NetCashProvidedByUsedInInvestingActivities
+
+          + NetCashProvidedByUsedInInvestingActivitiesContinuingOperations
+          + CashProvidedByUsedInFinancingActivitiesDiscontinuedOperations &lt;- CashProvidedByUsedInDiscontinuedOperationsFinancingActivities
+          --------
+      + NetCashProvidedByUsedInInvestingActivities
+
+
+                  Prio 1
+                           &lt;- EffectOfExchangeRateOnCash
+                       &lt;- EffectOfExchangeRateOnCashAndCashEquivalents
+                  + EffectOfExchangeRateOnCashCashEquivalentsRestrictedCashAndRestrictedCashEquivalents
+                  + EffectOfExchangeRateOnCashCashEquivalentsRestrictedCashAndRestrictedCashEquivalentsDisposalGroupIncludingDiscontinuedOperations
+                  --------
+                  EffectOfExchangeRateOnCashCashEquivalentsRestrictedCashAndRestrictedCashEquivalentsIncludingDisposalGroupAndDiscontinuedOperations
+                 &lt;-
+              EffectOfExchangeRateFinal
+
+
+                  Prio 2
+                  + EffectOfExchangeRateOnCashAndCashEquivalentsContinuingOperations &lt;- EffectOfExchangeRateOnCashContinuingOperations
+                  + EffectOfExchangeRateOnCashAndCashEquivalentsDiscontinuedOperations &lt;- EffectOfExchangeRateOnCashDiscontinuedOperations
+                  --------
+              EffectOfExchangeRateFinal
+
+
+      + EffectOfExchangeRateFinal
+      ---------------------------
+
+                   &lt;- CashPeriodIncreaseDecrease
+             &lt;- CashAndCashEquivalentsPeriodIncreaseDecrease
+        &lt;- CashCashEquivalentsRestrictedCashAndRestrictedCashEquivalentsPeriodIncreaseDecreaseIncludingExchangeRateEffect
+      CashPeriodIncreaseDecreaseIncludingExRateEffectFinal
+      ==================
+
+                                       &lt;- CashEndOfPeriod
+                                  &lt;- CashAndDueFromBanksEndOfPeriod
+                             &lt;- CashAndCashEquivalentsAtCarryingValueEndOfPeriod
+                        &lt;- CashAndCashEquivalentsAtCarryingValueIncludingDiscontinuedOperationsEndOfPeriod
+                   &lt;- CashCashEquivalentsRestrictedCashAndRestrictedCashEquivalentsEndOfPeriod
+              &lt;- CashCashEquivalentsRestrictedCashAndRestrictedCashEquivalentsDisposalGroupIncludingDiscontinuedOperationsEndOfPeriod
+        &lt;- CashCashEquivalentsRestrictedCashAndRestrictedCashEquivalentsIncludingDisposalGroupAndDiscontinuedOperationsEndOfPeriod
+      CashAndCashEquivalentsEndOfPeriod
+
+
+      Details of Operating Activities
+
+                  + AmortizationOfIntangibleAssets
+                  + AmortizationOfDeferredCharges
+                  + AmortizationOfFinancingCosts
+                  -------------
+                + Amortization
+                + Depreciation
+                --------------
+                + DepreciationAndAmortization
+                + Depletion
+                ----------
+            DepreciationDepletionAndAmortization
+
+            DeferredIncomeTaxExpenseBenefit
+            ShareBasedCompensation
+            IncreaseDecreaseInAccountsPayable
+            IncreaseDecreaseInAccruedLiabilities
+            InterestPaidNet
+            IncomeTaxesPaidNet
+
+
+      Details of Investing activities
+
+                + ProceedsFromSaleOfAvailableForSaleSecurities
+                + ProceedsFromSaleOfTradingSecurities
+                + ProceedsFromSaleOfEquitySecurities
+                + ProceedsFromSaleOfDebtSecurities
+                + ProceedsFromSaleAndMaturityOfOtherInvestments
+                + ProceedsFromMaturitiesPrepaymentsAndCallsOfAvailableForSaleSecurities
+                + ProceedsFromSaleOfInvestmentsInAffiliates
+                + ProceedsFromSaleOfHeldToMaturitySecurities
+                --------------------------------------------
+            ProceedsFromSaleOfInvestments
+
+            PaymentsToAcquirePropertyPlantAndEquipment
+            ProceedsFromSaleOfPropertyPlantAndEquipment
+            PaymentsToAcquireInvestments
+            PaymentsToAcquireBusinessesNetOfCashAcquired
+            ProceedsFromDivestitureOfBusinessesNetOfCashDivested
+            PaymentsToAcquireIntangibleAssets
+            ProceedsFromSaleOfIntangibleAssets
+
+
+      Details of Financing activities
+
+                  + PaymentsOfDividendsCommonStock
+                  + PaymentsOfDividendsPreferredStockAndPreferenceStock
+                  + PaymentsOfDividendsMinorityInterest
+                  -------------
+             PaymentsOfDividends
+
+             ProceedsFromIssuanceOfCommonStock
+             ProceedsFromStockOptionsExercised
+             PaymentsForRepurchaseOfCommonStock
+             ProceedsFromIssuanceOfDebt
+             RepaymentsOfDebt
+
+     Post Rules
+
+        Calculate missing &#34;Operating&#34; tags
+
+        + NetCashProvidedByUsedInOperatingActivities (if present)
+        - NetCashProvidedByUsedInOperatingActivitiesContinuingOperations (if present)
+        -------
+        = CashProvidedByUsedInOperatingActivitiesDiscontinuedOperations (if not present)
+
+
+        + NetCashProvidedByUsedInOperatingActivities (if present)
+        - CashProvidedByUsedInOperatingActivitiesDiscontinuedOperations (if present)
+        -------
+        = NetCashProvidedByUsedInOperatingActivitiesContinuingOperations (if not present)
+
+
+        if only NetCashProvidedByUsedInOperatingActivities is set:
+          NetCashProvidedByUsedInOperatingActivitiesContinuingOperations = NetCashProvidedByUsedInOperatingActivities
+          CashProvidedByUsedInOperatingActivitiesDiscontinuedOperations = 0
+
+
+        Same as above for Financing and Investing triples
+
+        Set to Zero if still not set:
+           NetCashProvidedByUsedInOperatingActivitiesContinuingOperations
+           NetCashProvidedByUsedInInvestingActivitiesContinuingOperations
+           NetCashProvidedByUsedInFinancingActivitiesContinuingOperations
+           NetCashProvidedByUsedInOperatingActivities
+           NetCashProvidedByUsedInInvestingActivities
+           NetCashProvidedByUsedInFinancingActivities
+           CashProvidedByUsedInOperatingActivitiesDiscontinuedOperations
+           CashProvidedByUsedInInvestingActivitiesDiscontinuedOperations
+           CashProvidedByUsedInFinancingActivitiesDiscontinuedOperations
+
+           EffectOfExchangeRateFinal
+
+        Set CashPeriodIncreaseDecreaseIncludingExRateEffectFinal (if not set yet)
+            + NetCashProvidedByUsedInOperatingActivities
+            + NetCashProvidedByUsedInInvestingActivities
+            + NetCashProvidedByUsedInFinancingActivities
+            + EffectOfExchangeRateFinal
+            ------------------
+            = CashPeriodIncreaseDecreaseIncludingExRateEffectFinal
+
+        Fix mixed up usage of NetCashProvidedByUsed...Activities/-ContinuingOperations
+    &lt;/pre&gt;
+
+    &#34;&#34;&#34;
+    prepivot_rule_tree = RuleGroup(
+        prefix=&#34;CF_PREPIV&#34;,
+        rules=[PrePivotDeduplicate(),  # remove duplicates
+               PrePivotMaxQtrs(max_qtrs=4),  # only keep entries with qtrs &lt;= 4
+               PrePivotCorrectSign(
+                   tag_list=inflow_tags,  # make sure these tags have a positive value
+                   is_positive=True
+               ),
+               PrePivotCorrectSign(
+                   tag_list=outflow_tags,  # make sure these tags have a negative value
+                   is_positive=False
+               ),
+               PrePivotCashAtEndOfPeriod()  # prepare CashAtEndOfPeriod
+               ]
+    )
+
+    preprocess_rule_tree = (
+        RuleGroup(prefix=&#34;CF_PRE&#34;,
+                  rules=[
+                      # fix wrong usage of NetCashProvidedByUsedInContinuingOperations
+                      PreCorrectMixUpContinuingOperations(),
+                  ]))
+
+    cf_netcash = RuleGroup(
+        prefix=&#34;NETCASH&#34;,
+        rules=[
+
+            # found in older reports, very rarely used (around 100 times)
+            CopyTagRule(original=&#39;CashProvidedByUsedInDiscontinuedOperationsOperatingActivities&#39;,
+                        target=&#39;CashProvidedByUsedInOperatingActivitiesDiscontinuedOperations&#39;),
+
+            CopyTagRule(original=&#39;CashProvidedByUsedInDiscontinuedOperationsInvestingActivities&#39;,
+                        target=&#39;CashProvidedByUsedInInvestingActivitiesDiscontinuedOperations&#39;),
+
+            CopyTagRule(original=&#39;CashProvidedByUsedInDiscontinuedOperationsFinancingActivities&#39;,
+                        target=&#39;CashProvidedByUsedInFinancingActivitiesDiscontinuedOperations&#39;),
+
+            # Calculate SumTags for Continuing and Discontinued
+            SumUpRule(sum_tag=&#39;NetCashProvidedByUsedInOperatingActivities&#39;,
+                      potential_summands=[
+                          &#39;NetCashProvidedByUsedInOperatingActivitiesContinuingOperations&#39;,
+                          &#39;CashProvidedByUsedInOperatingActivitiesDiscontinuedOperations&#39;,
+                      ]),
+            SumUpRule(sum_tag=&#39;NetCashProvidedByUsedInFinancingActivities&#39;,
+                      potential_summands=[
+                          &#39;NetCashProvidedByUsedInFinancingActivitiesContinuingOperations&#39;,
+                          &#39;CashProvidedByUsedInFinancingActivitiesDiscontinuedOperations&#39;,
+                      ]),
+            SumUpRule(sum_tag=&#39;NetCashProvidedByUsedInInvestingActivities&#39;,
+                      potential_summands=[
+                          &#39;NetCashProvidedByUsedInInvestingActivitiesContinuingOperations&#39;,
+                          &#39;CashProvidedByUsedInInvestingActivitiesDiscontinuedOperations&#39;,
+                      ]),
+        ]
+    )
+
+    cf_eff_ex_rate = RuleGroup(
+        prefix=&#34;EFF_EXRATE&#34;,
+        rules=[
+            # ExRateEffect
+            # ----------------------
+            CopyTagRule(original=&#39;EffectOfExchangeRateOnCash&#39;,
+                        target=&#39;EffectOfExchangeRateOnCashAndCashEquivalents&#39;),
+            CopyTagRule(original=&#39;EffectOfExchangeRateOnCashAndCashEquivalents&#39;,
+                        target=&#39;EffectOfExchangeRateOnCashCashEquivalentsRestrictedCashAndRestrictedCashEquivalents&#39;),
+            SumUpRule(
+                sum_tag=&#39;EffectOfExchangeRateOnCashCashEquivalentsRestrictedCashAndRestrictedCashEquivalentsIncludingDisposalGroupAndDiscontinuedOperations&#39;,
+                potential_summands=[
+                    &#39;EffectOfExchangeRateOnCashCashEquivalentsRestrictedCashAndRestrictedCashEquivalents&#39;,
+                    &#39;EffectOfExchangeRateOnCashCashEquivalentsRestrictedCashAndRestrictedCashEquivalentsDisposalGroupIncludingDiscontinuedOperations&#39;
+                ]),
+
+            # Simplify name to EffectOfExchangeRateFinal
+            CopyTagRule(
+                original=&#39;EffectOfExchangeRateOnCashCashEquivalentsRestrictedCashAndRestrictedCashEquivalentsIncludingDisposalGroupAndDiscontinuedOperations&#39;,
+                target=&#39;EffectOfExchangeRateFinal&#39;),
+
+            # Sometimes also EffectOfExchangeRateOnCashContinuingOperations are used
+            # Continuing Op EffectsOnExRate
+            CopyTagRule(original=&#39;EffectOfExchangeRateOnCashContinuingOperations&#39;,
+                        target=&#39;EffectOfExchangeRateOnCashAndCashEquivalentsContinuingOperations&#39;),
+
+            # Discontinued Op EffectsOnExRate
+            CopyTagRule(original=&#39;EffectOfExchangeRateOnCashDiscontinuedOperations&#39;,
+                        target=&#39;EffectOfExchangeRateOnCashAndCashEquivalentsDiscontinuedOperations&#39;),
+
+            SumUpRule(
+                sum_tag=&#39;EffectOfExchangeRateFinal&#39;,
+                potential_summands=[
+                    &#39;EffectOfExchangeRateOnCashAndCashEquivalentsContinuingOperations&#39;,
+                    &#39;EffectOfExchangeRateOnCashAndCashEquivalentsDiscontinuedOperations&#39;
+                ]
+            )
+        ]
+    )
+
+    cf_increase_decrease = RuleGroup(
+        prefix=&#34;INC_DEC&#34;,
+        rules=[
+            # Cash increase decrease Including ExRate Effect
+            # ----------------------------------------------
+            CopyTagRule(original=&#39;CashPeriodIncreaseDecrease&#39;,
+                        target=&#39;CashAndCashEquivalentsPeriodIncreaseDecrease&#39;),
+            CopyTagRule(original=&#39;CashAndCashEquivalentsPeriodIncreaseDecrease&#39;,
+                        target=&#39;CashCashEquivalentsRestrictedCashAndRestrictedCashEquivalentsPeriodIncreaseDecreaseIncludingExchangeRateEffect&#39;),
+
+            # Simplify name to CashTotalPeriodIncreaseDecreaseIncludingExRateEffect
+            CopyTagRule(
+                original=&#39;CashCashEquivalentsRestrictedCashAndRestrictedCashEquivalentsPeriodIncreaseDecreaseIncludingExchangeRateEffect&#39;,
+                target=&#39;CashPeriodIncreaseDecreaseIncludingExRateEffectFinal&#39;),
+        ])
+
+    cf_end_of_period = RuleGroup(
+        prefix=&#34;EOP&#34;,
+        rules=[
+            CopyTagRule(
+                original=&#39;CashEndOfPeriod&#39;,
+                target=&#39;CashAndDueFromBanksEndOfPeriod&#39;),
+            CopyTagRule(
+                original=&#39;CashAndDueFromBanksEndOfPeriod&#39;,
+                target=&#39;CashAndCashEquivalentsAtCarryingValueEndOfPeriod&#39;),
+            CopyTagRule(
+                original=&#39;CashAndCashEquivalentsAtCarryingValueEndOfPeriod&#39;,
+                target=&#39;CashAndCashEquivalentsAtCarryingValueIncludingDiscontinuedOperationsEndOfPeriod&#39;),
+            CopyTagRule(
+                original=&#39;CashAndCashEquivalentsAtCarryingValueIncludingDiscontinuedOperationsEndOfPeriod&#39;,
+                target=&#39;CashCashEquivalentsRestrictedCashAndRestrictedCashEquivalentsEndOfPeriod&#39;),
+            CopyTagRule(
+                original=&#39;CashCashEquivalentsRestrictedCashAndRestrictedCashEquivalentsEndOfPeriod&#39;,
+                target=&#39;CashCashEquivalentsRestrictedCashAndRestrictedCashEquivalentsDisposalGroupIncludingDiscontinuedOperationsEndOfPeriod&#39;),
+            CopyTagRule(
+                original=&#39;CashCashEquivalentsRestrictedCashAndRestrictedCashEquivalentsDisposalGroupIncludingDiscontinuedOperationsEndOfPeriod&#39;,
+                target=&#39;CashCashEquivalentsRestrictedCashAndRestrictedCashEquivalentsIncludingDisposalGroupAndDiscontinuedOperationsEndOfPeriod&#39;),
+            CopyTagRule(
+                original=&#39;CashCashEquivalentsRestrictedCashAndRestrictedCashEquivalentsIncludingDisposalGroupAndDiscontinuedOperationsEndOfPeriod&#39;,
+                target=&#39;CashAndCashEquivalentsEndOfPeriod&#39;),
+        ]
+    )
+
+    # DepreciationDepletionAndAmortization
+    cf_depr_depl_amort = RuleGroup(
+        # 1. DepreciationDepletionAndAmortization
+        # 1.1 DepreciationAndAmortization
+        # 1.1.1 Depreciation
+        # 1.1.2 Amortization
+        # 1.1.2.1 AmortizationOfIntangibleAssets
+        # 1.1.2.2 AmortizationOfDeferredCharges
+        # 1.1.2.3 AmortizationOfFinancingCosts
+        # 1.2 Depletion
+
+        prefix=&#34;DeprDeplAmort&#34;,
+        rules=[
+            SumUpRule(
+                sum_tag=&#39;Amortization&#39;,
+                potential_summands=[
+                    &#39;AmortizationOfIntangibleAssets&#39;,
+                    &#39;AmortizationOfDeferredCharges&#39;,
+                    &#39;AmortizationOfFinancingCosts&#39;,
+                ]),
+            SumUpRule(
+                sum_tag=&#39;DepreciationAndAmortization&#39;,
+                potential_summands=[
+                    &#39;Amortization&#39;,
+                    &#39;Depreciation&#39;,
+                ]),
+            SumUpRule(
+                sum_tag=&#39;DepreciationDepletionAndAmortization&#39;,
+                potential_summands=[
+                    &#39;DepreciationAndAmortization&#39;,
+                    &#39;Depletion&#39;,
+                ]),
+        ]
+    )
+
+    cf_proceeds_sale_invest = RuleGroup(
+        prefix=&#34;ProSalesInvest&#34;,
+        rules=[
+            SumUpRule(
+                sum_tag=&#34;ProceedsFromSaleOfInvestments&#34;,
+                potential_summands=[
+                    &#39;ProceedsFromSaleOfAvailableForSaleSecurities&#39;,
+                    &#39;ProceedsFromSaleOfTradingSecurities&#39;,
+                    &#39;ProceedsFromSaleOfEquitySecurities&#39;,
+                    &#39;ProceedsFromSaleOfDebtSecurities&#39;,
+                    &#39;ProceedsFromSaleAndMaturityOfOtherInvestments&#39;,
+                    &#39;ProceedsFromMaturitiesPrepaymentsAndCallsOfAvailableForSaleSecurities&#39;,
+                    &#39;ProceedsFromSaleOfInvestmentsInAffiliates&#39;,
+                    &#39;ProceedsFromSaleOfHeldToMaturitySecurities&#39;,
+                ]
+            )
+        ]
+    )
+
+    cf_payments_dividends = RuleGroup(
+        prefix=&#34;PayDividends&#34;,
+        rules=[
+            SumUpRule(
+                sum_tag=&#34;PaymentsOfDividends&#34;,
+                potential_summands=[
+                    &#39;PaymentsOfDividendsCommonStock&#39;,
+                    &#39;PaymentsOfDividendsPreferredStockAndPreferenceStock&#39;,
+                    &#39;PaymentsOfDividendsMinorityInterest&#39;,
+                ]
+            )
+        ]
+    )
+
+    main_rule_tree = RuleGroup(prefix=&#34;CF&#34;,
+                               rules=[
+                                   cf_netcash,
+                                   cf_eff_ex_rate,
+                                   cf_increase_decrease,
+                                   cf_end_of_period,
+                                   cf_depr_depl_amort,
+                                   cf_proceeds_sale_invest,
+                                   cf_payments_dividends,
+                               ])
+
+    post_rule_tree = RuleGroup(
+        prefix=&#34;CF&#34;,
+        rules=[
+            # final completion of NetCash-Tags
+            MissingSummandRule(sum_tag=&#39;NetCashProvidedByUsedInOperatingActivities&#39;,
+                               existing_summands_tags=[
+                                   &#39;NetCashProvidedByUsedInOperatingActivitiesContinuingOperations&#39;],
+                               missing_summand_tag=&#39;CashProvidedByUsedInOperatingActivitiesDiscontinuedOperations&#39;),
+
+            MissingSummandRule(sum_tag=&#39;NetCashProvidedByUsedInOperatingActivities&#39;,
+                               existing_summands_tags=[
+                                   &#39;CashProvidedByUsedInOperatingActivitiesDiscontinuedOperations&#39;],
+                               missing_summand_tag=&#39;NetCashProvidedByUsedInOperatingActivitiesContinuingOperations&#39;),
+
+            PostCopyToFirstSummand(sum_tag=&#39;NetCashProvidedByUsedInOperatingActivities&#39;,
+                                   first_summand=&#39;NetCashProvidedByUsedInOperatingActivitiesContinuingOperations&#39;,
+                                   other_summands=[
+                                       &#39;CashProvidedByUsedInOperatingActivitiesDiscontinuedOperations&#39;]),
+
+            MissingSummandRule(sum_tag=&#39;NetCashProvidedByUsedInFinancingActivities&#39;,
+                               existing_summands_tags=[
+                                   &#39;NetCashProvidedByUsedInFinancingActivitiesContinuingOperations&#39;],
+                               missing_summand_tag=&#39;CashProvidedByUsedInFinancingActivitiesDiscontinuedOperations&#39;),
+
+            MissingSummandRule(sum_tag=&#39;NetCashProvidedByUsedInFinancingActivities&#39;,
+                               existing_summands_tags=[
+                                   &#39;CashProvidedByUsedInFinancingActivitiesDiscontinuedOperations&#39;],
+                               missing_summand_tag=&#39;NetCashProvidedByUsedInFinancingActivitiesContinuingOperations&#39;),
+
+            PostCopyToFirstSummand(sum_tag=&#39;NetCashProvidedByUsedInFinancingActivities&#39;,
+                                   first_summand=&#39;NetCashProvidedByUsedInFinancingActivitiesContinuingOperations&#39;,
+                                   other_summands=[
+                                       &#39;CashProvidedByUsedInFinancingActivitiesDiscontinuedOperations&#39;]),
+
+            MissingSummandRule(sum_tag=&#39;NetCashProvidedByUsedInInvestingActivities&#39;,
+                               existing_summands_tags=[
+                                   &#39;NetCashProvidedByUsedInInvestingActivitiesContinuingOperations&#39;],
+                               missing_summand_tag=&#39;CashProvidedByUsedInInvestingActivitiesDiscontinuedOperations&#39;),
+
+            MissingSummandRule(sum_tag=&#39;NetCashProvidedByUsedInInvestingActivities&#39;,
+                               existing_summands_tags=[
+                                   &#39;CashProvidedByUsedInInvestingActivitiesDiscontinuedOperations&#39;],
+                               missing_summand_tag=&#39;NetCashProvidedByUsedInInvestingActivitiesContinuingOperations&#39;),
+
+            PostCopyToFirstSummand(sum_tag=&#39;NetCashProvidedByUsedInInvestingActivities&#39;,
+                                   first_summand=&#39;NetCashProvidedByUsedInInvestingActivitiesContinuingOperations&#39;,
+                                   other_summands=[
+                                       &#39;CashProvidedByUsedInInvestingActivitiesDiscontinuedOperations&#39;]),
+
+            # Setting values to zero of tags which were not set
+            PostSetToZero(
+                tags=[&#39;NetCashProvidedByUsedInOperatingActivitiesContinuingOperations&#39;, ]),
+            PostSetToZero(
+                tags=[&#39;NetCashProvidedByUsedInInvestingActivitiesContinuingOperations&#39;, ]),
+            PostSetToZero(
+                tags=[&#39;NetCashProvidedByUsedInFinancingActivitiesContinuingOperations&#39;, ]),
+            PostSetToZero(tags=[&#39;NetCashProvidedByUsedInOperatingActivities&#39;, ]),
+            PostSetToZero(tags=[&#39;NetCashProvidedByUsedInInvestingActivities&#39;, ]),
+            PostSetToZero(tags=[&#39;NetCashProvidedByUsedInFinancingActivities&#39;, ]),
+            PostSetToZero(tags=[&#39;CashProvidedByUsedInOperatingActivitiesDiscontinuedOperations&#39;, ]),
+            PostSetToZero(tags=[&#39;CashProvidedByUsedInInvestingActivitiesDiscontinuedOperations&#39;, ]),
+            PostSetToZero(tags=[&#39;CashProvidedByUsedInFinancingActivitiesDiscontinuedOperations&#39;, ]),
+
+            PostSetToZero(tags=[&#39;EffectOfExchangeRateFinal&#39;]),
+
+            # Final Summation of CashPeriodIncreaseDecreaseIncludingExRateEffectFinal
+            MissingSumRule(sum_tag=&#39;CashPeriodIncreaseDecreaseIncludingExRateEffectFinal&#39;,
+                           summand_tags=[&#39;NetCashProvidedByUsedInOperatingActivities&#39;,
+                                         &#39;NetCashProvidedByUsedInInvestingActivities&#39;,
+                                         &#39;NetCashProvidedByUsedInFinancingActivities&#39;,
+                                         &#39;EffectOfExchangeRateFinal&#39;]),
+
+            PostFixMixedContinuingWithSum(),
+
+        ])
+
+    validation_rules: List[ValidationRule] = [
+        SumValidationRule(identifier=&#34;BaseOpAct&#34;,
+                          sum_tag=&#39;NetCashProvidedByUsedInOperatingActivities&#39;,
+                          summands=[
+                              &#39;NetCashProvidedByUsedInOperatingActivitiesContinuingOperations&#39;,
+                              &#39;CashProvidedByUsedInOperatingActivitiesDiscontinuedOperations&#39;]),
+
+        SumValidationRule(identifier=&#34;BaseFinAct&#34;,
+                          sum_tag=&#39;NetCashProvidedByUsedInFinancingActivities&#39;,
+                          summands=[
+                              &#39;NetCashProvidedByUsedInFinancingActivitiesContinuingOperations&#39;,
+                              &#39;CashProvidedByUsedInFinancingActivitiesDiscontinuedOperations&#39;]),
+
+        SumValidationRule(identifier=&#34;BaseInvAct&#34;,
+                          sum_tag=&#39;NetCashProvidedByUsedInInvestingActivities&#39;,
+                          summands=[
+                              &#39;NetCashProvidedByUsedInInvestingActivitiesContinuingOperations&#39;,
+                              &#39;CashProvidedByUsedInInvestingActivitiesDiscontinuedOperations&#39;]),
+
+        SumValidationRule(identifier=&#34;NetCashContOp&#34;,
+                          sum_tag=&#39;CashPeriodIncreaseDecreaseIncludingExRateEffectFinal&#39;,
+                          summands=[&#39;NetCashProvidedByUsedInOperatingActivities&#39;,
+                                    &#39;NetCashProvidedByUsedInFinancingActivities&#39;,
+                                    &#39;NetCashProvidedByUsedInInvestingActivities&#39;,
+                                    &#39;EffectOfExchangeRateFinal&#39;]),
+
+        IsSetValidationRule(identifier=&#34;CashEoP&#34;,
+                            tag=&#39;CashAndCashEquivalentsEndOfPeriod&#39;)
+    ]
+
+    # these are the columns that finally are returned after the standardization
+    final_tags: List[str] = [
+        &#39;NetCashProvidedByUsedInOperatingActivitiesContinuingOperations&#39;,
+        &#39;NetCashProvidedByUsedInFinancingActivitiesContinuingOperations&#39;,
+        &#39;NetCashProvidedByUsedInInvestingActivitiesContinuingOperations&#39;,
+        &#39;NetCashProvidedByUsedInOperatingActivities&#39;,
+        &#39;NetCashProvidedByUsedInFinancingActivities&#39;,
+        &#39;NetCashProvidedByUsedInInvestingActivities&#39;,
+        &#39;CashProvidedByUsedInOperatingActivitiesDiscontinuedOperations&#39;,
+        &#39;CashProvidedByUsedInInvestingActivitiesDiscontinuedOperations&#39;,
+        &#39;CashProvidedByUsedInFinancingActivitiesDiscontinuedOperations&#39;,
+        &#39;EffectOfExchangeRateFinal&#39;,
+        &#39;CashPeriodIncreaseDecreaseIncludingExRateEffectFinal&#39;,
+        &#39;CashAndCashEquivalentsEndOfPeriod&#39;,
+
+        # Details in Operating activities
+        &#39;DepreciationDepletionAndAmortization&#39;,
+        &#39;DeferredIncomeTaxExpenseBenefit&#39;,
+        &#39;ShareBasedCompensation&#39;,
+        &#39;IncreaseDecreaseInAccountsPayable&#39;,
+        &#39;IncreaseDecreaseInAccruedLiabilities&#39;,
+        &#39;InterestPaidNet&#39;,
+        &#39;IncomeTaxesPaidNet&#39;,
+
+        # Details of Investing activities
+        &#39;PaymentsToAcquirePropertyPlantAndEquipment&#39;,
+        &#39;ProceedsFromSaleOfPropertyPlantAndEquipment&#39;,
+        &#39;PaymentsToAcquireInvestments&#39;,
+        &#39;ProceedsFromSaleOfInvestments&#39;,
+        &#39;PaymentsToAcquireBusinessesNetOfCashAcquired&#39;,
+        &#39;ProceedsFromDivestitureOfBusinessesNetOfCashDivested&#39;,
+        &#39;PaymentsToAcquireIntangibleAssets&#39;,
+        &#39;ProceedsFromSaleOfIntangibleAssets&#39;,
+
+        # Details of Financing activities
+        &#39;ProceedsFromIssuanceOfCommonStock&#39;,
+        &#39;ProceedsFromStockOptionsExercised&#39;,
+        &#39;PaymentsForRepurchaseOfCommonStock&#39;,
+        &#39;ProceedsFromIssuanceOfDebt&#39;,
+        &#39;RepaymentsOfDebt&#39;,
+        &#39;PaymentsOfDividends&#39;,
+
+    ]
+
+    # used to evaluate if a report is the main cashflow report
+    # inside a report, there can be several tables (different report nr)
+    # which stmt value is CF.
+    # however, we might be only interested in the &#34;major&#34; CF report. Usually this is the
+    # one which has the least nan in the following columns
+    main_statement_tags = [
+        &#39;NetCashProvidedByUsedInOperatingActivities&#39;,
+        &#39;NetCashProvidedByUsedInFinancingActivities&#39;,
+        &#39;NetCashProvidedByUsedInInvestingActivities&#39;,
+        &#39;NetCashProvidedByUsedInOperatingActivitiesContinuingOperations&#39;,
+        &#39;NetCashProvidedByUsedInInvestingActivitiesContinuingOperations&#39;,
+        &#39;NetCashProvidedByUsedInFinancingActivitiesContinuingOperations&#39;,
+        &#39;NetCashProvidedByUsedInContinuingOperations&#39;,
+        &#39;NetCashProvidedByUsedInDiscontinuedOperations&#39;,
+        &#39;CashCashEquivalentsRestrictedCashAndRestrictedCashEquivalentsPeriodIncreaseDecreaseIncludingExchangeRateEffect&#39;,
+        &#39;CashAndCashEquivalentsPeriodIncreaseDecrease&#39;,
+        &#39;CashPeriodIncreaseDecrease&#39;,
+    ]
+
+    def __init__(self,
+                 prepivot_rule_tree: Optional[RuleGroup] = None,
+                 pre_rule_tree: Optional[RuleGroup] = None,
+                 main_rule_tree: Optional[RuleGroup] = None,
+                 post_rule_tree: Optional[RuleGroup] = None,
+                 validation_rules: Optional[List[ValidationRule]] = None,
+                 final_tags: Optional[List[str]] = None,
+                 main_statement_tags: Optional[List[str]] = None,
+
+                 filter_for_main_statement: bool = True,
+                 main_iterations: int = 1,
+                 invert_negated: bool = True,
+                 additional_final_sub_fields: Optional[List[str]] = None,
+                 additional_final_tags: Optional[List[str]] = None):
+        &#34;&#34;&#34;
+        Initialize the CashFlow Standardizer.
+
+        Fine tune it with the following arguments:
+
+        Args:
+            prepivot_rule_tree: rules that are applied before the data is pivoted. These are rules
+                    that pathfilter (like deduplicate) or correct values.
+            pre_rule_tree: rules that are applied once before the main processing. These are mainly
+                    rules that try to correct existing data from obvious errors (like wrong
+                    tagging)
+            main_rule_tree: rules that are applied during the main processing rule and which do the
+                    heavy lifting. These rules can be executed multiple times depending on the value
+                    of the main_iterations parameter
+            post_rule_tree: rules that are used to &#34;cleanup&#34;, like setting certain values to
+                    0.0. They are just executed once.
+            validation_rules: Validation rules are applied after all rules were applied.
+                   they add validation columns to the main dataset. Validation rules do check
+                   if certain requirements are met. E.g. in a Balance Sheet, the following
+                   equation should be true: Assets = AssetsCurrent + AssetsNoncurrent
+            final_tags: The list of tags/columns that will appear in the final result dataframe.
+            main_statement_tags: list of tags that is used to identify the main table of a
+                   financial statement (income statement, balance sheet, cash flow).
+
+            filter_for_main_statement (bool):
+                    Only consider the reports that contain most of the &#34;main_statement_tags&#34;.
+                    Default is True.
+            main_iterations (int): Number of times the main rules should be applied.
+                    Default is 1 for CashFlow.
+            invert_negated (bool, Optional, True): inverts the value of the tags that are marked
+                   as negated (in the pre_df).
+            additional_final_sub_fields (List, Optional):
+                    When using the present method, the results are joined with the following fields
+                    from the sub_df entry: &#39;adsh&#39;, &#39;cik&#39;, &#39;form&#39;, &#39;fye&#39;, &#39;fy&#39;, &#39;fp&#39;, &#39;filed&#39;
+                    Additional fields can be assigend in this list. Default is None.
+            additional_final_tags (List, Optional):
+                     the &#34;final_tags&#34; list define the tags that will be present in the final result
+                     dataframe. Additional tags can be added via this parameter. Default is None.
+        &#34;&#34;&#34;
+        super().__init__(
+            prepivot_rule_tree=
+            prepivot_rule_tree if prepivot_rule_tree else self.prepivot_rule_tree,
+            pre_rule_tree=pre_rule_tree if pre_rule_tree else self.preprocess_rule_tree,
+            main_rule_tree=main_rule_tree if main_rule_tree else self.main_rule_tree,
+            post_rule_tree=post_rule_tree if post_rule_tree else self.post_rule_tree,
+            validation_rules=validation_rules if validation_rules else self.validation_rules,
+            final_tags=final_tags if final_tags else self.final_tags,
+            main_statement_tags=
+            main_statement_tags if main_statement_tags else self.main_statement_tags,
+
+            filter_for_main_statement=filter_for_main_statement,
+            main_iterations=main_iterations,
+            invert_negated=invert_negated,
+            additional_final_sub_fields=additional_final_sub_fields,
+            additional_final_tags=additional_final_tags
+        )</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="secfsdstools.f_standardize.standardizing.Standardizer" href="standardizing.html#secfsdstools.f_standardize.standardizing.Standardizer">Standardizer</a></li>
+<li><a title="secfsdstools.d_container.presentation.Presenter" href="../d_container/presentation.html#secfsdstools.d_container.presentation.Presenter">Presenter</a></li>
+<li>typing.Generic</li>
+</ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="secfsdstools.f_standardize.cf_standardize.CashFlowStandardizer.cf_depr_depl_amort"><code class="name">var <span class="ident">cf_depr_depl_amort</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="secfsdstools.f_standardize.cf_standardize.CashFlowStandardizer.cf_eff_ex_rate"><code class="name">var <span class="ident">cf_eff_ex_rate</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="secfsdstools.f_standardize.cf_standardize.CashFlowStandardizer.cf_end_of_period"><code class="name">var <span class="ident">cf_end_of_period</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="secfsdstools.f_standardize.cf_standardize.CashFlowStandardizer.cf_increase_decrease"><code class="name">var <span class="ident">cf_increase_decrease</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="secfsdstools.f_standardize.cf_standardize.CashFlowStandardizer.cf_netcash"><code class="name">var <span class="ident">cf_netcash</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="secfsdstools.f_standardize.cf_standardize.CashFlowStandardizer.cf_payments_dividends"><code class="name">var <span class="ident">cf_payments_dividends</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="secfsdstools.f_standardize.cf_standardize.CashFlowStandardizer.cf_proceeds_sale_invest"><code class="name">var <span class="ident">cf_proceeds_sale_invest</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="secfsdstools.f_standardize.cf_standardize.CashFlowStandardizer.final_tags"><code class="name">var <span class="ident">final_tags</span> : List[str]</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="secfsdstools.f_standardize.cf_standardize.CashFlowStandardizer.main_rule_tree"><code class="name">var <span class="ident">main_rule_tree</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="secfsdstools.f_standardize.cf_standardize.CashFlowStandardizer.main_statement_tags"><code class="name">var <span class="ident">main_statement_tags</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="secfsdstools.f_standardize.cf_standardize.CashFlowStandardizer.post_rule_tree"><code class="name">var <span class="ident">post_rule_tree</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="secfsdstools.f_standardize.cf_standardize.CashFlowStandardizer.prepivot_rule_tree"><code class="name">var <span class="ident">prepivot_rule_tree</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="secfsdstools.f_standardize.cf_standardize.CashFlowStandardizer.preprocess_rule_tree"><code class="name">var <span class="ident">preprocess_rule_tree</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="secfsdstools.f_standardize.cf_standardize.CashFlowStandardizer.validation_rules"><code class="name">var <span class="ident">validation_rules</span> : List[<a title="secfsdstools.f_standardize.base_validation_rules.ValidationRule" href="base_validation_rules.html#secfsdstools.f_standardize.base_validation_rules.ValidationRule">ValidationRule</a>]</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="secfsdstools.f_standardize.standardizing.Standardizer" href="standardizing.html#secfsdstools.f_standardize.standardizing.Standardizer">Standardizer</a></b></code>:
+<ul class="hlist">
+<li><code><a title="secfsdstools.f_standardize.standardizing.Standardizer.get_process_description" href="standardizing.html#secfsdstools.f_standardize.standardizing.Standardizer.get_process_description">get_process_description</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.standardizing.Standardizer.get_standardize_bag" href="standardizing.html#secfsdstools.f_standardize.standardizing.Standardizer.get_standardize_bag">get_standardize_bag</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.standardizing.Standardizer.present" href="standardizing.html#secfsdstools.f_standardize.standardizing.Standardizer.present">present</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.standardizing.Standardizer.process" href="standardizing.html#secfsdstools.f_standardize.standardizing.Standardizer.process">process</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+<dt id="secfsdstools.f_standardize.cf_standardize.PostFixMixedContinuingWithSum"><code class="flex name class">
+<span>class <span class="ident">PostFixMixedContinuingWithSum</span></span>
+</code></dt>
+<dd>
+<div class="desc"><p>Normally, NetCashProvidedByUsedInXXXActivities is the sum of
+NetCashProvidedByUsedInXXXActivitiesContinuingOperations and
+CashProvidedByUsedInXXXgActivitiesDiscontinuedOperations</p>
+<p>However, often when CashProvidedByUsedInXXXgActivitiesDiscontinuedOperations is present,
+NetCashProvidedByUsedInXXXActivities is used to tag the continuingOperations instead of
+NetCashProvidedByUsedInXXXActivitiesContinuingOperations.</p>
+<p>This results in a wrong summation and therefore validation.</p>
+<p>This rule fixes these entries.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class PostFixMixedContinuingWithSum(Rule):
+    &#34;&#34;&#34;
+    Normally, NetCashProvidedByUsedInXXXActivities is the sum of
+    NetCashProvidedByUsedInXXXActivitiesContinuingOperations and
+    CashProvidedByUsedInXXXgActivitiesDiscontinuedOperations
+
+    However, often when CashProvidedByUsedInXXXgActivitiesDiscontinuedOperations is present,
+    NetCashProvidedByUsedInXXXActivities is used to tag the continuingOperations instead of
+    NetCashProvidedByUsedInXXXActivitiesContinuingOperations.
+
+    This results in a wrong summation and therefore validation.
+
+    This rule fixes these entries.
+    &#34;&#34;&#34;
+
+    def __init__(self):
+        self.disc_tags = [&#39;CashProvidedByUsedInOperatingActivitiesDiscontinuedOperations&#39;,
+                          &#39;CashProvidedByUsedInFinancingActivitiesDiscontinuedOperations&#39;,
+                          &#39;CashProvidedByUsedInInvestingActivitiesDiscontinuedOperations&#39;]
+        self.cont_tags = [&#39;NetCashProvidedByUsedInOperatingActivitiesContinuingOperations&#39;,
+                          &#39;NetCashProvidedByUsedInFinancingActivitiesContinuingOperations&#39;,
+                          &#39;NetCashProvidedByUsedInInvestingActivitiesContinuingOperations&#39;]
+        self.sum_tags = [&#39;NetCashProvidedByUsedInOperatingActivities&#39;,
+                         &#39;NetCashProvidedByUsedInFinancingActivities&#39;,
+                         &#39;NetCashProvidedByUsedInInvestingActivities&#39;]
+
+    def get_target_tags(self) -&gt; List[str]:
+        &#34;&#34;&#34;
+        returns a list of tags that could be affected/changed by this rule
+
+        Returns:
+            List[str]: list with affected tags/columns
+        &#34;&#34;&#34;
+        return self.sum_tags + self.cont_tags
+
+    def get_input_tags(self) -&gt; Set[str]:
+        &#34;&#34;&#34;
+        return all tags that the rules within this group need.
+
+        Returns:
+            Set[str]: set of all input tags that are used by rules in this group
+        &#34;&#34;&#34;
+        return set(self.disc_tags + self.cont_tags + self.sum_tags)
+
+    def mask(self, data_df: pd.DataFrame) -&gt; pa.typing.Series[bool]:
+        &#34;&#34;&#34;
+            returns a Series[bool] which defines the rows to which this rule has to be applied.
+
+        Args:
+            data_df: dataframe on which the rules should be applied
+
+        Returns:
+            pa.typing.Series[bool]: a boolean Series that marks which rows have to be calculated
+        &#34;&#34;&#34;
+
+        # how to detect..
+        # Summing up the NetCashProvidedByUsedInOperatingActivities values and adding
+        # the value of EffectOfExchangeRateFinal gives the expected
+        # CashPeriodIncreaseDecrease value.
+
+        expected_sum = data_df[self.sum_tags].sum(axis=1) + data_df[&#39;EffectOfExchangeRateFinal&#39;]
+
+        # we sum up the values for the discontinued tags, and create a pathfilter if they are all 0
+        sum_disc = data_df[self.disc_tags].sum(axis=1)
+        mask_sum_disc_not_zero = ~(sum_disc == 0)
+
+        # now, we compare the expected CashPeriodIncDec value with the actual value the tag
+        # the difference should be 0.0
+        diff = data_df[&#39;CashPeriodIncreaseDecreaseIncludingExRateEffectFinal&#39;] - expected_sum
+
+        # So if the difference matches the sum of the disc operations, we know that the
+        # Discontinued Value is not in the appropriate SumTag.
+
+        # Explanation:
+        # it should be that
+        #   + NetCashProvidedByUsedInOperatingActivitiesContinuingOperations
+        #   + CashProvidedByUsedInOperatingActivitiesDiscontinuedOperations
+        #   = NetCashProvidedByUsedInOperatingActivities (expected)
+        #
+        #  However, if the tag NetCashProvidedByUsedInOperatingActivities was used to tag the
+        #  actual value for NetCashProvidedByUsedInOperatingActivitiesContinuingOperations
+        #  the value is off by the value of
+        #  CashProvidedByUsedInOperatingActivitiesDiscontinuedOperations
+
+        mask: pa.typing.Series[bool] = mask_sum_disc_not_zero &amp; (diff == sum_disc)
+        return mask
+
+    def apply(self, data_df: pd.DataFrame, mask: pa.typing.Series[bool]) -&gt; pd.DataFrame:
+        &#34;&#34;&#34;
+        apply the rule on the provided dataframe. the rows, on which the rule has to be applied
+        is defined by the provide mask Series.
+
+        Important, the rules have to be applied &#34;in-place&#34;, so no new dataframe is produced.
+
+        Args:
+            df: dataframe on which the rule has to be applied
+            mask: a Series marking the rows in the dataframe on which the rule has to be applied
+        Returns:
+            pd.DataFrame: make the process chainable
+        &#34;&#34;&#34;
+        for idx in range(3):
+            data_df.loc[mask, self.cont_tags[idx]] = data_df[self.sum_tags[idx]]
+            data_df.loc[mask, self.sum_tags[idx]] = (
+                    data_df[self.cont_tags[idx]] + data_df[self.disc_tags[idx]])
+        return data_df
+
+    def get_description(self) -&gt; str:
+        &#34;&#34;&#34;
+        Returns the description String
+        Returns:
+            str: description
+        &#34;&#34;&#34;
+        return (&#34;Tries to find and correct cases when discontinued operations are reported and &#34;
+                &#34;the &#39;Sum&#39; tags (e.g.&#39;NetCashProvidedByUsedIn...Activities&#39;) were used to&#34;
+                &#34; report the continuing operation instead using the of the &#34;
+                &#34; &#39;...ContinuingOperations&#39; tags. &#34;
+                &#34;(e.g. &#39;NetCashProvidedByUsedInOperatingActivitiesContinuingOperations&#39;).&#34;)</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="secfsdstools.f_standardize.base_rule_framework.Rule" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.Rule">Rule</a></li>
+<li><a title="secfsdstools.f_standardize.base_rule_framework.AbstractRule" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.AbstractRule">AbstractRule</a></li>
+<li><a title="secfsdstools.f_standardize.base_rule_framework.RuleEntity" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.RuleEntity">RuleEntity</a></li>
+<li>abc.ABC</li>
+</ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="secfsdstools.f_standardize.cf_standardize.PostFixMixedContinuingWithSum.masked"><code class="name">var <span class="ident">masked</span> : pandas.core.series.Series</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="secfsdstools.f_standardize.cf_standardize.PostFixMixedContinuingWithSum.apply"><code class="name flex">
+<span>def <span class="ident">apply</span></span>(<span>self, data_df: pandas.core.frame.DataFrame, mask: pandera.typing.pandas.Series[bool]) ‑> pandas.core.frame.DataFrame</span>
+</code></dt>
+<dd>
+<div class="desc"><p>apply the rule on the provided dataframe. the rows, on which the rule has to be applied
+is defined by the provide mask Series.</p>
+<p>Important, the rules have to be applied "in-place", so no new dataframe is produced.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>df</code></strong></dt>
+<dd>dataframe on which the rule has to be applied</dd>
+<dt><strong><code>mask</code></strong></dt>
+<dd>a Series marking the rows in the dataframe on which the rule has to be applied</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>pd.DataFrame</code></dt>
+<dd>make the process chainable</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def apply(self, data_df: pd.DataFrame, mask: pa.typing.Series[bool]) -&gt; pd.DataFrame:
+    &#34;&#34;&#34;
+    apply the rule on the provided dataframe. the rows, on which the rule has to be applied
+    is defined by the provide mask Series.
+
+    Important, the rules have to be applied &#34;in-place&#34;, so no new dataframe is produced.
+
+    Args:
+        df: dataframe on which the rule has to be applied
+        mask: a Series marking the rows in the dataframe on which the rule has to be applied
+    Returns:
+        pd.DataFrame: make the process chainable
+    &#34;&#34;&#34;
+    for idx in range(3):
+        data_df.loc[mask, self.cont_tags[idx]] = data_df[self.sum_tags[idx]]
+        data_df.loc[mask, self.sum_tags[idx]] = (
+                data_df[self.cont_tags[idx]] + data_df[self.disc_tags[idx]])
+    return data_df</code></pre>
+</details>
+</dd>
+<dt id="secfsdstools.f_standardize.cf_standardize.PostFixMixedContinuingWithSum.get_input_tags"><code class="name flex">
+<span>def <span class="ident">get_input_tags</span></span>(<span>self) ‑> Set[str]</span>
+</code></dt>
+<dd>
+<div class="desc"><p>return all tags that the rules within this group need.</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>Set[str]</code></dt>
+<dd>set of all input tags that are used by rules in this group</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_input_tags(self) -&gt; Set[str]:
+    &#34;&#34;&#34;
+    return all tags that the rules within this group need.
+
+    Returns:
+        Set[str]: set of all input tags that are used by rules in this group
+    &#34;&#34;&#34;
+    return set(self.disc_tags + self.cont_tags + self.sum_tags)</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="secfsdstools.f_standardize.base_rule_framework.Rule" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.Rule">Rule</a></b></code>:
+<ul class="hlist">
+<li><code><a title="secfsdstools.f_standardize.base_rule_framework.Rule.collect_description" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.AbstractRule.collect_description">collect_description</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.base_rule_framework.Rule.get_description" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.RuleEntity.get_description">get_description</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.base_rule_framework.Rule.get_mask" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.Rule.get_mask">get_mask</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.base_rule_framework.Rule.get_target_tags" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.Rule.get_target_tags">get_target_tags</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.base_rule_framework.Rule.get_target_tags_str" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.Rule.get_target_tags_str">get_target_tags_str</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.base_rule_framework.Rule.mask" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.AbstractRule.mask">mask</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.base_rule_framework.Rule.process" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.Rule.process">process</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.base_rule_framework.Rule.set_id" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.RuleEntity.set_id">set_id</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+<dt id="secfsdstools.f_standardize.cf_standardize.PreCorrectMixUpContinuingOperations"><code class="flex name class">
+<span>class <span class="ident">PreCorrectMixUpContinuingOperations</span></span>
+</code></dt>
+<dd>
+<div class="desc"><p>Normally,
+NetCashProvidedByUsedInFinancingActivities,
+NetCashProvidedByUsedInOperatingActivities, and
+NetCashProvidedByUsedInInvestingActivities</p>
+<p>Sum up in NetCashProvidedByUsedInContinuingOperations.</p>
+<p>However, there are reports which use NetCashProvidedByUsedInContinuingOperations to reflect
+NetCashProvidedByUsedInOperatingActivities.</p>
+<p>This rules correct such cases by looking for reports where
+NetCashProvidedByUsedInContinuingOperations and NetCashProvidedByUsedInFinancingActivities are
+set, but not NetCashProvidedByUsedInOperatingActivities.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>sum_tag</code></strong></dt>
+<dd>the tag that should contain the sum</dd>
+<dt><strong><code>mixed_up_summand</code></strong></dt>
+<dd>the summand that actually does contain the sum</dd>
+<dt><strong><code>other_summand</code></strong></dt>
+<dd>the other summand</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class PreCorrectMixUpContinuingOperations(Rule):
+    &#34;&#34;&#34;
+    Normally,
+    NetCashProvidedByUsedInFinancingActivities,
+    NetCashProvidedByUsedInOperatingActivities, and
+    NetCashProvidedByUsedInInvestingActivities
+
+    Sum up in NetCashProvidedByUsedInContinuingOperations.
+
+    However, there are reports which use NetCashProvidedByUsedInContinuingOperations to reflect
+    NetCashProvidedByUsedInOperatingActivities.
+
+    This rules correct such cases by looking for reports where
+    NetCashProvidedByUsedInContinuingOperations and NetCashProvidedByUsedInFinancingActivities are
+    set, but not NetCashProvidedByUsedInOperatingActivities.
+    &#34;&#34;&#34;
+
+    def __init__(self):
+        &#34;&#34;&#34;
+
+        Args:
+            sum_tag: the tag that should contain the sum
+            mixed_up_summand: the summand that actually does contain the sum
+            other_summand: the other summand
+        &#34;&#34;&#34;
+        self.opcont = &#39;NetCashProvidedByUsedInContinuingOperations&#39;
+        self.opact = &#39;NetCashProvidedByUsedInOperatingActivities&#39;
+        self.finact = &#39;NetCashProvidedByUsedInFinancingActivities&#39;
+
+    def get_target_tags(self) -&gt; List[str]:
+        &#34;&#34;&#34;
+        returns a list of tags that could be affected/changed by this rule
+
+        Returns:
+            List[str]: list with affected tags/columns
+        &#34;&#34;&#34;
+        return [self.opact]
+
+    def get_input_tags(self) -&gt; Set[str]:
+        &#34;&#34;&#34;
+        return all tags that the rules within this group need.
+
+        Returns:
+            Set[str]: set of all input tags that are used by rules in this group
+        &#34;&#34;&#34;
+        return {self.opcont, self.opact, self.finact}
+
+    def mask(self, data_df: pd.DataFrame) -&gt; pa.typing.Series[bool]:
+        &#34;&#34;&#34;
+            returns a Series[bool] which defines the rows to which this rule has to be applied.
+
+        Args:
+            data_df: dataframe on which the rules should be applied
+
+        Returns:
+            pa.typing.Series[bool]: a boolean Series that marks which rows have to be calculated
+        &#34;&#34;&#34;
+        return ~data_df[self.opcont].isnull() &amp; ~data_df[self.finact].isnull() \
+            &amp; data_df[self.opact].isnull()
+
+    def apply(self, data_df: pd.DataFrame, mask: pa.typing.Series[bool]) -&gt; pd.DataFrame:
+        &#34;&#34;&#34;
+        apply the rule on the provided dataframe. the rows, on which the rule has to be applied
+        is defined by the provide mask Series.
+
+        Important, the rules have to be applied &#34;in-place&#34;, so no new dataframe is produced.
+
+        Args:
+            df: dataframe on which the rule has to be applied
+            mask: a Series marking the rows in the dataframe on which the rule has to be applied
+        Returns:
+            pd.DataFrame: make the process chainable
+        &#34;&#34;&#34;
+
+        data_df.loc[mask, self.opact] = data_df[self.opcont]
+        data_df.loc[mask, self.opcont] = None
+        return data_df
+
+    def get_description(self) -&gt; str:
+        &#34;&#34;&#34;
+        Returns the description String
+        Returns:
+            str: description
+        &#34;&#34;&#34;
+        return (f&#34;Checks for reports where &#39;{self.opcont}&#39; was used instead of {self.opact}.&#34;
+                f&#34;Looks where {self.opcont} and {self.finact} were set, but ${self.opact} is nan.&#34;
+                f&#34;In this cases, the value from {self.opcont} is copied to {self.opact} &#34;
+                f&#34;and {self.opcont} is set to nan afterwards.&#34;)</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="secfsdstools.f_standardize.base_rule_framework.Rule" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.Rule">Rule</a></li>
+<li><a title="secfsdstools.f_standardize.base_rule_framework.AbstractRule" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.AbstractRule">AbstractRule</a></li>
+<li><a title="secfsdstools.f_standardize.base_rule_framework.RuleEntity" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.RuleEntity">RuleEntity</a></li>
+<li>abc.ABC</li>
+</ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="secfsdstools.f_standardize.cf_standardize.PreCorrectMixUpContinuingOperations.masked"><code class="name">var <span class="ident">masked</span> : pandas.core.series.Series</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="secfsdstools.f_standardize.cf_standardize.PreCorrectMixUpContinuingOperations.apply"><code class="name flex">
+<span>def <span class="ident">apply</span></span>(<span>self, data_df: pandas.core.frame.DataFrame, mask: pandera.typing.pandas.Series[bool]) ‑> pandas.core.frame.DataFrame</span>
+</code></dt>
+<dd>
+<div class="desc"><p>apply the rule on the provided dataframe. the rows, on which the rule has to be applied
+is defined by the provide mask Series.</p>
+<p>Important, the rules have to be applied "in-place", so no new dataframe is produced.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>df</code></strong></dt>
+<dd>dataframe on which the rule has to be applied</dd>
+<dt><strong><code>mask</code></strong></dt>
+<dd>a Series marking the rows in the dataframe on which the rule has to be applied</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>pd.DataFrame</code></dt>
+<dd>make the process chainable</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def apply(self, data_df: pd.DataFrame, mask: pa.typing.Series[bool]) -&gt; pd.DataFrame:
+    &#34;&#34;&#34;
+    apply the rule on the provided dataframe. the rows, on which the rule has to be applied
+    is defined by the provide mask Series.
+
+    Important, the rules have to be applied &#34;in-place&#34;, so no new dataframe is produced.
+
+    Args:
+        df: dataframe on which the rule has to be applied
+        mask: a Series marking the rows in the dataframe on which the rule has to be applied
+    Returns:
+        pd.DataFrame: make the process chainable
+    &#34;&#34;&#34;
+
+    data_df.loc[mask, self.opact] = data_df[self.opcont]
+    data_df.loc[mask, self.opcont] = None
+    return data_df</code></pre>
+</details>
+</dd>
+<dt id="secfsdstools.f_standardize.cf_standardize.PreCorrectMixUpContinuingOperations.get_input_tags"><code class="name flex">
+<span>def <span class="ident">get_input_tags</span></span>(<span>self) ‑> Set[str]</span>
+</code></dt>
+<dd>
+<div class="desc"><p>return all tags that the rules within this group need.</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>Set[str]</code></dt>
+<dd>set of all input tags that are used by rules in this group</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_input_tags(self) -&gt; Set[str]:
+    &#34;&#34;&#34;
+    return all tags that the rules within this group need.
+
+    Returns:
+        Set[str]: set of all input tags that are used by rules in this group
+    &#34;&#34;&#34;
+    return {self.opcont, self.opact, self.finact}</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="secfsdstools.f_standardize.base_rule_framework.Rule" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.Rule">Rule</a></b></code>:
+<ul class="hlist">
+<li><code><a title="secfsdstools.f_standardize.base_rule_framework.Rule.collect_description" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.AbstractRule.collect_description">collect_description</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.base_rule_framework.Rule.get_description" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.RuleEntity.get_description">get_description</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.base_rule_framework.Rule.get_mask" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.Rule.get_mask">get_mask</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.base_rule_framework.Rule.get_target_tags" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.Rule.get_target_tags">get_target_tags</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.base_rule_framework.Rule.get_target_tags_str" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.Rule.get_target_tags_str">get_target_tags_str</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.base_rule_framework.Rule.mask" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.AbstractRule.mask">mask</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.base_rule_framework.Rule.process" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.Rule.process">process</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.base_rule_framework.Rule.set_id" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.RuleEntity.set_id">set_id</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+<dt id="secfsdstools.f_standardize.cf_standardize.PrePivotCashAtEndOfPeriod"><code class="flex name class">
+<span>class <span class="ident">PrePivotCashAtEndOfPeriod</span></span>
+</code></dt>
+<dd>
+<div class="desc"><p>The cash at the beginning and end of a period always has qtrs=0, since this is
+"point-in-time" value and not a period value.</p>
+<p>However, when we pivot, we need to use the qtrs as key and therefore,
+this value is lost.</p>
+<p>Therefore, for all "cash" indicators:
+- CashAndCashEquivalentsAtCarryingValue
+- CashCashEquivalentsRestrictedCashAndRestrictedCashEquivalents
+- CashAndCashEquivalentsAtCarryingValueIncludingDiscontinuedOperations</p>
+<p>we add copied entries for the qtrs that are present for that adsh number.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class PrePivotCashAtEndOfPeriod(PrePivotRule):
+    &#34;&#34;&#34;
+    The cash at the beginning and end of a period always has qtrs=0, since this is
+    &#34;point-in-time&#34; value and not a period value.
+
+    However, when we pivot, we need to use the qtrs as key and therefore,
+    this value is lost.
+
+    Therefore, for all &#34;cash&#34; indicators:
+    - CashAndCashEquivalentsAtCarryingValue
+    - CashCashEquivalentsRestrictedCashAndRestrictedCashEquivalents
+    - CashAndCashEquivalentsAtCarryingValueIncludingDiscontinuedOperations
+
+    we add copied entries for the qtrs that are present for that adsh number.
+    &#34;&#34;&#34;
+
+    # pylint: disable=C0301
+    def __init__(self):
+        super().__init__(&#34;CashEndOfPeriod&#34;)
+        self.cash_tags = [
+            &#39;Cash&#39;,
+            &#39;CashAndDueFromBanks&#39;,
+            &#39;CashAndCashEquivalentsAtCarryingValue&#39;,
+            &#39;CashAndCashEquivalentsAtCarryingValueIncludingDiscontinuedOperations&#39;,
+            &#39;CashCashEquivalentsRestrictedCashAndRestrictedCashEquivalents&#39;,
+            &#39;CashCashEquivalentsRestrictedCashAndRestrictedCashEquivalentsDisposalGroupIncludingDiscontinuedOperations&#39;,
+            &#39;CashCashEquivalentsRestrictedCashAndRestrictedCashEquivalentsIncludingDisposalGroupAndDiscontinuedOperations&#39;,
+        ]
+
+    def get_input_tags(self) -&gt; Set[str]:
+        return set(self.cash_tags)
+
+    def mask(self, data_df: pd.DataFrame) -&gt; pa.typing.Series[bool]:
+        &#34;&#34;&#34;
+            returns a Series[bool] which defines the rows to which this rule has to be applied.
+
+        Args:
+            data_df: dataframe on which the rules should be applied
+
+        Returns:
+            pa.typing.Series[bool]: a boolean Series that marks which rows have to be calculated
+        &#34;&#34;&#34;
+        return data_df.tag.isin(self.cash_tags) &amp; (data_df.qtrs == 0)
+
+    def apply(self, data_df: pd.DataFrame, mask: pa.typing.Series[bool]) -&gt; pd.DataFrame:
+        &#34;&#34;&#34;
+        apply the rule on the provided dataframe. the rows, on which the rule has to be applied
+        is defined by the provide mask Series.
+
+        Important, the rules have to be applied &#34;in-place&#34;, so no new dataframe is produced.
+
+        Args:
+            df: dataframe on which the rule has to be applied
+            mask: a Series marking the rows in the dataframe on which the rule has to be applied
+        Returns:
+            pd.DataFrame: make the process chainable
+        &#34;&#34;&#34;
+        # dataframe with unique entries of qdsh and qtrs
+        adsh_qtrs_df = data_df[[&#39;adsh&#39;, &#39;qtrs&#39;]].drop_duplicates()
+
+        relevant_entries_df = data_df[mask]
+
+        added_dfs: List[pd.DataFrame] = []
+        # copy entries for qtrs 0...4
+        for qtrs in range(5):
+            # define which adshs have entries with the current qtrs loop-variable
+            adshs_with_qtrs = adsh_qtrs_df[adsh_qtrs_df.qtrs == qtrs].adsh.tolist()
+
+            # create new entries only for the adshs that have values in the current qtr
+            new_df = relevant_entries_df[relevant_entries_df.adsh.isin(adshs_with_qtrs)].copy()
+            new_df[&#39;qtrs&#39;] = qtrs
+            new_df[&#39;tag&#39;] = new_df.tag + &#34;EndOfPeriod&#34;
+            added_dfs.append(new_df)
+
+        return pd.concat([data_df] + added_dfs)
+
+    def get_description(self) -&gt; str:
+        &#34;&#34;&#34;
+        Returns the description String
+        Returns:
+            str: description
+        &#34;&#34;&#34;
+        return (f&#34;Adds copies of rows for {self.cash_tags} with the &#39;qtrs&#39; set to the values that&#34;
+                &#34;are present for the corresponding &#39;adsh&#39; and extending the tag name with &#34;
+                &#34; &#39;EndOfPeriod&#39;. &#34;)</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="secfsdstools.f_standardize.base_rule_framework.PrePivotRule" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.PrePivotRule">PrePivotRule</a></li>
+<li><a title="secfsdstools.f_standardize.base_rule_framework.AbstractRule" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.AbstractRule">AbstractRule</a></li>
+<li><a title="secfsdstools.f_standardize.base_rule_framework.RuleEntity" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.RuleEntity">RuleEntity</a></li>
+<li>abc.ABC</li>
+</ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="secfsdstools.f_standardize.cf_standardize.PrePivotCashAtEndOfPeriod.identifier"><code class="name">var <span class="ident">identifier</span> : str</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="secfsdstools.f_standardize.cf_standardize.PrePivotCashAtEndOfPeriod.apply"><code class="name flex">
+<span>def <span class="ident">apply</span></span>(<span>self, data_df: pandas.core.frame.DataFrame, mask: pandera.typing.pandas.Series[bool]) ‑> pandas.core.frame.DataFrame</span>
+</code></dt>
+<dd>
+<div class="desc"><p>apply the rule on the provided dataframe. the rows, on which the rule has to be applied
+is defined by the provide mask Series.</p>
+<p>Important, the rules have to be applied "in-place", so no new dataframe is produced.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>df</code></strong></dt>
+<dd>dataframe on which the rule has to be applied</dd>
+<dt><strong><code>mask</code></strong></dt>
+<dd>a Series marking the rows in the dataframe on which the rule has to be applied</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>pd.DataFrame</code></dt>
+<dd>make the process chainable</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def apply(self, data_df: pd.DataFrame, mask: pa.typing.Series[bool]) -&gt; pd.DataFrame:
+    &#34;&#34;&#34;
+    apply the rule on the provided dataframe. the rows, on which the rule has to be applied
+    is defined by the provide mask Series.
+
+    Important, the rules have to be applied &#34;in-place&#34;, so no new dataframe is produced.
+
+    Args:
+        df: dataframe on which the rule has to be applied
+        mask: a Series marking the rows in the dataframe on which the rule has to be applied
+    Returns:
+        pd.DataFrame: make the process chainable
+    &#34;&#34;&#34;
+    # dataframe with unique entries of qdsh and qtrs
+    adsh_qtrs_df = data_df[[&#39;adsh&#39;, &#39;qtrs&#39;]].drop_duplicates()
+
+    relevant_entries_df = data_df[mask]
+
+    added_dfs: List[pd.DataFrame] = []
+    # copy entries for qtrs 0...4
+    for qtrs in range(5):
+        # define which adshs have entries with the current qtrs loop-variable
+        adshs_with_qtrs = adsh_qtrs_df[adsh_qtrs_df.qtrs == qtrs].adsh.tolist()
+
+        # create new entries only for the adshs that have values in the current qtr
+        new_df = relevant_entries_df[relevant_entries_df.adsh.isin(adshs_with_qtrs)].copy()
+        new_df[&#39;qtrs&#39;] = qtrs
+        new_df[&#39;tag&#39;] = new_df.tag + &#34;EndOfPeriod&#34;
+        added_dfs.append(new_df)
+
+    return pd.concat([data_df] + added_dfs)</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="secfsdstools.f_standardize.base_rule_framework.PrePivotRule" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.PrePivotRule">PrePivotRule</a></b></code>:
+<ul class="hlist">
+<li><code><a title="secfsdstools.f_standardize.base_rule_framework.PrePivotRule.collect_description" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.AbstractRule.collect_description">collect_description</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.base_rule_framework.PrePivotRule.get_description" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.RuleEntity.get_description">get_description</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.base_rule_framework.PrePivotRule.get_input_tags" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.RuleEntity.get_input_tags">get_input_tags</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.base_rule_framework.PrePivotRule.mask" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.AbstractRule.mask">mask</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.base_rule_framework.PrePivotRule.process" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.PrePivotRule.process">process</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.base_rule_framework.PrePivotRule.set_id" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.RuleEntity.set_id">set_id</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+</dl>
+</section>
+</article>
+<nav id="sidebar">
+<h1>Index</h1>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="secfsdstools.f_standardize" href="index.html">secfsdstools.f_standardize</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="secfsdstools.f_standardize.cf_standardize.CashFlowStandardizer" href="#secfsdstools.f_standardize.cf_standardize.CashFlowStandardizer">CashFlowStandardizer</a></code></h4>
+<ul class="">
+<li><code><a title="secfsdstools.f_standardize.cf_standardize.CashFlowStandardizer.cf_depr_depl_amort" href="#secfsdstools.f_standardize.cf_standardize.CashFlowStandardizer.cf_depr_depl_amort">cf_depr_depl_amort</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.cf_standardize.CashFlowStandardizer.cf_eff_ex_rate" href="#secfsdstools.f_standardize.cf_standardize.CashFlowStandardizer.cf_eff_ex_rate">cf_eff_ex_rate</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.cf_standardize.CashFlowStandardizer.cf_end_of_period" href="#secfsdstools.f_standardize.cf_standardize.CashFlowStandardizer.cf_end_of_period">cf_end_of_period</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.cf_standardize.CashFlowStandardizer.cf_increase_decrease" href="#secfsdstools.f_standardize.cf_standardize.CashFlowStandardizer.cf_increase_decrease">cf_increase_decrease</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.cf_standardize.CashFlowStandardizer.cf_netcash" href="#secfsdstools.f_standardize.cf_standardize.CashFlowStandardizer.cf_netcash">cf_netcash</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.cf_standardize.CashFlowStandardizer.cf_payments_dividends" href="#secfsdstools.f_standardize.cf_standardize.CashFlowStandardizer.cf_payments_dividends">cf_payments_dividends</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.cf_standardize.CashFlowStandardizer.cf_proceeds_sale_invest" href="#secfsdstools.f_standardize.cf_standardize.CashFlowStandardizer.cf_proceeds_sale_invest">cf_proceeds_sale_invest</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.cf_standardize.CashFlowStandardizer.final_tags" href="#secfsdstools.f_standardize.cf_standardize.CashFlowStandardizer.final_tags">final_tags</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.cf_standardize.CashFlowStandardizer.main_rule_tree" href="#secfsdstools.f_standardize.cf_standardize.CashFlowStandardizer.main_rule_tree">main_rule_tree</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.cf_standardize.CashFlowStandardizer.main_statement_tags" href="#secfsdstools.f_standardize.cf_standardize.CashFlowStandardizer.main_statement_tags">main_statement_tags</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.cf_standardize.CashFlowStandardizer.post_rule_tree" href="#secfsdstools.f_standardize.cf_standardize.CashFlowStandardizer.post_rule_tree">post_rule_tree</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.cf_standardize.CashFlowStandardizer.prepivot_rule_tree" href="#secfsdstools.f_standardize.cf_standardize.CashFlowStandardizer.prepivot_rule_tree">prepivot_rule_tree</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.cf_standardize.CashFlowStandardizer.preprocess_rule_tree" href="#secfsdstools.f_standardize.cf_standardize.CashFlowStandardizer.preprocess_rule_tree">preprocess_rule_tree</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.cf_standardize.CashFlowStandardizer.validation_rules" href="#secfsdstools.f_standardize.cf_standardize.CashFlowStandardizer.validation_rules">validation_rules</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="secfsdstools.f_standardize.cf_standardize.PostFixMixedContinuingWithSum" href="#secfsdstools.f_standardize.cf_standardize.PostFixMixedContinuingWithSum">PostFixMixedContinuingWithSum</a></code></h4>
+<ul class="">
+<li><code><a title="secfsdstools.f_standardize.cf_standardize.PostFixMixedContinuingWithSum.apply" href="#secfsdstools.f_standardize.cf_standardize.PostFixMixedContinuingWithSum.apply">apply</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.cf_standardize.PostFixMixedContinuingWithSum.get_input_tags" href="#secfsdstools.f_standardize.cf_standardize.PostFixMixedContinuingWithSum.get_input_tags">get_input_tags</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.cf_standardize.PostFixMixedContinuingWithSum.masked" href="#secfsdstools.f_standardize.cf_standardize.PostFixMixedContinuingWithSum.masked">masked</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="secfsdstools.f_standardize.cf_standardize.PreCorrectMixUpContinuingOperations" href="#secfsdstools.f_standardize.cf_standardize.PreCorrectMixUpContinuingOperations">PreCorrectMixUpContinuingOperations</a></code></h4>
+<ul class="">
+<li><code><a title="secfsdstools.f_standardize.cf_standardize.PreCorrectMixUpContinuingOperations.apply" href="#secfsdstools.f_standardize.cf_standardize.PreCorrectMixUpContinuingOperations.apply">apply</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.cf_standardize.PreCorrectMixUpContinuingOperations.get_input_tags" href="#secfsdstools.f_standardize.cf_standardize.PreCorrectMixUpContinuingOperations.get_input_tags">get_input_tags</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.cf_standardize.PreCorrectMixUpContinuingOperations.masked" href="#secfsdstools.f_standardize.cf_standardize.PreCorrectMixUpContinuingOperations.masked">masked</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="secfsdstools.f_standardize.cf_standardize.PrePivotCashAtEndOfPeriod" href="#secfsdstools.f_standardize.cf_standardize.PrePivotCashAtEndOfPeriod">PrePivotCashAtEndOfPeriod</a></code></h4>
+<ul class="">
+<li><code><a title="secfsdstools.f_standardize.cf_standardize.PrePivotCashAtEndOfPeriod.apply" href="#secfsdstools.f_standardize.cf_standardize.PrePivotCashAtEndOfPeriod.apply">apply</a></code></li>
+<li><code><a title="secfsdstools.f_standardize.cf_standardize.PrePivotCashAtEndOfPeriod.identifier" href="#secfsdstools.f_standardize.cf_standardize.PrePivotCashAtEndOfPeriod.identifier">identifier</a></code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.10.0</a>.</p>
+</footer>
+</body>
+</html>

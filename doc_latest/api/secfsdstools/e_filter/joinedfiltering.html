@@ -270,7 +270,36 @@ class NoSegmentInfoJoinedFilter(FilterBase[JoinedDataBag]):
         pre_num_filtered_for_main_coreg = databag.pre_num_df[databag.pre_num_df.segments == &#39;&#39;]
 
         return JoinedDataBag.create(sub_df=databag.sub_df,
-                                    pre_num_df=pre_num_filtered_for_main_coreg)</code></pre>
+                                    pre_num_df=pre_num_filtered_for_main_coreg)
+
+
+class CIKJoinedFilter(FilterBase[JoinedDataBag]):
+    &#34;&#34;&#34;
+    Filters the data by a list of ciks. This filter operates on the sub, pre_df and the num_df.
+    &#34;&#34;&#34;
+
+    def __init__(self, ciks: List[int]):
+        self.ciks = ciks
+
+    def filter(self, databag: JoinedDataBag) -&gt; JoinedDataBag:
+        &#34;&#34;&#34;
+        filters the databag so that only datapoints belonging to the provided ciks
+        are contained.
+
+        Args:
+            databag(JoinedDataBag) : joineddatabag to apply the filter to
+
+        Returns:
+            JoinedDataBag: the databag with the filtered data
+        &#34;&#34;&#34;
+
+        sub_filtered_for_adshs = databag.sub_df[databag.sub_df.cik.isin(self.ciks)]
+        adshs = sub_filtered_for_adshs.adsh.tolist()
+
+        pre_num_filtered_for_adshs = databag.pre_num_df[databag.pre_num_df.adsh.isin(adshs)]
+
+        return JoinedDataBag.create(sub_df=sub_filtered_for_adshs,
+                                    pre_num_df=pre_num_filtered_for_adshs)</code></pre>
 </details>
 </section>
 <section>
@@ -354,6 +383,91 @@ are contained.</p>
     &#34;&#34;&#34;
     sub_filtered_for_adshs = databag.sub_df[databag.sub_df.adsh.isin(self.adshs)]
     pre_num_filtered_for_adshs = databag.pre_num_df[databag.pre_num_df.adsh.isin(self.adshs)]
+
+    return JoinedDataBag.create(sub_df=sub_filtered_for_adshs,
+                                pre_num_df=pre_num_filtered_for_adshs)</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+<dt id="secfsdstools.e_filter.joinedfiltering.CIKJoinedFilter"><code class="flex name class">
+<span>class <span class="ident">CIKJoinedFilter</span></span>
+<span>(</span><span>ciks: List[int])</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Filters the data by a list of ciks. This filter operates on the sub, pre_df and the num_df.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class CIKJoinedFilter(FilterBase[JoinedDataBag]):
+    &#34;&#34;&#34;
+    Filters the data by a list of ciks. This filter operates on the sub, pre_df and the num_df.
+    &#34;&#34;&#34;
+
+    def __init__(self, ciks: List[int]):
+        self.ciks = ciks
+
+    def filter(self, databag: JoinedDataBag) -&gt; JoinedDataBag:
+        &#34;&#34;&#34;
+        filters the databag so that only datapoints belonging to the provided ciks
+        are contained.
+
+        Args:
+            databag(JoinedDataBag) : joineddatabag to apply the filter to
+
+        Returns:
+            JoinedDataBag: the databag with the filtered data
+        &#34;&#34;&#34;
+
+        sub_filtered_for_adshs = databag.sub_df[databag.sub_df.cik.isin(self.ciks)]
+        adshs = sub_filtered_for_adshs.adsh.tolist()
+
+        pre_num_filtered_for_adshs = databag.pre_num_df[databag.pre_num_df.adsh.isin(adshs)]
+
+        return JoinedDataBag.create(sub_df=sub_filtered_for_adshs,
+                                    pre_num_df=pre_num_filtered_for_adshs)</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="secfsdstools.d_container.filter.FilterBase" href="../d_container/filter.html#secfsdstools.d_container.filter.FilterBase">FilterBase</a></li>
+<li>typing.Generic</li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="secfsdstools.e_filter.joinedfiltering.CIKJoinedFilter.filter"><code class="name flex">
+<span>def <span class="ident">filter</span></span>(<span>self, databag: <a title="secfsdstools.d_container.databagmodel.JoinedDataBag" href="../d_container/databagmodel.html#secfsdstools.d_container.databagmodel.JoinedDataBag">JoinedDataBag</a>) ‑> <a title="secfsdstools.d_container.databagmodel.JoinedDataBag" href="../d_container/databagmodel.html#secfsdstools.d_container.databagmodel.JoinedDataBag">JoinedDataBag</a></span>
+</code></dt>
+<dd>
+<div class="desc"><p>filters the databag so that only datapoints belonging to the provided ciks
+are contained.</p>
+<h2 id="args">Args</h2>
+<p>databag(JoinedDataBag) : joineddatabag to apply the filter to</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>JoinedDataBag</code></dt>
+<dd>the databag with the filtered data</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def filter(self, databag: JoinedDataBag) -&gt; JoinedDataBag:
+    &#34;&#34;&#34;
+    filters the databag so that only datapoints belonging to the provided ciks
+    are contained.
+
+    Args:
+        databag(JoinedDataBag) : joineddatabag to apply the filter to
+
+    Returns:
+        JoinedDataBag: the databag with the filtered data
+    &#34;&#34;&#34;
+
+    sub_filtered_for_adshs = databag.sub_df[databag.sub_df.cik.isin(self.ciks)]
+    adshs = sub_filtered_for_adshs.adsh.tolist()
+
+    pre_num_filtered_for_adshs = databag.pre_num_df[databag.pre_num_df.adsh.isin(adshs)]
 
     return JoinedDataBag.create(sub_df=sub_filtered_for_adshs,
                                 pre_num_df=pre_num_filtered_for_adshs)</code></pre>
@@ -1028,6 +1142,12 @@ that is in the provided list.</p>
 <h4><code><a title="secfsdstools.e_filter.joinedfiltering.AdshJoinedFilter" href="#secfsdstools.e_filter.joinedfiltering.AdshJoinedFilter">AdshJoinedFilter</a></code></h4>
 <ul class="">
 <li><code><a title="secfsdstools.e_filter.joinedfiltering.AdshJoinedFilter.filter" href="#secfsdstools.e_filter.joinedfiltering.AdshJoinedFilter.filter">filter</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="secfsdstools.e_filter.joinedfiltering.CIKJoinedFilter" href="#secfsdstools.e_filter.joinedfiltering.CIKJoinedFilter">CIKJoinedFilter</a></code></h4>
+<ul class="">
+<li><code><a title="secfsdstools.e_filter.joinedfiltering.CIKJoinedFilter.filter" href="#secfsdstools.e_filter.joinedfiltering.CIKJoinedFilter.filter">filter</a></code></li>
 </ul>
 </li>
 <li>

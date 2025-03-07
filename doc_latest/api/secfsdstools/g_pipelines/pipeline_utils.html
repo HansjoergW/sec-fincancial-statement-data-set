@@ -30,14 +30,18 @@
 <pre><code class="python">&#34;&#34;&#34;
 Util functions used in pipeline tasks
 &#34;&#34;&#34;
+import logging
 from pathlib import Path
 from typing import List
 
-from secfsdstools.d_container.databagmodel import RawDataBag, JoinedDataBag, is_rawbag_path, \
-    is_joinedbag_path
+from secfsdstools.d_container.databagmodel import RawDataBag, JoinedDataBag
+from secfsdstools.f_standardize.standardizing import StandardizedBag
+
+LOGGER = logging.getLogger(__name__)
 
 
-def concat_bags(paths_to_concat: List[Path], target_path: Path):
+def concat_bags(paths_to_concat: List[Path], target_path: Path,
+                drop_duplicates_sub_df: bool = True):
     &#34;&#34;&#34;
     Concatenates all the Bags in paths_to_concatenate by using the provided bag_type
     into the target_dir directory.
@@ -48,29 +52,41 @@ def concat_bags(paths_to_concat: List[Path], target_path: Path):
     Args:
         paths_to_concat (List[Path]) : List with paths to read the datafrome
         target_path (Path) : path to write the concatenated data to
+        drop_duplicates_sub_df (bool, False) : if the final sub_df should be check for duplicates
 
     &#34;&#34;&#34;
     if len(paths_to_concat) == 0:
         # nothing to do
         return
 
-    if is_rawbag_path(paths_to_concat[0]):
+    LOGGER.info(&#34;Concat in memory - number of paths: %d - target: %s&#34;,
+                len(paths_to_concat), target_path)
+
+    if RawDataBag.is_rawbag_path(paths_to_concat[0]):
         all_bags = [RawDataBag.load(str(path)) for path in paths_to_concat]
 
-        all_bag: RawDataBag = RawDataBag.concat(all_bags, drop_duplicates_sub_df=True)
+        all_bag: RawDataBag = RawDataBag.concat(all_bags,
+                                                drop_duplicates_sub_df=drop_duplicates_sub_df)
         all_bag.save(target_path=str(target_path))
-    elif is_joinedbag_path(paths_to_concat[0]):
+
+    elif JoinedDataBag.is_joinedbag_path(paths_to_concat[0]):
         all_bags = [JoinedDataBag.load(str(path)) for path in paths_to_concat]
 
-        all_bag: JoinedDataBag = JoinedDataBag.concat(all_bags, drop_duplicates_sub_df=True)
+        all_bag: JoinedDataBag = JoinedDataBag.concat(all_bags,
+                                                      drop_duplicates_sub_df=drop_duplicates_sub_df)
+        all_bag.save(target_path=str(target_path))
+
+    elif StandardizedBag.is_standardizebag_path(paths_to_concat[0]):
+        all_bags = [StandardizedBag.load(str(path)) for path in paths_to_concat]
+        all_bag: StandardizedBag = StandardizedBag.concat(all_bags)
         all_bag.save(target_path=str(target_path))
     else:
-        raise ValueError(&#34;bag_type must be either raw or joined&#34;)
+        raise ValueError(&#34;bag_type must be either raw, joined, or standardized&#34;)
 
 
 def concat_bags_filebased(paths_to_concat: List[Path],
-                           target_path: Path,
-                           drop_duplicates_sub_df: bool = False):
+                          target_path: Path,
+                          drop_duplicates_sub_df: bool = False):
     &#34;&#34;&#34;
     Concatenates all the Bags in paths_to_concatenate by using the provided bag_type
     into the target_dir directory.
@@ -89,12 +105,15 @@ def concat_bags_filebased(paths_to_concat: List[Path],
         # nothing to do
         return
 
-    if is_rawbag_path(paths_to_concat[0]):
+    LOGGER.info(&#34;Concat on filesystem - number of paths: %d - target: %s&#34;,
+                len(paths_to_concat), target_path)
+
+    if RawDataBag.is_rawbag_path(paths_to_concat[0]):
         RawDataBag.concat_filebased(paths_to_concat=paths_to_concat,
                                     target_path=target_path,
                                     drop_duplicates_sub_df=drop_duplicates_sub_df)
 
-    elif is_joinedbag_path(paths_to_concat[0]):
+    elif JoinedDataBag.is_joinedbag_path(paths_to_concat[0]):
         JoinedDataBag.concat_filebased(paths_to_concat=paths_to_concat,
                                        target_path=target_path,
                                        drop_duplicates_sub_df=drop_duplicates_sub_df)
@@ -110,7 +129,7 @@ def concat_bags_filebased(paths_to_concat: List[Path],
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
 <dt id="secfsdstools.g_pipelines.pipeline_utils.concat_bags"><code class="name flex">
-<span>def <span class="ident">concat_bags</span></span>(<span>paths_to_concat: List[pathlib.Path], target_path: pathlib.Path)</span>
+<span>def <span class="ident">concat_bags</span></span>(<span>paths_to_concat: List[pathlib.Path], target_path: pathlib.Path, drop_duplicates_sub_df: bool = True)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Concatenates all the Bags in paths_to_concatenate by using the provided bag_type
@@ -119,12 +138,14 @@ into the target_dir directory.</p>
 Of course, all paths in the paths_to_concat must be of the same type</p>
 <h2 id="args">Args</h2>
 <p>paths_to_concat (List[Path]) : List with paths to read the datafrome
-target_path (Path) : path to write the concatenated data to</p></div>
+target_path (Path) : path to write the concatenated data to
+drop_duplicates_sub_df (bool, False) : if the final sub_df should be check for duplicates</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def concat_bags(paths_to_concat: List[Path], target_path: Path):
+<pre><code class="python">def concat_bags(paths_to_concat: List[Path], target_path: Path,
+                drop_duplicates_sub_df: bool = True):
     &#34;&#34;&#34;
     Concatenates all the Bags in paths_to_concatenate by using the provided bag_type
     into the target_dir directory.
@@ -135,24 +156,36 @@ target_path (Path) : path to write the concatenated data to</p></div>
     Args:
         paths_to_concat (List[Path]) : List with paths to read the datafrome
         target_path (Path) : path to write the concatenated data to
+        drop_duplicates_sub_df (bool, False) : if the final sub_df should be check for duplicates
 
     &#34;&#34;&#34;
     if len(paths_to_concat) == 0:
         # nothing to do
         return
 
-    if is_rawbag_path(paths_to_concat[0]):
+    LOGGER.info(&#34;Concat in memory - number of paths: %d - target: %s&#34;,
+                len(paths_to_concat), target_path)
+
+    if RawDataBag.is_rawbag_path(paths_to_concat[0]):
         all_bags = [RawDataBag.load(str(path)) for path in paths_to_concat]
 
-        all_bag: RawDataBag = RawDataBag.concat(all_bags, drop_duplicates_sub_df=True)
+        all_bag: RawDataBag = RawDataBag.concat(all_bags,
+                                                drop_duplicates_sub_df=drop_duplicates_sub_df)
         all_bag.save(target_path=str(target_path))
-    elif is_joinedbag_path(paths_to_concat[0]):
+
+    elif JoinedDataBag.is_joinedbag_path(paths_to_concat[0]):
         all_bags = [JoinedDataBag.load(str(path)) for path in paths_to_concat]
 
-        all_bag: JoinedDataBag = JoinedDataBag.concat(all_bags, drop_duplicates_sub_df=True)
+        all_bag: JoinedDataBag = JoinedDataBag.concat(all_bags,
+                                                      drop_duplicates_sub_df=drop_duplicates_sub_df)
+        all_bag.save(target_path=str(target_path))
+
+    elif StandardizedBag.is_standardizebag_path(paths_to_concat[0]):
+        all_bags = [StandardizedBag.load(str(path)) for path in paths_to_concat]
+        all_bag: StandardizedBag = StandardizedBag.concat(all_bags)
         all_bag.save(target_path=str(target_path))
     else:
-        raise ValueError(&#34;bag_type must be either raw or joined&#34;)</code></pre>
+        raise ValueError(&#34;bag_type must be either raw, joined, or standardized&#34;)</code></pre>
 </details>
 </dd>
 <dt id="secfsdstools.g_pipelines.pipeline_utils.concat_bags_filebased"><code class="name flex">
@@ -173,8 +206,8 @@ Returns:</p></div>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def concat_bags_filebased(paths_to_concat: List[Path],
-                           target_path: Path,
-                           drop_duplicates_sub_df: bool = False):
+                          target_path: Path,
+                          drop_duplicates_sub_df: bool = False):
     &#34;&#34;&#34;
     Concatenates all the Bags in paths_to_concatenate by using the provided bag_type
     into the target_dir directory.
@@ -193,12 +226,15 @@ Returns:</p></div>
         # nothing to do
         return
 
-    if is_rawbag_path(paths_to_concat[0]):
+    LOGGER.info(&#34;Concat on filesystem - number of paths: %d - target: %s&#34;,
+                len(paths_to_concat), target_path)
+
+    if RawDataBag.is_rawbag_path(paths_to_concat[0]):
         RawDataBag.concat_filebased(paths_to_concat=paths_to_concat,
                                     target_path=target_path,
                                     drop_duplicates_sub_df=drop_duplicates_sub_df)
 
-    elif is_joinedbag_path(paths_to_concat[0]):
+    elif JoinedDataBag.is_joinedbag_path(paths_to_concat[0]):
         JoinedDataBag.concat_filebased(paths_to_concat=paths_to_concat,
                                        target_path=target_path,
                                        drop_duplicates_sub_df=drop_duplicates_sub_df)

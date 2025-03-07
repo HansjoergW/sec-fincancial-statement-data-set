@@ -268,7 +268,3 @@ class Updater:
 
             # update the timestamp of the last check
             self.db_state_accesor.set_key(Updater.LAST_UPDATE_CHECK_KEY, str(time.time()))
-
-
-if __name__ == '__main__':
-    print_sponsoring_message()

@@ -98,6 +98,14 @@ def print_sponsoring_message():
     print(&#34;\n&#34;)
     print(bold + white + &#34;    https://github.com/sponsors/HansjoergW&#34; + reset)
     print(&#34;\n&#34;)
+    print(white + &#34;    How to get in touch&#34;)
+    print(&#34;    - Found a bug:            https://github.com/HansjoergW/sec-fincancial-statement-data-set/issues&#34;)
+    print(&#34;    - Have a remark:          https://github.com/HansjoergW/sec-fincancial-statement-data-set/discussions/categories/general&#34;)
+    print(&#34;    - Have an idea:           https://github.com/HansjoergW/sec-fincancial-statement-data-set/discussions/categories/ideas&#34;)
+    print(&#34;    - Have a question:        https://github.com/HansjoergW/sec-fincancial-statement-data-set/discussions/categories/q-a&#34;)
+    print(&#34;    - Have something to show: https://github.com/HansjoergW/sec-fincancial-statement-data-set/discussions/categories/show-and-tell&#34;)
+    print(&#34;\n&#34;)
+
     print(bold + yellow + hash_border + reset)
     print(yellow + border + reset)
     print(&#34;\n\n&#34;)
@@ -290,7 +298,11 @@ class Updater:
             print_sponsoring_message()
 
             # update the timestamp of the last check
-            self.db_state_accesor.set_key(Updater.LAST_UPDATE_CHECK_KEY, str(time.time()))</code></pre>
+            self.db_state_accesor.set_key(Updater.LAST_UPDATE_CHECK_KEY, str(time.time()))
+
+
+if __name__ == &#39;__main__&#39;:
+    print_sponsoring_message()</code></pre>
 </details>
 </section>
 <section>
@@ -333,6 +345,14 @@ class Updater:
     print(&#34;\n&#34;)
     print(bold + white + &#34;    https://github.com/sponsors/HansjoergW&#34; + reset)
     print(&#34;\n&#34;)
+    print(white + &#34;    How to get in touch&#34;)
+    print(&#34;    - Found a bug:            https://github.com/HansjoergW/sec-fincancial-statement-data-set/issues&#34;)
+    print(&#34;    - Have a remark:          https://github.com/HansjoergW/sec-fincancial-statement-data-set/discussions/categories/general&#34;)
+    print(&#34;    - Have an idea:           https://github.com/HansjoergW/sec-fincancial-statement-data-set/discussions/categories/ideas&#34;)
+    print(&#34;    - Have a question:        https://github.com/HansjoergW/sec-fincancial-statement-data-set/discussions/categories/q-a&#34;)
+    print(&#34;    - Have something to show: https://github.com/HansjoergW/sec-fincancial-statement-data-set/discussions/categories/show-and-tell&#34;)
+    print(&#34;\n&#34;)
+
     print(bold + yellow + hash_border + reset)
     print(yellow + border + reset)
     print(&#34;\n\n&#34;)</code></pre>

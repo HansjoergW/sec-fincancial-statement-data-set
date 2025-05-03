@@ -13,8 +13,6 @@ new release
 - on github -> under code releases: draft new release
 
 
-- linked in post
-
 2.3.0 - maintenance release
 - switch to vs code?
 - poetry build pipeline
@@ -24,6 +22,8 @@ new release
 - versions check -> check if there is a new version to download
   https://chatgpt.com/c/67dc71ab-a44c-8011-9be1-b0308657cc27
 - github pipelines umstellen
+
+- linked in post
 
 2.4.0 daily updates
 - first only as additional pipeline steps, not integrated in db

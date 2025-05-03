@@ -1,39 +1,31 @@
-[build-system]
-requires = ["hatchling"]
-build-backend = "hatchling.build"
-
 [project]
 name = "secfsdstools"
 version = "2.2.0"
-authors = [
-    { name="Hansjoerg Wingeier", email="hansjoerg.wingeier@gmail.com" },
-]
-
-dependencies = [
-    "pandas>=1.3",
-    "numpy>=1.0,<2.0",
-    "requests>=2.0",
-    "pathos~=0.3",
-    "pyarrow>=8.0",
-    "fastparquet>=0.5",
-    "pandera==0.22.1"
-]
-
+authors = [{ name="Hansjoerg", email="hansjoerg.wingeier@gmail.com" }]
 description = "A few python tools to analyze the SEC.gov financial statements data sets (https://www.sec.gov/dera/data/financial-statement-data-sets)"
 readme = "README.md"
-long_description = "README.md"
-requires-python = ">=3.8"
+requires-python = ">=3.10"
 license = "Apache-2.0"
+
+maintainers = [
+    { name = "Hansjoerg Wingeier", email = "hansjoeg.wingeier@gmail.com" },
+]
+
 classifiers = [
     "Development Status :: 5 - Production/Stable",
     "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",    
     "License :: OSI Approved :: Apache Software License",
     "Operating System :: OS Independent",
     "Topic :: Office/Business :: Financial",
     "Topic :: Office/Business :: Financial :: Investment",
     "Intended Audience :: Developers",
+    "Intended Audience :: Financial and Insurance Industry",    
     "Topic :: Software Development :: Libraries :: Python Modules",
-    "Topic :: Utilities"
+    "Topic :: Utilities",
+    "Natural Language :: English",    
 ]
 
 keywords=[
@@ -50,38 +42,118 @@ keywords=[
     "Financial Statements Dataset",
     "Financial Analysis",
     "Data Processing",
+    "Financial Data",
+    "SEC API",
+    "XBRL",    
+]
+
+dependencies = [
+    "pandas>=1.3",
+    "numpy>=1.0,<2.0",
+    "requests>=2.0",
+    "pathos~=0.3",
+    "pyarrow>=8.0",
+    "fastparquet>=0.5",
+    "pandera==0.22.1"
 ]
 
 [project.urls]
 "Homepage" = "https://hansjoergw.github.io/sec-fincancial-statement-data-set/"
 "Bug Tracker" = "https://github.com/HansjoergW/sec-fincancial-statement-data-set/issues"
 "Github" = "https://github.com/HansjoergW/sec-fincancial-statement-data-set"
-"Changelog" = "https://github.com/HansjoergW/sec-fincancial-statement-data-set/blob/main/CHANGELOG.md"
 "Funding" = "https://github.com/sponsors/HansjoergW"
 "Forum" =  "https://github.com/HansjoergW/sec-fincancial-statement-data-set/discussions"
+"Change Log" = "https://github.com/HansjoergW/sec-fincancial-statement-data-set/blob/main/CHANGELOG.md"
+
 
 [project.optional-dependencies]
-test = [
+dev = [
     "pytest~=8.3",
-    "pylint~=2.13",
+    "pylint~=3.0",
     "coverage~=7.0",
     "typing_extensions~=4.0",
-    "pdoc3~=0.10"
+    "pdoc3~=0.10",
+    "ruff"
 ]
 
+[tool.poetry]
+packages = [{ include = "secfsdstools", from = "src" }]
 
-[tool.hatch.build.targets.sdist]
-exclude = [
-    "/tests",
-    "/docs",
-    "/notebooks",
-    "/sandbox"
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.3"
+pylint = "^3.0"
+coverage = "^7.0"
+typing_extensions = "^4.0"
+pdoc3 = "^0.10"
+black = "^24.2.0"
+ruff = "^0.5.3"
+
+[tool.ruff]
+# Explicitly enable F401 (unused imports) and other rules
+lint.select = [
+    "F401", # unused imports
+    "E",    # pycodestyle errors
+    "F",    # other pyflakes rules
+    "I",    # isort
+    "W",    # pycodestyle warnings
+]
+line-length = 120
+fix = true
+
+[tool.black]
+line-length = 120
+
+[tool.pylint.'MAIN']
+# Base settings that apply to everything
+disable = [
+    "R0201", # no-self-use
+    "R0801", # duplicate-code
+    "R0902", # too-many-instance-attributes
+    "R0903", # too-few-public-methods
+    "R0912", # too-many-branches
+    "R0913", # too-many-arguments
+    "W0511", # fixme
 ]
 
-[tool.hatch.build.targets.wheel]
-exclude = [
-    "/tests",
-    "/docs",
-    "/notebooks",
-    "/sandbox"
+[tool.pylint.'tests/*']
+# More relaxed settings for test files
+disable = [
+    "C0103", # invalid-name
+    "C0111", # missing-docstring
+    "C0114", # missing-module-docstring
+    "C0115", # missing-class-docstring
+    "C0116", # missing-function-docstring
+    "R0914", # too-many-locals
+    "R0915", # too-many-statements
+    "R0917", # too-many-positional-arguments    "W0212", # protected-access
+    "W0612", # unused-variable (common in pytest with fixtures)
+    "W0613", # unused-argument (common in pytest with fixtures)
+    "W0621", # redefined-outer-name (common in pytest with fixtures)
 ]
+
+extension-pkg-allow-list = ["lxml"]
+
+[tool.pylint.format]
+max-line-length = 120
+
+[tool.pytest.ini_options]
+testpaths = [
+    "tests",
+    "sandbox", # sandbox tests
+]
+python_files = ["test_*.py", "*_test.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = "-ra -q --strict-markers"
+markers = [
+    "integration: marks tests as integration tests (deselect with '-m \"not integration\"')",
+    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+]
+log_cli = true
+log_cli_format = "%(asctime)s %(levelname)s %(message)s [%(name)s]"
+log_cli_date_format = "%Y-%m-%d %H:%M:%S"
+log_cli_level = "DEBUG"
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"

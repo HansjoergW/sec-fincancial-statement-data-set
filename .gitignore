@@ -6,8 +6,12 @@ launchjupyter.bat
 /docs/api
 /tests/secfsdstools.db
 /sandbox/saved_data/
+/sandbox/tmp/
+/sandbox/zips/
 /notebooks/bs_10k_10q_all_joined
+/notebooks/bs_standardizer_results
 /notebooks/set
+/notebooks/standardized
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

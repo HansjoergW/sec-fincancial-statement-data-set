@@ -13,31 +13,23 @@ new release
 - on github -> under code releases: draft new release
 
 
-2.2.0
-- [ok] new CIKFilter for bags (similar logic than adshs filter)
-- [ok] segments basics notebook
-- [ok] cik-filter in load method of bags
-- [ok] Switch for ConcatProcess whether to load all data directly into memory, or do it file_based
-- [ok] use ConcatProcess also for StandardizedBag (only in_memory)
-- [ok] Standardization by quarter / make more flexibel -> either single task, or multiple dirs
-- [ok] define new memory_optimized pipeline
-- [ok] adapt pipeline/automation notebook
-- [ok] examples on how to use the bags from the pipeline
-- [ok] is_xxx_bag_path -> moved into classes JoinedDataBag, RawDataBag, added to StandardizeBag
-
-- [ok] sponsoring hinweis und text -> output once a day If you like it - please support it!
-- [ok] sponsoring hinweis in readme, und als header in allen notebooks
-
-- [ok] activate github discussions (https://docs.github.com/en/discussions/quickstart)
-
-- [ok] hint forum in readme, as additional link on pypi
-
 - linked in post
 
-2.3.0
-switch to vs code?
+2.3.0 - maintenance release
+- switch to vs code?
+- poetry build pipeline
+- pypi deploy with "trusted.."
+- from python 3.10
+- pyproject.toml / analog secdaily
+- versions check -> check if there is a new version to download
+  https://chatgpt.com/c/67dc71ab-a44c-8011-9be1-b0308657cc27
+- github pipelines umstellen
+
+2.4.0 daily updates
+- first only as additional pipeline steps, not integrated in db
 
 - adding more steps to automation
+
 
 spenden via paypal: Bsp:
 https://pypi.org/project/colorama/ -> Projekt mit Spenden-Button

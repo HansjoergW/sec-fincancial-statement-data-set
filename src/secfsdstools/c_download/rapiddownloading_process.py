@@ -4,7 +4,7 @@ Downloading zip files of the financial statement data sets from the sec.
 import json
 import logging
 import os
-from typing import List, Tuple, Dict
+from typing import Dict, List, Tuple
 
 from secfsdstools.a_utils.downloadutils import UrlDownloader
 from secfsdstools.a_utils.fileutils import get_filenames_in_directory

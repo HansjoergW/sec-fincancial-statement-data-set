@@ -1,10 +1,18 @@
 import numpy as np
 import pandas as pd
-
-from secfsdstools.f_standardize.base_rules import CopyTagRule, MissingSumRule, MissingSummandRule, \
-    SumUpRule, SetSumIfOnlyOneSummand, PostCopyToFirstSummand, PreSumUpCorrection, \
-    missingsumparts_rules_creator, setsumifonlyonesummand_rules_creator, SubtractFromRule, \
-    PostFixSign
+from secfsdstools.f_standardize.base_rules import (
+    CopyTagRule,
+    MissingSummandRule,
+    MissingSumRule,
+    PostCopyToFirstSummand,
+    PostFixSign,
+    PreSumUpCorrection,
+    SetSumIfOnlyOneSummand,
+    SubtractFromRule,
+    SumUpRule,
+    missingsumparts_rules_creator,
+    setsumifonlyonesummand_rules_creator,
+)
 
 
 def test_missingsumparts_rules_creator():

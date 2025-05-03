@@ -1,7 +1,7 @@
 """
 Collects all data by the cik company.
 """
-from typing import Optional, List
+from typing import List, Optional
 
 from secfsdstools.a_config.configmgt import ConfigurationManager
 from secfsdstools.a_config.configmodel import Configuration

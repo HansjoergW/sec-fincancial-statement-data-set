@@ -5,11 +5,11 @@ import logging
 import os
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Dict, List, TypeVar, Generic, Optional
+from typing import Dict, Generic, List, Optional, TypeVar
 
 import pandas as pd
 
-from secfsdstools.a_utils.constants import SUB_TXT, PRE_TXT, NUM_TXT, PRE_NUM_TXT
+from secfsdstools.a_utils.constants import NUM_TXT, PRE_NUM_TXT, PRE_TXT, SUB_TXT
 from secfsdstools.a_utils.fileutils import check_dir, concat_parquet_files
 from secfsdstools.d_container.filter import FilterBase
 from secfsdstools.d_container.presentation import Presenter

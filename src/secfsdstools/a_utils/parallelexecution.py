@@ -8,8 +8,8 @@ using pathos.multiprocessing instead of multiprocessing, so that method function
 import concurrent.futures
 import logging
 from abc import ABC, abstractmethod
-from time import time, sleep
-from typing import Generic, TypeVar, List, Callable, Optional, Tuple
+from time import sleep, time
+from typing import Callable, Generic, List, Optional, Tuple, TypeVar
 
 from pathos.multiprocessing import ProcessingPool as Pool
 from pathos.multiprocessing import cpu_count

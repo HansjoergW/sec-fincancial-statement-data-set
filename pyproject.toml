@@ -16,16 +16,16 @@ classifiers = [
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
-    "Programming Language :: Python :: 3.12",    
+    "Programming Language :: Python :: 3.12",
     "License :: OSI Approved :: Apache Software License",
     "Operating System :: OS Independent",
     "Topic :: Office/Business :: Financial",
     "Topic :: Office/Business :: Financial :: Investment",
     "Intended Audience :: Developers",
-    "Intended Audience :: Financial and Insurance Industry",    
+    "Intended Audience :: Financial and Insurance Industry",
     "Topic :: Software Development :: Libraries :: Python Modules",
     "Topic :: Utilities",
-    "Natural Language :: English",    
+    "Natural Language :: English",
 ]
 
 keywords=[
@@ -44,7 +44,7 @@ keywords=[
     "Data Processing",
     "Financial Data",
     "SEC API",
-    "XBRL",    
+    "XBRL",
 ]
 
 dependencies = [
@@ -97,6 +97,14 @@ lint.select = [
     "I",    # isort
     "W",    # pycodestyle warnings
 ]
+lint.ignore = [
+    "E501",  # line too long
+    "F401",  # unused imports
+]
+# Only check the src directory
+include = ["src/**/*.py"]
+# Explicitly exclude tests directory
+exclude = ["tests/**", "sandbox/**"]
 line-length = 120
 fix = true
 
@@ -106,7 +114,6 @@ line-length = 120
 [tool.pylint.'MAIN']
 # Base settings that apply to everything
 disable = [
-    "R0201", # no-self-use
     "R0801", # duplicate-code
     "R0902", # too-many-instance-attributes
     "R0903", # too-few-public-methods
@@ -114,6 +121,8 @@ disable = [
     "R0913", # too-many-arguments
     "W0511", # fixme
 ]
+# Only check src and tests folders
+ignore = ["build", "dist", ".git", ".github", ".venv", "venv", "docs", "notebooks", "sandbox"]
 
 [tool.pylint.'tests/*']
 # More relaxed settings for test files
@@ -125,10 +134,12 @@ disable = [
     "C0116", # missing-function-docstring
     "R0914", # too-many-locals
     "R0915", # too-many-statements
-    "R0917", # too-many-positional-arguments    "W0212", # protected-access
+    "R0917", # too-many-positional-arguments
+    "W0212", # protected-access
     "W0612", # unused-variable (common in pytest with fixtures)
     "W0613", # unused-argument (common in pytest with fixtures)
     "W0621", # redefined-outer-name (common in pytest with fixtures)
+    "W0622", # redefined-builtin (common in pytest with fixtures)
 ]
 
 extension-pkg-allow-list = ["lxml"]

@@ -2,14 +2,14 @@
 Reads company information.
 """
 import os
-from typing import Dict, Optional, List
+from typing import Dict, List, Optional
 
 import pandas as pd
 
 from secfsdstools.a_config.configmgt import ConfigurationManager
 from secfsdstools.a_config.configmodel import Configuration
-from secfsdstools.c_index.indexdataaccess import IndexReport, ParquetDBIndexingAccessor
 from secfsdstools.a_utils.constants import SUB_TXT
+from secfsdstools.c_index.indexdataaccess import IndexReport, ParquetDBIndexingAccessor
 
 
 class CompanyIndexReader:

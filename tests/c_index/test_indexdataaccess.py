@@ -2,10 +2,8 @@ from typing import List
 
 import pandas as pd
 import pytest
-
 from secfsdstools.b_setup.setupdb import DbCreator
-from secfsdstools.c_index.indexdataaccess import IndexReport, \
-    IndexFileProcessingState, ParquetDBIndexingAccessor
+from secfsdstools.c_index.indexdataaccess import IndexFileProcessingState, IndexReport, ParquetDBIndexingAccessor
 
 
 @pytest.fixture

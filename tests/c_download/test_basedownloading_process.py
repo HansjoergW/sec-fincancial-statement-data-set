@@ -2,7 +2,6 @@ import os
 from typing import List, Tuple
 
 import pytest
-
 from secfsdstools.a_utils.downloadutils import UrlDownloader
 from secfsdstools.a_utils.fileutils import get_filenames_in_directory
 from secfsdstools.c_download.basedownloading_process import BaseDownloadingProcess

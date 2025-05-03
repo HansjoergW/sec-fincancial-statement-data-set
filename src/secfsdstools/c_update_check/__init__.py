@@ -36,7 +36,7 @@ def is_already_in_update_or_check_config_process() -> bool:
     check if the call is made in the context of checking the configuration or the
     update process, since this would cause a circular import loop.
     """
-    import inspect # pylint: disable=C0415
+    import inspect  # pylint: disable=C0415
 
     stack = inspect.stack()
     return any(is_update_frame(frame) or is_check_configuration(frame) for frame in stack)
@@ -46,6 +46,7 @@ def is_already_in_update_or_check_config_process() -> bool:
 # the update process or the check_config_process
 if not is_running_in_pytest_or_pdoc() and not is_already_in_update_or_check_config_process():
     import logging
+
     import secfsdstools
 
     logging.getLogger().info("loading secfsdstools ...")

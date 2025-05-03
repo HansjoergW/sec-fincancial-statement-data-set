@@ -1,9 +1,9 @@
 """ contains collector, that reads a single report """
-from typing import Optional, List
+from typing import List, Optional
 
 from secfsdstools.a_config.configmgt import ConfigurationManager
 from secfsdstools.a_config.configmodel import Configuration
-from secfsdstools.c_index.indexdataaccess import ParquetDBIndexingAccessor, IndexReport
+from secfsdstools.c_index.indexdataaccess import IndexReport, ParquetDBIndexingAccessor
 from secfsdstools.d_container.databagmodel import RawDataBag
 from secfsdstools.e_collector.basecollector import BaseCollector
 

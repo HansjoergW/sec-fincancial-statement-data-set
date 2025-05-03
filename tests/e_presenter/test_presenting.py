@@ -2,8 +2,7 @@ import os
 
 import pandas as pd
 import pytest
-
-from secfsdstools.d_container.databagmodel import RawDataBag, JoinedDataBag
+from secfsdstools.d_container.databagmodel import JoinedDataBag, RawDataBag
 from secfsdstools.e_filter.rawfiltering import AdshRawFilter, ReportPeriodRawFilter
 from secfsdstools.e_presenter.presenting import StandardStatementPresenter
 

@@ -1,12 +1,11 @@
 from typing import List
 
 import pandas as pd
-
 from secfsdstools.d_container.databagmodel import JoinedDataBag
 from secfsdstools.e_collector.reportcollecting import SingleReportCollector
 from secfsdstools.e_collector.zipcollecting import ZipCollector
 from secfsdstools.e_filter.joinedfiltering import USDOnlyJoinedFilter
-from secfsdstools.e_filter.rawfiltering import ReportPeriodRawFilter, MainCoregRawFilter, USDOnlyRawFilter
+from secfsdstools.e_filter.rawfiltering import MainCoregRawFilter, ReportPeriodRawFilter, USDOnlyRawFilter
 from secfsdstools.f_standardize.bs_standardize import BalanceSheetStandardizer
 
 apple_10k_2017 = "0000320193-17-000070"

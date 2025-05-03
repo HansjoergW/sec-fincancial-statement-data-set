@@ -3,10 +3,9 @@ from pathlib import Path
 from unittest.mock import patch
 
 from secfsdstools.c_index.indexdataaccess import ParquetDBIndexingAccessor
-from secfsdstools.d_container.databagmodel import RawDataBag, JoinedDataBag
+from secfsdstools.d_container.databagmodel import JoinedDataBag, RawDataBag
 from secfsdstools.e_collector.zipcollecting import ZipCollector
-from secfsdstools.g_pipelines.filter_process import FilterTask, postloadfilter, ByStmtFilterTask, \
-    FilterProcess
+from secfsdstools.g_pipelines.filter_process import ByStmtFilterTask, FilterProcess, FilterTask, postloadfilter
 
 CURRENT_DIR, _ = os.path.split(__file__)
 TESTDATA_PATH = Path(CURRENT_DIR) / ".." / "_testdata"

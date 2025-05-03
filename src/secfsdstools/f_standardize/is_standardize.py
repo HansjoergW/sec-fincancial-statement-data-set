@@ -1,18 +1,22 @@
 # pylint: disable=C0302
 """Contains the definitions to standardize incaome statements."""
-from typing import List, Set, Optional
+from typing import List, Optional, Set
 
 import pandas as pd
 import pandera as pa
 
-from secfsdstools.f_standardize.base_prepivot_rules import (PrePivotDeduplicate,
-                                                            PrePivotCorrectSign, PrePivotMaxQtrs)
-from secfsdstools.f_standardize.base_rule_framework import RuleGroup, Rule
-from secfsdstools.f_standardize.base_rules import (CopyTagRule, SumUpRule, SubtractFromRule,
-                                                   missingsumparts_rules_creator,
-                                                   MissingSummandRule, PostSetToZero, PostFixSign)
-from secfsdstools.f_standardize.base_validation_rules import ValidationRule, SumValidationRule, \
-    ProductValidationRule
+from secfsdstools.f_standardize.base_prepivot_rules import PrePivotCorrectSign, PrePivotDeduplicate, PrePivotMaxQtrs
+from secfsdstools.f_standardize.base_rule_framework import Rule, RuleGroup
+from secfsdstools.f_standardize.base_rules import (
+    CopyTagRule,
+    MissingSummandRule,
+    PostFixSign,
+    PostSetToZero,
+    SubtractFromRule,
+    SumUpRule,
+    missingsumparts_rules_creator,
+)
+from secfsdstools.f_standardize.base_validation_rules import ProductValidationRule, SumValidationRule, ValidationRule
 from secfsdstools.f_standardize.standardizing import Standardizer
 
 # All tags that are used for costs of goods and services

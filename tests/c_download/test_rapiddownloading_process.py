@@ -3,7 +3,6 @@ import os
 from unittest.mock import MagicMock, patch
 
 import pytest
-
 from secfsdstools.a_utils.downloadutils import UrlDownloader
 from secfsdstools.a_utils.rapiddownloadutils import RapidUrlBuilder
 from secfsdstools.c_download.rapiddownloading_process import RapidDownloadingProcess

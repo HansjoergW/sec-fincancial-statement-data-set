@@ -5,12 +5,11 @@ in parallel.
 import os
 import shutil
 from pathlib import Path
-from typing import List, Callable
+from typing import Callable, List
 
 from secfsdstools.a_utils.fileutils import get_directories_in_directory
 from secfsdstools.c_automation.automation_utils import delete_temp_folders
-from secfsdstools.c_automation.task_framework import Task, \
-    AbstractThreadProcess
+from secfsdstools.c_automation.task_framework import AbstractThreadProcess, Task
 from secfsdstools.c_index.indexdataaccess import ParquetDBIndexingAccessor
 from secfsdstools.d_container.databagmodel import RawDataBag
 from secfsdstools.e_collector.zipcollecting import ZipCollector
@@ -25,8 +24,12 @@ def postloadfilter(databag: RawDataBag) -> RawDataBag:
             ReportPeriodRawFilter, MainCoregRawFilter, USDOnlyRawFilter, OfficialTagsOnlyRawFilter
     """
     # pylint: disable=C0415
-    from secfsdstools.e_filter.rawfiltering import ReportPeriodRawFilter, MainCoregRawFilter, \
-        USDOnlyRawFilter, OfficialTagsOnlyRawFilter
+    from secfsdstools.e_filter.rawfiltering import (
+        MainCoregRawFilter,
+        OfficialTagsOnlyRawFilter,
+        ReportPeriodRawFilter,
+        USDOnlyRawFilter,
+    )
 
     return databag[ReportPeriodRawFilter()][MainCoregRawFilter()][USDOnlyRawFilter()][
         OfficialTagsOnlyRawFilter()]

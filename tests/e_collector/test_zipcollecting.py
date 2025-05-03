@@ -3,7 +3,6 @@ from unittest.mock import patch
 
 import pandas as pd
 import pytest
-
 from secfsdstools.a_config.configmodel import Configuration
 from secfsdstools.c_index.indexdataaccess import IndexFileProcessingState
 from secfsdstools.e_collector.zipcollecting import ZipCollector

@@ -1,6 +1,4 @@
 from secfsdstools.e_collector.reportcollecting import SingleReportCollector
-
-from secfsdstools.e_filter.joinedfiltering import ReportPeriodJoinedFilter
 from secfsdstools.e_presenter.presenting import StandardStatementPresenter
 
 if __name__ == '__main__':

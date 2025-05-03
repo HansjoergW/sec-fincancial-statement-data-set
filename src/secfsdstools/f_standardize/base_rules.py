@@ -1,5 +1,5 @@
 """ This module contains the Base Rule implementations."""
-from typing import Set, List
+from typing import List, Set
 
 import pandas as pd
 import pandera as pa

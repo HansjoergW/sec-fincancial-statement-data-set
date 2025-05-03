@@ -1,7 +1,5 @@
 import pandas as pd
-
-from secfsdstools.f_standardize.base_prepivot_rules import PrePivotDeduplicate, PrePivotCorrectSign, \
-    PrePivotMaxQtrs
+from secfsdstools.f_standardize.base_prepivot_rules import PrePivotCorrectSign, PrePivotDeduplicate, PrePivotMaxQtrs
 
 
 def test_deduplicate_dataframe_with_no_duplicates():

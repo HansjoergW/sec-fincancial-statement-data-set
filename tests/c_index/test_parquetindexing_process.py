@@ -2,10 +2,9 @@ import os
 from unittest.mock import patch
 
 import pytest
-
 from secfsdstools.b_setup.setupdb import DbCreator
 from secfsdstools.c_index.indexdataaccess import IndexFileProcessingState
-from secfsdstools.c_index.indexing_process import ReportParquetIndexerProcess, IndexingTask
+from secfsdstools.c_index.indexing_process import IndexingTask, ReportParquetIndexerProcess
 
 
 @pytest.fixture

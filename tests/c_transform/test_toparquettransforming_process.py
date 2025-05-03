@@ -2,7 +2,6 @@ import os
 import shutil
 
 import pandas as pd
-
 from secfsdstools.c_transform.toparquettransforming_process import ToParquetTransformerProcess
 
 CURRENT_DIR, _ = os.path.split(__file__)

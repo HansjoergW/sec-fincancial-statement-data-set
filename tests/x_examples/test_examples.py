@@ -1,7 +1,7 @@
 import secfsdstools.x_examples.example_collectors as collect
-import secfsdstools.x_examples.example_presenter as presenter
-import secfsdstools.x_examples.example_indexsearch as indexsearch
 import secfsdstools.x_examples.example_companyindexreader as companyindex
+import secfsdstools.x_examples.example_indexsearch as indexsearch
+import secfsdstools.x_examples.example_presenter as presenter
 
 
 def test_collector():

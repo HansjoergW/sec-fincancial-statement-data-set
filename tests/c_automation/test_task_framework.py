@@ -3,9 +3,16 @@ import shutil
 from pathlib import Path
 from typing import List
 
-from secfsdstools.c_automation.task_framework import AbstractTask, CheckByTimestampMergeBaseTask, \
-    AbstractProcess, CheckByNewSubfoldersMergeBaseTask, AbstractThreadProcess, Task, TaskResultState, \
-    AbstractProcessPoolProcess
+from secfsdstools.c_automation.task_framework import (
+    AbstractProcess,
+    AbstractProcessPoolProcess,
+    AbstractTask,
+    AbstractThreadProcess,
+    CheckByNewSubfoldersMergeBaseTask,
+    CheckByTimestampMergeBaseTask,
+    Task,
+    TaskResultState,
+)
 
 CURRENT_DIR, _ = os.path.split(__file__)
 TESTDATA_PATH = Path(CURRENT_DIR) / ".." / "_testdata"

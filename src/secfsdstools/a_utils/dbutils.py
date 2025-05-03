@@ -7,7 +7,7 @@ import os
 import sqlite3
 from abc import ABC
 from dataclasses import Field
-from typing import List, TypeVar, Tuple, Optional
+from typing import List, Optional, Tuple, TypeVar
 
 import pandas as pd
 
@@ -169,7 +169,7 @@ class DB(ABC):
         value_list = []
         for field in fields:
             quotes = ""
-            if field.type == str:
+            if field.type is str:
                 quotes = "'"
             value_list.append(quotes + str(getattr(data, field.name)) + quotes)
 

@@ -2,7 +2,6 @@ import os
 from unittest.mock import patch
 
 import pytest
-
 from secfsdstools.a_config.configmodel import Configuration
 from secfsdstools.c_index.indexdataaccess import IndexReport
 from secfsdstools.e_collector.reportcollecting import SingleReportCollector

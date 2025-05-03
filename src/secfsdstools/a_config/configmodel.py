@@ -2,10 +2,10 @@
 Base Model for configuration.
 """
 
-import os
-from dataclasses import dataclass, asdict
-from typing import Optional
 import configparser
+import os
+from dataclasses import asdict, dataclass
+from typing import Optional
 
 
 @dataclass

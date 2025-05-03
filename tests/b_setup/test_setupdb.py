@@ -10,4 +10,3 @@ def test_db_creation(tmp_path):
     # check if expected tables are present
     assert len(creator.execute_fetchall("SELECT * FROM index_parquet_processing_state")) == 0
     assert len(creator.execute_fetchall("SELECT * FROM index_parquet_reports")) == 0
-    

@@ -30,9 +30,9 @@ DEFAULT_CONFIGURATION = Configuration(
 )
 
 DEFAULT_COMMENTED_LINES = """# If you want to add additional processing steps being
-# automatically executed when new data is available, just uncomment the following 
+# automatically executed when new data is available, just uncomment the following
 # config lines.
-# For more details about these additional steps, have a look at the 
+# For more details about these additional steps, have a look at the
 # 08_00_automation_basics notebook.
 
 # postupdateprocesses=secfsdstools.x_examples.automation.memory_optimized_automation.define_extra_processes
@@ -215,8 +215,8 @@ class ConfigurationManager:
         if function_name is None:
             return []
 
-        import importlib # pylint: disable=C0415
-        import inspect # pylint: disable=C0415
+        import importlib  # pylint: disable=C0415
+        import inspect  # pylint: disable=C0415
 
         messages: List[str] = []
         module_str = ""
@@ -251,9 +251,10 @@ class ConfigurationManager:
         if function_name is None:
             return []
 
-        import importlib # pylint: disable=C0415
-        import inspect # pylint: disable=C0415
-        from secfsdstools.c_automation.task_framework import AbstractProcess # pylint: disable=C0415
+        import importlib  # pylint: disable=C0415
+        import inspect  # pylint: disable=C0415
+
+        from secfsdstools.c_automation.task_framework import AbstractProcess  # pylint: disable=C0415
 
         messages: List[str] = []
         module_str = ""

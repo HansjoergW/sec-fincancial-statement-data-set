@@ -13,8 +13,7 @@ def singlereportcollector():
     """
     SingleReportCollector example
     """
-    from secfsdstools.e_collector.reportcollecting import \
-        SingleReportCollector  # pylint: disable=C0415
+    from secfsdstools.e_collector.reportcollecting import SingleReportCollector  # pylint: disable=C0415
 
     apple_10k_2022_adsh = "0000320193-22-000108"
 
@@ -34,8 +33,7 @@ def multireportcollector():
     MultiReportCollector example
     """
 
-    from secfsdstools.e_collector.multireportcollecting import \
-        MultiReportCollector  # pylint: disable=C0415
+    from secfsdstools.e_collector.multireportcollecting import MultiReportCollector  # pylint: disable=C0415
 
     apple_10k_2022_adsh = "0000320193-22-000108"
     apple_10k_2012_adsh = "0001193125-12-444068"
@@ -80,8 +78,7 @@ def companyreportcollector():
     CompanyReportCollector example
     """
 
-    from secfsdstools.e_collector.companycollecting import \
-        CompanyReportCollector  # pylint: disable=C0415
+    from secfsdstools.e_collector.companycollecting import CompanyReportCollector  # pylint: disable=C0415
 
     apple_cik = 320193
     collector = CompanyReportCollector.get_company_collector(ciks=[apple_cik],

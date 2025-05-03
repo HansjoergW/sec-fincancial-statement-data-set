@@ -1,9 +1,7 @@
 import os
 
 import pytest
-
 from secfsdstools.a_config.configmodel import Configuration
-
 
 CURRENT_DIR, _ = os.path.split(__file__)
 

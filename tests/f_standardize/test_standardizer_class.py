@@ -1,8 +1,7 @@
 import numpy as np
 import pandas as pd
 import pytest
-
-from secfsdstools.f_standardize.base_rule_framework import RuleGroup, PrePivotRule
+from secfsdstools.f_standardize.base_rule_framework import PrePivotRule, RuleGroup
 from secfsdstools.f_standardize.base_validation_rules import SumValidationRule
 from secfsdstools.f_standardize.standardizing import Standardizer
 

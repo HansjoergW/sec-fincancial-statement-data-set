@@ -4,11 +4,8 @@ from typing import List
 from unittest.mock import patch
 
 import pytest
-
-from secfsdstools.a_config.configmgt import ConfigurationManager, SECFSDSTOOLS_ENV_VAR_NAME, \
-    DEFAULT_CONFIG_FILE
+from secfsdstools.a_config.configmgt import DEFAULT_CONFIG_FILE, SECFSDSTOOLS_ENV_VAR_NAME, ConfigurationManager
 from secfsdstools.a_config.configmodel import Configuration
-from secfsdstools.b_setup.setupdb import DbCreator
 from secfsdstools.c_automation.task_framework import AbstractProcess
 
 CURRENT_DIR = os.path.dirname(os.path.realpath(__file__))

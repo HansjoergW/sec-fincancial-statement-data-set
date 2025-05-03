@@ -1,9 +1,18 @@
 import os
 
 from secfsdstools.d_container.databagmodel import RawDataBag
-from secfsdstools.e_filter.rawfiltering import ReportPeriodRawFilter, AdshRawFilter, \
-    ReportPeriodAndPreviousPeriodRawFilter, TagRawFilter, MainCoregRawFilter, StmtRawFilter, \
-    OfficialTagsOnlyRawFilter, USDOnlyRawFilter, NoSegmentInfoRawFilter, CIKRawFilter
+from secfsdstools.e_filter.rawfiltering import (
+    AdshRawFilter,
+    CIKRawFilter,
+    MainCoregRawFilter,
+    NoSegmentInfoRawFilter,
+    OfficialTagsOnlyRawFilter,
+    ReportPeriodAndPreviousPeriodRawFilter,
+    ReportPeriodRawFilter,
+    StmtRawFilter,
+    TagRawFilter,
+    USDOnlyRawFilter,
+)
 
 CURRENT_DIR, _ = os.path.split(__file__)
 PATH_TO_BAG_1 = f'{CURRENT_DIR}/../_testdata/parquet_new/quarter/2010q1.zip'

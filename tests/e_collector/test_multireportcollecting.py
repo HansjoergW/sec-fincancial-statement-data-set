@@ -2,7 +2,6 @@ import os
 from unittest.mock import patch
 
 import pytest
-
 from secfsdstools.c_index.indexdataaccess import IndexReport
 from secfsdstools.d_container.databagmodel import RawDataBag
 from secfsdstools.e_collector.multireportcollecting import MultiReportCollector

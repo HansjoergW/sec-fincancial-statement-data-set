@@ -11,8 +11,8 @@ def update(config: Configuration = None, force_update: bool = False):
     """
     ensures that all available zip files are downloaded and that the index is created.
     """
-    from secfsdstools.c_update.updateprocess import Updater
     from secfsdstools.a_config.configmgt import ConfigurationManager
+    from secfsdstools.c_update.updateprocess import Updater
 
     # check if a logger is active if not, make sure it logs at least to the console
     if len(logging.root.handlers) == 0:

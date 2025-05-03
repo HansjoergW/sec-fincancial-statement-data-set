@@ -3,15 +3,15 @@ Reads several reports from different files parallel
 """
 from collections import defaultdict
 from dataclasses import dataclass
-from typing import Optional, List, Dict
-
-from secfsdstools.e_collector.basecollector import BaseCollector
+from typing import Dict, List, Optional
 
 from secfsdstools.a_config.configmgt import ConfigurationManager
 from secfsdstools.a_config.configmodel import Configuration
 from secfsdstools.a_utils.parallelexecution import ParallelExecutor
 from secfsdstools.c_index.indexdataaccess import IndexReport, ParquetDBIndexingAccessor
 from secfsdstools.d_container.databagmodel import RawDataBag
+from secfsdstools.e_collector.basecollector import BaseCollector
+
 
 @dataclass
 class MultiReportCollector:

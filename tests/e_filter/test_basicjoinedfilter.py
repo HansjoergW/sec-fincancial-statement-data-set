@@ -1,12 +1,19 @@
 import os
 
 import pytest
-
 from secfsdstools.d_container.databagmodel import JoinedDataBag, RawDataBag
-from secfsdstools.e_filter.joinedfiltering import ReportPeriodJoinedFilter, AdshJoinedFilter, \
-    ReportPeriodAndPreviousPeriodJoinedFilter, TagJoinedFilter, MainCoregJoinedFilter, \
-    StmtJoinedFilter, \
-    OfficialTagsOnlyJoinedFilter, USDOnlyJoinedFilter, NoSegmentInfoJoinedFilter, CIKJoinedFilter
+from secfsdstools.e_filter.joinedfiltering import (
+    AdshJoinedFilter,
+    CIKJoinedFilter,
+    MainCoregJoinedFilter,
+    NoSegmentInfoJoinedFilter,
+    OfficialTagsOnlyJoinedFilter,
+    ReportPeriodAndPreviousPeriodJoinedFilter,
+    ReportPeriodJoinedFilter,
+    StmtJoinedFilter,
+    TagJoinedFilter,
+    USDOnlyJoinedFilter,
+)
 
 CURRENT_DIR, _ = os.path.split(__file__)
 PATH_TO_BAG_1 = f'{CURRENT_DIR}/../_testdata/parquet_new/quarter/2010q1.zip'

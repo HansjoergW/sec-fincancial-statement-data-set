@@ -1,5 +1,6 @@
-from secfsdstools.a_utils.downloadutils import UrlDownloader
 import os
+
+from secfsdstools.a_utils.downloadutils import UrlDownloader
 
 test_download_url = 'https://www.sec.gov/dera/data/financial-statement-data-sets.html'
 

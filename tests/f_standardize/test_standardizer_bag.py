@@ -2,7 +2,6 @@ import os
 from pathlib import Path
 
 import pytest
-
 from secfsdstools.f_standardize.standardizing import StandardizedBag
 
 CURRENT_DIR, _ = os.path.split(__file__)

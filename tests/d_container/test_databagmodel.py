@@ -2,7 +2,7 @@ import os
 from pathlib import Path
 from typing import List
 
-from secfsdstools.d_container.databagmodel import RawDataBag, RawDataBagStats, JoinedDataBag
+from secfsdstools.d_container.databagmodel import JoinedDataBag, RawDataBag, RawDataBagStats
 
 CURRENT_DIR, _ = os.path.split(__file__)
 TESTDATA_PATH = Path(CURRENT_DIR) / ".." / "_testdata"

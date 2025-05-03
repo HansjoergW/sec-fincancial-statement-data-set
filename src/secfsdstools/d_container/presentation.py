@@ -2,8 +2,7 @@
 Base class for Presenter implementations.
 """
 from abc import abstractmethod
-
-from typing import TypeVar, Generic
+from typing import Generic, TypeVar
 
 import pandas as pd
 

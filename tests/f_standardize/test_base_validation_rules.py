@@ -2,9 +2,7 @@ import numpy as np
 import pandas as pd
 import pandera as pa
 import pytest
-
-from secfsdstools.f_standardize.base_validation_rules import SumValidationRule, ValidationRule, \
-    IsSetValidationRule
+from secfsdstools.f_standardize.base_validation_rules import IsSetValidationRule, SumValidationRule, ValidationRule
 
 
 # Test the basic framework

@@ -2,10 +2,9 @@
 This module defines a simple rule framework that allows to define concrete rules and build
 a rule hierarchy that then is used in the standardizer.
 """
-from abc import ABC
-from abc import abstractmethod
+from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import Set, List
+from typing import List, Set
 
 import pandas as pd
 import pandera as pa

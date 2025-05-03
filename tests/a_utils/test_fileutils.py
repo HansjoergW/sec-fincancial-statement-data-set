@@ -2,9 +2,13 @@ import os
 from typing import List
 
 import numpy as np
-
-from secfsdstools.a_utils.fileutils import write_content_to_zip, read_content_from_zip, \
-    read_df_from_file_in_zip, get_filenames_in_directory, concat_parquet_files
+from secfsdstools.a_utils.fileutils import (
+    concat_parquet_files,
+    get_filenames_in_directory,
+    read_content_from_zip,
+    read_df_from_file_in_zip,
+    write_content_to_zip,
+)
 
 CURRENT_DIR, CURRENT_FILE = os.path.split(__file__)
 

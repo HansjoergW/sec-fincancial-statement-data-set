@@ -13,7 +13,7 @@ TESTDATA_PATH = Path(CURRENT_DIR) / ".." / "_testdata"
 
 
 def _create_subfolders(data_path: Path, root_path: Path):
-    # creates the subfolders in the provided directory. 
+    # creates the subfolders in the provided directory.
 
     joined_input_bag = ZipCollector(
         datapaths=[str(data_path)],

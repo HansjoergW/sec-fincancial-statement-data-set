@@ -4,11 +4,10 @@ from typing import List, Tuple
 from unittest.mock import MagicMock
 
 import pytest
-
 from secfsdstools.a_utils.downloadutils import UrlDownloader
 from secfsdstools.c_download.secdownloading_process import SecDownloadingProcess
 
-RE_MATCH_QRTR_FILENAME = '^20\d{2}q[1-4]\.zip$'
+RE_MATCH_QRTR_FILENAME = r'^20\d{2}q[1-4]\.zip$'
 RE_MATCH_QRTR_FILENAME_compiled = re.compile(RE_MATCH_QRTR_FILENAME)
 
 

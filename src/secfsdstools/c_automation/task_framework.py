@@ -10,10 +10,9 @@ from collections import defaultdict
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
-from typing import List, Tuple
-from typing import Protocol, Any, Dict
+from typing import Any, Dict, List, Protocol, Tuple
 
-from secfsdstools.a_utils.parallelexecution import ThreadExecutor, ParallelExecutor
+from secfsdstools.a_utils.parallelexecution import ParallelExecutor, ThreadExecutor
 from secfsdstools.c_automation.automation_utils import get_latest_mtime
 
 

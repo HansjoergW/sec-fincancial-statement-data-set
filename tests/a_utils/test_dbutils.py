@@ -1,7 +1,6 @@
 from dataclasses import dataclass
 
 import pytest
-
 from secfsdstools.a_utils.dbutils import DB, DBStateAcessor
 
 sql_create = """

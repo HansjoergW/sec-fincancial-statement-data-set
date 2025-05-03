@@ -1,5 +1,6 @@
 import pandas as pd
 
+
 def add_rows_inline(adf):
     new_data = {'A': 10, 'B': 20, 'C': 30}
     adf.loc[len(df)] = new_data

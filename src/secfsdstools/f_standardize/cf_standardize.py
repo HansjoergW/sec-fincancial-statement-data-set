@@ -1,17 +1,21 @@
 # pylint: disable=C0302
 """Contains the definitions to standardize incaome statements."""
-from typing import List, Set, Optional
+from typing import List, Optional, Set
 
 import pandas as pd
 import pandera as pa
 
-from secfsdstools.f_standardize.base_prepivot_rules import (PrePivotDeduplicate,
-                                                            PrePivotCorrectSign, PrePivotMaxQtrs)
-from secfsdstools.f_standardize.base_rule_framework import RuleGroup, Rule, PrePivotRule
-from secfsdstools.f_standardize.base_rules import CopyTagRule, SumUpRule, PostSetToZero, \
-    MissingSummandRule, PostCopyToFirstSummand, MissingSumRule
-from secfsdstools.f_standardize.base_validation_rules import ValidationRule, SumValidationRule, \
-    IsSetValidationRule
+from secfsdstools.f_standardize.base_prepivot_rules import PrePivotCorrectSign, PrePivotDeduplicate, PrePivotMaxQtrs
+from secfsdstools.f_standardize.base_rule_framework import PrePivotRule, Rule, RuleGroup
+from secfsdstools.f_standardize.base_rules import (
+    CopyTagRule,
+    MissingSummandRule,
+    MissingSumRule,
+    PostCopyToFirstSummand,
+    PostSetToZero,
+    SumUpRule,
+)
+from secfsdstools.f_standardize.base_validation_rules import IsSetValidationRule, SumValidationRule, ValidationRule
 from secfsdstools.f_standardize.standardizing import Standardizer
 
 # list of tags which indicate an inflow of money and therefore should have a positive value

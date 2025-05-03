@@ -5,7 +5,7 @@ Defines the version attribut of the library
 """
 import logging
 import sys
-from importlib.metadata import version, PackageNotFoundError
+from importlib.metadata import PackageNotFoundError, version
 
 import secfsdstools.update
 

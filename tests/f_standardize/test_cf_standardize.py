@@ -3,7 +3,6 @@ import os
 import numpy as np
 import pandas as pd
 import pytest
-
 from secfsdstools.d_container.databagmodel import JoinedDataBag
 from secfsdstools.e_collector.zipcollecting import ZipCollector
 from secfsdstools.e_filter.joinedfiltering import AdshJoinedFilter

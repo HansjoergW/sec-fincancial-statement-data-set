@@ -1,7 +1,7 @@
 import os
 from pathlib import Path
 
-from secfsdstools.c_automation.automation_utils import get_latest_mtime, delete_temp_folders
+from secfsdstools.c_automation.automation_utils import delete_temp_folders, get_latest_mtime
 
 CURRENT_DIR, _ = os.path.split(__file__)
 TESTDATA_PATH = Path(CURRENT_DIR) / ".." / "_testdata"

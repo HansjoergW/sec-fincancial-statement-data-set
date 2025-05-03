@@ -8,12 +8,11 @@ Please have a look at this notebook for a detailed explanation of the logic
 """
 import os
 from glob import glob
-from typing import Callable, Optional
-from typing import List
+from typing import Callable, List, Optional
 
 from secfsdstools.a_config.configmgt import ConfigurationManager
 from secfsdstools.c_index.indexdataaccess import ParquetDBIndexingAccessor
-from secfsdstools.d_container.databagmodel import RawDataBag, JoinedDataBag
+from secfsdstools.d_container.databagmodel import JoinedDataBag, RawDataBag
 from secfsdstools.e_collector.zipcollecting import ZipCollector
 
 
@@ -24,8 +23,12 @@ def default_postloadfilter(databag: RawDataBag) -> RawDataBag:
             ReportPeriodRawFilter, MainCoregRawFilter, OfficialTagsOnlyRawFilter, USDOnlyRawFilter
     """
     # pylint: disable=C0415
-    from secfsdstools.e_filter.rawfiltering import ReportPeriodRawFilter, MainCoregRawFilter, \
-        OfficialTagsOnlyRawFilter, USDOnlyRawFilter
+    from secfsdstools.e_filter.rawfiltering import (
+        MainCoregRawFilter,
+        OfficialTagsOnlyRawFilter,
+        ReportPeriodRawFilter,
+        USDOnlyRawFilter,
+    )
 
     return databag[ReportPeriodRawFilter()][MainCoregRawFilter()][OfficialTagsOnlyRawFilter()][
         USDOnlyRawFilter()]

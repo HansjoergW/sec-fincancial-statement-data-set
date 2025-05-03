@@ -1,10 +1,9 @@
 import os
 
 import pandas as pd
-
 from secfsdstools.e_collector.zipcollecting import ZipCollector
-from tests.e_collector.test_zipcollecting import test_forms_filter, test_stmt_filter, \
-    test_tag_filter
+
+from tests.e_collector.test_zipcollecting import test_forms_filter, test_stmt_filter, test_tag_filter
 
 CURRENT_DIR, _ = os.path.split(__file__)
 PATH_TO_ZIP = f'{CURRENT_DIR}/testdataparquet/quarter/2010q1.zip'

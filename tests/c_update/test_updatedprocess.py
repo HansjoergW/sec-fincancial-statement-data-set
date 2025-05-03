@@ -4,7 +4,6 @@ from pathlib import Path
 from unittest.mock import patch
 
 import pytest
-
 from secfsdstools.a_config.configmodel import Configuration
 from secfsdstools.b_setup.setupdb import DbCreator
 from secfsdstools.c_index.indexdataaccess import ParquetDBIndexingAccessor

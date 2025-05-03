@@ -285,8 +285,8 @@ class ParquetDBIndexingAccessor(DB):
             pd.DataFrame: with columns name and cik
         """
         sql = f"""
-                SELECT DISTINCT name, cik from {self.index_reports_table} 
-                WHERE name like '%{name_part}%' 
+                SELECT DISTINCT name, cik from {self.index_reports_table}
+                WHERE name like '%{name_part}%'
                 ORDER BY name"""
         return self.execute_read_as_df(sql)
 
@@ -302,8 +302,8 @@ class ParquetDBIndexingAccessor(DB):
 
         """
         sql = f"""
-                 SELECT ORIGINFILE 
-                 FROM {self.index_reports_table} 
+                 SELECT ORIGINFILE
+                 FROM {self.index_reports_table}
                  WHERE ORIGINFILETYPE='{originFileType}'"""
 
         # result  is a list of tuples with one entry, so we have to flatten it

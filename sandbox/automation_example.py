@@ -1,12 +1,10 @@
 import logging
 import os
 
-import secfsdstools
-
 CURRENT_DIR, _ = os.path.split(__file__)
 
 if __name__ == '__main__':
-    from secfsdstools.a_config.configmgt import ConfigurationManager, SECFSDSTOOLS_ENV_VAR_NAME
+    from secfsdstools.a_config.configmgt import SECFSDSTOOLS_ENV_VAR_NAME, ConfigurationManager
     from secfsdstools.c_update.updateprocess import Updater
 
     logging.basicConfig(

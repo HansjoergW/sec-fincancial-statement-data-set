@@ -2,12 +2,15 @@ import time
 from typing import List
 
 import pandas as pd
-from secfsdstools.e_filter.joinedfiltering import AdshJoinedFilter, OfficialTagsOnlyJoinedFilter
-
 from secfsdstools.d_container.databagmodel import JoinedDataBag
 from secfsdstools.e_collector.companycollecting import CompanyReportCollector
-from secfsdstools.e_filter.rawfiltering import ReportPeriodRawFilter, MainCoregRawFilter, \
-    OfficialTagsOnlyRawFilter, USDOnlyRawFilter
+from secfsdstools.e_filter.joinedfiltering import OfficialTagsOnlyJoinedFilter
+from secfsdstools.e_filter.rawfiltering import (
+    MainCoregRawFilter,
+    OfficialTagsOnlyRawFilter,
+    ReportPeriodRawFilter,
+    USDOnlyRawFilter,
+)
 from secfsdstools.f_standardize.standardizing import StandardizedBag
 from secfsdstools.u_usecases.analyzes import count_tags
 

@@ -4,8 +4,11 @@ from pathlib import Path
 
 from secfsdstools.c_automation.task_framework import TaskResultState
 from secfsdstools.d_container.databagmodel import JoinedDataBag
-from secfsdstools.g_pipelines.concat_process import ConcatIfNewSubfolderTask, \
-    ConcatByNewSubfoldersProcess, ConcatByChangedTimestampProcess
+from secfsdstools.g_pipelines.concat_process import (
+    ConcatByChangedTimestampProcess,
+    ConcatByNewSubfoldersProcess,
+    ConcatIfNewSubfolderTask,
+)
 
 CURRENT_DIR, _ = os.path.split(__file__)
 TESTDATA_PATH = Path(CURRENT_DIR) / ".." / "_testdata"

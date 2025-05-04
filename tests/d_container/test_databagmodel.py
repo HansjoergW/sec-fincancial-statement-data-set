@@ -23,7 +23,8 @@ BAG_1_CIKS: List[int] = [827054, 1024478]
 #     for zipfile in zips:
 #         target_path = TESTDATA_PATH / "joined" / zipfile
 #         target_path.mkdir(parents=True, exist_ok=True)
-#         RawDataBag.load(str(TESTDATA_PATH / "parquet_new" / "quarter" / zipfile)).join().save(str(TESTDATA_PATH / "joined" / zipfile))
+#         RawDataBag.load(str(TESTDATA_PATH / "parquet_new" / "quarter" / zipfile)) \
+#                   .join().save(str(TESTDATA_PATH / "joined" / zipfile))
 
 
 def test_is_rawbag():

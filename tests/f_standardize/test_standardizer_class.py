@@ -77,8 +77,7 @@ def test_preprocess_pivot(empty_instance, sample_dataframe_pivot):
     # a little cumbersome, since we have to check for nan values
     for column_to_test in columns_to_test:
         data = result_df[column_to_test].tolist()
-        for idx in range(len(data)):
-            value = data[idx]
+        for idx, value in enumerate(data):
             if no_nan_definition.get(column_to_test, 0) == idx:
                 assert value is not None
             else:

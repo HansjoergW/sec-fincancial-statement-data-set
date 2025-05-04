@@ -1,0 +1,28 @@
+{
+    "python.testing.pytestArgs": [
+        "-s",
+        "tests",
+        "sandbox"
+    ],
+    "python.testing.unittestEnabled": false,
+    "python.testing.pytestEnabled": true,
+    "editor.formatOnSave": true,
+    "[python]": {
+        "editor.defaultFormatter": "ms-python.black-formatter",
+        "editor.formatOnSave": true,
+        "editor.codeActionsOnSave": {
+            "source.fixAll.ruff": "always",
+            "source.organizeImports": "always"
+        }
+    },
+    "[toml]": {
+        "editor.defaultFormatter": "tamasfe.even-better-toml"
+    },
+    "ruff.enable": true,
+    "ruff.organizeImports": true,
+    "ruff.fixAll": true,
+    "pylint.enabled": true,
+    "pylint.args": [
+        "--extension-pkg-allow-list=numpy"
+    ]
+}

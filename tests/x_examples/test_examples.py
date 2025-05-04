@@ -18,4 +18,3 @@ def test_indexsearch():
 
 def test_companyindex():
     companyindex.run()
-

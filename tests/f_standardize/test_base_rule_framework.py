@@ -16,12 +16,12 @@ class Rule1(Rule):
     def get_target_tags(self) -> List[str]:
         return [self.tag_name]
 
-    def mask(self, df: pd.DataFrame) -> pa.typing.Series[bool]:
-        return df[df.columns[0]] == df[df.columns[0]]
+    def mask(self, data_df: pd.DataFrame) -> pa.typing.Series[bool]:
+        return data_df[data_df.columns[0]] == data_df[data_df.columns[0]]
 
-    def apply(self, df: pd.DataFrame, mask: pa.typing.Series[bool]) -> pd.DataFrame:
+    def apply(self, data_df: pd.DataFrame, mask: pa.typing.Series[bool]) -> pd.DataFrame:
         # do nothing
-        return df
+        return data_df
 
     def get_description(self) -> str:
         return ""
@@ -39,12 +39,12 @@ class Rule2(Rule):
     def get_target_tags(self) -> List[str]:
         return [self.tag1, self.tag2]
 
-    def mask(self, df: pd.DataFrame) -> pa.typing.Series[bool]:
-        return df[df.columns[0]] == df[df.columns[0]]
+    def mask(self, data_df: pd.DataFrame) -> pa.typing.Series[bool]:
+        return data_df[data_df.columns[0]] == data_df[data_df.columns[0]]
 
-    def apply(self, df: pd.DataFrame, mask: pa.typing.Series[bool]) -> pd.DataFrame:
+    def apply(self, data_df: pd.DataFrame, mask: pa.typing.Series[bool]) -> pd.DataFrame:
         # do nothing
-        return df
+        return data_df
 
     def get_description(self) -> str:
         return ""

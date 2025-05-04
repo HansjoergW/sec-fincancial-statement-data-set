@@ -12,7 +12,7 @@ def test_parallelexcution():
             self.result = None
 
         def get_unprocessed_entries(self) -> List[str]:
-            if self.was_read[0] == False:
+            if self.was_read[0] is False:
                 self.was_read[0] = True
                 return self.data_list
             return []

@@ -14,9 +14,9 @@ def test_get_latest_mtime():
 
 
 def test_delete_temp_folders(tmp_path):
-    tmp_dir1 = (tmp_path / "tmp_dir1")
-    tmp_dir2 = (tmp_path / "tmp_dir2")
-    dir1 = (tmp_path / "dir1")
+    tmp_dir1 = tmp_path / "tmp_dir1"
+    tmp_dir2 = tmp_path / "tmp_dir2"
+    dir1 = tmp_path / "dir1"
 
     tmp_dir1.mkdir()
     tmp_dir2.mkdir()

@@ -56,8 +56,8 @@ def test_get_filenames_in_directory(tmp_path):
     list_of_zips = get_filenames_in_directory(os.path.join(tmp_path, '*.zip'))
     assert len(list_of_zips) == 0
 
-    f = open(tmp_path / 'demo.zip', 'w')
-    f.close()
+    with open(tmp_path / 'demo.zip', 'w', encoding='utf-8') as f:
+        pass
 
     list_of_zips = get_filenames_in_directory(os.path.join(tmp_path, '*.zip'))
     assert len(list_of_zips) == 1
@@ -65,7 +65,7 @@ def test_get_filenames_in_directory(tmp_path):
 
 
 def test_file_merge(tmp_path):
-    import pyarrow.parquet as pq
+    import pyarrow.parquet as pq # pylint: disable=import-outside-toplevel
 
     file_q1 = CURRENT_DIR + "/../_testdata/parquet_new/quarter/2010q1.zip/sub.txt.parquet"
     file_q2 = CURRENT_DIR + "/../_testdata/parquet_new/quarter/2010q2.zip/sub.txt.parquet"
@@ -74,7 +74,7 @@ def test_file_merge(tmp_path):
 
     input_files: List[str] = [file_q1, file_q2, file_q3, file_q4]
 
-    total_rows = sum([pq.ParquetFile(f).metadata.num_rows for f in input_files])
+    total_rows = sum(pq.ParquetFile(f).metadata.num_rows for f in input_files)
 
     print(total_rows)
 

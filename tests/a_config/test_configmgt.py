@@ -47,7 +47,7 @@ def test_environment_variable_with_file(tmp_path):
         assert configuration.db_dir.endswith('blublu')
 
     # read file directly
-    with open(config_file, "r") as c_file:
+    with open(config_file, "r", encoding='utf-8') as c_file:
         content = c_file.read()
         # test if the additional commented line is present
         assert "# [Filter]" in content

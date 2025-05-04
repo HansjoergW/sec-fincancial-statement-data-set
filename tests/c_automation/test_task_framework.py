@@ -130,7 +130,7 @@ def test_checkbytimestamptask(tmp_path):
 # --- test CheckByNewSubfoldersMergeBaseTask -------------------------------------------------------
 class MyByNewSubfoldersTask(CheckByNewSubfoldersMergeBaseTask):
     called_paths_to_process: List[Path]
-    caled_target_path: Path
+    called_target_path: Path
     called_tmp_path: Path
 
     def do_execution(self,
@@ -227,8 +227,8 @@ class MyThreadProcess(AbstractThreadProcess):
         )
         if task.has_work_todo():
             return [task]
-        else:
-            return []
+
+        return []
 
 
 def test_abstractthreadprocess(tmp_path):
@@ -259,8 +259,7 @@ class MyProcessPoolProcess(AbstractProcessPoolProcess):
         )
         if task.has_work_todo():
             return [task]
-        else:
-            return []
+        return []
 
 
 def test_abstractprocesspoolprocess(tmp_path):

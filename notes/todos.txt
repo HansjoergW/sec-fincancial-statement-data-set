@@ -14,11 +14,20 @@ new release
 
 
 2.3.0 - maintenance release
-- switch to vs code?
+- switch to vs code
+  - [x] pyproject toml like secdaily
+  - [x] new python poetry env
+  - [x] ensure linting with pylint and ruff is working
+  - [x] vscode configs like secdaily
+  - [x] ensure test execution/debugging is working
+  - [x] ensure linting hints in editor are working
+
 - poetry build pipeline
-- pypi deploy with "trusted.."
-- from python 3.10
-- pyproject.toml / analog secdaily
+  - pypi deploy with "trusted.."
+  - from python 3.10
+  - ensure lint/test build is working when pushed
+
+
 - versions check -> check if there is a new version to download
   https://chatgpt.com/c/67dc71ab-a44c-8011-9be1-b0308657cc27
 - github pipelines umstellen

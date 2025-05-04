@@ -7,12 +7,12 @@ from secfsdstools.f_standardize.base_validation_rules import IsSetValidationRule
 
 # Test the basic framework
 class SimpleValidationRule(ValidationRule):
-    def mask(self, df: pd.DataFrame) -> pa.typing.Series[bool]:
-        return df['Value'].notnull()
+    def mask(self, data_df: pd.DataFrame) -> pa.typing.Series[bool]:
+        return data_df['Value'].notnull()
 
-    def calculate_error(self, df: pd.DataFrame, mask: pa.typing.Series[bool]) -> \
+    def calculate_error(self, data_df: pd.DataFrame, mask: pa.typing.Series[bool]) -> \
             pa.typing.Series[np.float64]:
-        return ((df.loc[mask, 'Value'] - 10) / 10).abs()
+        return ((data_df.loc[mask, 'Value'] - 10) / 10).abs()
 
     def get_description(self) -> str:
         return "Simple Validation Rule"

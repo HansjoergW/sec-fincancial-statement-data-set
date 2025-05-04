@@ -23,7 +23,8 @@ new release
   - [x] ensure linting hints in editor are working
 
 - poetry build pipeline
-  - ensure lint/test build is working when pushed
+  - [x] ensure lint/test build is working when pushed
+  - [] ensure pdoc build is working when pushed
   - pypi deploy with "trusted.."
 
 

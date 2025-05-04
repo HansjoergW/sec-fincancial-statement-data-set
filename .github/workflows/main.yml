@@ -75,7 +75,6 @@ jobs:
       
       - name: pdoc
         run: |
-          pip install pdoc3==0.10
           mkdir -p docs/_build/html
           pdoc3 --html --force -o docs/api src/secfsdstools
           cp README.md ./docs/read.md

@@ -76,7 +76,7 @@ jobs:
       - name: pdoc
         run: |
           mkdir -p docs/_build/html
-          pdoc3 --html --force -o docs/api src/secfsdstools
+          poetry run pdoc3 --html --force -o docs/api src/secfsdstools
           cp README.md ./docs/read.md
 
       - name: Deploy to GitHub Pages

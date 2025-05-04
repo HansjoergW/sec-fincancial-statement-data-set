@@ -49,16 +49,37 @@ jobs:
   publish-doc:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-python@v3
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v5
         with:
-          python-version: 3.8
-      - name: install dependencies
-        run: pip install .
-      - run: pip install pdoc3==0.10
-      - run: mkdir -p docs/_build/html
-      - run: pdoc3 --html --force -o docs/api src/secfsdstools
-      - run: cp README.md ./docs/read.md
+          python-version: 3.10
+      
+      - name: Install Poetry
+        uses: snok/install-poetry@v1
+        with:
+          version: 2.1.1
+          virtualenvs-create: true
+          virtualenvs-in-project: true
+    
+      - name: Load cached venv
+        id: cached-poetry-dependencies
+        uses: actions/cache@v3
+        with:
+          path: .venv
+          key: venv-${{ runner.os }}-3.10-${{ hashFiles('**/poetry.lock') }}-v1 # change version in case of prooblems with resolving environment
+    
+      - name: Install dependencies
+        run: poetry install --with dev
+      
+      - name: pdoc
+        run: |
+          pip install pdoc3==0.10
+          mkdir -p docs/_build/html
+          pdoc3 --html --force -o docs/api src/secfsdstools
+          cp README.md ./docs/read.md
+
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
@@ -66,6 +87,7 @@ jobs:
           publish_dir: "docs"
           destination_dir: doc_${{ github.ref_name }}
           enable_jekyll: true
+
       - name: Trigger GitHub pages rebuild
         run: |
           curl --fail --request POST \

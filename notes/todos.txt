@@ -24,8 +24,7 @@ new release
 
 - poetry build pipeline
   - ensure lint/test build is working when pushed
-    - pypi deploy with "trusted.."
-  - from python 3.10
+  - pypi deploy with "trusted.."
 
 
 - versions check -> check if there is a new version to download

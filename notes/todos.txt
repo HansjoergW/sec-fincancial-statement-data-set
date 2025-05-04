@@ -23,9 +23,9 @@ new release
   - [x] ensure linting hints in editor are working
 
 - poetry build pipeline
-  - pypi deploy with "trusted.."
-  - from python 3.10
   - ensure lint/test build is working when pushed
+    - pypi deploy with "trusted.."
+  - from python 3.10
 
 
 - versions check -> check if there is a new version to download

@@ -1,33 +1,50 @@
 name: Python test and linting
 
-on: [push]
+on: 
+  push:
+  pull_request:
 
-env:
-  RAPID_API_KEY: ${{ secrets.RAPID_API_KEY }}
 
 jobs:
   build:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ["3.8", "3.9", "3.10", "3.11"]
+        python-version: ["3.10", "3.11", "3.12"]
+      fail-fast: false  # Continue with other versions even if one fails
 
     steps:
-      - name: echo info
-        run: echo ${{ github.ref }} ${{ github.ref_name }}
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
+  
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v3
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
-      - name: install dependencies
-        run: pip install .
-      - name: install test dependencies
-        run: pip install .[test]
-      - name: unit tests
-        run: pytest tests --ignore=tests/x_examples
-      - name: linting
-        run: pylint --disable=R0913,R0912,R0903,W0511,R0902,R0801,R0201 secfsdstools
+  
+      - name: Install Poetry
+        uses: snok/install-poetry@v1
+        with:
+          version: 2.1.1
+          virtualenvs-create: true
+          virtualenvs-in-project: true
+  
+      - name: Load cached venv
+        id: cached-poetry-dependencies
+        uses: actions/cache@v3
+        with:
+          path: .venv
+          key: venv-${{ runner.os }}-${{ matrix.python-version }}-${{ hashFiles('**/poetry.lock') }}-v1 # change version in case of prooblems with resolving environment
+  
+      - name: Install dependencies
+        run: poetry install --with dev
+  
+      - name: Lint with pylint
+        run: |
+          poetry run pylint src tests
+  
+      - name: Run tests with pytest
+        run: |
+          poetry run pytest tests -v
 
   publish-doc:
     runs-on: ubuntu-latest
@@ -40,7 +57,7 @@ jobs:
         run: pip install .
       - run: pip install pdoc3==0.10
       - run: mkdir -p docs/_build/html
-      - run: pdoc3 --html --force -o docs/api secfsdstools
+      - run: pdoc3 --html --force -o docs/api src/secfsdstools
       - run: cp README.md ./docs/read.md
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3

@@ -31,10 +31,10 @@
 Base Model for configuration.
 &#34;&#34;&#34;
 
-import os
-from dataclasses import dataclass, asdict
-from typing import Optional
 import configparser
+import os
+from dataclasses import asdict, dataclass
+from typing import Optional
 
 
 @dataclass
@@ -86,7 +86,8 @@ class Configuration:
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class Configuration:
+<pre><code class="python">@dataclass
+class Configuration:
     &#34;&#34;&#34; Basic configuration settings &#34;&#34;&#34;
     download_dir: str
     db_dir: str

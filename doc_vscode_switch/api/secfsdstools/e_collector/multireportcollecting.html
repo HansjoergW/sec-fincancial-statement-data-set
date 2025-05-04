@@ -32,15 +32,15 @@ Reads several reports from different files parallel
 &#34;&#34;&#34;
 from collections import defaultdict
 from dataclasses import dataclass
-from typing import Optional, List, Dict
-
-from secfsdstools.e_collector.basecollector import BaseCollector
+from typing import Dict, List, Optional
 
 from secfsdstools.a_config.configmgt import ConfigurationManager
 from secfsdstools.a_config.configmodel import Configuration
 from secfsdstools.a_utils.parallelexecution import ParallelExecutor
 from secfsdstools.c_index.indexdataaccess import IndexReport, ParquetDBIndexingAccessor
 from secfsdstools.d_container.databagmodel import RawDataBag
+from secfsdstools.e_collector.basecollector import BaseCollector
+
 
 @dataclass
 class MultiReportCollector:
@@ -197,7 +197,8 @@ and provide their data in single RawDataBag.</p></div>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class MultiReportCollector:
+<pre><code class="python">@dataclass
+class MultiReportCollector:
     &#34;&#34;&#34;
     The MultiReport Reader can read reports from different zip files
     and provide their data in single RawDataBag.

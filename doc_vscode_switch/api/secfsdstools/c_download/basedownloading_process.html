@@ -34,10 +34,10 @@ import logging
 import os
 from abc import abstractmethod
 from pathlib import Path
-from typing import List, Tuple, Dict
+from typing import Dict, List, Tuple
 
 from secfsdstools.a_utils.downloadutils import UrlDownloader
-from secfsdstools.a_utils.fileutils import get_filenames_in_directory, get_directories_in_directory
+from secfsdstools.a_utils.fileutils import get_directories_in_directory, get_filenames_in_directory
 from secfsdstools.c_automation.task_framework import AbstractThreadProcess
 
 LOGGER = logging.getLogger(__name__)

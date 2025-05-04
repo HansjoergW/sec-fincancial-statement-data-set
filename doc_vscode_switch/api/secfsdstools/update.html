@@ -40,8 +40,8 @@ def update(config: Configuration = None, force_update: bool = False):
     &#34;&#34;&#34;
     ensures that all available zip files are downloaded and that the index is created.
     &#34;&#34;&#34;
-    from secfsdstools.c_update.updateprocess import Updater
     from secfsdstools.a_config.configmgt import ConfigurationManager
+    from secfsdstools.c_update.updateprocess import Updater
 
     # check if a logger is active if not, make sure it logs at least to the console
     if len(logging.root.handlers) == 0:
@@ -91,8 +91,8 @@ if __name__ == &#39;__main__&#39;:
     &#34;&#34;&#34;
     ensures that all available zip files are downloaded and that the index is created.
     &#34;&#34;&#34;
-    from secfsdstools.c_update.updateprocess import Updater
     from secfsdstools.a_config.configmgt import ConfigurationManager
+    from secfsdstools.c_update.updateprocess import Updater
 
     # check if a logger is active if not, make sure it logs at least to the console
     if len(logging.root.handlers) == 0:

@@ -34,10 +34,13 @@ from pathlib import Path
 from typing import List
 
 from secfsdstools.c_automation.automation_utils import delete_temp_folders
-from secfsdstools.c_automation.task_framework import CheckByNewSubfoldersMergeBaseTask, \
-    CheckByTimestampMergeBaseTask, AbstractTask, \
-    AbstractThreadProcess
-from secfsdstools.g_pipelines.pipeline_utils import concat_bags_filebased, concat_bags
+from secfsdstools.c_automation.task_framework import (
+    AbstractTask,
+    AbstractThreadProcess,
+    CheckByNewSubfoldersMergeBaseTask,
+    CheckByTimestampMergeBaseTask,
+)
+from secfsdstools.g_pipelines.pipeline_utils import concat_bags, concat_bags_filebased
 
 
 class ConcatIfNewSubfolderTask(CheckByNewSubfoldersMergeBaseTask):

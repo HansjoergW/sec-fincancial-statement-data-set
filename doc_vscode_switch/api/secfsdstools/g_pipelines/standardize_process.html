@@ -42,10 +42,8 @@ from pathlib import Path
 from typing import List
 
 from secfsdstools.a_utils.fileutils import get_directories_in_directory
-
 from secfsdstools.c_automation.automation_utils import delete_temp_folders
-from secfsdstools.c_automation.task_framework import Task, \
-    CheckByTimestampMergeBaseTask, AbstractThreadProcess
+from secfsdstools.c_automation.task_framework import AbstractThreadProcess, CheckByTimestampMergeBaseTask, Task
 from secfsdstools.d_container.databagmodel import JoinedDataBag
 from secfsdstools.f_standardize.bs_standardize import BalanceSheetStandardizer
 from secfsdstools.f_standardize.cf_standardize import CashFlowStandardizer

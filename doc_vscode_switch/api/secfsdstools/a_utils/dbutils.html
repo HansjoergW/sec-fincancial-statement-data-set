@@ -36,7 +36,7 @@ import os
 import sqlite3
 from abc import ABC
 from dataclasses import Field
-from typing import List, TypeVar, Tuple, Optional
+from typing import List, Optional, Tuple, TypeVar
 
 import pandas as pd
 
@@ -198,7 +198,7 @@ class DB(ABC):
         value_list = []
         for field in fields:
             quotes = &#34;&#34;
-            if field.type == str:
+            if field.type is str:
                 quotes = &#34;&#39;&#34;
             value_list.append(quotes + str(getattr(data, field.name)) + quotes)
 
@@ -427,7 +427,7 @@ class DBStateAcessor(DB):
         value_list = []
         for field in fields:
             quotes = &#34;&#34;
-            if field.type == str:
+            if field.type is str:
                 quotes = &#34;&#39;&#34;
             value_list.append(quotes + str(getattr(data, field.name)) + quotes)
 
@@ -525,7 +525,7 @@ and table have to match</p>
     value_list = []
     for field in fields:
         quotes = &#34;&#34;
-        if field.type == str:
+        if field.type is str:
             quotes = &#34;&#39;&#34;
         value_list.append(quotes + str(getattr(data, field.name)) + quotes)
 
@@ -559,7 +559,7 @@ and table have to match</p>
 </details>
 </dd>
 <dt id="secfsdstools.a_utils.dbutils.DB.execute_fetchall"><code class="name flex">
-<span>def <span class="ident">execute_fetchall</span></span>(<span>self, sql: str) ‑> List[Tuple[]]</span>
+<span>def <span class="ident">execute_fetchall</span></span>(<span>self, sql: str) ‑> List[Tuple]</span>
 </code></dt>
 <dd>
 <div class="desc"><p>returns all results of the sql</p>
@@ -642,7 +642,7 @@ name in the dataclass of type T.</p>
 </details>
 </dd>
 <dt id="secfsdstools.a_utils.dbutils.DB.execute_many"><code class="name flex">
-<span>def <span class="ident">execute_many</span></span>(<span>self, sql: str, params: List[Tuple[]], conn: sqlite3.Connection)</span>
+<span>def <span class="ident">execute_many</span></span>(<span>self, sql: str, params: List[Tuple], conn: sqlite3.Connection)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>executes a parameterized statement for every tuple in the params list</p>

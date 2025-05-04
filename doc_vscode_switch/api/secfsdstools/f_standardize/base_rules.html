@@ -28,7 +28,7 @@
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">&#34;&#34;&#34; This module contains the Base Rule implementations.&#34;&#34;&#34;
-from typing import Set, List
+from typing import List, Set
 
 import pandas as pd
 import pandera as pa
@@ -1137,13 +1137,6 @@ and the original tag is set</p>
 <li><a title="secfsdstools.f_standardize.base_rule_framework.RuleEntity" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.RuleEntity">RuleEntity</a></li>
 <li>abc.ABC</li>
 </ul>
-<h3>Class variables</h3>
-<dl>
-<dt id="secfsdstools.f_standardize.base_rules.CopyTagRule.masked"><code class="name">var <span class="ident">masked</span> : pandas.core.series.Series</code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-</dl>
 <h3>Methods</h3>
 <dl>
 <dt id="secfsdstools.f_standardize.base_rules.CopyTagRule.apply"><code class="name flex">
@@ -1326,13 +1319,6 @@ sum_tag if the sum_tag is nan and all summand_tags have values</p>
 <li><a title="secfsdstools.f_standardize.base_rule_framework.RuleEntity" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.RuleEntity">RuleEntity</a></li>
 <li>abc.ABC</li>
 </ul>
-<h3>Class variables</h3>
-<dl>
-<dt id="secfsdstools.f_standardize.base_rules.MissingSumRule.masked"><code class="name">var <span class="ident">masked</span> : pandas.core.series.Series</code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-</dl>
 <h3>Methods</h3>
 <dl>
 <dt id="secfsdstools.f_standardize.base_rules.MissingSumRule.apply"><code class="name flex">
@@ -1558,13 +1544,6 @@ is defined by the provide mask Series.</p>
 <li><a title="secfsdstools.f_standardize.base_rule_framework.RuleEntity" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.RuleEntity">RuleEntity</a></li>
 <li>abc.ABC</li>
 </ul>
-<h3>Class variables</h3>
-<dl>
-<dt id="secfsdstools.f_standardize.base_rules.MissingSummandRule.masked"><code class="name">var <span class="ident">masked</span> : pandas.core.series.Series</code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-</dl>
 <h3>Methods</h3>
 <dl>
 <dt id="secfsdstools.f_standardize.base_rules.MissingSummandRule.apply"><code class="name flex">
@@ -1796,13 +1775,6 @@ then copy the sum_tag value to the first summand and set the other summands to '
 <li><a title="secfsdstools.f_standardize.base_rule_framework.RuleEntity" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.RuleEntity">RuleEntity</a></li>
 <li>abc.ABC</li>
 </ul>
-<h3>Class variables</h3>
-<dl>
-<dt id="secfsdstools.f_standardize.base_rules.PostCopyToFirstSummand.masked"><code class="name">var <span class="ident">masked</span> : pandas.core.series.Series</code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-</dl>
 <h3>Methods</h3>
 <dl>
 <dt id="secfsdstools.f_standardize.base_rules.PostCopyToFirstSummand.apply"><code class="name flex">
@@ -2022,13 +1994,6 @@ IncomeLossFromContinuingOperationsBeforeIncomeTaxExpenseBenefit</p>
 <li><a title="secfsdstools.f_standardize.base_rule_framework.RuleEntity" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.RuleEntity">RuleEntity</a></li>
 <li>abc.ABC</li>
 </ul>
-<h3>Class variables</h3>
-<dl>
-<dt id="secfsdstools.f_standardize.base_rules.PostFixSign.masked"><code class="name">var <span class="ident">masked</span> : pandas.core.series.Series</code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-</dl>
 <h3>Methods</h3>
 <dl>
 <dt id="secfsdstools.f_standardize.base_rules.PostFixSign.apply"><code class="name flex">
@@ -2233,13 +2198,6 @@ is defined by the provide mask Series.</p>
 <li><a title="secfsdstools.f_standardize.base_rule_framework.RuleEntity" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.RuleEntity">RuleEntity</a></li>
 <li>abc.ABC</li>
 </ul>
-<h3>Class variables</h3>
-<dl>
-<dt id="secfsdstools.f_standardize.base_rules.PostSetToZero.masked"><code class="name">var <span class="ident">masked</span> : pandas.core.series.Series</code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-</dl>
 <h3>Methods</h3>
 <dl>
 <dt id="secfsdstools.f_standardize.base_rules.PostSetToZero.apply"><code class="name flex">
@@ -2471,13 +2429,6 @@ it matches AssetsNoncurrent = Assets + AssetsCurrent.</p>
 <li><a title="secfsdstools.f_standardize.base_rule_framework.RuleEntity" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.RuleEntity">RuleEntity</a></li>
 <li>abc.ABC</li>
 </ul>
-<h3>Class variables</h3>
-<dl>
-<dt id="secfsdstools.f_standardize.base_rules.PreSumUpCorrection.masked"><code class="name">var <span class="ident">masked</span> : pandas.core.series.Series</code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-</dl>
 <h3>Methods</h3>
 <dl>
 <dt id="secfsdstools.f_standardize.base_rules.PreSumUpCorrection.apply"><code class="name flex">
@@ -2673,13 +2624,6 @@ sum_tag gets the copy of the summand available and the other summands are set to
 <li><a title="secfsdstools.f_standardize.base_rule_framework.RuleEntity" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.RuleEntity">RuleEntity</a></li>
 <li>abc.ABC</li>
 </ul>
-<h3>Class variables</h3>
-<dl>
-<dt id="secfsdstools.f_standardize.base_rules.SetSumIfOnlyOneSummand.masked"><code class="name">var <span class="ident">masked</span> : pandas.core.series.Series</code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-</dl>
 <h3>Methods</h3>
 <dl>
 <dt id="secfsdstools.f_standardize.base_rules.SetSumIfOnlyOneSummand.apply"><code class="name flex">
@@ -2915,13 +2859,6 @@ target tag if column if the target colum is not set</p>
 <li><a title="secfsdstools.f_standardize.base_rule_framework.RuleEntity" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.RuleEntity">RuleEntity</a></li>
 <li>abc.ABC</li>
 </ul>
-<h3>Class variables</h3>
-<dl>
-<dt id="secfsdstools.f_standardize.base_rules.SubtractFromRule.masked"><code class="name">var <span class="ident">masked</span> : pandas.core.series.Series</code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-</dl>
 <h3>Methods</h3>
 <dl>
 <dt id="secfsdstools.f_standardize.base_rules.SubtractFromRule.apply"><code class="name flex">
@@ -3169,13 +3106,6 @@ is present</dd>
 <li><a title="secfsdstools.f_standardize.base_rule_framework.RuleEntity" href="base_rule_framework.html#secfsdstools.f_standardize.base_rule_framework.RuleEntity">RuleEntity</a></li>
 <li>abc.ABC</li>
 </ul>
-<h3>Class variables</h3>
-<dl>
-<dt id="secfsdstools.f_standardize.base_rules.SumUpRule.masked"><code class="name">var <span class="ident">masked</span> : pandas.core.series.Series</code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-</dl>
 <h3>Methods</h3>
 <dl>
 <dt id="secfsdstools.f_standardize.base_rules.SumUpRule.apply"><code class="name flex">
@@ -3327,7 +3257,6 @@ is defined by the provide mask Series.</p>
 <ul class="">
 <li><code><a title="secfsdstools.f_standardize.base_rules.CopyTagRule.apply" href="#secfsdstools.f_standardize.base_rules.CopyTagRule.apply">apply</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.base_rules.CopyTagRule.get_input_tags" href="#secfsdstools.f_standardize.base_rules.CopyTagRule.get_input_tags">get_input_tags</a></code></li>
-<li><code><a title="secfsdstools.f_standardize.base_rules.CopyTagRule.masked" href="#secfsdstools.f_standardize.base_rules.CopyTagRule.masked">masked</a></code></li>
 </ul>
 </li>
 <li>
@@ -3336,7 +3265,6 @@ is defined by the provide mask Series.</p>
 <li><code><a title="secfsdstools.f_standardize.base_rules.MissingSumRule.apply" href="#secfsdstools.f_standardize.base_rules.MissingSumRule.apply">apply</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.base_rules.MissingSumRule.get_input_tags" href="#secfsdstools.f_standardize.base_rules.MissingSumRule.get_input_tags">get_input_tags</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.base_rules.MissingSumRule.mask" href="#secfsdstools.f_standardize.base_rules.MissingSumRule.mask">mask</a></code></li>
-<li><code><a title="secfsdstools.f_standardize.base_rules.MissingSumRule.masked" href="#secfsdstools.f_standardize.base_rules.MissingSumRule.masked">masked</a></code></li>
 </ul>
 </li>
 <li>
@@ -3345,7 +3273,6 @@ is defined by the provide mask Series.</p>
 <li><code><a title="secfsdstools.f_standardize.base_rules.MissingSummandRule.apply" href="#secfsdstools.f_standardize.base_rules.MissingSummandRule.apply">apply</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.base_rules.MissingSummandRule.get_input_tags" href="#secfsdstools.f_standardize.base_rules.MissingSummandRule.get_input_tags">get_input_tags</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.base_rules.MissingSummandRule.mask" href="#secfsdstools.f_standardize.base_rules.MissingSummandRule.mask">mask</a></code></li>
-<li><code><a title="secfsdstools.f_standardize.base_rules.MissingSummandRule.masked" href="#secfsdstools.f_standardize.base_rules.MissingSummandRule.masked">masked</a></code></li>
 </ul>
 </li>
 <li>
@@ -3354,7 +3281,6 @@ is defined by the provide mask Series.</p>
 <li><code><a title="secfsdstools.f_standardize.base_rules.PostCopyToFirstSummand.apply" href="#secfsdstools.f_standardize.base_rules.PostCopyToFirstSummand.apply">apply</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.base_rules.PostCopyToFirstSummand.get_input_tags" href="#secfsdstools.f_standardize.base_rules.PostCopyToFirstSummand.get_input_tags">get_input_tags</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.base_rules.PostCopyToFirstSummand.mask" href="#secfsdstools.f_standardize.base_rules.PostCopyToFirstSummand.mask">mask</a></code></li>
-<li><code><a title="secfsdstools.f_standardize.base_rules.PostCopyToFirstSummand.masked" href="#secfsdstools.f_standardize.base_rules.PostCopyToFirstSummand.masked">masked</a></code></li>
 </ul>
 </li>
 <li>
@@ -3363,7 +3289,6 @@ is defined by the provide mask Series.</p>
 <li><code><a title="secfsdstools.f_standardize.base_rules.PostFixSign.apply" href="#secfsdstools.f_standardize.base_rules.PostFixSign.apply">apply</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.base_rules.PostFixSign.get_input_tags" href="#secfsdstools.f_standardize.base_rules.PostFixSign.get_input_tags">get_input_tags</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.base_rules.PostFixSign.mask" href="#secfsdstools.f_standardize.base_rules.PostFixSign.mask">mask</a></code></li>
-<li><code><a title="secfsdstools.f_standardize.base_rules.PostFixSign.masked" href="#secfsdstools.f_standardize.base_rules.PostFixSign.masked">masked</a></code></li>
 </ul>
 </li>
 <li>
@@ -3372,7 +3297,6 @@ is defined by the provide mask Series.</p>
 <li><code><a title="secfsdstools.f_standardize.base_rules.PostSetToZero.apply" href="#secfsdstools.f_standardize.base_rules.PostSetToZero.apply">apply</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.base_rules.PostSetToZero.get_input_tags" href="#secfsdstools.f_standardize.base_rules.PostSetToZero.get_input_tags">get_input_tags</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.base_rules.PostSetToZero.mask" href="#secfsdstools.f_standardize.base_rules.PostSetToZero.mask">mask</a></code></li>
-<li><code><a title="secfsdstools.f_standardize.base_rules.PostSetToZero.masked" href="#secfsdstools.f_standardize.base_rules.PostSetToZero.masked">masked</a></code></li>
 </ul>
 </li>
 <li>
@@ -3380,7 +3304,6 @@ is defined by the provide mask Series.</p>
 <ul class="">
 <li><code><a title="secfsdstools.f_standardize.base_rules.PreSumUpCorrection.apply" href="#secfsdstools.f_standardize.base_rules.PreSumUpCorrection.apply">apply</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.base_rules.PreSumUpCorrection.get_input_tags" href="#secfsdstools.f_standardize.base_rules.PreSumUpCorrection.get_input_tags">get_input_tags</a></code></li>
-<li><code><a title="secfsdstools.f_standardize.base_rules.PreSumUpCorrection.masked" href="#secfsdstools.f_standardize.base_rules.PreSumUpCorrection.masked">masked</a></code></li>
 </ul>
 </li>
 <li>
@@ -3389,7 +3312,6 @@ is defined by the provide mask Series.</p>
 <li><code><a title="secfsdstools.f_standardize.base_rules.SetSumIfOnlyOneSummand.apply" href="#secfsdstools.f_standardize.base_rules.SetSumIfOnlyOneSummand.apply">apply</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.base_rules.SetSumIfOnlyOneSummand.get_input_tags" href="#secfsdstools.f_standardize.base_rules.SetSumIfOnlyOneSummand.get_input_tags">get_input_tags</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.base_rules.SetSumIfOnlyOneSummand.mask" href="#secfsdstools.f_standardize.base_rules.SetSumIfOnlyOneSummand.mask">mask</a></code></li>
-<li><code><a title="secfsdstools.f_standardize.base_rules.SetSumIfOnlyOneSummand.masked" href="#secfsdstools.f_standardize.base_rules.SetSumIfOnlyOneSummand.masked">masked</a></code></li>
 </ul>
 </li>
 <li>
@@ -3398,7 +3320,6 @@ is defined by the provide mask Series.</p>
 <li><code><a title="secfsdstools.f_standardize.base_rules.SubtractFromRule.apply" href="#secfsdstools.f_standardize.base_rules.SubtractFromRule.apply">apply</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.base_rules.SubtractFromRule.get_input_tags" href="#secfsdstools.f_standardize.base_rules.SubtractFromRule.get_input_tags">get_input_tags</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.base_rules.SubtractFromRule.mask" href="#secfsdstools.f_standardize.base_rules.SubtractFromRule.mask">mask</a></code></li>
-<li><code><a title="secfsdstools.f_standardize.base_rules.SubtractFromRule.masked" href="#secfsdstools.f_standardize.base_rules.SubtractFromRule.masked">masked</a></code></li>
 </ul>
 </li>
 <li>
@@ -3407,7 +3328,6 @@ is defined by the provide mask Series.</p>
 <li><code><a title="secfsdstools.f_standardize.base_rules.SumUpRule.apply" href="#secfsdstools.f_standardize.base_rules.SumUpRule.apply">apply</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.base_rules.SumUpRule.get_input_tags" href="#secfsdstools.f_standardize.base_rules.SumUpRule.get_input_tags">get_input_tags</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.base_rules.SumUpRule.mask" href="#secfsdstools.f_standardize.base_rules.SumUpRule.mask">mask</a></code></li>
-<li><code><a title="secfsdstools.f_standardize.base_rules.SumUpRule.masked" href="#secfsdstools.f_standardize.base_rules.SumUpRule.masked">masked</a></code></li>
 </ul>
 </li>
 </ul>

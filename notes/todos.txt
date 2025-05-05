@@ -23,14 +23,15 @@ new release
   - [x] ensure linting hints in editor are working
 
 - poetry build pipeline
-  - [x] ensure lint/test build is working when pushed
-  - [] ensure pdoc build is working when pushed
-  - pypi deploy with "trusted.."
-
+  - [] ensure lint/test build is working when pushed
+  - [x] ensure pdoc build is working when pushed
 
 - versions check -> check if there is a new version to download
   https://chatgpt.com/c/67dc71ab-a44c-8011-9be1-b0308657cc27
-- github pipelines umstellen
+
+- [] adapt publish workflow
+  - pypi deploy with "trusted.."
+
 
 - linked in post
 

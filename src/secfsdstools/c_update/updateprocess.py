@@ -71,20 +71,20 @@ def print_sponsoring_message():
     print("\n")
     print(white + "    How to get in touch")
     print(
-        "    - Found a bug:            https://github.com/HansjoergW/sec-fincancial-statement-data-set/issues"
-    )  # pylint: disable=C0301
+        "    - Found a bug:            https://github.com/HansjoergW/sec-fincancial-statement-data-set/issues"  # pylint: disable=C0301
+    )
     print(
-        "    - Have a remark:          https://github.com/HansjoergW/sec-fincancial-statement-data-set/discussions/categories/general"
-    )  # pylint: disable=C0301
+        "    - Have a remark:          https://github.com/HansjoergW/sec-fincancial-statement-data-set/discussions/categories/general"  # pylint: disable=C0301
+    )
     print(
-        "    - Have an idea:           https://github.com/HansjoergW/sec-fincancial-statement-data-set/discussions/categories/ideas"
-    )  # pylint: disable=C0301
+        "    - Have an idea:           https://github.com/HansjoergW/sec-fincancial-statement-data-set/discussions/categories/ideas"  # pylint: disable=C0301
+    )
     print(
-        "    - Have a question:        https://github.com/HansjoergW/sec-fincancial-statement-data-set/discussions/categories/q-a"
-    )  # pylint: disable=C0301
+        "    - Have a question:        https://github.com/HansjoergW/sec-fincancial-statement-data-set/discussions/categories/q-a"  # pylint: disable=C0301
+    )
     print(
-        "    - Have something to show: https://github.com/HansjoergW/sec-fincancial-statement-data-set/discussions/categories/show-and-tell"
-    )  # pylint: disable=C0301
+        "    - Have something to show: https://github.com/HansjoergW/sec-fincancial-statement-data-set/discussions/categories/show-and-tell"  # pylint: disable=C0301
+    )
     print("\n")
 
     print(bold + yellow + hash_border + reset)
@@ -260,8 +260,8 @@ class Updater:
             LOGGER.info("dataframes. This is not supported anymore in this version of the ")
             LOGGER.info("framework. If you want to use the old, smaller datasets which are ")
             LOGGER.info(
-                "still available at https://www.sec.gov/data-research/sec-markets-data/financial-statement-data-sets-archive"
-            )  # pylint: disable=C0301
+                "still available at https://www.sec.gov/data-research/sec-markets-data/financial-statement-data-sets-archive"  # pylint: disable=C0301
+            )
             LOGGER.info("you have to use version 1.8.2 of the framework.")
             LOGGER.info("                 ----                        ")
             LOGGER.info("If you want to use the datasets with the segments column, you have to ")

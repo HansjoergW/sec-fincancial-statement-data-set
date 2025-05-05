@@ -30,12 +30,18 @@
 <pre><code class="python">&#34;&#34;&#34;Contains the definitions to standardize balance sheets.&#34;&#34;&#34;
 from typing import List, Optional
 
-from secfsdstools.f_standardize.base_rule_framework import RuleGroup
 from secfsdstools.f_standardize.base_prepivot_rules import PrePivotDeduplicate
-from secfsdstools.f_standardize.base_rules import CopyTagRule, SumUpRule, \
-    missingsumparts_rules_creator, SetSumIfOnlyOneSummand, PostCopyToFirstSummand, \
-    PreSumUpCorrection, PostSetToZero
-from secfsdstools.f_standardize.base_validation_rules import ValidationRule, SumValidationRule
+from secfsdstools.f_standardize.base_rule_framework import RuleGroup
+from secfsdstools.f_standardize.base_rules import (
+    CopyTagRule,
+    PostCopyToFirstSummand,
+    PostSetToZero,
+    PreSumUpCorrection,
+    SetSumIfOnlyOneSummand,
+    SumUpRule,
+    missingsumparts_rules_creator,
+)
+from secfsdstools.f_standardize.base_validation_rules import SumValidationRule, ValidationRule
 from secfsdstools.f_standardize.standardizing import Standardizer
 
 

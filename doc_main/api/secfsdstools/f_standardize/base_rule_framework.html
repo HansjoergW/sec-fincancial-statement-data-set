@@ -33,10 +33,9 @@ a rule hierarchy that then is used in the standardizer.</p>
 This module defines a simple rule framework that allows to define concrete rules and build
 a rule hierarchy that then is used in the standardizer.
 &#34;&#34;&#34;
-from abc import ABC
-from abc import abstractmethod
+from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import Set, List
+from typing import List, Set
 
 import pandas as pd
 import pandera as pa
@@ -444,13 +443,6 @@ class RuleGroup(RuleEntity):
 <li><a title="secfsdstools.f_standardize.base_rule_framework.PrePivotRule" href="#secfsdstools.f_standardize.base_rule_framework.PrePivotRule">PrePivotRule</a></li>
 <li><a title="secfsdstools.f_standardize.base_rule_framework.Rule" href="#secfsdstools.f_standardize.base_rule_framework.Rule">Rule</a></li>
 </ul>
-<h3>Class variables</h3>
-<dl>
-<dt id="secfsdstools.f_standardize.base_rule_framework.AbstractRule.identifier"><code class="name">var <span class="ident">identifier</span> : str</code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-</dl>
 <h3>Methods</h3>
 <dl>
 <dt id="secfsdstools.f_standardize.base_rule_framework.AbstractRule.apply"><code class="name flex">
@@ -582,7 +574,8 @@ process descrption table.</p></div>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class DescriptionEntry:
+<pre><code class="python">@dataclass
+class DescriptionEntry:
     &#34;&#34;&#34; Dataclass used to collect the rule descriptions and to create the
     process descrption table. &#34;&#34;&#34;
     part: str
@@ -680,10 +673,6 @@ process descrption table.</p></div>
 </ul>
 <h3>Class variables</h3>
 <dl>
-<dt id="secfsdstools.f_standardize.base_rule_framework.PrePivotRule.identifier"><code class="name">var <span class="ident">identifier</span> : str</code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
 <dt id="secfsdstools.f_standardize.base_rule_framework.PrePivotRule.index_cols"><code class="name">var <span class="ident">index_cols</span></code></dt>
 <dd>
 <div class="desc"></div>
@@ -1295,13 +1284,6 @@ def set_id(self, prefix: str):
 <li><a title="secfsdstools.f_standardize.base_rule_framework.RuleEntity" href="#secfsdstools.f_standardize.base_rule_framework.RuleEntity">RuleEntity</a></li>
 <li>abc.ABC</li>
 </ul>
-<h3>Class variables</h3>
-<dl>
-<dt id="secfsdstools.f_standardize.base_rule_framework.RuleGroup.identifier"><code class="name">var <span class="ident">identifier</span> : str</code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-</dl>
 <h3>Methods</h3>
 <dl>
 <dt id="secfsdstools.f_standardize.base_rule_framework.RuleGroup.append_log"><code class="name flex">
@@ -1534,7 +1516,6 @@ and to collect the applied rules together with their ids</p>
 <ul class="">
 <li><code><a title="secfsdstools.f_standardize.base_rule_framework.AbstractRule.apply" href="#secfsdstools.f_standardize.base_rule_framework.AbstractRule.apply">apply</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.base_rule_framework.AbstractRule.collect_description" href="#secfsdstools.f_standardize.base_rule_framework.AbstractRule.collect_description">collect_description</a></code></li>
-<li><code><a title="secfsdstools.f_standardize.base_rule_framework.AbstractRule.identifier" href="#secfsdstools.f_standardize.base_rule_framework.AbstractRule.identifier">identifier</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.base_rule_framework.AbstractRule.mask" href="#secfsdstools.f_standardize.base_rule_framework.AbstractRule.mask">mask</a></code></li>
 </ul>
 </li>
@@ -1551,7 +1532,6 @@ and to collect the applied rules together with their ids</p>
 <li>
 <h4><code><a title="secfsdstools.f_standardize.base_rule_framework.PrePivotRule" href="#secfsdstools.f_standardize.base_rule_framework.PrePivotRule">PrePivotRule</a></code></h4>
 <ul class="">
-<li><code><a title="secfsdstools.f_standardize.base_rule_framework.PrePivotRule.identifier" href="#secfsdstools.f_standardize.base_rule_framework.PrePivotRule.identifier">identifier</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.base_rule_framework.PrePivotRule.index_cols" href="#secfsdstools.f_standardize.base_rule_framework.PrePivotRule.index_cols">index_cols</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.base_rule_framework.PrePivotRule.process" href="#secfsdstools.f_standardize.base_rule_framework.PrePivotRule.process">process</a></code></li>
 </ul>
@@ -1584,7 +1564,6 @@ and to collect the applied rules together with their ids</p>
 <li><code><a title="secfsdstools.f_standardize.base_rule_framework.RuleGroup.collect_description" href="#secfsdstools.f_standardize.base_rule_framework.RuleGroup.collect_description">collect_description</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.base_rule_framework.RuleGroup.collect_masked_entries" href="#secfsdstools.f_standardize.base_rule_framework.RuleGroup.collect_masked_entries">collect_masked_entries</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.base_rule_framework.RuleGroup.get_input_tags" href="#secfsdstools.f_standardize.base_rule_framework.RuleGroup.get_input_tags">get_input_tags</a></code></li>
-<li><code><a title="secfsdstools.f_standardize.base_rule_framework.RuleGroup.identifier" href="#secfsdstools.f_standardize.base_rule_framework.RuleGroup.identifier">identifier</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.base_rule_framework.RuleGroup.process" href="#secfsdstools.f_standardize.base_rule_framework.RuleGroup.process">process</a></code></li>
 <li><code><a title="secfsdstools.f_standardize.base_rule_framework.RuleGroup.set_id" href="#secfsdstools.f_standardize.base_rule_framework.RuleGroup.set_id">set_id</a></code></li>
 </ul>

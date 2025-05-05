@@ -43,10 +43,9 @@ from collections import defaultdict
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
-from typing import List, Tuple
-from typing import Protocol, Any, Dict
+from typing import Any, Dict, List, Protocol, Tuple
 
-from secfsdstools.a_utils.parallelexecution import ThreadExecutor, ParallelExecutor
+from secfsdstools.a_utils.parallelexecution import ParallelExecutor, ThreadExecutor
 from secfsdstools.c_automation.automation_utils import get_latest_mtime
 
 
@@ -1941,7 +1940,8 @@ or exception() method.</p></div>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class TaskResult:
+<pre><code class="python">@dataclass
+class TaskResult:
     &#34;&#34;&#34;
     Dataclass containing the result of a task.
     Contains the task, the TaskResultState and the result (either the return value form the commit()

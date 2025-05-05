@@ -37,10 +37,8 @@ import shutil
 from pathlib import Path
 from typing import List
 
-from secfsdstools.a_utils.constants import SUB_TXT, PRE_TXT, NUM_TXT, NUM_DTYPE, PRE_DTYPE, \
-    SUB_DTYPE
-from secfsdstools.a_utils.fileutils import get_directories_in_directory, \
-    read_df_from_file_in_zip
+from secfsdstools.a_utils.constants import NUM_DTYPE, NUM_TXT, PRE_DTYPE, PRE_TXT, SUB_DTYPE, SUB_TXT
+from secfsdstools.a_utils.fileutils import get_directories_in_directory, read_df_from_file_in_zip
 from secfsdstools.c_automation.task_framework import AbstractProcessPoolProcess
 
 LOGGER = logging.getLogger(__name__)

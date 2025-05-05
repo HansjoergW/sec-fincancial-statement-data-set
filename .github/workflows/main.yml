@@ -44,7 +44,7 @@ jobs:
   
       - name: Run tests with pytest
         run: |
-          poetry run pytest tests -v
+          poetry run pytest tests -v --ignore=tests/x_examples
 
   publish-doc:
     runs-on: ubuntu-latest

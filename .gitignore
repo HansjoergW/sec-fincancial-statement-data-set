@@ -1,7 +1,9 @@
 /.idea/
 /data/
-/notebooks/.ipynb_checkpoints/
+/notebooks
+/sandbox
 /tests/
 /secrets.txt
 /docs/
 /_site
+__pycache__

@@ -394,6 +394,11 @@ class JoinedDataBag(DataBagBase[JOINED]):
             drop_duplicates_sub_df=drop_duplicates_sub_df
         )
 
+    @staticmethod
+    def is_joinedbag_path(path: Path) -&gt; bool:
+        &#34;&#34;&#34; Check whether the provided path contains the files of a JoinedDatabag. &#34;&#34;&#34;
+        return (path / &#34;pre_num.txt.parquet&#34;).exists()
+
 
 @dataclass
 class RawDataBagStats:
@@ -647,15 +652,10 @@ class RawDataBag(DataBagBase[RAW]):
             drop_duplicates_sub_df=drop_duplicates_sub_df
         )
 
-
-def is_rawbag_path(path: Path) -&gt; bool:
-    &#34;&#34;&#34; Check whether the provided path contains the files of a RawDatabag. &#34;&#34;&#34;
-    return (path / &#34;num.txt.parquet&#34;).exists()
-
-
-def is_joinedbag_path(path: Path) -&gt; bool:
-    &#34;&#34;&#34; Check whether the provided path contains the files of a JoinedDatabag. &#34;&#34;&#34;
-    return (path / &#34;pre_num.txt.parquet&#34;).exists()</code></pre>
+    @staticmethod
+    def is_rawbag_path(path: Path) -&gt; bool:
+        &#34;&#34;&#34; Check whether the provided path contains the files of a RawDatabag. &#34;&#34;&#34;
+        return (path / &#34;num.txt.parquet&#34;).exists()</code></pre>
 </details>
 </section>
 <section>
@@ -766,34 +766,6 @@ all have the same data in sub.txt.</dd>
         num_filter.append(tag_filter_expression)
 
     return pre_filter, num_filter</code></pre>
-</details>
-</dd>
-<dt id="secfsdstools.d_container.databagmodel.is_joinedbag_path"><code class="name flex">
-<span>def <span class="ident">is_joinedbag_path</span></span>(<span>path: pathlib.Path) ‑> bool</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Check whether the provided path contains the files of a JoinedDatabag.</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def is_joinedbag_path(path: Path) -&gt; bool:
-    &#34;&#34;&#34; Check whether the provided path contains the files of a JoinedDatabag. &#34;&#34;&#34;
-    return (path / &#34;pre_num.txt.parquet&#34;).exists()</code></pre>
-</details>
-</dd>
-<dt id="secfsdstools.d_container.databagmodel.is_rawbag_path"><code class="name flex">
-<span>def <span class="ident">is_rawbag_path</span></span>(<span>path: pathlib.Path) ‑> bool</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Check whether the provided path contains the files of a RawDatabag.</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def is_rawbag_path(path: Path) -&gt; bool:
-    &#34;&#34;&#34; Check whether the provided path contains the files of a RawDatabag. &#34;&#34;&#34;
-    return (path / &#34;num.txt.parquet&#34;).exists()</code></pre>
 </details>
 </dd>
 </dl>
@@ -1229,7 +1201,12 @@ adsh, tag, and version.</p>
             target_path=target_path,
             file_list=[PRE_NUM_TXT],
             drop_duplicates_sub_df=drop_duplicates_sub_df
-        )</code></pre>
+        )
+
+    @staticmethod
+    def is_joinedbag_path(path: Path) -&gt; bool:
+        &#34;&#34;&#34; Check whether the provided path contains the files of a JoinedDatabag. &#34;&#34;&#34;
+        return (path / &#34;pre_num.txt.parquet&#34;).exists()</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -1379,6 +1356,21 @@ def create(cls, sub_df: pd.DataFrame, pre_num_df: pd.DataFrame) -&gt; JOINED:
         JoinedDataBag: new instance of JoinedDataBag
     &#34;&#34;&#34;
     return JoinedDataBag(sub_df=sub_df, pre_num_df=pre_num_df)</code></pre>
+</details>
+</dd>
+<dt id="secfsdstools.d_container.databagmodel.JoinedDataBag.is_joinedbag_path"><code class="name flex">
+<span>def <span class="ident">is_joinedbag_path</span></span>(<span>path: pathlib.Path) ‑> bool</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Check whether the provided path contains the files of a JoinedDatabag.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@staticmethod
+def is_joinedbag_path(path: Path) -&gt; bool:
+    &#34;&#34;&#34; Check whether the provided path contains the files of a JoinedDatabag. &#34;&#34;&#34;
+    return (path / &#34;pre_num.txt.parquet&#34;).exists()</code></pre>
 </details>
 </dd>
 <dt id="secfsdstools.d_container.databagmodel.JoinedDataBag.load"><code class="name flex">
@@ -1853,7 +1845,12 @@ will be created</dd>
             target_path=target_path,
             file_list=[PRE_TXT, NUM_TXT],
             drop_duplicates_sub_df=drop_duplicates_sub_df
-        )</code></pre>
+        )
+
+    @staticmethod
+    def is_rawbag_path(path: Path) -&gt; bool:
+        &#34;&#34;&#34; Check whether the provided path contains the files of a RawDatabag. &#34;&#34;&#34;
+        return (path / &#34;num.txt.parquet&#34;).exists()</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -1999,6 +1996,21 @@ def create(cls, sub_df: pd.DataFrame, pre_df: pd.DataFrame, num_df: pd.DataFrame
         RawDataBag:
     &#34;&#34;&#34;
     return RawDataBag(sub_df=sub_df, pre_df=pre_df, num_df=num_df)</code></pre>
+</details>
+</dd>
+<dt id="secfsdstools.d_container.databagmodel.RawDataBag.is_rawbag_path"><code class="name flex">
+<span>def <span class="ident">is_rawbag_path</span></span>(<span>path: pathlib.Path) ‑> bool</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Check whether the provided path contains the files of a RawDatabag.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@staticmethod
+def is_rawbag_path(path: Path) -&gt; bool:
+    &#34;&#34;&#34; Check whether the provided path contains the files of a RawDatabag. &#34;&#34;&#34;
+    return (path / &#34;num.txt.parquet&#34;).exists()</code></pre>
 </details>
 </dd>
 <dt id="secfsdstools.d_container.databagmodel.RawDataBag.load"><code class="name flex">
@@ -2383,8 +2395,6 @@ and num_txt will be created</dd>
 <ul class="">
 <li><code><a title="secfsdstools.d_container.databagmodel.concat_bags_file_based_internal" href="#secfsdstools.d_container.databagmodel.concat_bags_file_based_internal">concat_bags_file_based_internal</a></code></li>
 <li><code><a title="secfsdstools.d_container.databagmodel.get_pre_num_filters" href="#secfsdstools.d_container.databagmodel.get_pre_num_filters">get_pre_num_filters</a></code></li>
-<li><code><a title="secfsdstools.d_container.databagmodel.is_joinedbag_path" href="#secfsdstools.d_container.databagmodel.is_joinedbag_path">is_joinedbag_path</a></code></li>
-<li><code><a title="secfsdstools.d_container.databagmodel.is_rawbag_path" href="#secfsdstools.d_container.databagmodel.is_rawbag_path">is_rawbag_path</a></code></li>
 </ul>
 </li>
 <li><h3><a href="#header-classes">Classes</a></h3>
@@ -2406,6 +2416,7 @@ and num_txt will be created</dd>
 <li><code><a title="secfsdstools.d_container.databagmodel.JoinedDataBag.create" href="#secfsdstools.d_container.databagmodel.JoinedDataBag.create">create</a></code></li>
 <li><code><a title="secfsdstools.d_container.databagmodel.JoinedDataBag.get_pre_num_copy" href="#secfsdstools.d_container.databagmodel.JoinedDataBag.get_pre_num_copy">get_pre_num_copy</a></code></li>
 <li><code><a title="secfsdstools.d_container.databagmodel.JoinedDataBag.get_sub_copy" href="#secfsdstools.d_container.databagmodel.JoinedDataBag.get_sub_copy">get_sub_copy</a></code></li>
+<li><code><a title="secfsdstools.d_container.databagmodel.JoinedDataBag.is_joinedbag_path" href="#secfsdstools.d_container.databagmodel.JoinedDataBag.is_joinedbag_path">is_joinedbag_path</a></code></li>
 <li><code><a title="secfsdstools.d_container.databagmodel.JoinedDataBag.load" href="#secfsdstools.d_container.databagmodel.JoinedDataBag.load">load</a></code></li>
 <li><code><a title="secfsdstools.d_container.databagmodel.JoinedDataBag.save" href="#secfsdstools.d_container.databagmodel.JoinedDataBag.save">save</a></code></li>
 </ul>
@@ -2420,6 +2431,7 @@ and num_txt will be created</dd>
 <li><code><a title="secfsdstools.d_container.databagmodel.RawDataBag.get_num_copy" href="#secfsdstools.d_container.databagmodel.RawDataBag.get_num_copy">get_num_copy</a></code></li>
 <li><code><a title="secfsdstools.d_container.databagmodel.RawDataBag.get_pre_copy" href="#secfsdstools.d_container.databagmodel.RawDataBag.get_pre_copy">get_pre_copy</a></code></li>
 <li><code><a title="secfsdstools.d_container.databagmodel.RawDataBag.get_sub_copy" href="#secfsdstools.d_container.databagmodel.RawDataBag.get_sub_copy">get_sub_copy</a></code></li>
+<li><code><a title="secfsdstools.d_container.databagmodel.RawDataBag.is_rawbag_path" href="#secfsdstools.d_container.databagmodel.RawDataBag.is_rawbag_path">is_rawbag_path</a></code></li>
 <li><code><a title="secfsdstools.d_container.databagmodel.RawDataBag.join" href="#secfsdstools.d_container.databagmodel.RawDataBag.join">join</a></code></li>
 <li><code><a title="secfsdstools.d_container.databagmodel.RawDataBag.load" href="#secfsdstools.d_container.databagmodel.RawDataBag.load">load</a></code></li>
 <li><code><a title="secfsdstools.d_container.databagmodel.RawDataBag.save" href="#secfsdstools.d_container.databagmodel.RawDataBag.save">save</a></code></li>

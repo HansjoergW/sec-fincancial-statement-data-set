@@ -34,6 +34,7 @@ this module contains the update logic. This means downloading new zipfiles, tran
 into parquet format, and indexing the reports.
 &#34;&#34;&#34;
 import logging
+import random
 import sys
 import time
 from pathlib import Path
@@ -52,6 +53,62 @@ from secfsdstools.c_index.indexing_process import ReportParquetIndexerProcess
 from secfsdstools.c_transform.toparquettransforming_process import ToParquetTransformerProcess
 
 LOGGER = logging.getLogger(__name__)
+
+sponsor_messages = [
+    &#34;Enjoying secfsdstools? Please consider sponsoring the project!&#34;,
+    &#34;Love the tool? Your support keeps development alive – consider sponsoring!&#34;,
+    &#34;If you find this tool useful, a sponsorship would be greatly appreciated!&#34;,
+    &#34;Help us continue to improve secfsdstools by becoming a sponsor!&#34;,
+    &#34;Support open source: Sponsor secfsdstools today!&#34;,
+    &#34;Keep the updates coming – sponsor secfsdstools and fuel further development.&#34;,
+    &#34;Like what you see? Consider sponsoring to help drive innovation.&#34;,
+    &#34;Your support makes a difference. Please sponsor secfsdstools!&#34;,
+    &#34;Sponsor secfsdstools and help us build a better tool for everyone.&#34;,
+    &#34;Support innovation and open source by sponsoring secfsdstools.&#34;,
+    &#34;Your sponsorship ensures continued updates. Thank you for your support!&#34;,
+    &#34;Help us keep secfsdstools running smoothly – your sponsorship matters.&#34;,
+    &#34;If you value this tool, your sponsorship is a great way to contribute!&#34;,
+    &#34;Support the developer behind secfsdstools – consider sponsoring today.&#34;,
+    &#34;Enjoy the convenience? Sponsor secfsdstools and help us grow.&#34;,
+    &#34;Be a champion for open source – sponsor secfsdstools and support innovation.&#34;
+]
+
+
+def print_sponsoring_message():
+    &#34;&#34;&#34; create sponsoring message &#34;&#34;&#34;
+
+    message = random.choice(sponsor_messages)
+
+    # ANSI-Escape-Codes für Farben und Formatierungen
+    reset = &#34;\033[0m&#34;
+    bold = &#34;\033[1m&#34;
+    yellow = &#34;\033[33m&#34;
+    white = &#34;\033[37m&#34;
+
+    # Rahmen um die Nachricht erzeugen
+    border = &#34;-&#34; * (len(message) + 8)
+    hash_border = &#34;#&#34; * (len(message) + 8)
+
+    # Präsentation des Sponsor-Hinweises mit Farben und Hervorhebung
+    print(&#34;\n\n&#34;)
+    print(yellow + border + reset)
+    print(bold + yellow + hash_border + reset)
+    print(&#34;\n&#34;)
+    print(bold + white + &#34;    &#34; + message + &#34;    &#34; + reset)
+    print(&#34;\n&#34;)
+    print(bold + white + &#34;    https://github.com/sponsors/HansjoergW&#34; + reset)
+    print(&#34;\n&#34;)
+    print(white + &#34;    How to get in touch&#34;)
+    print(&#34;    - Found a bug:            https://github.com/HansjoergW/sec-fincancial-statement-data-set/issues&#34;) # pylint: disable=C0301
+    print(&#34;    - Have a remark:          https://github.com/HansjoergW/sec-fincancial-statement-data-set/discussions/categories/general&#34;) # pylint: disable=C0301
+    print(&#34;    - Have an idea:           https://github.com/HansjoergW/sec-fincancial-statement-data-set/discussions/categories/ideas&#34;) # pylint: disable=C0301
+    print(&#34;    - Have a question:        https://github.com/HansjoergW/sec-fincancial-statement-data-set/discussions/categories/q-a&#34;) # pylint: disable=C0301
+    print(&#34;    - Have something to show: https://github.com/HansjoergW/sec-fincancial-statement-data-set/discussions/categories/show-and-tell&#34;) # pylint: disable=C0301
+    print(&#34;\n&#34;)
+
+    print(bold + yellow + hash_border + reset)
+    print(yellow + border + reset)
+    print(&#34;\n\n&#34;)
 
 
 class Updater:
@@ -238,6 +295,8 @@ class Updater:
             # execute the update logic
             self._update()
 
+            print_sponsoring_message()
+
             # update the timestamp of the last check
             self.db_state_accesor.set_key(Updater.LAST_UPDATE_CHECK_KEY, str(time.time()))</code></pre>
 </details>
@@ -247,6 +306,55 @@ class Updater:
 <section>
 </section>
 <section>
+<h2 class="section-title" id="header-functions">Functions</h2>
+<dl>
+<dt id="secfsdstools.c_update.updateprocess.print_sponsoring_message"><code class="name flex">
+<span>def <span class="ident">print_sponsoring_message</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>create sponsoring message</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def print_sponsoring_message():
+    &#34;&#34;&#34; create sponsoring message &#34;&#34;&#34;
+
+    message = random.choice(sponsor_messages)
+
+    # ANSI-Escape-Codes für Farben und Formatierungen
+    reset = &#34;\033[0m&#34;
+    bold = &#34;\033[1m&#34;
+    yellow = &#34;\033[33m&#34;
+    white = &#34;\033[37m&#34;
+
+    # Rahmen um die Nachricht erzeugen
+    border = &#34;-&#34; * (len(message) + 8)
+    hash_border = &#34;#&#34; * (len(message) + 8)
+
+    # Präsentation des Sponsor-Hinweises mit Farben und Hervorhebung
+    print(&#34;\n\n&#34;)
+    print(yellow + border + reset)
+    print(bold + yellow + hash_border + reset)
+    print(&#34;\n&#34;)
+    print(bold + white + &#34;    &#34; + message + &#34;    &#34; + reset)
+    print(&#34;\n&#34;)
+    print(bold + white + &#34;    https://github.com/sponsors/HansjoergW&#34; + reset)
+    print(&#34;\n&#34;)
+    print(white + &#34;    How to get in touch&#34;)
+    print(&#34;    - Found a bug:            https://github.com/HansjoergW/sec-fincancial-statement-data-set/issues&#34;) # pylint: disable=C0301
+    print(&#34;    - Have a remark:          https://github.com/HansjoergW/sec-fincancial-statement-data-set/discussions/categories/general&#34;) # pylint: disable=C0301
+    print(&#34;    - Have an idea:           https://github.com/HansjoergW/sec-fincancial-statement-data-set/discussions/categories/ideas&#34;) # pylint: disable=C0301
+    print(&#34;    - Have a question:        https://github.com/HansjoergW/sec-fincancial-statement-data-set/discussions/categories/q-a&#34;) # pylint: disable=C0301
+    print(&#34;    - Have something to show: https://github.com/HansjoergW/sec-fincancial-statement-data-set/discussions/categories/show-and-tell&#34;) # pylint: disable=C0301
+    print(&#34;\n&#34;)
+
+    print(bold + yellow + hash_border + reset)
+    print(yellow + border + reset)
+    print(&#34;\n\n&#34;)</code></pre>
+</details>
+</dd>
+</dl>
 </section>
 <section>
 <h2 class="section-title" id="header-classes">Classes</h2>
@@ -445,6 +553,8 @@ class Updater:
             # execute the update logic
             self._update()
 
+            print_sponsoring_message()
+
             # update the timestamp of the last check
             self.db_state_accesor.set_key(Updater.LAST_UPDATE_CHECK_KEY, str(time.time()))</code></pre>
 </details>
@@ -577,6 +687,8 @@ Returns:</p></div>
         # execute the update logic
         self._update()
 
+        print_sponsoring_message()
+
         # update the timestamp of the last check
         self.db_state_accesor.set_key(Updater.LAST_UPDATE_CHECK_KEY, str(time.time()))</code></pre>
 </details>
@@ -595,6 +707,11 @@ Returns:</p></div>
 <li><h3>Super-module</h3>
 <ul>
 <li><code><a title="secfsdstools.c_update" href="index.html">secfsdstools.c_update</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-functions">Functions</a></h3>
+<ul class="">
+<li><code><a title="secfsdstools.c_update.updateprocess.print_sponsoring_message" href="#secfsdstools.c_update.updateprocess.print_sponsoring_message">print_sponsoring_message</a></code></li>
 </ul>
 </li>
 <li><h3><a href="#header-classes">Classes</a></h3>

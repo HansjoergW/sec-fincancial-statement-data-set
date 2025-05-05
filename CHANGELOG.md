@@ -2,6 +2,11 @@
 # Changelog
 See the [Release Notes](https://hansjoergw.github.io/sec-fincancial-statement-data-set/releasenotes/) for details.
 
+## 2.2.0 -> 2.3.0
+Maintenance release.
+   * changed development environment to vscode as ide
+   * changed to use poetry as dependency management tool
+   * inform user if a newer version is available on pypi.org
 
 ## 2.2.1 -> 2.2.0
 

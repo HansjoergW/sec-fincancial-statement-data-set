@@ -15,32 +15,41 @@ on:
   release:
     types: [published]
 
-#on:
-#  push:
-#    branches:
-#      - main
-
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-python@v3
+      - uses: actions/checkout@v4
+
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v5
         with:
-          python-version: 3.8
-      - name: install dependencies
-        run: pip install .
-      - run: pip install pdoc3==0.10
-      - run: cp README.md ./docs/read.md
-      - run: mkdir -p docs/_build/html
-      - run: pdoc3 --html --force -o docs/api secfsdstools
+          python-version: "3.10"
+
+      - name: Install Poetry
+        uses: snok/install-poetry@v1
+        with:
+          version: 2.1.1
+          virtualenvs-create: true
+          virtualenvs-in-project: true
+
+      - name: Install dependencies
+        run: poetry install --with dev
+            
+      - name: pdoc
+        run: |
+          mkdir -p docs/_build/html
+          poetry run pdoc3 --html --force -o docs/api src/secfsdstools
+          cp README.md ./docs/read.md
+
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: docs
+          publish_dir: "docs"
           destination_dir: doc_latest
           enable_jekyll: true
+
       - name: Trigger GitHub pages rebuild
         run: |
           curl --fail --request POST \
@@ -49,19 +58,5 @@ jobs:
         env:
           USER_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-#  deploy:
-#    runs-on: ubuntu-latest
-#    steps:
-#      - uses: actions/checkout@v3
-#      - uses: actions/setup-python@v3
-#        with:
-#          python-version: 3.8
-#      - run: pip install sphinx sphinx-rtd-theme
-#      - run: mkdir -p docs/_build/html
-#      - run: sphinx-build -b html docs/ docs/_build/html
-#      - name: Deploy to ReadTheDocs
-#        uses: peaceiris/actions-readthedocs@v2
-#        with:
-#          readthedocs_version: latest
-#          readthedocs_token: ${{ secrets.READTHEDOCS_TOKEN }}
+
 

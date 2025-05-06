@@ -13,29 +13,11 @@ new release
 - on github -> under code releases: draft new release
 
 
-2.3.0 - maintenance release
-- switch to vs code
-  - [x] pyproject toml like secdaily
-  - [x] new python poetry env
-  - [x] ensure linting with pylint and ruff is working
-  - [x] vscode configs like secdaily
-  - [x] ensure test execution/debugging is working
-  - [x] ensure linting hints in editor are working
-
-- poetry build pipeline
-  - [x] ensure lint/test build is working when pushed
-  - [x] ensure pdoc build is working when pushed
-
-- [x] versions check -> check if there is a new version to download
-
-- [] adapt publish workflow
-  - pypi deploy with "trusted.."
-
-
-- linked in post
-
 2.4.0 daily updates
-- first only as additional pipeline steps, not integrated in db
+- ensure docs deploy is working when released
+
+- first only as additional pipeline steps, not integrated in db?
+- linked in post
 
 - adding more steps to automation
 
@@ -137,3 +119,21 @@ look at
 -------
 - https://pypi.org/project/edgartools/1.6.0/
 
+
+
+Historie
+---------
+2.3.0 - maintenance release
+- switch to vs code
+  - [x] pyproject toml like secdaily
+  - [x] new python poetry env
+  - [x] ensure linting with pylint and ruff is working
+  - [x] vscode configs like secdaily
+  - [x] ensure test execution/debugging is working
+  - [x] ensure linting hints in editor are working
+
+- poetry build pipeline
+  - [x] ensure lint/test build is working when pushed
+  - [x] ensure pdoc build is working when pushed
+
+- [x] versions check -> check if there is a new version to download

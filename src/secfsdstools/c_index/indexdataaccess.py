@@ -1,4 +1,5 @@
 """Database logic to hanlde the indexing"""
+
 import sqlite3
 from dataclasses import dataclass
 from typing import List, Optional
@@ -10,7 +11,8 @@ from secfsdstools.a_utils.dbutils import DB
 
 @dataclass
 class IndexReport:
-    """ dataclass for index_reports table"""
+    """dataclass for index_reports table"""
+
     adsh: str
     cik: int
     name: str
@@ -25,7 +27,8 @@ class IndexReport:
 
 @dataclass
 class IndexFileProcessingState:
-    """ dataclass for index_file_processing_state table"""
+    """dataclass for index_file_processing_state table"""
+
     fileName: str  # pylint: disable=C0103
     fullPath: str  # pylint: disable=C0103
     status: str
@@ -34,9 +37,10 @@ class IndexFileProcessingState:
 
 
 class ParquetDBIndexingAccessor(DB):
-    """ Dataaccess class for index related tables of parquet files"""
-    index_reports_table = 'index_parquet_reports'
-    index_processing_table = 'index_parquet_processing_state'
+    """Dataaccess class for index related tables of parquet files"""
+
+    index_reports_table = "index_parquet_reports"
+    index_processing_table = "index_parquet_processing_state"
 
     def __init__(self, db_dir: str):
         super().__init__(db_dir=db_dir)
@@ -48,7 +52,7 @@ class ParquetDBIndexingAccessor(DB):
         Returns:
             List[IndexReport]: List with IndexReport objects
         """
-        sql = f'SELECT * FROM {self.index_reports_table}'
+        sql = f"SELECT * FROM {self.index_reports_table}"
         return self.execute_fetchall_typed(sql, IndexReport)
 
     def read_all_indexreports_df(self) -> pd.DataFrame:
@@ -58,8 +62,28 @@ class ParquetDBIndexingAccessor(DB):
         Returns:
             pd.DataFrame: pandas DataFrame
         """
-        sql = f'SELECT * FROM {self.index_reports_table}'
+        sql = f"SELECT * FROM {self.index_reports_table}"
         return self.execute_read_as_df(sql)
+
+    def find_latest_quarter_file_name(self) -> Optional[str]:
+        """
+        finds the latest quarter in the index_reports table
+
+        Returns:
+            str: the latest quarter
+        """
+        sql = f"""
+                SELECT *
+                FROM {self.index_processing_table}
+                WHERE fileName LIKE '____q_.zip' AND status = 'processed'
+                ORDER BY fileName DESC
+                LIMIT 1
+        """
+        result = self.execute_fetchall_typed(sql, IndexFileProcessingState)
+        if not result:
+            return None
+
+        return result[0].fileName
 
     def read_all_indexfileprocessing(self) -> List[IndexFileProcessingState]:
         """
@@ -68,7 +92,7 @@ class ParquetDBIndexingAccessor(DB):
         Returns:
             List[IndexFileProcessingState]: List with IndexFileProcessingState objects
         """
-        sql = f'SELECT * FROM {self.index_processing_table}'
+        sql = f"SELECT * FROM {self.index_processing_table}"
         return self.execute_fetchall_typed(sql, IndexFileProcessingState)
 
     def read_all_indexfileprocessing_df(self) -> pd.DataFrame:
@@ -78,7 +102,7 @@ class ParquetDBIndexingAccessor(DB):
         Returns:
             pd.DataFrame: pandas DataFrame
         """
-        sql = f'SELECT * FROM {self.index_processing_table}'
+        sql = f"SELECT * FROM {self.index_processing_table}"
         return self.execute_read_as_df(sql)
 
     def read_index_file_for_filename(self, filename: str) -> IndexFileProcessingState:
@@ -93,8 +117,7 @@ class ParquetDBIndexingAccessor(DB):
         sql = f"SELECT * FROM {self.index_processing_table} WHERE fileName = '{filename}'"
         return self.execute_fetchall_typed(sql, IndexFileProcessingState)[0]
 
-    def read_index_files_for_filenames(self, filenames: List[str]) \
-            -> List[IndexFileProcessingState]:
+    def read_index_files_for_filenames(self, filenames: List[str]) -> List[IndexFileProcessingState]:
         """
         returns the IndexFileProcessingState instances for the provided filenames
         Args:
@@ -227,8 +250,7 @@ class ParquetDBIndexingAccessor(DB):
 
         return filtered_reports
 
-    def read_index_reports_for_ciks(self, ciks: List[int], forms: Optional[List[str]] = None) \
-            -> List[IndexReport]:
+    def read_index_reports_for_ciks(self, ciks: List[int], forms: Optional[List[str]] = None) -> List[IndexReport]:
         """
         gets all reports as IndexReport instances for the companies identified by their cik numbers.
         if forms is not set, all forms are returned, otherwise forms is a list of the
@@ -245,13 +267,12 @@ class ParquetDBIndexingAccessor(DB):
         sql = f'SELECT * FROM {self.index_reports_table} WHERE cik in ({",".join(ciks_str)})'
         if forms is not None:
             forms_str = ", ".join(["'" + x.upper() + "'" for x in forms])
-            sql = sql + f' and form in ({forms_str}) '
-        sql = sql + ' ORDER BY period DESC'
+            sql = sql + f" and form in ({forms_str}) "
+        sql = sql + " ORDER BY period DESC"
 
         return self.execute_fetchall_typed(sql, IndexReport)
 
-    def read_index_reports_for_ciks_df(self, ciks: List[int], forms: Optional[List[str]] = None) \
-            -> pd.DataFrame:
+    def read_index_reports_for_ciks_df(self, ciks: List[int], forms: Optional[List[str]] = None) -> pd.DataFrame:
         """
         gets all reports as IndexReport instances for the companies identified by their cik numbers.
         if forms is not set, all forms are returned, otherwise forms is a list of the
@@ -268,8 +289,8 @@ class ParquetDBIndexingAccessor(DB):
         sql = f'SELECT * FROM {self.index_reports_table} WHERE cik in ({",".join(ciks_str)})'
         if forms is not None:
             forms_str = ", ".join(["'" + x.upper() + "'" for x in forms])
-            sql = sql + f' and form in ({forms_str}) '
-        sql = sql + ' ORDER BY period DESC'
+            sql = sql + f" and form in ({forms_str}) "
+        sql = sql + " ORDER BY period DESC"
 
         return self.execute_read_as_df(sql)
 

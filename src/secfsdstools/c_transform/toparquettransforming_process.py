@@ -150,7 +150,7 @@ class ToParquetTransformerProcess(AbstractProcessPoolProcess):
 
     def calculate_tasks(self) -> List[ToParquetTransformTask]:
         """
-
+        
         Returns:
             List[ToParquetTransformTask]: calculates the necessary tasks that have to be executed.
         """

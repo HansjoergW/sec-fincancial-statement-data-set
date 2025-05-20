@@ -14,6 +14,17 @@ new release
 
 
 2.4.0 daily updates
+- [] daily processing integration
+     [] clear index tables (for last zip quarter and before quarters)
+     [] clear daily parquet files (for last zip quarter and before quarters)
+     [x] calculate start quarter
+     [] download and process daily files
+     [] transform new daily files to parquet
+     [] index new daily files
+  
+
+
+
 - ensure docs deploy is working when released
 
 - first only as additional pipeline steps, not integrated in db?

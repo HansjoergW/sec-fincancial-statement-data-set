@@ -14,6 +14,13 @@ new release
 
 
 2.4.0 daily updates
+Problems:
+-[x] pylint config problem 
+
+- [] cyclic dependency -> check ob neue Version vorhanden, sollte an anderer Stelle erfolgen, nicht via update
+  vermutlich via is_newer_version_available
+
+Functions:
 - [] daily processing integration
      [] clear index tables (for last zip quarter and before quarters)
      [] clear daily parquet files (for last zip quarter and before quarters)
@@ -21,6 +28,8 @@ new release
      [] download and process daily files
      [] transform new daily files to parquet
      [] index new daily files
+     [] configuration daily processing -> enable
+- [] new features info message
   
 
 

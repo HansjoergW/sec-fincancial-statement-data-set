@@ -15,6 +15,14 @@ Neuer Release
 7. enter infos and press publish
 
 
+Pylint
+------
+Unterschiedliche Konfigs für src und tests sind nicht direk möglich.
+Ansatz: 
+- Konfiguration für src direkt im pyproject.toml -> "pylint src" wird dann direkt pyproject.toml verwenden
+- Konfiguration für tests in einem extra pylint.rc file -> "pylint --rcfile tests/.pylintrc tests" wird dann dieses file verwenden
+- entsprechend auch unterschiedliche steps in der build pipeline einrichten
+
 
 Releasing
 ---------

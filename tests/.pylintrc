@@ -1,0 +1,18 @@
+[MESSAGES CONTROL]
+disable=
+    C0103, # invalid-name
+    C0111, # missing-docstring
+    C0114, # missing-module-docstring
+    C0115, # missing-class-docstring
+    C0116, # missing-function-docstring
+    C0301, # line-too-long
+    R0401, # cyclic-import
+    R0914, # too-many-locals
+    R0915, # too-many-statements
+    R0917, # too-many-positional-arguments
+    W0212, # protected-access
+    W0612, # unused-variable (common in pytest with fixtures)
+    W0613, # unused-argument (common in pytest with fixtures)
+    W0621, # redefined-outer-name (common in pytest with fixtures)
+    W0622, # redefined-builtin (common in pytest with fixtures)
+    duplicate-code

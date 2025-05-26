@@ -11,12 +11,13 @@ from pathlib import Path
 from typing import List
 
 import fastparquet
+import requests
+from packaging import version
 
 from secfsdstools.a_config.configmodel import Configuration
 from secfsdstools.a_utils.dbutils import DBStateAcessor
 from secfsdstools.a_utils.downloadutils import UrlDownloader
 from secfsdstools.a_utils.fileutils import get_directories_in_directory
-from secfsdstools.a_utils.version import get_latest_pypi_version, is_newer_version_available
 from secfsdstools.b_setup.setupdb import DbCreator
 from secfsdstools.c_automation.task_framework import AbstractProcess, execute_processes
 from secfsdstools.c_download.secdownloading_process import SecDownloadingProcess
@@ -24,6 +25,37 @@ from secfsdstools.c_index.indexing_process import ReportParquetIndexerProcess
 from secfsdstools.c_transform.toparquettransforming_process import ToParquetTransformerProcess
 
 LOGGER = logging.getLogger(__name__)
+
+
+def get_latest_pypi_version():
+    """Reads the latest version of the library from pypi.org
+    Returns:
+        str: the latest version as string
+    """
+    url = "https://pypi.org/pypi/secfsdstools/json"
+    response = requests.get(url, timeout=10)
+
+    if response.status_code == 200:
+        data = response.json()
+        return data["info"]["version"]
+    return ""
+
+
+def is_newer_version_available():
+    """Checks if a newer version of the library is available on pypi.org
+    Returns:
+        bool: True if a newer version is available
+    """
+    import secfsdstools # pylint: disable=C0415
+
+    pypi_version = get_latest_pypi_version()
+    if pypi_version == "":
+        return False
+
+    current_version = secfsdstools.__version__
+
+    return version.parse(pypi_version) > version.parse(current_version)
+
 
 sponsor_messages = [
     "Enjoying secfsdstools? Please consider sponsoring the project!",

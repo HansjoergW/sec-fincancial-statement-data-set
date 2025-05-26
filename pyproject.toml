@@ -112,18 +112,9 @@ fix = true
 [tool.black]
 line-length = 120
 
-[tool.pylint.'MAIN']
+[tool.pylint]
 # Base settings that apply to everything
-disable = [
-    "R0801", # duplicate-code
-    "R0902", # too-many-instance-attributes
-    "R0903", # too-few-public-methods
-    "R0912", # too-many-branches
-    "R0913", # too-many-arguments
-    "W0511", # fixme
-]
-# Only check src and tests folders
-ignore = [
+ignore-paths = [
     "build",
     "dist",
     ".git",
@@ -135,25 +126,19 @@ ignore = [
     "sandbox",
 ]
 
-[tool.pylint.'tests/*']
-# More relaxed settings for test files
+[tool.pylint.'MESSAGES CONTROL']
+# Explicitly disable specific checks
 disable = [
-    "C0103", # invalid-name
-    "C0111", # missing-docstring
-    "C0114", # missing-module-docstring
-    "C0115", # missing-class-docstring
-    "C0116", # missing-function-docstring
-    "R0401", # cyclic-import
-    "R0914", # too-many-locals
-    "R0915", # too-many-statements
+    "R0801", # duplicate-code
+    "R0902", # too-many-instance-attributes
+    "R0903", # too-few-public-methods
+    "R0912", # too-many-branches
+    "R0913", # too-many-arguments
     "R0917", # too-many-positional-arguments
-    "W0212", # protected-access
-    "W0612", # unused-variable (common in pytest with fixtures)
-    "W0613", # unused-argument (common in pytest with fixtures)
-    "W0621", # redefined-outer-name (common in pytest with fixtures)
-    "W0622", # redefined-builtin (common in pytest with fixtures)
+    "W0511", # fixme
 ]
 
+[tool.pylint.typecheck]
 extension-pkg-allow-list = ["lxml"]
 
 [tool.pylint.format]

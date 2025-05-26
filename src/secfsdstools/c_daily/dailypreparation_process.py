@@ -3,6 +3,14 @@ from secdaily.SecDaily import Configuration, SecDailyOrchestrator
 
 
 class DailyPreparationProcess:
+    """
+    Process for preparing daily SEC financial statement data.
+
+    This class handles the entire process of downloading daily SEC filings,
+    transforming them into the appropriate format, and indexing them for
+    efficient access. It works with the secdaily package to download and
+    process the daily files.
+    """
 
     def __init__(
         self,
@@ -42,12 +50,31 @@ class DailyPreparationProcess:
         return quarter.year * 10_000 + (quarter.qrtr - 1) * 300
 
     def clear_index_tables(self):
+        """
+        Clear index tables for the daily processing.
+
+        This method removes any existing index entries for the daily files
+        to prepare for a fresh indexing process.
+        """
         pass
 
     def clear_daily_parquet_files(self):
+        """
+        Clear daily parquet files.
+
+        This method removes any existing daily parquet files to prepare
+        for a fresh transformation process.
+        """
         pass
 
     def download_daily_files(self):
+        """
+        Download daily SEC filing files.
+
+        This method configures and uses the SecDailyOrchestrator to download
+        and process daily SEC filing data, starting from the calculated
+        daily_start_quarter.
+        """
         config = Configuration(
             workdir=self.daily_dir,
             clean_db_entries=True,
@@ -64,12 +91,34 @@ class DailyPreparationProcess:
         sec_daily.housekeeping(start_qrtr_info=self.daily_start_quarter)
 
     def transform_daily_files(self):
+        """
+        Transform downloaded daily files into parquet format.
+
+        This method processes the downloaded daily files and transforms
+        them into the parquet format for efficient storage and querying.
+        """
         pass
 
     def index_daily_files(self):
+        """
+        Index the transformed daily files.
+
+        This method creates indexes for the transformed daily files to
+        enable efficient searching and retrieval.
+        """
         pass
 
     def process(self):
+        """
+        Execute the complete daily preparation process.
+
+        This method runs the entire process in sequence:
+        1. Clear index tables
+        2. Clear daily parquet files
+        3. Download daily files
+        4. Transform daily files
+        5. Index daily files
+        """
         self.clear_index_tables()
         self.clear_daily_parquet_files()
         self.download_daily_files()

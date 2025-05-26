@@ -7,6 +7,10 @@ import secfsdstools
 
 
 def get_latest_pypi_version():
+    """ Reads the latest version of the library from pypi.org
+    Returns:
+        str: the latest version as string
+    """
     url = "https://pypi.org/pypi/secfsdstools/json"
     response = requests.get(url, timeout=10)
 
@@ -17,6 +21,10 @@ def get_latest_pypi_version():
 
 
 def is_newer_version_available():
+    """Checks if a newer version of the library is available on pypi.org
+    Returns:
+        bool: True if a newer version is available
+    """
     pypi_version = get_latest_pypi_version()
     if pypi_version == "":
         return False
@@ -24,7 +32,3 @@ def is_newer_version_available():
     current_version = secfsdstools.__version__
 
     return version.parse(pypi_version) > version.parse(current_version)
-
-
-if __name__ == "__main__":
-    print(is_newer_version_available())

@@ -38,10 +38,14 @@ jobs:
       - name: Install dependencies
         run: poetry install --with dev
   
-      - name: Lint with pylint
+      - name: Lint src with pylint
         run: |
-          poetry run pylint src tests
-  
+          poetry run pylint src
+
+      - name: Lint tests with pylint
+        run: |
+          poetry run pylint --rcfile tests/.pylintrc tests
+          
       - name: Run tests with pytest
         run: |
           poetry run pytest tests -v --ignore=tests/x_examples

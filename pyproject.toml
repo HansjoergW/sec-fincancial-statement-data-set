@@ -100,7 +100,6 @@ lint.select = [
 ]
 lint.ignore = [
     "E501", # line too long
-    "F401", # unused imports
 ]
 # Only check the src directory
 include = ["src/**/*.py"]

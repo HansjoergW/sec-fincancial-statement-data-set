@@ -166,14 +166,10 @@ class ConfigurationManager:
         config.read(file_path)
 
         secconfig = Configuration(
-            download_dir=config["DEFAULT"].get(
-                "DownloadDirectory",
-            ),
+            download_dir=config["DEFAULT"].get("DownloadDirectory"),
             db_dir=config["DEFAULT"].get("DbDirectory"),
             parquet_dir=config["DEFAULT"].get("ParquetDirectory"),
             user_agent_email=config["DEFAULT"].get("UserAgentEmail"),
-            rapid_api_key=config["DEFAULT"].get("RapidApiKey", None),
-            rapid_api_plan=config["DEFAULT"].get("RapidApiPlan", "basic"),
             auto_update=config["DEFAULT"].getboolean("AutoUpdate", True),
             keep_zip_files=config["DEFAULT"].getboolean("KeepZipFiles", False),
             no_parallel_processing=config["DEFAULT"].getboolean("NoParallelProcessing", False),

@@ -10,17 +10,16 @@ from typing import Optional
 
 @dataclass
 class Configuration:
-    """ Basic configuration settings """
+    """Basic configuration settings"""
+
     download_dir: str
     db_dir: str
     parquet_dir: str
     user_agent_email: str
-    rapid_api_key: Optional[str] = None
-    rapid_api_plan: Optional[str] = 'basic'
     daily_download_dir: Optional[str] = None
-    auto_update: Optional[bool] = True
-    keep_zip_files: Optional[bool] = False
-    no_parallel_processing: Optional[bool] = False
+    auto_update: bool = True
+    keep_zip_files: bool = False
+    no_parallel_processing: bool = False
 
     config_parser: Optional[configparser.ConfigParser] = None
     post_update_hook: Optional[str] = None

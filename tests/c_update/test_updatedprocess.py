@@ -26,8 +26,6 @@ def updater(tmp_path: Path) -> Updater:
         user_agent_email="me@here.com",
         keep_zip_files=True,
         auto_update=True,
-        rapid_api_plan=None,
-        rapid_api_key=None,
     )
 
     return Updater(config=config)
@@ -53,9 +51,6 @@ def test_update_no_rapid_api(updater):
     with patch('secfsdstools.c_download.secdownloading_process.SecDownloadingProcess.process') \
             as sec_download, \
             patch(
-                'secfsdstools.c_download.rapiddownloading_process.RapidDownloadingProcess.process') \
-                    as rapid_download, \
-            patch(
                 'secfsdstools.c_transform.toparquettransforming_process.ToParquetTransformerProcess.process') \
                     as transformer, \
             patch(
@@ -65,7 +60,6 @@ def test_update_no_rapid_api(updater):
 
         # Überprüfen, ob die download-Methode von SecZipDownloader aufgerufen wurde
         sec_download.assert_called_once()
-        rapid_download.assert_not_called()
         transformer.assert_called_once()
         indexer.assert_called_once()
 
@@ -80,16 +74,13 @@ def test_integration_test(updater):
     start_time = time.time()
     time.sleep(1)  # make sure some time has past, before calling update
     with patch('secfsdstools.c_download.secdownloading_process.SecDownloadingProcess.process') \
-            as sec_download, \
-            patch(
-                'secfsdstools.c_download.rapiddownloading_process.RapidDownloadingProcess.process') \
-                    as rapid_download:
+            as sec_download:
+
         # updates LAST_UPDATE_CHECK_KEY
         updater.update()
 
         # Überprüfen, ob die download-Methode von SecZipDownloader aufgerufen wurde
         sec_download.assert_called_once()
-        rapid_download.assert_not_called()
 
         # check that both zip files had been processed
         indexer = ParquetDBIndexingAccessor(db_dir=updater.db_dir)
@@ -126,8 +117,6 @@ def test_update_hooks(tmp_path):
         user_agent_email="me@here.com",
         keep_zip_files=True,
         auto_update=True,
-        rapid_api_plan=None,
-        rapid_api_key=None,
         post_update_hook="tests.c_update.test_updatedprocess.update_hook",
         post_update_processes="tests.c_update.test_updatedprocess.update_processes_hook"
     )
@@ -135,9 +124,6 @@ def test_update_hooks(tmp_path):
     updater = Updater(config=config)
     with patch('secfsdstools.c_download.secdownloading_process.SecDownloadingProcess.process') \
             as sec_download, \
-            patch(
-                'secfsdstools.c_download.rapiddownloading_process.RapidDownloadingProcess.process') \
-                    as rapid_download, \
             patch('tests.c_update.test_updatedprocess.update_hook') as update_hook_patch, \
             patch('tests.c_update.test_updatedprocess.update_processes_hook',
                   return_value=[]) as update_processes_hook_patch:

@@ -6,8 +6,6 @@ Defines the version attribut of the library
 
 from importlib.metadata import PackageNotFoundError, version
 
-import secfsdstools.update
-
 try:
     __version__ = version("secfsdstools")
 except PackageNotFoundError:

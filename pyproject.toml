@@ -124,6 +124,7 @@ ignore-paths = [
     "docs",
     "notebooks",
     "sandbox",
+    "tests",
 ]
 
 [tool.pylint.'MESSAGES CONTROL']

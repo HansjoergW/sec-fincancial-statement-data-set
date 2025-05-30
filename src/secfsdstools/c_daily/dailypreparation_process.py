@@ -1,3 +1,9 @@
+"""
+Module for preparing daily SEC financial statement data. Handles downloading,
+transforming, and indexing daily SEC filings.
+Provides functionality to process daily files starting from a specified quarter.
+"""
+
 from secdaily._00_common.BaseDefinitions import QuarterInfo
 from secdaily.SecDaily import Configuration, SecDailyOrchestrator
 
@@ -56,7 +62,6 @@ class DailyPreparationProcess:
         This method removes any existing index entries for the daily files
         to prepare for a fresh indexing process.
         """
-        pass
 
     def clear_daily_parquet_files(self):
         """
@@ -65,7 +70,6 @@ class DailyPreparationProcess:
         This method removes any existing daily parquet files to prepare
         for a fresh transformation process.
         """
-        pass
 
     def download_daily_files(self):
         """
@@ -97,7 +101,6 @@ class DailyPreparationProcess:
         This method processes the downloaded daily files and transforms
         them into the parquet format for efficient storage and querying.
         """
-        pass
 
     def index_daily_files(self):
         """
@@ -106,7 +109,6 @@ class DailyPreparationProcess:
         This method creates indexes for the transformed daily files to
         enable efficient searching and retrieval.
         """
-        pass
 
     def process(self):
         """

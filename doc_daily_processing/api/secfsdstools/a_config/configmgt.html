@@ -195,14 +195,10 @@ class ConfigurationManager:
         config.read(file_path)
 
         secconfig = Configuration(
-            download_dir=config[&#34;DEFAULT&#34;].get(
-                &#34;DownloadDirectory&#34;,
-            ),
+            download_dir=config[&#34;DEFAULT&#34;].get(&#34;DownloadDirectory&#34;),
             db_dir=config[&#34;DEFAULT&#34;].get(&#34;DbDirectory&#34;),
             parquet_dir=config[&#34;DEFAULT&#34;].get(&#34;ParquetDirectory&#34;),
             user_agent_email=config[&#34;DEFAULT&#34;].get(&#34;UserAgentEmail&#34;),
-            rapid_api_key=config[&#34;DEFAULT&#34;].get(&#34;RapidApiKey&#34;, None),
-            rapid_api_plan=config[&#34;DEFAULT&#34;].get(&#34;RapidApiPlan&#34;, &#34;basic&#34;),
             auto_update=config[&#34;DEFAULT&#34;].getboolean(&#34;AutoUpdate&#34;, True),
             keep_zip_files=config[&#34;DEFAULT&#34;].getboolean(&#34;KeepZipFiles&#34;, False),
             no_parallel_processing=config[&#34;DEFAULT&#34;].getboolean(&#34;NoParallelProcessing&#34;, False),
@@ -511,14 +507,10 @@ If the file does not exist, it will create one in the current directory</p></div
         config.read(file_path)
 
         secconfig = Configuration(
-            download_dir=config[&#34;DEFAULT&#34;].get(
-                &#34;DownloadDirectory&#34;,
-            ),
+            download_dir=config[&#34;DEFAULT&#34;].get(&#34;DownloadDirectory&#34;),
             db_dir=config[&#34;DEFAULT&#34;].get(&#34;DbDirectory&#34;),
             parquet_dir=config[&#34;DEFAULT&#34;].get(&#34;ParquetDirectory&#34;),
             user_agent_email=config[&#34;DEFAULT&#34;].get(&#34;UserAgentEmail&#34;),
-            rapid_api_key=config[&#34;DEFAULT&#34;].get(&#34;RapidApiKey&#34;, None),
-            rapid_api_plan=config[&#34;DEFAULT&#34;].get(&#34;RapidApiPlan&#34;, &#34;basic&#34;),
             auto_update=config[&#34;DEFAULT&#34;].getboolean(&#34;AutoUpdate&#34;, True),
             keep_zip_files=config[&#34;DEFAULT&#34;].getboolean(&#34;KeepZipFiles&#34;, False),
             no_parallel_processing=config[&#34;DEFAULT&#34;].getboolean(&#34;NoParallelProcessing&#34;, False),

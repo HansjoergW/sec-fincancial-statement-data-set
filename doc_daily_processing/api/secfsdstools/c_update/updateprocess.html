@@ -43,12 +43,12 @@ from typing import List
 
 import fastparquet
 import requests
-from packaging import version
 
 from secfsdstools.a_config.configmodel import Configuration
 from secfsdstools.a_utils.dbutils import DBStateAcessor
 from secfsdstools.a_utils.downloadutils import UrlDownloader
 from secfsdstools.a_utils.fileutils import get_directories_in_directory
+from secfsdstools.a_utils.version import get_latest_pypi_version, is_newer_version_available
 from secfsdstools.b_setup.setupdb import DbCreator
 from secfsdstools.c_automation.task_framework import AbstractProcess, execute_processes
 from secfsdstools.c_download.secdownloading_process import SecDownloadingProcess
@@ -56,36 +56,6 @@ from secfsdstools.c_index.indexing_process import ReportParquetIndexerProcess
 from secfsdstools.c_transform.toparquettransforming_process import ToParquetTransformerProcess
 
 LOGGER = logging.getLogger(__name__)
-
-
-def get_latest_pypi_version():
-    &#34;&#34;&#34;Reads the latest version of the library from pypi.org
-    Returns:
-        str: the latest version as string
-    &#34;&#34;&#34;
-    url = &#34;https://pypi.org/pypi/secfsdstools/json&#34;
-    response = requests.get(url, timeout=10)
-
-    if response.status_code == 200:
-        data = response.json()
-        return data[&#34;info&#34;][&#34;version&#34;]
-    return &#34;&#34;
-
-
-def is_newer_version_available():
-    &#34;&#34;&#34;Checks if a newer version of the library is available on pypi.org
-    Returns:
-        bool: True if a newer version is available
-    &#34;&#34;&#34;
-    import secfsdstools # pylint: disable=C0415
-
-    pypi_version = get_latest_pypi_version()
-    if pypi_version == &#34;&#34;:
-        return False
-
-    current_version = secfsdstools.__version__
-
-    return version.parse(pypi_version) &gt; version.parse(current_version)
 
 
 sponsor_messages = [
@@ -191,8 +161,6 @@ class Updater:
         self.daily_dld_dir = config.daily_download_dir
         self.parquet_dir = config.parquet_dir
         self.user_agent = config.user_agent_email
-        self.rapid_api_plan = config.rapid_api_plan
-        self.rapid_api_key = config.rapid_api_key
         self.keep_zip_files = config.keep_zip_files
         self.auto_update = config.auto_update
         self.no_parallel_processing = config.no_parallel_processing
@@ -379,64 +347,6 @@ class Updater:
 <section>
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
-<dt id="secfsdstools.c_update.updateprocess.get_latest_pypi_version"><code class="name flex">
-<span>def <span class="ident">get_latest_pypi_version</span></span>(<span>)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Reads the latest version of the library from pypi.org</p>
-<h2 id="returns">Returns</h2>
-<dl>
-<dt><code>str</code></dt>
-<dd>the latest version as string</dd>
-</dl></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def get_latest_pypi_version():
-    &#34;&#34;&#34;Reads the latest version of the library from pypi.org
-    Returns:
-        str: the latest version as string
-    &#34;&#34;&#34;
-    url = &#34;https://pypi.org/pypi/secfsdstools/json&#34;
-    response = requests.get(url, timeout=10)
-
-    if response.status_code == 200:
-        data = response.json()
-        return data[&#34;info&#34;][&#34;version&#34;]
-    return &#34;&#34;</code></pre>
-</details>
-</dd>
-<dt id="secfsdstools.c_update.updateprocess.is_newer_version_available"><code class="name flex">
-<span>def <span class="ident">is_newer_version_available</span></span>(<span>)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Checks if a newer version of the library is available on pypi.org</p>
-<h2 id="returns">Returns</h2>
-<dl>
-<dt><code>bool</code></dt>
-<dd>True if a newer version is available</dd>
-</dl></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def is_newer_version_available():
-    &#34;&#34;&#34;Checks if a newer version of the library is available on pypi.org
-    Returns:
-        bool: True if a newer version is available
-    &#34;&#34;&#34;
-    import secfsdstools # pylint: disable=C0415
-
-    pypi_version = get_latest_pypi_version()
-    if pypi_version == &#34;&#34;:
-        return False
-
-    current_version = secfsdstools.__version__
-
-    return version.parse(pypi_version) &gt; version.parse(current_version)</code></pre>
-</details>
-</dd>
 <dt id="secfsdstools.c_update.updateprocess.print_newer_version_message"><code class="name flex">
 <span>def <span class="ident">print_newer_version_message</span></span>(<span>newer_version: str)</span>
 </code></dt>
@@ -553,8 +463,6 @@ class Updater:
         self.daily_dld_dir = config.daily_download_dir
         self.parquet_dir = config.parquet_dir
         self.user_agent = config.user_agent_email
-        self.rapid_api_plan = config.rapid_api_plan
-        self.rapid_api_key = config.rapid_api_key
         self.keep_zip_files = config.keep_zip_files
         self.auto_update = config.auto_update
         self.no_parallel_processing = config.no_parallel_processing
@@ -888,8 +796,6 @@ Returns:</p></div>
 </li>
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
-<li><code><a title="secfsdstools.c_update.updateprocess.get_latest_pypi_version" href="#secfsdstools.c_update.updateprocess.get_latest_pypi_version">get_latest_pypi_version</a></code></li>
-<li><code><a title="secfsdstools.c_update.updateprocess.is_newer_version_available" href="#secfsdstools.c_update.updateprocess.is_newer_version_available">is_newer_version_available</a></code></li>
 <li><code><a title="secfsdstools.c_update.updateprocess.print_newer_version_message" href="#secfsdstools.c_update.updateprocess.print_newer_version_message">print_newer_version_message</a></code></li>
 <li><code><a title="secfsdstools.c_update.updateprocess.print_sponsoring_message" href="#secfsdstools.c_update.updateprocess.print_sponsoring_message">print_sponsoring_message</a></code></li>
 </ul>

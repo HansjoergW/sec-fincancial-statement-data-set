@@ -5,7 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.10.0" />
 <title>secfsdstools.c_daily.dailypreparation_process API documentation</title>
-<meta name="description" content="" />
+<meta name="description" content="Module for preparing daily SEC financial statement data. Handles downloading,
+transforming, and indexing daily SEC filings.
+Provides functionality to …" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
 <link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
@@ -22,11 +24,20 @@
 <h1 class="title">Module <code>secfsdstools.c_daily.dailypreparation_process</code></h1>
 </header>
 <section id="section-intro">
+<p>Module for preparing daily SEC financial statement data. Handles downloading,
+transforming, and indexing daily SEC filings.
+Provides functionality to process daily files starting from a specified quarter.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">from secdaily._00_common.BaseDefinitions import QuarterInfo
+<pre><code class="python">&#34;&#34;&#34;
+Module for preparing daily SEC financial statement data. Handles downloading,
+transforming, and indexing daily SEC filings.
+Provides functionality to process daily files starting from a specified quarter.
+&#34;&#34;&#34;
+
+from secdaily._00_common.BaseDefinitions import QuarterInfo
 from secdaily.SecDaily import Configuration, SecDailyOrchestrator
 
 
@@ -84,7 +95,6 @@ class DailyPreparationProcess:
         This method removes any existing index entries for the daily files
         to prepare for a fresh indexing process.
         &#34;&#34;&#34;
-        pass
 
     def clear_daily_parquet_files(self):
         &#34;&#34;&#34;
@@ -93,7 +103,6 @@ class DailyPreparationProcess:
         This method removes any existing daily parquet files to prepare
         for a fresh transformation process.
         &#34;&#34;&#34;
-        pass
 
     def download_daily_files(self):
         &#34;&#34;&#34;
@@ -125,7 +134,6 @@ class DailyPreparationProcess:
         This method processes the downloaded daily files and transforms
         them into the parquet format for efficient storage and querying.
         &#34;&#34;&#34;
-        pass
 
     def index_daily_files(self):
         &#34;&#34;&#34;
@@ -134,7 +142,6 @@ class DailyPreparationProcess:
         This method creates indexes for the transformed daily files to
         enable efficient searching and retrieval.
         &#34;&#34;&#34;
-        pass
 
     def process(self):
         &#34;&#34;&#34;
@@ -231,7 +238,6 @@ process the daily files.</p></div>
         This method removes any existing index entries for the daily files
         to prepare for a fresh indexing process.
         &#34;&#34;&#34;
-        pass
 
     def clear_daily_parquet_files(self):
         &#34;&#34;&#34;
@@ -240,7 +246,6 @@ process the daily files.</p></div>
         This method removes any existing daily parquet files to prepare
         for a fresh transformation process.
         &#34;&#34;&#34;
-        pass
 
     def download_daily_files(self):
         &#34;&#34;&#34;
@@ -272,7 +277,6 @@ process the daily files.</p></div>
         This method processes the downloaded daily files and transforms
         them into the parquet format for efficient storage and querying.
         &#34;&#34;&#34;
-        pass
 
     def index_daily_files(self):
         &#34;&#34;&#34;
@@ -281,7 +285,6 @@ process the daily files.</p></div>
         This method creates indexes for the transformed daily files to
         enable efficient searching and retrieval.
         &#34;&#34;&#34;
-        pass
 
     def process(self):
         &#34;&#34;&#34;
@@ -319,8 +322,7 @@ for a fresh transformation process.</p></div>
 
     This method removes any existing daily parquet files to prepare
     for a fresh transformation process.
-    &#34;&#34;&#34;
-    pass</code></pre>
+    &#34;&#34;&#34;</code></pre>
 </details>
 </dd>
 <dt id="secfsdstools.c_daily.dailypreparation_process.DailyPreparationProcess.clear_index_tables"><code class="name flex">
@@ -340,8 +342,7 @@ to prepare for a fresh indexing process.</p></div>
 
     This method removes any existing index entries for the daily files
     to prepare for a fresh indexing process.
-    &#34;&#34;&#34;
-    pass</code></pre>
+    &#34;&#34;&#34;</code></pre>
 </details>
 </dd>
 <dt id="secfsdstools.c_daily.dailypreparation_process.DailyPreparationProcess.download_daily_files"><code class="name flex">
@@ -397,8 +398,7 @@ enable efficient searching and retrieval.</p></div>
 
     This method creates indexes for the transformed daily files to
     enable efficient searching and retrieval.
-    &#34;&#34;&#34;
-    pass</code></pre>
+    &#34;&#34;&#34;</code></pre>
 </details>
 </dd>
 <dt id="secfsdstools.c_daily.dailypreparation_process.DailyPreparationProcess.process"><code class="name flex">
@@ -451,8 +451,7 @@ them into the parquet format for efficient storage and querying.</p></div>
 
     This method processes the downloaded daily files and transforms
     them into the parquet format for efficient storage and querying.
-    &#34;&#34;&#34;
-    pass</code></pre>
+    &#34;&#34;&#34;</code></pre>
 </details>
 </dd>
 </dl>

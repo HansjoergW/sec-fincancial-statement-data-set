@@ -58,7 +58,7 @@ class Configuration:
 
     def __post_init__(self):
         if self.daily_download_dir == &#34;&#34;:
-            self.daily_download_dir = os.path.join(self.download_dir, &#34;daily&#34;)
+            self.daily_download_dir = os.path.join(os.path.dirname(self.download_dir), &#34;dld_daily&#34;)
 
     def get_dict(self):
         &#34;&#34;&#34;
@@ -109,7 +109,7 @@ class Configuration:
 
     def __post_init__(self):
         if self.daily_download_dir == &#34;&#34;:
-            self.daily_download_dir = os.path.join(self.download_dir, &#34;daily&#34;)
+            self.daily_download_dir = os.path.join(os.path.dirname(self.download_dir), &#34;dld_daily&#34;)
 
     def get_dict(self):
         &#34;&#34;&#34;

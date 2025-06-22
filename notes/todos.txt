@@ -15,10 +15,8 @@ new release
 
 2.4.0 daily updates
 Problems:
--[x] pylint config problem 
+-[x] pylint config problems
 
-- [] cyclic dependency -> check ob neue Version vorhanden, sollte an anderer Stelle erfolgen, nicht via update
-  vermutlich via is_newer_version_available
 
 Functions:
 - [] daily processing integration
@@ -31,8 +29,6 @@ Functions:
      [] configuration daily processing -> enable
 - [] new features info message
   
-
-
 
 - ensure docs deploy is working when released
 

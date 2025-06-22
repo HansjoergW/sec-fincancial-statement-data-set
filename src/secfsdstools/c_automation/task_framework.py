@@ -3,6 +3,7 @@ Base classes for the Task and Process Framework.
 Used for downloading, transforming to parquet, and indexing of the zip files from SEC, as well
 as to implement customized automation tasks.
 """
+
 import logging
 import shutil
 from abc import ABC, abstractmethod
@@ -20,6 +21,7 @@ class TaskResultState(Enum):
     """
     Enum defining possible ResultStates of one task.
     """
+
     SUCCESS = 1
     FAILED = 2
 
@@ -30,21 +32,21 @@ class Task(Protocol):
     """
 
     def prepare(self):
-        """ Prepare everything to execute the task.
-            E.g., creation or clearing a directory. """
+        """Prepare everything to execute the task.
+        E.g., creation or clearing a directory."""
 
     def execute(self):
-        """ Execution the task. """
+        """Execution the task."""
 
     def commit(self) -> Any:
-        """ Commit the task if the execution method is not "self-commiting". E.g.,
-         If you do some file processing in the execute-method,
-         but want to update a state in a table,
-         you could do the update of the state in the commit method.
-         """
+        """Commit the task if the execution method is not "self-commiting". E.g.,
+        If you do some file processing in the execute-method,
+        but want to update a state in a table,
+        you could do the update of the state in the commit method.
+        """
 
     def exception(self, exception) -> Any:
-        """ Handle the exception. """
+        """Handle the exception."""
 
 
 @dataclass
@@ -54,6 +56,7 @@ class TaskResult:
     Contains the task, the TaskResultState and the result (either the return value form the commit()
     or exception() method.
     """
+
     task: Task
     result: Any
     state: TaskResultState
@@ -82,10 +85,7 @@ class AbstractTask:
 
     """
 
-    def __init__(self,
-                 root_path: Path,
-                 pathfilter: str,
-                 target_path: Path):
+    def __init__(self, root_path: Path, pathfilter: str, target_path: Path):
         """
         The constructor of the AbstracTask.
 
@@ -149,17 +149,17 @@ class AbstractTask:
         """
 
         # ignore first and last /
-        if path.startswith('/'):
+        if path.startswith("/"):
             path = path[1:]
-        if path.endswith('/'):
+        if path.endswith("/"):
             path = path[:-1]
 
         # Split the string by '/' to get segments
-        segments = path.split('/')
+        segments = path.split("/")
 
         # Iterate from the end and find the first segment containing '*'
         for i, segment in enumerate(reversed(segments)):
-            if '*' in segment:
+            if "*" in segment:
                 return i  # Position from the end
 
         # If no '*' is found, return -1 to indicate an error
@@ -268,13 +268,10 @@ class CheckByTimestampMergeBaseTask(AbstractTask):
       process the data and also update the timestamp in the meta.inf file
     """
 
-    def __init__(self,
-                 root_path: Path,
-                 pathfilter: str,
-                 target_path: Path):
+    def __init__(self, root_path: Path, pathfilter: str, target_path: Path):
         """
-          The constructor of the CheckByTimestampMergeBaseTask.
-          Check also the documentation of the AbstractTask Constructor.
+        The constructor of the CheckByTimestampMergeBaseTask.
+        Check also the documentation of the AbstractTask Constructor.
         """
         super().__init__(
             root_path=root_path,
@@ -311,16 +308,13 @@ class CheckByTimestampMergeBaseTask(AbstractTask):
         if not self.has_work_todo():
             return
 
-        self.do_execution(paths_to_process=self.paths_to_process,
-                          tmp_path=self.tmp_path)
+        self.do_execution(paths_to_process=self.paths_to_process, tmp_path=self.tmp_path)
 
         meta_inf_content: str = str(get_latest_mtime(self.root_path))
         self.write_meta_inf(content=meta_inf_content)
 
     @abstractmethod
-    def do_execution(self,
-                     paths_to_process: List[Path],
-                     tmp_path: Path):
+    def do_execution(self, paths_to_process: List[Path], tmp_path: Path):
         """
             defines the logic to be executed.
         Args:
@@ -342,10 +336,7 @@ class CheckByNewSubfoldersMergeBaseTask(AbstractTask):
     the timestamp of the latest processed modification.
     """
 
-    def __init__(self,
-                 root_path: Path,
-                 pathfilter: str,
-                 target_path: Path):
+    def __init__(self, root_path: Path, pathfilter: str, target_path: Path):
         """
         Constructor of base task.
 
@@ -365,8 +356,9 @@ class CheckByNewSubfoldersMergeBaseTask(AbstractTask):
 
         # so if we have the pathfilter */BS and if we have the directories "2010q1.zip/BS",
         # "2010q2.zip/BS" in the root_path, all_names key will be 2010q1.zip, 2010q2.zip
-        self.all_names = {self._get_star_position_name(path=p, star_position=self.star_position):
-                              p for p in self.paths_to_process}
+        self.all_names = {
+            self._get_star_position_name(path=p, star_position=self.star_position): p for p in self.paths_to_process
+        }
 
         if self.meta_inf_file.exists():
             containing_values = self.read_metainf_content()
@@ -395,19 +387,15 @@ class CheckByNewSubfoldersMergeBaseTask(AbstractTask):
         # therefore, we provide a list "paths_to_process" which contains subfolders that are new,
         # the processed_path (the path that contains the result of the last processing), and
         # the target_path, where we have to store the result to (this the tmp folder)
-        self.do_execution(paths_to_process=paths_to_process,
-                          target_path=self.target_path,
-                          tmp_path=self.tmp_path)
+        self.do_execution(paths_to_process=paths_to_process, target_path=self.target_path, tmp_path=self.tmp_path)
 
-        meta_inf_content: str = "\n".join([self._get_star_position_name(f, self.star_position)
-                                           for f in self.filtered_paths])
+        meta_inf_content: str = "\n".join(
+            [self._get_star_position_name(f, self.star_position) for f in self.filtered_paths]
+        )
         self.write_meta_inf(content=meta_inf_content)
 
     @abstractmethod
-    def do_execution(self,
-                     paths_to_process: List[Path],
-                     target_path: Path,
-                     tmp_path: Path):
+    def do_execution(self, paths_to_process: List[Path], target_path: Path, tmp_path: Path):
         """
             defines the logic to be executed.
         Args:
@@ -422,11 +410,19 @@ class AbstractProcess(ABC):
     Defines the Abstract process of processing tasks for a certain process.
     """
 
-    def __init__(self,
-                 execute_serial: bool = False,
-                 chunksize: int = 3,
-                 paralleltasks: int = 3,
-                 max_tasks_per_second: int = 8):
+    @abstractmethod
+    def process(self):
+        """executes the process."""
+
+
+class AbstractParallelProcess(AbstractProcess):
+    """
+    Defines the Abstract process of processing tasks for a certain process.
+    """
+
+    def __init__(
+        self, execute_serial: bool = False, chunksize: int = 3, paralleltasks: int = 3, max_tasks_per_second: int = 8
+    ):
         self.execute_serial = execute_serial
         self.chunksize = chunksize
         self.paralleltasks = paralleltasks
@@ -448,11 +444,10 @@ class AbstractProcess(ABC):
         """
 
     def pre_process(self):
-        """ Hook method to implement logic that is executed before the whole process is finished.
-        """
+        """Hook method to implement logic that is executed before the whole process is finished."""
 
     def post_process(self):
-        """ Hook method to implement logic that is executed after the whole process is finished. """
+        """Hook method to implement logic that is executed after the whole process is finished."""
 
     @staticmethod
     def process_task(task: Task) -> TaskResult:
@@ -463,17 +458,13 @@ class AbstractProcess(ABC):
         try:
             task.prepare()
             task.execute()
-            result = TaskResult(task=task,
-                                result=task.commit(),
-                                state=TaskResultState.SUCCESS)
+            result = TaskResult(task=task, result=task.commit(), state=TaskResultState.SUCCESS)
             logger.info("Success: %s", task)
             return result
         except Exception as ex:  # pylint: disable=W0703
             # we want to catch everything here.
             logger.info("Failed: %s / %s ", task, ex)
-            return TaskResult(task=task,
-                              result=task.exception(exception=ex),
-                              state=TaskResultState.FAILED)
+            return TaskResult(task=task, result=task.exception(exception=ex), state=TaskResultState.FAILED)
 
     def process(self):
         """
@@ -506,7 +497,7 @@ class AbstractProcess(ABC):
         """
 
 
-class AbstractThreadProcess(AbstractProcess):
+class AbstractThreadProcess(AbstractParallelProcess):
     """
     Uses for the parallel execution logic a Thread-Based approach.
     """
@@ -519,7 +510,7 @@ class AbstractThreadProcess(AbstractProcess):
             processes=self.paralleltasks,
             max_calls_per_sec=self.max_tasks_per_second,
             chunksize=self.chunksize,
-            execute_serial=self.execute_serial
+            execute_serial=self.execute_serial,
         )
         executor.set_get_entries_function(self.calculate_tasks)
         executor.set_process_element_function(self.process_task)
@@ -527,7 +518,7 @@ class AbstractThreadProcess(AbstractProcess):
         return executor.execute()
 
 
-class AbstractProcessPoolProcess(AbstractProcess):
+class AbstractProcessPoolProcess(AbstractParallelProcess):
     """
     Uses for the parallel execution logic a Thread-Based approach.
     """
@@ -540,7 +531,7 @@ class AbstractProcessPoolProcess(AbstractProcess):
             processes=self.paralleltasks,
             max_calls_per_sec=self.max_tasks_per_second,
             chunksize=self.chunksize,
-            execute_serial=self.execute_serial
+            execute_serial=self.execute_serial,
         )
         executor.set_get_entries_function(self.calculate_tasks)
         executor.set_process_element_function(self.process_task)

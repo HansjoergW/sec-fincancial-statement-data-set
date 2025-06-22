@@ -16,7 +16,6 @@ class Configuration:
     db_dir: str
     parquet_dir: str
     user_agent_email: str
-    daily_download_dir: Optional[str] = None
     auto_update: bool = True
     keep_zip_files: bool = False
     no_parallel_processing: bool = False
@@ -25,8 +24,12 @@ class Configuration:
     post_update_hook: Optional[str] = None
     post_update_processes: Optional[str] = None
 
+    daily_download_dir: str = ""
+    daily_processing: bool = False
+
     def __post_init__(self):
-        self.daily_download_dir = os.path.join(self.download_dir, "daily")
+        if self.daily_download_dir == "":
+            self.daily_download_dir = os.path.join(self.download_dir, "daily")
 
     def get_dict(self):
         """

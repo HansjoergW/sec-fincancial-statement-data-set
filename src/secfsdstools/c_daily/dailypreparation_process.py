@@ -4,11 +4,18 @@ transforming, and indexing daily SEC filings.
 Provides functionality to process daily files starting from a specified quarter.
 """
 
+import logging
+
 from secdaily._00_common.BaseDefinitions import QuarterInfo
 from secdaily.SecDaily import Configuration, SecDailyOrchestrator
 
+from secfsdstools.c_automation.task_framework import AbstractProcess
+from secfsdstools.c_index.indexdataaccess import ParquetDBIndexingAccessor
 
-class DailyPreparationProcess:
+LOGGER = logging.getLogger(__name__)
+
+
+class DailyPreparationProcess(AbstractProcess):
     """
     Process for preparing daily SEC financial statement data.
 
@@ -20,15 +27,12 @@ class DailyPreparationProcess:
 
     def __init__(
         self,
-        daily_dir: str,
-        last_processed_quarter: str,  # in the form of 2022q1
-        execute_serial: bool = False,
+        db_dir: str,
+        daily_dir: str
     ):
+        super().__init__()
         self.daily_dir = daily_dir
-        self.last_processed_quarter = last_processed_quarter
-        self.execute_serial = execute_serial
-
-        self.daily_start_quarter = self._calculate_daily_start_quarter(self.last_processed_quarter)
+        self.index_accessor = ParquetDBIndexingAccessor(db_dir=db_dir)
 
     @staticmethod
     def _calculate_daily_start_quarter(quarter_before: str) -> QuarterInfo:
@@ -55,23 +59,25 @@ class DailyPreparationProcess:
         """
         return quarter.year * 10_000 + (quarter.qrtr - 1) * 300
 
-    def clear_index_tables(self):
+    def clear_index_tables(self, cut_off_day: int):
         """
         Clear index tables for the daily processing.
 
-        This method removes any existing index entries for the daily files
-        to prepare for a fresh indexing process.
+        index_parquet_reports: Removes entries that were created based on daily files that
+        are now covered by quarterly files. Based on fields origin_file and originFileType.
+
+        index_parquet_processing_state: TBD
         """
 
-    def clear_daily_parquet_files(self):
+    def clear_daily_parquet_files(self, cut_off_day: int):
         """
         Clear daily parquet files.
 
-        This method removes any existing daily parquet files to prepare
-        for a fresh transformation process.
+        Clear parquet files that were created from daily files that
+        are now covered by quarterly files.
         """
 
-    def download_daily_files(self):
+    def download_daily_files(self, daily_start_quarter: QuarterInfo):
         """
         Download daily SEC filing files.
 
@@ -88,27 +94,11 @@ class DailyPreparationProcess:
         )
 
         sec_daily = SecDailyOrchestrator(configuration=config)
-        sec_daily.process_index_data(start_qrtr_info=self.daily_start_quarter)
+        sec_daily.process_index_data(start_qrtr_info=daily_start_quarter)
         sec_daily.process_xml_data()
         sec_daily.create_sec_style()
         sec_daily.create_daily_zip()
-        sec_daily.housekeeping(start_qrtr_info=self.daily_start_quarter)
-
-    def transform_daily_files(self):
-        """
-        Transform downloaded daily files into parquet format.
-
-        This method processes the downloaded daily files and transforms
-        them into the parquet format for efficient storage and querying.
-        """
-
-    def index_daily_files(self):
-        """
-        Index the transformed daily files.
-
-        This method creates indexes for the transformed daily files to
-        enable efficient searching and retrieval.
-        """
+        sec_daily.housekeeping(start_qrtr_info=daily_start_quarter)
 
     def process(self):
         """
@@ -121,8 +111,21 @@ class DailyPreparationProcess:
         4. Transform daily files
         5. Index daily files
         """
-        self.clear_index_tables()
-        self.clear_daily_parquet_files()
-        self.download_daily_files()
-        self.transform_daily_files()
-        self.index_daily_files()
+
+        last_processed_quarter_file_name = self.index_accessor.find_latest_quarter_file_name()
+        if last_processed_quarter_file_name is None:
+            raise ValueError(
+                "No quarterly files were processed before. "
+                "Please process quarterly files first before running the daily process."
+            )
+
+        last_processed_quarter = last_processed_quarter_file_name.split(".")[0]
+
+        LOGGER.info("starting daily processing after last processed quarter: %s", last_processed_quarter)
+
+        daily_start_quarter = self._calculate_daily_start_quarter(last_processed_quarter)
+        cut_off_day = self._cut_off_day(daily_start_quarter)
+
+        self.clear_index_tables(cut_off_day=cut_off_day)
+        self.clear_daily_parquet_files(cut_off_day=cut_off_day)
+        self.download_daily_files(daily_start_quarter=daily_start_quarter)

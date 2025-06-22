@@ -19,6 +19,7 @@ from secfsdstools.a_utils.fileutils import get_directories_in_directory
 from secfsdstools.a_utils.version import get_latest_pypi_version, is_newer_version_available
 from secfsdstools.b_setup.setupdb import DbCreator
 from secfsdstools.c_automation.task_framework import AbstractProcess, execute_processes
+from secfsdstools.c_daily.dailypreparation_process import DailyPreparationProcess
 from secfsdstools.c_download.secdownloading_process import SecDownloadingProcess
 from secfsdstools.c_index.indexing_process import ReportParquetIndexerProcess
 from secfsdstools.c_transform.toparquettransforming_process import ToParquetTransformerProcess
@@ -134,6 +135,7 @@ class Updater:
         self.no_parallel_processing = config.no_parallel_processing
         self.post_update_hook = config.post_update_hook
         self.post_update_processes = config.post_update_processes
+        self.daily_processing = config.daily_processing
 
     def _check_for_update(self) -> bool:
         """checks if a new update check should be conducted."""
@@ -181,6 +183,29 @@ class Updater:
                 execute_serial=self.no_parallel_processing,
             )
         )
+
+        if self.daily_processing:
+            process_list.extend(
+                [
+                    # download daily data from sec
+                    DailyPreparationProcess(db_dir=self.db_dir, daily_dir=self.daily_dld_dir),
+                    # transform daily data to parquet
+                    # ToParquetTransformerProcess(
+                    #     zip_dir=self.daily_dld_dir,
+                    #     parquet_dir=self.parquet_dir,
+                    #     keep_zip_files=self.keep_zip_files,
+                    #     file_type="daily",
+                    #     execute_serial=self.no_parallel_processing,
+                    # ),
+                    # index daily data
+                    # ReportParquetIndexerProcess(
+                    #     db_dir=self.db_dir,
+                    #     parquet_dir=self.parquet_dir,
+                    #     file_type="daily",
+                    #     execute_serial=self.no_parallel_processing,
+                    # ),
+                ]
+            )
 
         return process_list
 

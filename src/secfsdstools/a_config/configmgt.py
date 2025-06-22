@@ -175,6 +175,7 @@ class ConfigurationManager:
             no_parallel_processing=config["DEFAULT"].getboolean("NoParallelProcessing", False),
             post_update_hook=config["DEFAULT"].get("PostUpdateHook", None),
             post_update_processes=config["DEFAULT"].get("PostUpdateProcesses", None),
+            daily_processing=config["DEFAULT"].getboolean("DailyProcessing", False),
             config_parser=config,
         )
 
@@ -335,6 +336,7 @@ class ConfigurationManager:
             "AutoUpdate": configuration.auto_update,
             "KeepZipFiles": configuration.keep_zip_files,
             "NoParallelProcessing": configuration.no_parallel_processing,
+            "DailyProcessing": configuration.daily_processing,
         }
 
         with open(file_path, "w", encoding="utf8") as configfile:

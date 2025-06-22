@@ -25,14 +25,18 @@ class DailyPreparationProcess(AbstractProcess):
     process the daily files.
     """
 
-    def __init__(
-        self,
-        db_dir: str,
-        daily_dir: str
-    ):
+    def __init__(self, db_dir: str, daily_dir: str):
         super().__init__()
         self.daily_dir = daily_dir
         self.index_accessor = ParquetDBIndexingAccessor(db_dir=db_dir)
+
+        self.config = Configuration(
+            workdir=self.daily_dir,
+            clean_db_entries=True,
+            clean_daily_zip_files=True,
+            clean_intermediate_files=True,
+            clean_quarter_zip_files=True,
+        )
 
     @staticmethod
     def _calculate_daily_start_quarter(quarter_before: str) -> QuarterInfo:
@@ -85,15 +89,8 @@ class DailyPreparationProcess(AbstractProcess):
         and process daily SEC filing data, starting from the calculated
         daily_start_quarter.
         """
-        config = Configuration(
-            workdir=self.daily_dir,
-            clean_db_entries=True,
-            clean_daily_zip_files=True,
-            clean_intermediate_files=True,
-            clean_quarter_zip_files=True,
-        )
 
-        sec_daily = SecDailyOrchestrator(configuration=config)
+        sec_daily = SecDailyOrchestrator(configuration=self.config)
         sec_daily.process_index_data(start_qrtr_info=daily_start_quarter)
         sec_daily.process_xml_data()
         sec_daily.create_sec_style()

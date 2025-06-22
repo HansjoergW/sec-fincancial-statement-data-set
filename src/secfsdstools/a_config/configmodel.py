@@ -29,7 +29,7 @@ class Configuration:
 
     def __post_init__(self):
         if self.daily_download_dir == "":
-            self.daily_download_dir = os.path.join(self.download_dir, "daily")
+            self.daily_download_dir = os.path.join(os.path.dirname(self.download_dir), "dld_daily")
 
     def get_dict(self):
         """

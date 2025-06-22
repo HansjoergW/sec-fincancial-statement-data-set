@@ -19,6 +19,7 @@ from secfsdstools.a_utils.fileutils import get_directories_in_directory
 from secfsdstools.a_utils.version import get_latest_pypi_version, is_newer_version_available
 from secfsdstools.b_setup.setupdb import DbCreator
 from secfsdstools.c_automation.task_framework import AbstractProcess, execute_processes
+from secfsdstools.c_daily import dailypreparation_process
 from secfsdstools.c_daily.dailypreparation_process import DailyPreparationProcess
 from secfsdstools.c_download.secdownloading_process import SecDownloadingProcess
 from secfsdstools.c_index.indexing_process import ReportParquetIndexerProcess
@@ -185,18 +186,19 @@ class Updater:
         )
 
         if self.daily_processing:
+            dailyprocess = DailyPreparationProcess(db_dir=self.db_dir, daily_dir=self.daily_dld_dir)
             process_list.extend(
                 [
                     # download daily data from sec
-                    DailyPreparationProcess(db_dir=self.db_dir, daily_dir=self.daily_dld_dir),
+                    dailyprocess,
                     # transform daily data to parquet
-                    # ToParquetTransformerProcess(
-                    #     zip_dir=self.daily_dld_dir,
-                    #     parquet_dir=self.parquet_dir,
-                    #     keep_zip_files=self.keep_zip_files,
-                    #     file_type="daily",
-                    #     execute_serial=self.no_parallel_processing,
-                    # ),
+                    ToParquetTransformerProcess(
+                        zip_dir=dailyprocess.config.dailyzipdir,
+                        parquet_dir=self.parquet_dir,
+                        keep_zip_files=self.keep_zip_files,
+                        file_type="daily",
+                        execute_serial=self.no_parallel_processing,
+                    ),
                     # index daily data
                     # ReportParquetIndexerProcess(
                     #     db_dir=self.db_dir,

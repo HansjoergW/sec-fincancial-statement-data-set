@@ -37,11 +37,18 @@ transforming, and indexing daily SEC filings.
 Provides functionality to process daily files starting from a specified quarter.
 &#34;&#34;&#34;
 
+import logging
+
 from secdaily._00_common.BaseDefinitions import QuarterInfo
 from secdaily.SecDaily import Configuration, SecDailyOrchestrator
 
+from secfsdstools.c_automation.task_framework import AbstractProcess
+from secfsdstools.c_index.indexdataaccess import ParquetDBIndexingAccessor
 
-class DailyPreparationProcess:
+LOGGER = logging.getLogger(__name__)
+
+
+class DailyPreparationProcess(AbstractProcess):
     &#34;&#34;&#34;
     Process for preparing daily SEC financial statement data.
 
@@ -53,15 +60,12 @@ class DailyPreparationProcess:
 
     def __init__(
         self,
-        daily_dir: str,
-        last_processed_quarter: str,  # in the form of 2022q1
-        execute_serial: bool = False,
+        db_dir: str,
+        daily_dir: str
     ):
+        super().__init__()
         self.daily_dir = daily_dir
-        self.last_processed_quarter = last_processed_quarter
-        self.execute_serial = execute_serial
-
-        self.daily_start_quarter = self._calculate_daily_start_quarter(self.last_processed_quarter)
+        self.index_accessor = ParquetDBIndexingAccessor(db_dir=db_dir)
 
     @staticmethod
     def _calculate_daily_start_quarter(quarter_before: str) -&gt; QuarterInfo:
@@ -88,23 +92,25 @@ class DailyPreparationProcess:
         &#34;&#34;&#34;
         return quarter.year * 10_000 + (quarter.qrtr - 1) * 300
 
-    def clear_index_tables(self):
+    def clear_index_tables(self, cut_off_day: int):
         &#34;&#34;&#34;
         Clear index tables for the daily processing.
 
-        This method removes any existing index entries for the daily files
-        to prepare for a fresh indexing process.
+        index_parquet_reports: Removes entries that were created based on daily files that
+        are now covered by quarterly files. Based on fields origin_file and originFileType.
+
+        index_parquet_processing_state: TBD
         &#34;&#34;&#34;
 
-    def clear_daily_parquet_files(self):
+    def clear_daily_parquet_files(self, cut_off_day: int):
         &#34;&#34;&#34;
         Clear daily parquet files.
 
-        This method removes any existing daily parquet files to prepare
-        for a fresh transformation process.
+        Clear parquet files that were created from daily files that
+        are now covered by quarterly files.
         &#34;&#34;&#34;
 
-    def download_daily_files(self):
+    def download_daily_files(self, daily_start_quarter: QuarterInfo):
         &#34;&#34;&#34;
         Download daily SEC filing files.
 
@@ -121,27 +127,11 @@ class DailyPreparationProcess:
         )
 
         sec_daily = SecDailyOrchestrator(configuration=config)
-        sec_daily.process_index_data(start_qrtr_info=self.daily_start_quarter)
+        sec_daily.process_index_data(start_qrtr_info=daily_start_quarter)
         sec_daily.process_xml_data()
         sec_daily.create_sec_style()
         sec_daily.create_daily_zip()
-        sec_daily.housekeeping(start_qrtr_info=self.daily_start_quarter)
-
-    def transform_daily_files(self):
-        &#34;&#34;&#34;
-        Transform downloaded daily files into parquet format.
-
-        This method processes the downloaded daily files and transforms
-        them into the parquet format for efficient storage and querying.
-        &#34;&#34;&#34;
-
-    def index_daily_files(self):
-        &#34;&#34;&#34;
-        Index the transformed daily files.
-
-        This method creates indexes for the transformed daily files to
-        enable efficient searching and retrieval.
-        &#34;&#34;&#34;
+        sec_daily.housekeeping(start_qrtr_info=daily_start_quarter)
 
     def process(self):
         &#34;&#34;&#34;
@@ -154,11 +144,24 @@ class DailyPreparationProcess:
         4. Transform daily files
         5. Index daily files
         &#34;&#34;&#34;
-        self.clear_index_tables()
-        self.clear_daily_parquet_files()
-        self.download_daily_files()
-        self.transform_daily_files()
-        self.index_daily_files()</code></pre>
+
+        last_processed_quarter_file_name = self.index_accessor.find_latest_quarter_file_name()
+        if last_processed_quarter_file_name is None:
+            raise ValueError(
+                &#34;No quarterly files were processed before. &#34;
+                &#34;Please process quarterly files first before running the daily process.&#34;
+            )
+
+        last_processed_quarter = last_processed_quarter_file_name.split(&#34;.&#34;)[0]
+
+        LOGGER.info(&#34;starting daily processing after last processed quarter: %s&#34;, last_processed_quarter)
+
+        daily_start_quarter = self._calculate_daily_start_quarter(last_processed_quarter)
+        cut_off_day = self._cut_off_day(daily_start_quarter)
+
+        self.clear_index_tables(cut_off_day=cut_off_day)
+        self.clear_daily_parquet_files(cut_off_day=cut_off_day)
+        self.download_daily_files(daily_start_quarter=daily_start_quarter)</code></pre>
 </details>
 </section>
 <section>
@@ -172,7 +175,7 @@ class DailyPreparationProcess:
 <dl>
 <dt id="secfsdstools.c_daily.dailypreparation_process.DailyPreparationProcess"><code class="flex name class">
 <span>class <span class="ident">DailyPreparationProcess</span></span>
-<span>(</span><span>daily_dir: str, last_processed_quarter: str, execute_serial: bool = False)</span>
+<span>(</span><span>db_dir: str, daily_dir: str)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Process for preparing daily SEC financial statement data.</p>
@@ -184,7 +187,7 @@ process the daily files.</p></div>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class DailyPreparationProcess:
+<pre><code class="python">class DailyPreparationProcess(AbstractProcess):
     &#34;&#34;&#34;
     Process for preparing daily SEC financial statement data.
 
@@ -196,15 +199,12 @@ process the daily files.</p></div>
 
     def __init__(
         self,
-        daily_dir: str,
-        last_processed_quarter: str,  # in the form of 2022q1
-        execute_serial: bool = False,
+        db_dir: str,
+        daily_dir: str
     ):
+        super().__init__()
         self.daily_dir = daily_dir
-        self.last_processed_quarter = last_processed_quarter
-        self.execute_serial = execute_serial
-
-        self.daily_start_quarter = self._calculate_daily_start_quarter(self.last_processed_quarter)
+        self.index_accessor = ParquetDBIndexingAccessor(db_dir=db_dir)
 
     @staticmethod
     def _calculate_daily_start_quarter(quarter_before: str) -&gt; QuarterInfo:
@@ -231,23 +231,25 @@ process the daily files.</p></div>
         &#34;&#34;&#34;
         return quarter.year * 10_000 + (quarter.qrtr - 1) * 300
 
-    def clear_index_tables(self):
+    def clear_index_tables(self, cut_off_day: int):
         &#34;&#34;&#34;
         Clear index tables for the daily processing.
 
-        This method removes any existing index entries for the daily files
-        to prepare for a fresh indexing process.
+        index_parquet_reports: Removes entries that were created based on daily files that
+        are now covered by quarterly files. Based on fields origin_file and originFileType.
+
+        index_parquet_processing_state: TBD
         &#34;&#34;&#34;
 
-    def clear_daily_parquet_files(self):
+    def clear_daily_parquet_files(self, cut_off_day: int):
         &#34;&#34;&#34;
         Clear daily parquet files.
 
-        This method removes any existing daily parquet files to prepare
-        for a fresh transformation process.
+        Clear parquet files that were created from daily files that
+        are now covered by quarterly files.
         &#34;&#34;&#34;
 
-    def download_daily_files(self):
+    def download_daily_files(self, daily_start_quarter: QuarterInfo):
         &#34;&#34;&#34;
         Download daily SEC filing files.
 
@@ -264,27 +266,11 @@ process the daily files.</p></div>
         )
 
         sec_daily = SecDailyOrchestrator(configuration=config)
-        sec_daily.process_index_data(start_qrtr_info=self.daily_start_quarter)
+        sec_daily.process_index_data(start_qrtr_info=daily_start_quarter)
         sec_daily.process_xml_data()
         sec_daily.create_sec_style()
         sec_daily.create_daily_zip()
-        sec_daily.housekeeping(start_qrtr_info=self.daily_start_quarter)
-
-    def transform_daily_files(self):
-        &#34;&#34;&#34;
-        Transform downloaded daily files into parquet format.
-
-        This method processes the downloaded daily files and transforms
-        them into the parquet format for efficient storage and querying.
-        &#34;&#34;&#34;
-
-    def index_daily_files(self):
-        &#34;&#34;&#34;
-        Index the transformed daily files.
-
-        This method creates indexes for the transformed daily files to
-        enable efficient searching and retrieval.
-        &#34;&#34;&#34;
+        sec_daily.housekeeping(start_qrtr_info=daily_start_quarter)
 
     def process(self):
         &#34;&#34;&#34;
@@ -297,56 +283,77 @@ process the daily files.</p></div>
         4. Transform daily files
         5. Index daily files
         &#34;&#34;&#34;
-        self.clear_index_tables()
-        self.clear_daily_parquet_files()
-        self.download_daily_files()
-        self.transform_daily_files()
-        self.index_daily_files()</code></pre>
+
+        last_processed_quarter_file_name = self.index_accessor.find_latest_quarter_file_name()
+        if last_processed_quarter_file_name is None:
+            raise ValueError(
+                &#34;No quarterly files were processed before. &#34;
+                &#34;Please process quarterly files first before running the daily process.&#34;
+            )
+
+        last_processed_quarter = last_processed_quarter_file_name.split(&#34;.&#34;)[0]
+
+        LOGGER.info(&#34;starting daily processing after last processed quarter: %s&#34;, last_processed_quarter)
+
+        daily_start_quarter = self._calculate_daily_start_quarter(last_processed_quarter)
+        cut_off_day = self._cut_off_day(daily_start_quarter)
+
+        self.clear_index_tables(cut_off_day=cut_off_day)
+        self.clear_daily_parquet_files(cut_off_day=cut_off_day)
+        self.download_daily_files(daily_start_quarter=daily_start_quarter)</code></pre>
 </details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="secfsdstools.c_automation.task_framework.AbstractProcess" href="../c_automation/task_framework.html#secfsdstools.c_automation.task_framework.AbstractProcess">AbstractProcess</a></li>
+<li>abc.ABC</li>
+</ul>
 <h3>Methods</h3>
 <dl>
 <dt id="secfsdstools.c_daily.dailypreparation_process.DailyPreparationProcess.clear_daily_parquet_files"><code class="name flex">
-<span>def <span class="ident">clear_daily_parquet_files</span></span>(<span>self)</span>
+<span>def <span class="ident">clear_daily_parquet_files</span></span>(<span>self, cut_off_day: int)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Clear daily parquet files.</p>
-<p>This method removes any existing daily parquet files to prepare
-for a fresh transformation process.</p></div>
+<p>Clear parquet files that were created from daily files that
+are now covered by quarterly files.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def clear_daily_parquet_files(self):
+<pre><code class="python">def clear_daily_parquet_files(self, cut_off_day: int):
     &#34;&#34;&#34;
     Clear daily parquet files.
 
-    This method removes any existing daily parquet files to prepare
-    for a fresh transformation process.
+    Clear parquet files that were created from daily files that
+    are now covered by quarterly files.
     &#34;&#34;&#34;</code></pre>
 </details>
 </dd>
 <dt id="secfsdstools.c_daily.dailypreparation_process.DailyPreparationProcess.clear_index_tables"><code class="name flex">
-<span>def <span class="ident">clear_index_tables</span></span>(<span>self)</span>
+<span>def <span class="ident">clear_index_tables</span></span>(<span>self, cut_off_day: int)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Clear index tables for the daily processing.</p>
-<p>This method removes any existing index entries for the daily files
-to prepare for a fresh indexing process.</p></div>
+<p>index_parquet_reports: Removes entries that were created based on daily files that
+are now covered by quarterly files. Based on fields origin_file and originFileType.</p>
+<p>index_parquet_processing_state: TBD</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def clear_index_tables(self):
+<pre><code class="python">def clear_index_tables(self, cut_off_day: int):
     &#34;&#34;&#34;
     Clear index tables for the daily processing.
 
-    This method removes any existing index entries for the daily files
-    to prepare for a fresh indexing process.
+    index_parquet_reports: Removes entries that were created based on daily files that
+    are now covered by quarterly files. Based on fields origin_file and originFileType.
+
+    index_parquet_processing_state: TBD
     &#34;&#34;&#34;</code></pre>
 </details>
 </dd>
 <dt id="secfsdstools.c_daily.dailypreparation_process.DailyPreparationProcess.download_daily_files"><code class="name flex">
-<span>def <span class="ident">download_daily_files</span></span>(<span>self)</span>
+<span>def <span class="ident">download_daily_files</span></span>(<span>self, daily_start_quarter: secdaily._00_common.BaseDefinitions.QuarterInfo)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Download daily SEC filing files.</p>
@@ -357,7 +364,7 @@ daily_start_quarter.</p></div>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def download_daily_files(self):
+<pre><code class="python">def download_daily_files(self, daily_start_quarter: QuarterInfo):
     &#34;&#34;&#34;
     Download daily SEC filing files.
 
@@ -374,31 +381,11 @@ daily_start_quarter.</p></div>
     )
 
     sec_daily = SecDailyOrchestrator(configuration=config)
-    sec_daily.process_index_data(start_qrtr_info=self.daily_start_quarter)
+    sec_daily.process_index_data(start_qrtr_info=daily_start_quarter)
     sec_daily.process_xml_data()
     sec_daily.create_sec_style()
     sec_daily.create_daily_zip()
-    sec_daily.housekeeping(start_qrtr_info=self.daily_start_quarter)</code></pre>
-</details>
-</dd>
-<dt id="secfsdstools.c_daily.dailypreparation_process.DailyPreparationProcess.index_daily_files"><code class="name flex">
-<span>def <span class="ident">index_daily_files</span></span>(<span>self)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Index the transformed daily files.</p>
-<p>This method creates indexes for the transformed daily files to
-enable efficient searching and retrieval.</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def index_daily_files(self):
-    &#34;&#34;&#34;
-    Index the transformed daily files.
-
-    This method creates indexes for the transformed daily files to
-    enable efficient searching and retrieval.
-    &#34;&#34;&#34;</code></pre>
+    sec_daily.housekeeping(start_qrtr_info=daily_start_quarter)</code></pre>
 </details>
 </dd>
 <dt id="secfsdstools.c_daily.dailypreparation_process.DailyPreparationProcess.process"><code class="name flex">
@@ -427,31 +414,24 @@ enable efficient searching and retrieval.</p></div>
     4. Transform daily files
     5. Index daily files
     &#34;&#34;&#34;
-    self.clear_index_tables()
-    self.clear_daily_parquet_files()
-    self.download_daily_files()
-    self.transform_daily_files()
-    self.index_daily_files()</code></pre>
-</details>
-</dd>
-<dt id="secfsdstools.c_daily.dailypreparation_process.DailyPreparationProcess.transform_daily_files"><code class="name flex">
-<span>def <span class="ident">transform_daily_files</span></span>(<span>self)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Transform downloaded daily files into parquet format.</p>
-<p>This method processes the downloaded daily files and transforms
-them into the parquet format for efficient storage and querying.</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def transform_daily_files(self):
-    &#34;&#34;&#34;
-    Transform downloaded daily files into parquet format.
 
-    This method processes the downloaded daily files and transforms
-    them into the parquet format for efficient storage and querying.
-    &#34;&#34;&#34;</code></pre>
+    last_processed_quarter_file_name = self.index_accessor.find_latest_quarter_file_name()
+    if last_processed_quarter_file_name is None:
+        raise ValueError(
+            &#34;No quarterly files were processed before. &#34;
+            &#34;Please process quarterly files first before running the daily process.&#34;
+        )
+
+    last_processed_quarter = last_processed_quarter_file_name.split(&#34;.&#34;)[0]
+
+    LOGGER.info(&#34;starting daily processing after last processed quarter: %s&#34;, last_processed_quarter)
+
+    daily_start_quarter = self._calculate_daily_start_quarter(last_processed_quarter)
+    cut_off_day = self._cut_off_day(daily_start_quarter)
+
+    self.clear_index_tables(cut_off_day=cut_off_day)
+    self.clear_daily_parquet_files(cut_off_day=cut_off_day)
+    self.download_daily_files(daily_start_quarter=daily_start_quarter)</code></pre>
 </details>
 </dd>
 </dl>
@@ -478,9 +458,7 @@ them into the parquet format for efficient storage and querying.</p></div>
 <li><code><a title="secfsdstools.c_daily.dailypreparation_process.DailyPreparationProcess.clear_daily_parquet_files" href="#secfsdstools.c_daily.dailypreparation_process.DailyPreparationProcess.clear_daily_parquet_files">clear_daily_parquet_files</a></code></li>
 <li><code><a title="secfsdstools.c_daily.dailypreparation_process.DailyPreparationProcess.clear_index_tables" href="#secfsdstools.c_daily.dailypreparation_process.DailyPreparationProcess.clear_index_tables">clear_index_tables</a></code></li>
 <li><code><a title="secfsdstools.c_daily.dailypreparation_process.DailyPreparationProcess.download_daily_files" href="#secfsdstools.c_daily.dailypreparation_process.DailyPreparationProcess.download_daily_files">download_daily_files</a></code></li>
-<li><code><a title="secfsdstools.c_daily.dailypreparation_process.DailyPreparationProcess.index_daily_files" href="#secfsdstools.c_daily.dailypreparation_process.DailyPreparationProcess.index_daily_files">index_daily_files</a></code></li>
 <li><code><a title="secfsdstools.c_daily.dailypreparation_process.DailyPreparationProcess.process" href="#secfsdstools.c_daily.dailypreparation_process.DailyPreparationProcess.process">process</a></code></li>
-<li><code><a title="secfsdstools.c_daily.dailypreparation_process.DailyPreparationProcess.transform_daily_files" href="#secfsdstools.c_daily.dailypreparation_process.DailyPreparationProcess.transform_daily_files">transform_daily_files</a></code></li>
 </ul>
 </li>
 </ul>

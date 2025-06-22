@@ -204,6 +204,7 @@ class ConfigurationManager:
             no_parallel_processing=config[&#34;DEFAULT&#34;].getboolean(&#34;NoParallelProcessing&#34;, False),
             post_update_hook=config[&#34;DEFAULT&#34;].get(&#34;PostUpdateHook&#34;, None),
             post_update_processes=config[&#34;DEFAULT&#34;].get(&#34;PostUpdateProcesses&#34;, None),
+            daily_processing=config[&#34;DEFAULT&#34;].getboolean(&#34;DailyProcessing&#34;, False),
             config_parser=config,
         )
 
@@ -364,6 +365,7 @@ class ConfigurationManager:
             &#34;AutoUpdate&#34;: configuration.auto_update,
             &#34;KeepZipFiles&#34;: configuration.keep_zip_files,
             &#34;NoParallelProcessing&#34;: configuration.no_parallel_processing,
+            &#34;DailyProcessing&#34;: configuration.daily_processing,
         }
 
         with open(file_path, &#34;w&#34;, encoding=&#34;utf8&#34;) as configfile:
@@ -516,6 +518,7 @@ If the file does not exist, it will create one in the current directory</p></div
             no_parallel_processing=config[&#34;DEFAULT&#34;].getboolean(&#34;NoParallelProcessing&#34;, False),
             post_update_hook=config[&#34;DEFAULT&#34;].get(&#34;PostUpdateHook&#34;, None),
             post_update_processes=config[&#34;DEFAULT&#34;].get(&#34;PostUpdateProcesses&#34;, None),
+            daily_processing=config[&#34;DEFAULT&#34;].getboolean(&#34;DailyProcessing&#34;, False),
             config_parser=config,
         )
 
@@ -676,6 +679,7 @@ If the file does not exist, it will create one in the current directory</p></div
             &#34;AutoUpdate&#34;: configuration.auto_update,
             &#34;KeepZipFiles&#34;: configuration.keep_zip_files,
             &#34;NoParallelProcessing&#34;: configuration.no_parallel_processing,
+            &#34;DailyProcessing&#34;: configuration.daily_processing,
         }
 
         with open(file_path, &#34;w&#34;, encoding=&#34;utf8&#34;) as configfile:

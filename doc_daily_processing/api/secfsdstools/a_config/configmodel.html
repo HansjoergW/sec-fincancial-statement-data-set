@@ -45,7 +45,6 @@ class Configuration:
     db_dir: str
     parquet_dir: str
     user_agent_email: str
-    daily_download_dir: Optional[str] = None
     auto_update: bool = True
     keep_zip_files: bool = False
     no_parallel_processing: bool = False
@@ -54,8 +53,12 @@ class Configuration:
     post_update_hook: Optional[str] = None
     post_update_processes: Optional[str] = None
 
+    daily_download_dir: str = &#34;&#34;
+    daily_processing: bool = False
+
     def __post_init__(self):
-        self.daily_download_dir = os.path.join(self.download_dir, &#34;daily&#34;)
+        if self.daily_download_dir == &#34;&#34;:
+            self.daily_download_dir = os.path.join(self.download_dir, &#34;daily&#34;)
 
     def get_dict(self):
         &#34;&#34;&#34;
@@ -77,7 +80,7 @@ class Configuration:
 <dl>
 <dt id="secfsdstools.a_config.configmodel.Configuration"><code class="flex name class">
 <span>class <span class="ident">Configuration</span></span>
-<span>(</span><span>download_dir: str, db_dir: str, parquet_dir: str, user_agent_email: str, daily_download_dir: Optional[str] = None, auto_update: bool = True, keep_zip_files: bool = False, no_parallel_processing: bool = False, config_parser: Optional[configparser.ConfigParser] = None, post_update_hook: Optional[str] = None, post_update_processes: Optional[str] = None)</span>
+<span>(</span><span>download_dir: str, db_dir: str, parquet_dir: str, user_agent_email: str, auto_update: bool = True, keep_zip_files: bool = False, no_parallel_processing: bool = False, config_parser: Optional[configparser.ConfigParser] = None, post_update_hook: Optional[str] = None, post_update_processes: Optional[str] = None, daily_download_dir: str = '', daily_processing: bool = False)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Basic configuration settings</p></div>
@@ -93,7 +96,6 @@ class Configuration:
     db_dir: str
     parquet_dir: str
     user_agent_email: str
-    daily_download_dir: Optional[str] = None
     auto_update: bool = True
     keep_zip_files: bool = False
     no_parallel_processing: bool = False
@@ -102,8 +104,12 @@ class Configuration:
     post_update_hook: Optional[str] = None
     post_update_processes: Optional[str] = None
 
+    daily_download_dir: str = &#34;&#34;
+    daily_processing: bool = False
+
     def __post_init__(self):
-        self.daily_download_dir = os.path.join(self.download_dir, &#34;daily&#34;)
+        if self.daily_download_dir == &#34;&#34;:
+            self.daily_download_dir = os.path.join(self.download_dir, &#34;daily&#34;)
 
     def get_dict(self):
         &#34;&#34;&#34;
@@ -123,7 +129,11 @@ class Configuration:
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="secfsdstools.a_config.configmodel.Configuration.daily_download_dir"><code class="name">var <span class="ident">daily_download_dir</span> : Optional[str]</code></dt>
+<dt id="secfsdstools.a_config.configmodel.Configuration.daily_download_dir"><code class="name">var <span class="ident">daily_download_dir</span> : str</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="secfsdstools.a_config.configmodel.Configuration.daily_processing"><code class="name">var <span class="ident">daily_processing</span> : bool</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -206,6 +216,7 @@ class Configuration:
 <li><code><a title="secfsdstools.a_config.configmodel.Configuration.auto_update" href="#secfsdstools.a_config.configmodel.Configuration.auto_update">auto_update</a></code></li>
 <li><code><a title="secfsdstools.a_config.configmodel.Configuration.config_parser" href="#secfsdstools.a_config.configmodel.Configuration.config_parser">config_parser</a></code></li>
 <li><code><a title="secfsdstools.a_config.configmodel.Configuration.daily_download_dir" href="#secfsdstools.a_config.configmodel.Configuration.daily_download_dir">daily_download_dir</a></code></li>
+<li><code><a title="secfsdstools.a_config.configmodel.Configuration.daily_processing" href="#secfsdstools.a_config.configmodel.Configuration.daily_processing">daily_processing</a></code></li>
 <li><code><a title="secfsdstools.a_config.configmodel.Configuration.db_dir" href="#secfsdstools.a_config.configmodel.Configuration.db_dir">db_dir</a></code></li>
 <li><code><a title="secfsdstools.a_config.configmodel.Configuration.download_dir" href="#secfsdstools.a_config.configmodel.Configuration.download_dir">download_dir</a></code></li>
 <li><code><a title="secfsdstools.a_config.configmodel.Configuration.get_dict" href="#secfsdstools.a_config.configmodel.Configuration.get_dict">get_dict</a></code></li>

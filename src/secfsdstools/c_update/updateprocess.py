@@ -195,7 +195,7 @@ class Updater:
                     ToParquetTransformerProcess(
                         zip_dir=dailyprocess.config.dailyzipdir,
                         parquet_dir=self.parquet_dir,
-                        keep_zip_files=self.keep_zip_files,
+                        keep_zip_files=True, # needed for the daily process to work -> it has its own cleanup
                         file_type="daily",
                         execute_serial=self.no_parallel_processing,
                     ),

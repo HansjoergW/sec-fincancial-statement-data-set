@@ -200,12 +200,12 @@ class Updater:
                         execute_serial=self.no_parallel_processing,
                     ),
                     # index daily data
-                    # ReportParquetIndexerProcess(
-                    #     db_dir=self.db_dir,
-                    #     parquet_dir=self.parquet_dir,
-                    #     file_type="daily",
-                    #     execute_serial=self.no_parallel_processing,
-                    # ),
+                    ReportParquetIndexerProcess(
+                        db_dir=self.db_dir,
+                        parquet_dir=self.parquet_dir,
+                        file_type="daily",
+                        execute_serial=self.no_parallel_processing,
+                    ),
                 ]
             )
 

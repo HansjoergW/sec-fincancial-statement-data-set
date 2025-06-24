@@ -1,3 +1,13 @@
+"""
+Tests for the DailyPreparationProcess class.
+
+Tests cover static methods for quarter calculations and instance methods
+for clearing index tables and daily parquet files.
+"""
+
+from pathlib import Path
+from unittest.mock import Mock, patch
+
 from secdaily._00_common.BaseDefinitions import QuarterInfo
 
 from secfsdstools.c_daily.dailypreparation_process import DailyPreparationProcess
@@ -42,3 +52,86 @@ def test_cut_off_day():
     assert DailyPreparationProcess._cut_off_day(q2) == 20220300  # Q2: yyyy0300
     assert DailyPreparationProcess._cut_off_day(q3) == 20220600  # Q3: yyyy0600
     assert DailyPreparationProcess._cut_off_day(q4) == 20220900  # Q4: yyyy0900
+
+
+def test_clear_index_tables():
+    """Test clearing index tables with a specific cut_off_day."""
+    # Setup
+    mock_index_accessor = Mock()
+
+    with patch("secfsdstools.c_daily.dailypreparation_process.ParquetDBIndexingAccessor") as mock_accessor_class:
+        mock_accessor_class.return_value = mock_index_accessor
+
+        process = DailyPreparationProcess(db_dir="/test/db", parquet_dir="/test/parquet", daily_dir="/test/daily")
+
+        # Execution
+        cut_off_day = 20220300
+        process.clear_index_tables(cut_off_day=cut_off_day)
+
+        # Assertion
+        mock_index_accessor.clear_index_tables.assert_called_once_with(cut_off_day=20220300)
+
+
+def test_clear_daily_parquet_files_directory_exists(tmp_path):
+    """Test clearing daily parquet files when directory exists with files to remove."""
+    # Setup
+    parquet_dir = tmp_path / "parquet"
+    daily_dir = parquet_dir / "daily"
+    daily_dir.mkdir(parents=True)
+
+    # Create test directories that should be removed (before cut_off)
+    (daily_dir / "20220101.zip").mkdir()
+    (daily_dir / "20220201.zip").mkdir()
+
+    # Create test directories that should remain (after cut_off)
+    (daily_dir / "20220401.zip").mkdir()
+    (daily_dir / "20220501.zip").mkdir()
+
+    # Create a file (not directory) that should be ignored
+    (daily_dir / "somefile.txt").touch()
+
+    mock_index_accessor = Mock()
+
+    with patch("secfsdstools.c_daily.dailypreparation_process.ParquetDBIndexingAccessor") as mock_accessor_class:
+        mock_accessor_class.return_value = mock_index_accessor
+
+        process = DailyPreparationProcess(db_dir="/test/db", parquet_dir=str(parquet_dir), daily_dir="/test/daily")
+
+        # Execution
+        cut_off_day = 20220300
+        process.clear_daily_parquet_files(cut_off_day=cut_off_day)
+
+        # Assertion
+        remaining_dirs = [d.name for d in daily_dir.iterdir() if d.is_dir()]
+        remaining_files = [f.name for f in daily_dir.iterdir() if f.is_file()]
+
+        # Directories before cut_off should be removed
+        assert "20220101.zip" not in remaining_dirs
+        assert "20220201.zip" not in remaining_dirs
+
+        # Directories after cut_off should remain
+        assert "20220401.zip" in remaining_dirs
+        assert "20220501.zip" in remaining_dirs
+
+        # Files should be ignored and remain
+        assert "somefile.txt" in remaining_files
+
+
+def test_clear_daily_parquet_files_directory_not_exists():
+    """Test clearing daily parquet files when directory does not exist."""
+    # Setup
+    mock_index_accessor = Mock()
+
+    with patch("secfsdstools.c_daily.dailypreparation_process.ParquetDBIndexingAccessor") as mock_accessor_class:
+        mock_accessor_class.return_value = mock_index_accessor
+
+        process = DailyPreparationProcess(
+            db_dir="/test/db", parquet_dir="/nonexistent/parquet", daily_dir="/test/daily"
+        )
+
+        # Execution - should not raise an error
+        cut_off_day = 20220300
+        process.clear_daily_parquet_files(cut_off_day=cut_off_day)
+
+        # Assertion - method should complete without error
+        # No specific assertions needed as we're testing it doesn't crash

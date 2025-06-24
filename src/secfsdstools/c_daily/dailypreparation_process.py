@@ -5,6 +5,8 @@ Provides functionality to process daily files starting from a specified quarter.
 """
 
 import logging
+from pathlib import Path
+import shutil
 
 from secdaily._00_common.BaseDefinitions import QuarterInfo
 from secdaily.SecDaily import Configuration, SecDailyOrchestrator
@@ -25,9 +27,13 @@ class DailyPreparationProcess(AbstractProcess):
     process the daily files.
     """
 
-    def __init__(self, db_dir: str, daily_dir: str):
+    def __init__(self, 
+                 db_dir: str, 
+                 parquet_dir: str,
+                 daily_dir: str):
         super().__init__()
         self.daily_dir = daily_dir
+        self.parquet_dir = parquet_dir
         self.index_accessor = ParquetDBIndexingAccessor(db_dir=db_dir)
 
         self.config = Configuration(
@@ -68,10 +74,12 @@ class DailyPreparationProcess(AbstractProcess):
         Clear index tables for the daily processing.
 
         index_parquet_reports: Removes entries that were created based on daily files that
-        are now covered by quarterly files. Based on fields origin_file and originFileType.
+        are now covered by quarterly files. Based on fields origin_file < cut_off_day and originFileType = daily.
 
-        index_parquet_processing_state: TBD
+        index_parquet_processing_state: remove entries based on fileName length 8 + 3 and < cut_off_day
         """
+        self.index_accessor.clear_index_tables(cut_off_day=cut_off_day)
+
 
     def clear_daily_parquet_files(self, cut_off_day: int):
         """
@@ -80,6 +88,15 @@ class DailyPreparationProcess(AbstractProcess):
         Clear parquet files that were created from daily files that
         are now covered by quarterly files.
         """
+
+        cut_off_file_name = f"{cut_off_day}.zip"
+        daily_parquet_dir = Path(self.parquet_dir) / "daily"
+
+        if daily_parquet_dir.exists():
+            for dir_path in daily_parquet_dir.iterdir():
+                if dir_path.is_dir() and dir_path.name < cut_off_file_name:
+                    shutil.rmtree(dir_path)
+
 
     def download_daily_files(self, daily_start_quarter: QuarterInfo):
         """

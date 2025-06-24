@@ -17,26 +17,30 @@ new release
 Problems:
 -[x] pylint config problems
 
-- [] eigenes dlddaily Verzeichnis
+- [x] eigenes dlddaily Verzeichnis
   - [x] config anpassen für default dlddaily
   - [x] bereits vorhandene struktur verschieben
-  - [] datenbank anpassen
+  - [x] datenbank anpassen
 
 
 Functions:
 - [] daily processing integration
-     [] clear index tables (for last zip quarter and before quarters)
-     [] clear daily parquet files (for last zip quarter and before quarters)
+     [x] clear index tables (for last zip quarter and before quarters)
+     [x] clear daily parquet files (for last zip quarter and before quarters)
      [x] calculate start quarter
      [x] download and process daily files
-     [] transform new daily files to parquet
-     [] index new daily files
-     [] configuration daily processing -> enable
+     [x] transform new daily files to parquet
+     [x] index new daily files
+     [x] configuration daily processing -> enable
+- [] Testing daily integration
+     [] test different collectors with daily
+     [] test notebooks for daily reports
 - [] new features info message
   
 
 - ensure docs deploy is working when released
 
+----------------------------------
 - first only as additional pipeline steps, not integrated in db?
 - linked in post
 

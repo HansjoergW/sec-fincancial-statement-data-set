@@ -330,3 +330,34 @@ class ParquetDBIndexingAccessor(DB):
         # result  is a list of tuples with one entry, so we have to flatten it
         result = self.execute_fetchall(sql=sql)
         return [x[0] for x in result]
+
+    def clear_index_tables(self, cut_off_day: int):
+        """
+        Clear index tables for the daily processing.
+
+        index_parquet_reports: Removes entries that were created based on daily files that
+        are now covered by quarterly files. Based on fields origin_file < cut_off_day and originFileType = daily.
+
+        index_parquet_processing_state: remove entries based on fileName length 8 + 3 and < cut_off_day
+        """
+
+        cut_off_file_name: str = f"{cut_off_day}.zip"
+
+        conn = self.get_connection()
+        try:
+            sql = f"""
+                    DELETE FROM {self.index_reports_table}
+                    WHERE originFile < '{cut_off_file_name}' and originFileType = 'daily'
+                """
+            self.execute_single(sql=sql, conn=conn)
+
+            sql = f"""
+                    DELETE FROM {self.index_processing_table}
+                    WHERE fileName < '{cut_off_file_name}' and length(fileName) = 12
+                """
+            self.execute_single(sql=sql, conn=conn)
+
+            # Commit the transaction
+            conn.commit()
+        finally:
+            conn.close()

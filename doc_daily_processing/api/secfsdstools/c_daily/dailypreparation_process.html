@@ -38,6 +38,8 @@ Provides functionality to process daily files starting from a specified quarter.
 &#34;&#34;&#34;
 
 import logging
+from pathlib import Path
+import shutil
 
 from secdaily._00_common.BaseDefinitions import QuarterInfo
 from secdaily.SecDaily import Configuration, SecDailyOrchestrator
@@ -58,9 +60,13 @@ class DailyPreparationProcess(AbstractProcess):
     process the daily files.
     &#34;&#34;&#34;
 
-    def __init__(self, db_dir: str, daily_dir: str):
+    def __init__(self, 
+                 db_dir: str, 
+                 parquet_dir: str,
+                 daily_dir: str):
         super().__init__()
         self.daily_dir = daily_dir
+        self.parquet_dir = parquet_dir
         self.index_accessor = ParquetDBIndexingAccessor(db_dir=db_dir)
 
         self.config = Configuration(
@@ -101,10 +107,12 @@ class DailyPreparationProcess(AbstractProcess):
         Clear index tables for the daily processing.
 
         index_parquet_reports: Removes entries that were created based on daily files that
-        are now covered by quarterly files. Based on fields origin_file and originFileType.
+        are now covered by quarterly files. Based on fields origin_file &lt; cut_off_day and originFileType = daily.
 
-        index_parquet_processing_state: TBD
+        index_parquet_processing_state: remove entries based on fileName length 8 + 3 and &lt; cut_off_day
         &#34;&#34;&#34;
+        self.index_accessor.clear_index_tables(cut_off_day=cut_off_day)
+
 
     def clear_daily_parquet_files(self, cut_off_day: int):
         &#34;&#34;&#34;
@@ -113,6 +121,15 @@ class DailyPreparationProcess(AbstractProcess):
         Clear parquet files that were created from daily files that
         are now covered by quarterly files.
         &#34;&#34;&#34;
+
+        cut_off_file_name = f&#34;{cut_off_day}.zip&#34;
+        daily_parquet_dir = Path(self.parquet_dir) / &#34;daily&#34;
+
+        if daily_parquet_dir.exists():
+            for dir_path in daily_parquet_dir.iterdir():
+                if dir_path.is_dir() and dir_path.name &lt; cut_off_file_name:
+                    shutil.rmtree(dir_path)
+
 
     def download_daily_files(self, daily_start_quarter: QuarterInfo):
         &#34;&#34;&#34;
@@ -172,7 +189,7 @@ class DailyPreparationProcess(AbstractProcess):
 <dl>
 <dt id="secfsdstools.c_daily.dailypreparation_process.DailyPreparationProcess"><code class="flex name class">
 <span>class <span class="ident">DailyPreparationProcess</span></span>
-<span>(</span><span>db_dir: str, daily_dir: str)</span>
+<span>(</span><span>db_dir: str, parquet_dir: str, daily_dir: str)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Process for preparing daily SEC financial statement data.</p>
@@ -194,9 +211,13 @@ process the daily files.</p></div>
     process the daily files.
     &#34;&#34;&#34;
 
-    def __init__(self, db_dir: str, daily_dir: str):
+    def __init__(self, 
+                 db_dir: str, 
+                 parquet_dir: str,
+                 daily_dir: str):
         super().__init__()
         self.daily_dir = daily_dir
+        self.parquet_dir = parquet_dir
         self.index_accessor = ParquetDBIndexingAccessor(db_dir=db_dir)
 
         self.config = Configuration(
@@ -237,10 +258,12 @@ process the daily files.</p></div>
         Clear index tables for the daily processing.
 
         index_parquet_reports: Removes entries that were created based on daily files that
-        are now covered by quarterly files. Based on fields origin_file and originFileType.
+        are now covered by quarterly files. Based on fields origin_file &lt; cut_off_day and originFileType = daily.
 
-        index_parquet_processing_state: TBD
+        index_parquet_processing_state: remove entries based on fileName length 8 + 3 and &lt; cut_off_day
         &#34;&#34;&#34;
+        self.index_accessor.clear_index_tables(cut_off_day=cut_off_day)
+
 
     def clear_daily_parquet_files(self, cut_off_day: int):
         &#34;&#34;&#34;
@@ -249,6 +272,15 @@ process the daily files.</p></div>
         Clear parquet files that were created from daily files that
         are now covered by quarterly files.
         &#34;&#34;&#34;
+
+        cut_off_file_name = f&#34;{cut_off_day}.zip&#34;
+        daily_parquet_dir = Path(self.parquet_dir) / &#34;daily&#34;
+
+        if daily_parquet_dir.exists():
+            for dir_path in daily_parquet_dir.iterdir():
+                if dir_path.is_dir() and dir_path.name &lt; cut_off_file_name:
+                    shutil.rmtree(dir_path)
+
 
     def download_daily_files(self, daily_start_quarter: QuarterInfo):
         &#34;&#34;&#34;
@@ -320,7 +352,15 @@ are now covered by quarterly files.</p></div>
 
     Clear parquet files that were created from daily files that
     are now covered by quarterly files.
-    &#34;&#34;&#34;</code></pre>
+    &#34;&#34;&#34;
+
+    cut_off_file_name = f&#34;{cut_off_day}.zip&#34;
+    daily_parquet_dir = Path(self.parquet_dir) / &#34;daily&#34;
+
+    if daily_parquet_dir.exists():
+        for dir_path in daily_parquet_dir.iterdir():
+            if dir_path.is_dir() and dir_path.name &lt; cut_off_file_name:
+                shutil.rmtree(dir_path)</code></pre>
 </details>
 </dd>
 <dt id="secfsdstools.c_daily.dailypreparation_process.DailyPreparationProcess.clear_index_tables"><code class="name flex">
@@ -329,8 +369,8 @@ are now covered by quarterly files.</p></div>
 <dd>
 <div class="desc"><p>Clear index tables for the daily processing.</p>
 <p>index_parquet_reports: Removes entries that were created based on daily files that
-are now covered by quarterly files. Based on fields origin_file and originFileType.</p>
-<p>index_parquet_processing_state: TBD</p></div>
+are now covered by quarterly files. Based on fields origin_file &lt; cut_off_day and originFileType = daily.</p>
+<p>index_parquet_processing_state: remove entries based on fileName length 8 + 3 and &lt; cut_off_day</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -340,10 +380,11 @@ are now covered by quarterly files. Based on fields origin_file and originFileTy
     Clear index tables for the daily processing.
 
     index_parquet_reports: Removes entries that were created based on daily files that
-    are now covered by quarterly files. Based on fields origin_file and originFileType.
+    are now covered by quarterly files. Based on fields origin_file &lt; cut_off_day and originFileType = daily.
 
-    index_parquet_processing_state: TBD
-    &#34;&#34;&#34;</code></pre>
+    index_parquet_processing_state: remove entries based on fileName length 8 + 3 and &lt; cut_off_day
+    &#34;&#34;&#34;
+    self.index_accessor.clear_index_tables(cut_off_day=cut_off_day)</code></pre>
 </details>
 </dd>
 <dt id="secfsdstools.c_daily.dailypreparation_process.DailyPreparationProcess.download_daily_files"><code class="name flex">

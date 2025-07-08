@@ -36,6 +36,8 @@ Functions:
      [] test different collectors with daily
      [] test notebooks for daily reports
 - [] new features info message
+
+- [] colum fy_real is created and saved for daily sub_df
   
 
 - ensure docs deploy is working when released

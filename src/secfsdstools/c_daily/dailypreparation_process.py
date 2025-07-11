@@ -5,8 +5,8 @@ Provides functionality to process daily files starting from a specified quarter.
 """
 
 import logging
-from pathlib import Path
 import shutil
+from pathlib import Path
 from typing import Dict
 
 from secdaily._00_common.BaseDefinitions import QuarterInfo
@@ -28,10 +28,7 @@ class DailyPreparationProcess(AbstractProcess):
     process the daily files.
     """
 
-    def __init__(self, 
-                 db_dir: str, 
-                 parquet_dir: str,
-                 daily_dir: str):
+    def __init__(self, db_dir: str, parquet_dir: str, daily_dir: str):
         super().__init__()
         self.daily_dir = daily_dir
         self.parquet_dir = parquet_dir
@@ -68,12 +65,7 @@ class DailyPreparationProcess(AbstractProcess):
 
         This way, we can select for < cut_off_day to get all filings before the start of the quarter.
         """
-        cut_off_month: Dict[int, int] = {
-            1: 0, # previous year
-            2: 4, # April
-            3: 7, # July
-            4: 10 # October
-        }
+        cut_off_month: Dict[int, int] = {1: 0, 2: 4, 3: 7, 4: 10}  # previous year  # April  # July  # October
 
         return quarter.year * 10_000 + cut_off_month[quarter.qrtr] * 100
 
@@ -87,7 +79,6 @@ class DailyPreparationProcess(AbstractProcess):
         index_parquet_processing_state: remove entries based on fileName length 8 + 3 and < cut_off_day
         """
         self.index_accessor.clear_index_tables(cut_off_day=cut_off_day)
-
 
     def clear_daily_parquet_files(self, cut_off_day: int):
         """
@@ -104,7 +95,6 @@ class DailyPreparationProcess(AbstractProcess):
             for dir_path in daily_parquet_dir.iterdir():
                 if dir_path.is_dir() and dir_path.name < cut_off_file_name:
                     shutil.rmtree(dir_path)
-
 
     def download_daily_files(self, daily_start_quarter: QuarterInfo):
         """
@@ -142,7 +132,6 @@ class DailyPreparationProcess(AbstractProcess):
             )
 
         last_processed_quarter = last_processed_quarter_file_name.split(".")[0]
-
 
         daily_start_quarter = self._calculate_daily_start_quarter(last_processed_quarter)
         cut_off_day = self._cut_off_day(daily_start_quarter)

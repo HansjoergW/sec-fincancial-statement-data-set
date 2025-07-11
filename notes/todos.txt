@@ -34,7 +34,7 @@ Functions:
      [x] configuration daily processing -> enable
 - [] Testing daily integration
      [x] test different collectors with daily
-     [] test notebooks for daily reports
+     [] test notebooks for daily reports -> zieht in übersicht nur quarter.
 - [] new features info message
 
 - [x] colum fy_real is created and saved for daily sub_df

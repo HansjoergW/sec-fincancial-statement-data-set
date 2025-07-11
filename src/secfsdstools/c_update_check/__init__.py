@@ -10,8 +10,8 @@ from inspect import FrameInfo
 
 
 def is_running_in_pytest_or_pdoc():
-    """ Check if we are running as a test or inside the build process """
-    return ('pytest' in sys.argv[0]) or ('pdoc3' in sys.argv[0])
+    """Check if we are running as a test or inside the build process"""
+    return ("pytest" in sys.argv[0]) or ("pdoc3" in sys.argv[0])
 
 
 def is_update_frame(frameinfo: FrameInfo) -> bool:
@@ -27,8 +27,7 @@ def is_check_configuration(frameinfo: FrameInfo) -> bool:
     check if the call is done in the context of checking the configuration.
     this could cause a circular import looping
     """
-    return ((frameinfo.function == "check_basic_configuration") and
-            (frameinfo.filename.endswith("configmgt.py")))
+    return (frameinfo.function == "check_basic_configuration") and (frameinfo.filename.endswith("configmgt.py"))
 
 
 def is_already_in_update_or_check_config_process() -> bool:
@@ -47,7 +46,7 @@ def is_already_in_update_or_check_config_process() -> bool:
 if not is_running_in_pytest_or_pdoc() and not is_already_in_update_or_check_config_process():
     import logging
 
-    import secfsdstools
+    from secfsdstools.update import update
 
     logging.getLogger().info("loading secfsdstools ...")
-    secfsdstools.update.update()
+    update()

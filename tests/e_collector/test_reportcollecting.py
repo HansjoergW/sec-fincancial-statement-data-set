@@ -10,7 +10,7 @@ from secfsdstools.e_collector.reportcollecting import SingleReportCollector
 APPLE_ADSH_10Q_2010_Q1 = "0001193125-10-012085"
 CURRENT_DIR, _ = os.path.split(__file__)
 PATH_TO_ZIP = f"{CURRENT_DIR}/../_testdata/parquet_new/quarter/2010q1.zip"
-PATH_TO_DAILY_ZIP = f"{CURRENT_DIR}/../_testdata/parquet_new/daily/20250404.zip"
+PATH_TO_DAILY_ZIP = f"{CURRENT_DIR}/../_testdata/parquet_new/daily/20250701.zip"
 
 
 @pytest.fixture
@@ -34,13 +34,13 @@ def reportcollector():
 @pytest.fixture
 def dailyreportcollector():
     report = IndexReport(
-        adsh="0001023459-25-000032",
-        cik=1023459,
-        name="SIMULATIONS PLUS, INC.",
+        adsh="0001554795-25-000172",
+        cik=1394108,
+        name="SUIC WORLDWIDE HOLDINGS LTD.",
         form="10-Q",
-        filed=20250404,
-        period=20250228,
-        originFile="20250404.zip",
+        filed=20250701,
+        period=20250331,
+        originFile="20250701.zip",
         originFileType="daily",
         fullPath=PATH_TO_DAILY_ZIP,
         url="",
@@ -76,7 +76,7 @@ def test_cm_get_report_by_adsh():
 
 def test_cm_get_daily_report_by_adsh():
     instance = IndexReport(
-        cik=1023459,
+        cik=1394108,
         name="",
         form="",
         filed=0,
@@ -84,7 +84,7 @@ def test_cm_get_daily_report_by_adsh():
         originFile="",
         originFileType="",
         url="",
-        adsh="0001023459-25-000032",
+        adsh="0001554795-25-000172",
         fullPath=PATH_TO_DAILY_ZIP,
     )
 
@@ -93,10 +93,10 @@ def test_cm_get_daily_report_by_adsh():
         return_value=instance,
     ):
         reportreader = SingleReportCollector.get_report_by_adsh(
-            adsh="0001023459-25-000032",
+            adsh="0001554795-25-000172",
             configuration=Configuration(db_dir="", download_dir="", user_agent_email="", parquet_dir=""),
         )
-        assert reportreader.collect().num_df.shape == (225, 10)
+        assert reportreader.collect().num_df.shape == (128, 10)
 
 
 def test_read_raw_data(reportcollector):
@@ -107,5 +107,5 @@ def test_read_raw_data(reportcollector):
 
 def test_read_raw_daily_data(dailyreportcollector):
     bag = dailyreportcollector.collect()
-    assert bag.num_df.shape == (225, 10)
-    assert bag.pre_df.shape == (95, 10)
+    assert bag.num_df.shape == (128, 10)
+    assert bag.pre_df.shape == (69, 10)

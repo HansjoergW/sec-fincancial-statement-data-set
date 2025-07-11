@@ -10,7 +10,7 @@ from secfsdstools.e_collector.zipcollecting import ZipCollector
 
 CURRENT_DIR, _ = os.path.split(__file__)
 PATH_TO_ZIP = f"{CURRENT_DIR}/../_testdata/parquet_new/quarter/2010q1.zip"
-PATH_TO_DAILY_ZIP = f"{CURRENT_DIR}/../_testdata/parquet_new/daily/20250404.zip"
+PATH_TO_DAILY_ZIP = f"{CURRENT_DIR}/../_testdata/parquet_new/daily/20250701.zip"
 
 
 @pytest.fixture
@@ -48,9 +48,9 @@ def test_read_raw_data(zipcollector):
 
 
 def test_read_raw_daily_data(dailyzipcollector):
-    assert dailyzipcollector.collect().num_df.shape == (2107, 10)
-    assert dailyzipcollector.collect().pre_df.shape == (1089, 10)
-    assert dailyzipcollector.collect().sub_df.shape == (12, 12)
+    assert dailyzipcollector.collect().num_df.shape == (1598, 10)
+    assert dailyzipcollector.collect().pre_df.shape == (595, 10)
+    assert dailyzipcollector.collect().sub_df.shape == (6, 11)
 
 
 def test_forms_filter():

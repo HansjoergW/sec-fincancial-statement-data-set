@@ -78,10 +78,10 @@ def test_daily_zip_transformation(tmp_path):
 
     transformer.process()
 
-    sub_1_df = pd.read_parquet(tmp_path / "daily" / "20250404.zip" / "sub.txt.parquet")
-    pre_1_df = pd.read_parquet(tmp_path / "daily" / "20250404.zip" / "pre.txt.parquet")
-    num_1_df = pd.read_parquet(tmp_path / "daily" / "20250404.zip" / "num.txt.parquet")
+    sub_1_df = pd.read_parquet(tmp_path / "daily" / "20250701.zip" / "sub.txt.parquet")
+    pre_1_df = pd.read_parquet(tmp_path / "daily" / "20250701.zip" / "pre.txt.parquet")
+    num_1_df = pd.read_parquet(tmp_path / "daily" / "20250701.zip" / "num.txt.parquet")
 
-    assert num_1_df.shape == (2107, 10)
-    assert pre_1_df.shape == (1089, 10)
-    assert sub_1_df.shape == (12, 12)
+    assert num_1_df.shape == (1598, 10)
+    assert pre_1_df.shape == (595, 10)
+    assert sub_1_df.shape == (6, 11)

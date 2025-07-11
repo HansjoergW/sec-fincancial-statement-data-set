@@ -48,10 +48,10 @@ def test_cut_off_day():
     q4 = QuarterInfo(2022, 4)
 
     # Test cut_off_day for each quarter
-    assert DailyPreparationProcess._cut_off_day(q1) == 20220000  # Q1: yyyy0000
-    assert DailyPreparationProcess._cut_off_day(q2) == 20220300  # Q2: yyyy0300
-    assert DailyPreparationProcess._cut_off_day(q3) == 20220600  # Q3: yyyy0600
-    assert DailyPreparationProcess._cut_off_day(q4) == 20220900  # Q4: yyyy0900
+    assert DailyPreparationProcess._cut_off_day(q1) == 20220000  # Q1: yyyy0000 Everyting in the past years
+    assert DailyPreparationProcess._cut_off_day(q2) == 20220400  # Q2: yyyy0400 Everything before april
+    assert DailyPreparationProcess._cut_off_day(q3) == 20220700  # Q3: yyyy0700 Everything before july
+    assert DailyPreparationProcess._cut_off_day(q4) == 20221000  # Q4: yyyy1000 Everything before october
 
 
 def test_clear_index_tables():

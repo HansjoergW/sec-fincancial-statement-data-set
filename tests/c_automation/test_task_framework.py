@@ -4,6 +4,7 @@ from pathlib import Path
 from typing import List
 
 from secfsdstools.c_automation.task_framework import (
+    AbstractParallelProcess,
     AbstractProcess,
     AbstractProcessPoolProcess,
     AbstractTask,
@@ -73,7 +74,7 @@ def test_checkbytimestamptask(tmp_path):
 
     assert task.has_work_todo()
 
-    result = AbstractProcess.process_task(task)
+    result = AbstractParallelProcess.process_task(task)
 
     assert len(task.called_paths_to_process) == 3
     assert result.result == "success"
@@ -109,7 +110,7 @@ def test_checkbytimestamptask(tmp_path):
 
     assert task_changed.has_work_todo()
 
-    result_task_changed = AbstractProcess.process_task(task_changed)
+    result_task_changed = AbstractParallelProcess.process_task(task_changed)
 
     # we expect the same thant it was with the initial task
     assert len(task_changed.called_paths_to_process) == 3
@@ -159,7 +160,7 @@ def test_checkbynewsubfoldertask(tmp_path):
 
     assert task.has_work_todo()
 
-    result = AbstractProcess.process_task(task)
+    result = AbstractParallelProcess.process_task(task)
 
     assert len(task.called_paths_to_process) == 3
     assert result.result == "success"
@@ -195,7 +196,7 @@ def test_checkbynewsubfoldertask(tmp_path):
 
     assert task_changed.has_work_todo()
 
-    result_task_changed = AbstractProcess.process_task(task_changed)
+    result_task_changed = AbstractParallelProcess.process_task(task_changed)
 
     # we expect the same thant it was with the initial task
     assert len(task_changed.called_paths_to_process) == 1

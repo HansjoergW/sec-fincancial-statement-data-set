@@ -7,6 +7,7 @@ Provides functionality to process daily files starting from a specified quarter.
 import logging
 from pathlib import Path
 import shutil
+from typing import Dict
 
 from secdaily._00_common.BaseDefinitions import QuarterInfo
 from secdaily.SecDaily import Configuration, SecDailyOrchestrator
@@ -67,7 +68,14 @@ class DailyPreparationProcess(AbstractProcess):
 
         This way, we can select for < cut_off_day to get all filings before the start of the quarter.
         """
-        return quarter.year * 10_000 + (quarter.qrtr - 1) * 300
+        cut_off_month: Dict[int, int] = {
+            1: 0, # previous year
+            2: 4, # April
+            3: 7, # July
+            4: 10 # October
+        }
+
+        return quarter.year * 10_000 + cut_off_month[quarter.qrtr] * 100
 
     def clear_index_tables(self, cut_off_day: int):
         """
@@ -135,11 +143,13 @@ class DailyPreparationProcess(AbstractProcess):
 
         last_processed_quarter = last_processed_quarter_file_name.split(".")[0]
 
-        LOGGER.info("starting daily processing after last processed quarter: %s", last_processed_quarter)
 
         daily_start_quarter = self._calculate_daily_start_quarter(last_processed_quarter)
         cut_off_day = self._cut_off_day(daily_start_quarter)
 
+        LOGGER.info("clearing index tables and daily parquet files before cut off: %s", cut_off_day)
         self.clear_index_tables(cut_off_day=cut_off_day)
         self.clear_daily_parquet_files(cut_off_day=cut_off_day)
+
+        LOGGER.info("starting daily processing after last processed quarter: %s", last_processed_quarter)
         self.download_daily_files(daily_start_quarter=daily_start_quarter)

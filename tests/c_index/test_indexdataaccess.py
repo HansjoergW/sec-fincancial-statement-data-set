@@ -340,7 +340,7 @@ def test_debug_clear_index_tables(parquetindexaccessor):
         test_sql3 = "SELECT fileName, length(fileName) FROM index_parquet_processing_state"
         cursor.execute(test_sql3)
         all_processing = cursor.fetchall()
-        print(f"\nDEBUG: All processing records with lengths:")
+        print("\nDEBUG: All processing records with lengths:")
         for record in all_processing:
             print(f"  {record[0]}: length={record[1]}")
 

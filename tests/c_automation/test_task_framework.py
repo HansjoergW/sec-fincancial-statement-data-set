@@ -5,7 +5,6 @@ from typing import List
 
 from secfsdstools.c_automation.task_framework import (
     AbstractParallelProcess,
-    AbstractProcess,
     AbstractProcessPoolProcess,
     AbstractTask,
     AbstractThreadProcess,
@@ -51,9 +50,7 @@ class MyByTSTask(CheckByTimestampMergeBaseTask):
     called_paths_to_process: List[Path]
     called_tmp_path: Path
 
-    def do_execution(self,
-                     paths_to_process: List[Path],
-                     tmp_path: Path):
+    def do_execution(self, paths_to_process: List[Path], tmp_path: Path):
         self.called_paths_to_process = paths_to_process
         self.called_tmp_path = tmp_path
 
@@ -99,8 +96,9 @@ def test_checkbytimestamptask(tmp_path):
 
     # Test 3: change the content
     # we overwrite the content of the 2010q3 with q4, to force an update in the folder
-    shutil.copytree(src=TESTDATA_PATH / "joined" / "2010q4.zip",
-                    dst=tmp_path / "quarter" / "2010q3.zip", dirs_exist_ok=True)
+    shutil.copytree(
+        src=TESTDATA_PATH / "joined" / "2010q4.zip", dst=tmp_path / "quarter" / "2010q3.zip", dirs_exist_ok=True
+    )
 
     task_changed = MyByTSTask(
         root_path=tmp_path / "quarter",
@@ -134,10 +132,7 @@ class MyByNewSubfoldersTask(CheckByNewSubfoldersMergeBaseTask):
     called_target_path: Path
     called_tmp_path: Path
 
-    def do_execution(self,
-                     paths_to_process: List[Path],
-                     target_path: Path,
-                     tmp_path: Path):
+    def do_execution(self, paths_to_process: List[Path], target_path: Path, tmp_path: Path):
         self.called_paths_to_process = paths_to_process
         self.called_target_path = target_path
         self.called_tmp_path = tmp_path
@@ -185,8 +180,7 @@ def test_checkbynewsubfoldertask(tmp_path):
 
     # Test 3: add a new folder
     # we overwrite the content of the 2010q3 with q4, to force an update in the folder
-    shutil.copytree(src=TESTDATA_PATH / "joined" / "2010q4.zip",
-                    dst=tmp_path / "quarter" / "2010q4.zip")
+    shutil.copytree(src=TESTDATA_PATH / "joined" / "2010q4.zip", dst=tmp_path / "quarter" / "2010q4.zip")
 
     task_changed = MyByNewSubfoldersTask(
         root_path=tmp_path / "quarter",
@@ -209,8 +203,7 @@ def test_checkbynewsubfoldertask(tmp_path):
 
     meta_inf_content = task_changed.read_metainf_content()
     assert len(meta_inf_content) == 4  # we expect a single timestamp
-    assert len(
-        set(meta_inf_content) - {"2010q1.zip", "2010q2.zip", "2010q3.zip", "2010q4.zip"}) == 0
+    assert len(set(meta_inf_content) - {"2010q1.zip", "2010q2.zip", "2010q3.zip", "2010q4.zip"}) == 0
 
 
 # --- test AbstractThreadProcess -------------------------------------------------------
@@ -222,9 +215,7 @@ class MyThreadProcess(AbstractThreadProcess):
 
     def calculate_tasks(self) -> List[Task]:
         task = MyByNewSubfoldersTask(
-            target_path=self.base_path / "target",
-            root_path=self.base_path / "root",
-            pathfilter="*"
+            target_path=self.base_path / "target", root_path=self.base_path / "root", pathfilter="*"
         )
         if task.has_work_todo():
             return [task]
@@ -246,6 +237,7 @@ def test_abstractthreadprocess(tmp_path):
 
 # --- test AbstractProcessPoolProcess -------------------------------------------------------
 
+
 class MyProcessPoolProcess(AbstractProcessPoolProcess):
 
     def __init__(self, base_path: Path):
@@ -254,9 +246,7 @@ class MyProcessPoolProcess(AbstractProcessPoolProcess):
 
     def calculate_tasks(self) -> List[Task]:
         task = MyByNewSubfoldersTask(
-            target_path=self.base_path / "target",
-            root_path=self.base_path / "root",
-            pathfilter="*"
+            target_path=self.base_path / "target", root_path=self.base_path / "root", pathfilter="*"
         )
         if task.has_work_todo():
             return [task]

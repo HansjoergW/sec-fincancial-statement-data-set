@@ -5,7 +5,6 @@ Tests cover static methods for quarter calculations and instance methods
 for clearing index tables and daily parquet files.
 """
 
-from pathlib import Path
 from unittest.mock import Mock, patch
 
 from secdaily._00_common.BaseDefinitions import QuarterInfo

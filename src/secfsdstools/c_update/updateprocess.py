@@ -102,6 +102,22 @@ def print_newer_version_message(newer_version: str):
     print("\n\n")
 
 
+def print_automation_feature_message():
+    """printed if the automation feature is not used yet"""
+    print("\n\n")
+    print("    Version 1.8.0 of secfsdstools was released. This version adds support for automation.")
+    print("    Please have a look at the documentation and the example notebooks to learn more.")
+    print("\n\n")
+
+
+def print_daily_feature_message():
+    """printed if a daily processing is not used yet"""
+    print("\n\n")
+    print("    Version 2.4.0 of secfsdstools was released. This version adds support for daily reports.")
+    print("    Please have a look at the documentation and the example notebooks to learn more.")
+    print("\n\n")
+
+
 class Updater:
     """Manages the update process: download zipfiles, transform to parquet, and index the reports"""
 
@@ -332,5 +348,13 @@ class Updater:
 
             print_sponsoring_message()
 
+            # print unused feature messages
+            if not self.config.daily_processing:
+                print_daily_feature_message()
+
+            if (not self.config.post_update_processes) and (not self.config.post_update_hook):
+                print_automation_feature_message()
+
+            # print newer version message
             if is_newer_version_available():
                 print_newer_version_message(get_latest_pypi_version())

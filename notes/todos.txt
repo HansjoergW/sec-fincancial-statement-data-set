@@ -4,6 +4,7 @@ todos
 new release
 - adapt readme
 - adapt notebooks
+- adapt "new features" info
 - in gitpages branch
     - adapt release notes
     - adapt index
@@ -24,7 +25,7 @@ Problems:
 
 
 Functions:
-- [] daily processing integration
+- [x] daily processing integration
      [x] clear index tables (for last zip quarter and before quarters)
      [x] clear daily parquet files (for last zip quarter and before quarters)
      [x] calculate start quarter
@@ -32,13 +33,18 @@ Functions:
      [x] transform new daily files to parquet
      [x] index new daily files
      [x] configuration daily processing -> enable
-- [] Testing daily integration
+- [x] Testing daily integration
      [x] test different collectors with daily
-     [] test notebooks for daily reports -> zieht in übersicht nur quarter.
-- [] new features info message
+     [x] test notebooks for daily reports -> zieht in übersicht nur quarter.
+- [x] new features info message
 
 - [x] colum fy_real is created and saved for daily sub_df
   
+- [] update documents
+   [] update readme
+   [] new notebook for daily
+
+- [] intgrate new version of daily library
 
 - ensure docs deploy is working when released
 

@@ -44,7 +44,7 @@ Functions:
    [] update readme
    [] new notebook for daily
 
-- [] intgrate new version of daily library
+- [x] integrate new version secdaily 0.2.1
 
 - ensure docs deploy is working when released
 
@@ -154,8 +154,8 @@ look at
 
 
 
-Historie
----------
+History
+-------
 2.3.0 - maintenance release
 - switch to vs code
   - [x] pyproject toml like secdaily

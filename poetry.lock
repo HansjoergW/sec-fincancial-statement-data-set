@@ -1516,14 +1516,14 @@ files = [
 
 [[package]]
 name = "secdaily"
-version = "0.2.0"
+version = "0.2.1"
 description = "A tool that replicates the quarterly Financial Statement Datasets from the SEC (https://www.sec.gov/dera/data/financial-statement-data-sets), but on a daily basis."
 optional = false
 python-versions = ">=3.10"
 groups = ["main"]
 files = [
-    {file = "secdaily-0.2.0-py3-none-any.whl", hash = "sha256:904009c7f7ab3d3cf920b158508540185c2cfade67f212d25440fc6c13089c44"},
-    {file = "secdaily-0.2.0.tar.gz", hash = "sha256:2cee655972b6af9a38ae4cc379b52d9e284eda5c87d2509d0605e98d0018acb8"},
+    {file = "secdaily-0.2.1-py3-none-any.whl", hash = "sha256:df53ca4bf25005dc9a20a957a6b7b58d508a95f8a2e07e7b9491aee8e1060036"},
+    {file = "secdaily-0.2.1.tar.gz", hash = "sha256:d762bb2918c62ca0b32e67e0c4dda49acd05c187ec395ef1f22dbdd4b9c7851c"},
 ]
 
 [package.dependencies]
@@ -1701,4 +1701,4 @@ dev = ["coverage", "pdoc3", "pylint", "pytest", "ruff", "typing_extensions"]
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.10"
-content-hash = "a1fa70be66e47041cdbdcdc5e65ec23fffd4992dd44c7571999d26423f1be982"
+content-hash = "9c00c606b3b710d65374db75fcb2a19bfd3a7b3570c06b1871ff833ae5e21d17"

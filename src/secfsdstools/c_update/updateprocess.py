@@ -105,16 +105,16 @@ def print_newer_version_message(newer_version: str):
 def print_automation_feature_message():
     """printed if the automation feature is not used yet"""
     print("\n\n")
-    print("    Version 1.8.0 of secfsdstools was released. This version adds support for automation.")
-    print("    Please have a look at the documentation and the example notebooks to learn more.")
+    print("    Automation was introduced with version 1.8.0.")
+    print("    Please have a look at the documentation and the example notebooks (08_00_automation_basics) to learn more.")
     print("\n\n")
 
 
 def print_daily_feature_message():
     """printed if a daily processing is not used yet"""
     print("\n\n")
-    print("    Version 2.4.0 of secfsdstools was released. This version adds support for daily reports.")
-    print("    Please have a look at the documentation and the example notebooks to learn more.")
+    print("    Daily report updates were introduced in version 2.4.0.")
+    print("    Please have a look at the documentation and the example notebooks (10_00_daily_financial_report_updates) to learn more.")
     print("\n\n")
 
 

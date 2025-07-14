@@ -30,6 +30,7 @@
 <pre><code class="python">&#34;&#34;&#34;
 Reads company information.
 &#34;&#34;&#34;
+
 import os
 from typing import Dict, List, Optional
 
@@ -76,12 +77,31 @@ class CompanyIndexReader:
             Dict[str, str]: dict with the information of the latest
              report as present in the sub.txt file.
         &#34;&#34;&#34;
-        latest_report = self.dbaccessor.find_latest_company_report(self.cik)
-        return self._get_latest_company_filing_parquet(latest_report)
+        # get the latest quarter report
+        latest_quarter_report = self.dbaccessor.find_latest_company_report(self.cik, filetype=&#34;quarter&#34;)
+        quarter_data = self._get_latest_company_filing_parquet(latest_quarter_report)
+
+        # get the latest daily report, if present
+        latest_daily_report = self.dbaccessor.find_latest_company_report(self.cik, filetype=&#34;daily&#34;)
+
+        # if no daily report is available, return the quarter report
+        if not latest_daily_report:
+            return quarter_data
+
+        # if daily report is available, check if it is newer than the quarter report
+        daily_data = self._get_latest_company_filing_parquet(latest_daily_report)
+
+        if daily_data[&#34;filed&#34;] &gt; quarter_data[&#34;filed&#34;]:
+            # there are more columns in the quarter data, so we use it to fill the gaps in the daily data
+            if quarter_data:
+                daily_data.update(quarter_data)
+            return daily_data
+        return quarter_data
 
     def _get_latest_company_filing_parquet(self, latest_report: IndexReport) -&gt; Dict[str, str]:
-        latest_filing = pd.read_parquet(os.path.join(latest_report.fullPath, f&#39;{SUB_TXT}.parquet&#39;),
-                                        filters=[(&#39;adsh&#39;, &#39;==&#39;, latest_report.adsh)])
+        latest_filing = pd.read_parquet(
+            os.path.join(latest_report.fullPath, f&#34;{SUB_TXT}.parquet&#34;), filters=[(&#34;adsh&#34;, &#34;==&#34;, latest_report.adsh)]
+        )
 
         return latest_filing.iloc[0].to_dict()
 
@@ -170,12 +190,31 @@ class CompanyIndexReader:
             Dict[str, str]: dict with the information of the latest
              report as present in the sub.txt file.
         &#34;&#34;&#34;
-        latest_report = self.dbaccessor.find_latest_company_report(self.cik)
-        return self._get_latest_company_filing_parquet(latest_report)
+        # get the latest quarter report
+        latest_quarter_report = self.dbaccessor.find_latest_company_report(self.cik, filetype=&#34;quarter&#34;)
+        quarter_data = self._get_latest_company_filing_parquet(latest_quarter_report)
+
+        # get the latest daily report, if present
+        latest_daily_report = self.dbaccessor.find_latest_company_report(self.cik, filetype=&#34;daily&#34;)
+
+        # if no daily report is available, return the quarter report
+        if not latest_daily_report:
+            return quarter_data
+
+        # if daily report is available, check if it is newer than the quarter report
+        daily_data = self._get_latest_company_filing_parquet(latest_daily_report)
+
+        if daily_data[&#34;filed&#34;] &gt; quarter_data[&#34;filed&#34;]:
+            # there are more columns in the quarter data, so we use it to fill the gaps in the daily data
+            if quarter_data:
+                daily_data.update(quarter_data)
+            return daily_data
+        return quarter_data
 
     def _get_latest_company_filing_parquet(self, latest_report: IndexReport) -&gt; Dict[str, str]:
-        latest_filing = pd.read_parquet(os.path.join(latest_report.fullPath, f&#39;{SUB_TXT}.parquet&#39;),
-                                        filters=[(&#39;adsh&#39;, &#39;==&#39;, latest_report.adsh)])
+        latest_filing = pd.read_parquet(
+            os.path.join(latest_report.fullPath, f&#34;{SUB_TXT}.parquet&#34;), filters=[(&#34;adsh&#34;, &#34;==&#34;, latest_report.adsh)]
+        )
 
         return latest_filing.iloc[0].to_dict()
 
@@ -356,8 +395,26 @@ from the quarter-zip files.</p>
         Dict[str, str]: dict with the information of the latest
          report as present in the sub.txt file.
     &#34;&#34;&#34;
-    latest_report = self.dbaccessor.find_latest_company_report(self.cik)
-    return self._get_latest_company_filing_parquet(latest_report)</code></pre>
+    # get the latest quarter report
+    latest_quarter_report = self.dbaccessor.find_latest_company_report(self.cik, filetype=&#34;quarter&#34;)
+    quarter_data = self._get_latest_company_filing_parquet(latest_quarter_report)
+
+    # get the latest daily report, if present
+    latest_daily_report = self.dbaccessor.find_latest_company_report(self.cik, filetype=&#34;daily&#34;)
+
+    # if no daily report is available, return the quarter report
+    if not latest_daily_report:
+        return quarter_data
+
+    # if daily report is available, check if it is newer than the quarter report
+    daily_data = self._get_latest_company_filing_parquet(latest_daily_report)
+
+    if daily_data[&#34;filed&#34;] &gt; quarter_data[&#34;filed&#34;]:
+        # there are more columns in the quarter data, so we use it to fill the gaps in the daily data
+        if quarter_data:
+            daily_data.update(quarter_data)
+        return daily_data
+    return quarter_data</code></pre>
 </details>
 </dd>
 </dl>

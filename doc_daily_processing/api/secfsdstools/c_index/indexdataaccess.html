@@ -215,7 +215,7 @@ class ParquetDBIndexingAccessor(DB):
         sql = self.create_insert_statement_for_dataclass(self.index_processing_table, data)
         self.execute_single(sql, conn)
 
-    def find_latest_company_report(self, cik: int) -&gt; IndexReport:
+    def find_latest_company_report(self, cik: int, filetype: str = &#34;quarter&#34;) -&gt; Optional[IndexReport]:
         &#34;&#34;&#34;
         returns the latest report of a company
 
@@ -228,9 +228,13 @@ class ParquetDBIndexingAccessor(DB):
 
         sql = f&#34;&#34;&#34;SELECT *
                     FROM {self.index_reports_table}
-                    WHERE cik = {cik} and originFileType = &#39;quarter&#39;
+                    WHERE cik = {cik} and originFileType = &#39;{filetype}&#39;
                     ORDER BY period DESC&#34;&#34;&#34;
-        return self.execute_fetchall_typed(sql, IndexReport)[0]
+
+        results = self.execute_fetchall_typed(sql, IndexReport)
+        if len(results) == 0:
+            return None
+        return results[0]
 
     def read_index_report_for_adsh(self, adsh: str) -&gt; IndexReport:
         &#34;&#34;&#34;
@@ -674,7 +678,7 @@ class IndexReport:
         sql = self.create_insert_statement_for_dataclass(self.index_processing_table, data)
         self.execute_single(sql, conn)
 
-    def find_latest_company_report(self, cik: int) -&gt; IndexReport:
+    def find_latest_company_report(self, cik: int, filetype: str = &#34;quarter&#34;) -&gt; Optional[IndexReport]:
         &#34;&#34;&#34;
         returns the latest report of a company
 
@@ -687,9 +691,13 @@ class IndexReport:
 
         sql = f&#34;&#34;&#34;SELECT *
                     FROM {self.index_reports_table}
-                    WHERE cik = {cik} and originFileType = &#39;quarter&#39;
+                    WHERE cik = {cik} and originFileType = &#39;{filetype}&#39;
                     ORDER BY period DESC&#34;&#34;&#34;
-        return self.execute_fetchall_typed(sql, IndexReport)[0]
+
+        results = self.execute_fetchall_typed(sql, IndexReport)
+        if len(results) == 0:
+            return None
+        return results[0]
 
     def read_index_report_for_adsh(self, adsh: str) -&gt; IndexReport:
         &#34;&#34;&#34;
@@ -986,7 +994,7 @@ Lower and uppercase are ignored.</p>
 </details>
 </dd>
 <dt id="secfsdstools.c_index.indexdataaccess.ParquetDBIndexingAccessor.find_latest_company_report"><code class="name flex">
-<span>def <span class="ident">find_latest_company_report</span></span>(<span>self, cik: int) ‑> <a title="secfsdstools.c_index.indexdataaccess.IndexReport" href="#secfsdstools.c_index.indexdataaccess.IndexReport">IndexReport</a></span>
+<span>def <span class="ident">find_latest_company_report</span></span>(<span>self, cik: int, filetype: str = 'quarter') ‑> Optional[<a title="secfsdstools.c_index.indexdataaccess.IndexReport" href="#secfsdstools.c_index.indexdataaccess.IndexReport">IndexReport</a>]</span>
 </code></dt>
 <dd>
 <div class="desc"><p>returns the latest report of a company</p>
@@ -1004,7 +1012,7 @@ Lower and uppercase are ignored.</p>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def find_latest_company_report(self, cik: int) -&gt; IndexReport:
+<pre><code class="python">def find_latest_company_report(self, cik: int, filetype: str = &#34;quarter&#34;) -&gt; Optional[IndexReport]:
     &#34;&#34;&#34;
     returns the latest report of a company
 
@@ -1017,9 +1025,13 @@ Lower and uppercase are ignored.</p>
 
     sql = f&#34;&#34;&#34;SELECT *
                 FROM {self.index_reports_table}
-                WHERE cik = {cik} and originFileType = &#39;quarter&#39;
+                WHERE cik = {cik} and originFileType = &#39;{filetype}&#39;
                 ORDER BY period DESC&#34;&#34;&#34;
-    return self.execute_fetchall_typed(sql, IndexReport)[0]</code></pre>
+
+    results = self.execute_fetchall_typed(sql, IndexReport)
+    if len(results) == 0:
+        return None
+    return results[0]</code></pre>
 </details>
 </dd>
 <dt id="secfsdstools.c_index.indexdataaccess.ParquetDBIndexingAccessor.find_latest_quarter_file_name"><code class="name flex">

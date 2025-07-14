@@ -129,7 +129,9 @@ def print_newer_version_message(newer_version: str):
     &#34;&#34;&#34;printed if a newer version of the library is available&#34;&#34;&#34;
 
     print(&#34;\n\n&#34;)
-    print(f&#34;    A newer version of secfsdstools ({newer_version}) is available on pypi.org. Please consider upgrading.&#34;)
+    print(
+        f&#34;    A newer version of secfsdstools ({newer_version}) is available on pypi.org. Please consider upgrading.&#34;
+    )  # pylint: disable=C0301
     print(&#34;\n\n&#34;)
 
 
@@ -137,7 +139,9 @@ def print_automation_feature_message():
     &#34;&#34;&#34;printed if the automation feature is not used yet&#34;&#34;&#34;
     print(&#34;\n\n&#34;)
     print(&#34;    Automation was introduced with version 1.8.0.&#34;)
-    print(&#34;    Please have a look at the documentation and the example notebooks (08_00_automation_basics) to learn more.&#34;)
+    print(
+        &#34;    Please have a look at the documentation and the example notebooks (08_00_automation_basics) to learn more.&#34;
+    )  # pylint: disable=C0301
     print(&#34;\n\n&#34;)
 
 
@@ -145,7 +149,9 @@ def print_daily_feature_message():
     &#34;&#34;&#34;printed if a daily processing is not used yet&#34;&#34;&#34;
     print(&#34;\n\n&#34;)
     print(&#34;    Daily report updates were introduced in version 2.4.0.&#34;)
-    print(&#34;    Please have a look at the documentation and the example notebooks (10_00_daily_financial_report_updates) to learn more.&#34;)
+    print(
+        &#34;    Please have a look at the documentation and the example notebooks (10_00_daily_financial_report_updates) to learn more.&#34;
+    )  # pylint: disable=C0301
     print(&#34;\n\n&#34;)
 
 
@@ -411,7 +417,9 @@ class Updater:
     &#34;&#34;&#34;printed if the automation feature is not used yet&#34;&#34;&#34;
     print(&#34;\n\n&#34;)
     print(&#34;    Automation was introduced with version 1.8.0.&#34;)
-    print(&#34;    Please have a look at the documentation and the example notebooks (08_00_automation_basics) to learn more.&#34;)
+    print(
+        &#34;    Please have a look at the documentation and the example notebooks (08_00_automation_basics) to learn more.&#34;
+    )  # pylint: disable=C0301
     print(&#34;\n\n&#34;)</code></pre>
 </details>
 </dd>
@@ -428,7 +436,9 @@ class Updater:
     &#34;&#34;&#34;printed if a daily processing is not used yet&#34;&#34;&#34;
     print(&#34;\n\n&#34;)
     print(&#34;    Daily report updates were introduced in version 2.4.0.&#34;)
-    print(&#34;    Please have a look at the documentation and the example notebooks (10_00_daily_financial_report_updates) to learn more.&#34;)
+    print(
+        &#34;    Please have a look at the documentation and the example notebooks (10_00_daily_financial_report_updates) to learn more.&#34;
+    )  # pylint: disable=C0301
     print(&#34;\n\n&#34;)</code></pre>
 </details>
 </dd>
@@ -445,7 +455,9 @@ class Updater:
     &#34;&#34;&#34;printed if a newer version of the library is available&#34;&#34;&#34;
 
     print(&#34;\n\n&#34;)
-    print(f&#34;    A newer version of secfsdstools ({newer_version}) is available on pypi.org. Please consider upgrading.&#34;)
+    print(
+        f&#34;    A newer version of secfsdstools ({newer_version}) is available on pypi.org. Please consider upgrading.&#34;
+    )  # pylint: disable=C0301
     print(&#34;\n\n&#34;)</code></pre>
 </details>
 </dd>

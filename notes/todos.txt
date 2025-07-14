@@ -42,7 +42,9 @@ Functions:
   
 - [] update documents
    [] update readme
-   [] new notebook for daily
+   [x] new notebook for daily
+
+- [] load subdata of last report -> ensure it always comes from the quartery zip files
 
 - [x] integrate new version secdaily 0.2.1
 

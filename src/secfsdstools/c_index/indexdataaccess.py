@@ -186,7 +186,7 @@ class ParquetDBIndexingAccessor(DB):
         sql = self.create_insert_statement_for_dataclass(self.index_processing_table, data)
         self.execute_single(sql, conn)
 
-    def find_latest_company_report(self, cik: int) -> IndexReport:
+    def find_latest_company_report(self, cik: int, filetype: str = "quarter") -> Optional[IndexReport]:
         """
         returns the latest report of a company
 
@@ -199,9 +199,13 @@ class ParquetDBIndexingAccessor(DB):
 
         sql = f"""SELECT *
                     FROM {self.index_reports_table}
-                    WHERE cik = {cik} and originFileType = 'quarter'
+                    WHERE cik = {cik} and originFileType = '{filetype}'
                     ORDER BY period DESC"""
-        return self.execute_fetchall_typed(sql, IndexReport)[0]
+
+        results = self.execute_fetchall_typed(sql, IndexReport)
+        if len(results) == 0:
+            return None
+        return results[0]
 
     def read_index_report_for_adsh(self, adsh: str) -> IndexReport:
         """

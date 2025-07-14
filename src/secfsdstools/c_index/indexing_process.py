@@ -8,7 +8,7 @@ import pandas as pd
 
 from secfsdstools.a_utils.constants import SUB_TXT
 from secfsdstools.a_utils.fileutils import get_directories_in_directory
-from secfsdstools.c_automation.task_framework import AbstractThreadProcess
+from secfsdstools.c_automation.task_framework import AbstractThreadProcess, Task
 from secfsdstools.c_index.indexdataaccess import IndexFileProcessingState, ParquetDBIndexingAccessor
 
 LOGGER = logging.getLogger(__name__)
@@ -158,7 +158,7 @@ class ReportParquetIndexerProcess(AbstractThreadProcess):
         return [os.path.realpath(os.path.join(self.parquet_dir, self.file_type, file_name))
                 for file_name in not_indexed_file_names]
 
-    def calculate_tasks(self) -> List[IndexingTask]:
+    def calculate_tasks(self) -> List[Task]:
         """
         Calculates the tasks, which have to be executed.
         Returns:

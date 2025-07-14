@@ -10,7 +10,7 @@ PATH_TO_PARQUET = f'{CURRENT_DIR}/../_testdata/parquet_new/'
 def test_get_latest_company_information_parquet(basicconf):
     reader = CompanyIndexReader.get_company_index_reader(cik=320193, configuration=basicconf)
 
-    reader.dbaccessor.find_latest_company_report = lambda x: IndexReport(
+    reader.dbaccessor.find_latest_company_report = lambda cik, filetype: IndexReport(
         adsh='0001193125-10-012085',
         fullPath=f'{basicconf.parquet_dir}/quarter/2010q1.zip',
         cik=320193,

@@ -99,8 +99,8 @@ def print_newer_version_message(newer_version: str):
 
     print("\n\n")
     print(
-        f"    A newer version of secfsdstools ({newer_version}) is available on pypi.org. Please consider upgrading."
-    )  # pylint: disable=C0301
+        f"    A newer version of secfsdstools ({newer_version}) is available on pypi.org. Please consider upgrading."  # pylint: disable=C0301
+    )
     print("\n\n")
 
 
@@ -109,8 +109,8 @@ def print_automation_feature_message():
     print("\n\n")
     print("    Automation was introduced with version 1.8.0.")
     print(
-        "    Please have a look at the documentation and the example notebooks (08_00_automation_basics) to learn more."
-    )  # pylint: disable=C0301
+        "    Please have a look at the documentation and the example notebooks (08_00_automation_basics) to learn more."  # pylint: disable=C0301
+    )
     print("\n\n")
 
 
@@ -119,8 +119,8 @@ def print_daily_feature_message():
     print("\n\n")
     print("    Daily report updates were introduced in version 2.4.0.")
     print(
-        "    Please have a look at the documentation and the example notebooks (10_00_daily_financial_report_updates) to learn more."
-    )  # pylint: disable=C0301
+        "    Please have a look at the documentation and the example notebooks (10_00_daily_financial_report_updates) to learn more."  # pylint: disable=C0301
+    )
     print("\n\n")
 
 

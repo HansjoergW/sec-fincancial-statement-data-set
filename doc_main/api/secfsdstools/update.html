@@ -29,6 +29,7 @@
 </summary>
 <pre><code class="python">&#34;&#34;&#34; Getting everything ready to work with the data. &#34;&#34;&#34;
 import logging
+from typing import Optional
 
 from secfsdstools.a_config.configmodel import Configuration
 
@@ -36,7 +37,7 @@ LOGGER = logging.getLogger(__name__)
 
 
 # pylint: disable=C0415
-def update(config: Configuration = None, force_update: bool = False):
+def update(config: Optional[Configuration] = None, force_update: bool = False):
     &#34;&#34;&#34;
     ensures that all available zip files are downloaded and that the index is created.
     &#34;&#34;&#34;
@@ -79,7 +80,7 @@ if __name__ == &#39;__main__&#39;:
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
 <dt id="secfsdstools.update.update"><code class="name flex">
-<span>def <span class="ident">update</span></span>(<span>config: <a title="secfsdstools.a_config.configmodel.Configuration" href="a_config/configmodel.html#secfsdstools.a_config.configmodel.Configuration">Configuration</a> = None, force_update: bool = False)</span>
+<span>def <span class="ident">update</span></span>(<span>config: Optional[<a title="secfsdstools.a_config.configmodel.Configuration" href="a_config/configmodel.html#secfsdstools.a_config.configmodel.Configuration">Configuration</a>] = None, force_update: bool = False)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>ensures that all available zip files are downloaded and that the index is created.</p></div>
@@ -87,7 +88,7 @@ if __name__ == &#39;__main__&#39;:
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def update(config: Configuration = None, force_update: bool = False):
+<pre><code class="python">def update(config: Optional[Configuration] = None, force_update: bool = False):
     &#34;&#34;&#34;
     ensures that all available zip files are downloaded and that the index is created.
     &#34;&#34;&#34;

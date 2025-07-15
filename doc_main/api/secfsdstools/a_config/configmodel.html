@@ -39,24 +39,26 @@ from typing import Optional
 
 @dataclass
 class Configuration:
-    &#34;&#34;&#34; Basic configuration settings &#34;&#34;&#34;
+    &#34;&#34;&#34;Basic configuration settings&#34;&#34;&#34;
+
     download_dir: str
     db_dir: str
     parquet_dir: str
     user_agent_email: str
-    rapid_api_key: Optional[str] = None
-    rapid_api_plan: Optional[str] = &#39;basic&#39;
-    daily_download_dir: Optional[str] = None
-    auto_update: Optional[bool] = True
-    keep_zip_files: Optional[bool] = False
-    no_parallel_processing: Optional[bool] = False
+    auto_update: bool = True
+    keep_zip_files: bool = False
+    no_parallel_processing: bool = False
 
     config_parser: Optional[configparser.ConfigParser] = None
     post_update_hook: Optional[str] = None
     post_update_processes: Optional[str] = None
 
+    daily_download_dir: str = &#34;&#34;
+    daily_processing: bool = False
+
     def __post_init__(self):
-        self.daily_download_dir = os.path.join(self.download_dir, &#34;daily&#34;)
+        if self.daily_download_dir == &#34;&#34;:
+            self.daily_download_dir = os.path.join(os.path.dirname(self.download_dir), &#34;dld_daily&#34;)
 
     def get_dict(self):
         &#34;&#34;&#34;
@@ -78,7 +80,7 @@ class Configuration:
 <dl>
 <dt id="secfsdstools.a_config.configmodel.Configuration"><code class="flex name class">
 <span>class <span class="ident">Configuration</span></span>
-<span>(</span><span>download_dir: str, db_dir: str, parquet_dir: str, user_agent_email: str, rapid_api_key: Optional[str] = None, rapid_api_plan: Optional[str] = 'basic', daily_download_dir: Optional[str] = None, auto_update: Optional[bool] = True, keep_zip_files: Optional[bool] = False, no_parallel_processing: Optional[bool] = False, config_parser: Optional[configparser.ConfigParser] = None, post_update_hook: Optional[str] = None, post_update_processes: Optional[str] = None)</span>
+<span>(</span><span>download_dir: str, db_dir: str, parquet_dir: str, user_agent_email: str, auto_update: bool = True, keep_zip_files: bool = False, no_parallel_processing: bool = False, config_parser: Optional[configparser.ConfigParser] = None, post_update_hook: Optional[str] = None, post_update_processes: Optional[str] = None, daily_download_dir: str = '', daily_processing: bool = False)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Basic configuration settings</p></div>
@@ -88,24 +90,26 @@ class Configuration:
 </summary>
 <pre><code class="python">@dataclass
 class Configuration:
-    &#34;&#34;&#34; Basic configuration settings &#34;&#34;&#34;
+    &#34;&#34;&#34;Basic configuration settings&#34;&#34;&#34;
+
     download_dir: str
     db_dir: str
     parquet_dir: str
     user_agent_email: str
-    rapid_api_key: Optional[str] = None
-    rapid_api_plan: Optional[str] = &#39;basic&#39;
-    daily_download_dir: Optional[str] = None
-    auto_update: Optional[bool] = True
-    keep_zip_files: Optional[bool] = False
-    no_parallel_processing: Optional[bool] = False
+    auto_update: bool = True
+    keep_zip_files: bool = False
+    no_parallel_processing: bool = False
 
     config_parser: Optional[configparser.ConfigParser] = None
     post_update_hook: Optional[str] = None
     post_update_processes: Optional[str] = None
 
+    daily_download_dir: str = &#34;&#34;
+    daily_processing: bool = False
+
     def __post_init__(self):
-        self.daily_download_dir = os.path.join(self.download_dir, &#34;daily&#34;)
+        if self.daily_download_dir == &#34;&#34;:
+            self.daily_download_dir = os.path.join(os.path.dirname(self.download_dir), &#34;dld_daily&#34;)
 
     def get_dict(self):
         &#34;&#34;&#34;
@@ -117,7 +121,7 @@ class Configuration:
 </details>
 <h3>Class variables</h3>
 <dl>
-<dt id="secfsdstools.a_config.configmodel.Configuration.auto_update"><code class="name">var <span class="ident">auto_update</span> : Optional[bool]</code></dt>
+<dt id="secfsdstools.a_config.configmodel.Configuration.auto_update"><code class="name">var <span class="ident">auto_update</span> : bool</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -125,7 +129,11 @@ class Configuration:
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="secfsdstools.a_config.configmodel.Configuration.daily_download_dir"><code class="name">var <span class="ident">daily_download_dir</span> : Optional[str]</code></dt>
+<dt id="secfsdstools.a_config.configmodel.Configuration.daily_download_dir"><code class="name">var <span class="ident">daily_download_dir</span> : str</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="secfsdstools.a_config.configmodel.Configuration.daily_processing"><code class="name">var <span class="ident">daily_processing</span> : bool</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -137,11 +145,11 @@ class Configuration:
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="secfsdstools.a_config.configmodel.Configuration.keep_zip_files"><code class="name">var <span class="ident">keep_zip_files</span> : Optional[bool]</code></dt>
+<dt id="secfsdstools.a_config.configmodel.Configuration.keep_zip_files"><code class="name">var <span class="ident">keep_zip_files</span> : bool</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="secfsdstools.a_config.configmodel.Configuration.no_parallel_processing"><code class="name">var <span class="ident">no_parallel_processing</span> : Optional[bool]</code></dt>
+<dt id="secfsdstools.a_config.configmodel.Configuration.no_parallel_processing"><code class="name">var <span class="ident">no_parallel_processing</span> : bool</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -154,14 +162,6 @@ class Configuration:
 <div class="desc"></div>
 </dd>
 <dt id="secfsdstools.a_config.configmodel.Configuration.post_update_processes"><code class="name">var <span class="ident">post_update_processes</span> : Optional[str]</code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt id="secfsdstools.a_config.configmodel.Configuration.rapid_api_key"><code class="name">var <span class="ident">rapid_api_key</span> : Optional[str]</code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt id="secfsdstools.a_config.configmodel.Configuration.rapid_api_plan"><code class="name">var <span class="ident">rapid_api_plan</span> : Optional[str]</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -216,6 +216,7 @@ class Configuration:
 <li><code><a title="secfsdstools.a_config.configmodel.Configuration.auto_update" href="#secfsdstools.a_config.configmodel.Configuration.auto_update">auto_update</a></code></li>
 <li><code><a title="secfsdstools.a_config.configmodel.Configuration.config_parser" href="#secfsdstools.a_config.configmodel.Configuration.config_parser">config_parser</a></code></li>
 <li><code><a title="secfsdstools.a_config.configmodel.Configuration.daily_download_dir" href="#secfsdstools.a_config.configmodel.Configuration.daily_download_dir">daily_download_dir</a></code></li>
+<li><code><a title="secfsdstools.a_config.configmodel.Configuration.daily_processing" href="#secfsdstools.a_config.configmodel.Configuration.daily_processing">daily_processing</a></code></li>
 <li><code><a title="secfsdstools.a_config.configmodel.Configuration.db_dir" href="#secfsdstools.a_config.configmodel.Configuration.db_dir">db_dir</a></code></li>
 <li><code><a title="secfsdstools.a_config.configmodel.Configuration.download_dir" href="#secfsdstools.a_config.configmodel.Configuration.download_dir">download_dir</a></code></li>
 <li><code><a title="secfsdstools.a_config.configmodel.Configuration.get_dict" href="#secfsdstools.a_config.configmodel.Configuration.get_dict">get_dict</a></code></li>
@@ -224,8 +225,6 @@ class Configuration:
 <li><code><a title="secfsdstools.a_config.configmodel.Configuration.parquet_dir" href="#secfsdstools.a_config.configmodel.Configuration.parquet_dir">parquet_dir</a></code></li>
 <li><code><a title="secfsdstools.a_config.configmodel.Configuration.post_update_hook" href="#secfsdstools.a_config.configmodel.Configuration.post_update_hook">post_update_hook</a></code></li>
 <li><code><a title="secfsdstools.a_config.configmodel.Configuration.post_update_processes" href="#secfsdstools.a_config.configmodel.Configuration.post_update_processes">post_update_processes</a></code></li>
-<li><code><a title="secfsdstools.a_config.configmodel.Configuration.rapid_api_key" href="#secfsdstools.a_config.configmodel.Configuration.rapid_api_key">rapid_api_key</a></code></li>
-<li><code><a title="secfsdstools.a_config.configmodel.Configuration.rapid_api_plan" href="#secfsdstools.a_config.configmodel.Configuration.rapid_api_plan">rapid_api_plan</a></code></li>
 <li><code><a title="secfsdstools.a_config.configmodel.Configuration.user_agent_email" href="#secfsdstools.a_config.configmodel.Configuration.user_agent_email">user_agent_email</a></code></li>
 </ul>
 </li>

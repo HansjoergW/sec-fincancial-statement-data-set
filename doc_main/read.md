@@ -13,18 +13,19 @@ The main features include:
 - all data is on your local hard drive and can be updated automatically, no need for numerous API calls
 - data is loaded as pandas files
 - fast and efficient reading of a single report, all reports of one or multiple companies, or even all available reports 
-- filter framework with predefined filters, easy to extend, supports easy way of saving, loading, and combining filtered data (see [01_quickstart.ipynb](notebooks/01_quickstart.ipynb) and
-[03_explore_with_interactive_notebook.ipynb](notebooks/03_explore_with_interactive_notebook.ipynb))
+- filter framework with predefined filters, easy to extend, supports easy way of saving, loading, and combining filtered data (see [01_quickstart.ipynb](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/01_quickstart.ipynb) and
+[03_explore_with_interactive_notebook.ipynb](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/03_explore_with_interactive_notebook.ipynb))
 - standardize the data for balance sheets, income statements, and cash flow statements to make reports easily comparable
-(see [07_00_standardizer_basics.ipynb](notebooks/07_00_standardizer_basics.ipynb), 
-[07_01_BS_standardizer.ipynb](notebooks/07_01_BS_standardizer.ipynb), 
-[07_01_BS_standardizer.ipynb](notebooks/07_01_BS_standardizer.ipynb), and
-[07_03_CF_standardizer.ipynb](notebooks/07_03_CF_standardizer.ipynb))
+(see [07_00_standardizer_basics.ipynb](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/07_00_standardizer_basics.ipynb), 
+[07_01_BS_standardizer.ipynb](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/07_01_BS_standardizer.ipynb), 
+[07_01_BS_standardizer.ipynb](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/07_01_BS_standardizer.ipynb), and
+[07_03_CF_standardizer.ipynb](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/07_03_CF_standardizer.ipynb))
 - automate processing and standardizing by configuring customized process steps that are executed whenever a new 
-  data file is detected on sec.gov (see [08_00_automation_basics.ipynb](notebooks/08_00_automation_basics.ipynb))
-- **version 2 supports the new "segments" column that was added in December 2024**  
+  data file is detected on sec.gov (see [08_00_automation_basics.ipynb](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/08_00_automation_basics.ipynb))
+- version 2 supports the new "segments" column that was added in December 2024
+- **experimental - instroduced in version 2.4.0: support for daily updates of the financial reports (see [10_00_daily_financial_report_updates.ipynb](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/10_00_daily_financial_report_updates.ipynb))**
 
-Have a look at the * [Release Notes](https://hansjoergw.github.io/sec-fincancial-statement-data-set/releasenotes/)
+Have a look at the [Release Notes](https://hansjoergw.github.io/sec-fincancial-statement-data-set/releasenotes/)
 <br/>
 <br/>
 <br/>
@@ -71,8 +72,8 @@ pip install secfsdstools
 If you want to contribute, just clone the project and use a python 3.8 environment.
 The dependencies are defined in the requirements.txt file or use the pyproject.toml to install them.
 
-To have a first glance at the library, check out the interactive jupyter notebooks [01_quickstart.ipynb](notebooks/01_quickstart.ipynb) 
-and [03_explore_with_interactive_notebook.ipynb](notebooks/03_explore_with_interactive_notebook.ipynb) that are located in `notebooks` directory in the github repo.
+To have a first glance at the library, check out the interactive jupyter notebooks [01_quickstart.ipynb](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/01_quickstart.ipynb) 
+and [03_explore_with_interactive_notebook.ipynb](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/03_explore_with_interactive_notebook.ipynb) that are located in `notebooks` directory in the github repo.
 
 Upon using the library for the first time, it downloads the data files and creates the index by calling the `update()`
 method. You can manually trigger the update using the following code:
@@ -151,7 +152,7 @@ if __name__ == '__main__':
 
 ## Viewing metadata
 
-The recommend way to view and use the metadata is using `secfsdstools` library functions as described in [notebooks/01_quickstart.ipynb](notebooks/01_quickstart.ipynb)  
+The recommend way to view and use the metadata is using `secfsdstools` library functions as described in [notebooks/01_quickstart.ipynb](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/01_quickstart.ipynb)  
 
 Of course, the created "index of reports" can be viewed also using a database viewer that supports the SQLite format,
 such as [DB Browser for SQLite](https://sqlitebrowser.org/).
@@ -210,7 +211,7 @@ The diagramm also shows the main classes with which a user interacts. The use of
 
 ## Feature Overview
 
-This section shows some example code of the different features. Have a look at the [notebooks/01_quickstart.ipynb](notebooks/01_quickstart.ipynb)
+This section shows some example code of the different features. Have a look at the [notebooks/01_quickstart.ipynb](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/01_quickstart.ipynb)
 notebook and all other notebooks to get more details on how to use the framework.
 
 ### Working with the Index
@@ -668,7 +669,18 @@ The framework provides two hook methods, that are called whenever the default up
 This way, you can implement additional processing steps that are executed, after a new data file from the sec.gov was 
 downloaded, transformed to parquet, and index.
 
-Have a look at [08_00_automation_basics](notebooks/08_00_automation_basics.ipynb)
+Have a look at [08_00_automation_basics](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/08_00_automation_basics.ipynb)
+
+
+## Daily Updates (Experimental)
+Introduced with version 2.4.0, secfsdstools now also provides daily updates for filed reports at the SEC.
+
+You have to activate it by adding `dailyprocessing = True` in the `DEFAULT` section of the configuration file.
+
+Note, that there are some limitations (see [10_00_daily_financial_report_updates](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/10_00_daily_financial_report_updates.ipynb) for details).
+
+
+
 
 # Links 
 * [For a detail description of the content and the structure of the dataset](https://www.sec.gov/files/aqfs.pdf)
@@ -684,6 +696,6 @@ Have a look at [08_00_automation_basics](notebooks/08_00_automation_basics.ipynb
 * [standardize the balance sheets and make them comparable](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/07_01_BS_standardizer.ipynb)
 * [standardize the income statements and make them comparable](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/07_02_IS_standardizer.ipynb)
 * [standardize the cash flow statements and make them comparable](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/07_03_CF_standardizer.ipynb)
-* [automate additional processing steps that are executed after new data is discovered](notebooks/08_00_automation_basics.ipynb)
+* [automate additional processing steps that are executed after new data is discovered](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/08_00_automation_basics.ipynb)
 * [checkout the `u_usecases` package](https://hansjoergw.github.io/sec-fincancial-statement-data-set/doc_latest/api/secfsdstools/u_usecases/index.html)
 * [Trouble shooting and known issues](KNOWN_ISSUES.md)

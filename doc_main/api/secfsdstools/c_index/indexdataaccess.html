@@ -28,6 +28,7 @@
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">&#34;&#34;&#34;Database logic to hanlde the indexing&#34;&#34;&#34;
+
 import sqlite3
 from dataclasses import dataclass
 from typing import List, Optional
@@ -39,7 +40,8 @@ from secfsdstools.a_utils.dbutils import DB
 
 @dataclass
 class IndexReport:
-    &#34;&#34;&#34; dataclass for index_reports table&#34;&#34;&#34;
+    &#34;&#34;&#34;dataclass for index_reports table&#34;&#34;&#34;
+
     adsh: str
     cik: int
     name: str
@@ -54,7 +56,8 @@ class IndexReport:
 
 @dataclass
 class IndexFileProcessingState:
-    &#34;&#34;&#34; dataclass for index_file_processing_state table&#34;&#34;&#34;
+    &#34;&#34;&#34;dataclass for index_file_processing_state table&#34;&#34;&#34;
+
     fileName: str  # pylint: disable=C0103
     fullPath: str  # pylint: disable=C0103
     status: str
@@ -63,9 +66,10 @@ class IndexFileProcessingState:
 
 
 class ParquetDBIndexingAccessor(DB):
-    &#34;&#34;&#34; Dataaccess class for index related tables of parquet files&#34;&#34;&#34;
-    index_reports_table = &#39;index_parquet_reports&#39;
-    index_processing_table = &#39;index_parquet_processing_state&#39;
+    &#34;&#34;&#34;Dataaccess class for index related tables of parquet files&#34;&#34;&#34;
+
+    index_reports_table = &#34;index_parquet_reports&#34;
+    index_processing_table = &#34;index_parquet_processing_state&#34;
 
     def __init__(self, db_dir: str):
         super().__init__(db_dir=db_dir)
@@ -77,7 +81,7 @@ class ParquetDBIndexingAccessor(DB):
         Returns:
             List[IndexReport]: List with IndexReport objects
         &#34;&#34;&#34;
-        sql = f&#39;SELECT * FROM {self.index_reports_table}&#39;
+        sql = f&#34;SELECT * FROM {self.index_reports_table}&#34;
         return self.execute_fetchall_typed(sql, IndexReport)
 
     def read_all_indexreports_df(self) -&gt; pd.DataFrame:
@@ -87,8 +91,28 @@ class ParquetDBIndexingAccessor(DB):
         Returns:
             pd.DataFrame: pandas DataFrame
         &#34;&#34;&#34;
-        sql = f&#39;SELECT * FROM {self.index_reports_table}&#39;
+        sql = f&#34;SELECT * FROM {self.index_reports_table}&#34;
         return self.execute_read_as_df(sql)
+
+    def find_latest_quarter_file_name(self) -&gt; Optional[str]:
+        &#34;&#34;&#34;
+        finds the latest quarter in the index_reports table
+
+        Returns:
+            str: the latest quarter
+        &#34;&#34;&#34;
+        sql = f&#34;&#34;&#34;
+                SELECT *
+                FROM {self.index_processing_table}
+                WHERE fileName LIKE &#39;____q_.zip&#39; AND status = &#39;processed&#39;
+                ORDER BY fileName DESC
+                LIMIT 1
+        &#34;&#34;&#34;
+        result = self.execute_fetchall_typed(sql, IndexFileProcessingState)
+        if not result:
+            return None
+
+        return result[0].fileName
 
     def read_all_indexfileprocessing(self) -&gt; List[IndexFileProcessingState]:
         &#34;&#34;&#34;
@@ -97,7 +121,7 @@ class ParquetDBIndexingAccessor(DB):
         Returns:
             List[IndexFileProcessingState]: List with IndexFileProcessingState objects
         &#34;&#34;&#34;
-        sql = f&#39;SELECT * FROM {self.index_processing_table}&#39;
+        sql = f&#34;SELECT * FROM {self.index_processing_table}&#34;
         return self.execute_fetchall_typed(sql, IndexFileProcessingState)
 
     def read_all_indexfileprocessing_df(self) -&gt; pd.DataFrame:
@@ -107,7 +131,7 @@ class ParquetDBIndexingAccessor(DB):
         Returns:
             pd.DataFrame: pandas DataFrame
         &#34;&#34;&#34;
-        sql = f&#39;SELECT * FROM {self.index_processing_table}&#39;
+        sql = f&#34;SELECT * FROM {self.index_processing_table}&#34;
         return self.execute_read_as_df(sql)
 
     def read_index_file_for_filename(self, filename: str) -&gt; IndexFileProcessingState:
@@ -122,8 +146,7 @@ class ParquetDBIndexingAccessor(DB):
         sql = f&#34;SELECT * FROM {self.index_processing_table} WHERE fileName = &#39;{filename}&#39;&#34;
         return self.execute_fetchall_typed(sql, IndexFileProcessingState)[0]
 
-    def read_index_files_for_filenames(self, filenames: List[str]) \
-            -&gt; List[IndexFileProcessingState]:
+    def read_index_files_for_filenames(self, filenames: List[str]) -&gt; List[IndexFileProcessingState]:
         &#34;&#34;&#34;
         returns the IndexFileProcessingState instances for the provided filenames
         Args:
@@ -192,7 +215,7 @@ class ParquetDBIndexingAccessor(DB):
         sql = self.create_insert_statement_for_dataclass(self.index_processing_table, data)
         self.execute_single(sql, conn)
 
-    def find_latest_company_report(self, cik: int) -&gt; IndexReport:
+    def find_latest_company_report(self, cik: int, filetype: str = &#34;quarter&#34;) -&gt; Optional[IndexReport]:
         &#34;&#34;&#34;
         returns the latest report of a company
 
@@ -205,9 +228,13 @@ class ParquetDBIndexingAccessor(DB):
 
         sql = f&#34;&#34;&#34;SELECT *
                     FROM {self.index_reports_table}
-                    WHERE cik = {cik} and originFileType = &#39;quarter&#39;
+                    WHERE cik = {cik} and originFileType = &#39;{filetype}&#39;
                     ORDER BY period DESC&#34;&#34;&#34;
-        return self.execute_fetchall_typed(sql, IndexReport)[0]
+
+        results = self.execute_fetchall_typed(sql, IndexReport)
+        if len(results) == 0:
+            return None
+        return results[0]
 
     def read_index_report_for_adsh(self, adsh: str) -&gt; IndexReport:
         &#34;&#34;&#34;
@@ -256,8 +283,7 @@ class ParquetDBIndexingAccessor(DB):
 
         return filtered_reports
 
-    def read_index_reports_for_ciks(self, ciks: List[int], forms: Optional[List[str]] = None) \
-            -&gt; List[IndexReport]:
+    def read_index_reports_for_ciks(self, ciks: List[int], forms: Optional[List[str]] = None) -&gt; List[IndexReport]:
         &#34;&#34;&#34;
         gets all reports as IndexReport instances for the companies identified by their cik numbers.
         if forms is not set, all forms are returned, otherwise forms is a list of the
@@ -274,13 +300,12 @@ class ParquetDBIndexingAccessor(DB):
         sql = f&#39;SELECT * FROM {self.index_reports_table} WHERE cik in ({&#34;,&#34;.join(ciks_str)})&#39;
         if forms is not None:
             forms_str = &#34;, &#34;.join([&#34;&#39;&#34; + x.upper() + &#34;&#39;&#34; for x in forms])
-            sql = sql + f&#39; and form in ({forms_str}) &#39;
-        sql = sql + &#39; ORDER BY period DESC&#39;
+            sql = sql + f&#34; and form in ({forms_str}) &#34;
+        sql = sql + &#34; ORDER BY period DESC&#34;
 
         return self.execute_fetchall_typed(sql, IndexReport)
 
-    def read_index_reports_for_ciks_df(self, ciks: List[int], forms: Optional[List[str]] = None) \
-            -&gt; pd.DataFrame:
+    def read_index_reports_for_ciks_df(self, ciks: List[int], forms: Optional[List[str]] = None) -&gt; pd.DataFrame:
         &#34;&#34;&#34;
         gets all reports as IndexReport instances for the companies identified by their cik numbers.
         if forms is not set, all forms are returned, otherwise forms is a list of the
@@ -297,8 +322,8 @@ class ParquetDBIndexingAccessor(DB):
         sql = f&#39;SELECT * FROM {self.index_reports_table} WHERE cik in ({&#34;,&#34;.join(ciks_str)})&#39;
         if forms is not None:
             forms_str = &#34;, &#34;.join([&#34;&#39;&#34; + x.upper() + &#34;&#39;&#34; for x in forms])
-            sql = sql + f&#39; and form in ({forms_str}) &#39;
-        sql = sql + &#39; ORDER BY period DESC&#39;
+            sql = sql + f&#34; and form in ({forms_str}) &#34;
+        sql = sql + &#34; ORDER BY period DESC&#34;
 
         return self.execute_read_as_df(sql)
 
@@ -337,7 +362,38 @@ class ParquetDBIndexingAccessor(DB):
 
         # result  is a list of tuples with one entry, so we have to flatten it
         result = self.execute_fetchall(sql=sql)
-        return [x[0] for x in result]</code></pre>
+        return [x[0] for x in result]
+
+    def clear_index_tables(self, cut_off_day: int):
+        &#34;&#34;&#34;
+        Clear index tables for the daily processing.
+
+        index_parquet_reports: Removes entries that were created based on daily files that
+        are now covered by quarterly files. Based on fields origin_file &lt; cut_off_day and originFileType = daily.
+
+        index_parquet_processing_state: remove entries based on fileName length 8 + 3 and &lt; cut_off_day
+        &#34;&#34;&#34;
+
+        cut_off_file_name: str = f&#34;{cut_off_day}.zip&#34;
+
+        conn = self.get_connection()
+        try:
+            sql = f&#34;&#34;&#34;
+                    DELETE FROM {self.index_reports_table}
+                    WHERE originFile &lt; &#39;{cut_off_file_name}&#39; and originFileType = &#39;daily&#39;
+                &#34;&#34;&#34;
+            self.execute_single(sql=sql, conn=conn)
+
+            sql = f&#34;&#34;&#34;
+                    DELETE FROM {self.index_processing_table}
+                    WHERE fileName &lt; &#39;{cut_off_file_name}&#39; and length(fileName) = 12
+                &#34;&#34;&#34;
+            self.execute_single(sql=sql, conn=conn)
+
+            # Commit the transaction
+            conn.commit()
+        finally:
+            conn.close()</code></pre>
 </details>
 </section>
 <section>
@@ -361,7 +417,8 @@ class ParquetDBIndexingAccessor(DB):
 </summary>
 <pre><code class="python">@dataclass
 class IndexFileProcessingState:
-    &#34;&#34;&#34; dataclass for index_file_processing_state table&#34;&#34;&#34;
+    &#34;&#34;&#34;dataclass for index_file_processing_state table&#34;&#34;&#34;
+
     fileName: str  # pylint: disable=C0103
     fullPath: str  # pylint: disable=C0103
     status: str
@@ -404,7 +461,8 @@ class IndexFileProcessingState:
 </summary>
 <pre><code class="python">@dataclass
 class IndexReport:
-    &#34;&#34;&#34; dataclass for index_reports table&#34;&#34;&#34;
+    &#34;&#34;&#34;dataclass for index_reports table&#34;&#34;&#34;
+
     adsh: str
     cik: int
     name: str
@@ -471,9 +529,10 @@ class IndexReport:
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class ParquetDBIndexingAccessor(DB):
-    &#34;&#34;&#34; Dataaccess class for index related tables of parquet files&#34;&#34;&#34;
-    index_reports_table = &#39;index_parquet_reports&#39;
-    index_processing_table = &#39;index_parquet_processing_state&#39;
+    &#34;&#34;&#34;Dataaccess class for index related tables of parquet files&#34;&#34;&#34;
+
+    index_reports_table = &#34;index_parquet_reports&#34;
+    index_processing_table = &#34;index_parquet_processing_state&#34;
 
     def __init__(self, db_dir: str):
         super().__init__(db_dir=db_dir)
@@ -485,7 +544,7 @@ class IndexReport:
         Returns:
             List[IndexReport]: List with IndexReport objects
         &#34;&#34;&#34;
-        sql = f&#39;SELECT * FROM {self.index_reports_table}&#39;
+        sql = f&#34;SELECT * FROM {self.index_reports_table}&#34;
         return self.execute_fetchall_typed(sql, IndexReport)
 
     def read_all_indexreports_df(self) -&gt; pd.DataFrame:
@@ -495,8 +554,28 @@ class IndexReport:
         Returns:
             pd.DataFrame: pandas DataFrame
         &#34;&#34;&#34;
-        sql = f&#39;SELECT * FROM {self.index_reports_table}&#39;
+        sql = f&#34;SELECT * FROM {self.index_reports_table}&#34;
         return self.execute_read_as_df(sql)
+
+    def find_latest_quarter_file_name(self) -&gt; Optional[str]:
+        &#34;&#34;&#34;
+        finds the latest quarter in the index_reports table
+
+        Returns:
+            str: the latest quarter
+        &#34;&#34;&#34;
+        sql = f&#34;&#34;&#34;
+                SELECT *
+                FROM {self.index_processing_table}
+                WHERE fileName LIKE &#39;____q_.zip&#39; AND status = &#39;processed&#39;
+                ORDER BY fileName DESC
+                LIMIT 1
+        &#34;&#34;&#34;
+        result = self.execute_fetchall_typed(sql, IndexFileProcessingState)
+        if not result:
+            return None
+
+        return result[0].fileName
 
     def read_all_indexfileprocessing(self) -&gt; List[IndexFileProcessingState]:
         &#34;&#34;&#34;
@@ -505,7 +584,7 @@ class IndexReport:
         Returns:
             List[IndexFileProcessingState]: List with IndexFileProcessingState objects
         &#34;&#34;&#34;
-        sql = f&#39;SELECT * FROM {self.index_processing_table}&#39;
+        sql = f&#34;SELECT * FROM {self.index_processing_table}&#34;
         return self.execute_fetchall_typed(sql, IndexFileProcessingState)
 
     def read_all_indexfileprocessing_df(self) -&gt; pd.DataFrame:
@@ -515,7 +594,7 @@ class IndexReport:
         Returns:
             pd.DataFrame: pandas DataFrame
         &#34;&#34;&#34;
-        sql = f&#39;SELECT * FROM {self.index_processing_table}&#39;
+        sql = f&#34;SELECT * FROM {self.index_processing_table}&#34;
         return self.execute_read_as_df(sql)
 
     def read_index_file_for_filename(self, filename: str) -&gt; IndexFileProcessingState:
@@ -530,8 +609,7 @@ class IndexReport:
         sql = f&#34;SELECT * FROM {self.index_processing_table} WHERE fileName = &#39;{filename}&#39;&#34;
         return self.execute_fetchall_typed(sql, IndexFileProcessingState)[0]
 
-    def read_index_files_for_filenames(self, filenames: List[str]) \
-            -&gt; List[IndexFileProcessingState]:
+    def read_index_files_for_filenames(self, filenames: List[str]) -&gt; List[IndexFileProcessingState]:
         &#34;&#34;&#34;
         returns the IndexFileProcessingState instances for the provided filenames
         Args:
@@ -600,7 +678,7 @@ class IndexReport:
         sql = self.create_insert_statement_for_dataclass(self.index_processing_table, data)
         self.execute_single(sql, conn)
 
-    def find_latest_company_report(self, cik: int) -&gt; IndexReport:
+    def find_latest_company_report(self, cik: int, filetype: str = &#34;quarter&#34;) -&gt; Optional[IndexReport]:
         &#34;&#34;&#34;
         returns the latest report of a company
 
@@ -613,9 +691,13 @@ class IndexReport:
 
         sql = f&#34;&#34;&#34;SELECT *
                     FROM {self.index_reports_table}
-                    WHERE cik = {cik} and originFileType = &#39;quarter&#39;
+                    WHERE cik = {cik} and originFileType = &#39;{filetype}&#39;
                     ORDER BY period DESC&#34;&#34;&#34;
-        return self.execute_fetchall_typed(sql, IndexReport)[0]
+
+        results = self.execute_fetchall_typed(sql, IndexReport)
+        if len(results) == 0:
+            return None
+        return results[0]
 
     def read_index_report_for_adsh(self, adsh: str) -&gt; IndexReport:
         &#34;&#34;&#34;
@@ -664,8 +746,7 @@ class IndexReport:
 
         return filtered_reports
 
-    def read_index_reports_for_ciks(self, ciks: List[int], forms: Optional[List[str]] = None) \
-            -&gt; List[IndexReport]:
+    def read_index_reports_for_ciks(self, ciks: List[int], forms: Optional[List[str]] = None) -&gt; List[IndexReport]:
         &#34;&#34;&#34;
         gets all reports as IndexReport instances for the companies identified by their cik numbers.
         if forms is not set, all forms are returned, otherwise forms is a list of the
@@ -682,13 +763,12 @@ class IndexReport:
         sql = f&#39;SELECT * FROM {self.index_reports_table} WHERE cik in ({&#34;,&#34;.join(ciks_str)})&#39;
         if forms is not None:
             forms_str = &#34;, &#34;.join([&#34;&#39;&#34; + x.upper() + &#34;&#39;&#34; for x in forms])
-            sql = sql + f&#39; and form in ({forms_str}) &#39;
-        sql = sql + &#39; ORDER BY period DESC&#39;
+            sql = sql + f&#34; and form in ({forms_str}) &#34;
+        sql = sql + &#34; ORDER BY period DESC&#34;
 
         return self.execute_fetchall_typed(sql, IndexReport)
 
-    def read_index_reports_for_ciks_df(self, ciks: List[int], forms: Optional[List[str]] = None) \
-            -&gt; pd.DataFrame:
+    def read_index_reports_for_ciks_df(self, ciks: List[int], forms: Optional[List[str]] = None) -&gt; pd.DataFrame:
         &#34;&#34;&#34;
         gets all reports as IndexReport instances for the companies identified by their cik numbers.
         if forms is not set, all forms are returned, otherwise forms is a list of the
@@ -705,8 +785,8 @@ class IndexReport:
         sql = f&#39;SELECT * FROM {self.index_reports_table} WHERE cik in ({&#34;,&#34;.join(ciks_str)})&#39;
         if forms is not None:
             forms_str = &#34;, &#34;.join([&#34;&#39;&#34; + x.upper() + &#34;&#39;&#34; for x in forms])
-            sql = sql + f&#39; and form in ({forms_str}) &#39;
-        sql = sql + &#39; ORDER BY period DESC&#39;
+            sql = sql + f&#34; and form in ({forms_str}) &#34;
+        sql = sql + &#34; ORDER BY period DESC&#34;
 
         return self.execute_read_as_df(sql)
 
@@ -745,7 +825,38 @@ class IndexReport:
 
         # result  is a list of tuples with one entry, so we have to flatten it
         result = self.execute_fetchall(sql=sql)
-        return [x[0] for x in result]</code></pre>
+        return [x[0] for x in result]
+
+    def clear_index_tables(self, cut_off_day: int):
+        &#34;&#34;&#34;
+        Clear index tables for the daily processing.
+
+        index_parquet_reports: Removes entries that were created based on daily files that
+        are now covered by quarterly files. Based on fields origin_file &lt; cut_off_day and originFileType = daily.
+
+        index_parquet_processing_state: remove entries based on fileName length 8 + 3 and &lt; cut_off_day
+        &#34;&#34;&#34;
+
+        cut_off_file_name: str = f&#34;{cut_off_day}.zip&#34;
+
+        conn = self.get_connection()
+        try:
+            sql = f&#34;&#34;&#34;
+                    DELETE FROM {self.index_reports_table}
+                    WHERE originFile &lt; &#39;{cut_off_file_name}&#39; and originFileType = &#39;daily&#39;
+                &#34;&#34;&#34;
+            self.execute_single(sql=sql, conn=conn)
+
+            sql = f&#34;&#34;&#34;
+                    DELETE FROM {self.index_processing_table}
+                    WHERE fileName &lt; &#39;{cut_off_file_name}&#39; and length(fileName) = 12
+                &#34;&#34;&#34;
+            self.execute_single(sql=sql, conn=conn)
+
+            # Commit the transaction
+            conn.commit()
+        finally:
+            conn.close()</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -800,6 +911,50 @@ in the processing table</p>
         self._insert_indexfileprocessing(processing_state, conn)</code></pre>
 </details>
 </dd>
+<dt id="secfsdstools.c_index.indexdataaccess.ParquetDBIndexingAccessor.clear_index_tables"><code class="name flex">
+<span>def <span class="ident">clear_index_tables</span></span>(<span>self, cut_off_day: int)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Clear index tables for the daily processing.</p>
+<p>index_parquet_reports: Removes entries that were created based on daily files that
+are now covered by quarterly files. Based on fields origin_file &lt; cut_off_day and originFileType = daily.</p>
+<p>index_parquet_processing_state: remove entries based on fileName length 8 + 3 and &lt; cut_off_day</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def clear_index_tables(self, cut_off_day: int):
+    &#34;&#34;&#34;
+    Clear index tables for the daily processing.
+
+    index_parquet_reports: Removes entries that were created based on daily files that
+    are now covered by quarterly files. Based on fields origin_file &lt; cut_off_day and originFileType = daily.
+
+    index_parquet_processing_state: remove entries based on fileName length 8 + 3 and &lt; cut_off_day
+    &#34;&#34;&#34;
+
+    cut_off_file_name: str = f&#34;{cut_off_day}.zip&#34;
+
+    conn = self.get_connection()
+    try:
+        sql = f&#34;&#34;&#34;
+                DELETE FROM {self.index_reports_table}
+                WHERE originFile &lt; &#39;{cut_off_file_name}&#39; and originFileType = &#39;daily&#39;
+            &#34;&#34;&#34;
+        self.execute_single(sql=sql, conn=conn)
+
+        sql = f&#34;&#34;&#34;
+                DELETE FROM {self.index_processing_table}
+                WHERE fileName &lt; &#39;{cut_off_file_name}&#39; and length(fileName) = 12
+            &#34;&#34;&#34;
+        self.execute_single(sql=sql, conn=conn)
+
+        # Commit the transaction
+        conn.commit()
+    finally:
+        conn.close()</code></pre>
+</details>
+</dd>
 <dt id="secfsdstools.c_index.indexdataaccess.ParquetDBIndexingAccessor.find_company_by_name"><code class="name flex">
 <span>def <span class="ident">find_company_by_name</span></span>(<span>self, name_part: str) ‑> pandas.core.frame.DataFrame</span>
 </code></dt>
@@ -839,7 +994,7 @@ Lower and uppercase are ignored.</p>
 </details>
 </dd>
 <dt id="secfsdstools.c_index.indexdataaccess.ParquetDBIndexingAccessor.find_latest_company_report"><code class="name flex">
-<span>def <span class="ident">find_latest_company_report</span></span>(<span>self, cik: int) ‑> <a title="secfsdstools.c_index.indexdataaccess.IndexReport" href="#secfsdstools.c_index.indexdataaccess.IndexReport">IndexReport</a></span>
+<span>def <span class="ident">find_latest_company_report</span></span>(<span>self, cik: int, filetype: str = 'quarter') ‑> Optional[<a title="secfsdstools.c_index.indexdataaccess.IndexReport" href="#secfsdstools.c_index.indexdataaccess.IndexReport">IndexReport</a>]</span>
 </code></dt>
 <dd>
 <div class="desc"><p>returns the latest report of a company</p>
@@ -857,7 +1012,7 @@ Lower and uppercase are ignored.</p>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def find_latest_company_report(self, cik: int) -&gt; IndexReport:
+<pre><code class="python">def find_latest_company_report(self, cik: int, filetype: str = &#34;quarter&#34;) -&gt; Optional[IndexReport]:
     &#34;&#34;&#34;
     returns the latest report of a company
 
@@ -870,9 +1025,48 @@ Lower and uppercase are ignored.</p>
 
     sql = f&#34;&#34;&#34;SELECT *
                 FROM {self.index_reports_table}
-                WHERE cik = {cik} and originFileType = &#39;quarter&#39;
+                WHERE cik = {cik} and originFileType = &#39;{filetype}&#39;
                 ORDER BY period DESC&#34;&#34;&#34;
-    return self.execute_fetchall_typed(sql, IndexReport)[0]</code></pre>
+
+    results = self.execute_fetchall_typed(sql, IndexReport)
+    if len(results) == 0:
+        return None
+    return results[0]</code></pre>
+</details>
+</dd>
+<dt id="secfsdstools.c_index.indexdataaccess.ParquetDBIndexingAccessor.find_latest_quarter_file_name"><code class="name flex">
+<span>def <span class="ident">find_latest_quarter_file_name</span></span>(<span>self) ‑> Optional[str]</span>
+</code></dt>
+<dd>
+<div class="desc"><p>finds the latest quarter in the index_reports table</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>str</code></dt>
+<dd>the latest quarter</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def find_latest_quarter_file_name(self) -&gt; Optional[str]:
+    &#34;&#34;&#34;
+    finds the latest quarter in the index_reports table
+
+    Returns:
+        str: the latest quarter
+    &#34;&#34;&#34;
+    sql = f&#34;&#34;&#34;
+            SELECT *
+            FROM {self.index_processing_table}
+            WHERE fileName LIKE &#39;____q_.zip&#39; AND status = &#39;processed&#39;
+            ORDER BY fileName DESC
+            LIMIT 1
+    &#34;&#34;&#34;
+    result = self.execute_fetchall_typed(sql, IndexFileProcessingState)
+    if not result:
+        return None
+
+    return result[0].fileName</code></pre>
 </details>
 </dd>
 <dt id="secfsdstools.c_index.indexdataaccess.ParquetDBIndexingAccessor.insert_indexfileprocessing"><code class="name flex">
@@ -946,7 +1140,7 @@ Lower and uppercase are ignored.</p>
     Returns:
         List[IndexFileProcessingState]: List with IndexFileProcessingState objects
     &#34;&#34;&#34;
-    sql = f&#39;SELECT * FROM {self.index_processing_table}&#39;
+    sql = f&#34;SELECT * FROM {self.index_processing_table}&#34;
     return self.execute_fetchall_typed(sql, IndexFileProcessingState)</code></pre>
 </details>
 </dd>
@@ -971,7 +1165,7 @@ Lower and uppercase are ignored.</p>
     Returns:
         pd.DataFrame: pandas DataFrame
     &#34;&#34;&#34;
-    sql = f&#39;SELECT * FROM {self.index_processing_table}&#39;
+    sql = f&#34;SELECT * FROM {self.index_processing_table}&#34;
     return self.execute_read_as_df(sql)</code></pre>
 </details>
 </dd>
@@ -996,7 +1190,7 @@ Lower and uppercase are ignored.</p>
     Returns:
         List[IndexReport]: List with IndexReport objects
     &#34;&#34;&#34;
-    sql = f&#39;SELECT * FROM {self.index_reports_table}&#39;
+    sql = f&#34;SELECT * FROM {self.index_reports_table}&#34;
     return self.execute_fetchall_typed(sql, IndexReport)</code></pre>
 </details>
 </dd>
@@ -1021,7 +1215,7 @@ Lower and uppercase are ignored.</p>
     Returns:
         pd.DataFrame: pandas DataFrame
     &#34;&#34;&#34;
-    sql = f&#39;SELECT * FROM {self.index_reports_table}&#39;
+    sql = f&#34;SELECT * FROM {self.index_reports_table}&#34;
     return self.execute_read_as_df(sql)</code></pre>
 </details>
 </dd>
@@ -1112,8 +1306,7 @@ Lower and uppercase are ignored.</p>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def read_index_files_for_filenames(self, filenames: List[str]) \
-        -&gt; List[IndexFileProcessingState]:
+<pre><code class="python">def read_index_files_for_filenames(self, filenames: List[str]) -&gt; List[IndexFileProcessingState]:
     &#34;&#34;&#34;
     returns the IndexFileProcessingState instances for the provided filenames
     Args:
@@ -1236,8 +1429,7 @@ forms that should be returned</p>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def read_index_reports_for_ciks(self, ciks: List[int], forms: Optional[List[str]] = None) \
-        -&gt; List[IndexReport]:
+<pre><code class="python">def read_index_reports_for_ciks(self, ciks: List[int], forms: Optional[List[str]] = None) -&gt; List[IndexReport]:
     &#34;&#34;&#34;
     gets all reports as IndexReport instances for the companies identified by their cik numbers.
     if forms is not set, all forms are returned, otherwise forms is a list of the
@@ -1254,8 +1446,8 @@ forms that should be returned</p>
     sql = f&#39;SELECT * FROM {self.index_reports_table} WHERE cik in ({&#34;,&#34;.join(ciks_str)})&#39;
     if forms is not None:
         forms_str = &#34;, &#34;.join([&#34;&#39;&#34; + x.upper() + &#34;&#39;&#34; for x in forms])
-        sql = sql + f&#39; and form in ({forms_str}) &#39;
-    sql = sql + &#39; ORDER BY period DESC&#39;
+        sql = sql + f&#34; and form in ({forms_str}) &#34;
+    sql = sql + &#34; ORDER BY period DESC&#34;
 
     return self.execute_fetchall_typed(sql, IndexReport)</code></pre>
 </details>
@@ -1281,8 +1473,7 @@ forms that should be returned</p>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def read_index_reports_for_ciks_df(self, ciks: List[int], forms: Optional[List[str]] = None) \
-        -&gt; pd.DataFrame:
+<pre><code class="python">def read_index_reports_for_ciks_df(self, ciks: List[int], forms: Optional[List[str]] = None) -&gt; pd.DataFrame:
     &#34;&#34;&#34;
     gets all reports as IndexReport instances for the companies identified by their cik numbers.
     if forms is not set, all forms are returned, otherwise forms is a list of the
@@ -1299,8 +1490,8 @@ forms that should be returned</p>
     sql = f&#39;SELECT * FROM {self.index_reports_table} WHERE cik in ({&#34;,&#34;.join(ciks_str)})&#39;
     if forms is not None:
         forms_str = &#34;, &#34;.join([&#34;&#39;&#34; + x.upper() + &#34;&#39;&#34; for x in forms])
-        sql = sql + f&#39; and form in ({forms_str}) &#39;
-    sql = sql + &#39; ORDER BY period DESC&#39;
+        sql = sql + f&#34; and form in ({forms_str}) &#34;
+    sql = sql + &#34; ORDER BY period DESC&#34;
 
     return self.execute_read_as_df(sql)</code></pre>
 </details>
@@ -1369,8 +1560,10 @@ forms that should be returned</p>
 <h4><code><a title="secfsdstools.c_index.indexdataaccess.ParquetDBIndexingAccessor" href="#secfsdstools.c_index.indexdataaccess.ParquetDBIndexingAccessor">ParquetDBIndexingAccessor</a></code></h4>
 <ul class="">
 <li><code><a title="secfsdstools.c_index.indexdataaccess.ParquetDBIndexingAccessor.add_index_report" href="#secfsdstools.c_index.indexdataaccess.ParquetDBIndexingAccessor.add_index_report">add_index_report</a></code></li>
+<li><code><a title="secfsdstools.c_index.indexdataaccess.ParquetDBIndexingAccessor.clear_index_tables" href="#secfsdstools.c_index.indexdataaccess.ParquetDBIndexingAccessor.clear_index_tables">clear_index_tables</a></code></li>
 <li><code><a title="secfsdstools.c_index.indexdataaccess.ParquetDBIndexingAccessor.find_company_by_name" href="#secfsdstools.c_index.indexdataaccess.ParquetDBIndexingAccessor.find_company_by_name">find_company_by_name</a></code></li>
 <li><code><a title="secfsdstools.c_index.indexdataaccess.ParquetDBIndexingAccessor.find_latest_company_report" href="#secfsdstools.c_index.indexdataaccess.ParquetDBIndexingAccessor.find_latest_company_report">find_latest_company_report</a></code></li>
+<li><code><a title="secfsdstools.c_index.indexdataaccess.ParquetDBIndexingAccessor.find_latest_quarter_file_name" href="#secfsdstools.c_index.indexdataaccess.ParquetDBIndexingAccessor.find_latest_quarter_file_name">find_latest_quarter_file_name</a></code></li>
 <li><code><a title="secfsdstools.c_index.indexdataaccess.ParquetDBIndexingAccessor.index_processing_table" href="#secfsdstools.c_index.indexdataaccess.ParquetDBIndexingAccessor.index_processing_table">index_processing_table</a></code></li>
 <li><code><a title="secfsdstools.c_index.indexdataaccess.ParquetDBIndexingAccessor.index_reports_table" href="#secfsdstools.c_index.indexdataaccess.ParquetDBIndexingAccessor.index_reports_table">index_reports_table</a></code></li>
 <li><code><a title="secfsdstools.c_index.indexdataaccess.ParquetDBIndexingAccessor.insert_indexfileprocessing" href="#secfsdstools.c_index.indexdataaccess.ParquetDBIndexingAccessor.insert_indexfileprocessing">insert_indexfileprocessing</a></code></li>

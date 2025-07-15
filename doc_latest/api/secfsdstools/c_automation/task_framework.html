@@ -36,6 +36,7 @@ Base classes for the Task and Process Framework.
 Used for downloading, transforming to parquet, and indexing of the zip files from SEC, as well
 as to implement customized automation tasks.
 &#34;&#34;&#34;
+
 import logging
 import shutil
 from abc import ABC, abstractmethod
@@ -43,10 +44,9 @@ from collections import defaultdict
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
-from typing import List, Tuple
-from typing import Protocol, Any, Dict
+from typing import Any, Dict, List, Protocol, Tuple
 
-from secfsdstools.a_utils.parallelexecution import ThreadExecutor, ParallelExecutor
+from secfsdstools.a_utils.parallelexecution import ParallelExecutor, ThreadExecutor
 from secfsdstools.c_automation.automation_utils import get_latest_mtime
 
 
@@ -54,6 +54,7 @@ class TaskResultState(Enum):
     &#34;&#34;&#34;
     Enum defining possible ResultStates of one task.
     &#34;&#34;&#34;
+
     SUCCESS = 1
     FAILED = 2
 
@@ -64,21 +65,21 @@ class Task(Protocol):
     &#34;&#34;&#34;
 
     def prepare(self):
-        &#34;&#34;&#34; Prepare everything to execute the task.
-            E.g., creation or clearing a directory. &#34;&#34;&#34;
+        &#34;&#34;&#34;Prepare everything to execute the task.
+        E.g., creation or clearing a directory.&#34;&#34;&#34;
 
     def execute(self):
-        &#34;&#34;&#34; Execution the task. &#34;&#34;&#34;
+        &#34;&#34;&#34;Execution the task.&#34;&#34;&#34;
 
     def commit(self) -&gt; Any:
-        &#34;&#34;&#34; Commit the task if the execution method is not &#34;self-commiting&#34;. E.g.,
-         If you do some file processing in the execute-method,
-         but want to update a state in a table,
-         you could do the update of the state in the commit method.
-         &#34;&#34;&#34;
+        &#34;&#34;&#34;Commit the task if the execution method is not &#34;self-commiting&#34;. E.g.,
+        If you do some file processing in the execute-method,
+        but want to update a state in a table,
+        you could do the update of the state in the commit method.
+        &#34;&#34;&#34;
 
     def exception(self, exception) -&gt; Any:
-        &#34;&#34;&#34; Handle the exception. &#34;&#34;&#34;
+        &#34;&#34;&#34;Handle the exception.&#34;&#34;&#34;
 
 
 @dataclass
@@ -88,6 +89,7 @@ class TaskResult:
     Contains the task, the TaskResultState and the result (either the return value form the commit()
     or exception() method.
     &#34;&#34;&#34;
+
     task: Task
     result: Any
     state: TaskResultState
@@ -116,10 +118,7 @@ class AbstractTask:
 
     &#34;&#34;&#34;
 
-    def __init__(self,
-                 root_path: Path,
-                 pathfilter: str,
-                 target_path: Path):
+    def __init__(self, root_path: Path, pathfilter: str, target_path: Path):
         &#34;&#34;&#34;
         The constructor of the AbstracTask.
 
@@ -183,17 +182,17 @@ class AbstractTask:
         &#34;&#34;&#34;
 
         # ignore first and last /
-        if path.startswith(&#39;/&#39;):
+        if path.startswith(&#34;/&#34;):
             path = path[1:]
-        if path.endswith(&#39;/&#39;):
+        if path.endswith(&#34;/&#34;):
             path = path[:-1]
 
         # Split the string by &#39;/&#39; to get segments
-        segments = path.split(&#39;/&#39;)
+        segments = path.split(&#34;/&#34;)
 
         # Iterate from the end and find the first segment containing &#39;*&#39;
         for i, segment in enumerate(reversed(segments)):
-            if &#39;*&#39; in segment:
+            if &#34;*&#34; in segment:
                 return i  # Position from the end
 
         # If no &#39;*&#39; is found, return -1 to indicate an error
@@ -302,13 +301,10 @@ class CheckByTimestampMergeBaseTask(AbstractTask):
       process the data and also update the timestamp in the meta.inf file
     &#34;&#34;&#34;
 
-    def __init__(self,
-                 root_path: Path,
-                 pathfilter: str,
-                 target_path: Path):
+    def __init__(self, root_path: Path, pathfilter: str, target_path: Path):
         &#34;&#34;&#34;
-          The constructor of the CheckByTimestampMergeBaseTask.
-          Check also the documentation of the AbstractTask Constructor.
+        The constructor of the CheckByTimestampMergeBaseTask.
+        Check also the documentation of the AbstractTask Constructor.
         &#34;&#34;&#34;
         super().__init__(
             root_path=root_path,
@@ -345,16 +341,13 @@ class CheckByTimestampMergeBaseTask(AbstractTask):
         if not self.has_work_todo():
             return
 
-        self.do_execution(paths_to_process=self.paths_to_process,
-                          tmp_path=self.tmp_path)
+        self.do_execution(paths_to_process=self.paths_to_process, tmp_path=self.tmp_path)
 
         meta_inf_content: str = str(get_latest_mtime(self.root_path))
         self.write_meta_inf(content=meta_inf_content)
 
     @abstractmethod
-    def do_execution(self,
-                     paths_to_process: List[Path],
-                     tmp_path: Path):
+    def do_execution(self, paths_to_process: List[Path], tmp_path: Path):
         &#34;&#34;&#34;
             defines the logic to be executed.
         Args:
@@ -376,10 +369,7 @@ class CheckByNewSubfoldersMergeBaseTask(AbstractTask):
     the timestamp of the latest processed modification.
     &#34;&#34;&#34;
 
-    def __init__(self,
-                 root_path: Path,
-                 pathfilter: str,
-                 target_path: Path):
+    def __init__(self, root_path: Path, pathfilter: str, target_path: Path):
         &#34;&#34;&#34;
         Constructor of base task.
 
@@ -399,8 +389,9 @@ class CheckByNewSubfoldersMergeBaseTask(AbstractTask):
 
         # so if we have the pathfilter */BS and if we have the directories &#34;2010q1.zip/BS&#34;,
         # &#34;2010q2.zip/BS&#34; in the root_path, all_names key will be 2010q1.zip, 2010q2.zip
-        self.all_names = {self._get_star_position_name(path=p, star_position=self.star_position):
-                              p for p in self.paths_to_process}
+        self.all_names = {
+            self._get_star_position_name(path=p, star_position=self.star_position): p for p in self.paths_to_process
+        }
 
         if self.meta_inf_file.exists():
             containing_values = self.read_metainf_content()
@@ -429,19 +420,15 @@ class CheckByNewSubfoldersMergeBaseTask(AbstractTask):
         # therefore, we provide a list &#34;paths_to_process&#34; which contains subfolders that are new,
         # the processed_path (the path that contains the result of the last processing), and
         # the target_path, where we have to store the result to (this the tmp folder)
-        self.do_execution(paths_to_process=paths_to_process,
-                          target_path=self.target_path,
-                          tmp_path=self.tmp_path)
+        self.do_execution(paths_to_process=paths_to_process, target_path=self.target_path, tmp_path=self.tmp_path)
 
-        meta_inf_content: str = &#34;\n&#34;.join([self._get_star_position_name(f, self.star_position)
-                                           for f in self.filtered_paths])
+        meta_inf_content: str = &#34;\n&#34;.join(
+            [self._get_star_position_name(f, self.star_position) for f in self.filtered_paths]
+        )
         self.write_meta_inf(content=meta_inf_content)
 
     @abstractmethod
-    def do_execution(self,
-                     paths_to_process: List[Path],
-                     target_path: Path,
-                     tmp_path: Path):
+    def do_execution(self, paths_to_process: List[Path], target_path: Path, tmp_path: Path):
         &#34;&#34;&#34;
             defines the logic to be executed.
         Args:
@@ -456,11 +443,19 @@ class AbstractProcess(ABC):
     Defines the Abstract process of processing tasks for a certain process.
     &#34;&#34;&#34;
 
-    def __init__(self,
-                 execute_serial: bool = False,
-                 chunksize: int = 3,
-                 paralleltasks: int = 3,
-                 max_tasks_per_second: int = 8):
+    @abstractmethod
+    def process(self):
+        &#34;&#34;&#34;executes the process.&#34;&#34;&#34;
+
+
+class AbstractParallelProcess(AbstractProcess):
+    &#34;&#34;&#34;
+    Defines the Abstract process of processing tasks for a certain process.
+    &#34;&#34;&#34;
+
+    def __init__(
+        self, execute_serial: bool = False, chunksize: int = 3, paralleltasks: int = 3, max_tasks_per_second: int = 8
+    ):
         self.execute_serial = execute_serial
         self.chunksize = chunksize
         self.paralleltasks = paralleltasks
@@ -482,11 +477,10 @@ class AbstractProcess(ABC):
         &#34;&#34;&#34;
 
     def pre_process(self):
-        &#34;&#34;&#34; Hook method to implement logic that is executed before the whole process is finished.
-        &#34;&#34;&#34;
+        &#34;&#34;&#34;Hook method to implement logic that is executed before the whole process is finished.&#34;&#34;&#34;
 
     def post_process(self):
-        &#34;&#34;&#34; Hook method to implement logic that is executed after the whole process is finished. &#34;&#34;&#34;
+        &#34;&#34;&#34;Hook method to implement logic that is executed after the whole process is finished.&#34;&#34;&#34;
 
     @staticmethod
     def process_task(task: Task) -&gt; TaskResult:
@@ -497,17 +491,13 @@ class AbstractProcess(ABC):
         try:
             task.prepare()
             task.execute()
-            result = TaskResult(task=task,
-                                result=task.commit(),
-                                state=TaskResultState.SUCCESS)
+            result = TaskResult(task=task, result=task.commit(), state=TaskResultState.SUCCESS)
             logger.info(&#34;Success: %s&#34;, task)
             return result
         except Exception as ex:  # pylint: disable=W0703
             # we want to catch everything here.
             logger.info(&#34;Failed: %s / %s &#34;, task, ex)
-            return TaskResult(task=task,
-                              result=task.exception(exception=ex),
-                              state=TaskResultState.FAILED)
+            return TaskResult(task=task, result=task.exception(exception=ex), state=TaskResultState.FAILED)
 
     def process(self):
         &#34;&#34;&#34;
@@ -540,7 +530,7 @@ class AbstractProcess(ABC):
         &#34;&#34;&#34;
 
 
-class AbstractThreadProcess(AbstractProcess):
+class AbstractThreadProcess(AbstractParallelProcess):
     &#34;&#34;&#34;
     Uses for the parallel execution logic a Thread-Based approach.
     &#34;&#34;&#34;
@@ -553,7 +543,7 @@ class AbstractThreadProcess(AbstractProcess):
             processes=self.paralleltasks,
             max_calls_per_sec=self.max_tasks_per_second,
             chunksize=self.chunksize,
-            execute_serial=self.execute_serial
+            execute_serial=self.execute_serial,
         )
         executor.set_get_entries_function(self.calculate_tasks)
         executor.set_process_element_function(self.process_task)
@@ -561,7 +551,7 @@ class AbstractThreadProcess(AbstractProcess):
         return executor.execute()
 
 
-class AbstractProcessPoolProcess(AbstractProcess):
+class AbstractProcessPoolProcess(AbstractParallelProcess):
     &#34;&#34;&#34;
     Uses for the parallel execution logic a Thread-Based approach.
     &#34;&#34;&#34;
@@ -574,7 +564,7 @@ class AbstractProcessPoolProcess(AbstractProcess):
             processes=self.paralleltasks,
             max_calls_per_sec=self.max_tasks_per_second,
             chunksize=self.chunksize,
-            execute_serial=self.execute_serial
+            execute_serial=self.execute_serial,
         )
         executor.set_get_entries_function(self.calculate_tasks)
         executor.set_process_element_function(self.process_task)
@@ -627,8 +617,8 @@ def execute_processes(processes: List[AbstractProcess]):
 <section>
 <h2 class="section-title" id="header-classes">Classes</h2>
 <dl>
-<dt id="secfsdstools.c_automation.task_framework.AbstractProcess"><code class="flex name class">
-<span>class <span class="ident">AbstractProcess</span></span>
+<dt id="secfsdstools.c_automation.task_framework.AbstractParallelProcess"><code class="flex name class">
+<span>class <span class="ident">AbstractParallelProcess</span></span>
 <span>(</span><span>execute_serial: bool = False, chunksize: int = 3, paralleltasks: int = 3, max_tasks_per_second: int = 8)</span>
 </code></dt>
 <dd>
@@ -637,16 +627,14 @@ def execute_processes(processes: List[AbstractProcess]):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class AbstractProcess(ABC):
+<pre><code class="python">class AbstractParallelProcess(AbstractProcess):
     &#34;&#34;&#34;
     Defines the Abstract process of processing tasks for a certain process.
     &#34;&#34;&#34;
 
-    def __init__(self,
-                 execute_serial: bool = False,
-                 chunksize: int = 3,
-                 paralleltasks: int = 3,
-                 max_tasks_per_second: int = 8):
+    def __init__(
+        self, execute_serial: bool = False, chunksize: int = 3, paralleltasks: int = 3, max_tasks_per_second: int = 8
+    ):
         self.execute_serial = execute_serial
         self.chunksize = chunksize
         self.paralleltasks = paralleltasks
@@ -668,11 +656,10 @@ def execute_processes(processes: List[AbstractProcess]):
         &#34;&#34;&#34;
 
     def pre_process(self):
-        &#34;&#34;&#34; Hook method to implement logic that is executed before the whole process is finished.
-        &#34;&#34;&#34;
+        &#34;&#34;&#34;Hook method to implement logic that is executed before the whole process is finished.&#34;&#34;&#34;
 
     def post_process(self):
-        &#34;&#34;&#34; Hook method to implement logic that is executed after the whole process is finished. &#34;&#34;&#34;
+        &#34;&#34;&#34;Hook method to implement logic that is executed after the whole process is finished.&#34;&#34;&#34;
 
     @staticmethod
     def process_task(task: Task) -&gt; TaskResult:
@@ -683,17 +670,13 @@ def execute_processes(processes: List[AbstractProcess]):
         try:
             task.prepare()
             task.execute()
-            result = TaskResult(task=task,
-                                result=task.commit(),
-                                state=TaskResultState.SUCCESS)
+            result = TaskResult(task=task, result=task.commit(), state=TaskResultState.SUCCESS)
             logger.info(&#34;Success: %s&#34;, task)
             return result
         except Exception as ex:  # pylint: disable=W0703
             # we want to catch everything here.
             logger.info(&#34;Failed: %s / %s &#34;, task, ex)
-            return TaskResult(task=task,
-                              result=task.exception(exception=ex),
-                              state=TaskResultState.FAILED)
+            return TaskResult(task=task, result=task.exception(exception=ex), state=TaskResultState.FAILED)
 
     def process(self):
         &#34;&#34;&#34;
@@ -727,6 +710,7 @@ def execute_processes(processes: List[AbstractProcess]):
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
+<li><a title="secfsdstools.c_automation.task_framework.AbstractProcess" href="#secfsdstools.c_automation.task_framework.AbstractProcess">AbstractProcess</a></li>
 <li>abc.ABC</li>
 </ul>
 <h3>Subclasses</h3>
@@ -736,7 +720,7 @@ def execute_processes(processes: List[AbstractProcess]):
 </ul>
 <h3>Static methods</h3>
 <dl>
-<dt id="secfsdstools.c_automation.task_framework.AbstractProcess.process_task"><code class="name flex">
+<dt id="secfsdstools.c_automation.task_framework.AbstractParallelProcess.process_task"><code class="name flex">
 <span>def <span class="ident">process_task</span></span>(<span>task: <a title="secfsdstools.c_automation.task_framework.Task" href="#secfsdstools.c_automation.task_framework.Task">Task</a>) ‑> <a title="secfsdstools.c_automation.task_framework.TaskResult" href="#secfsdstools.c_automation.task_framework.TaskResult">TaskResult</a></span>
 </code></dt>
 <dd>
@@ -754,23 +738,19 @@ def process_task(task: Task) -&gt; TaskResult:
     try:
         task.prepare()
         task.execute()
-        result = TaskResult(task=task,
-                            result=task.commit(),
-                            state=TaskResultState.SUCCESS)
+        result = TaskResult(task=task, result=task.commit(), state=TaskResultState.SUCCESS)
         logger.info(&#34;Success: %s&#34;, task)
         return result
     except Exception as ex:  # pylint: disable=W0703
         # we want to catch everything here.
         logger.info(&#34;Failed: %s / %s &#34;, task, ex)
-        return TaskResult(task=task,
-                          result=task.exception(exception=ex),
-                          state=TaskResultState.FAILED)</code></pre>
+        return TaskResult(task=task, result=task.exception(exception=ex), state=TaskResultState.FAILED)</code></pre>
 </details>
 </dd>
 </dl>
 <h3>Methods</h3>
 <dl>
-<dt id="secfsdstools.c_automation.task_framework.AbstractProcess.calculate_tasks"><code class="name flex">
+<dt id="secfsdstools.c_automation.task_framework.AbstractParallelProcess.calculate_tasks"><code class="name flex">
 <span>def <span class="ident">calculate_tasks</span></span>(<span>self) ‑> List[<a title="secfsdstools.c_automation.task_framework.Task" href="#secfsdstools.c_automation.task_framework.Task">Task</a>]</span>
 </code></dt>
 <dd>
@@ -794,7 +774,7 @@ def calculate_tasks(self) -&gt; List[Task]:
     &#34;&#34;&#34;</code></pre>
 </details>
 </dd>
-<dt id="secfsdstools.c_automation.task_framework.AbstractProcess.do_execution"><code class="name flex">
+<dt id="secfsdstools.c_automation.task_framework.AbstractParallelProcess.do_execution"><code class="name flex">
 <span>def <span class="ident">do_execution</span></span>(<span>self) ‑> Tuple[List[<a title="secfsdstools.c_automation.task_framework.TaskResult" href="#secfsdstools.c_automation.task_framework.TaskResult">TaskResult</a>], List[<a title="secfsdstools.c_automation.task_framework.Task" href="#secfsdstools.c_automation.task_framework.Task">Task</a>]]</span>
 </code></dt>
 <dd>
@@ -810,7 +790,7 @@ def do_execution(self) -&gt; Tuple[List[TaskResult], List[Task]]:
     &#34;&#34;&#34;</code></pre>
 </details>
 </dd>
-<dt id="secfsdstools.c_automation.task_framework.AbstractProcess.post_process"><code class="name flex">
+<dt id="secfsdstools.c_automation.task_framework.AbstractParallelProcess.post_process"><code class="name flex">
 <span>def <span class="ident">post_process</span></span>(<span>self)</span>
 </code></dt>
 <dd>
@@ -820,10 +800,10 @@ def do_execution(self) -&gt; Tuple[List[TaskResult], List[Task]]:
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def post_process(self):
-    &#34;&#34;&#34; Hook method to implement logic that is executed after the whole process is finished. &#34;&#34;&#34;</code></pre>
+    &#34;&#34;&#34;Hook method to implement logic that is executed after the whole process is finished.&#34;&#34;&#34;</code></pre>
 </details>
 </dd>
-<dt id="secfsdstools.c_automation.task_framework.AbstractProcess.pre_process"><code class="name flex">
+<dt id="secfsdstools.c_automation.task_framework.AbstractParallelProcess.pre_process"><code class="name flex">
 <span>def <span class="ident">pre_process</span></span>(<span>self)</span>
 </code></dt>
 <dd>
@@ -833,11 +813,10 @@ def do_execution(self) -&gt; Tuple[List[TaskResult], List[Task]]:
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def pre_process(self):
-    &#34;&#34;&#34; Hook method to implement logic that is executed before the whole process is finished.
-    &#34;&#34;&#34;</code></pre>
+    &#34;&#34;&#34;Hook method to implement logic that is executed before the whole process is finished.&#34;&#34;&#34;</code></pre>
 </details>
 </dd>
-<dt id="secfsdstools.c_automation.task_framework.AbstractProcess.process"><code class="name flex">
+<dt id="secfsdstools.c_automation.task_framework.AbstractParallelProcess.process"><code class="name flex">
 <span>def <span class="ident">process</span></span>(<span>self)</span>
 </code></dt>
 <dd>
@@ -875,6 +854,51 @@ The execution can happen in parallel or serial.</p>
 </dd>
 </dl>
 </dd>
+<dt id="secfsdstools.c_automation.task_framework.AbstractProcess"><code class="flex name class">
+<span>class <span class="ident">AbstractProcess</span></span>
+</code></dt>
+<dd>
+<div class="desc"><p>Defines the Abstract process of processing tasks for a certain process.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class AbstractProcess(ABC):
+    &#34;&#34;&#34;
+    Defines the Abstract process of processing tasks for a certain process.
+    &#34;&#34;&#34;
+
+    @abstractmethod
+    def process(self):
+        &#34;&#34;&#34;executes the process.&#34;&#34;&#34;</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>abc.ABC</li>
+</ul>
+<h3>Subclasses</h3>
+<ul class="hlist">
+<li><a title="secfsdstools.c_automation.task_framework.AbstractParallelProcess" href="#secfsdstools.c_automation.task_framework.AbstractParallelProcess">AbstractParallelProcess</a></li>
+<li><a title="secfsdstools.c_daily.dailypreparation_process.DailyPreparationProcess" href="../c_daily/dailypreparation_process.html#secfsdstools.c_daily.dailypreparation_process.DailyPreparationProcess">DailyPreparationProcess</a></li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="secfsdstools.c_automation.task_framework.AbstractProcess.process"><code class="name flex">
+<span>def <span class="ident">process</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>executes the process.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@abstractmethod
+def process(self):
+    &#34;&#34;&#34;executes the process.&#34;&#34;&#34;</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
 <dt id="secfsdstools.c_automation.task_framework.AbstractProcessPoolProcess"><code class="flex name class">
 <span>class <span class="ident">AbstractProcessPoolProcess</span></span>
 <span>(</span><span>execute_serial: bool = False, chunksize: int = 3, paralleltasks: int = 3, max_tasks_per_second: int = 8)</span>
@@ -885,7 +909,7 @@ The execution can happen in parallel or serial.</p>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class AbstractProcessPoolProcess(AbstractProcess):
+<pre><code class="python">class AbstractProcessPoolProcess(AbstractParallelProcess):
     &#34;&#34;&#34;
     Uses for the parallel execution logic a Thread-Based approach.
     &#34;&#34;&#34;
@@ -898,7 +922,7 @@ The execution can happen in parallel or serial.</p>
             processes=self.paralleltasks,
             max_calls_per_sec=self.max_tasks_per_second,
             chunksize=self.chunksize,
-            execute_serial=self.execute_serial
+            execute_serial=self.execute_serial,
         )
         executor.set_get_entries_function(self.calculate_tasks)
         executor.set_process_element_function(self.process_task)
@@ -907,6 +931,7 @@ The execution can happen in parallel or serial.</p>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
+<li><a title="secfsdstools.c_automation.task_framework.AbstractParallelProcess" href="#secfsdstools.c_automation.task_framework.AbstractParallelProcess">AbstractParallelProcess</a></li>
 <li><a title="secfsdstools.c_automation.task_framework.AbstractProcess" href="#secfsdstools.c_automation.task_framework.AbstractProcess">AbstractProcess</a></li>
 <li>abc.ABC</li>
 </ul>
@@ -933,7 +958,7 @@ The execution can happen in parallel or serial.</p>
         processes=self.paralleltasks,
         max_calls_per_sec=self.max_tasks_per_second,
         chunksize=self.chunksize,
-        execute_serial=self.execute_serial
+        execute_serial=self.execute_serial,
     )
     executor.set_get_entries_function(self.calculate_tasks)
     executor.set_process_element_function(self.process_task)
@@ -944,13 +969,13 @@ The execution can happen in parallel or serial.</p>
 </dl>
 <h3>Inherited members</h3>
 <ul class="hlist">
-<li><code><b><a title="secfsdstools.c_automation.task_framework.AbstractProcess" href="#secfsdstools.c_automation.task_framework.AbstractProcess">AbstractProcess</a></b></code>:
+<li><code><b><a title="secfsdstools.c_automation.task_framework.AbstractParallelProcess" href="#secfsdstools.c_automation.task_framework.AbstractParallelProcess">AbstractParallelProcess</a></b></code>:
 <ul class="hlist">
-<li><code><a title="secfsdstools.c_automation.task_framework.AbstractProcess.calculate_tasks" href="#secfsdstools.c_automation.task_framework.AbstractProcess.calculate_tasks">calculate_tasks</a></code></li>
-<li><code><a title="secfsdstools.c_automation.task_framework.AbstractProcess.post_process" href="#secfsdstools.c_automation.task_framework.AbstractProcess.post_process">post_process</a></code></li>
-<li><code><a title="secfsdstools.c_automation.task_framework.AbstractProcess.pre_process" href="#secfsdstools.c_automation.task_framework.AbstractProcess.pre_process">pre_process</a></code></li>
-<li><code><a title="secfsdstools.c_automation.task_framework.AbstractProcess.process" href="#secfsdstools.c_automation.task_framework.AbstractProcess.process">process</a></code></li>
-<li><code><a title="secfsdstools.c_automation.task_framework.AbstractProcess.process_task" href="#secfsdstools.c_automation.task_framework.AbstractProcess.process_task">process_task</a></code></li>
+<li><code><a title="secfsdstools.c_automation.task_framework.AbstractParallelProcess.calculate_tasks" href="#secfsdstools.c_automation.task_framework.AbstractParallelProcess.calculate_tasks">calculate_tasks</a></code></li>
+<li><code><a title="secfsdstools.c_automation.task_framework.AbstractParallelProcess.post_process" href="#secfsdstools.c_automation.task_framework.AbstractParallelProcess.post_process">post_process</a></code></li>
+<li><code><a title="secfsdstools.c_automation.task_framework.AbstractParallelProcess.pre_process" href="#secfsdstools.c_automation.task_framework.AbstractParallelProcess.pre_process">pre_process</a></code></li>
+<li><code><a title="secfsdstools.c_automation.task_framework.AbstractParallelProcess.process" href="#secfsdstools.c_automation.task_framework.AbstractParallelProcess.process">process</a></code></li>
+<li><code><a title="secfsdstools.c_automation.task_framework.AbstractParallelProcess.process_task" href="#secfsdstools.c_automation.task_framework.AbstractParallelProcess.process_task">process_task</a></code></li>
 </ul>
 </li>
 </ul>
@@ -1026,10 +1051,7 @@ would select all "BS" "sub-subfolders" within root_path:
 
     &#34;&#34;&#34;
 
-    def __init__(self,
-                 root_path: Path,
-                 pathfilter: str,
-                 target_path: Path):
+    def __init__(self, root_path: Path, pathfilter: str, target_path: Path):
         &#34;&#34;&#34;
         The constructor of the AbstracTask.
 
@@ -1093,17 +1115,17 @@ would select all "BS" "sub-subfolders" within root_path:
         &#34;&#34;&#34;
 
         # ignore first and last /
-        if path.startswith(&#39;/&#39;):
+        if path.startswith(&#34;/&#34;):
             path = path[1:]
-        if path.endswith(&#39;/&#39;):
+        if path.endswith(&#34;/&#34;):
             path = path[:-1]
 
         # Split the string by &#39;/&#39; to get segments
-        segments = path.split(&#39;/&#39;)
+        segments = path.split(&#34;/&#34;)
 
         # Iterate from the end and find the first segment containing &#39;*&#39;
         for i, segment in enumerate(reversed(segments)):
-            if &#39;*&#39; in segment:
+            if &#34;*&#34; in segment:
                 return i  # Position from the end
 
         # If no &#39;*&#39; is found, return -1 to indicate an error
@@ -1353,7 +1375,7 @@ or does create the tmp_folder, if processing has to be done.</p></div>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class AbstractThreadProcess(AbstractProcess):
+<pre><code class="python">class AbstractThreadProcess(AbstractParallelProcess):
     &#34;&#34;&#34;
     Uses for the parallel execution logic a Thread-Based approach.
     &#34;&#34;&#34;
@@ -1366,7 +1388,7 @@ or does create the tmp_folder, if processing has to be done.</p></div>
             processes=self.paralleltasks,
             max_calls_per_sec=self.max_tasks_per_second,
             chunksize=self.chunksize,
-            execute_serial=self.execute_serial
+            execute_serial=self.execute_serial,
         )
         executor.set_get_entries_function(self.calculate_tasks)
         executor.set_process_element_function(self.process_task)
@@ -1375,6 +1397,7 @@ or does create the tmp_folder, if processing has to be done.</p></div>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
+<li><a title="secfsdstools.c_automation.task_framework.AbstractParallelProcess" href="#secfsdstools.c_automation.task_framework.AbstractParallelProcess">AbstractParallelProcess</a></li>
 <li><a title="secfsdstools.c_automation.task_framework.AbstractProcess" href="#secfsdstools.c_automation.task_framework.AbstractProcess">AbstractProcess</a></li>
 <li>abc.ABC</li>
 </ul>
@@ -1406,7 +1429,7 @@ or does create the tmp_folder, if processing has to be done.</p></div>
         processes=self.paralleltasks,
         max_calls_per_sec=self.max_tasks_per_second,
         chunksize=self.chunksize,
-        execute_serial=self.execute_serial
+        execute_serial=self.execute_serial,
     )
     executor.set_get_entries_function(self.calculate_tasks)
     executor.set_process_element_function(self.process_task)
@@ -1417,13 +1440,13 @@ or does create the tmp_folder, if processing has to be done.</p></div>
 </dl>
 <h3>Inherited members</h3>
 <ul class="hlist">
-<li><code><b><a title="secfsdstools.c_automation.task_framework.AbstractProcess" href="#secfsdstools.c_automation.task_framework.AbstractProcess">AbstractProcess</a></b></code>:
+<li><code><b><a title="secfsdstools.c_automation.task_framework.AbstractParallelProcess" href="#secfsdstools.c_automation.task_framework.AbstractParallelProcess">AbstractParallelProcess</a></b></code>:
 <ul class="hlist">
-<li><code><a title="secfsdstools.c_automation.task_framework.AbstractProcess.calculate_tasks" href="#secfsdstools.c_automation.task_framework.AbstractProcess.calculate_tasks">calculate_tasks</a></code></li>
-<li><code><a title="secfsdstools.c_automation.task_framework.AbstractProcess.post_process" href="#secfsdstools.c_automation.task_framework.AbstractProcess.post_process">post_process</a></code></li>
-<li><code><a title="secfsdstools.c_automation.task_framework.AbstractProcess.pre_process" href="#secfsdstools.c_automation.task_framework.AbstractProcess.pre_process">pre_process</a></code></li>
-<li><code><a title="secfsdstools.c_automation.task_framework.AbstractProcess.process" href="#secfsdstools.c_automation.task_framework.AbstractProcess.process">process</a></code></li>
-<li><code><a title="secfsdstools.c_automation.task_framework.AbstractProcess.process_task" href="#secfsdstools.c_automation.task_framework.AbstractProcess.process_task">process_task</a></code></li>
+<li><code><a title="secfsdstools.c_automation.task_framework.AbstractParallelProcess.calculate_tasks" href="#secfsdstools.c_automation.task_framework.AbstractParallelProcess.calculate_tasks">calculate_tasks</a></code></li>
+<li><code><a title="secfsdstools.c_automation.task_framework.AbstractParallelProcess.post_process" href="#secfsdstools.c_automation.task_framework.AbstractParallelProcess.post_process">post_process</a></code></li>
+<li><code><a title="secfsdstools.c_automation.task_framework.AbstractParallelProcess.pre_process" href="#secfsdstools.c_automation.task_framework.AbstractParallelProcess.pre_process">pre_process</a></code></li>
+<li><code><a title="secfsdstools.c_automation.task_framework.AbstractParallelProcess.process" href="#secfsdstools.c_automation.task_framework.AbstractParallelProcess.process">process</a></code></li>
+<li><code><a title="secfsdstools.c_automation.task_framework.AbstractParallelProcess.process_task" href="#secfsdstools.c_automation.task_framework.AbstractParallelProcess.process_task">process_task</a></code></li>
 </ul>
 </li>
 </ul>
@@ -1469,10 +1492,7 @@ root_path have to be selected</dd>
     the timestamp of the latest processed modification.
     &#34;&#34;&#34;
 
-    def __init__(self,
-                 root_path: Path,
-                 pathfilter: str,
-                 target_path: Path):
+    def __init__(self, root_path: Path, pathfilter: str, target_path: Path):
         &#34;&#34;&#34;
         Constructor of base task.
 
@@ -1492,8 +1512,9 @@ root_path have to be selected</dd>
 
         # so if we have the pathfilter */BS and if we have the directories &#34;2010q1.zip/BS&#34;,
         # &#34;2010q2.zip/BS&#34; in the root_path, all_names key will be 2010q1.zip, 2010q2.zip
-        self.all_names = {self._get_star_position_name(path=p, star_position=self.star_position):
-                              p for p in self.paths_to_process}
+        self.all_names = {
+            self._get_star_position_name(path=p, star_position=self.star_position): p for p in self.paths_to_process
+        }
 
         if self.meta_inf_file.exists():
             containing_values = self.read_metainf_content()
@@ -1522,19 +1543,15 @@ root_path have to be selected</dd>
         # therefore, we provide a list &#34;paths_to_process&#34; which contains subfolders that are new,
         # the processed_path (the path that contains the result of the last processing), and
         # the target_path, where we have to store the result to (this the tmp folder)
-        self.do_execution(paths_to_process=paths_to_process,
-                          target_path=self.target_path,
-                          tmp_path=self.tmp_path)
+        self.do_execution(paths_to_process=paths_to_process, target_path=self.target_path, tmp_path=self.tmp_path)
 
-        meta_inf_content: str = &#34;\n&#34;.join([self._get_star_position_name(f, self.star_position)
-                                           for f in self.filtered_paths])
+        meta_inf_content: str = &#34;\n&#34;.join(
+            [self._get_star_position_name(f, self.star_position) for f in self.filtered_paths]
+        )
         self.write_meta_inf(content=meta_inf_content)
 
     @abstractmethod
-    def do_execution(self,
-                     paths_to_process: List[Path],
-                     target_path: Path,
-                     tmp_path: Path):
+    def do_execution(self, paths_to_process: List[Path], target_path: Path, tmp_path: Path):
         &#34;&#34;&#34;
             defines the logic to be executed.
         Args:
@@ -1572,10 +1589,7 @@ root_path have to be selected</dd>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@abstractmethod
-def do_execution(self,
-                 paths_to_process: List[Path],
-                 target_path: Path,
-                 tmp_path: Path):
+def do_execution(self, paths_to_process: List[Path], target_path: Path, tmp_path: Path):
     &#34;&#34;&#34;
         defines the logic to be executed.
     Args:
@@ -1618,12 +1632,11 @@ being true or not.</p>
     # therefore, we provide a list &#34;paths_to_process&#34; which contains subfolders that are new,
     # the processed_path (the path that contains the result of the last processing), and
     # the target_path, where we have to store the result to (this the tmp folder)
-    self.do_execution(paths_to_process=paths_to_process,
-                      target_path=self.target_path,
-                      tmp_path=self.tmp_path)
+    self.do_execution(paths_to_process=paths_to_process, target_path=self.target_path, tmp_path=self.tmp_path)
 
-    meta_inf_content: str = &#34;\n&#34;.join([self._get_star_position_name(f, self.star_position)
-                                       for f in self.filtered_paths])
+    meta_inf_content: str = &#34;\n&#34;.join(
+        [self._get_star_position_name(f, self.star_position) for f in self.filtered_paths]
+    )
     self.write_meta_inf(content=meta_inf_content)</code></pre>
 </details>
 </dd>
@@ -1681,13 +1694,10 @@ Check also the documentation of the AbstractTask Constructor.</p></div>
       process the data and also update the timestamp in the meta.inf file
     &#34;&#34;&#34;
 
-    def __init__(self,
-                 root_path: Path,
-                 pathfilter: str,
-                 target_path: Path):
+    def __init__(self, root_path: Path, pathfilter: str, target_path: Path):
         &#34;&#34;&#34;
-          The constructor of the CheckByTimestampMergeBaseTask.
-          Check also the documentation of the AbstractTask Constructor.
+        The constructor of the CheckByTimestampMergeBaseTask.
+        Check also the documentation of the AbstractTask Constructor.
         &#34;&#34;&#34;
         super().__init__(
             root_path=root_path,
@@ -1724,16 +1734,13 @@ Check also the documentation of the AbstractTask Constructor.</p></div>
         if not self.has_work_todo():
             return
 
-        self.do_execution(paths_to_process=self.paths_to_process,
-                          tmp_path=self.tmp_path)
+        self.do_execution(paths_to_process=self.paths_to_process, tmp_path=self.tmp_path)
 
         meta_inf_content: str = str(get_latest_mtime(self.root_path))
         self.write_meta_inf(content=meta_inf_content)
 
     @abstractmethod
-    def do_execution(self,
-                     paths_to_process: List[Path],
-                     tmp_path: Path):
+    def do_execution(self, paths_to_process: List[Path], tmp_path: Path):
         &#34;&#34;&#34;
             defines the logic to be executed.
         Args:
@@ -1769,9 +1776,7 @@ Check also the documentation of the AbstractTask Constructor.</p></div>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@abstractmethod
-def do_execution(self,
-                 paths_to_process: List[Path],
-                 tmp_path: Path):
+def do_execution(self, paths_to_process: List[Path], tmp_path: Path):
     &#34;&#34;&#34;
         defines the logic to be executed.
     Args:
@@ -1805,8 +1810,7 @@ being true or not.</p>
     if not self.has_work_todo():
         return
 
-    self.do_execution(paths_to_process=self.paths_to_process,
-                      tmp_path=self.tmp_path)
+    self.do_execution(paths_to_process=self.paths_to_process, tmp_path=self.tmp_path)
 
     meta_inf_content: str = str(get_latest_mtime(self.root_path))
     self.write_meta_inf(content=meta_inf_content)</code></pre>
@@ -1843,21 +1847,21 @@ being true or not.</p>
     &#34;&#34;&#34;
 
     def prepare(self):
-        &#34;&#34;&#34; Prepare everything to execute the task.
-            E.g., creation or clearing a directory. &#34;&#34;&#34;
+        &#34;&#34;&#34;Prepare everything to execute the task.
+        E.g., creation or clearing a directory.&#34;&#34;&#34;
 
     def execute(self):
-        &#34;&#34;&#34; Execution the task. &#34;&#34;&#34;
+        &#34;&#34;&#34;Execution the task.&#34;&#34;&#34;
 
     def commit(self) -&gt; Any:
-        &#34;&#34;&#34; Commit the task if the execution method is not &#34;self-commiting&#34;. E.g.,
-         If you do some file processing in the execute-method,
-         but want to update a state in a table,
-         you could do the update of the state in the commit method.
-         &#34;&#34;&#34;
+        &#34;&#34;&#34;Commit the task if the execution method is not &#34;self-commiting&#34;. E.g.,
+        If you do some file processing in the execute-method,
+        but want to update a state in a table,
+        you could do the update of the state in the commit method.
+        &#34;&#34;&#34;
 
     def exception(self, exception) -&gt; Any:
-        &#34;&#34;&#34; Handle the exception. &#34;&#34;&#34;</code></pre>
+        &#34;&#34;&#34;Handle the exception.&#34;&#34;&#34;</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -1879,11 +1883,11 @@ you could do the update of the state in the commit method.</p></div>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def commit(self) -&gt; Any:
-    &#34;&#34;&#34; Commit the task if the execution method is not &#34;self-commiting&#34;. E.g.,
-     If you do some file processing in the execute-method,
-     but want to update a state in a table,
-     you could do the update of the state in the commit method.
-     &#34;&#34;&#34;</code></pre>
+    &#34;&#34;&#34;Commit the task if the execution method is not &#34;self-commiting&#34;. E.g.,
+    If you do some file processing in the execute-method,
+    but want to update a state in a table,
+    you could do the update of the state in the commit method.
+    &#34;&#34;&#34;</code></pre>
 </details>
 </dd>
 <dt id="secfsdstools.c_automation.task_framework.Task.exception"><code class="name flex">
@@ -1896,7 +1900,7 @@ you could do the update of the state in the commit method.</p></div>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def exception(self, exception) -&gt; Any:
-    &#34;&#34;&#34; Handle the exception. &#34;&#34;&#34;</code></pre>
+    &#34;&#34;&#34;Handle the exception.&#34;&#34;&#34;</code></pre>
 </details>
 </dd>
 <dt id="secfsdstools.c_automation.task_framework.Task.execute"><code class="name flex">
@@ -1909,7 +1913,7 @@ you could do the update of the state in the commit method.</p></div>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def execute(self):
-    &#34;&#34;&#34; Execution the task. &#34;&#34;&#34;</code></pre>
+    &#34;&#34;&#34;Execution the task.&#34;&#34;&#34;</code></pre>
 </details>
 </dd>
 <dt id="secfsdstools.c_automation.task_framework.Task.prepare"><code class="name flex">
@@ -1923,8 +1927,8 @@ E.g., creation or clearing a directory.</p></div>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def prepare(self):
-    &#34;&#34;&#34; Prepare everything to execute the task.
-        E.g., creation or clearing a directory. &#34;&#34;&#34;</code></pre>
+    &#34;&#34;&#34;Prepare everything to execute the task.
+    E.g., creation or clearing a directory.&#34;&#34;&#34;</code></pre>
 </details>
 </dd>
 </dl>
@@ -1941,12 +1945,14 @@ or exception() method.</p></div>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class TaskResult:
+<pre><code class="python">@dataclass
+class TaskResult:
     &#34;&#34;&#34;
     Dataclass containing the result of a task.
     Contains the task, the TaskResultState and the result (either the return value form the commit()
     or exception() method.
     &#34;&#34;&#34;
+
     task: Task
     result: Any
     state: TaskResultState</code></pre>
@@ -1981,6 +1987,7 @@ or exception() method.</p></div>
     &#34;&#34;&#34;
     Enum defining possible ResultStates of one task.
     &#34;&#34;&#34;
+
     SUCCESS = 1
     FAILED = 2</code></pre>
 </details>
@@ -2022,14 +2029,20 @@ or exception() method.</p></div>
 <li><h3><a href="#header-classes">Classes</a></h3>
 <ul>
 <li>
-<h4><code><a title="secfsdstools.c_automation.task_framework.AbstractProcess" href="#secfsdstools.c_automation.task_framework.AbstractProcess">AbstractProcess</a></code></h4>
+<h4><code><a title="secfsdstools.c_automation.task_framework.AbstractParallelProcess" href="#secfsdstools.c_automation.task_framework.AbstractParallelProcess">AbstractParallelProcess</a></code></h4>
 <ul class="two-column">
-<li><code><a title="secfsdstools.c_automation.task_framework.AbstractProcess.calculate_tasks" href="#secfsdstools.c_automation.task_framework.AbstractProcess.calculate_tasks">calculate_tasks</a></code></li>
-<li><code><a title="secfsdstools.c_automation.task_framework.AbstractProcess.do_execution" href="#secfsdstools.c_automation.task_framework.AbstractProcess.do_execution">do_execution</a></code></li>
-<li><code><a title="secfsdstools.c_automation.task_framework.AbstractProcess.post_process" href="#secfsdstools.c_automation.task_framework.AbstractProcess.post_process">post_process</a></code></li>
-<li><code><a title="secfsdstools.c_automation.task_framework.AbstractProcess.pre_process" href="#secfsdstools.c_automation.task_framework.AbstractProcess.pre_process">pre_process</a></code></li>
+<li><code><a title="secfsdstools.c_automation.task_framework.AbstractParallelProcess.calculate_tasks" href="#secfsdstools.c_automation.task_framework.AbstractParallelProcess.calculate_tasks">calculate_tasks</a></code></li>
+<li><code><a title="secfsdstools.c_automation.task_framework.AbstractParallelProcess.do_execution" href="#secfsdstools.c_automation.task_framework.AbstractParallelProcess.do_execution">do_execution</a></code></li>
+<li><code><a title="secfsdstools.c_automation.task_framework.AbstractParallelProcess.post_process" href="#secfsdstools.c_automation.task_framework.AbstractParallelProcess.post_process">post_process</a></code></li>
+<li><code><a title="secfsdstools.c_automation.task_framework.AbstractParallelProcess.pre_process" href="#secfsdstools.c_automation.task_framework.AbstractParallelProcess.pre_process">pre_process</a></code></li>
+<li><code><a title="secfsdstools.c_automation.task_framework.AbstractParallelProcess.process" href="#secfsdstools.c_automation.task_framework.AbstractParallelProcess.process">process</a></code></li>
+<li><code><a title="secfsdstools.c_automation.task_framework.AbstractParallelProcess.process_task" href="#secfsdstools.c_automation.task_framework.AbstractParallelProcess.process_task">process_task</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="secfsdstools.c_automation.task_framework.AbstractProcess" href="#secfsdstools.c_automation.task_framework.AbstractProcess">AbstractProcess</a></code></h4>
+<ul class="">
 <li><code><a title="secfsdstools.c_automation.task_framework.AbstractProcess.process" href="#secfsdstools.c_automation.task_framework.AbstractProcess.process">process</a></code></li>
-<li><code><a title="secfsdstools.c_automation.task_framework.AbstractProcess.process_task" href="#secfsdstools.c_automation.task_framework.AbstractProcess.process_task">process_task</a></code></li>
 </ul>
 </li>
 <li>

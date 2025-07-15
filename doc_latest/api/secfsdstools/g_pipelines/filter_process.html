@@ -36,12 +36,11 @@ in parallel.
 import os
 import shutil
 from pathlib import Path
-from typing import List, Callable
+from typing import Callable, List
 
 from secfsdstools.a_utils.fileutils import get_directories_in_directory
 from secfsdstools.c_automation.automation_utils import delete_temp_folders
-from secfsdstools.c_automation.task_framework import Task, \
-    AbstractThreadProcess
+from secfsdstools.c_automation.task_framework import AbstractThreadProcess, Task
 from secfsdstools.c_index.indexdataaccess import ParquetDBIndexingAccessor
 from secfsdstools.d_container.databagmodel import RawDataBag
 from secfsdstools.e_collector.zipcollecting import ZipCollector
@@ -56,8 +55,12 @@ def postloadfilter(databag: RawDataBag) -&gt; RawDataBag:
             ReportPeriodRawFilter, MainCoregRawFilter, USDOnlyRawFilter, OfficialTagsOnlyRawFilter
     &#34;&#34;&#34;
     # pylint: disable=C0415
-    from secfsdstools.e_filter.rawfiltering import ReportPeriodRawFilter, MainCoregRawFilter, \
-        USDOnlyRawFilter, OfficialTagsOnlyRawFilter
+    from secfsdstools.e_filter.rawfiltering import (
+        MainCoregRawFilter,
+        OfficialTagsOnlyRawFilter,
+        ReportPeriodRawFilter,
+        USDOnlyRawFilter,
+    )
 
     return databag[ReportPeriodRawFilter()][MainCoregRawFilter()][USDOnlyRawFilter()][
         OfficialTagsOnlyRawFilter()]
@@ -331,8 +334,12 @@ ReportPeriodRawFilter, MainCoregRawFilter, USDOnlyRawFilter, OfficialTagsOnlyRaw
             ReportPeriodRawFilter, MainCoregRawFilter, USDOnlyRawFilter, OfficialTagsOnlyRawFilter
     &#34;&#34;&#34;
     # pylint: disable=C0415
-    from secfsdstools.e_filter.rawfiltering import ReportPeriodRawFilter, MainCoregRawFilter, \
-        USDOnlyRawFilter, OfficialTagsOnlyRawFilter
+    from secfsdstools.e_filter.rawfiltering import (
+        MainCoregRawFilter,
+        OfficialTagsOnlyRawFilter,
+        ReportPeriodRawFilter,
+        USDOnlyRawFilter,
+    )
 
     return databag[ReportPeriodRawFilter()][MainCoregRawFilter()][USDOnlyRawFilter()][
         OfficialTagsOnlyRawFilter()]</code></pre>
@@ -765,6 +772,7 @@ postloadfilter-function.</dd>
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li><a title="secfsdstools.c_automation.task_framework.AbstractThreadProcess" href="../c_automation/task_framework.html#secfsdstools.c_automation.task_framework.AbstractThreadProcess">AbstractThreadProcess</a></li>
+<li><a title="secfsdstools.c_automation.task_framework.AbstractParallelProcess" href="../c_automation/task_framework.html#secfsdstools.c_automation.task_framework.AbstractParallelProcess">AbstractParallelProcess</a></li>
 <li><a title="secfsdstools.c_automation.task_framework.AbstractProcess" href="../c_automation/task_framework.html#secfsdstools.c_automation.task_framework.AbstractProcess">AbstractProcess</a></li>
 <li>abc.ABC</li>
 </ul>
@@ -841,9 +849,9 @@ processing FilterTasks for every unprocessed zipfile.</p>
 <li><code><b><a title="secfsdstools.c_automation.task_framework.AbstractThreadProcess" href="../c_automation/task_framework.html#secfsdstools.c_automation.task_framework.AbstractThreadProcess">AbstractThreadProcess</a></b></code>:
 <ul class="hlist">
 <li><code><a title="secfsdstools.c_automation.task_framework.AbstractThreadProcess.do_execution" href="../c_automation/task_framework.html#secfsdstools.c_automation.task_framework.AbstractThreadProcess.do_execution">do_execution</a></code></li>
-<li><code><a title="secfsdstools.c_automation.task_framework.AbstractThreadProcess.post_process" href="../c_automation/task_framework.html#secfsdstools.c_automation.task_framework.AbstractProcess.post_process">post_process</a></code></li>
-<li><code><a title="secfsdstools.c_automation.task_framework.AbstractThreadProcess.process" href="../c_automation/task_framework.html#secfsdstools.c_automation.task_framework.AbstractProcess.process">process</a></code></li>
-<li><code><a title="secfsdstools.c_automation.task_framework.AbstractThreadProcess.process_task" href="../c_automation/task_framework.html#secfsdstools.c_automation.task_framework.AbstractProcess.process_task">process_task</a></code></li>
+<li><code><a title="secfsdstools.c_automation.task_framework.AbstractThreadProcess.post_process" href="../c_automation/task_framework.html#secfsdstools.c_automation.task_framework.AbstractParallelProcess.post_process">post_process</a></code></li>
+<li><code><a title="secfsdstools.c_automation.task_framework.AbstractThreadProcess.process" href="../c_automation/task_framework.html#secfsdstools.c_automation.task_framework.AbstractParallelProcess.process">process</a></code></li>
+<li><code><a title="secfsdstools.c_automation.task_framework.AbstractThreadProcess.process_task" href="../c_automation/task_framework.html#secfsdstools.c_automation.task_framework.AbstractParallelProcess.process_task">process_task</a></code></li>
 </ul>
 </li>
 </ul>

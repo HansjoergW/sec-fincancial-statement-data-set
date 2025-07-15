@@ -36,11 +36,11 @@ import logging
 import os
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Dict, List, TypeVar, Generic, Optional
+from typing import Dict, Generic, List, Optional, TypeVar
 
 import pandas as pd
 
-from secfsdstools.a_utils.constants import SUB_TXT, PRE_TXT, NUM_TXT, PRE_NUM_TXT
+from secfsdstools.a_utils.constants import NUM_TXT, PRE_NUM_TXT, PRE_TXT, SUB_TXT
 from secfsdstools.a_utils.fileutils import check_dir, concat_parquet_files
 from secfsdstools.d_container.filter import FilterBase
 from secfsdstools.d_container.presentation import Presenter
@@ -775,7 +775,6 @@ all have the same data in sub.txt.</dd>
 <dl>
 <dt id="secfsdstools.d_container.databagmodel.DataBagBase"><code class="flex name class">
 <span>class <span class="ident">DataBagBase</span></span>
-<span>(</span><span>*args, **kwds)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Base class for the DataBag types</p></div>
@@ -2343,7 +2342,8 @@ and num_txt will be created</dd>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class RawDataBagStats:
+<pre><code class="python">@dataclass
+class RawDataBagStats:
     &#34;&#34;&#34;
     Contains simple statistics of a report.
     &#34;&#34;&#34;

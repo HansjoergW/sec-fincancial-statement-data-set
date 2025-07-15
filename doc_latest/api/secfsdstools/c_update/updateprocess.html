@@ -33,6 +33,7 @@ into parquet format, and indexing the reports.</p>
 this module contains the update logic. This means downloading new zipfiles, transforming the data
 into parquet format, and indexing the reports.
 &#34;&#34;&#34;
+
 import logging
 import random
 import sys
@@ -46,13 +47,16 @@ from secfsdstools.a_config.configmodel import Configuration
 from secfsdstools.a_utils.dbutils import DBStateAcessor
 from secfsdstools.a_utils.downloadutils import UrlDownloader
 from secfsdstools.a_utils.fileutils import get_directories_in_directory
+from secfsdstools.a_utils.version import get_latest_pypi_version, is_newer_version_available
 from secfsdstools.b_setup.setupdb import DbCreator
 from secfsdstools.c_automation.task_framework import AbstractProcess, execute_processes
+from secfsdstools.c_daily.dailypreparation_process import DailyPreparationProcess
 from secfsdstools.c_download.secdownloading_process import SecDownloadingProcess
 from secfsdstools.c_index.indexing_process import ReportParquetIndexerProcess
 from secfsdstools.c_transform.toparquettransforming_process import ToParquetTransformerProcess
 
 LOGGER = logging.getLogger(__name__)
+
 
 sponsor_messages = [
     &#34;Enjoying secfsdstools? Please consider sponsoring the project!&#34;,
@@ -70,12 +74,12 @@ sponsor_messages = [
     &#34;If you value this tool, your sponsorship is a great way to contribute!&#34;,
     &#34;Support the developer behind secfsdstools – consider sponsoring today.&#34;,
     &#34;Enjoy the convenience? Sponsor secfsdstools and help us grow.&#34;,
-    &#34;Be a champion for open source – sponsor secfsdstools and support innovation.&#34;
+    &#34;Be a champion for open source – sponsor secfsdstools and support innovation.&#34;,
 ]
 
 
 def print_sponsoring_message():
-    &#34;&#34;&#34; create sponsoring message &#34;&#34;&#34;
+    &#34;&#34;&#34;create sponsoring message&#34;&#34;&#34;
 
     message = random.choice(sponsor_messages)
 
@@ -90,7 +94,7 @@ def print_sponsoring_message():
     hash_border = &#34;#&#34; * (len(message) + 8)
 
     # Präsentation des Sponsor-Hinweises mit Farben und Hervorhebung
-    print(&#34;\n\n&#34;)
+    print(&#34;\n&#34;)
     print(yellow + border + reset)
     print(bold + yellow + hash_border + reset)
     print(&#34;\n&#34;)
@@ -99,11 +103,21 @@ def print_sponsoring_message():
     print(bold + white + &#34;    https://github.com/sponsors/HansjoergW&#34; + reset)
     print(&#34;\n&#34;)
     print(white + &#34;    How to get in touch&#34;)
-    print(&#34;    - Found a bug:            https://github.com/HansjoergW/sec-fincancial-statement-data-set/issues&#34;)
-    print(&#34;    - Have a remark:          https://github.com/HansjoergW/sec-fincancial-statement-data-set/discussions/categories/general&#34;)
-    print(&#34;    - Have an idea:           https://github.com/HansjoergW/sec-fincancial-statement-data-set/discussions/categories/ideas&#34;)
-    print(&#34;    - Have a question:        https://github.com/HansjoergW/sec-fincancial-statement-data-set/discussions/categories/q-a&#34;)
-    print(&#34;    - Have something to show: https://github.com/HansjoergW/sec-fincancial-statement-data-set/discussions/categories/show-and-tell&#34;)
+    print(
+        &#34;    - Found a bug:            https://github.com/HansjoergW/sec-fincancial-statement-data-set/issues&#34;  # pylint: disable=C0301
+    )
+    print(
+        &#34;    - Have a remark:          https://github.com/HansjoergW/sec-fincancial-statement-data-set/discussions/categories/general&#34;  # pylint: disable=C0301
+    )
+    print(
+        &#34;    - Have an idea:           https://github.com/HansjoergW/sec-fincancial-statement-data-set/discussions/categories/ideas&#34;  # pylint: disable=C0301
+    )
+    print(
+        &#34;    - Have a question:        https://github.com/HansjoergW/sec-fincancial-statement-data-set/discussions/categories/q-a&#34;  # pylint: disable=C0301
+    )
+    print(
+        &#34;    - Have something to show: https://github.com/HansjoergW/sec-fincancial-statement-data-set/discussions/categories/show-and-tell&#34;  # pylint: disable=C0301
+    )
     print(&#34;\n&#34;)
 
     print(bold + yellow + hash_border + reset)
@@ -111,9 +125,40 @@ def print_sponsoring_message():
     print(&#34;\n\n&#34;)
 
 
+def print_newer_version_message(newer_version: str):
+    &#34;&#34;&#34;printed if a newer version of the library is available&#34;&#34;&#34;
+
+    print(&#34;\n\n&#34;)
+    print(
+        f&#34;    A newer version of secfsdstools ({newer_version}) is available on pypi.org. Please consider upgrading.&#34;  # pylint: disable=C0301
+    )
+    print(&#34;\n\n&#34;)
+
+
+def print_automation_feature_message():
+    &#34;&#34;&#34;printed if the automation feature is not used yet&#34;&#34;&#34;
+    print(&#34;\n\n&#34;)
+    print(&#34;    Automation was introduced with version 1.8.0.&#34;)
+    print(
+        &#34;    Please have a look at the documentation and the example notebooks (08_00_automation_basics) to learn more.&#34;  # pylint: disable=C0301
+    )
+    print(&#34;\n\n&#34;)
+
+
+def print_daily_feature_message():
+    &#34;&#34;&#34;printed if a daily processing is not used yet&#34;&#34;&#34;
+    print(&#34;\n\n&#34;)
+    print(&#34;    Daily report updates were introduced in version 2.4.0.&#34;)
+    print(
+        &#34;    Please have a look at the documentation and the example notebooks (10_00_daily_financial_report_updates) to learn more.&#34;  # pylint: disable=C0301
+    )
+    print(&#34;\n\n&#34;)
+
+
 class Updater:
     &#34;&#34;&#34;Manages the update process: download zipfiles, transform to parquet, and index the reports&#34;&#34;&#34;
-    LAST_UPDATE_CHECK_KEY: str = &#39;LAST_UPDATED&#39;
+
+    LAST_UPDATE_CHECK_KEY: str = &#34;LAST_UPDATED&#34;
     CHECK_EVERY_SECONDS: int = 24 * 60 * 60  # check every 24 hours
 
     @classmethod
@@ -127,12 +172,9 @@ class Updater:
             Updater: the instance
 
         &#34;&#34;&#34;
-        return Updater(
-            config
-        )
+        return Updater(config)
 
-    def __init__(self,
-                 config: Configuration):
+    def __init__(self, config: Configuration):
         self.config = config
 
         self.db_state_accesor = DBStateAcessor(db_dir=config.db_dir)
@@ -141,13 +183,12 @@ class Updater:
         self.daily_dld_dir = config.daily_download_dir
         self.parquet_dir = config.parquet_dir
         self.user_agent = config.user_agent_email
-        self.rapid_api_plan = config.rapid_api_plan
-        self.rapid_api_key = config.rapid_api_key
         self.keep_zip_files = config.keep_zip_files
         self.auto_update = config.auto_update
         self.no_parallel_processing = config.no_parallel_processing
         self.post_update_hook = config.post_update_hook
         self.post_update_processes = config.post_update_processes
+        self.daily_processing = config.daily_processing
 
     def _check_for_update(self) -&gt; bool:
         &#34;&#34;&#34;checks if a new update check should be conducted.&#34;&#34;&#34;
@@ -167,24 +208,60 @@ class Updater:
         urldownloader = UrlDownloader(user_agent=self.user_agent)
 
         # download data from sec
-        process_list.append(SecDownloadingProcess(zip_dir=self.dld_dir,
-                                                  parquet_root_dir=self.parquet_dir,
-                                                  urldownloader=urldownloader,
-                                                  execute_serial=self.no_parallel_processing))
+        process_list.append(
+            SecDownloadingProcess(
+                zip_dir=self.dld_dir,
+                parquet_root_dir=self.parquet_dir,
+                urldownloader=urldownloader,
+                execute_serial=self.no_parallel_processing,
+            )
+        )
         # transform sec zip files
-        process_list.append(ToParquetTransformerProcess(zip_dir=self.dld_dir,
-                                                        parquet_dir=self.parquet_dir,
-                                                        keep_zip_files=self.keep_zip_files,
-                                                        file_type=&#39;quarter&#39;,
-                                                        execute_serial=self.no_parallel_processing
-                                                        ))
+        process_list.append(
+            ToParquetTransformerProcess(
+                zip_dir=self.dld_dir,
+                parquet_dir=self.parquet_dir,
+                keep_zip_files=self.keep_zip_files,
+                file_type=&#34;quarter&#34;,
+                execute_serial=self.no_parallel_processing,
+            )
+        )
 
         # index sec zip files
-        process_list.append(ReportParquetIndexerProcess(db_dir=self.db_dir,
-                                                        parquet_dir=self.parquet_dir,
-                                                        file_type=&#39;quarter&#39;,
-                                                        execute_serial=self.no_parallel_processing
-                                                        ))
+        process_list.append(
+            ReportParquetIndexerProcess(
+                db_dir=self.db_dir,
+                parquet_dir=self.parquet_dir,
+                file_type=&#34;quarter&#34;,
+                execute_serial=self.no_parallel_processing,
+            )
+        )
+
+        if self.daily_processing:
+            dailyprocess = DailyPreparationProcess(
+                db_dir=self.db_dir, parquet_dir=self.parquet_dir, daily_dir=self.daily_dld_dir
+            )
+            process_list.extend(
+                [
+                    # download daily data from SEC
+                    dailyprocess,
+                    # transform daily data to parquet
+                    ToParquetTransformerProcess(
+                        zip_dir=dailyprocess.config.dailyzipdir,
+                        parquet_dir=self.parquet_dir,
+                        keep_zip_files=True,  # needed for the daily process to work -&gt; it has its own cleanup
+                        file_type=&#34;daily&#34;,
+                        execute_serial=self.no_parallel_processing,
+                    ),
+                    # index daily data
+                    ReportParquetIndexerProcess(
+                        db_dir=self.db_dir,
+                        parquet_dir=self.parquet_dir,
+                        file_type=&#34;daily&#34;,
+                        execute_serial=self.no_parallel_processing,
+                    ),
+                ]
+            )
 
         return process_list
 
@@ -194,27 +271,34 @@ class Updater:
         if not self.post_update_processes:
             return []
 
-        module_str, function_str = self.post_update_processes.rsplit(&#39;.&#39;, 1)
+        module_str, function_str = self.post_update_processes.rsplit(&#34;.&#34;, 1)
         module = importlib.import_module(module_str)
         post_processes_function = getattr(module, function_str)
 
         post_processes = post_processes_function(self.config)
 
         if not isinstance(post_processes, list):
-            LOGGER.error(&#34;A post_update_processes function was defined in the configuration: %s&#34;
-                         &#34;. But it does not return a list.&#34;, self.post_update_processes)
-            raise ValueError(&#34;Defined post_update_processes function does not return a list: &#34;
-                             f&#34;{self.post_update_processes}&#34;)
+            LOGGER.error(
+                &#34;A post_update_processes function was defined in the configuration: %s&#34;
+                &#34;. But it does not return a list.&#34;,
+                self.post_update_processes,
+            )
+            raise ValueError(
+                &#34;Defined post_update_processes function does not return a list: &#34; f&#34;{self.post_update_processes}&#34;
+            )
 
         if not all(isinstance(item, AbstractProcess) for item in post_processes):
-            LOGGER.error(&#34;A post_update_processes function was defined in the configuration: %s&#34;
-                         &#34;. But it not all elements are of type AbstractProcess.&#34;,
-                         self.post_update_processes)
-            raise ValueError(&#34;Defined post_update_processes function does have elements that are &#34;
-                             f&#34;not of type AbstractPcoess: {self.post_update_processes}&#34;)
+            LOGGER.error(
+                &#34;A post_update_processes function was defined in the configuration: %s&#34;
+                &#34;. But it not all elements are of type AbstractProcess.&#34;,
+                self.post_update_processes,
+            )
+            raise ValueError(
+                &#34;Defined post_update_processes function does have elements that are &#34;
+                f&#34;not of type AbstractPcoess: {self.post_update_processes}&#34;
+            )
 
-        LOGGER.info(&#34;Loading %d post update processes from %s&#34;,
-                    len(post_processes), self.post_update_processes)
+        LOGGER.info(&#34;Loading %d post update processes from %s&#34;, len(post_processes), self.post_update_processes)
 
         return post_processes
 
@@ -224,7 +308,7 @@ class Updater:
         if not self.post_update_hook:
             return
 
-        module_str, function_str = self.post_update_hook.rsplit(&#39;.&#39;, 1)
+        module_str, function_str = self.post_update_hook.rsplit(&#34;.&#34;, 1)
         module = importlib.import_module(module_str)
         post_update_hook = getattr(module, function_str)
 
@@ -256,7 +340,8 @@ class Updater:
             LOGGER.info(&#34;dataframes. This is not supported anymore in this version of the &#34;)
             LOGGER.info(&#34;framework. If you want to use the old, smaller datasets which are &#34;)
             LOGGER.info(
-                &#34;still available at https://www.sec.gov/data-research/sec-markets-data/financial-statement-data-sets-archive&#34;)  # pylint: disable=C0301
+                &#34;still available at https://www.sec.gov/data-research/sec-markets-data/financial-statement-data-sets-archive&#34;  # pylint: disable=C0301
+            )
             LOGGER.info(&#34;you have to use version 1.8.2 of the framework.&#34;)
             LOGGER.info(&#34;                 ----                        &#34;)
             LOGGER.info(&#34;If you want to use the datasets with the segments column, you have to &#34;)
@@ -280,25 +365,36 @@ class Updater:
 
         if force_update | self.auto_update:
             if not force_update &amp; self.auto_update:
-                LOGGER.debug(&#39;AutoUpdate is True, so check if new zip files are available&#39;)
+                LOGGER.debug(&#34;AutoUpdate is True, so check if new zip files are available&#34;)
 
             if (not force_update) &amp; (not self._check_for_update()):
                 LOGGER.debug(
-                    &#39;Skipping update: last check was done less than %d seconds ago&#39;,
-                    Updater.CHECK_EVERY_SECONDS)
+                    &#34;Skipping update: last check was done less than %d seconds ago&#34;, Updater.CHECK_EVERY_SECONDS
+                )
                 return
 
-            LOGGER.info(&#39;Launching data update process ...&#39;)
+            LOGGER.info(&#34;Launching data update process ...&#34;)
             # create db if necessary
             DbCreator(db_dir=self.db_dir).create_db()
 
             # execute the update logic
             self._update()
 
+            # update the timestamp of the last check
+            self.db_state_accesor.set_key(Updater.LAST_UPDATE_CHECK_KEY, str(time.time()))
+
             print_sponsoring_message()
 
-            # update the timestamp of the last check
-            self.db_state_accesor.set_key(Updater.LAST_UPDATE_CHECK_KEY, str(time.time()))</code></pre>
+            # print unused feature messages
+            if not self.config.daily_processing:
+                print_daily_feature_message()
+
+            if (not self.config.post_update_processes) and (not self.config.post_update_hook):
+                print_automation_feature_message()
+
+            # print newer version message
+            if is_newer_version_available():
+                print_newer_version_message(get_latest_pypi_version())</code></pre>
 </details>
 </section>
 <section>
@@ -308,6 +404,63 @@ class Updater:
 <section>
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
+<dt id="secfsdstools.c_update.updateprocess.print_automation_feature_message"><code class="name flex">
+<span>def <span class="ident">print_automation_feature_message</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>printed if the automation feature is not used yet</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def print_automation_feature_message():
+    &#34;&#34;&#34;printed if the automation feature is not used yet&#34;&#34;&#34;
+    print(&#34;\n\n&#34;)
+    print(&#34;    Automation was introduced with version 1.8.0.&#34;)
+    print(
+        &#34;    Please have a look at the documentation and the example notebooks (08_00_automation_basics) to learn more.&#34;  # pylint: disable=C0301
+    )
+    print(&#34;\n\n&#34;)</code></pre>
+</details>
+</dd>
+<dt id="secfsdstools.c_update.updateprocess.print_daily_feature_message"><code class="name flex">
+<span>def <span class="ident">print_daily_feature_message</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>printed if a daily processing is not used yet</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def print_daily_feature_message():
+    &#34;&#34;&#34;printed if a daily processing is not used yet&#34;&#34;&#34;
+    print(&#34;\n\n&#34;)
+    print(&#34;    Daily report updates were introduced in version 2.4.0.&#34;)
+    print(
+        &#34;    Please have a look at the documentation and the example notebooks (10_00_daily_financial_report_updates) to learn more.&#34;  # pylint: disable=C0301
+    )
+    print(&#34;\n\n&#34;)</code></pre>
+</details>
+</dd>
+<dt id="secfsdstools.c_update.updateprocess.print_newer_version_message"><code class="name flex">
+<span>def <span class="ident">print_newer_version_message</span></span>(<span>newer_version: str)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>printed if a newer version of the library is available</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def print_newer_version_message(newer_version: str):
+    &#34;&#34;&#34;printed if a newer version of the library is available&#34;&#34;&#34;
+
+    print(&#34;\n\n&#34;)
+    print(
+        f&#34;    A newer version of secfsdstools ({newer_version}) is available on pypi.org. Please consider upgrading.&#34;  # pylint: disable=C0301
+    )
+    print(&#34;\n\n&#34;)</code></pre>
+</details>
+</dd>
 <dt id="secfsdstools.c_update.updateprocess.print_sponsoring_message"><code class="name flex">
 <span>def <span class="ident">print_sponsoring_message</span></span>(<span>)</span>
 </code></dt>
@@ -318,7 +471,7 @@ class Updater:
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def print_sponsoring_message():
-    &#34;&#34;&#34; create sponsoring message &#34;&#34;&#34;
+    &#34;&#34;&#34;create sponsoring message&#34;&#34;&#34;
 
     message = random.choice(sponsor_messages)
 
@@ -333,7 +486,7 @@ class Updater:
     hash_border = &#34;#&#34; * (len(message) + 8)
 
     # Präsentation des Sponsor-Hinweises mit Farben und Hervorhebung
-    print(&#34;\n\n&#34;)
+    print(&#34;\n&#34;)
     print(yellow + border + reset)
     print(bold + yellow + hash_border + reset)
     print(&#34;\n&#34;)
@@ -342,11 +495,21 @@ class Updater:
     print(bold + white + &#34;    https://github.com/sponsors/HansjoergW&#34; + reset)
     print(&#34;\n&#34;)
     print(white + &#34;    How to get in touch&#34;)
-    print(&#34;    - Found a bug:            https://github.com/HansjoergW/sec-fincancial-statement-data-set/issues&#34;)
-    print(&#34;    - Have a remark:          https://github.com/HansjoergW/sec-fincancial-statement-data-set/discussions/categories/general&#34;)
-    print(&#34;    - Have an idea:           https://github.com/HansjoergW/sec-fincancial-statement-data-set/discussions/categories/ideas&#34;)
-    print(&#34;    - Have a question:        https://github.com/HansjoergW/sec-fincancial-statement-data-set/discussions/categories/q-a&#34;)
-    print(&#34;    - Have something to show: https://github.com/HansjoergW/sec-fincancial-statement-data-set/discussions/categories/show-and-tell&#34;)
+    print(
+        &#34;    - Found a bug:            https://github.com/HansjoergW/sec-fincancial-statement-data-set/issues&#34;  # pylint: disable=C0301
+    )
+    print(
+        &#34;    - Have a remark:          https://github.com/HansjoergW/sec-fincancial-statement-data-set/discussions/categories/general&#34;  # pylint: disable=C0301
+    )
+    print(
+        &#34;    - Have an idea:           https://github.com/HansjoergW/sec-fincancial-statement-data-set/discussions/categories/ideas&#34;  # pylint: disable=C0301
+    )
+    print(
+        &#34;    - Have a question:        https://github.com/HansjoergW/sec-fincancial-statement-data-set/discussions/categories/q-a&#34;  # pylint: disable=C0301
+    )
+    print(
+        &#34;    - Have something to show: https://github.com/HansjoergW/sec-fincancial-statement-data-set/discussions/categories/show-and-tell&#34;  # pylint: disable=C0301
+    )
     print(&#34;\n&#34;)
 
     print(bold + yellow + hash_border + reset)
@@ -371,7 +534,8 @@ class Updater:
 </summary>
 <pre><code class="python">class Updater:
     &#34;&#34;&#34;Manages the update process: download zipfiles, transform to parquet, and index the reports&#34;&#34;&#34;
-    LAST_UPDATE_CHECK_KEY: str = &#39;LAST_UPDATED&#39;
+
+    LAST_UPDATE_CHECK_KEY: str = &#34;LAST_UPDATED&#34;
     CHECK_EVERY_SECONDS: int = 24 * 60 * 60  # check every 24 hours
 
     @classmethod
@@ -385,12 +549,9 @@ class Updater:
             Updater: the instance
 
         &#34;&#34;&#34;
-        return Updater(
-            config
-        )
+        return Updater(config)
 
-    def __init__(self,
-                 config: Configuration):
+    def __init__(self, config: Configuration):
         self.config = config
 
         self.db_state_accesor = DBStateAcessor(db_dir=config.db_dir)
@@ -399,13 +560,12 @@ class Updater:
         self.daily_dld_dir = config.daily_download_dir
         self.parquet_dir = config.parquet_dir
         self.user_agent = config.user_agent_email
-        self.rapid_api_plan = config.rapid_api_plan
-        self.rapid_api_key = config.rapid_api_key
         self.keep_zip_files = config.keep_zip_files
         self.auto_update = config.auto_update
         self.no_parallel_processing = config.no_parallel_processing
         self.post_update_hook = config.post_update_hook
         self.post_update_processes = config.post_update_processes
+        self.daily_processing = config.daily_processing
 
     def _check_for_update(self) -&gt; bool:
         &#34;&#34;&#34;checks if a new update check should be conducted.&#34;&#34;&#34;
@@ -425,24 +585,60 @@ class Updater:
         urldownloader = UrlDownloader(user_agent=self.user_agent)
 
         # download data from sec
-        process_list.append(SecDownloadingProcess(zip_dir=self.dld_dir,
-                                                  parquet_root_dir=self.parquet_dir,
-                                                  urldownloader=urldownloader,
-                                                  execute_serial=self.no_parallel_processing))
+        process_list.append(
+            SecDownloadingProcess(
+                zip_dir=self.dld_dir,
+                parquet_root_dir=self.parquet_dir,
+                urldownloader=urldownloader,
+                execute_serial=self.no_parallel_processing,
+            )
+        )
         # transform sec zip files
-        process_list.append(ToParquetTransformerProcess(zip_dir=self.dld_dir,
-                                                        parquet_dir=self.parquet_dir,
-                                                        keep_zip_files=self.keep_zip_files,
-                                                        file_type=&#39;quarter&#39;,
-                                                        execute_serial=self.no_parallel_processing
-                                                        ))
+        process_list.append(
+            ToParquetTransformerProcess(
+                zip_dir=self.dld_dir,
+                parquet_dir=self.parquet_dir,
+                keep_zip_files=self.keep_zip_files,
+                file_type=&#34;quarter&#34;,
+                execute_serial=self.no_parallel_processing,
+            )
+        )
 
         # index sec zip files
-        process_list.append(ReportParquetIndexerProcess(db_dir=self.db_dir,
-                                                        parquet_dir=self.parquet_dir,
-                                                        file_type=&#39;quarter&#39;,
-                                                        execute_serial=self.no_parallel_processing
-                                                        ))
+        process_list.append(
+            ReportParquetIndexerProcess(
+                db_dir=self.db_dir,
+                parquet_dir=self.parquet_dir,
+                file_type=&#34;quarter&#34;,
+                execute_serial=self.no_parallel_processing,
+            )
+        )
+
+        if self.daily_processing:
+            dailyprocess = DailyPreparationProcess(
+                db_dir=self.db_dir, parquet_dir=self.parquet_dir, daily_dir=self.daily_dld_dir
+            )
+            process_list.extend(
+                [
+                    # download daily data from SEC
+                    dailyprocess,
+                    # transform daily data to parquet
+                    ToParquetTransformerProcess(
+                        zip_dir=dailyprocess.config.dailyzipdir,
+                        parquet_dir=self.parquet_dir,
+                        keep_zip_files=True,  # needed for the daily process to work -&gt; it has its own cleanup
+                        file_type=&#34;daily&#34;,
+                        execute_serial=self.no_parallel_processing,
+                    ),
+                    # index daily data
+                    ReportParquetIndexerProcess(
+                        db_dir=self.db_dir,
+                        parquet_dir=self.parquet_dir,
+                        file_type=&#34;daily&#34;,
+                        execute_serial=self.no_parallel_processing,
+                    ),
+                ]
+            )
 
         return process_list
 
@@ -452,27 +648,34 @@ class Updater:
         if not self.post_update_processes:
             return []
 
-        module_str, function_str = self.post_update_processes.rsplit(&#39;.&#39;, 1)
+        module_str, function_str = self.post_update_processes.rsplit(&#34;.&#34;, 1)
         module = importlib.import_module(module_str)
         post_processes_function = getattr(module, function_str)
 
         post_processes = post_processes_function(self.config)
 
         if not isinstance(post_processes, list):
-            LOGGER.error(&#34;A post_update_processes function was defined in the configuration: %s&#34;
-                         &#34;. But it does not return a list.&#34;, self.post_update_processes)
-            raise ValueError(&#34;Defined post_update_processes function does not return a list: &#34;
-                             f&#34;{self.post_update_processes}&#34;)
+            LOGGER.error(
+                &#34;A post_update_processes function was defined in the configuration: %s&#34;
+                &#34;. But it does not return a list.&#34;,
+                self.post_update_processes,
+            )
+            raise ValueError(
+                &#34;Defined post_update_processes function does not return a list: &#34; f&#34;{self.post_update_processes}&#34;
+            )
 
         if not all(isinstance(item, AbstractProcess) for item in post_processes):
-            LOGGER.error(&#34;A post_update_processes function was defined in the configuration: %s&#34;
-                         &#34;. But it not all elements are of type AbstractProcess.&#34;,
-                         self.post_update_processes)
-            raise ValueError(&#34;Defined post_update_processes function does have elements that are &#34;
-                             f&#34;not of type AbstractPcoess: {self.post_update_processes}&#34;)
+            LOGGER.error(
+                &#34;A post_update_processes function was defined in the configuration: %s&#34;
+                &#34;. But it not all elements are of type AbstractProcess.&#34;,
+                self.post_update_processes,
+            )
+            raise ValueError(
+                &#34;Defined post_update_processes function does have elements that are &#34;
+                f&#34;not of type AbstractPcoess: {self.post_update_processes}&#34;
+            )
 
-        LOGGER.info(&#34;Loading %d post update processes from %s&#34;,
-                    len(post_processes), self.post_update_processes)
+        LOGGER.info(&#34;Loading %d post update processes from %s&#34;, len(post_processes), self.post_update_processes)
 
         return post_processes
 
@@ -482,7 +685,7 @@ class Updater:
         if not self.post_update_hook:
             return
 
-        module_str, function_str = self.post_update_hook.rsplit(&#39;.&#39;, 1)
+        module_str, function_str = self.post_update_hook.rsplit(&#34;.&#34;, 1)
         module = importlib.import_module(module_str)
         post_update_hook = getattr(module, function_str)
 
@@ -514,7 +717,8 @@ class Updater:
             LOGGER.info(&#34;dataframes. This is not supported anymore in this version of the &#34;)
             LOGGER.info(&#34;framework. If you want to use the old, smaller datasets which are &#34;)
             LOGGER.info(
-                &#34;still available at https://www.sec.gov/data-research/sec-markets-data/financial-statement-data-sets-archive&#34;)  # pylint: disable=C0301
+                &#34;still available at https://www.sec.gov/data-research/sec-markets-data/financial-statement-data-sets-archive&#34;  # pylint: disable=C0301
+            )
             LOGGER.info(&#34;you have to use version 1.8.2 of the framework.&#34;)
             LOGGER.info(&#34;                 ----                        &#34;)
             LOGGER.info(&#34;If you want to use the datasets with the segments column, you have to &#34;)
@@ -538,25 +742,36 @@ class Updater:
 
         if force_update | self.auto_update:
             if not force_update &amp; self.auto_update:
-                LOGGER.debug(&#39;AutoUpdate is True, so check if new zip files are available&#39;)
+                LOGGER.debug(&#34;AutoUpdate is True, so check if new zip files are available&#34;)
 
             if (not force_update) &amp; (not self._check_for_update()):
                 LOGGER.debug(
-                    &#39;Skipping update: last check was done less than %d seconds ago&#39;,
-                    Updater.CHECK_EVERY_SECONDS)
+                    &#34;Skipping update: last check was done less than %d seconds ago&#34;, Updater.CHECK_EVERY_SECONDS
+                )
                 return
 
-            LOGGER.info(&#39;Launching data update process ...&#39;)
+            LOGGER.info(&#34;Launching data update process ...&#34;)
             # create db if necessary
             DbCreator(db_dir=self.db_dir).create_db()
 
             # execute the update logic
             self._update()
 
+            # update the timestamp of the last check
+            self.db_state_accesor.set_key(Updater.LAST_UPDATE_CHECK_KEY, str(time.time()))
+
             print_sponsoring_message()
 
-            # update the timestamp of the last check
-            self.db_state_accesor.set_key(Updater.LAST_UPDATE_CHECK_KEY, str(time.time()))</code></pre>
+            # print unused feature messages
+            if not self.config.daily_processing:
+                print_daily_feature_message()
+
+            if (not self.config.post_update_processes) and (not self.config.post_update_hook):
+                print_automation_feature_message()
+
+            # print newer version message
+            if is_newer_version_available():
+                print_newer_version_message(get_latest_pypi_version())</code></pre>
 </details>
 <h3>Class variables</h3>
 <dl>
@@ -601,9 +816,7 @@ def get_instance(cls, config: Configuration):
         Updater: the instance
 
     &#34;&#34;&#34;
-    return Updater(
-        config
-    )</code></pre>
+    return Updater(config)</code></pre>
 </details>
 </dd>
 </dl>
@@ -637,7 +850,8 @@ def get_instance(cls, config: Configuration):
         LOGGER.info(&#34;dataframes. This is not supported anymore in this version of the &#34;)
         LOGGER.info(&#34;framework. If you want to use the old, smaller datasets which are &#34;)
         LOGGER.info(
-            &#34;still available at https://www.sec.gov/data-research/sec-markets-data/financial-statement-data-sets-archive&#34;)  # pylint: disable=C0301
+            &#34;still available at https://www.sec.gov/data-research/sec-markets-data/financial-statement-data-sets-archive&#34;  # pylint: disable=C0301
+        )
         LOGGER.info(&#34;you have to use version 1.8.2 of the framework.&#34;)
         LOGGER.info(&#34;                 ----                        &#34;)
         LOGGER.info(&#34;If you want to use the datasets with the segments column, you have to &#34;)
@@ -672,25 +886,36 @@ Returns:</p></div>
 
     if force_update | self.auto_update:
         if not force_update &amp; self.auto_update:
-            LOGGER.debug(&#39;AutoUpdate is True, so check if new zip files are available&#39;)
+            LOGGER.debug(&#34;AutoUpdate is True, so check if new zip files are available&#34;)
 
         if (not force_update) &amp; (not self._check_for_update()):
             LOGGER.debug(
-                &#39;Skipping update: last check was done less than %d seconds ago&#39;,
-                Updater.CHECK_EVERY_SECONDS)
+                &#34;Skipping update: last check was done less than %d seconds ago&#34;, Updater.CHECK_EVERY_SECONDS
+            )
             return
 
-        LOGGER.info(&#39;Launching data update process ...&#39;)
+        LOGGER.info(&#34;Launching data update process ...&#34;)
         # create db if necessary
         DbCreator(db_dir=self.db_dir).create_db()
 
         # execute the update logic
         self._update()
 
+        # update the timestamp of the last check
+        self.db_state_accesor.set_key(Updater.LAST_UPDATE_CHECK_KEY, str(time.time()))
+
         print_sponsoring_message()
 
-        # update the timestamp of the last check
-        self.db_state_accesor.set_key(Updater.LAST_UPDATE_CHECK_KEY, str(time.time()))</code></pre>
+        # print unused feature messages
+        if not self.config.daily_processing:
+            print_daily_feature_message()
+
+        if (not self.config.post_update_processes) and (not self.config.post_update_hook):
+            print_automation_feature_message()
+
+        # print newer version message
+        if is_newer_version_available():
+            print_newer_version_message(get_latest_pypi_version())</code></pre>
 </details>
 </dd>
 </dl>
@@ -711,6 +936,9 @@ Returns:</p></div>
 </li>
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
+<li><code><a title="secfsdstools.c_update.updateprocess.print_automation_feature_message" href="#secfsdstools.c_update.updateprocess.print_automation_feature_message">print_automation_feature_message</a></code></li>
+<li><code><a title="secfsdstools.c_update.updateprocess.print_daily_feature_message" href="#secfsdstools.c_update.updateprocess.print_daily_feature_message">print_daily_feature_message</a></code></li>
+<li><code><a title="secfsdstools.c_update.updateprocess.print_newer_version_message" href="#secfsdstools.c_update.updateprocess.print_newer_version_message">print_newer_version_message</a></code></li>
 <li><code><a title="secfsdstools.c_update.updateprocess.print_sponsoring_message" href="#secfsdstools.c_update.updateprocess.print_sponsoring_message">print_sponsoring_message</a></code></li>
 </ul>
 </li>

@@ -44,8 +44,8 @@ from inspect import FrameInfo
 
 
 def is_running_in_pytest_or_pdoc():
-    &#34;&#34;&#34; Check if we are running as a test or inside the build process &#34;&#34;&#34;
-    return (&#39;pytest&#39; in sys.argv[0]) or (&#39;pdoc3&#39; in sys.argv[0])
+    &#34;&#34;&#34;Check if we are running as a test or inside the build process&#34;&#34;&#34;
+    return (&#34;pytest&#34; in sys.argv[0]) or (&#34;pdoc3&#34; in sys.argv[0])
 
 
 def is_update_frame(frameinfo: FrameInfo) -&gt; bool:
@@ -61,8 +61,7 @@ def is_check_configuration(frameinfo: FrameInfo) -&gt; bool:
     check if the call is done in the context of checking the configuration.
     this could cause a circular import looping
     &#34;&#34;&#34;
-    return ((frameinfo.function == &#34;check_basic_configuration&#34;) and
-            (frameinfo.filename.endswith(&#34;configmgt.py&#34;)))
+    return (frameinfo.function == &#34;check_basic_configuration&#34;) and (frameinfo.filename.endswith(&#34;configmgt.py&#34;))
 
 
 def is_already_in_update_or_check_config_process() -&gt; bool:
@@ -70,7 +69,7 @@ def is_already_in_update_or_check_config_process() -&gt; bool:
     check if the call is made in the context of checking the configuration or the
     update process, since this would cause a circular import loop.
     &#34;&#34;&#34;
-    import inspect # pylint: disable=C0415
+    import inspect  # pylint: disable=C0415
 
     stack = inspect.stack()
     return any(is_update_frame(frame) or is_check_configuration(frame) for frame in stack)
@@ -80,10 +79,11 @@ def is_already_in_update_or_check_config_process() -&gt; bool:
 # the update process or the check_config_process
 if not is_running_in_pytest_or_pdoc() and not is_already_in_update_or_check_config_process():
     import logging
-    import secfsdstools
+
+    from secfsdstools.update import update
 
     logging.getLogger().info(&#34;loading secfsdstools ...&#34;)
-    secfsdstools.update.update()</code></pre>
+    update()</code></pre>
 </details>
 </section>
 <section>
@@ -108,7 +108,7 @@ update process, since this would cause a circular import loop.</p></div>
     check if the call is made in the context of checking the configuration or the
     update process, since this would cause a circular import loop.
     &#34;&#34;&#34;
-    import inspect # pylint: disable=C0415
+    import inspect  # pylint: disable=C0415
 
     stack = inspect.stack()
     return any(is_update_frame(frame) or is_check_configuration(frame) for frame in stack)</code></pre>
@@ -129,8 +129,7 @@ this could cause a circular import looping</p></div>
     check if the call is done in the context of checking the configuration.
     this could cause a circular import looping
     &#34;&#34;&#34;
-    return ((frameinfo.function == &#34;check_basic_configuration&#34;) and
-            (frameinfo.filename.endswith(&#34;configmgt.py&#34;)))</code></pre>
+    return (frameinfo.function == &#34;check_basic_configuration&#34;) and (frameinfo.filename.endswith(&#34;configmgt.py&#34;))</code></pre>
 </details>
 </dd>
 <dt id="secfsdstools.c_update_check.is_running_in_pytest_or_pdoc"><code class="name flex">
@@ -143,8 +142,8 @@ this could cause a circular import looping</p></div>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def is_running_in_pytest_or_pdoc():
-    &#34;&#34;&#34; Check if we are running as a test or inside the build process &#34;&#34;&#34;
-    return (&#39;pytest&#39; in sys.argv[0]) or (&#39;pdoc3&#39; in sys.argv[0])</code></pre>
+    &#34;&#34;&#34;Check if we are running as a test or inside the build process&#34;&#34;&#34;
+    return (&#34;pytest&#34; in sys.argv[0]) or (&#34;pdoc3&#34; in sys.argv[0])</code></pre>
 </details>
 </dd>
 <dt id="secfsdstools.c_update_check.is_update_frame"><code class="name flex">

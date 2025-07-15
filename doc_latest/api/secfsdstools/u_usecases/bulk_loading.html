@@ -42,12 +42,11 @@ Please have a look at this notebook for a detailed explanation of the logic
 &#34;&#34;&#34;
 import os
 from glob import glob
-from typing import Callable, Optional
-from typing import List
+from typing import Callable, List, Optional
 
 from secfsdstools.a_config.configmgt import ConfigurationManager
 from secfsdstools.c_index.indexdataaccess import ParquetDBIndexingAccessor
-from secfsdstools.d_container.databagmodel import RawDataBag, JoinedDataBag
+from secfsdstools.d_container.databagmodel import JoinedDataBag, RawDataBag
 from secfsdstools.e_collector.zipcollecting import ZipCollector
 
 
@@ -58,8 +57,12 @@ def default_postloadfilter(databag: RawDataBag) -&gt; RawDataBag:
             ReportPeriodRawFilter, MainCoregRawFilter, OfficialTagsOnlyRawFilter, USDOnlyRawFilter
     &#34;&#34;&#34;
     # pylint: disable=C0415
-    from secfsdstools.e_filter.rawfiltering import ReportPeriodRawFilter, MainCoregRawFilter, \
-        OfficialTagsOnlyRawFilter, USDOnlyRawFilter
+    from secfsdstools.e_filter.rawfiltering import (
+        MainCoregRawFilter,
+        OfficialTagsOnlyRawFilter,
+        ReportPeriodRawFilter,
+        USDOnlyRawFilter,
+    )
 
     return databag[ReportPeriodRawFilter()][MainCoregRawFilter()][OfficialTagsOnlyRawFilter()][
         USDOnlyRawFilter()]
@@ -579,8 +582,12 @@ ReportPeriodRawFilter, MainCoregRawFilter, OfficialTagsOnlyRawFilter, USDOnlyRaw
             ReportPeriodRawFilter, MainCoregRawFilter, OfficialTagsOnlyRawFilter, USDOnlyRawFilter
     &#34;&#34;&#34;
     # pylint: disable=C0415
-    from secfsdstools.e_filter.rawfiltering import ReportPeriodRawFilter, MainCoregRawFilter, \
-        OfficialTagsOnlyRawFilter, USDOnlyRawFilter
+    from secfsdstools.e_filter.rawfiltering import (
+        MainCoregRawFilter,
+        OfficialTagsOnlyRawFilter,
+        ReportPeriodRawFilter,
+        USDOnlyRawFilter,
+    )
 
     return databag[ReportPeriodRawFilter()][MainCoregRawFilter()][OfficialTagsOnlyRawFilter()][
         USDOnlyRawFilter()]</code></pre>

@@ -5,6 +5,12 @@ permalink: /releasenotes/
 
 # Release Notes
 
+## 2.2.3 -> 2.2.4 2025-July-15
+* New (Experimental)
+  * Integration of [secdaily](https://github.com/HansjoergW/sec-financial-statement-data-set-daily-processing) to provide daily report updates.
+    * You have to turn on this feature by adding `dailyprocessing = True` in the `DEFAULT` section of the configuration file.
+    * Please have a look at the notebook [10_00_daily_financial_report_updates](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/10_00_daily_financial_report_updates.ipynb) for details.
+
 
 ## 2.2.0 -> 2.3.0 2025-May-05
 Maintenance release.

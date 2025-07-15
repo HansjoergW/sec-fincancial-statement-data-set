@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.10.0" />
-<title>secfsdstools.c_download.rapiddownloading_process API documentation</title>
+<title>secfsdstools.c_download.secdownloading_process API documentation</title>
 <meta name="description" content="Downloading zip files of the financial statement data sets from the sec." />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
@@ -19,7 +19,7 @@
 <main>
 <article id="content">
 <header>
-<h1 class="title">Module <code>secfsdstools.c_download.rapiddownloading_process</code></h1>
+<h1 class="title">Module <code>secfsdstools.c_download.secdownloading_process</code></h1>
 </header>
 <section id="section-intro">
 <p>Downloading zip files of the financial statement data sets from the sec.</p>
@@ -30,128 +30,89 @@
 <pre><code class="python">&#34;&#34;&#34;
 Downloading zip files of the financial statement data sets from the sec.
 &#34;&#34;&#34;
-import json
 import logging
 import os
-from typing import List, Tuple, Dict
+import re
+from typing import List, Tuple
 
 from secfsdstools.a_utils.downloadutils import UrlDownloader
-from secfsdstools.a_utils.fileutils import get_filenames_in_directory
-from secfsdstools.a_utils.rapiddownloadutils import RapidUrlBuilder
 from secfsdstools.c_download.basedownloading_process import BaseDownloadingProcess
 
 LOGGER = logging.getLogger(__name__)
 
 
-class RapidDownloadingProcess(BaseDownloadingProcess):
+class SecDownloadingProcess(BaseDownloadingProcess):
     &#34;&#34;&#34;
-    Class which coordinates downloading form the rapidapi api
-    https://rapidapi.com/hansjoerg.wingeier/api/daily-sec-financial-statement-dataset
+        Downloading the quarterly zip files of the financial statement data sets
     &#34;&#34;&#34;
+    FIN_STAT_DATASET_URL = &#39;https://www.sec.gov/dera/data/financial-statement-data-sets.html&#39;
+    # FIN_STAT_DATASET_ARCHIVE_URL = \
+    #     &#39;https://www.sec.gov/data-research/sec-markets-data/financial-statement-data-sets-archive&#39;
+
+    table_re = re.compile(&#39;&lt;TABLE.*?&gt;.*&lt;/TABLE&gt;&#39;, re.IGNORECASE + re.MULTILINE + re.DOTALL)
+    href_re = re.compile(&#34;href=\&#34;.*?\&#34;&#34;, re.IGNORECASE + re.MULTILINE + re.DOTALL)
 
     def __init__(self,
-                 rapidurlbuilder: RapidUrlBuilder,
-                 daily_zip_dir: str,
-                 qrtr_zip_dir: str,
+                 zip_dir: str,
                  parquet_root_dir: str,
                  urldownloader: UrlDownloader,
                  execute_serial: bool = False):
-        super().__init__(zip_dir=daily_zip_dir,
+        super().__init__(zip_dir=zip_dir,
                          urldownloader=urldownloader,
                          parquet_dir=os.path.join(parquet_root_dir, &#39;quarter&#39;),
                          execute_serial=execute_serial
                          )
-        self.rapidurlbuilder = rapidurlbuilder
-        self.qrtr_zip_dir = qrtr_zip_dir
 
-        if not os.path.isdir(self.zip_dir):
-            LOGGER.info(&#34;creating download folder: %s&#34;, self.zip_dir)
-            os.makedirs(self.zip_dir)
+    def _get_available_zips(self) -&gt; List[Tuple[str, str]]:
 
-    def get_headers(self) -&gt; Dict[str, str]:
-        return self.rapidurlbuilder.get_headers()
+        # # reading data from the archived page - until 2024q3.zip
+        # LOGGER.info(&#34;reading table in archive: %s&#34;, self.FIN_STAT_DATASET_ARCHIVE_URL)
+        # archive_content = self.urldownloader.get_url_content(self.FIN_STAT_DATASET_ARCHIVE_URL)
+        # archive_tables = self.table_re.findall(archive_content.text)
+        #
+        # archive_hrefs: List[str] = []
+        #
+        # if len(archive_tables) == 0:
+        #     LOGGER.warning(&#34;No archive table found at: %s&#34;, self.FIN_STAT_DATASET_ARCHIVE_URL)
+        # else:
+        #     archive_first_table = archive_tables[0]
+        #     archive_hrefs = self.href_re.findall(archive_first_table)
+        #     archive_hrefs = [f&#39;https://www.sec.gov{href[6:-1]}&#39; for href in archive_hrefs]
 
-    def _get_content(self) -&gt; str:
-        response = self.urldownloader.get_url_content(self.rapidurlbuilder.get_content_url(),
-                                                      headers=self.get_headers())
-        return response.text
+        # reading data from the main url - starting with 2024q4.zip
+        LOGGER.info(&#34;reading table in main page: %s&#34;, self.FIN_STAT_DATASET_URL)
+        main_content = self.urldownloader.get_url_content(self.FIN_STAT_DATASET_URL)
+        main_tables = self.table_re.findall(main_content.text)
 
-    def _get_latest_quarter_file_name(self):
-        files = get_filenames_in_directory(os.path.join(self.qrtr_zip_dir, &#39;*.zip&#39;))
-        files.sort(reverse=True)
-        return files[0]
+        main_hrefs: List[str] = []
 
-    def _calculate_cut_off_for_qrtr_file(self, filename: str) -&gt; str:
-        &#34;&#34;&#34;
-        We only want to download daily files that are newer than the latest available
-        quarter file on the SEC side.
-
-        The idea is simple, we create a date-string of the quarter that starts after the quarter
-        defined in the filename, but we set the day to 00.
-
-        So if the filename is 2022q1
-        -&gt; &#34;2022&#34; + &#34;04&#34; + &#34;00&#34;
-        if it is 2022q4
-        -&gt; &#34;2022&#34; + &#34;0100&#34;
-
-        Args:
-            filename: filname of the quarter file
-
-        Returns:
-
-        &#34;&#34;&#34;
-        last_quarter_file_year = int(filename[:4])
-        last_quarter_file_quarter = int(filename[5:6])
-
-        cutoff: str = &#39;&#39;
-        if last_quarter_file_quarter &lt; 4:
-            cutoff = str(last_quarter_file_year) \
-                     + str(((last_quarter_file_quarter * 3) + 1)).zfill(2) \
-                     + &#39;00&#39;
+        if len(main_tables) == 0:
+            LOGGER.warning(&#34;No table found at: %s&#34;, self.FIN_STAT_DATASET_URL)
         else:
-            cutoff = str(last_quarter_file_year + 1) + &#39;0100&#39;
-        return cutoff
+            main_first_table = main_tables[0]
+            main_hrefs = self.href_re.findall(main_first_table)
+            main_hrefs = [f&#39;https://www.sec.gov{href[6:-1]}&#39; for href in main_hrefs]
+
+        # hrefs = archive_hrefs + main_hrefs
+        # return_value: List[Tuple[str, str]] = [(os.path.basename(href), href) for href in hrefs]
+        #
+        # return_value = [(n.replace(&#34;-archive&#34;, &#34;&#34;), p) for n, p in return_value]
+        # return return_value
+
+        return_value: List[Tuple[str, str]] = \
+            [(os.path.basename(href), href) for href in main_hrefs]
+        return return_value
 
     def _calculate_missing_zips(self) -&gt; List[Tuple[str, str]]:
-        # only download the daily zips for dates for which there is no quarter zip file yet
-        # so first get that latest downloaded zip -&gt; this is always done first
-        latest_quarter_file = self._get_latest_quarter_file_name()
-
-        # then calculate the cut_off string
-        # e.g., if the lates zip is 2022q4.zip, then the cutoff string looks like: &#39;20230100&#39;
-        cutoff_str = self._calculate_cut_off_for_qrtr_file(latest_quarter_file)
-
         downloaded_zip_files = self._get_downloaded_zips()
         transformed_parquet = self._get_transformed_parquet()
-        available_zips_to_dld = self._get_available_zips()
+        available_zips_to_dld_dict = self._get_available_zips()
 
         # define which zip files don&#39;t have to be downloaded
         download_or_transformed_zips = set(downloaded_zip_files).union(set(transformed_parquet))
 
-        missing = list(set(available_zips_to_dld) - set(download_or_transformed_zips))
-
-        # only consider the filenames with names (without extension)
-        # that are bigger than the cutoff string
-        missing_after_cut_off = [entry for entry in missing if entry[:8] &gt; cutoff_str]
-
-        return [(filename, self.rapidurlbuilder.get_donwload_url(filename)) for filename in
-                missing_after_cut_off]
-
-    def _get_available_zips(self) -&gt; List[str]:
-        content = self._get_content()
-        parsed_content = json.loads(content)
-        daily_entries = parsed_content[&#39;daily&#39;]
-
-        return [entry[&#39;file&#39;] for entry in daily_entries if
-                ((entry[&#39;subscription&#39;] == &#39;basic&#39;) | (
-                        entry[&#39;subscription&#39;] == self.rapidurlbuilder.rapid_plan))]
-
-    def process(self):
-        try:
-            super().process()
-        except Exception as ex:  # pylint: disable=W0703
-            LOGGER.warning(&#34;Failed to get data from rapid api, please check rapid-api-key. &#34;)
-            LOGGER.warning(&#34;Only using data from Sec.gov because of: %s&#34;, ex)</code></pre>
+        return [(name, href) for name, href in available_zips_to_dld_dict if
+                name not in download_or_transformed_zips]</code></pre>
 </details>
 </section>
 <section>
@@ -163,13 +124,12 @@ class RapidDownloadingProcess(BaseDownloadingProcess):
 <section>
 <h2 class="section-title" id="header-classes">Classes</h2>
 <dl>
-<dt id="secfsdstools.c_download.rapiddownloading_process.RapidDownloadingProcess"><code class="flex name class">
-<span>class <span class="ident">RapidDownloadingProcess</span></span>
-<span>(</span><span>rapidurlbuilder: <a title="secfsdstools.a_utils.rapiddownloadutils.RapidUrlBuilder" href="../a_utils/rapiddownloadutils.html#secfsdstools.a_utils.rapiddownloadutils.RapidUrlBuilder">RapidUrlBuilder</a>, daily_zip_dir: str, qrtr_zip_dir: str, parquet_root_dir: str, urldownloader: <a title="secfsdstools.a_utils.downloadutils.UrlDownloader" href="../a_utils/downloadutils.html#secfsdstools.a_utils.downloadutils.UrlDownloader">UrlDownloader</a>, execute_serial: bool = False)</span>
+<dt id="secfsdstools.c_download.secdownloading_process.SecDownloadingProcess"><code class="flex name class">
+<span>class <span class="ident">SecDownloadingProcess</span></span>
+<span>(</span><span>zip_dir: str, parquet_root_dir: str, urldownloader: <a title="secfsdstools.a_utils.downloadutils.UrlDownloader" href="../a_utils/downloadutils.html#secfsdstools.a_utils.downloadutils.UrlDownloader">UrlDownloader</a>, execute_serial: bool = False)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Class which coordinates downloading form the rapidapi api
-<a href="https://rapidapi.com/hansjoerg.wingeier/api/daily-sec-financial-statement-dataset">https://rapidapi.com/hansjoerg.wingeier/api/daily-sec-financial-statement-dataset</a></p>
+<div class="desc"><p>Downloading the quarterly zip files of the financial statement data sets</p>
 <p>Constructor.</p>
 <h2 id="args">Args</h2>
 <dl>
@@ -186,123 +146,102 @@ class RapidDownloadingProcess(BaseDownloadingProcess):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class RapidDownloadingProcess(BaseDownloadingProcess):
+<pre><code class="python">class SecDownloadingProcess(BaseDownloadingProcess):
     &#34;&#34;&#34;
-    Class which coordinates downloading form the rapidapi api
-    https://rapidapi.com/hansjoerg.wingeier/api/daily-sec-financial-statement-dataset
+        Downloading the quarterly zip files of the financial statement data sets
     &#34;&#34;&#34;
+    FIN_STAT_DATASET_URL = &#39;https://www.sec.gov/dera/data/financial-statement-data-sets.html&#39;
+    # FIN_STAT_DATASET_ARCHIVE_URL = \
+    #     &#39;https://www.sec.gov/data-research/sec-markets-data/financial-statement-data-sets-archive&#39;
+
+    table_re = re.compile(&#39;&lt;TABLE.*?&gt;.*&lt;/TABLE&gt;&#39;, re.IGNORECASE + re.MULTILINE + re.DOTALL)
+    href_re = re.compile(&#34;href=\&#34;.*?\&#34;&#34;, re.IGNORECASE + re.MULTILINE + re.DOTALL)
 
     def __init__(self,
-                 rapidurlbuilder: RapidUrlBuilder,
-                 daily_zip_dir: str,
-                 qrtr_zip_dir: str,
+                 zip_dir: str,
                  parquet_root_dir: str,
                  urldownloader: UrlDownloader,
                  execute_serial: bool = False):
-        super().__init__(zip_dir=daily_zip_dir,
+        super().__init__(zip_dir=zip_dir,
                          urldownloader=urldownloader,
                          parquet_dir=os.path.join(parquet_root_dir, &#39;quarter&#39;),
                          execute_serial=execute_serial
                          )
-        self.rapidurlbuilder = rapidurlbuilder
-        self.qrtr_zip_dir = qrtr_zip_dir
 
-        if not os.path.isdir(self.zip_dir):
-            LOGGER.info(&#34;creating download folder: %s&#34;, self.zip_dir)
-            os.makedirs(self.zip_dir)
+    def _get_available_zips(self) -&gt; List[Tuple[str, str]]:
 
-    def get_headers(self) -&gt; Dict[str, str]:
-        return self.rapidurlbuilder.get_headers()
+        # # reading data from the archived page - until 2024q3.zip
+        # LOGGER.info(&#34;reading table in archive: %s&#34;, self.FIN_STAT_DATASET_ARCHIVE_URL)
+        # archive_content = self.urldownloader.get_url_content(self.FIN_STAT_DATASET_ARCHIVE_URL)
+        # archive_tables = self.table_re.findall(archive_content.text)
+        #
+        # archive_hrefs: List[str] = []
+        #
+        # if len(archive_tables) == 0:
+        #     LOGGER.warning(&#34;No archive table found at: %s&#34;, self.FIN_STAT_DATASET_ARCHIVE_URL)
+        # else:
+        #     archive_first_table = archive_tables[0]
+        #     archive_hrefs = self.href_re.findall(archive_first_table)
+        #     archive_hrefs = [f&#39;https://www.sec.gov{href[6:-1]}&#39; for href in archive_hrefs]
 
-    def _get_content(self) -&gt; str:
-        response = self.urldownloader.get_url_content(self.rapidurlbuilder.get_content_url(),
-                                                      headers=self.get_headers())
-        return response.text
+        # reading data from the main url - starting with 2024q4.zip
+        LOGGER.info(&#34;reading table in main page: %s&#34;, self.FIN_STAT_DATASET_URL)
+        main_content = self.urldownloader.get_url_content(self.FIN_STAT_DATASET_URL)
+        main_tables = self.table_re.findall(main_content.text)
 
-    def _get_latest_quarter_file_name(self):
-        files = get_filenames_in_directory(os.path.join(self.qrtr_zip_dir, &#39;*.zip&#39;))
-        files.sort(reverse=True)
-        return files[0]
+        main_hrefs: List[str] = []
 
-    def _calculate_cut_off_for_qrtr_file(self, filename: str) -&gt; str:
-        &#34;&#34;&#34;
-        We only want to download daily files that are newer than the latest available
-        quarter file on the SEC side.
-
-        The idea is simple, we create a date-string of the quarter that starts after the quarter
-        defined in the filename, but we set the day to 00.
-
-        So if the filename is 2022q1
-        -&gt; &#34;2022&#34; + &#34;04&#34; + &#34;00&#34;
-        if it is 2022q4
-        -&gt; &#34;2022&#34; + &#34;0100&#34;
-
-        Args:
-            filename: filname of the quarter file
-
-        Returns:
-
-        &#34;&#34;&#34;
-        last_quarter_file_year = int(filename[:4])
-        last_quarter_file_quarter = int(filename[5:6])
-
-        cutoff: str = &#39;&#39;
-        if last_quarter_file_quarter &lt; 4:
-            cutoff = str(last_quarter_file_year) \
-                     + str(((last_quarter_file_quarter * 3) + 1)).zfill(2) \
-                     + &#39;00&#39;
+        if len(main_tables) == 0:
+            LOGGER.warning(&#34;No table found at: %s&#34;, self.FIN_STAT_DATASET_URL)
         else:
-            cutoff = str(last_quarter_file_year + 1) + &#39;0100&#39;
-        return cutoff
+            main_first_table = main_tables[0]
+            main_hrefs = self.href_re.findall(main_first_table)
+            main_hrefs = [f&#39;https://www.sec.gov{href[6:-1]}&#39; for href in main_hrefs]
+
+        # hrefs = archive_hrefs + main_hrefs
+        # return_value: List[Tuple[str, str]] = [(os.path.basename(href), href) for href in hrefs]
+        #
+        # return_value = [(n.replace(&#34;-archive&#34;, &#34;&#34;), p) for n, p in return_value]
+        # return return_value
+
+        return_value: List[Tuple[str, str]] = \
+            [(os.path.basename(href), href) for href in main_hrefs]
+        return return_value
 
     def _calculate_missing_zips(self) -&gt; List[Tuple[str, str]]:
-        # only download the daily zips for dates for which there is no quarter zip file yet
-        # so first get that latest downloaded zip -&gt; this is always done first
-        latest_quarter_file = self._get_latest_quarter_file_name()
-
-        # then calculate the cut_off string
-        # e.g., if the lates zip is 2022q4.zip, then the cutoff string looks like: &#39;20230100&#39;
-        cutoff_str = self._calculate_cut_off_for_qrtr_file(latest_quarter_file)
-
         downloaded_zip_files = self._get_downloaded_zips()
         transformed_parquet = self._get_transformed_parquet()
-        available_zips_to_dld = self._get_available_zips()
+        available_zips_to_dld_dict = self._get_available_zips()
 
         # define which zip files don&#39;t have to be downloaded
         download_or_transformed_zips = set(downloaded_zip_files).union(set(transformed_parquet))
 
-        missing = list(set(available_zips_to_dld) - set(download_or_transformed_zips))
-
-        # only consider the filenames with names (without extension)
-        # that are bigger than the cutoff string
-        missing_after_cut_off = [entry for entry in missing if entry[:8] &gt; cutoff_str]
-
-        return [(filename, self.rapidurlbuilder.get_donwload_url(filename)) for filename in
-                missing_after_cut_off]
-
-    def _get_available_zips(self) -&gt; List[str]:
-        content = self._get_content()
-        parsed_content = json.loads(content)
-        daily_entries = parsed_content[&#39;daily&#39;]
-
-        return [entry[&#39;file&#39;] for entry in daily_entries if
-                ((entry[&#39;subscription&#39;] == &#39;basic&#39;) | (
-                        entry[&#39;subscription&#39;] == self.rapidurlbuilder.rapid_plan))]
-
-    def process(self):
-        try:
-            super().process()
-        except Exception as ex:  # pylint: disable=W0703
-            LOGGER.warning(&#34;Failed to get data from rapid api, please check rapid-api-key. &#34;)
-            LOGGER.warning(&#34;Only using data from Sec.gov because of: %s&#34;, ex)</code></pre>
+        return [(name, href) for name, href in available_zips_to_dld_dict if
+                name not in download_or_transformed_zips]</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li><a title="secfsdstools.c_download.basedownloading_process.BaseDownloadingProcess" href="basedownloading_process.html#secfsdstools.c_download.basedownloading_process.BaseDownloadingProcess">BaseDownloadingProcess</a></li>
 <li><a title="secfsdstools.c_automation.task_framework.AbstractThreadProcess" href="../c_automation/task_framework.html#secfsdstools.c_automation.task_framework.AbstractThreadProcess">AbstractThreadProcess</a></li>
+<li><a title="secfsdstools.c_automation.task_framework.AbstractParallelProcess" href="../c_automation/task_framework.html#secfsdstools.c_automation.task_framework.AbstractParallelProcess">AbstractParallelProcess</a></li>
 <li><a title="secfsdstools.c_automation.task_framework.AbstractProcess" href="../c_automation/task_framework.html#secfsdstools.c_automation.task_framework.AbstractProcess">AbstractProcess</a></li>
 <li>abc.ABC</li>
 </ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="secfsdstools.c_download.secdownloading_process.SecDownloadingProcess.FIN_STAT_DATASET_URL"><code class="name">var <span class="ident">FIN_STAT_DATASET_URL</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="secfsdstools.c_download.secdownloading_process.SecDownloadingProcess.href_re"><code class="name">var <span class="ident">href_re</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="secfsdstools.c_download.secdownloading_process.SecDownloadingProcess.table_re"><code class="name">var <span class="ident">table_re</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
 <h3>Inherited members</h3>
 <ul class="hlist">
 <li><code><b><a title="secfsdstools.c_download.basedownloading_process.BaseDownloadingProcess" href="basedownloading_process.html#secfsdstools.c_download.basedownloading_process.BaseDownloadingProcess">BaseDownloadingProcess</a></b></code>:
@@ -310,10 +249,10 @@ class RapidDownloadingProcess(BaseDownloadingProcess):
 <li><code><a title="secfsdstools.c_download.basedownloading_process.BaseDownloadingProcess.calculate_tasks" href="basedownloading_process.html#secfsdstools.c_download.basedownloading_process.BaseDownloadingProcess.calculate_tasks">calculate_tasks</a></code></li>
 <li><code><a title="secfsdstools.c_download.basedownloading_process.BaseDownloadingProcess.do_execution" href="../c_automation/task_framework.html#secfsdstools.c_automation.task_framework.AbstractThreadProcess.do_execution">do_execution</a></code></li>
 <li><code><a title="secfsdstools.c_download.basedownloading_process.BaseDownloadingProcess.get_headers" href="basedownloading_process.html#secfsdstools.c_download.basedownloading_process.BaseDownloadingProcess.get_headers">get_headers</a></code></li>
-<li><code><a title="secfsdstools.c_download.basedownloading_process.BaseDownloadingProcess.post_process" href="../c_automation/task_framework.html#secfsdstools.c_automation.task_framework.AbstractProcess.post_process">post_process</a></code></li>
-<li><code><a title="secfsdstools.c_download.basedownloading_process.BaseDownloadingProcess.pre_process" href="../c_automation/task_framework.html#secfsdstools.c_automation.task_framework.AbstractProcess.pre_process">pre_process</a></code></li>
-<li><code><a title="secfsdstools.c_download.basedownloading_process.BaseDownloadingProcess.process" href="../c_automation/task_framework.html#secfsdstools.c_automation.task_framework.AbstractProcess.process">process</a></code></li>
-<li><code><a title="secfsdstools.c_download.basedownloading_process.BaseDownloadingProcess.process_task" href="../c_automation/task_framework.html#secfsdstools.c_automation.task_framework.AbstractProcess.process_task">process_task</a></code></li>
+<li><code><a title="secfsdstools.c_download.basedownloading_process.BaseDownloadingProcess.post_process" href="../c_automation/task_framework.html#secfsdstools.c_automation.task_framework.AbstractParallelProcess.post_process">post_process</a></code></li>
+<li><code><a title="secfsdstools.c_download.basedownloading_process.BaseDownloadingProcess.pre_process" href="../c_automation/task_framework.html#secfsdstools.c_automation.task_framework.AbstractParallelProcess.pre_process">pre_process</a></code></li>
+<li><code><a title="secfsdstools.c_download.basedownloading_process.BaseDownloadingProcess.process" href="../c_automation/task_framework.html#secfsdstools.c_automation.task_framework.AbstractParallelProcess.process">process</a></code></li>
+<li><code><a title="secfsdstools.c_download.basedownloading_process.BaseDownloadingProcess.process_task" href="../c_automation/task_framework.html#secfsdstools.c_automation.task_framework.AbstractParallelProcess.process_task">process_task</a></code></li>
 </ul>
 </li>
 </ul>
@@ -335,7 +274,12 @@ class RapidDownloadingProcess(BaseDownloadingProcess):
 <li><h3><a href="#header-classes">Classes</a></h3>
 <ul>
 <li>
-<h4><code><a title="secfsdstools.c_download.rapiddownloading_process.RapidDownloadingProcess" href="#secfsdstools.c_download.rapiddownloading_process.RapidDownloadingProcess">RapidDownloadingProcess</a></code></h4>
+<h4><code><a title="secfsdstools.c_download.secdownloading_process.SecDownloadingProcess" href="#secfsdstools.c_download.secdownloading_process.SecDownloadingProcess">SecDownloadingProcess</a></code></h4>
+<ul class="">
+<li><code><a title="secfsdstools.c_download.secdownloading_process.SecDownloadingProcess.FIN_STAT_DATASET_URL" href="#secfsdstools.c_download.secdownloading_process.SecDownloadingProcess.FIN_STAT_DATASET_URL">FIN_STAT_DATASET_URL</a></code></li>
+<li><code><a title="secfsdstools.c_download.secdownloading_process.SecDownloadingProcess.href_re" href="#secfsdstools.c_download.secdownloading_process.SecDownloadingProcess.href_re">href_re</a></code></li>
+<li><code><a title="secfsdstools.c_download.secdownloading_process.SecDownloadingProcess.table_re" href="#secfsdstools.c_download.secdownloading_process.SecDownloadingProcess.table_re">table_re</a></code></li>
+</ul>
 </li>
 </ul>
 </li>

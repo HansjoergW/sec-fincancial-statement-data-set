@@ -40,8 +40,8 @@ Functions:
 
 - [x] colum fy_real is created and saved for daily sub_df
   
-- [] update documents
-   [] update readme
+- [x] update documents
+   [x] update readme / Changelog
    [x] new notebook for daily
 
 - [x] load subdata of last report -> ensure it always comes from the quartery zip files

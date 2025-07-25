@@ -10,45 +10,21 @@ new release
     - adapt index
 - adapt releases in project.toml
 - merge back into main
-- set tag and push tag (format vx.x.x)
+- set tag and push tag (format vx.x.x) (git push --tags)
 - on github -> under code releases: draft new release
 
+2.4.1
+-----
+[] update secdaily to 0.2.2 (more robustness / prevent name clashes)
+   [] check for daily data cleanup if needed by secdaily
 
-2.4.0 daily updates
-Problems:
--[x] pylint config problems
-
-- [x] eigenes dlddaily Verzeichnis
-  - [x] config anpassen für default dlddaily
-  - [x] bereits vorhandene struktur verschieben
-  - [x] datenbank anpassen
+2.4.2
+-----
+[] support daily data in example automation pipelines
 
 
-Functions:
-- [x] daily processing integration
-     [x] clear index tables (for last zip quarter and before quarters)
-     [x] clear daily parquet files (for last zip quarter and before quarters)
-     [x] calculate start quarter
-     [x] download and process daily files
-     [x] transform new daily files to parquet
-     [x] index new daily files
-     [x] configuration daily processing -> enable
-- [x] Testing daily integration
-     [x] test different collectors with daily
-     [x] test notebooks for daily reports -> zieht in übersicht nur quarter.
-- [x] new features info message
 
-- [x] colum fy_real is created and saved for daily sub_df
-  
-- [x] update documents
-   [x] update readme / Changelog
-   [x] new notebook for daily
 
-- [x] load subdata of last report -> ensure it always comes from the quartery zip files
-
-- [x] integrate new version secdaily 0.2.1
-
-- ensure docs deploy is working when released
 
 ----------------------------------
 - first only as additional pipeline steps, not integrated in db?
@@ -56,11 +32,9 @@ Functions:
 
 - adding more steps to automation
 
-
 spenden via paypal: Bsp:
 https://pypi.org/project/colorama/ -> Projekt mit Spenden-Button
 https://www.paypal.com/donate/?cmd=_donations&business=2MZ9D2GMLYCUJ&item_name=Colorama&currency_code=USD -> Präsentation
-
 
 
 ----------
@@ -133,7 +107,6 @@ next:
 
 later
 -build timeline for company
--correct quarter naming -> was meine ich damit?
 -db-version for updates
 
 
@@ -158,6 +131,44 @@ look at
 
 History
 -------
+2.4.0 daily updates
+Problems:
+-[x] pylint config problems
+
+- [x] eigenes dlddaily Verzeichnis
+  - [x] config anpassen für default dlddaily
+  - [x] bereits vorhandene struktur verschieben
+  - [x] datenbank anpassen
+
+
+Functions:
+- [x] daily processing integration
+     [x] clear index tables (for last zip quarter and before quarters)
+     [x] clear daily parquet files (for last zip quarter and before quarters)
+     [x] calculate start quarter
+     [x] download and process daily files
+     [x] transform new daily files to parquet
+     [x] index new daily files
+     [x] configuration daily processing -> enable
+- [x] Testing daily integration
+     [x] test different collectors with daily
+     [x] test notebooks for daily reports -> zieht in übersicht nur quarter.
+- [x] new features info message
+
+- [x] colum fy_real is created and saved for daily sub_df
+  
+- [x] update documents
+   [x] update readme / Changelog
+   [x] new notebook for daily
+
+- [x] load subdata of last report -> ensure it always comes from the quartery zip files
+
+- [x] integrate new version secdaily 0.2.1
+
+- ensure docs deploy is working when released
+
+
+
 2.3.0 - maintenance release
 - switch to vs code
   - [x] pyproject toml like secdaily

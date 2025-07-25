@@ -1,0 +1,11 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Debug Current File",
+            "type": "python",
+            "request": "test",
+            "justMyCode": false,
+        }
+    ]
+}

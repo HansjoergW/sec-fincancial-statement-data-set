@@ -10,6 +10,8 @@ from pathlib import Path
 from typing import Dict
 
 from secdaily._00_common.BaseDefinitions import QuarterInfo
+from secdaily._00_common.db.StateAccess import StateAccess
+from secdaily._00_common.MigrationProcessing import MigrationProcessor
 from secdaily.SecDaily import Configuration, SecDailyOrchestrator
 
 from secfsdstools.c_automation.task_framework import AbstractProcess
@@ -96,6 +98,24 @@ class DailyPreparationProcess(AbstractProcess):
                 if dir_path.is_dir() and dir_path.name < cut_off_file_name:
                     shutil.rmtree(dir_path)
 
+    def check_for_daily_cleanup(self) -> bool:
+        """
+        check if the daily processing needs to be cleaned up.
+        directly executes the cleanup if necessary for all the data that is managed by secdaily.
+        """
+
+        state_access = StateAccess(work_dir=self.daily_dir)
+        migration_processor = MigrationProcessor(dbmanager=state_access)
+
+        if migration_processor.is_migration_required():
+            migration_processor.execute_migration(self.config)
+
+            # Update the last run version after successful completion
+            migration_processor.update_last_run_version()
+            return True
+
+        return False
+
     def download_daily_files(self, daily_start_quarter: QuarterInfo):
         """
         Download daily SEC filing files.
@@ -133,10 +153,18 @@ class DailyPreparationProcess(AbstractProcess):
 
         last_processed_quarter = last_processed_quarter_file_name.split(".")[0]
 
-        daily_start_quarter = self._calculate_daily_start_quarter(last_processed_quarter)
+        last_processed_quarter: str
+        # check if the daily data has te be cleaned up because of a breaking change in secdaily
+        if self.check_for_daily_cleanup():
+            # if so, we just use a "quarter" that is far in the future to ensure everything is cleared in secfsdstools as well
+            daily_last_processed_quarter = "3000q1"
+        else:
+            daily_last_processed_quarter = last_processed_quarter
+
+        daily_start_quarter = self._calculate_daily_start_quarter(daily_last_processed_quarter)
         cut_off_day = self._cut_off_day(daily_start_quarter)
 
-        LOGGER.info("clearing index tables and daily parquet files before cut off: %s", cut_off_day)
+        LOGGER.info("clearing daily index tables and daily parquet files before cut off: %s", cut_off_day)
         self.clear_index_tables(cut_off_day=cut_off_day)
         self.clear_daily_parquet_files(cut_off_day=cut_off_day)
 

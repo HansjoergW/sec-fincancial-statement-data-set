@@ -43,6 +43,8 @@ from pathlib import Path
 from typing import Dict
 
 from secdaily._00_common.BaseDefinitions import QuarterInfo
+from secdaily._00_common.db.StateAccess import StateAccess
+from secdaily._00_common.MigrationProcessing import MigrationProcessor
 from secdaily.SecDaily import Configuration, SecDailyOrchestrator
 
 from secfsdstools.c_automation.task_framework import AbstractProcess
@@ -129,6 +131,24 @@ class DailyPreparationProcess(AbstractProcess):
                 if dir_path.is_dir() and dir_path.name &lt; cut_off_file_name:
                     shutil.rmtree(dir_path)
 
+    def check_for_daily_cleanup(self) -&gt; bool:
+        &#34;&#34;&#34;
+        check if the daily processing needs to be cleaned up.
+        directly executes the cleanup if necessary for all the data that is managed by secdaily.
+        &#34;&#34;&#34;
+
+        state_access = StateAccess(work_dir=self.daily_dir)
+        migration_processor = MigrationProcessor(dbmanager=state_access)
+
+        if migration_processor.is_migration_required():
+            migration_processor.execute_migration(self.config)
+
+            # Update the last run version after successful completion
+            migration_processor.update_last_run_version()
+            return True
+
+        return False
+
     def download_daily_files(self, daily_start_quarter: QuarterInfo):
         &#34;&#34;&#34;
         Download daily SEC filing files.
@@ -166,10 +186,19 @@ class DailyPreparationProcess(AbstractProcess):
 
         last_processed_quarter = last_processed_quarter_file_name.split(&#34;.&#34;)[0]
 
-        daily_start_quarter = self._calculate_daily_start_quarter(last_processed_quarter)
+        last_processed_quarter: str
+        # check if the daily data has te be cleaned up because of a breaking change in secdaily
+        if self.check_for_daily_cleanup():
+            # if so, we just use a &#34;quarter&#34; that is far in the future to
+            # ensure everything is cleared in secfsdstools as well
+            daily_last_processed_quarter = &#34;3000q1&#34;
+        else:
+            daily_last_processed_quarter = last_processed_quarter
+
+        daily_start_quarter = self._calculate_daily_start_quarter(daily_last_processed_quarter)
         cut_off_day = self._cut_off_day(daily_start_quarter)
 
-        LOGGER.info(&#34;clearing index tables and daily parquet files before cut off: %s&#34;, cut_off_day)
+        LOGGER.info(&#34;clearing daily index tables and daily parquet files before cut off: %s&#34;, cut_off_day)
         self.clear_index_tables(cut_off_day=cut_off_day)
         self.clear_daily_parquet_files(cut_off_day=cut_off_day)
 
@@ -278,6 +307,24 @@ process the daily files.</p></div>
                 if dir_path.is_dir() and dir_path.name &lt; cut_off_file_name:
                     shutil.rmtree(dir_path)
 
+    def check_for_daily_cleanup(self) -&gt; bool:
+        &#34;&#34;&#34;
+        check if the daily processing needs to be cleaned up.
+        directly executes the cleanup if necessary for all the data that is managed by secdaily.
+        &#34;&#34;&#34;
+
+        state_access = StateAccess(work_dir=self.daily_dir)
+        migration_processor = MigrationProcessor(dbmanager=state_access)
+
+        if migration_processor.is_migration_required():
+            migration_processor.execute_migration(self.config)
+
+            # Update the last run version after successful completion
+            migration_processor.update_last_run_version()
+            return True
+
+        return False
+
     def download_daily_files(self, daily_start_quarter: QuarterInfo):
         &#34;&#34;&#34;
         Download daily SEC filing files.
@@ -315,10 +362,19 @@ process the daily files.</p></div>
 
         last_processed_quarter = last_processed_quarter_file_name.split(&#34;.&#34;)[0]
 
-        daily_start_quarter = self._calculate_daily_start_quarter(last_processed_quarter)
+        last_processed_quarter: str
+        # check if the daily data has te be cleaned up because of a breaking change in secdaily
+        if self.check_for_daily_cleanup():
+            # if so, we just use a &#34;quarter&#34; that is far in the future to
+            # ensure everything is cleared in secfsdstools as well
+            daily_last_processed_quarter = &#34;3000q1&#34;
+        else:
+            daily_last_processed_quarter = last_processed_quarter
+
+        daily_start_quarter = self._calculate_daily_start_quarter(daily_last_processed_quarter)
         cut_off_day = self._cut_off_day(daily_start_quarter)
 
-        LOGGER.info(&#34;clearing index tables and daily parquet files before cut off: %s&#34;, cut_off_day)
+        LOGGER.info(&#34;clearing daily index tables and daily parquet files before cut off: %s&#34;, cut_off_day)
         self.clear_index_tables(cut_off_day=cut_off_day)
         self.clear_daily_parquet_files(cut_off_day=cut_off_day)
 
@@ -332,6 +388,35 @@ process the daily files.</p></div>
 </ul>
 <h3>Methods</h3>
 <dl>
+<dt id="secfsdstools.c_daily.dailypreparation_process.DailyPreparationProcess.check_for_daily_cleanup"><code class="name flex">
+<span>def <span class="ident">check_for_daily_cleanup</span></span>(<span>self) ‑> bool</span>
+</code></dt>
+<dd>
+<div class="desc"><p>check if the daily processing needs to be cleaned up.
+directly executes the cleanup if necessary for all the data that is managed by secdaily.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def check_for_daily_cleanup(self) -&gt; bool:
+    &#34;&#34;&#34;
+    check if the daily processing needs to be cleaned up.
+    directly executes the cleanup if necessary for all the data that is managed by secdaily.
+    &#34;&#34;&#34;
+
+    state_access = StateAccess(work_dir=self.daily_dir)
+    migration_processor = MigrationProcessor(dbmanager=state_access)
+
+    if migration_processor.is_migration_required():
+        migration_processor.execute_migration(self.config)
+
+        # Update the last run version after successful completion
+        migration_processor.update_last_run_version()
+        return True
+
+    return False</code></pre>
+</details>
+</dd>
 <dt id="secfsdstools.c_daily.dailypreparation_process.DailyPreparationProcess.clear_daily_parquet_files"><code class="name flex">
 <span>def <span class="ident">clear_daily_parquet_files</span></span>(<span>self, cut_off_day: int)</span>
 </code></dt>
@@ -449,10 +534,19 @@ daily_start_quarter.</p></div>
 
     last_processed_quarter = last_processed_quarter_file_name.split(&#34;.&#34;)[0]
 
-    daily_start_quarter = self._calculate_daily_start_quarter(last_processed_quarter)
+    last_processed_quarter: str
+    # check if the daily data has te be cleaned up because of a breaking change in secdaily
+    if self.check_for_daily_cleanup():
+        # if so, we just use a &#34;quarter&#34; that is far in the future to
+        # ensure everything is cleared in secfsdstools as well
+        daily_last_processed_quarter = &#34;3000q1&#34;
+    else:
+        daily_last_processed_quarter = last_processed_quarter
+
+    daily_start_quarter = self._calculate_daily_start_quarter(daily_last_processed_quarter)
     cut_off_day = self._cut_off_day(daily_start_quarter)
 
-    LOGGER.info(&#34;clearing index tables and daily parquet files before cut off: %s&#34;, cut_off_day)
+    LOGGER.info(&#34;clearing daily index tables and daily parquet files before cut off: %s&#34;, cut_off_day)
     self.clear_index_tables(cut_off_day=cut_off_day)
     self.clear_daily_parquet_files(cut_off_day=cut_off_day)
 
@@ -481,6 +575,7 @@ daily_start_quarter.</p></div>
 <li>
 <h4><code><a title="secfsdstools.c_daily.dailypreparation_process.DailyPreparationProcess" href="#secfsdstools.c_daily.dailypreparation_process.DailyPreparationProcess">DailyPreparationProcess</a></code></h4>
 <ul class="">
+<li><code><a title="secfsdstools.c_daily.dailypreparation_process.DailyPreparationProcess.check_for_daily_cleanup" href="#secfsdstools.c_daily.dailypreparation_process.DailyPreparationProcess.check_for_daily_cleanup">check_for_daily_cleanup</a></code></li>
 <li><code><a title="secfsdstools.c_daily.dailypreparation_process.DailyPreparationProcess.clear_daily_parquet_files" href="#secfsdstools.c_daily.dailypreparation_process.DailyPreparationProcess.clear_daily_parquet_files">clear_daily_parquet_files</a></code></li>
 <li><code><a title="secfsdstools.c_daily.dailypreparation_process.DailyPreparationProcess.clear_index_tables" href="#secfsdstools.c_daily.dailypreparation_process.DailyPreparationProcess.clear_index_tables">clear_index_tables</a></code></li>
 <li><code><a title="secfsdstools.c_daily.dailypreparation_process.DailyPreparationProcess.download_daily_files" href="#secfsdstools.c_daily.dailypreparation_process.DailyPreparationProcess.download_daily_files">download_daily_files</a></code></li>

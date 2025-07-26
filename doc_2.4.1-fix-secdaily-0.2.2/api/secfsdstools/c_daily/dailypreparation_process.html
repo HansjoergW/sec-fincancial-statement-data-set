@@ -189,7 +189,8 @@ class DailyPreparationProcess(AbstractProcess):
         last_processed_quarter: str
         # check if the daily data has te be cleaned up because of a breaking change in secdaily
         if self.check_for_daily_cleanup():
-            # if so, we just use a &#34;quarter&#34; that is far in the future to ensure everything is cleared in secfsdstools as well
+            # if so, we just use a &#34;quarter&#34; that is far in the future to
+            # ensure everything is cleared in secfsdstools as well
             daily_last_processed_quarter = &#34;3000q1&#34;
         else:
             daily_last_processed_quarter = last_processed_quarter
@@ -364,7 +365,8 @@ process the daily files.</p></div>
         last_processed_quarter: str
         # check if the daily data has te be cleaned up because of a breaking change in secdaily
         if self.check_for_daily_cleanup():
-            # if so, we just use a &#34;quarter&#34; that is far in the future to ensure everything is cleared in secfsdstools as well
+            # if so, we just use a &#34;quarter&#34; that is far in the future to
+            # ensure everything is cleared in secfsdstools as well
             daily_last_processed_quarter = &#34;3000q1&#34;
         else:
             daily_last_processed_quarter = last_processed_quarter
@@ -535,7 +537,8 @@ daily_start_quarter.</p></div>
     last_processed_quarter: str
     # check if the daily data has te be cleaned up because of a breaking change in secdaily
     if self.check_for_daily_cleanup():
-        # if so, we just use a &#34;quarter&#34; that is far in the future to ensure everything is cleared in secfsdstools as well
+        # if so, we just use a &#34;quarter&#34; that is far in the future to
+        # ensure everything is cleared in secfsdstools as well
         daily_last_processed_quarter = &#34;3000q1&#34;
     else:
         daily_last_processed_quarter = last_processed_quarter

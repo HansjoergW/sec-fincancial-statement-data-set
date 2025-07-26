@@ -3,9 +3,31 @@
     "configurations": [
         {
             "name": "Debug Current File",
-            "type": "python",
-            "request": "test",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${file}",
             "justMyCode": false,
+            "console": "integratedTerminal"
+        },
+        {
+            "name": "Run Tests with pytest",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "pytest",
+            "args": [
+                "tests/",
+                "-v"
+            ],
+            "justMyCode": false,
+            "console": "integratedTerminal"
+        },
+        {
+            "name": "Run Example Script",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/sandbox/presenter.py",
+            "justMyCode": false,
+            "console": "integratedTerminal"
         }
     ]
 }

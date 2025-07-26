@@ -2,21 +2,25 @@ todos
 ------
 
 new release
-- adapt readme
+- adapt readme / changelog
 - adapt notebooks
 - adapt "new features" info
-- in gitpages branch
-    - adapt release notes
-    - adapt index
 - adapt releases in project.toml
 - merge back into main
 - set tag and push tag (format vx.x.x) (git push --tags)
+
+- in gitpages branch
+    - adapt release notes
+    - adapt index
+
 - on github -> under code releases: draft new release
 
 2.4.1
 -----
-[] update secdaily to 0.2.2 (more robustness / prevent name clashes)
-   [] check for daily data cleanup if needed by secdaily
+[x] update secdaily to 0.2.2 (more robustness / prevent name clashes)
+   [x] check for daily data cleanup if needed by secdaily
+
+
 
 2.4.2
 -----

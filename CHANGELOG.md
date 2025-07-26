@@ -3,7 +3,12 @@
 See the [Release Notes](https://hansjoergw.github.io/sec-fincancial-statement-data-set/releasenotes/) for details.
 
 
-## 2.2.3 -> 2.2.4
+## 2.3.4 -> 2.4.1
+* Fixes
+  * update to secdaily 0.2.2 (more robustness / prevent name clashes)
+  * check for daily data cleanup if needed by secdaily
+
+## 2.3.0 -> 2.4.0
 * New (Experimental)
   * Integration of [secdaily](https://github.com/HansjoergW/sec-financial-statement-data-set-daily-processing) to provide daily report updates. (Experimental)
     * You have to turn on this feature by adding `dailyprocessing = True` in the `DEFAULT` section of the configuration file.

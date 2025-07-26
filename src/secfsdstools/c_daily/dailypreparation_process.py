@@ -156,7 +156,8 @@ class DailyPreparationProcess(AbstractProcess):
         last_processed_quarter: str
         # check if the daily data has te be cleaned up because of a breaking change in secdaily
         if self.check_for_daily_cleanup():
-            # if so, we just use a "quarter" that is far in the future to ensure everything is cleared in secfsdstools as well
+            # if so, we just use a "quarter" that is far in the future to
+            # ensure everything is cleared in secfsdstools as well
             daily_last_processed_quarter = "3000q1"
         else:
             daily_last_processed_quarter = last_processed_quarter

@@ -3,7 +3,7 @@
 See the [Release Notes](https://hansjoergw.github.io/sec-fincancial-statement-data-set/releasenotes/) for details.
 
 
-## 2.3.4 -> 2.4.1
+## 2.4.0 -> 2.4.1
 * Fixes
   * update to secdaily 0.2.2 (more robustness / prevent name clashes)
   * check for daily data cleanup if needed by secdaily

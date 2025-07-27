@@ -1,3 +1,7 @@
+---
+type: "agent_requested"
+description: "Guidelines on how to write tests"
+---
 # Test Guidelines
 
 ## Framework and Structure

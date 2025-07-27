@@ -15,12 +15,6 @@ new release
 
 - on github -> under code releases: draft new release
 
-2.4.1
------
-[x] update secdaily to 0.2.2 (more robustness / prevent name clashes)
-   [x] check for daily data cleanup if needed by secdaily
-
-
 
 2.4.2
 -----
@@ -135,6 +129,12 @@ look at
 
 History
 -------
+2.4.1
+-----
+[x] update secdaily to 0.2.2 (more robustness / prevent name clashes)
+   [x] check for daily data cleanup if needed by secdaily
+
+
 2.4.0 daily updates
 Problems:
 -[x] pylint config problems

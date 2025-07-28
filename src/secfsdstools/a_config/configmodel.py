@@ -38,3 +38,13 @@ class Configuration:
             the configuration as a dictionary
         """
         return dict(asdict(self))
+
+    def get_parser(self) -> configparser.ConfigParser:
+        """
+        returns the configuration as a configparser
+        Returns:
+            the configuration as a configparser
+        """
+        if self.config_parser is None:
+            raise ValueError("config_parser is not set")
+        return self.config_parser

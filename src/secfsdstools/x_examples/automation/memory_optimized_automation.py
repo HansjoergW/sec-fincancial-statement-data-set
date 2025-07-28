@@ -12,7 +12,7 @@ If you update the configuration as defined below, you will get the following dat
 - a single filtered and joined bag containing the data from all available zip files.
 - single standardized bags for BS, IS, CF containing the data from all available zip files.
 
-Moreover, these file will be automatically updated as soon as a new zip file becomes available
+Moreover, these files will be automatically updated as soon as a new zip file becomes available
 at the SEC website.
 
 You can configure this function in the secfsdstools configuration file, by adding
@@ -44,11 +44,12 @@ standardized_by_stmt_dir = C:/data/sec/automated/_1_by_quarter/_2_standardized_b
 concat_joined_by_stmt_dir = C:/data/sec/automated/_2_all/_1_joined_by_stmt
 concat_joined_all_dir = C:/data/sec/automated/_2_all/_2_joined
 concat_standardized_by_stmt_dir = C:/data/sec/automated/_2_all/_3_standardized_by_stmt
+</pre>
 
 (A complete configuration file using the "define_extra_processes" function is available in the file
- memory_optimized_automation_config.cfg which is in the same package as this module here.)
+ memory_optimized_daily_automation_config.cfg which is in the same package as this module here.)
 
-This example adds 5 main steps to the usual updated process.
+This example adds 5 main steps to the usual update process.
 
 First, it creates a joined bag for every zip file, filters it for 10-K and 10-Q reports only
 and also applies the filters  ReportPeriodRawFilter, MainCoregRawFilter, USDOnlyRawFilter,
@@ -120,77 +121,73 @@ def define_extra_processes(configuration: Configuration) -> List[AbstractProcess
 
     """
 
-    filtered_joined_by_stmt_dir = configuration.config_parser.get(
-        section="Filter",
-        option="filtered_joined_by_stmt_dir")
+    filtered_joined_by_stmt_dir = configuration.get_parser().get(section="Filter", option="filtered_joined_by_stmt_dir")
 
-    filter_parallelize = configuration.config_parser.get(
-        section="Filter",
-        option="parallelize",
-        fallback=True
+    filter_parallelize = configuration.get_parser().get(section="Filter", option="parallelize", fallback=True)
+
+    standardized_by_stmt_dir = configuration.get_parser().get(section="Standardizer", option="standardized_by_stmt_dir")
+
+    concat_joined_by_stmt_dir = configuration.get_parser().get(section="Concat", option="concat_joined_by_stmt_dir")
+
+    concat_joined_all_dir = configuration.get_parser().get(section="Concat", option="concat_joined_all_dir")
+
+    concat_standardized_by_stmt_dir = configuration.get_parser().get(
+        section="Concat", option="concat_standardized_by_stmt_dir"
     )
-
-    standardized_by_stmt_dir = configuration.config_parser.get(
-        section="Standardizer",
-        option="standardized_by_stmt_dir")
-
-    concat_joined_by_stmt_dir = configuration.config_parser.get(
-        section="Concat",
-        option="concat_joined_by_stmt_dir")
-
-    concat_joined_all_dir = configuration.config_parser.get(
-        section="Concat",
-        option="concat_joined_all_dir")
-
-    concat_standardized_by_stmt_dir = configuration.config_parser.get(
-        section="Concat",
-        option="concat_standardized_by_stmt_dir")
 
     processes: List[AbstractProcess] = []
 
     processes.append(
         # 1. Filter, join, and save by stmt
-        FilterProcess(db_dir=configuration.db_dir,
-                      target_dir=filtered_joined_by_stmt_dir,
-                      bag_type="joined",
-                      save_by_stmt=True,
-                      execute_serial=not filter_parallelize
-                      )
+        FilterProcess(
+            db_dir=configuration.db_dir,
+            target_dir=filtered_joined_by_stmt_dir,
+            bag_type="joined",
+            save_by_stmt=True,
+            execute_serial=not filter_parallelize,
+        )
     )
 
     processes.append(
         # 2. Standardize the data for every quarter
-        StandardizeProcess(root_dir=f"{filtered_joined_by_stmt_dir}/quarter",
-                           target_dir=standardized_by_stmt_dir),
+        StandardizeProcess(root_dir=f"{filtered_joined_by_stmt_dir}/quarter", target_dir=standardized_by_stmt_dir),
     )
 
-    processes.extend([
-        # 3. building datasets with all entries by stmt
-        ConcatByNewSubfoldersProcess(root_dir=f"{filtered_joined_by_stmt_dir}/quarter",
-                                     target_dir=f"{concat_joined_by_stmt_dir}/BS",
-                                     pathfilter="*/BS"
-                                     ),
-        ConcatByNewSubfoldersProcess(root_dir=f"{filtered_joined_by_stmt_dir}/quarter",
-                                     target_dir=f"{concat_joined_by_stmt_dir}/CF",
-                                     pathfilter="*/CF"
-                                     ),
-        ConcatByNewSubfoldersProcess(root_dir=f"{filtered_joined_by_stmt_dir}/quarter",
-                                     target_dir=f"{concat_joined_by_stmt_dir}/CI",
-                                     pathfilter="*/CI"
-                                     ),
-        ConcatByNewSubfoldersProcess(root_dir=f"{filtered_joined_by_stmt_dir}/quarter",
-                                     target_dir=f"{concat_joined_by_stmt_dir}/CP",
-                                     pathfilter="*/CP"
-                                     ),
-        ConcatByNewSubfoldersProcess(root_dir=f"{filtered_joined_by_stmt_dir}/quarter",
-                                     target_dir=f"{concat_joined_by_stmt_dir}/EQ",
-                                     pathfilter="*/EQ"
-                                     ),
-        ConcatByNewSubfoldersProcess(root_dir=f"{filtered_joined_by_stmt_dir}/quarter",
-                                     target_dir=f"{concat_joined_by_stmt_dir}/IS",
-                                     pathfilter="*/IS"
-                                     )
-    ])
+    processes.extend(
+        [
+            # 3. building datasets with all entries by stmt
+            ConcatByNewSubfoldersProcess(
+                root_dir=f"{filtered_joined_by_stmt_dir}/quarter",
+                target_dir=f"{concat_joined_by_stmt_dir}/BS",
+                pathfilter="*/BS",
+            ),
+            ConcatByNewSubfoldersProcess(
+                root_dir=f"{filtered_joined_by_stmt_dir}/quarter",
+                target_dir=f"{concat_joined_by_stmt_dir}/CF",
+                pathfilter="*/CF",
+            ),
+            ConcatByNewSubfoldersProcess(
+                root_dir=f"{filtered_joined_by_stmt_dir}/quarter",
+                target_dir=f"{concat_joined_by_stmt_dir}/CI",
+                pathfilter="*/CI",
+            ),
+            ConcatByNewSubfoldersProcess(
+                root_dir=f"{filtered_joined_by_stmt_dir}/quarter",
+                target_dir=f"{concat_joined_by_stmt_dir}/CP",
+                pathfilter="*/CP",
+            ),
+            ConcatByNewSubfoldersProcess(
+                root_dir=f"{filtered_joined_by_stmt_dir}/quarter",
+                target_dir=f"{concat_joined_by_stmt_dir}/EQ",
+                pathfilter="*/EQ",
+            ),
+            ConcatByNewSubfoldersProcess(
+                root_dir=f"{filtered_joined_by_stmt_dir}/quarter",
+                target_dir=f"{concat_joined_by_stmt_dir}/IS",
+                pathfilter="*/IS",
+            ),
+        ]
+    )
 
     # 4. create a single joined bag with all the data filtered and joined
     processes.append(
@@ -200,24 +197,28 @@ def define_extra_processes(configuration: Configuration) -> List[AbstractProcess
         )
     )
 
-    processes.extend([
-
-        # 5. concate the standardized bags together by stmt (BS, IS, CF).
-        ConcatByNewSubfoldersProcess(root_dir=standardized_by_stmt_dir,
-                                     target_dir=f"{concat_standardized_by_stmt_dir}/BS",
-                                     pathfilter="*/BS",
-                                     in_memory=True # Standardized Bag only work with in_memory
-                                     ),
-        ConcatByNewSubfoldersProcess(root_dir=standardized_by_stmt_dir,
-                                     target_dir=f"{concat_standardized_by_stmt_dir}/CF",
-                                     pathfilter="*/CF",
-                                     in_memory=True # Standardized Bag only work with in_memory
-                                     ),
-        ConcatByNewSubfoldersProcess(root_dir=standardized_by_stmt_dir,
-                                     target_dir=f"{concat_standardized_by_stmt_dir}/IS",
-                                     pathfilter="*/IS",
-                                     in_memory=True # Standardized Bag only work with in_memory
-                                     )
-    ])
+    processes.extend(
+        [
+            # 5. concate the standardized bags together by stmt (BS, IS, CF).
+            ConcatByNewSubfoldersProcess(
+                root_dir=standardized_by_stmt_dir,
+                target_dir=f"{concat_standardized_by_stmt_dir}/BS",
+                pathfilter="*/BS",
+                in_memory=True,  # Standardized Bag only work with in_memory
+            ),
+            ConcatByNewSubfoldersProcess(
+                root_dir=standardized_by_stmt_dir,
+                target_dir=f"{concat_standardized_by_stmt_dir}/CF",
+                pathfilter="*/CF",
+                in_memory=True,  # Standardized Bag only work with in_memory
+            ),
+            ConcatByNewSubfoldersProcess(
+                root_dir=standardized_by_stmt_dir,
+                target_dir=f"{concat_standardized_by_stmt_dir}/IS",
+                pathfilter="*/IS",
+                in_memory=True,  # Standardized Bag only work with in_memory
+            ),
+        ]
+    )
 
     return processes

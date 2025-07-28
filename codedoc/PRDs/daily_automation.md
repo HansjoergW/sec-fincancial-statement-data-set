@@ -30,14 +30,19 @@ General Flow
 Daily Data Automation Processing steps
 --------------------------------------
 1. check and clear daily data if necessary. do this by quarter
-2. generate the filtered daily datasets per quarter and per statement.
-   this means, if there are new daily data for a "daily data only quarters", then the daily data is being added to that  quarterly data bag, or the whole bag has to be completly recreated.
-3. standardize the "daily data only quarters". Again, if there are new daily data for a quarter, the standardize bag has to be recreated.
-4. create the "_3_all/_1_joined_by_stmt" dataset by concatenating the "daily data only" and the quarterly data.
-5. create the "_3_all/_2_joined" dataset by concatenating all the data from step 4.
-6. create the "_3_all/_3_standardized_by_stmt" dataset by concatenating the standardized "daily data only" and the quarterly data. 
+  1. filtered and joined by date
+  2. standardized by date
+  3. all -> wahrscheinlich alles neu bei Änderung? 
+2. generate the filtered daily datasets per day and per statement.
+3. standardize the daily data per statement
+4. 
+5. create the "_3_all/_1_joined_by_stmt" dataset by concatenating the "daily data only" and the quarterly data.
+6. create the "_3_all/_2_joined" dataset by concatenating all the data from step 4.
+7. create the "_3_all/_3_standardized_by_stmt" dataset by concatenating the standardized "daily data only" and the quarterly data. 
 
 
 Created Code
+------------
+
 
 

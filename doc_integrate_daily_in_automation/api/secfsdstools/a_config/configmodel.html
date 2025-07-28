@@ -66,7 +66,17 @@ class Configuration:
         Returns:
             the configuration as a dictionary
         &#34;&#34;&#34;
-        return dict(asdict(self))</code></pre>
+        return dict(asdict(self))
+
+    def get_parser(self) -&gt; configparser.ConfigParser:
+        &#34;&#34;&#34;
+        returns the configuration as a configparser
+        Returns:
+            the configuration as a configparser
+        &#34;&#34;&#34;
+        if self.config_parser is None:
+            raise ValueError(&#34;config_parser is not set&#34;)
+        return self.config_parser</code></pre>
 </details>
 </section>
 <section>
@@ -117,7 +127,17 @@ class Configuration:
         Returns:
             the configuration as a dictionary
         &#34;&#34;&#34;
-        return dict(asdict(self))</code></pre>
+        return dict(asdict(self))
+
+    def get_parser(self) -&gt; configparser.ConfigParser:
+        &#34;&#34;&#34;
+        returns the configuration as a configparser
+        Returns:
+            the configuration as a configparser
+        &#34;&#34;&#34;
+        if self.config_parser is None:
+            raise ValueError(&#34;config_parser is not set&#34;)
+        return self.config_parser</code></pre>
 </details>
 <h3>Class variables</h3>
 <dl>
@@ -192,6 +212,28 @@ class Configuration:
     return dict(asdict(self))</code></pre>
 </details>
 </dd>
+<dt id="secfsdstools.a_config.configmodel.Configuration.get_parser"><code class="name flex">
+<span>def <span class="ident">get_parser</span></span>(<span>self) ‑> configparser.ConfigParser</span>
+</code></dt>
+<dd>
+<div class="desc"><p>returns the configuration as a configparser</p>
+<h2 id="returns">Returns</h2>
+<p>the configuration as a configparser</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_parser(self) -&gt; configparser.ConfigParser:
+    &#34;&#34;&#34;
+    returns the configuration as a configparser
+    Returns:
+        the configuration as a configparser
+    &#34;&#34;&#34;
+    if self.config_parser is None:
+        raise ValueError(&#34;config_parser is not set&#34;)
+    return self.config_parser</code></pre>
+</details>
+</dd>
 </dl>
 </dd>
 </dl>
@@ -220,6 +262,7 @@ class Configuration:
 <li><code><a title="secfsdstools.a_config.configmodel.Configuration.db_dir" href="#secfsdstools.a_config.configmodel.Configuration.db_dir">db_dir</a></code></li>
 <li><code><a title="secfsdstools.a_config.configmodel.Configuration.download_dir" href="#secfsdstools.a_config.configmodel.Configuration.download_dir">download_dir</a></code></li>
 <li><code><a title="secfsdstools.a_config.configmodel.Configuration.get_dict" href="#secfsdstools.a_config.configmodel.Configuration.get_dict">get_dict</a></code></li>
+<li><code><a title="secfsdstools.a_config.configmodel.Configuration.get_parser" href="#secfsdstools.a_config.configmodel.Configuration.get_parser">get_parser</a></code></li>
 <li><code><a title="secfsdstools.a_config.configmodel.Configuration.keep_zip_files" href="#secfsdstools.a_config.configmodel.Configuration.keep_zip_files">keep_zip_files</a></code></li>
 <li><code><a title="secfsdstools.a_config.configmodel.Configuration.no_parallel_processing" href="#secfsdstools.a_config.configmodel.Configuration.no_parallel_processing">no_parallel_processing</a></code></li>
 <li><code><a title="secfsdstools.a_config.configmodel.Configuration.parquet_dir" href="#secfsdstools.a_config.configmodel.Configuration.parquet_dir">parquet_dir</a></code></li>

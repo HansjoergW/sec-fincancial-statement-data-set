@@ -116,8 +116,12 @@ class AbstractTask:
         self.filter = pathfilter
 
         self.filtered_paths: List[Path] = []
-        for root_path in root_paths:
-            self.filtered_paths.extend(list(root_path.glob(self.filter)))
+
+        if self.filter is None or self.filter == "":
+            self.filtered_paths.extend(self.root_paths)
+        else:
+            for root_path in root_paths:
+                self.filtered_paths.extend(list(root_path.glob(self.filter)))
 
         # usually, all filtered_paths have to be processed
         self.paths_to_process: List[Path] = self.filtered_paths

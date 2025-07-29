@@ -120,7 +120,11 @@ from typing import List
 
 from secfsdstools.a_config.configmodel import Configuration
 from secfsdstools.c_automation.task_framework import AbstractProcess
-from secfsdstools.g_pipelines.concat_process import ConcatByChangedTimestampProcess, ConcatByNewSubfoldersProcess
+from secfsdstools.g_pipelines.concat_process import (
+    ConcatByChangedTimestampProcess,
+    ConcatByNewSubfoldersProcess,
+    ConcatMultiRootByChangedTimestampProcess,
+)
 from secfsdstools.g_pipelines.filter_process import FilterProcess
 from secfsdstools.g_pipelines.standardize_process import StandardizeProcess
 
@@ -187,6 +191,16 @@ def define_extra_processes(configuration: Configuration) -> List[AbstractProcess
     )
     concat_daily_standardized_by_stmt_dir = configuration.get_parser().get(
         section="Concat", option="concat_daily_standardized_by_stmt_dir"
+    )
+
+    concat_all_joined_by_stmt_dir = configuration.get_parser().get(
+        section="Concat", option="concat_all_joined_by_stmt_dir"
+    )
+
+    concat_all_joined_dir = configuration.get_parser().get(section="Concat", option="concat_all_joined_dir")
+
+    concat_all_standardized_by_stmt_dir = configuration.get_parser().get(
+        section="Concat", option="concat_all_standardized_by_stmt_dir"
     )
 
     processes: List[AbstractProcess] = []
@@ -370,4 +384,74 @@ def define_extra_processes(configuration: Configuration) -> List[AbstractProcess
         ]
     )
 
+    # Concat daily and quarter together
+
+    # 1. concat joined_by_statement
+    processes.extend(
+        [
+            ConcatMultiRootByChangedTimestampProcess(
+                root_dirs=[concat_quarterly_joined_by_stmt_dir, concat_daily_joined_by_stmt_dir],
+                target_dir=f"{concat_all_joined_by_stmt_dir}/BS",
+                pathfilter="BS",
+            ),
+            ConcatMultiRootByChangedTimestampProcess(
+                root_dirs=[concat_quarterly_joined_by_stmt_dir, concat_daily_joined_by_stmt_dir],
+                target_dir=f"{concat_all_joined_by_stmt_dir}/CF",
+                pathfilter="CF",
+            ),
+            ConcatMultiRootByChangedTimestampProcess(
+                root_dirs=[concat_quarterly_joined_by_stmt_dir, concat_daily_joined_by_stmt_dir],
+                target_dir=f"{concat_all_joined_by_stmt_dir}/CI",
+                pathfilter="CI",
+            ),
+            ConcatMultiRootByChangedTimestampProcess(
+                root_dirs=[concat_quarterly_joined_by_stmt_dir, concat_daily_joined_by_stmt_dir],
+                target_dir=f"{concat_all_joined_by_stmt_dir}/CP",
+                pathfilter="CP",
+            ),
+            ConcatMultiRootByChangedTimestampProcess(
+                root_dirs=[concat_quarterly_joined_by_stmt_dir, concat_daily_joined_by_stmt_dir],
+                target_dir=f"{concat_all_joined_by_stmt_dir}/EQ",
+                pathfilter="EQ",
+            ),
+            ConcatMultiRootByChangedTimestampProcess(
+                root_dirs=[concat_quarterly_joined_by_stmt_dir, concat_daily_joined_by_stmt_dir],
+                target_dir=f"{concat_all_joined_by_stmt_dir}/IS",
+                pathfilter="IS",
+            ),
+        ]
+    )
+
+    # 2. concat joined
+    processes.append(
+        ConcatMultiRootByChangedTimestampProcess(
+            root_dirs=[concat_daily_joined_all_dir, concat_quarterly_joined_all_dir],
+            pathfilter="",
+            target_dir=concat_all_joined_dir,
+        )
+    )
+
+    # 3. concat standardized by statement
+    processes.extend(
+        [
+            ConcatMultiRootByChangedTimestampProcess(
+                root_dirs=[concat_daily_standardized_by_stmt_dir, concat_quarterly_standardized_by_stmt_dir],
+                target_dir=f"{concat_all_standardized_by_stmt_dir}/BS",
+                pathfilter="BS",
+                in_memory=True,  # Standardized Bag only work with in_memory
+            ),
+            ConcatMultiRootByChangedTimestampProcess(
+                root_dirs=[concat_daily_standardized_by_stmt_dir, concat_quarterly_standardized_by_stmt_dir],
+                target_dir=f"{concat_all_standardized_by_stmt_dir}/CF",
+                pathfilter="CF",
+                in_memory=True,  # Standardized Bag only work with in_memory
+            ),
+            ConcatMultiRootByChangedTimestampProcess(
+                root_dirs=[concat_daily_standardized_by_stmt_dir, concat_quarterly_standardized_by_stmt_dir],
+                target_dir=f"{concat_all_standardized_by_stmt_dir}/IS",
+                pathfilter="IS",
+                in_memory=True,  # Standardized Bag only work with in_memory
+            ),
+        ]
+    )
     return processes

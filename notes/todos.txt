@@ -18,8 +18,10 @@ new release
 
 2.4.2
 -----
-[] support daily data in example automation pipelines
-[] supporting multiple root_paths for concat
+[x] support daily data in example automation pipelines
+[] test results -> are "all" folders the sum of quarter and daily?
+[] Logging Process to better show what is going on
+[x] supporting multiple root_paths for concat
    [x] base class takes a list of rootpaths, not just one
       filter are aplied on all rootpaths elements
       -> final list of paths to process

@@ -11,7 +11,7 @@ from collections import defaultdict
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
-from typing import Any, Dict, List, Protocol, Tuple
+from typing import Any, Dict, List, Optional, Protocol, Tuple
 
 from secfsdstools.a_utils.parallelexecution import ParallelExecutor, ThreadExecutor
 from secfsdstools.c_automation.automation_utils import get_latest_mtime
@@ -85,14 +85,14 @@ class AbstractTask:
 
     """
 
-    def __init__(self, root_path: Path, pathfilter: str, target_path: Path):
+    def __init__(self, root_paths: List[Path], pathfilter: str, target_path: Path):
         """
         The constructor of the AbstracTask.
 
         Args:
-            root_path: root_path of the data to be processed
+            root_paths: list of root_paths of the data to be processed
             pathfilter: a pathfilter string (e.g. "*"; as defined for Path.glob()) to select the
-                    subfolders, that have to be processed.
+                    subfolders in the root_paths, that have to be processed.
                     pathfilter could be something like "*", or "*/BS", or "something/*/BS".
 
                     E.g., the following root_path structure and the pathfilter "*/BS"
@@ -111,12 +111,13 @@ class AbstractTask:
             target_path: the target_path to write the results to.
         """
 
-        self.root_path = root_path
+        self.root_paths = root_paths
         self.target_path = target_path
         self.filter = pathfilter
 
-        # create a list of subfolders that have to be processed defined by the pathfilter string.
-        self.filtered_paths = list(self.root_path.glob(self.filter))
+        self.filtered_paths: List[Path] = []
+        for root_path in root_paths:
+            self.filtered_paths.extend(list(root_path.glob(self.filter)))
 
         # usually, all filtered_paths have to be processed
         self.paths_to_process: List[Path] = self.filtered_paths
@@ -268,15 +269,15 @@ class CheckByTimestampMergeBaseTask(AbstractTask):
       process the data and also update the timestamp in the meta.inf file
     """
 
-    def __init__(self, root_path: Path, pathfilter: str, target_path: Path):
+    def __init__(self, root_paths: List[Path], pathfilter: str, target_path: Path):
         """
         The constructor of the CheckByTimestampMergeBaseTask.
         Check also the documentation of the AbstractTask Constructor.
         """
         super().__init__(
-            root_path=root_path,
+            root_paths=root_paths,
             pathfilter=pathfilter,
-            target_path=target_path,
+            target_path=target_path
         )
 
         if self.meta_inf_file.exists():
@@ -287,7 +288,7 @@ class CheckByTimestampMergeBaseTask(AbstractTask):
             last_processed_timestamp = float(containing_values[0])
 
             # go and find the current latest modification timestamp of allfiles in the root_path
-            current_timestamp = get_latest_mtime(self.root_path)
+            current_timestamp = get_latest_mtime(self.root_paths)
 
             # if the current_timestamp is equal to the last_processed_timestamp,
             # it means that the data in the root_path weren't changed and therefore,
@@ -310,7 +311,7 @@ class CheckByTimestampMergeBaseTask(AbstractTask):
 
         self.do_execution(paths_to_process=self.paths_to_process, tmp_path=self.tmp_path)
 
-        meta_inf_content: str = str(get_latest_mtime(self.root_path))
+        meta_inf_content: str = str(get_latest_mtime(self.root_paths))
         self.write_meta_inf(content=meta_inf_content)
 
     @abstractmethod
@@ -336,12 +337,12 @@ class CheckByNewSubfoldersMergeBaseTask(AbstractTask):
     the timestamp of the latest processed modification.
     """
 
-    def __init__(self, root_path: Path, pathfilter: str, target_path: Path):
+    def __init__(self, root_paths: List[Path], pathfilter: str, target_path: Path):
         """
         Constructor of base task.
 
         Args:
-            root_path: root path to read that from
+            root_paths: root paths to read data from
             pathfilter: pathfilter string that defines which subfolders in the
                         root_path have to be selected
             target_path: path to where the results have to be written
@@ -349,7 +350,7 @@ class CheckByNewSubfoldersMergeBaseTask(AbstractTask):
         self.all_names: Dict[str, Path]
 
         super().__init__(
-            root_path=root_path,
+            root_paths=root_paths,
             pathfilter=pathfilter,
             target_path=target_path,
         )

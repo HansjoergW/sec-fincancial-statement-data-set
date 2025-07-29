@@ -4,12 +4,13 @@ from pathlib import Path
 from secfsdstools.c_automation.automation_utils import delete_temp_folders, get_latest_mtime
 
 CURRENT_DIR, _ = os.path.split(__file__)
-TESTDATA_PATH = Path(CURRENT_DIR) / ".." / "_testdata"
+TESTDATA_PATH_1 = Path(CURRENT_DIR) / ".." / "_testdata" / "joined"
+TESTDATA_PATH_2 = Path(CURRENT_DIR) / ".." / "_testdata" / "parquet_new"
 
 
 def test_get_latest_mtime():
     # we just test if it is generally working
-    latest_mtime: float = get_latest_mtime(root_path=TESTDATA_PATH)
+    latest_mtime: float = get_latest_mtime(root_paths=[TESTDATA_PATH_1, TESTDATA_PATH_2])
     assert latest_mtime > 0
 
 

@@ -19,6 +19,13 @@ new release
 2.4.2
 -----
 [] support daily data in example automation pipelines
+[] supporting multiple root_paths for concat
+   [x] base class takes a list of rootpaths, not just one
+      filter are aplied on all rootpaths elements
+      -> final list of paths to process
+   [x] get_latest_mtime takes a list of rootpaths, not just one + tests
+   [x] tests for ConcatMultiRootByChangedTimestampProcess
+
 
 
 

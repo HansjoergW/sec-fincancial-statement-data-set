@@ -72,10 +72,11 @@ class StandardizerTask(CheckByTimestampMergeBaseTask):
             target_path: the target path to write the results to
         """
         super().__init__(
-            root_path=root_path,
+            root_paths=[root_path],
             pathfilter="*",  # can actually be ignored
             target_path=target_path
         )
+        self.root_path = root_path
 
     def prepare(self):
         """

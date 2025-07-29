@@ -11,7 +11,7 @@ from collections import defaultdict
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Protocol, Tuple
+from typing import Any, Dict, List, Protocol, Tuple
 
 from secfsdstools.a_utils.parallelexecution import ParallelExecutor, ThreadExecutor
 from secfsdstools.c_automation.automation_utils import get_latest_mtime
@@ -274,11 +274,7 @@ class CheckByTimestampMergeBaseTask(AbstractTask):
         The constructor of the CheckByTimestampMergeBaseTask.
         Check also the documentation of the AbstractTask Constructor.
         """
-        super().__init__(
-            root_paths=root_paths,
-            pathfilter=pathfilter,
-            target_path=target_path
-        )
+        super().__init__(root_paths=root_paths, pathfilter=pathfilter, target_path=target_path)
 
         if self.meta_inf_file.exists():
             # if the meta_inf file exists, we expect that the first row contains the

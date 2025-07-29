@@ -44,7 +44,7 @@ from collections import defaultdict
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
-from typing import Any, Dict, List, Protocol, Tuple
+from typing import Any, Dict, List, Optional, Protocol, Tuple
 
 from secfsdstools.a_utils.parallelexecution import ParallelExecutor, ThreadExecutor
 from secfsdstools.c_automation.automation_utils import get_latest_mtime
@@ -118,14 +118,14 @@ class AbstractTask:
 
     &#34;&#34;&#34;
 
-    def __init__(self, root_path: Path, pathfilter: str, target_path: Path):
+    def __init__(self, root_paths: List[Path], pathfilter: str, target_path: Path):
         &#34;&#34;&#34;
         The constructor of the AbstracTask.
 
         Args:
-            root_path: root_path of the data to be processed
+            root_paths: list of root_paths of the data to be processed
             pathfilter: a pathfilter string (e.g. &#34;*&#34;; as defined for Path.glob()) to select the
-                    subfolders, that have to be processed.
+                    subfolders in the root_paths, that have to be processed.
                     pathfilter could be something like &#34;*&#34;, or &#34;*/BS&#34;, or &#34;something/*/BS&#34;.
 
                     E.g., the following root_path structure and the pathfilter &#34;*/BS&#34;
@@ -144,12 +144,13 @@ class AbstractTask:
             target_path: the target_path to write the results to.
         &#34;&#34;&#34;
 
-        self.root_path = root_path
+        self.root_paths = root_paths
         self.target_path = target_path
         self.filter = pathfilter
 
-        # create a list of subfolders that have to be processed defined by the pathfilter string.
-        self.filtered_paths = list(self.root_path.glob(self.filter))
+        self.filtered_paths: List[Path] = []
+        for root_path in root_paths:
+            self.filtered_paths.extend(list(root_path.glob(self.filter)))
 
         # usually, all filtered_paths have to be processed
         self.paths_to_process: List[Path] = self.filtered_paths
@@ -301,15 +302,15 @@ class CheckByTimestampMergeBaseTask(AbstractTask):
       process the data and also update the timestamp in the meta.inf file
     &#34;&#34;&#34;
 
-    def __init__(self, root_path: Path, pathfilter: str, target_path: Path):
+    def __init__(self, root_paths: List[Path], pathfilter: str, target_path: Path):
         &#34;&#34;&#34;
         The constructor of the CheckByTimestampMergeBaseTask.
         Check also the documentation of the AbstractTask Constructor.
         &#34;&#34;&#34;
         super().__init__(
-            root_path=root_path,
+            root_paths=root_paths,
             pathfilter=pathfilter,
-            target_path=target_path,
+            target_path=target_path
         )
 
         if self.meta_inf_file.exists():
@@ -320,7 +321,7 @@ class CheckByTimestampMergeBaseTask(AbstractTask):
             last_processed_timestamp = float(containing_values[0])
 
             # go and find the current latest modification timestamp of allfiles in the root_path
-            current_timestamp = get_latest_mtime(self.root_path)
+            current_timestamp = get_latest_mtime(self.root_paths)
 
             # if the current_timestamp is equal to the last_processed_timestamp,
             # it means that the data in the root_path weren&#39;t changed and therefore,
@@ -343,7 +344,7 @@ class CheckByTimestampMergeBaseTask(AbstractTask):
 
         self.do_execution(paths_to_process=self.paths_to_process, tmp_path=self.tmp_path)
 
-        meta_inf_content: str = str(get_latest_mtime(self.root_path))
+        meta_inf_content: str = str(get_latest_mtime(self.root_paths))
         self.write_meta_inf(content=meta_inf_content)
 
     @abstractmethod
@@ -369,12 +370,12 @@ class CheckByNewSubfoldersMergeBaseTask(AbstractTask):
     the timestamp of the latest processed modification.
     &#34;&#34;&#34;
 
-    def __init__(self, root_path: Path, pathfilter: str, target_path: Path):
+    def __init__(self, root_paths: List[Path], pathfilter: str, target_path: Path):
         &#34;&#34;&#34;
         Constructor of base task.
 
         Args:
-            root_path: root path to read that from
+            root_paths: root paths to read data from
             pathfilter: pathfilter string that defines which subfolders in the
                         root_path have to be selected
             target_path: path to where the results have to be written
@@ -382,7 +383,7 @@ class CheckByNewSubfoldersMergeBaseTask(AbstractTask):
         self.all_names: Dict[str, Path]
 
         super().__init__(
-            root_path=root_path,
+            root_paths=root_paths,
             pathfilter=pathfilter,
             target_path=target_path,
         )
@@ -982,7 +983,7 @@ def process(self):
 </dd>
 <dt id="secfsdstools.c_automation.task_framework.AbstractTask"><code class="flex name class">
 <span>class <span class="ident">AbstractTask</span></span>
-<span>(</span><span>root_path: pathlib.Path, pathfilter: str, target_path: pathlib.Path)</span>
+<span>(</span><span>root_paths: List[pathlib.Path], pathfilter: str, target_path: pathlib.Path)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Abstract Base implemenation providing some commonly used basic functionality.</p>
@@ -1002,11 +1003,11 @@ of files in the root_path is newer than the timestamp stored in the meta.inf fil
 <p>The constructor of the AbstracTask.</p>
 <h2 id="args">Args</h2>
 <dl>
-<dt><strong><code>root_path</code></strong></dt>
-<dd>root_path of the data to be processed</dd>
+<dt><strong><code>root_paths</code></strong></dt>
+<dd>list of root_paths of the data to be processed</dd>
 <dt><strong><code>pathfilter</code></strong></dt>
 <dd>a pathfilter string (e.g. "<em>"; as defined for Path.glob()) to select the
-subfolders, that have to be processed.
+subfolders in the root_paths, that have to be processed.
 pathfilter could be something like "</em>", or "<em>/BS", or "something/</em>/BS".<pre><code>E.g., the following root_path structure and the pathfilter "*/BS"
 would select all "BS" "sub-subfolders" within root_path:
 &lt;pre&gt;
@@ -1051,14 +1052,14 @@ would select all "BS" "sub-subfolders" within root_path:
 
     &#34;&#34;&#34;
 
-    def __init__(self, root_path: Path, pathfilter: str, target_path: Path):
+    def __init__(self, root_paths: List[Path], pathfilter: str, target_path: Path):
         &#34;&#34;&#34;
         The constructor of the AbstracTask.
 
         Args:
-            root_path: root_path of the data to be processed
+            root_paths: list of root_paths of the data to be processed
             pathfilter: a pathfilter string (e.g. &#34;*&#34;; as defined for Path.glob()) to select the
-                    subfolders, that have to be processed.
+                    subfolders in the root_paths, that have to be processed.
                     pathfilter could be something like &#34;*&#34;, or &#34;*/BS&#34;, or &#34;something/*/BS&#34;.
 
                     E.g., the following root_path structure and the pathfilter &#34;*/BS&#34;
@@ -1077,12 +1078,13 @@ would select all "BS" "sub-subfolders" within root_path:
             target_path: the target_path to write the results to.
         &#34;&#34;&#34;
 
-        self.root_path = root_path
+        self.root_paths = root_paths
         self.target_path = target_path
         self.filter = pathfilter
 
-        # create a list of subfolders that have to be processed defined by the pathfilter string.
-        self.filtered_paths = list(self.root_path.glob(self.filter))
+        self.filtered_paths: List[Path] = []
+        for root_path in root_paths:
+            self.filtered_paths.extend(list(root_path.glob(self.filter)))
 
         # usually, all filtered_paths have to be processed
         self.paths_to_process: List[Path] = self.filtered_paths
@@ -1405,8 +1407,8 @@ or does create the tmp_folder, if processing has to be done.</p></div>
 <ul class="hlist">
 <li><a title="secfsdstools.c_download.basedownloading_process.BaseDownloadingProcess" href="../c_download/basedownloading_process.html#secfsdstools.c_download.basedownloading_process.BaseDownloadingProcess">BaseDownloadingProcess</a></li>
 <li><a title="secfsdstools.c_index.indexing_process.ReportParquetIndexerProcess" href="../c_index/indexing_process.html#secfsdstools.c_index.indexing_process.ReportParquetIndexerProcess">ReportParquetIndexerProcess</a></li>
-<li><a title="secfsdstools.g_pipelines.concat_process.ConcatByChangedTimestampProcess" href="../g_pipelines/concat_process.html#secfsdstools.g_pipelines.concat_process.ConcatByChangedTimestampProcess">ConcatByChangedTimestampProcess</a></li>
 <li><a title="secfsdstools.g_pipelines.concat_process.ConcatByNewSubfoldersProcess" href="../g_pipelines/concat_process.html#secfsdstools.g_pipelines.concat_process.ConcatByNewSubfoldersProcess">ConcatByNewSubfoldersProcess</a></li>
+<li><a title="secfsdstools.g_pipelines.concat_process.ConcatMultiRootByChangedTimestampProcess" href="../g_pipelines/concat_process.html#secfsdstools.g_pipelines.concat_process.ConcatMultiRootByChangedTimestampProcess">ConcatMultiRootByChangedTimestampProcess</a></li>
 <li><a title="secfsdstools.g_pipelines.filter_process.FilterProcess" href="../g_pipelines/filter_process.html#secfsdstools.g_pipelines.filter_process.FilterProcess">FilterProcess</a></li>
 <li><a title="secfsdstools.g_pipelines.standardize_process.StandardizeProcess" href="../g_pipelines/standardize_process.html#secfsdstools.g_pipelines.standardize_process.StandardizeProcess">StandardizeProcess</a></li>
 </ul>
@@ -1453,7 +1455,7 @@ or does create the tmp_folder, if processing has to be done.</p></div>
 </dd>
 <dt id="secfsdstools.c_automation.task_framework.CheckByNewSubfoldersMergeBaseTask"><code class="flex name class">
 <span>class <span class="ident">CheckByNewSubfoldersMergeBaseTask</span></span>
-<span>(</span><span>root_path: pathlib.Path, pathfilter: str, target_path: pathlib.Path)</span>
+<span>(</span><span>root_paths: List[pathlib.Path], pathfilter: str, target_path: pathlib.Path)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Implements the basic logic to track already processed data either by folder structure of the
@@ -1467,8 +1469,8 @@ the timestamp of the latest processed modification.</p>
 <p>Constructor of base task.</p>
 <h2 id="args">Args</h2>
 <dl>
-<dt><strong><code>root_path</code></strong></dt>
-<dd>root path to read that from</dd>
+<dt><strong><code>root_paths</code></strong></dt>
+<dd>root paths to read data from</dd>
 <dt><strong><code>pathfilter</code></strong></dt>
 <dd>pathfilter string that defines which subfolders in the
 root_path have to be selected</dd>
@@ -1492,12 +1494,12 @@ root_path have to be selected</dd>
     the timestamp of the latest processed modification.
     &#34;&#34;&#34;
 
-    def __init__(self, root_path: Path, pathfilter: str, target_path: Path):
+    def __init__(self, root_paths: List[Path], pathfilter: str, target_path: Path):
         &#34;&#34;&#34;
         Constructor of base task.
 
         Args:
-            root_path: root path to read that from
+            root_paths: root paths to read data from
             pathfilter: pathfilter string that defines which subfolders in the
                         root_path have to be selected
             target_path: path to where the results have to be written
@@ -1505,7 +1507,7 @@ root_path have to be selected</dd>
         self.all_names: Dict[str, Path]
 
         super().__init__(
-            root_path=root_path,
+            root_paths=root_paths,
             pathfilter=pathfilter,
             target_path=target_path,
         )
@@ -1657,7 +1659,7 @@ being true or not.</p>
 </dd>
 <dt id="secfsdstools.c_automation.task_framework.CheckByTimestampMergeBaseTask"><code class="flex name class">
 <span>class <span class="ident">CheckByTimestampMergeBaseTask</span></span>
-<span>(</span><span>root_path: pathlib.Path, pathfilter: str, target_path: pathlib.Path)</span>
+<span>(</span><span>root_paths: List[pathlib.Path], pathfilter: str, target_path: pathlib.Path)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>This class uses the AbstractTask to implement logic that checks if files were changed within
@@ -1694,15 +1696,15 @@ Check also the documentation of the AbstractTask Constructor.</p></div>
       process the data and also update the timestamp in the meta.inf file
     &#34;&#34;&#34;
 
-    def __init__(self, root_path: Path, pathfilter: str, target_path: Path):
+    def __init__(self, root_paths: List[Path], pathfilter: str, target_path: Path):
         &#34;&#34;&#34;
         The constructor of the CheckByTimestampMergeBaseTask.
         Check also the documentation of the AbstractTask Constructor.
         &#34;&#34;&#34;
         super().__init__(
-            root_path=root_path,
+            root_paths=root_paths,
             pathfilter=pathfilter,
-            target_path=target_path,
+            target_path=target_path
         )
 
         if self.meta_inf_file.exists():
@@ -1713,7 +1715,7 @@ Check also the documentation of the AbstractTask Constructor.</p></div>
             last_processed_timestamp = float(containing_values[0])
 
             # go and find the current latest modification timestamp of allfiles in the root_path
-            current_timestamp = get_latest_mtime(self.root_path)
+            current_timestamp = get_latest_mtime(self.root_paths)
 
             # if the current_timestamp is equal to the last_processed_timestamp,
             # it means that the data in the root_path weren&#39;t changed and therefore,
@@ -1736,7 +1738,7 @@ Check also the documentation of the AbstractTask Constructor.</p></div>
 
         self.do_execution(paths_to_process=self.paths_to_process, tmp_path=self.tmp_path)
 
-        meta_inf_content: str = str(get_latest_mtime(self.root_path))
+        meta_inf_content: str = str(get_latest_mtime(self.root_paths))
         self.write_meta_inf(content=meta_inf_content)
 
     @abstractmethod
@@ -1812,7 +1814,7 @@ being true or not.</p>
 
     self.do_execution(paths_to_process=self.paths_to_process, tmp_path=self.tmp_path)
 
-    meta_inf_content: str = str(get_latest_mtime(self.root_path))
+    meta_inf_content: str = str(get_latest_mtime(self.root_paths))
     self.write_meta_inf(content=meta_inf_content)</code></pre>
 </details>
 </dd>

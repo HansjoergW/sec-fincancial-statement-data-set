@@ -105,10 +105,11 @@ class StandardizerTask(CheckByTimestampMergeBaseTask):
             target_path: the target path to write the results to
         &#34;&#34;&#34;
         super().__init__(
-            root_path=root_path,
+            root_paths=[root_path],
             pathfilter=&#34;*&#34;,  # can actually be ignored
             target_path=target_path
         )
+        self.root_path = root_path
 
     def prepare(self):
         &#34;&#34;&#34;
@@ -482,10 +483,11 @@ The Data has to be provided as standardized DataBags.</dd>
             target_path: the target path to write the results to
         &#34;&#34;&#34;
         super().__init__(
-            root_path=root_path,
+            root_paths=[root_path],
             pathfilter=&#34;*&#34;,  # can actually be ignored
             target_path=target_path
         )
+        self.root_path = root_path
 
     def prepare(self):
         &#34;&#34;&#34;

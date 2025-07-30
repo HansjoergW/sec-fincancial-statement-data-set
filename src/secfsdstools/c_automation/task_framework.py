@@ -549,3 +549,35 @@ def execute_processes(processes: List[AbstractProcess]):
     """
     for process in processes:
         process.process()
+
+
+class LoggingProcess(AbstractProcess):
+    """
+    Simple process that just logs some information.
+    """
+
+    def __init__(self, title: str, lines: List[str]):
+        """
+        Constructor.
+        Args:
+            title: title of the process
+            lines: list of lines to be logged
+        """
+        super().__init__()
+        self.title = title
+        self.lines = lines
+
+    def process(self):
+        """execute the process."""
+        logger = logging.getLogger()
+
+        length_title = len(self.title)
+
+        logger.info("")
+        logger.info("#" * (length_title + 4))
+        logger.info("%s", self.title)
+
+        for line in self.lines:
+            logger.info("    %s", line)
+
+        logger.info("#" * (length_title + 4))

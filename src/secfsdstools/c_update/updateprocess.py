@@ -18,7 +18,7 @@ from secfsdstools.a_utils.downloadutils import UrlDownloader
 from secfsdstools.a_utils.fileutils import get_directories_in_directory
 from secfsdstools.a_utils.version import get_latest_pypi_version, is_newer_version_available
 from secfsdstools.b_setup.setupdb import DbCreator
-from secfsdstools.c_automation.task_framework import AbstractProcess, execute_processes
+from secfsdstools.c_automation.task_framework import AbstractProcess, LoggingProcess, execute_processes
 from secfsdstools.c_daily.dailypreparation_process import DailyPreparationProcess
 from secfsdstools.c_download.secdownloading_process import SecDownloadingProcess
 from secfsdstools.c_index.indexing_process import ReportParquetIndexerProcess
@@ -177,6 +177,7 @@ class Updater:
         urldownloader = UrlDownloader(user_agent=self.user_agent)
 
         # download data from sec
+        process_list.append(LoggingProcess(title="Download Process for Quarterly Data Started", lines=[]))
         process_list.append(
             SecDownloadingProcess(
                 zip_dir=self.dld_dir,
@@ -212,6 +213,7 @@ class Updater:
             )
             process_list.extend(
                 [
+                    LoggingProcess(title="Download Process for Daily Data Started", lines=[]),
                     # download daily data from SEC
                     dailyprocess,
                     # transform daily data to parquet

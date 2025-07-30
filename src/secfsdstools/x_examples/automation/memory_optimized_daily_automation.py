@@ -71,6 +71,10 @@ concat_daily_joined_all_dir = C:/data/sec/automated/_2_all_day/_2_joined
 concat_quarterly_standardized_by_stmt_dir = C:/data/sec/automated/_2_all_quarter/_3_standardized_by_stmt
 concat_daily_standardized_by_stmt_dir = C:/data/sec/automated/_2_all_day/_3_standardized_by_stmt
 
+concat_all_joined_by_stmt_dir = C:/data/sec/automated/_3_all/_1_joined_by_stmt
+concat_all_joined_dir = C:/data/sec/automated/_3_all/_2_joined
+concat_all_standardized_by_stmt_dir = C:/data/sec/automated/_3_all/_3_standardized_by_stmt
+
 </pre>
 
 (A complete configuration file using the "define_extra_processes" function is available in the file
@@ -104,7 +108,16 @@ This example adds the following main steps to the usual update process.
 
 - combined quarterly and daily data:
 
+    First, it creates a single joined bag for every statement (balance sheet, income statement,
+    cash flow, ...) containing quarterly and daily data.
+    These bags are stored under the path defined as `concat_all_joined_by_stmt_dir`.
 
+    Second, it will create a single bag with all data from all different statements, by merging the
+    bags from the previous step into a single big bag. This bag will be stored under the path defined
+    as `concat_all_joined_all_dir`.
+
+    Third, it will create single standardized bags for BS, IS, CF containing data from both quarterly and daily data.
+    These bags will be stored under the path defined as `concat_all_standardized_by_stmt_dir`.
 
 
 All this steps use basic implementations of the AbstractProcess class from the
@@ -119,7 +132,7 @@ Have also a look at the notebook 08_00_automation_basics.
 from typing import List
 
 from secfsdstools.a_config.configmodel import Configuration
-from secfsdstools.c_automation.task_framework import AbstractProcess
+from secfsdstools.c_automation.task_framework import AbstractProcess, LoggingProcess
 from secfsdstools.g_pipelines.concat_process import (
     ConcatByChangedTimestampProcess,
     ConcatByNewSubfoldersProcess,
@@ -204,6 +217,8 @@ def define_extra_processes(configuration: Configuration) -> List[AbstractProcess
     )
 
     processes: List[AbstractProcess] = []
+
+    processes.append(LoggingProcess(title="Post Update Processes For Quarterly Data Started", lines=[]))
 
     # QUARTERLY DATA Processing
     processes.append(
@@ -294,6 +309,7 @@ def define_extra_processes(configuration: Configuration) -> List[AbstractProcess
     )
 
     # DAILY DATA Processing
+    processes.append(LoggingProcess(title="Post Update Processes For Daily Data Started", lines=[]))
 
     # clean daily data covered now by quarterly data
     # processes.append()
@@ -385,6 +401,9 @@ def define_extra_processes(configuration: Configuration) -> List[AbstractProcess
     )
 
     # Concat daily and quarter together
+    processes.append(
+        LoggingProcess(title="Post Update Processes To Combine Quarterly And Daily Data Started", lines=[])
+    )
 
     # 1. concat joined_by_statement
     processes.extend(

@@ -78,7 +78,11 @@ class DailyPreparationProcess(AbstractProcess):
         )
 
     @staticmethod
-    def _calculate_daily_start_quarter(quarter_before: str) -&gt; QuarterInfo:
+    def calculate_daily_start_quarter(quarter_before: str) -&gt; QuarterInfo:
+        &#34;&#34;&#34;
+        calculates the next quarter based on the provided quarter.
+        &#34;&#34;&#34;
+
         year_str, quarter_str = quarter_before.split(&#34;q&#34;)
         year = int(year_str)
         quarter = int(quarter_str)
@@ -92,7 +96,7 @@ class DailyPreparationProcess(AbstractProcess):
         return QuarterInfo(year, quarter)
 
     @staticmethod
-    def _cut_off_day(quarter: QuarterInfo) -&gt; int:
+    def cut_off_day(quarter: QuarterInfo) -&gt; int:
         &#34;&#34;&#34;
         calculates the &#34;first&#34; day of the quarter.
         quarter one will result in yyyy0000, quarter two in yyyy0300,
@@ -195,8 +199,8 @@ class DailyPreparationProcess(AbstractProcess):
         else:
             daily_last_processed_quarter = last_processed_quarter
 
-        daily_start_quarter = self._calculate_daily_start_quarter(daily_last_processed_quarter)
-        cut_off_day = self._cut_off_day(daily_start_quarter)
+        daily_start_quarter = self.calculate_daily_start_quarter(daily_last_processed_quarter)
+        cut_off_day = self.cut_off_day(daily_start_quarter)
 
         LOGGER.info(&#34;clearing daily index tables and daily parquet files before cut off: %s&#34;, cut_off_day)
         self.clear_index_tables(cut_off_day=cut_off_day)
@@ -254,7 +258,11 @@ process the daily files.</p></div>
         )
 
     @staticmethod
-    def _calculate_daily_start_quarter(quarter_before: str) -&gt; QuarterInfo:
+    def calculate_daily_start_quarter(quarter_before: str) -&gt; QuarterInfo:
+        &#34;&#34;&#34;
+        calculates the next quarter based on the provided quarter.
+        &#34;&#34;&#34;
+
         year_str, quarter_str = quarter_before.split(&#34;q&#34;)
         year = int(year_str)
         quarter = int(quarter_str)
@@ -268,7 +276,7 @@ process the daily files.</p></div>
         return QuarterInfo(year, quarter)
 
     @staticmethod
-    def _cut_off_day(quarter: QuarterInfo) -&gt; int:
+    def cut_off_day(quarter: QuarterInfo) -&gt; int:
         &#34;&#34;&#34;
         calculates the &#34;first&#34; day of the quarter.
         quarter one will result in yyyy0000, quarter two in yyyy0300,
@@ -371,8 +379,8 @@ process the daily files.</p></div>
         else:
             daily_last_processed_quarter = last_processed_quarter
 
-        daily_start_quarter = self._calculate_daily_start_quarter(daily_last_processed_quarter)
-        cut_off_day = self._cut_off_day(daily_start_quarter)
+        daily_start_quarter = self.calculate_daily_start_quarter(daily_last_processed_quarter)
+        cut_off_day = self.cut_off_day(daily_start_quarter)
 
         LOGGER.info(&#34;clearing daily index tables and daily parquet files before cut off: %s&#34;, cut_off_day)
         self.clear_index_tables(cut_off_day=cut_off_day)
@@ -386,6 +394,63 @@ process the daily files.</p></div>
 <li><a title="secfsdstools.c_automation.task_framework.AbstractProcess" href="../c_automation/task_framework.html#secfsdstools.c_automation.task_framework.AbstractProcess">AbstractProcess</a></li>
 <li>abc.ABC</li>
 </ul>
+<h3>Static methods</h3>
+<dl>
+<dt id="secfsdstools.c_daily.dailypreparation_process.DailyPreparationProcess.calculate_daily_start_quarter"><code class="name flex">
+<span>def <span class="ident">calculate_daily_start_quarter</span></span>(<span>quarter_before: str) ‑> secdaily._00_common.BaseDefinitions.QuarterInfo</span>
+</code></dt>
+<dd>
+<div class="desc"><p>calculates the next quarter based on the provided quarter.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@staticmethod
+def calculate_daily_start_quarter(quarter_before: str) -&gt; QuarterInfo:
+    &#34;&#34;&#34;
+    calculates the next quarter based on the provided quarter.
+    &#34;&#34;&#34;
+
+    year_str, quarter_str = quarter_before.split(&#34;q&#34;)
+    year = int(year_str)
+    quarter = int(quarter_str)
+
+    if quarter == 4:
+        year += 1
+        quarter = 1
+    else:
+        quarter += 1
+
+    return QuarterInfo(year, quarter)</code></pre>
+</details>
+</dd>
+<dt id="secfsdstools.c_daily.dailypreparation_process.DailyPreparationProcess.cut_off_day"><code class="name flex">
+<span>def <span class="ident">cut_off_day</span></span>(<span>quarter: secdaily._00_common.BaseDefinitions.QuarterInfo) ‑> int</span>
+</code></dt>
+<dd>
+<div class="desc"><p>calculates the "first" day of the quarter.
+quarter one will result in yyyy0000, quarter two in yyyy0300,
+quarter three in yyyy0600, and quarter four in yyyy0900.</p>
+<p>This way, we can select for &lt; cut_off_day to get all filings before the start of the quarter.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@staticmethod
+def cut_off_day(quarter: QuarterInfo) -&gt; int:
+    &#34;&#34;&#34;
+    calculates the &#34;first&#34; day of the quarter.
+    quarter one will result in yyyy0000, quarter two in yyyy0300,
+    quarter three in yyyy0600, and quarter four in yyyy0900.
+
+    This way, we can select for &lt; cut_off_day to get all filings before the start of the quarter.
+    &#34;&#34;&#34;
+    cut_off_month: Dict[int, int] = {1: 0, 2: 4, 3: 7, 4: 10}  # previous year  # April  # July  # October
+
+    return quarter.year * 10_000 + cut_off_month[quarter.qrtr] * 100</code></pre>
+</details>
+</dd>
+</dl>
 <h3>Methods</h3>
 <dl>
 <dt id="secfsdstools.c_daily.dailypreparation_process.DailyPreparationProcess.check_for_daily_cleanup"><code class="name flex">
@@ -543,8 +608,8 @@ daily_start_quarter.</p></div>
     else:
         daily_last_processed_quarter = last_processed_quarter
 
-    daily_start_quarter = self._calculate_daily_start_quarter(daily_last_processed_quarter)
-    cut_off_day = self._cut_off_day(daily_start_quarter)
+    daily_start_quarter = self.calculate_daily_start_quarter(daily_last_processed_quarter)
+    cut_off_day = self.cut_off_day(daily_start_quarter)
 
     LOGGER.info(&#34;clearing daily index tables and daily parquet files before cut off: %s&#34;, cut_off_day)
     self.clear_index_tables(cut_off_day=cut_off_day)
@@ -575,9 +640,11 @@ daily_start_quarter.</p></div>
 <li>
 <h4><code><a title="secfsdstools.c_daily.dailypreparation_process.DailyPreparationProcess" href="#secfsdstools.c_daily.dailypreparation_process.DailyPreparationProcess">DailyPreparationProcess</a></code></h4>
 <ul class="">
+<li><code><a title="secfsdstools.c_daily.dailypreparation_process.DailyPreparationProcess.calculate_daily_start_quarter" href="#secfsdstools.c_daily.dailypreparation_process.DailyPreparationProcess.calculate_daily_start_quarter">calculate_daily_start_quarter</a></code></li>
 <li><code><a title="secfsdstools.c_daily.dailypreparation_process.DailyPreparationProcess.check_for_daily_cleanup" href="#secfsdstools.c_daily.dailypreparation_process.DailyPreparationProcess.check_for_daily_cleanup">check_for_daily_cleanup</a></code></li>
 <li><code><a title="secfsdstools.c_daily.dailypreparation_process.DailyPreparationProcess.clear_daily_parquet_files" href="#secfsdstools.c_daily.dailypreparation_process.DailyPreparationProcess.clear_daily_parquet_files">clear_daily_parquet_files</a></code></li>
 <li><code><a title="secfsdstools.c_daily.dailypreparation_process.DailyPreparationProcess.clear_index_tables" href="#secfsdstools.c_daily.dailypreparation_process.DailyPreparationProcess.clear_index_tables">clear_index_tables</a></code></li>
+<li><code><a title="secfsdstools.c_daily.dailypreparation_process.DailyPreparationProcess.cut_off_day" href="#secfsdstools.c_daily.dailypreparation_process.DailyPreparationProcess.cut_off_day">cut_off_day</a></code></li>
 <li><code><a title="secfsdstools.c_daily.dailypreparation_process.DailyPreparationProcess.download_daily_files" href="#secfsdstools.c_daily.dailypreparation_process.DailyPreparationProcess.download_daily_files">download_daily_files</a></code></li>
 <li><code><a title="secfsdstools.c_daily.dailypreparation_process.DailyPreparationProcess.process" href="#secfsdstools.c_daily.dailypreparation_process.DailyPreparationProcess.process">process</a></code></li>
 </ul>

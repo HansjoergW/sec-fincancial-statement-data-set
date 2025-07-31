@@ -28,8 +28,15 @@ new release
    [x] get_latest_mtime takes a list of rootpaths, not just one + tests
    [x] tests for ConcatMultiRootByChangedTimestampProcess
 
-[] add new notebook for daily automation
+[] clearing of daily data processed 
+   [x] new step in the automation pipeline
+   [] tests
+
+[x] add new notebook for daily automation
 [] adapt readme, changelog, notebooks (daily processing)
+  [] readme
+  [] changelog
+  [x] notebook 10_00
 
 
 

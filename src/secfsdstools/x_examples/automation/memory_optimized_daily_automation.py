@@ -129,10 +129,14 @@ if something did change (for instance, if a new data became available).
 Have also a look at the notebook 08_00_automation_basics.
 
 """
+import shutil
+from pathlib import Path
 from typing import List
 
 from secfsdstools.a_config.configmodel import Configuration
 from secfsdstools.c_automation.task_framework import AbstractProcess, LoggingProcess
+from secfsdstools.c_daily.dailypreparation_process import DailyPreparationProcess
+from secfsdstools.c_index.indexdataaccess import ParquetDBIndexingAccessor
 from secfsdstools.g_pipelines.concat_process import (
     ConcatByChangedTimestampProcess,
     ConcatByNewSubfoldersProcess,
@@ -142,21 +146,69 @@ from secfsdstools.g_pipelines.filter_process import FilterProcess
 from secfsdstools.g_pipelines.standardize_process import StandardizeProcess
 
 
+class ClearDailyDataProcess(AbstractProcess):
+    """
+    Since daily processed data is removed, as soon as the data is contained in a quarterly zip file,
+    we also need to remove the according data from the automated datasets.
+
+    This process does this for the filtered and standardized daily data, which are created in the first step
+    of processing the daily data.
+
+    The following steps for the daily processing always creates the dataset fresh from all available daily data.
+    Hence, we only need to clean the filtered and standardized daily data.
+    """
+
+    def __init__(self, db_dir: str, filtered_daily_joined_by_stmt_dir: str, standardized_daily_by_stmt_dir: str):
+        """
+        Constructor.
+        Args:
+            db_dir: directory of the database
+            filtered_daily_joined_by_stmt_dir: directory containing the filtered daily data
+            standardized_daily_by_stmt_dir: directory containing the standardized daily data
+        """
+        super().__init__()
+        self.db_dir = db_dir
+        self.index_accessor = ParquetDBIndexingAccessor(db_dir=db_dir)
+        self.filtered_daily_joined_by_stmt_dir = filtered_daily_joined_by_stmt_dir
+        self.standardized_daily_by_stmt_dir = standardized_daily_by_stmt_dir
+
+    def clear_directory(self, cut_off_day: int, root_dir_path: Path):
+        """
+        removes all directories under root_dir_path that are older than the cut_off_day.
+        """
+
+        cut_off_file_name = f"{cut_off_day}.zip"
+
+        if root_dir_path.exists():
+            for dir_path in root_dir_path.iterdir():
+                if dir_path.is_dir() and dir_path.name < cut_off_file_name:
+                    shutil.rmtree(dir_path)
+
+    def process(self):
+        """
+        Execute the process.
+        """
+        last_processed_quarter_file_name = self.index_accessor.find_latest_quarter_file_name()
+        if last_processed_quarter_file_name is None:
+            raise ValueError(
+                "No quarterly files were processed before. "
+                "Please process quarterly files first before running the daily process."
+            )
+        last_processed_quarter = last_processed_quarter_file_name.split(".")[0]
+
+        daily_start_quarter = DailyPreparationProcess.calculate_daily_start_quarter(last_processed_quarter)
+        cut_off_day = DailyPreparationProcess.cut_off_day(daily_start_quarter)
+        self.clear_directory(
+            cut_off_day=cut_off_day, root_dir_path=Path(self.filtered_daily_joined_by_stmt_dir) / "daily"
+        )
+        self.clear_directory(cut_off_day=cut_off_day, root_dir_path=Path(self.standardized_daily_by_stmt_dir))
+
+
 def define_extra_processes(configuration: Configuration) -> List[AbstractProcess]:
     """
-    example definition of an additional pipeline.
-
-    It adds process steps that:
-    1. Filter for 10-K and 10-Q reports, als apply the filters
-       ReportPeriodRawFilter, MainCoregRawFilter, USDOnlyRawFilter, OfficialTagsOnlyRawFilter,
-       then joins the data and splits up the data by stmt (BS, IS, CF, ...)
-       This is done for every zipfile individually.
-    2. it produces a standardize bag for every quarter/zipfile.
-    3. it concatenates all the stmts together, so that there is one file for every stmt containing all
-       the available data
-    4. it creates a single bag containing all the filtered and joined data
-    5. it creates a standardize bag for BS, IS, and CF containing all the available data for stmt
-       in one single file
+    example definition of an additional pipeline. It adds sevreal steps to process
+    quarterly and daily data, as well as combining both. See the documentation of this
+    module for more details.
 
     All these steps have a low memory footprint, so, the should run without any problems also
     on 16 GB machine.
@@ -218,9 +270,9 @@ def define_extra_processes(configuration: Configuration) -> List[AbstractProcess
 
     processes: List[AbstractProcess] = []
 
+    # QUARTERLY DATA Processing
     processes.append(LoggingProcess(title="Post Update Processes For Quarterly Data Started", lines=[]))
 
-    # QUARTERLY DATA Processing
     processes.append(
         # 1. Filter, join, and save by stmt
         FilterProcess(
@@ -312,9 +364,16 @@ def define_extra_processes(configuration: Configuration) -> List[AbstractProcess
     processes.append(LoggingProcess(title="Post Update Processes For Daily Data Started", lines=[]))
 
     # clean daily data covered now by quarterly data
-    # processes.append()
     processes.append(
-        # 1. Filter, join, and save by stmt
+        ClearDailyDataProcess(
+            db_dir=configuration.db_dir,
+            filtered_daily_joined_by_stmt_dir=filtered_daily_joined_by_stmt_dir,
+            standardized_daily_by_stmt_dir=standardized_daily_by_stmt_dir,
+        )
+    )
+
+    # 1. Filter, join, and save by stmt
+    processes.append(
         FilterProcess(
             db_dir=configuration.db_dir,
             target_dir=filtered_daily_joined_by_stmt_dir,

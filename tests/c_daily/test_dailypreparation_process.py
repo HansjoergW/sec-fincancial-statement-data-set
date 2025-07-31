@@ -15,17 +15,17 @@ from secfsdstools.c_daily.dailypreparation_process import DailyPreparationProces
 def test_calculate_daily_start_quarter_regular_quarter():
     """Test calculating the next quarter when it's not the 4th quarter."""
     # Test Q1 -> Q2
-    result = DailyPreparationProcess._calculate_daily_start_quarter("2022q1")
+    result = DailyPreparationProcess.calculate_daily_start_quarter("2022q1")
     assert result.year == 2022
     assert result.qrtr == 2
 
     # Test Q2 -> Q3
-    result = DailyPreparationProcess._calculate_daily_start_quarter("2022q2")
+    result = DailyPreparationProcess.calculate_daily_start_quarter("2022q2")
     assert result.year == 2022
     assert result.qrtr == 3
 
     # Test Q3 -> Q4
-    result = DailyPreparationProcess._calculate_daily_start_quarter("2022q3")
+    result = DailyPreparationProcess.calculate_daily_start_quarter("2022q3")
     assert result.year == 2022
     assert result.qrtr == 4
 
@@ -33,7 +33,7 @@ def test_calculate_daily_start_quarter_regular_quarter():
 def test_calculate_daily_start_quarter_year_transition():
     """Test calculating the next quarter when transitioning from Q4 to Q1 of next year."""
     # Test Q4 -> Q1 of next year
-    result = DailyPreparationProcess._calculate_daily_start_quarter("2022q4")
+    result = DailyPreparationProcess.calculate_daily_start_quarter("2022q4")
     assert result.year == 2023
     assert result.qrtr == 1
 
@@ -47,10 +47,10 @@ def test_cut_off_day():
     q4 = QuarterInfo(2022, 4)
 
     # Test cut_off_day for each quarter
-    assert DailyPreparationProcess._cut_off_day(q1) == 20220000  # Q1: yyyy0000 Everyting in the past years
-    assert DailyPreparationProcess._cut_off_day(q2) == 20220400  # Q2: yyyy0400 Everything before april
-    assert DailyPreparationProcess._cut_off_day(q3) == 20220700  # Q3: yyyy0700 Everything before july
-    assert DailyPreparationProcess._cut_off_day(q4) == 20221000  # Q4: yyyy1000 Everything before october
+    assert DailyPreparationProcess.cut_off_day(q1) == 20220000  # Q1: yyyy0000 Everyting in the past years
+    assert DailyPreparationProcess.cut_off_day(q2) == 20220400  # Q2: yyyy0400 Everything before april
+    assert DailyPreparationProcess.cut_off_day(q3) == 20220700  # Q3: yyyy0700 Everything before july
+    assert DailyPreparationProcess.cut_off_day(q4) == 20221000  # Q4: yyyy1000 Everything before october
 
 
 def test_clear_index_tables():

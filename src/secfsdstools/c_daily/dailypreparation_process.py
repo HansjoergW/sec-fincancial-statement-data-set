@@ -45,7 +45,11 @@ class DailyPreparationProcess(AbstractProcess):
         )
 
     @staticmethod
-    def _calculate_daily_start_quarter(quarter_before: str) -> QuarterInfo:
+    def calculate_daily_start_quarter(quarter_before: str) -> QuarterInfo:
+        """
+        calculates the next quarter based on the provided quarter.
+        """
+
         year_str, quarter_str = quarter_before.split("q")
         year = int(year_str)
         quarter = int(quarter_str)
@@ -59,7 +63,7 @@ class DailyPreparationProcess(AbstractProcess):
         return QuarterInfo(year, quarter)
 
     @staticmethod
-    def _cut_off_day(quarter: QuarterInfo) -> int:
+    def cut_off_day(quarter: QuarterInfo) -> int:
         """
         calculates the "first" day of the quarter.
         quarter one will result in yyyy0000, quarter two in yyyy0300,
@@ -162,8 +166,8 @@ class DailyPreparationProcess(AbstractProcess):
         else:
             daily_last_processed_quarter = last_processed_quarter
 
-        daily_start_quarter = self._calculate_daily_start_quarter(daily_last_processed_quarter)
-        cut_off_day = self._cut_off_day(daily_start_quarter)
+        daily_start_quarter = self.calculate_daily_start_quarter(daily_last_processed_quarter)
+        cut_off_day = self.cut_off_day(daily_start_quarter)
 
         LOGGER.info("clearing daily index tables and daily parquet files before cut off: %s", cut_off_day)
         self.clear_index_tables(cut_off_day=cut_off_day)

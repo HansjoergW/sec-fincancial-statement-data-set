@@ -28,6 +28,7 @@ description: "Guidelines on how to write tests"
 - Use `@pytest.mark.parametrize` decorator for testing multiple similar scenarios
 - Use meaningful assertion messages when helpful for debugging
 - Avoid testing implementation details - focus on behavior and outcomes
+- Use testmethods, not Testclasses.
 
 ## Examples
 ```python

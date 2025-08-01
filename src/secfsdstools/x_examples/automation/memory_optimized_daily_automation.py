@@ -204,6 +204,7 @@ class ClearDailyDataProcess(AbstractProcess):
         self.clear_directory(cut_off_day=cut_off_day, root_dir_path=Path(self.standardized_daily_by_stmt_dir))
 
 
+# pylint: disable=too-many-locals
 def define_extra_processes(configuration: Configuration) -> List[AbstractProcess]:
     """
     example definition of an additional pipeline. It adds sevreal steps to process

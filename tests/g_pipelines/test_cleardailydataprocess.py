@@ -9,7 +9,6 @@ from pathlib import Path
 from unittest.mock import Mock, patch
 
 import pytest
-from secdaily._00_common.BaseDefinitions import QuarterInfo
 
 from secfsdstools.x_examples.automation.memory_optimized_daily_automation import ClearDailyDataProcess
 

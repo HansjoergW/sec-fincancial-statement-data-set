@@ -31,6 +31,7 @@
 
 import sqlite3
 from dataclasses import dataclass
+from datetime import datetime
 from typing import List, Optional
 
 import pandas as pd
@@ -159,6 +160,27 @@ class ParquetDBIndexingAccessor(DB):
 
         sql = f&#34;SELECT * FROM {self.index_processing_table} WHERE fileName in ({filenames_str})&#34;
         return self.execute_fetchall_typed(sql, IndexFileProcessingState)
+
+    def find_oldest_daily_processing_time(self) -&gt; Optional[datetime]:
+        &#34;&#34;&#34;
+        Finds the oldest processing time of all daily files.
+        Returns:
+            datetime: the oldest processing time as datetime object, or None if no daily files found
+        &#34;&#34;&#34;
+
+        # Use the original processTime to preserve full precision
+        sql = f&#34;&#34;&#34;SELECT processTime FROM {self.index_processing_table}
+                  WHERE fileName GLOB &#39;[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9].zip&#39;
+                  ORDER BY DATETIME(processTime) ASC
+                  LIMIT 1&#34;&#34;&#34;
+        result = self.execute_fetchall(sql)
+
+        if not result or result[0][0] is None:
+            return None
+
+        # Parse the ISO 8601 timestamp string to datetime object
+        timestamp_str = result[0][0]
+        return datetime.fromisoformat(timestamp_str)
 
     def insert_indexreport(self, data: IndexReport):
         &#34;&#34;&#34;
@@ -623,6 +645,27 @@ class IndexReport:
         sql = f&#34;SELECT * FROM {self.index_processing_table} WHERE fileName in ({filenames_str})&#34;
         return self.execute_fetchall_typed(sql, IndexFileProcessingState)
 
+    def find_oldest_daily_processing_time(self) -&gt; Optional[datetime]:
+        &#34;&#34;&#34;
+        Finds the oldest processing time of all daily files.
+        Returns:
+            datetime: the oldest processing time as datetime object, or None if no daily files found
+        &#34;&#34;&#34;
+
+        # Use the original processTime to preserve full precision
+        sql = f&#34;&#34;&#34;SELECT processTime FROM {self.index_processing_table}
+                  WHERE fileName GLOB &#39;[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9].zip&#39;
+                  ORDER BY DATETIME(processTime) ASC
+                  LIMIT 1&#34;&#34;&#34;
+        result = self.execute_fetchall(sql)
+
+        if not result or result[0][0] is None:
+            return None
+
+        # Parse the ISO 8601 timestamp string to datetime object
+        timestamp_str = result[0][0]
+        return datetime.fromisoformat(timestamp_str)
+
     def insert_indexreport(self, data: IndexReport):
         &#34;&#34;&#34;
         inserts an entry into the index_report table
@@ -1067,6 +1110,42 @@ Lower and uppercase are ignored.</p>
         return None
 
     return result[0].fileName</code></pre>
+</details>
+</dd>
+<dt id="secfsdstools.c_index.indexdataaccess.ParquetDBIndexingAccessor.find_oldest_daily_processing_time"><code class="name flex">
+<span>def <span class="ident">find_oldest_daily_processing_time</span></span>(<span>self) ‑> Optional[datetime.datetime]</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Finds the oldest processing time of all daily files.</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>datetime</code></dt>
+<dd>the oldest processing time as datetime object, or None if no daily files found</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def find_oldest_daily_processing_time(self) -&gt; Optional[datetime]:
+    &#34;&#34;&#34;
+    Finds the oldest processing time of all daily files.
+    Returns:
+        datetime: the oldest processing time as datetime object, or None if no daily files found
+    &#34;&#34;&#34;
+
+    # Use the original processTime to preserve full precision
+    sql = f&#34;&#34;&#34;SELECT processTime FROM {self.index_processing_table}
+              WHERE fileName GLOB &#39;[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9].zip&#39;
+              ORDER BY DATETIME(processTime) ASC
+              LIMIT 1&#34;&#34;&#34;
+    result = self.execute_fetchall(sql)
+
+    if not result or result[0][0] is None:
+        return None
+
+    # Parse the ISO 8601 timestamp string to datetime object
+    timestamp_str = result[0][0]
+    return datetime.fromisoformat(timestamp_str)</code></pre>
 </details>
 </dd>
 <dt id="secfsdstools.c_index.indexdataaccess.ParquetDBIndexingAccessor.insert_indexfileprocessing"><code class="name flex">
@@ -1564,6 +1643,7 @@ forms that should be returned</p>
 <li><code><a title="secfsdstools.c_index.indexdataaccess.ParquetDBIndexingAccessor.find_company_by_name" href="#secfsdstools.c_index.indexdataaccess.ParquetDBIndexingAccessor.find_company_by_name">find_company_by_name</a></code></li>
 <li><code><a title="secfsdstools.c_index.indexdataaccess.ParquetDBIndexingAccessor.find_latest_company_report" href="#secfsdstools.c_index.indexdataaccess.ParquetDBIndexingAccessor.find_latest_company_report">find_latest_company_report</a></code></li>
 <li><code><a title="secfsdstools.c_index.indexdataaccess.ParquetDBIndexingAccessor.find_latest_quarter_file_name" href="#secfsdstools.c_index.indexdataaccess.ParquetDBIndexingAccessor.find_latest_quarter_file_name">find_latest_quarter_file_name</a></code></li>
+<li><code><a title="secfsdstools.c_index.indexdataaccess.ParquetDBIndexingAccessor.find_oldest_daily_processing_time" href="#secfsdstools.c_index.indexdataaccess.ParquetDBIndexingAccessor.find_oldest_daily_processing_time">find_oldest_daily_processing_time</a></code></li>
 <li><code><a title="secfsdstools.c_index.indexdataaccess.ParquetDBIndexingAccessor.index_processing_table" href="#secfsdstools.c_index.indexdataaccess.ParquetDBIndexingAccessor.index_processing_table">index_processing_table</a></code></li>
 <li><code><a title="secfsdstools.c_index.indexdataaccess.ParquetDBIndexingAccessor.index_reports_table" href="#secfsdstools.c_index.indexdataaccess.ParquetDBIndexingAccessor.index_reports_table">index_reports_table</a></code></li>
 <li><code><a title="secfsdstools.c_index.indexdataaccess.ParquetDBIndexingAccessor.insert_indexfileprocessing" href="#secfsdstools.c_index.indexdataaccess.ParquetDBIndexingAccessor.insert_indexfileprocessing">insert_indexfileprocessing</a></code></li>

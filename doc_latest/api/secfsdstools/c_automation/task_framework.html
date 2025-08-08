@@ -118,14 +118,14 @@ class AbstractTask:
 
     &#34;&#34;&#34;
 
-    def __init__(self, root_path: Path, pathfilter: str, target_path: Path):
+    def __init__(self, root_paths: List[Path], pathfilter: str, target_path: Path):
         &#34;&#34;&#34;
         The constructor of the AbstracTask.
 
         Args:
-            root_path: root_path of the data to be processed
+            root_paths: list of root_paths of the data to be processed
             pathfilter: a pathfilter string (e.g. &#34;*&#34;; as defined for Path.glob()) to select the
-                    subfolders, that have to be processed.
+                    subfolders in the root_paths, that have to be processed.
                     pathfilter could be something like &#34;*&#34;, or &#34;*/BS&#34;, or &#34;something/*/BS&#34;.
 
                     E.g., the following root_path structure and the pathfilter &#34;*/BS&#34;
@@ -144,12 +144,17 @@ class AbstractTask:
             target_path: the target_path to write the results to.
         &#34;&#34;&#34;
 
-        self.root_path = root_path
+        self.root_paths = root_paths
         self.target_path = target_path
         self.filter = pathfilter
 
-        # create a list of subfolders that have to be processed defined by the pathfilter string.
-        self.filtered_paths = list(self.root_path.glob(self.filter))
+        self.filtered_paths: List[Path] = []
+
+        if self.filter is None or self.filter == &#34;&#34;:
+            self.filtered_paths.extend(self.root_paths)
+        else:
+            for root_path in root_paths:
+                self.filtered_paths.extend(list(root_path.glob(self.filter)))
 
         # usually, all filtered_paths have to be processed
         self.paths_to_process: List[Path] = self.filtered_paths
@@ -301,16 +306,12 @@ class CheckByTimestampMergeBaseTask(AbstractTask):
       process the data and also update the timestamp in the meta.inf file
     &#34;&#34;&#34;
 
-    def __init__(self, root_path: Path, pathfilter: str, target_path: Path):
+    def __init__(self, root_paths: List[Path], pathfilter: str, target_path: Path):
         &#34;&#34;&#34;
         The constructor of the CheckByTimestampMergeBaseTask.
         Check also the documentation of the AbstractTask Constructor.
         &#34;&#34;&#34;
-        super().__init__(
-            root_path=root_path,
-            pathfilter=pathfilter,
-            target_path=target_path,
-        )
+        super().__init__(root_paths=root_paths, pathfilter=pathfilter, target_path=target_path)
 
         if self.meta_inf_file.exists():
             # if the meta_inf file exists, we expect that the first row contains the
@@ -320,7 +321,7 @@ class CheckByTimestampMergeBaseTask(AbstractTask):
             last_processed_timestamp = float(containing_values[0])
 
             # go and find the current latest modification timestamp of allfiles in the root_path
-            current_timestamp = get_latest_mtime(self.root_path)
+            current_timestamp = get_latest_mtime(self.root_paths)
 
             # if the current_timestamp is equal to the last_processed_timestamp,
             # it means that the data in the root_path weren&#39;t changed and therefore,
@@ -343,7 +344,7 @@ class CheckByTimestampMergeBaseTask(AbstractTask):
 
         self.do_execution(paths_to_process=self.paths_to_process, tmp_path=self.tmp_path)
 
-        meta_inf_content: str = str(get_latest_mtime(self.root_path))
+        meta_inf_content: str = str(get_latest_mtime(self.root_paths))
         self.write_meta_inf(content=meta_inf_content)
 
     @abstractmethod
@@ -369,12 +370,12 @@ class CheckByNewSubfoldersMergeBaseTask(AbstractTask):
     the timestamp of the latest processed modification.
     &#34;&#34;&#34;
 
-    def __init__(self, root_path: Path, pathfilter: str, target_path: Path):
+    def __init__(self, root_paths: List[Path], pathfilter: str, target_path: Path):
         &#34;&#34;&#34;
         Constructor of base task.
 
         Args:
-            root_path: root path to read that from
+            root_paths: root paths to read data from
             pathfilter: pathfilter string that defines which subfolders in the
                         root_path have to be selected
             target_path: path to where the results have to be written
@@ -382,7 +383,7 @@ class CheckByNewSubfoldersMergeBaseTask(AbstractTask):
         self.all_names: Dict[str, Path]
 
         super().__init__(
-            root_path=root_path,
+            root_paths=root_paths,
             pathfilter=pathfilter,
             target_path=target_path,
         )
@@ -443,6 +444,13 @@ class AbstractProcess(ABC):
     Defines the Abstract process of processing tasks for a certain process.
     &#34;&#34;&#34;
 
+    def __init__(self):
+        self.context: Dict[str, Any]
+
+    def set_context(self, context: Dict[str, Any]):
+        &#34;&#34;&#34;set the context of the process.&#34;&#34;&#34;
+        self.context = context
+
     @abstractmethod
     def process(self):
         &#34;&#34;&#34;executes the process.&#34;&#34;&#34;
@@ -456,6 +464,7 @@ class AbstractParallelProcess(AbstractProcess):
     def __init__(
         self, execute_serial: bool = False, chunksize: int = 3, paralleltasks: int = 3, max_tasks_per_second: int = 8
     ):
+        super().__init__()
         self.execute_serial = execute_serial
         self.chunksize = chunksize
         self.paralleltasks = paralleltasks
@@ -579,8 +588,42 @@ def execute_processes(processes: List[AbstractProcess]):
         processes (List(AbstractProcess)): List of AbstractProcesses to be executed
 
     &#34;&#34;&#34;
+    context: Dict[str, Any] = {}
     for process in processes:
-        process.process()</code></pre>
+        process.set_context(context)
+        process.process()
+
+
+class LoggingProcess(AbstractProcess):
+    &#34;&#34;&#34;
+    Simple process that just logs some information.
+    &#34;&#34;&#34;
+
+    def __init__(self, title: str, lines: List[str]):
+        &#34;&#34;&#34;
+        Constructor.
+        Args:
+            title: title of the process
+            lines: list of lines to be logged
+        &#34;&#34;&#34;
+        super().__init__()
+        self.title = title
+        self.lines = lines
+
+    def process(self):
+        &#34;&#34;&#34;execute the process.&#34;&#34;&#34;
+        logger = logging.getLogger()
+
+        length_title = len(self.title)
+
+        logger.info(&#34;&#34;)
+        logger.info(&#34;#&#34; * (length_title + 4))
+        logger.info(&#34;%s&#34;, self.title)
+
+        for line in self.lines:
+            logger.info(&#34;    %s&#34;, line)
+
+        logger.info(&#34;#&#34; * (length_title + 4))</code></pre>
 </details>
 </section>
 <section>
@@ -608,7 +651,9 @@ def execute_processes(processes: List[AbstractProcess]):
         processes (List(AbstractProcess)): List of AbstractProcesses to be executed
 
     &#34;&#34;&#34;
+    context: Dict[str, Any] = {}
     for process in processes:
+        process.set_context(context)
         process.process()</code></pre>
 </details>
 </dd>
@@ -635,6 +680,7 @@ def execute_processes(processes: List[AbstractProcess]):
     def __init__(
         self, execute_serial: bool = False, chunksize: int = 3, paralleltasks: int = 3, max_tasks_per_second: int = 8
     ):
+        super().__init__()
         self.execute_serial = execute_serial
         self.chunksize = chunksize
         self.paralleltasks = paralleltasks
@@ -853,6 +899,14 @@ The execution can happen in parallel or serial.</p>
 </details>
 </dd>
 </dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="secfsdstools.c_automation.task_framework.AbstractProcess" href="#secfsdstools.c_automation.task_framework.AbstractProcess">AbstractProcess</a></b></code>:
+<ul class="hlist">
+<li><code><a title="secfsdstools.c_automation.task_framework.AbstractProcess.set_context" href="#secfsdstools.c_automation.task_framework.AbstractProcess.set_context">set_context</a></code></li>
+</ul>
+</li>
+</ul>
 </dd>
 <dt id="secfsdstools.c_automation.task_framework.AbstractProcess"><code class="flex name class">
 <span>class <span class="ident">AbstractProcess</span></span>
@@ -868,6 +922,13 @@ The execution can happen in parallel or serial.</p>
     Defines the Abstract process of processing tasks for a certain process.
     &#34;&#34;&#34;
 
+    def __init__(self):
+        self.context: Dict[str, Any]
+
+    def set_context(self, context: Dict[str, Any]):
+        &#34;&#34;&#34;set the context of the process.&#34;&#34;&#34;
+        self.context = context
+
     @abstractmethod
     def process(self):
         &#34;&#34;&#34;executes the process.&#34;&#34;&#34;</code></pre>
@@ -879,7 +940,9 @@ The execution can happen in parallel or serial.</p>
 <h3>Subclasses</h3>
 <ul class="hlist">
 <li><a title="secfsdstools.c_automation.task_framework.AbstractParallelProcess" href="#secfsdstools.c_automation.task_framework.AbstractParallelProcess">AbstractParallelProcess</a></li>
+<li><a title="secfsdstools.c_automation.task_framework.LoggingProcess" href="#secfsdstools.c_automation.task_framework.LoggingProcess">LoggingProcess</a></li>
 <li><a title="secfsdstools.c_daily.dailypreparation_process.DailyPreparationProcess" href="../c_daily/dailypreparation_process.html#secfsdstools.c_daily.dailypreparation_process.DailyPreparationProcess">DailyPreparationProcess</a></li>
+<li><a title="secfsdstools.x_examples.automation.memory_optimized_daily_automation.ClearDailyDataProcess" href="../x_examples/automation/memory_optimized_daily_automation.html#secfsdstools.x_examples.automation.memory_optimized_daily_automation.ClearDailyDataProcess">ClearDailyDataProcess</a></li>
 </ul>
 <h3>Methods</h3>
 <dl>
@@ -895,6 +958,20 @@ The execution can happen in parallel or serial.</p>
 <pre><code class="python">@abstractmethod
 def process(self):
     &#34;&#34;&#34;executes the process.&#34;&#34;&#34;</code></pre>
+</details>
+</dd>
+<dt id="secfsdstools.c_automation.task_framework.AbstractProcess.set_context"><code class="name flex">
+<span>def <span class="ident">set_context</span></span>(<span>self, context: Dict[str, Any])</span>
+</code></dt>
+<dd>
+<div class="desc"><p>set the context of the process.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def set_context(self, context: Dict[str, Any]):
+    &#34;&#34;&#34;set the context of the process.&#34;&#34;&#34;
+    self.context = context</code></pre>
 </details>
 </dd>
 </dl>
@@ -976,13 +1053,14 @@ def process(self):
 <li><code><a title="secfsdstools.c_automation.task_framework.AbstractParallelProcess.pre_process" href="#secfsdstools.c_automation.task_framework.AbstractParallelProcess.pre_process">pre_process</a></code></li>
 <li><code><a title="secfsdstools.c_automation.task_framework.AbstractParallelProcess.process" href="#secfsdstools.c_automation.task_framework.AbstractParallelProcess.process">process</a></code></li>
 <li><code><a title="secfsdstools.c_automation.task_framework.AbstractParallelProcess.process_task" href="#secfsdstools.c_automation.task_framework.AbstractParallelProcess.process_task">process_task</a></code></li>
+<li><code><a title="secfsdstools.c_automation.task_framework.AbstractParallelProcess.set_context" href="#secfsdstools.c_automation.task_framework.AbstractProcess.set_context">set_context</a></code></li>
 </ul>
 </li>
 </ul>
 </dd>
 <dt id="secfsdstools.c_automation.task_framework.AbstractTask"><code class="flex name class">
 <span>class <span class="ident">AbstractTask</span></span>
-<span>(</span><span>root_path: pathlib.Path, pathfilter: str, target_path: pathlib.Path)</span>
+<span>(</span><span>root_paths: List[pathlib.Path], pathfilter: str, target_path: pathlib.Path)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Abstract Base implemenation providing some commonly used basic functionality.</p>
@@ -1002,11 +1080,11 @@ of files in the root_path is newer than the timestamp stored in the meta.inf fil
 <p>The constructor of the AbstracTask.</p>
 <h2 id="args">Args</h2>
 <dl>
-<dt><strong><code>root_path</code></strong></dt>
-<dd>root_path of the data to be processed</dd>
+<dt><strong><code>root_paths</code></strong></dt>
+<dd>list of root_paths of the data to be processed</dd>
 <dt><strong><code>pathfilter</code></strong></dt>
 <dd>a pathfilter string (e.g. "<em>"; as defined for Path.glob()) to select the
-subfolders, that have to be processed.
+subfolders in the root_paths, that have to be processed.
 pathfilter could be something like "</em>", or "<em>/BS", or "something/</em>/BS".<pre><code>E.g., the following root_path structure and the pathfilter "*/BS"
 would select all "BS" "sub-subfolders" within root_path:
 &lt;pre&gt;
@@ -1051,14 +1129,14 @@ would select all "BS" "sub-subfolders" within root_path:
 
     &#34;&#34;&#34;
 
-    def __init__(self, root_path: Path, pathfilter: str, target_path: Path):
+    def __init__(self, root_paths: List[Path], pathfilter: str, target_path: Path):
         &#34;&#34;&#34;
         The constructor of the AbstracTask.
 
         Args:
-            root_path: root_path of the data to be processed
+            root_paths: list of root_paths of the data to be processed
             pathfilter: a pathfilter string (e.g. &#34;*&#34;; as defined for Path.glob()) to select the
-                    subfolders, that have to be processed.
+                    subfolders in the root_paths, that have to be processed.
                     pathfilter could be something like &#34;*&#34;, or &#34;*/BS&#34;, or &#34;something/*/BS&#34;.
 
                     E.g., the following root_path structure and the pathfilter &#34;*/BS&#34;
@@ -1077,12 +1155,17 @@ would select all "BS" "sub-subfolders" within root_path:
             target_path: the target_path to write the results to.
         &#34;&#34;&#34;
 
-        self.root_path = root_path
+        self.root_paths = root_paths
         self.target_path = target_path
         self.filter = pathfilter
 
-        # create a list of subfolders that have to be processed defined by the pathfilter string.
-        self.filtered_paths = list(self.root_path.glob(self.filter))
+        self.filtered_paths: List[Path] = []
+
+        if self.filter is None or self.filter == &#34;&#34;:
+            self.filtered_paths.extend(self.root_paths)
+        else:
+            for root_path in root_paths:
+                self.filtered_paths.extend(list(root_path.glob(self.filter)))
 
         # usually, all filtered_paths have to be processed
         self.paths_to_process: List[Path] = self.filtered_paths
@@ -1405,8 +1488,8 @@ or does create the tmp_folder, if processing has to be done.</p></div>
 <ul class="hlist">
 <li><a title="secfsdstools.c_download.basedownloading_process.BaseDownloadingProcess" href="../c_download/basedownloading_process.html#secfsdstools.c_download.basedownloading_process.BaseDownloadingProcess">BaseDownloadingProcess</a></li>
 <li><a title="secfsdstools.c_index.indexing_process.ReportParquetIndexerProcess" href="../c_index/indexing_process.html#secfsdstools.c_index.indexing_process.ReportParquetIndexerProcess">ReportParquetIndexerProcess</a></li>
-<li><a title="secfsdstools.g_pipelines.concat_process.ConcatByChangedTimestampProcess" href="../g_pipelines/concat_process.html#secfsdstools.g_pipelines.concat_process.ConcatByChangedTimestampProcess">ConcatByChangedTimestampProcess</a></li>
 <li><a title="secfsdstools.g_pipelines.concat_process.ConcatByNewSubfoldersProcess" href="../g_pipelines/concat_process.html#secfsdstools.g_pipelines.concat_process.ConcatByNewSubfoldersProcess">ConcatByNewSubfoldersProcess</a></li>
+<li><a title="secfsdstools.g_pipelines.concat_process.ConcatMultiRootByChangedTimestampProcess" href="../g_pipelines/concat_process.html#secfsdstools.g_pipelines.concat_process.ConcatMultiRootByChangedTimestampProcess">ConcatMultiRootByChangedTimestampProcess</a></li>
 <li><a title="secfsdstools.g_pipelines.filter_process.FilterProcess" href="../g_pipelines/filter_process.html#secfsdstools.g_pipelines.filter_process.FilterProcess">FilterProcess</a></li>
 <li><a title="secfsdstools.g_pipelines.standardize_process.StandardizeProcess" href="../g_pipelines/standardize_process.html#secfsdstools.g_pipelines.standardize_process.StandardizeProcess">StandardizeProcess</a></li>
 </ul>
@@ -1447,13 +1530,14 @@ or does create the tmp_folder, if processing has to be done.</p></div>
 <li><code><a title="secfsdstools.c_automation.task_framework.AbstractParallelProcess.pre_process" href="#secfsdstools.c_automation.task_framework.AbstractParallelProcess.pre_process">pre_process</a></code></li>
 <li><code><a title="secfsdstools.c_automation.task_framework.AbstractParallelProcess.process" href="#secfsdstools.c_automation.task_framework.AbstractParallelProcess.process">process</a></code></li>
 <li><code><a title="secfsdstools.c_automation.task_framework.AbstractParallelProcess.process_task" href="#secfsdstools.c_automation.task_framework.AbstractParallelProcess.process_task">process_task</a></code></li>
+<li><code><a title="secfsdstools.c_automation.task_framework.AbstractParallelProcess.set_context" href="#secfsdstools.c_automation.task_framework.AbstractProcess.set_context">set_context</a></code></li>
 </ul>
 </li>
 </ul>
 </dd>
 <dt id="secfsdstools.c_automation.task_framework.CheckByNewSubfoldersMergeBaseTask"><code class="flex name class">
 <span>class <span class="ident">CheckByNewSubfoldersMergeBaseTask</span></span>
-<span>(</span><span>root_path: pathlib.Path, pathfilter: str, target_path: pathlib.Path)</span>
+<span>(</span><span>root_paths: List[pathlib.Path], pathfilter: str, target_path: pathlib.Path)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Implements the basic logic to track already processed data either by folder structure of the
@@ -1467,8 +1551,8 @@ the timestamp of the latest processed modification.</p>
 <p>Constructor of base task.</p>
 <h2 id="args">Args</h2>
 <dl>
-<dt><strong><code>root_path</code></strong></dt>
-<dd>root path to read that from</dd>
+<dt><strong><code>root_paths</code></strong></dt>
+<dd>root paths to read data from</dd>
 <dt><strong><code>pathfilter</code></strong></dt>
 <dd>pathfilter string that defines which subfolders in the
 root_path have to be selected</dd>
@@ -1492,12 +1576,12 @@ root_path have to be selected</dd>
     the timestamp of the latest processed modification.
     &#34;&#34;&#34;
 
-    def __init__(self, root_path: Path, pathfilter: str, target_path: Path):
+    def __init__(self, root_paths: List[Path], pathfilter: str, target_path: Path):
         &#34;&#34;&#34;
         Constructor of base task.
 
         Args:
-            root_path: root path to read that from
+            root_paths: root paths to read data from
             pathfilter: pathfilter string that defines which subfolders in the
                         root_path have to be selected
             target_path: path to where the results have to be written
@@ -1505,7 +1589,7 @@ root_path have to be selected</dd>
         self.all_names: Dict[str, Path]
 
         super().__init__(
-            root_path=root_path,
+            root_paths=root_paths,
             pathfilter=pathfilter,
             target_path=target_path,
         )
@@ -1657,7 +1741,7 @@ being true or not.</p>
 </dd>
 <dt id="secfsdstools.c_automation.task_framework.CheckByTimestampMergeBaseTask"><code class="flex name class">
 <span>class <span class="ident">CheckByTimestampMergeBaseTask</span></span>
-<span>(</span><span>root_path: pathlib.Path, pathfilter: str, target_path: pathlib.Path)</span>
+<span>(</span><span>root_paths: List[pathlib.Path], pathfilter: str, target_path: pathlib.Path)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>This class uses the AbstractTask to implement logic that checks if files were changed within
@@ -1694,16 +1778,12 @@ Check also the documentation of the AbstractTask Constructor.</p></div>
       process the data and also update the timestamp in the meta.inf file
     &#34;&#34;&#34;
 
-    def __init__(self, root_path: Path, pathfilter: str, target_path: Path):
+    def __init__(self, root_paths: List[Path], pathfilter: str, target_path: Path):
         &#34;&#34;&#34;
         The constructor of the CheckByTimestampMergeBaseTask.
         Check also the documentation of the AbstractTask Constructor.
         &#34;&#34;&#34;
-        super().__init__(
-            root_path=root_path,
-            pathfilter=pathfilter,
-            target_path=target_path,
-        )
+        super().__init__(root_paths=root_paths, pathfilter=pathfilter, target_path=target_path)
 
         if self.meta_inf_file.exists():
             # if the meta_inf file exists, we expect that the first row contains the
@@ -1713,7 +1793,7 @@ Check also the documentation of the AbstractTask Constructor.</p></div>
             last_processed_timestamp = float(containing_values[0])
 
             # go and find the current latest modification timestamp of allfiles in the root_path
-            current_timestamp = get_latest_mtime(self.root_path)
+            current_timestamp = get_latest_mtime(self.root_paths)
 
             # if the current_timestamp is equal to the last_processed_timestamp,
             # it means that the data in the root_path weren&#39;t changed and therefore,
@@ -1736,7 +1816,7 @@ Check also the documentation of the AbstractTask Constructor.</p></div>
 
         self.do_execution(paths_to_process=self.paths_to_process, tmp_path=self.tmp_path)
 
-        meta_inf_content: str = str(get_latest_mtime(self.root_path))
+        meta_inf_content: str = str(get_latest_mtime(self.root_paths))
         self.write_meta_inf(content=meta_inf_content)
 
     @abstractmethod
@@ -1812,7 +1892,7 @@ being true or not.</p>
 
     self.do_execution(paths_to_process=self.paths_to_process, tmp_path=self.tmp_path)
 
-    meta_inf_content: str = str(get_latest_mtime(self.root_path))
+    meta_inf_content: str = str(get_latest_mtime(self.root_paths))
     self.write_meta_inf(content=meta_inf_content)</code></pre>
 </details>
 </dd>
@@ -1827,6 +1907,97 @@ being true or not.</p>
 <li><code><a title="secfsdstools.c_automation.task_framework.AbstractTask.prepare" href="#secfsdstools.c_automation.task_framework.AbstractTask.prepare">prepare</a></code></li>
 <li><code><a title="secfsdstools.c_automation.task_framework.AbstractTask.read_metainf_content" href="#secfsdstools.c_automation.task_framework.AbstractTask.read_metainf_content">read_metainf_content</a></code></li>
 <li><code><a title="secfsdstools.c_automation.task_framework.AbstractTask.write_meta_inf" href="#secfsdstools.c_automation.task_framework.AbstractTask.write_meta_inf">write_meta_inf</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+<dt id="secfsdstools.c_automation.task_framework.LoggingProcess"><code class="flex name class">
+<span>class <span class="ident">LoggingProcess</span></span>
+<span>(</span><span>title: str, lines: List[str])</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Simple process that just logs some information.</p>
+<p>Constructor.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>title</code></strong></dt>
+<dd>title of the process</dd>
+<dt><strong><code>lines</code></strong></dt>
+<dd>list of lines to be logged</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class LoggingProcess(AbstractProcess):
+    &#34;&#34;&#34;
+    Simple process that just logs some information.
+    &#34;&#34;&#34;
+
+    def __init__(self, title: str, lines: List[str]):
+        &#34;&#34;&#34;
+        Constructor.
+        Args:
+            title: title of the process
+            lines: list of lines to be logged
+        &#34;&#34;&#34;
+        super().__init__()
+        self.title = title
+        self.lines = lines
+
+    def process(self):
+        &#34;&#34;&#34;execute the process.&#34;&#34;&#34;
+        logger = logging.getLogger()
+
+        length_title = len(self.title)
+
+        logger.info(&#34;&#34;)
+        logger.info(&#34;#&#34; * (length_title + 4))
+        logger.info(&#34;%s&#34;, self.title)
+
+        for line in self.lines:
+            logger.info(&#34;    %s&#34;, line)
+
+        logger.info(&#34;#&#34; * (length_title + 4))</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="secfsdstools.c_automation.task_framework.AbstractProcess" href="#secfsdstools.c_automation.task_framework.AbstractProcess">AbstractProcess</a></li>
+<li>abc.ABC</li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="secfsdstools.c_automation.task_framework.LoggingProcess.process"><code class="name flex">
+<span>def <span class="ident">process</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>execute the process.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def process(self):
+    &#34;&#34;&#34;execute the process.&#34;&#34;&#34;
+    logger = logging.getLogger()
+
+    length_title = len(self.title)
+
+    logger.info(&#34;&#34;)
+    logger.info(&#34;#&#34; * (length_title + 4))
+    logger.info(&#34;%s&#34;, self.title)
+
+    for line in self.lines:
+        logger.info(&#34;    %s&#34;, line)
+
+    logger.info(&#34;#&#34; * (length_title + 4))</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="secfsdstools.c_automation.task_framework.AbstractProcess" href="#secfsdstools.c_automation.task_framework.AbstractProcess">AbstractProcess</a></b></code>:
+<ul class="hlist">
+<li><code><a title="secfsdstools.c_automation.task_framework.AbstractProcess.set_context" href="#secfsdstools.c_automation.task_framework.AbstractProcess.set_context">set_context</a></code></li>
 </ul>
 </li>
 </ul>
@@ -2043,6 +2214,7 @@ class TaskResult:
 <h4><code><a title="secfsdstools.c_automation.task_framework.AbstractProcess" href="#secfsdstools.c_automation.task_framework.AbstractProcess">AbstractProcess</a></code></h4>
 <ul class="">
 <li><code><a title="secfsdstools.c_automation.task_framework.AbstractProcess.process" href="#secfsdstools.c_automation.task_framework.AbstractProcess.process">process</a></code></li>
+<li><code><a title="secfsdstools.c_automation.task_framework.AbstractProcess.set_context" href="#secfsdstools.c_automation.task_framework.AbstractProcess.set_context">set_context</a></code></li>
 </ul>
 </li>
 <li>
@@ -2080,6 +2252,12 @@ class TaskResult:
 <ul class="">
 <li><code><a title="secfsdstools.c_automation.task_framework.CheckByTimestampMergeBaseTask.do_execution" href="#secfsdstools.c_automation.task_framework.CheckByTimestampMergeBaseTask.do_execution">do_execution</a></code></li>
 <li><code><a title="secfsdstools.c_automation.task_framework.CheckByTimestampMergeBaseTask.execute" href="#secfsdstools.c_automation.task_framework.CheckByTimestampMergeBaseTask.execute">execute</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="secfsdstools.c_automation.task_framework.LoggingProcess" href="#secfsdstools.c_automation.task_framework.LoggingProcess">LoggingProcess</a></code></h4>
+<ul class="">
+<li><code><a title="secfsdstools.c_automation.task_framework.LoggingProcess.process" href="#secfsdstools.c_automation.task_framework.LoggingProcess.process">process</a></code></li>
 </ul>
 </li>
 <li>

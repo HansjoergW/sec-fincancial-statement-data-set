@@ -105,10 +105,11 @@ class StandardizerTask(CheckByTimestampMergeBaseTask):
             target_path: the target path to write the results to
         &#34;&#34;&#34;
         super().__init__(
-            root_path=root_path,
+            root_paths=[root_path],
             pathfilter=&#34;*&#34;,  # can actually be ignored
             target_path=target_path
         )
+        self.root_path = root_path
 
     def prepare(self):
         &#34;&#34;&#34;
@@ -432,6 +433,7 @@ root_dir since last execution.</p>
 <li><code><a title="secfsdstools.c_automation.task_framework.AbstractThreadProcess.post_process" href="../c_automation/task_framework.html#secfsdstools.c_automation.task_framework.AbstractParallelProcess.post_process">post_process</a></code></li>
 <li><code><a title="secfsdstools.c_automation.task_framework.AbstractThreadProcess.process" href="../c_automation/task_framework.html#secfsdstools.c_automation.task_framework.AbstractParallelProcess.process">process</a></code></li>
 <li><code><a title="secfsdstools.c_automation.task_framework.AbstractThreadProcess.process_task" href="../c_automation/task_framework.html#secfsdstools.c_automation.task_framework.AbstractParallelProcess.process_task">process_task</a></code></li>
+<li><code><a title="secfsdstools.c_automation.task_framework.AbstractThreadProcess.set_context" href="../c_automation/task_framework.html#secfsdstools.c_automation.task_framework.AbstractProcess.set_context">set_context</a></code></li>
 </ul>
 </li>
 </ul>
@@ -482,10 +484,11 @@ The Data has to be provided as standardized DataBags.</dd>
             target_path: the target path to write the results to
         &#34;&#34;&#34;
         super().__init__(
-            root_path=root_path,
+            root_paths=[root_path],
             pathfilter=&#34;*&#34;,  # can actually be ignored
             target_path=target_path
         )
+        self.root_path = root_path
 
     def prepare(self):
         &#34;&#34;&#34;

@@ -23,7 +23,7 @@ The main features include:
 - automate processing and standardizing by configuring customized process steps that are executed whenever a new 
   data file is detected on sec.gov (see [08_00_automation_basics.ipynb](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/08_00_automation_basics.ipynb))
 - version 2 supports the new "segments" column that was added in December 2024
-- **experimental - instroduced in version 2.4.0: support for daily updates of the financial reports (see [10_00_daily_financial_report_updates.ipynb](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/10_00_daily_financial_report_updates.ipynb))**
+- **experimental - introduced in version 2.4.0: support for daily updates of the financial reports (see [10_00_daily_financial_report_updates.ipynb](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/10_00_daily_financial_report_updates.ipynb))**
 
 Have a look at the [Release Notes](https://hansjoergw.github.io/sec-fincancial-statement-data-set/releasenotes/)
 <br/>
@@ -679,6 +679,13 @@ You have to activate it by adding `dailyprocessing = True` in the `DEFAULT` sect
 
 Note, that there are some limitations (see [10_00_daily_financial_report_updates](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/10_00_daily_financial_report_updates.ipynb) for details).
 
+What basically happens, if dailyprocessing is switched on:
+- reports that are not yet part of the quarterly zip files (fincancial statement data set) but are were filed,
+  are downloaded in its raw formate, preprocessed in the same way as the SEC does, transformed to parquet and added to the index table.
+  **This means, that you have the latest report locally as soon as they were filed with the SEC.**
+- As soon as a new quarterly zip file is available, the data of the reports that are now part of the quarterly zip file is cleaned,
+  and the according daily data is being removed, since they are not part of the "official" data set.
+- Processing of the daily data is integrated in the example automation pipeline. Have a look at [08_03_automation_supporting_daily_data_example_2.4.2](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/08_03_automation_supporting_daily_data_example_2.4.2.ipynb) for details.
 
 
 

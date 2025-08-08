@@ -201,6 +201,7 @@ class DailyPreparationProcess(AbstractProcess):
 
         daily_start_quarter = self.calculate_daily_start_quarter(daily_last_processed_quarter)
         cut_off_day = self.cut_off_day(daily_start_quarter)
+        self.context[&#34;cut_off_day&#34;] = cut_off_day
 
         LOGGER.info(&#34;clearing daily index tables and daily parquet files before cut off: %s&#34;, cut_off_day)
         self.clear_index_tables(cut_off_day=cut_off_day)
@@ -381,6 +382,7 @@ process the daily files.</p></div>
 
         daily_start_quarter = self.calculate_daily_start_quarter(daily_last_processed_quarter)
         cut_off_day = self.cut_off_day(daily_start_quarter)
+        self.context[&#34;cut_off_day&#34;] = cut_off_day
 
         LOGGER.info(&#34;clearing daily index tables and daily parquet files before cut off: %s&#34;, cut_off_day)
         self.clear_index_tables(cut_off_day=cut_off_day)
@@ -610,6 +612,7 @@ daily_start_quarter.</p></div>
 
     daily_start_quarter = self.calculate_daily_start_quarter(daily_last_processed_quarter)
     cut_off_day = self.cut_off_day(daily_start_quarter)
+    self.context[&#34;cut_off_day&#34;] = cut_off_day
 
     LOGGER.info(&#34;clearing daily index tables and daily parquet files before cut off: %s&#34;, cut_off_day)
     self.clear_index_tables(cut_off_day=cut_off_day)
@@ -620,6 +623,14 @@ daily_start_quarter.</p></div>
 </details>
 </dd>
 </dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="secfsdstools.c_automation.task_framework.AbstractProcess" href="../c_automation/task_framework.html#secfsdstools.c_automation.task_framework.AbstractProcess">AbstractProcess</a></b></code>:
+<ul class="hlist">
+<li><code><a title="secfsdstools.c_automation.task_framework.AbstractProcess.set_context" href="../c_automation/task_framework.html#secfsdstools.c_automation.task_framework.AbstractProcess.set_context">set_context</a></code></li>
+</ul>
+</li>
+</ul>
 </dd>
 </dl>
 </section>

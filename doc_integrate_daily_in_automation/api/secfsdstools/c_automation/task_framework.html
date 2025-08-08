@@ -444,6 +444,13 @@ class AbstractProcess(ABC):
     Defines the Abstract process of processing tasks for a certain process.
     &#34;&#34;&#34;
 
+    def __init__(self):
+        self.context: Dict[str, Any]
+
+    def set_context(self, context: Dict[str, Any]):
+        &#34;&#34;&#34;set the context of the process.&#34;&#34;&#34;
+        self.context = context
+
     @abstractmethod
     def process(self):
         &#34;&#34;&#34;executes the process.&#34;&#34;&#34;
@@ -457,6 +464,7 @@ class AbstractParallelProcess(AbstractProcess):
     def __init__(
         self, execute_serial: bool = False, chunksize: int = 3, paralleltasks: int = 3, max_tasks_per_second: int = 8
     ):
+        super().__init__()
         self.execute_serial = execute_serial
         self.chunksize = chunksize
         self.paralleltasks = paralleltasks
@@ -580,7 +588,9 @@ def execute_processes(processes: List[AbstractProcess]):
         processes (List(AbstractProcess)): List of AbstractProcesses to be executed
 
     &#34;&#34;&#34;
+    context: Dict[str, Any] = {}
     for process in processes:
+        process.set_context(context)
         process.process()
 
 
@@ -641,7 +651,9 @@ class LoggingProcess(AbstractProcess):
         processes (List(AbstractProcess)): List of AbstractProcesses to be executed
 
     &#34;&#34;&#34;
+    context: Dict[str, Any] = {}
     for process in processes:
+        process.set_context(context)
         process.process()</code></pre>
 </details>
 </dd>
@@ -668,6 +680,7 @@ class LoggingProcess(AbstractProcess):
     def __init__(
         self, execute_serial: bool = False, chunksize: int = 3, paralleltasks: int = 3, max_tasks_per_second: int = 8
     ):
+        super().__init__()
         self.execute_serial = execute_serial
         self.chunksize = chunksize
         self.paralleltasks = paralleltasks
@@ -886,6 +899,14 @@ The execution can happen in parallel or serial.</p>
 </details>
 </dd>
 </dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="secfsdstools.c_automation.task_framework.AbstractProcess" href="#secfsdstools.c_automation.task_framework.AbstractProcess">AbstractProcess</a></b></code>:
+<ul class="hlist">
+<li><code><a title="secfsdstools.c_automation.task_framework.AbstractProcess.set_context" href="#secfsdstools.c_automation.task_framework.AbstractProcess.set_context">set_context</a></code></li>
+</ul>
+</li>
+</ul>
 </dd>
 <dt id="secfsdstools.c_automation.task_framework.AbstractProcess"><code class="flex name class">
 <span>class <span class="ident">AbstractProcess</span></span>
@@ -900,6 +921,13 @@ The execution can happen in parallel or serial.</p>
     &#34;&#34;&#34;
     Defines the Abstract process of processing tasks for a certain process.
     &#34;&#34;&#34;
+
+    def __init__(self):
+        self.context: Dict[str, Any]
+
+    def set_context(self, context: Dict[str, Any]):
+        &#34;&#34;&#34;set the context of the process.&#34;&#34;&#34;
+        self.context = context
 
     @abstractmethod
     def process(self):
@@ -930,6 +958,20 @@ The execution can happen in parallel or serial.</p>
 <pre><code class="python">@abstractmethod
 def process(self):
     &#34;&#34;&#34;executes the process.&#34;&#34;&#34;</code></pre>
+</details>
+</dd>
+<dt id="secfsdstools.c_automation.task_framework.AbstractProcess.set_context"><code class="name flex">
+<span>def <span class="ident">set_context</span></span>(<span>self, context: Dict[str, Any])</span>
+</code></dt>
+<dd>
+<div class="desc"><p>set the context of the process.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def set_context(self, context: Dict[str, Any]):
+    &#34;&#34;&#34;set the context of the process.&#34;&#34;&#34;
+    self.context = context</code></pre>
 </details>
 </dd>
 </dl>
@@ -1011,6 +1053,7 @@ def process(self):
 <li><code><a title="secfsdstools.c_automation.task_framework.AbstractParallelProcess.pre_process" href="#secfsdstools.c_automation.task_framework.AbstractParallelProcess.pre_process">pre_process</a></code></li>
 <li><code><a title="secfsdstools.c_automation.task_framework.AbstractParallelProcess.process" href="#secfsdstools.c_automation.task_framework.AbstractParallelProcess.process">process</a></code></li>
 <li><code><a title="secfsdstools.c_automation.task_framework.AbstractParallelProcess.process_task" href="#secfsdstools.c_automation.task_framework.AbstractParallelProcess.process_task">process_task</a></code></li>
+<li><code><a title="secfsdstools.c_automation.task_framework.AbstractParallelProcess.set_context" href="#secfsdstools.c_automation.task_framework.AbstractProcess.set_context">set_context</a></code></li>
 </ul>
 </li>
 </ul>
@@ -1487,6 +1530,7 @@ or does create the tmp_folder, if processing has to be done.</p></div>
 <li><code><a title="secfsdstools.c_automation.task_framework.AbstractParallelProcess.pre_process" href="#secfsdstools.c_automation.task_framework.AbstractParallelProcess.pre_process">pre_process</a></code></li>
 <li><code><a title="secfsdstools.c_automation.task_framework.AbstractParallelProcess.process" href="#secfsdstools.c_automation.task_framework.AbstractParallelProcess.process">process</a></code></li>
 <li><code><a title="secfsdstools.c_automation.task_framework.AbstractParallelProcess.process_task" href="#secfsdstools.c_automation.task_framework.AbstractParallelProcess.process_task">process_task</a></code></li>
+<li><code><a title="secfsdstools.c_automation.task_framework.AbstractParallelProcess.set_context" href="#secfsdstools.c_automation.task_framework.AbstractProcess.set_context">set_context</a></code></li>
 </ul>
 </li>
 </ul>
@@ -1949,6 +1993,14 @@ being true or not.</p>
 </details>
 </dd>
 </dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="secfsdstools.c_automation.task_framework.AbstractProcess" href="#secfsdstools.c_automation.task_framework.AbstractProcess">AbstractProcess</a></b></code>:
+<ul class="hlist">
+<li><code><a title="secfsdstools.c_automation.task_framework.AbstractProcess.set_context" href="#secfsdstools.c_automation.task_framework.AbstractProcess.set_context">set_context</a></code></li>
+</ul>
+</li>
+</ul>
 </dd>
 <dt id="secfsdstools.c_automation.task_framework.Task"><code class="flex name class">
 <span>class <span class="ident">Task</span></span>
@@ -2162,6 +2214,7 @@ class TaskResult:
 <h4><code><a title="secfsdstools.c_automation.task_framework.AbstractProcess" href="#secfsdstools.c_automation.task_framework.AbstractProcess">AbstractProcess</a></code></h4>
 <ul class="">
 <li><code><a title="secfsdstools.c_automation.task_framework.AbstractProcess.process" href="#secfsdstools.c_automation.task_framework.AbstractProcess.process">process</a></code></li>
+<li><code><a title="secfsdstools.c_automation.task_framework.AbstractProcess.set_context" href="#secfsdstools.c_automation.task_framework.AbstractProcess.set_context">set_context</a></code></li>
 </ul>
 </li>
 <li>

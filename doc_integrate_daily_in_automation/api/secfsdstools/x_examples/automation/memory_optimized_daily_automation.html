@@ -285,8 +285,6 @@ from typing import List
 
 from secfsdstools.a_config.configmodel import Configuration
 from secfsdstools.c_automation.task_framework import AbstractProcess, LoggingProcess
-from secfsdstools.c_daily.dailypreparation_process import DailyPreparationProcess
-from secfsdstools.c_index.indexdataaccess import ParquetDBIndexingAccessor
 from secfsdstools.g_pipelines.concat_process import (
     ConcatByChangedTimestampProcess,
     ConcatByNewSubfoldersProcess,
@@ -308,19 +306,16 @@ class ClearDailyDataProcess(AbstractProcess):
     Hence, we only need to clean the filtered and standardized daily data.
     &#34;&#34;&#34;
 
-    def __init__(self, db_dir: str, filtered_daily_joined_by_stmt_dir: str, standardized_daily_by_stmt_dir: str):
+    def __init__(self, filtered_daily_joined_by_stmt_dir: str, standardized_daily_by_stmt_dir: str):
         &#34;&#34;&#34;
         Constructor.
         Args:
-            db_dir: directory of the database
             filtered_daily_joined_by_stmt_dir: directory containing the filtered daily data
             standardized_daily_by_stmt_dir: directory containing the standardized daily data
         &#34;&#34;&#34;
         super().__init__()
-        self.db_dir = db_dir
-        self.index_accessor = ParquetDBIndexingAccessor(db_dir=db_dir)
-        self.filtered_daily_joined_by_stmt_dir = filtered_daily_joined_by_stmt_dir
-        self.standardized_daily_by_stmt_dir = standardized_daily_by_stmt_dir
+        self.filtered_daily_joined_by_stmt_path = Path(filtered_daily_joined_by_stmt_dir) / &#34;daily&#34;
+        self.standardized_daily_by_stmt_path = Path(standardized_daily_by_stmt_dir)
 
     def clear_directory(self, cut_off_day: int, root_dir_path: Path):
         &#34;&#34;&#34;
@@ -338,20 +333,12 @@ class ClearDailyDataProcess(AbstractProcess):
         &#34;&#34;&#34;
         Execute the process.
         &#34;&#34;&#34;
-        last_processed_quarter_file_name = self.index_accessor.find_latest_quarter_file_name()
-        if last_processed_quarter_file_name is None:
-            raise ValueError(
-                &#34;No quarterly files were processed before. &#34;
-                &#34;Please process quarterly files first before running the daily process.&#34;
-            )
-        last_processed_quarter = last_processed_quarter_file_name.split(&#34;.&#34;)[0]
+        # DailyPreparationProcess writes the calculated cut_off_day into the context
+        # and we have to make sure, that we cleanup the &#34;postprocessing&#34; daily data as well.
+        cut_off_day = self.context[&#34;cut_off_day&#34;]
 
-        daily_start_quarter = DailyPreparationProcess.calculate_daily_start_quarter(last_processed_quarter)
-        cut_off_day = DailyPreparationProcess.cut_off_day(daily_start_quarter)
-        self.clear_directory(
-            cut_off_day=cut_off_day, root_dir_path=Path(self.filtered_daily_joined_by_stmt_dir) / &#34;daily&#34;
-        )
-        self.clear_directory(cut_off_day=cut_off_day, root_dir_path=Path(self.standardized_daily_by_stmt_dir))
+        self.clear_directory(cut_off_day=cut_off_day, root_dir_path=self.filtered_daily_joined_by_stmt_path)
+        self.clear_directory(cut_off_day=cut_off_day, root_dir_path=self.standardized_daily_by_stmt_path)
 
 
 # pylint: disable=too-many-locals
@@ -517,7 +504,6 @@ def define_extra_processes(configuration: Configuration) -&gt; List[AbstractProc
     # clean daily data covered now by quarterly data
     processes.append(
         ClearDailyDataProcess(
-            db_dir=configuration.db_dir,
             filtered_daily_joined_by_stmt_dir=filtered_daily_joined_by_stmt_dir,
             standardized_daily_by_stmt_dir=standardized_daily_by_stmt_dir,
         )
@@ -879,7 +865,6 @@ on 16 GB machine.</p>
     # clean daily data covered now by quarterly data
     processes.append(
         ClearDailyDataProcess(
-            db_dir=configuration.db_dir,
             filtered_daily_joined_by_stmt_dir=filtered_daily_joined_by_stmt_dir,
             standardized_daily_by_stmt_dir=standardized_daily_by_stmt_dir,
         )
@@ -1055,7 +1040,7 @@ on 16 GB machine.</p>
 <dl>
 <dt id="secfsdstools.x_examples.automation.memory_optimized_daily_automation.ClearDailyDataProcess"><code class="flex name class">
 <span>class <span class="ident">ClearDailyDataProcess</span></span>
-<span>(</span><span>db_dir: str, filtered_daily_joined_by_stmt_dir: str, standardized_daily_by_stmt_dir: str)</span>
+<span>(</span><span>filtered_daily_joined_by_stmt_dir: str, standardized_daily_by_stmt_dir: str)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Since daily processed data is removed, as soon as the data is contained in a quarterly zip file,
@@ -1067,8 +1052,6 @@ Hence, we only need to clean the filtered and standardized daily data.</p>
 <p>Constructor.</p>
 <h2 id="args">Args</h2>
 <dl>
-<dt><strong><code>db_dir</code></strong></dt>
-<dd>directory of the database</dd>
 <dt><strong><code>filtered_daily_joined_by_stmt_dir</code></strong></dt>
 <dd>directory containing the filtered daily data</dd>
 <dt><strong><code>standardized_daily_by_stmt_dir</code></strong></dt>
@@ -1090,19 +1073,16 @@ Hence, we only need to clean the filtered and standardized daily data.</p>
     Hence, we only need to clean the filtered and standardized daily data.
     &#34;&#34;&#34;
 
-    def __init__(self, db_dir: str, filtered_daily_joined_by_stmt_dir: str, standardized_daily_by_stmt_dir: str):
+    def __init__(self, filtered_daily_joined_by_stmt_dir: str, standardized_daily_by_stmt_dir: str):
         &#34;&#34;&#34;
         Constructor.
         Args:
-            db_dir: directory of the database
             filtered_daily_joined_by_stmt_dir: directory containing the filtered daily data
             standardized_daily_by_stmt_dir: directory containing the standardized daily data
         &#34;&#34;&#34;
         super().__init__()
-        self.db_dir = db_dir
-        self.index_accessor = ParquetDBIndexingAccessor(db_dir=db_dir)
-        self.filtered_daily_joined_by_stmt_dir = filtered_daily_joined_by_stmt_dir
-        self.standardized_daily_by_stmt_dir = standardized_daily_by_stmt_dir
+        self.filtered_daily_joined_by_stmt_path = Path(filtered_daily_joined_by_stmt_dir) / &#34;daily&#34;
+        self.standardized_daily_by_stmt_path = Path(standardized_daily_by_stmt_dir)
 
     def clear_directory(self, cut_off_day: int, root_dir_path: Path):
         &#34;&#34;&#34;
@@ -1120,20 +1100,12 @@ Hence, we only need to clean the filtered and standardized daily data.</p>
         &#34;&#34;&#34;
         Execute the process.
         &#34;&#34;&#34;
-        last_processed_quarter_file_name = self.index_accessor.find_latest_quarter_file_name()
-        if last_processed_quarter_file_name is None:
-            raise ValueError(
-                &#34;No quarterly files were processed before. &#34;
-                &#34;Please process quarterly files first before running the daily process.&#34;
-            )
-        last_processed_quarter = last_processed_quarter_file_name.split(&#34;.&#34;)[0]
+        # DailyPreparationProcess writes the calculated cut_off_day into the context
+        # and we have to make sure, that we cleanup the &#34;postprocessing&#34; daily data as well.
+        cut_off_day = self.context[&#34;cut_off_day&#34;]
 
-        daily_start_quarter = DailyPreparationProcess.calculate_daily_start_quarter(last_processed_quarter)
-        cut_off_day = DailyPreparationProcess.cut_off_day(daily_start_quarter)
-        self.clear_directory(
-            cut_off_day=cut_off_day, root_dir_path=Path(self.filtered_daily_joined_by_stmt_dir) / &#34;daily&#34;
-        )
-        self.clear_directory(cut_off_day=cut_off_day, root_dir_path=Path(self.standardized_daily_by_stmt_dir))</code></pre>
+        self.clear_directory(cut_off_day=cut_off_day, root_dir_path=self.filtered_daily_joined_by_stmt_path)
+        self.clear_directory(cut_off_day=cut_off_day, root_dir_path=self.standardized_daily_by_stmt_path)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -1177,23 +1149,23 @@ Hence, we only need to clean the filtered and standardized daily data.</p>
     &#34;&#34;&#34;
     Execute the process.
     &#34;&#34;&#34;
-    last_processed_quarter_file_name = self.index_accessor.find_latest_quarter_file_name()
-    if last_processed_quarter_file_name is None:
-        raise ValueError(
-            &#34;No quarterly files were processed before. &#34;
-            &#34;Please process quarterly files first before running the daily process.&#34;
-        )
-    last_processed_quarter = last_processed_quarter_file_name.split(&#34;.&#34;)[0]
+    # DailyPreparationProcess writes the calculated cut_off_day into the context
+    # and we have to make sure, that we cleanup the &#34;postprocessing&#34; daily data as well.
+    cut_off_day = self.context[&#34;cut_off_day&#34;]
 
-    daily_start_quarter = DailyPreparationProcess.calculate_daily_start_quarter(last_processed_quarter)
-    cut_off_day = DailyPreparationProcess.cut_off_day(daily_start_quarter)
-    self.clear_directory(
-        cut_off_day=cut_off_day, root_dir_path=Path(self.filtered_daily_joined_by_stmt_dir) / &#34;daily&#34;
-    )
-    self.clear_directory(cut_off_day=cut_off_day, root_dir_path=Path(self.standardized_daily_by_stmt_dir))</code></pre>
+    self.clear_directory(cut_off_day=cut_off_day, root_dir_path=self.filtered_daily_joined_by_stmt_path)
+    self.clear_directory(cut_off_day=cut_off_day, root_dir_path=self.standardized_daily_by_stmt_path)</code></pre>
 </details>
 </dd>
 </dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="secfsdstools.c_automation.task_framework.AbstractProcess" href="../../c_automation/task_framework.html#secfsdstools.c_automation.task_framework.AbstractProcess">AbstractProcess</a></b></code>:
+<ul class="hlist">
+<li><code><a title="secfsdstools.c_automation.task_framework.AbstractProcess.set_context" href="../../c_automation/task_framework.html#secfsdstools.c_automation.task_framework.AbstractProcess.set_context">set_context</a></code></li>
+</ul>
+</li>
+</ul>
 </dd>
 </dl>
 </section>

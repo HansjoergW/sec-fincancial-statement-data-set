@@ -5,6 +5,14 @@ permalink: /releasenotes/
 
 # Release Notes
 
+## 2.4.1 -> 2.4.2 2025-August-08
+* New
+  * Daily data processing is now integrated in the example automation pipeline. Have a look at [08_03_automation_supporting_daily_data_example_2.4.2](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/08_03_automation_supporting_daily_data_example_2.4.2.ipynb) for details. 
+  * Improvements in the process/task framework
+    * A new "LoggingProcess" provides a way to log some information before and after a process is executed to make the output more readable.
+    * The ConcatTasks can now take several root paths, not just one
+    * A Context can be passed between processes to share information.
+
 ## 2.4.0 -> 2.4.1 2025-July-26
 * Fixes
   * update to secdaily 0.2.2 (more robustness / prevent name clashes)

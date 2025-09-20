@@ -5,6 +5,13 @@ permalink: /releasenotes/
 
 # Release Notes
 
+## 2.4.2 -> 2.4.3 2025-September-20
+* Fixes
+    * Fix for daily cleanup if daily was not executed before. Fixes:
+      [ERROR] MigrationProcessing Migration failed: no such table: sec_report_processing.
+      [ERROR] MigrationProcessing Please clear all data manually and run the process again...
+
+
 ## 2.4.1 -> 2.4.2 2025-August-08
 * New
   * Daily data processing is now integrated in the example automation pipeline. Have a look at [08_03_automation_supporting_daily_data_example_2.4.2](https://nbviewer.org/github/HansjoergW/sec-fincancial-statement-data-set/blob/main/notebooks/08_03_automation_supporting_daily_data_example_2.4.2.ipynb) for details. 
